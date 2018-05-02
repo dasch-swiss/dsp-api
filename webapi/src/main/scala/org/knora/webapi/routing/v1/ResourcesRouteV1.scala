@@ -772,14 +772,10 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def knoraDataTypeXml(node: Node): CreateResourceValueV1 = {
             val knoraType: Seq[Node] = node.attribute("knoraType").getOrElse(throw BadRequestException(s"Attribute 'knoraType' missing in element '${node.label}'"))
-
-
-            val elementLanguage: String = node.attribute("lang").getOrElse(None).toString
-
-
             val elementValue = node.text
 
             if (knoraType.nonEmpty) {
+                val language = node.attribute("lang").map(s => s.head.toString)
                 knoraType.toString match {
                     case "richtext_value" =>
                         val maybeMappingID: Option[Seq[Node]] = node.attributes.get("mapping_id")
@@ -792,25 +788,13 @@ object ResourcesRouteV1 extends Authenticator {
                                 if (childElements.nonEmpty) {
                                     val embeddedXmlRootNode = childElements.head
                                     val embeddedXmlDoc = """<?xml version="1.0" encoding="UTF-8"?>""" + embeddedXmlRootNode.toString
-                                    if (elementLanguage!="None") {
-                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, language=Some(elementLanguage), xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
-                                    }
-                                    else {
-                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
-
-                                    }
+                                    CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = None, language = language, xml = Some(embeddedXmlDoc), mapping_id = mappingIri)))
                                 } else {
                                     throw BadRequestException(s"Element '${node.label}' provides a mapping_id, but its content is not XML")
                                 }
 
                             case None =>
-                                if (elementLanguage!="None") {
-                                    CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = Some(elementLanguage))))
-                                } else {
-                                        CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue))))
-                                }
-
-
+                                CreateResourceValueV1(richtext_value = Some(CreateRichtextV1(utf8str = Some(elementValue), language = language)))
                         }
 
                     case "link_value" =>

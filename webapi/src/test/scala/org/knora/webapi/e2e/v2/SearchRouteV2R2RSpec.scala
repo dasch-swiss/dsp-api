@@ -1802,7 +1802,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?text a xsd:string .
                   |
-                  |     FILTER(lang(?text) = "en")
+                  |     FILTER(lang(?text) = "de")
                   |}
                 """.stripMargin
 
@@ -1813,8 +1813,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // TODO: add some test data that have a language annotation and check for results
 
-                checkCountQuery(responseAs[String], 0)
-
+                checkCountQuery(responseAs[String], 1)
             }
 
         }

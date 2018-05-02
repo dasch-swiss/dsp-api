@@ -16,7 +16,6 @@ object ResourcesResponderV2SpecFullData {
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Berthold, der Bruder"
@@ -25,7 +24,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
@@ -35,7 +33,6 @@ object ResourcesResponderV2SpecFullData {
             "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schramm Bd. XXI, S. 27"
@@ -44,7 +41,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "GW 4168"
@@ -53,7 +49,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "ISTC ib00512000"
@@ -63,7 +58,6 @@ object ResourcesResponderV2SpecFullData {
             ),
             "http://www.knora.org/ontology/0803/incunabula#location" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
@@ -72,7 +66,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#url" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
@@ -81,7 +74,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#physical_desc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Dimension: 8\u00B0"
@@ -90,7 +82,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel"
@@ -111,7 +102,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#publisher" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Johann Amerbach"
@@ -129,7 +119,6 @@ object ResourcesResponderV2SpecFullData {
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Jean Mandeville"
@@ -139,7 +128,6 @@ object ResourcesResponderV2SpecFullData {
             "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Reise ins Heilige Land"
@@ -148,7 +136,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
@@ -157,7 +144,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Itinerarius"
@@ -168,7 +154,6 @@ object ResourcesResponderV2SpecFullData {
             "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Van der Haegen I: 9,14"
@@ -177,7 +162,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Goff M165"
@@ -186,7 +170,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "C 3833"
@@ -195,7 +178,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Klebs 651.2"
@@ -204,7 +186,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schr 4799"
@@ -213,7 +194,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Schramm XXI p. 9 & 26"
@@ -222,7 +202,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "FairMur(G) 283"
@@ -231,7 +210,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "IBP 3556"
@@ -240,7 +218,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Borm 1751"
@@ -250,7 +227,6 @@ object ResourcesResponderV2SpecFullData {
             ),
             "http://www.knora.org/ontology/0803/incunabula#location" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel UB, Sign: Aleph D III 13:1"
@@ -259,7 +235,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#url" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
@@ -268,7 +243,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#physical_desc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
@@ -277,7 +251,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#book_comment" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
@@ -286,7 +259,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Basel"
@@ -307,7 +279,6 @@ object ResourcesResponderV2SpecFullData {
             )),
             "http://www.knora.org/ontology/0803/incunabula#publisher" -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    valueHasLanguage = None,
                     comment = None,
                     standoff = None,
                     valueHasString = "Bernhard Richel"
@@ -317,7 +288,6 @@ object ResourcesResponderV2SpecFullData {
             "http://www.knora.org/ontology/0803/incunabula#note" -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "deutsch von Otto von Diemeringen"
@@ -326,7 +296,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Rubr. mit Init. J zu Beginn"
@@ -335,7 +304,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Holzschnitte nicht koloriert"
@@ -344,7 +312,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
@@ -353,7 +320,6 @@ object ResourcesResponderV2SpecFullData {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
                         comment = None,
                         standoff = None,
                         valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"

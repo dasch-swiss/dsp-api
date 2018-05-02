@@ -55,18 +55,16 @@
         @* Construct the value. *@
         <@newValueIri> rdf:type <@value.valueTypeIri> ;
             knora-base:isDeleted false  ;
-            knora-base:valueHasString """@value.toString""" .
 
         @value match {
 
             case textValueSimple: TextValueSimpleV1 => {
-             @if(!textValueSimple.language.isEmpty){
-                <@newValueIri> knora-base:valueHasLanguage """@textValueSimple.language.toString""" .
-              }
+                knora-base:valueHasString  @textValueSimple.language.map(l => "\"" + value.toString + "\""+ "@" + l).getOrElse("\"" + value.toString + "\"") .
             }
 
             case textValueWithStandoff: TextValueWithStandoffV1 => {
 
+                knora-base:valueHasString """@value.toString""" .
                 @* Create a Standoff node for each StandoffTagV1. *@
 
                 <@newValueIri> knora-base:valueHasMapping <@textValueWithStandoff.mappingIri> .

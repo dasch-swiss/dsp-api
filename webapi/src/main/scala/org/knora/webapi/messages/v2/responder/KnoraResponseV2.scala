@@ -172,7 +172,7 @@ case class DateValueContentV2(valueHasString: String,
   * @param standoff       a [[StandoffAndMapping]], if any.
   * @param comment        a comment on this `TextValueContentV2`, if any.
   */
-case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[String], standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
+case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[String] = None, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
 
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
@@ -214,18 +214,19 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
                 // xml is returned
                 Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri)
+                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri),
+                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(valueHasLanguage.getOrElse(""))
                 )
             }
 
         } else {
             // no markup given
-            Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
+            Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
+                OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(valueHasLanguage.getOrElse(""))
+            )
+        }
 
-        }
-        if (valueHasLanguage.nonEmpty) {
-            Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(valueHasLanguage.get))
-        }
         JsonLDObject(objectMap)
     }
 

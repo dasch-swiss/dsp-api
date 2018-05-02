@@ -316,7 +316,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "Ein Ding für jemanden, dem die Dinge gefallen" ;
-	anything:hasText <http://rdfh.ch/0001/a-thing-with-text-values/values/1> , <http://rdfh.ch/0001/a-thing-with-text-values/values/2> ;
+	anything:hasText <http://rdfh.ch/0001/a-thing-with-text-values/values/1> , <http://rdfh.ch/0001/a-thing-with-text-values/values/2>,  <http://rdfh.ch/0001/a-thing-with-text-values/values/3>, <http://rdfh.ch/0001/a-thing-with-text-values/values/4>;
 	knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/a-thing> ;
 	knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/a-thing-with-text-values/values/0> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
@@ -932,3 +932,20 @@
     knora-base:valueHasListNode	<http://rdfh.ch/lists/0001/otherTreeList02> ;
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
+
+<http://rdfh.ch/0001/a-thing-with-text-values/values/3> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+	knora-base:valueHasString "ye chize maskhare"@fa;
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2018-05-02T16:04:54Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator" .
+
+<http://rdfh.ch/0001/a-thing-with-text-values/values/4> a knora-base:TextValue ;
+	knora-base:isDeleted false ;
+	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
+	knora-base:valueHasString "ein verdamtes Ding";
+	knora-base:valueHasLanguage "de";
+	knora-base:valueHasOrder 0 ;
+	knora-base:valueCreationDate "2018-05-02T16:04:54Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator" .
