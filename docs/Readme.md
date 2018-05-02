@@ -16,7 +16,7 @@ We are currently in a transitioning phase, where we slowly move chapters from Sp
 moving chapter involves the following Pandoc command for converting `rst` documents to `md` documents:
 
 ```
-$ pandoc filename.rst -f rst -t markdown -o filename.md
+$ pandoc filename.rst -f rst -t gfm -o filename.md
 ```
 
 All the different documentations are build by invoking the following command:

@@ -14,9 +14,11 @@ ifeq ($(shell which $(TYPEDOC) >/dev/null 2>&1; echo $$?), 1)
 $(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc installed.
 endif
 
+# Graphviz diagrams to be converted to PNG
+DOT_FIGURES = $(shell find src/paradox -type f -name '*.dot')
+PNG_FIGURES = $(patsubst %.dot,%.dot.png,$(DOT_FIGURES))
 
-
-.PHONY: help clean
+.PHONY: help clean jsonformat jsonformattest graphvizfigures
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -27,7 +29,7 @@ help:
 clean:
 	rm -rf $(FORMATDOCDIRV1)/*
 	rm -rf $(FORMATDOCDIRV2)/*
-
+	rm -f $(PNG_FIGURES)
 
 jsonformat:
 	$(TYPEDOC) --out $(FORMATDOCDIRV1) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
@@ -38,3 +40,8 @@ jsonformattest:
 	$(TYPEDOC) --out $(FORMATDOCDIRV1) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
 	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
+
+graphvizfigures: $(PNG_FIGURES)
+
+%.dot.png: %.dot
+	dot -Tpng $< -o $@
