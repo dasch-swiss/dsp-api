@@ -17,5 +17,20 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-Webapi
-======
+# The Knora API Server
+
+The Knora API server implements Knora's HTTP-based APIs, and manages data
+stored in an RDF triplestore and in files.
+
+@@toc { depth=2 }
+
+@@@ index
+
+* [Deployment](deployment/index.md)
+* [Design](design/index.md)
+* [Development](development/index.md)
+* [API v1](api-v1/index.md)
+* [API v2](api-v2/index.md)
+* [Admin API](api-admin/index.md)
+
+@@@
