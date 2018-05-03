@@ -18,3 +18,19 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Knora API v1
+
+@@toc { depth=1 }
+
+@@@ index
+
+- [Introduction](introduction.md)
+- [Reading and Searching Resources](reading-and-searching-resources.md)
+- [XML to Standoff Mapping](create-a-mapping.md)
+- [Adding Resources](adding-resources.md)
+- [Reading and Searching Resources](reading-and-searching-resources.md)
+- [Reading Values](reading-values.md)
+- [Adding a Value](adding-values.md)
+- [Changing a Value](changing-values.md)
+- [Deleting Resources and Values](delete-resources-and-values.md)
+
+@@@
