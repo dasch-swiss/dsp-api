@@ -561,7 +561,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles query variables that represent properties in a [[FilterPattern]].
           *
           * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter expression.
+          * @param comparisonOperator the comparison operator used in the filter pattern.
           * @param iriRef the Iri the property query variable is restricted to.
           * @param propInfo information about the query variable's type.
           * @return a [[TransformedFilterPattern]].
@@ -605,7 +605,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles query variables that represent literals in a [[FilterPattern]].
           *
           * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter expression.
+          * @param comparisonOperator the comparison operator used in the filter pattern.
           * @param literalValueExpression the literal provided in the [[FilterPattern]] as an [[Expression]].
           * @param xsdType valid xsd types of the literal.
           * @param valueHasProperty the property of the value object pointing to the literal.
@@ -638,6 +638,124 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(valueHasProperty.toSmartIri), valueObjectLiteralVar)
                 )
             )
+
+        }
+
+        /**
+          * Handles query variables that represent a date in a [[FilterPattern]].
+          *
+          * @param queryVar the query variable to be handled.
+          * @param comparisonOperator the comparison operator used in the filter pattern.
+          * @param dateValueExpression the date literal provided in the [[FilterPattern]] as an [[Expression]].
+          * @return a [[TransformedFilterPattern]].
+          */
+        private def handleDateQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, dateValueExpression: Expression): TransformedFilterPattern = {
+
+            // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
+            val dateStringLiteral: XsdLiteral = dateValueExpression match {
+                case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
+
+                case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
+            }
+
+            // validate Knora date string
+            val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
+
+            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
+
+            // create a variable representing the period's start
+            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
+
+            // sort dates by their period's start (in the prequery)
+            valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
+
+            // create a variable representing the period's end
+            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
+
+            // connects the value object with the periods start variable
+            val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
+
+            // connects the value object with the periods end variable
+            val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri), obj = dateValueHasEndVar)
+
+            // process filter expression based on given comparison operator
+            comparisonOperator match {
+
+                case CompareExpressionOperator.EQUALS =>
+
+                    // any overlap in considered as equality
+                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
+
+                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
+
+                    val filter = AndExpression(leftArgFilter, rightArgFilter)
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(
+                            dateValStartStatement, dateValEndStatement
+                        )
+                    )
+
+                case CompareExpressionOperator.NOT_EQUALS =>
+
+                    // no overlap in considered as inequality (negation of equality)
+                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
+
+                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
+
+                    val filter = OrExpression(leftArgFilter, rightArgFilter)
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(
+                            dateValStartStatement, dateValEndStatement
+                        )
+                    )
+
+                case CompareExpressionOperator.LESS_THAN =>
+
+                    // period ends before indicated period
+                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
+                    )
+
+                case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
+
+                    // period ends before indicated period or equals it (any overlap)
+                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(dateValStartStatement)
+                    )
+
+                case CompareExpressionOperator.GREATER_THAN =>
+
+                    // period starts after end of indicated period
+                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(dateValStartStatement)
+                    )
+
+                case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
+
+                    // period starts after indicated period or equals it (any overlap)
+                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+
+                    TransformedFilterPattern(
+                        Some(filter),
+                        Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
+                    )
+
+                case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
+
+            }
 
         }
 
@@ -750,121 +868,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                             case OntologyConstants.KnoraApiV2Simple.Date =>
 
-                                                // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
-                                                val dateStringLiteral: XsdLiteral = filterCompare.rightArg match {
-                                                    case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
-
-                                                    case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
-                                                }
-
-                                                // validate Knora  date string
-                                                val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
-
-                                                val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
-
-                                                // create a variable representing the period's start
-                                                val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
-
-                                                // sort dates by their period's start (in the prequery)
-                                                valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
-
-                                                // create a variable representing the period's end
-                                                val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
-
-                                                // connects the value object with the periods start variable
-                                                val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
-
-                                                // connects the value object with the periods end variable
-                                                val dateValEndStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasEndJDN.toSmartIri), obj = dateValueHasEndVar)
-
-                                                // process filter expression based on given comparison operator
-                                                filterCompare.operator match {
-
-                                                    case CompareExpressionOperator.EQUALS =>
-
-                                                        // any overlap in considered as equality
-                                                        val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
-
-                                                        val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
-
-                                                        val filter = AndExpression(leftArgFilter, rightArgFilter)
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(
-                                                                dateValStartStatement, dateValEndStatement
-                                                            )
-                                                        )
-
-                                                    case CompareExpressionOperator.NOT_EQUALS =>
-
-                                                        // no overlap in considered as inequality (negation of equality)
-                                                        val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
-
-                                                        val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
-
-                                                        val filter = OrExpression(leftArgFilter, rightArgFilter)
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(
-                                                                dateValStartStatement, dateValEndStatement
-                                                            )
-                                                        )
-
-                                                    case CompareExpressionOperator.LESS_THAN =>
-
-                                                        // period ends before indicated period
-                                                        val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
-                                                        )
-
-                                                    case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
-
-                                                        // period ends before indicated period or equals it (any overlap)
-                                                        val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(dateValStartStatement)
-                                                        )
-
-                                                    case CompareExpressionOperator.GREATER_THAN =>
-
-                                                        // period starts after end of indicated period
-                                                        val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(dateValStartStatement)
-                                                        )
-
-                                                    case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
-
-                                                        // period starts after indicated period or equals it (any overlap)
-                                                        val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
-
-                                                        TransformedFilterPattern(
-                                                            Some(filter),
-                                                            Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
-                                                        )
-
-
-                                                    case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
-
-
-                                                }
+                                                handleDateQueryVar(queryVar = queryVar, comparisonOperator = filterCompare.operator, dateValueExpression = filterCompare.rightArg)
 
                                             case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
 
                                         }
 
                                 }
-
-
+                                
                             } else {
                                 throw SparqlSearchException(s"type information about $queryVar is missing")
                             }
