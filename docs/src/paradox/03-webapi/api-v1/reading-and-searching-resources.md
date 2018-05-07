@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Reading and Searching Resources
 
+@@toc
+
 In order to get an existing resource, the HTTP method `GET` has to be
 used. The request has to be sent to the Knora server using the
 `resources` path segment (depending on the type of request, this segment
@@ -52,7 +54,7 @@ HTTP GET to http://host/v1/resources/resourceIRI
 
 As an answer, the client receives a JSON that represents the
 requested resource. It has the following members:
-    
+
 * `status`: The Knora status code, `0` if everything went well
 * `userdata`: Data about the user that made the request
 * `resinfo`: Data describing the requested resource and its class
@@ -70,7 +72,7 @@ module `resourceResponseFormats`.
 
 To make a request more specific, the following parameters can be
 appended to the URL (`http://www.knora.org/resources/resourceIRI?param1=value1&param2=value2`):
-    
+
 - `reqtype=info|context|rights`: Specifies the type of
   request.
 
@@ -208,7 +210,7 @@ HTTP GET to http://host/v1/resources?searchstr=searchValue
 ```
 
 Additionally, the following parameters can be appended to the URL (search value is `Zeitglöcklein`):
-  
+
 - `restype_id=resourceClassIRI`: This restricts the search to
   resources of the specified class (subclasses of that class will
   also match). `-1` is the default value and means no restriction
@@ -272,7 +274,7 @@ HTTP GET to http://host/v1/search/?searchtype=extended
 The parameter `searchtype` is required and has to be set to
 `extended`. An extended search requires at least one set of
 parameters consisting of:
-    
+
 - `property_id=propertyTypeIRI`: the property the resource has to
   have (subproperties of that property will also match).
 
@@ -302,7 +304,7 @@ operators:
 | Boolean Value    | EQ, !EQ, EXISTS                                       |
 
 Explanation of the comparison operators:
-    
+
 * `EQ`: checks if a resource's value *equals* the search value. In
   case of a text value type, it checks for identity of the strings
   compared. In case of a date value type, equality is given if the
@@ -348,7 +350,7 @@ Explanation of the comparison operators:
   terms. The list takes this form: `([+-]term\s)+`.
 
 Additionally, these parameters can be set:
-    
+
 * `filter_by_restype=resourceClassIRI`: restricts the search to
   resources of the specified resource class (subclasses of that
   class will also match).
@@ -363,7 +365,7 @@ Additionally, these parameters can be set:
   results request by request.
 
 Some sample searches:
-    
+
 * `http://localhost:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23title&compop=!EQ&searchval=Zeitgl%C3%B6cklein%20des%20Lebens%20und%20Leidens%20Christi`:
   searches for books that have a title that does not equal
   "Zeitglöcklein des Lebens und Leidens

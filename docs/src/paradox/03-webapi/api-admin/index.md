@@ -25,6 +25,6 @@ The Knora admin API makes it possible to administer Knora projects, users, user 
 
 @@@ index
 
-* [Introduction](introduction.md)
+- [Introduction](introduction.md)
 
 @@@

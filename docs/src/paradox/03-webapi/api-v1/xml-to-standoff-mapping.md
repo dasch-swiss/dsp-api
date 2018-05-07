@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # XML to Standoff Mapping
 
+@@toc
+
 ## The Knora Standard Mapping
 
 ### Description
@@ -110,7 +112,7 @@ The mapping is written in XML itself (for a formal description, see
 structure (the indentation corresponds to the nesting in XML):
 
 - `<mapping>`: the root element
-        
+
     - `<defaultXSLTransformation> (optional)`: the Iri of the
       default XSL transformation to be applied to the XML when
       reading it back from Knora. The XSL transformation is
@@ -155,11 +157,11 @@ structure (the indentation corresponds to the nesting in XML):
             - `<attributes>`: XML attributes to be
               mapped to standoff properties (other
               than `id` or `class`), if any
-              
+
                 - `<attribute>`: an XML attribute
                   to be mapped to a standoff
                   property, may be repeated
-                  
+
                     - `<attributeName>`: the name
                       of the XML attribute
                     - `<namespace>`: the namespace
@@ -545,7 +547,7 @@ The multipart request consists of two named parts:
 
 ```
 "json":
-  
+
   {
     "project_id": "projectIRI",
     "label": "my mapping",
@@ -553,7 +555,7 @@ The multipart request consists of two named parts:
   }
 
 "xml":
-  
+
   <?xml version="1.0" encoding="UTF-8"?>
   <mapping>
       ...

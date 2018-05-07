@@ -973,7 +973,7 @@ data:SO1 rdf:type kb:StandoffLinkTag ;
     kb:standoffTagHasLink data:R2 .
 
 data:R1 kb:hasStandoffLinkTo data:R2 .
-data:R1 kb:hasStandoffLinkToValue data:LV1 . 
+data:R1 kb:hasStandoffLinkToValue data:LV1 .
 
 data:LV1 rdf:type kb:LinkValue ;
     rdf:subject data:R1 ;
@@ -1010,7 +1010,7 @@ For links to a `kb:Resource`, see @ref:[StandoffLinkTag](#standofflinktag).
 A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements
 (with or without a class) and attributes and standoff classes and
-properties (TODO: add link here to "XML to standoff mapping").
+properties (see @ref:[XML to Standoff Mapping](../03-webapi/api-v1/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains
 one or more `kb:MappingElement`. A `kb:MappingElement` maps an XML
@@ -1143,7 +1143,7 @@ date tag referring to Christmas Eve 2016, contained in a
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX standoff: <http://www.knora.org/ontology/standoff#>
 
-select * where { 
+select * where {
     ?standoffTag a knora-base:StandoffDateTag  .
 
     ?standoffTag knora-base:valueHasStartJDN ?dateStart .

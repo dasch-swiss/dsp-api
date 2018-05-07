@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction: Using the Admin API
 
+@@toc { depth=2 }
+
 ## RESTful API
 
 The Knora Admin API is a RESTful API that allows for reading and adding of
@@ -62,8 +64,8 @@ running on.
 For all API operations that target at changing resources or values, the
 client has to provide credentials (username and password) so that the
 API server can authenticate the user making the request. Credentials can
-be sent as a part of the HTTP header or as parts of the URL (see
-[Authentication in the Knora API Server](../design/authentication.md)).
+be sent as a part of the HTTP header or as parts of the URL (TODO: add
+a link to "Authentication in the Knora API Server").
 
 ## OpenAPI/Swagger
 

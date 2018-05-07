@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Adding Resources
 
+@@toc
+
 To create a resource, the HTTP method `POST` has to be used.
 The request has to be sent to the Knora server using the `resources`
 path segment:
@@ -302,7 +304,7 @@ This illustrates several aspects of XML imports:
     refer to it as `p0802-biblio:p0801-beol__comment`.
 
   - A text value can contain XML markup. If it does:
-        
+
       + The text value element must have the attribute `mapping_id`,
         specifying a mapping from XML to standoff markup (see
         XML-to-standoff-mapping).

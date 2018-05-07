@@ -25,7 +25,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 - [Introduction](introduction.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
-- [XML to Standoff Mapping](create-a-mapping.md)
+- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [Adding Resources](adding-resources.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
 - [Reading Values](reading-values.md)

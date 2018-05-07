@@ -12,11 +12,17 @@ This folder contains the sources to the Knora documentation website published un
  - `src/api-v2`: The Knora JSON-LD API V2 Request and Response Format documentation.
  - `src/api-admin`: The Knora JSON Admin API Request and Response format Swagger-based documentation.
 
-We are currently in a transitioning phase, where we slowly move chapters from Sphinx to Paradox. The process of 
-moving chapter involves the following Pandoc command for converting `rst` documents to `md` documents:
+We are currently in a transitioning phase, where we slowly move chapters from Sphinx to Paradox. The process of
+converting a chapter involves the following Pandoc command for converting `rst` documents to `md` documents:
 
 ```
 $ pandoc filename.rst -f rst -t gfm -o filename.md
+```
+
+You can convert all the files in a directory like this:
+
+```
+$ for f in $(ls *.rst); do pandoc $f -f rst -t gfm -o $(basename -s .rst $f).md; done
 ```
 
 All the different documentations are build by invoking the following command:
@@ -42,7 +48,7 @@ $ sbt previewAuto
 ```
 
 which launches a dynamic server updating its content at each modification in your source files. Both launch the server
-on port `4000` and attempts to connect your browser to `http://localhost:4000/`. 
+on port `4000` and attempt to connect your browser to `http://localhost:4000/`.
 
 ## 4 Publishing
 
