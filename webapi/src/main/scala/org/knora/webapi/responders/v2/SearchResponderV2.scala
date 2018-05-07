@@ -873,6 +873,66 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
+          *
+          * Handles the use of the SPARQL lang function in a [[FilterPattern]].
+          *
+          * @param langFunctionCall  zhe lang function call to be handled.
+          * @param compareExpression the filter pattern's compare expression.
+          * @param typeInspection the type inspection results.
+          * @return a [[TransformedFilterPattern]].
+          */
+        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+
+            // make a key to look up information about the lang functions argument (query var) in type inspection results
+            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(langFunctionCall.textValueVar)
+
+            // get information about the queryVar's type
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                // get type information for lang.textValueVar
+                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                typeInfo match {
+
+                    case nonPropInfo: NonPropertyTypeInfo =>
+
+                        nonPropInfo.typeIri.toString match {
+
+                            case OntologyConstants.Xsd.String => () // xsd:string is expected
+
+                            case _ => throw SparqlSearchException(s"${langFunctionCall.textValueVar} is expected to be of type xsd:string")
+                        }
+
+                    case _ => throw SparqlSearchException(s"${langFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                }
+
+            } else {
+                throw SparqlSearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
+            }
+
+            // create a variable representing the string literal
+            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+
+            // comparison operator is expected to be '='
+            if (compareExpression.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator is expected to be '=' for the use with a 'lang' function call.")
+
+            compareExpression.rightArg match {
+                case stringLiteral: XsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri =>
+
+                case other => throw SparqlSearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
+            }
+
+            TransformedFilterPattern(
+                Some(CompareExpression(LangFunction(textValHasString), compareExpression.operator, compareExpression.rightArg)),
+                Seq(
+                    // connects the value object with the value literal
+                    StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                )
+            )
+
+        }
+
+        /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
           *
           * @param filterExpression the Filter expression to be transformed.
@@ -894,52 +954,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case lang: LangFunction =>
 
-                            // make a key to look up information about the lang functions argument (query var) in type inspection results
-                            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(lang.textValueVar)
-
-                            // get information about the queryVar's type
-                            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
-
-                                // get type information for lang.textValueVar
-                                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
-
-                                typeInfo match {
-
-                                    case nonPropInfo: NonPropertyTypeInfo =>
-
-                                        nonPropInfo.typeIri.toString match {
-
-                                            case OntologyConstants.Xsd.String => () // xsd:string is expected
-
-                                            case _ => throw SparqlSearchException(s"${lang.textValueVar} is expected to be of type xsd:string")
-                                        }
-
-                                    case _ => throw SparqlSearchException(s"${lang.textValueVar} is expected to be of type NonPropertyTypeInfo")
-                                }
-
-                            } else {
-                                throw SparqlSearchException(s"type information about ${lang.textValueVar} is missing")
-                            }
-
-                            // create a variable representing the string literal
-                            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(lang.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
-
-                            // comparison operator is expected to be '='
-                            if (filterCompare.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator is expected to be '=' for the use with a 'lang' function call.")
-
-                            filterCompare.rightArg match {
-                                case stringLiteral: XsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri =>
-
-                                case other => throw SparqlSearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
-                            }
-
-                            TransformedFilterPattern(
-                                Some(CompareExpression(LangFunction(textValHasString), filterCompare.operator, filterCompare.rightArg)),
-                                Seq(
-                                    // connects the value object with the value literal
-                                    StatementPattern.makeExplicit(subj = lang.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
-                                )
-                            )
+                            handleLangFunctionCall(langFunctionCall = lang, compareExpression = filterCompare, typeInspection = typeInspection)
 
                         case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable or a 'lang' function call, but $other is given")
                     }
