@@ -987,6 +987,82 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
+          *
+          * Handles a KnarQL specific function call in a [[FilterPattern]].
+          *
+          * @param functionCallExpression the function call to be handled.
+          * @param typeInspection the type inspection results.
+          * @return a [[TransformedFilterPattern]].
+          */
+        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult) = {
+
+            val functionName: IriRef = functionCallExpression.functionIri.toInternalEntityIri
+
+            functionName.iri match {
+
+                case SmartIri(OntologyConstants.KnoraBase.MatchFunctionIri) =>
+
+                    // two arguments are expected: the first is expected to be a variable representing a string value,
+                    // the second is expected to be a string literal
+
+                    if (functionCallExpression.args.size != 2) throw SparqlSearchException(s"Two arguments are expected for ${functionCallExpression.functionIri}")
+
+                    // a QueryVariable expected to represent a text value
+                    val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+                    // make a key to look up information in type inspection results
+                    val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(textValueVar)
+
+                    // get information about the queryVar's type
+                    if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                        // get type information for regexFunction.textValueVar
+                        val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                        typeInfo match {
+
+                            case nonPropInfo: NonPropertyTypeInfo =>
+
+                                nonPropInfo.typeIri.toString match {
+
+                                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
+
+                                    case _ => throw SparqlSearchException(s"$textValueVar is expected to be of type xsd:string")
+                                }
+
+                            case _ => throw SparqlSearchException(s"$textValueVar} is expected to be of type NonPropertyTypeInfo")
+                        }
+
+                    } else {
+                        throw SparqlSearchException(s"type information about $textValueVar is missing")
+                    }
+
+                    // create a variable representing the string literal
+                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+
+                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                    valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
+
+                    val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+
+                    // combine search terms with a logical AND (Lucene syntax)
+                    val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTerm.value)
+
+                    TransformedFilterPattern(
+                        None, // FILTER has been replaced by statements
+                        Seq(
+                            // connects the value object with the value literal
+                            StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString),
+                            StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
+                        )
+                    )
+
+                case _ => throw NotImplementedException(s"KnarQL function ${functionCallExpression.functionIri} not implemented")
+            }
+
+        }
+
+        /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
           *
           * @param filterExpression the Filter expression to be transformed.
@@ -1039,73 +1115,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case regexFunction: RegexFunction =>
 
-                    handleRegexFunctionCall(regexFunction, typeInspectionResult)
+                    handleRegexFunctionCall(regexFunctionCall = regexFunction, typeInspection = typeInspectionResult)
 
                 case functionCall: FunctionCallExpression =>
 
-                    val functionName: IriRef = functionCall.functionIri.toInternalEntityIri
-
-                    functionName.iri match {
-
-                        case SmartIri(OntologyConstants.KnoraBase.MatchFunctionIri) =>
-
-                            // two arguments are expected: the first is expected to be a variable representing a string value,
-                            // the second is expected to be a string literal
-
-                            if (functionCall.args.size != 2) throw SparqlSearchException(s"Two arguments are expected for ${functionCall.functionIri}")
-
-                            // a QueryVariable expected to represent a text value
-                            val textValueVar: QueryVariable = functionCall.getArgAsQueryVar(pos = 0)
-
-                            // make a key to look up information in type inspection results
-                            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(textValueVar)
-
-                            // get information about the queryVar's type
-                            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
-
-                                // get type information for regexFunction.textValueVar
-                                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
-
-                                typeInfo match {
-
-                                    case nonPropInfo: NonPropertyTypeInfo =>
-
-                                        nonPropInfo.typeIri.toString match {
-
-                                            case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
-
-                                            case _ => throw SparqlSearchException(s"$textValueVar is expected to be of type xsd:string")
-                                        }
-
-                                    case _ => throw SparqlSearchException(s"$textValueVar} is expected to be of type NonPropertyTypeInfo")
-                                }
-
-                            } else {
-                                throw SparqlSearchException(s"type information about $textValueVar is missing")
-                            }
-
-                            // create a variable representing the string literal
-                            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(textValueVar, OntologyConstants.KnoraBase.ValueHasString)
-
-                            // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                            valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
-
-                            val searchTerm: XsdLiteral = functionCall.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
-
-                            // combine search terms with a logical AND (Lucene syntax)
-                            val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTerm.value)
-
-                            TransformedFilterPattern(
-                                None, // FILTER has been replaced by statements
-                                Seq(
-                                    // connects the value object with the value literal
-                                    StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString),
-                                    StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
-                                )
-                            )
-
-                        case _ => throw NotImplementedException(s"KnarQL function ${functionCall.functionIri} not implemented")
-                    }
+                    handleKnoraFunctionCall(functionCallExpression = functionCall, typeInspectionResult)
 
                 case other => throw NotImplementedException(s"$other not supported as FilterExpression")
             }
