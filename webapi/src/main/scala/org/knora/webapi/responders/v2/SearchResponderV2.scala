@@ -876,7 +876,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * Handles the use of the SPARQL lang function in a [[FilterPattern]].
           *
-          * @param langFunctionCall  zhe lang function call to be handled.
+          * @param langFunctionCall  the lang function call to be handled.
           * @param compareExpression the filter pattern's compare expression.
           * @param typeInspection the type inspection results.
           * @return a [[TransformedFilterPattern]].
@@ -927,6 +927,60 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 Seq(
                     // connects the value object with the value literal
                     StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                )
+            )
+
+        }
+
+        /**
+          * Handles the use of the SPARQL regex function in a [[FilterPattern]].
+          *
+          * @param regexFunctionCall the regex function call to be handled.
+          * @param typeInspection the type inspection results.
+          * @return a [[TransformedFilterPattern]].
+          */
+        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+
+            // make sure that the query variable (first argument of regex function) represents a text value
+
+            // make a key to look up information in type inspection results
+            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(regexFunctionCall.textValueVar)
+
+            // get information about the queryVar's type
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                // get type information for regexFunction.textValueVar
+                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                typeInfo match {
+
+                    case nonPropInfo: NonPropertyTypeInfo =>
+
+                        nonPropInfo.typeIri.toString match {
+
+                            case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
+
+                            case _ => throw SparqlSearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
+                        }
+
+                    case _ => throw SparqlSearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                }
+
+            } else {
+                throw SparqlSearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
+            }
+
+            // create a variable representing the string literal
+            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(regexFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+
+            // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+            valueVariablesCreatedInFilters.put(regexFunctionCall.textValueVar, textValHasString)
+
+            TransformedFilterPattern(
+                Some(RegexFunction(textValHasString, regexFunctionCall.pattern, regexFunctionCall.modifier)),
+                Seq(
+                    // connects the value object with the value literal
+                    StatementPattern.makeExplicit(subj = regexFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
                 )
             )
 
@@ -985,48 +1039,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case regexFunction: RegexFunction =>
 
-                    // make sure that the query variable (first argument of regex function) represents a text value
-
-                    // make a key to look up information in type inspection results
-                    val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(regexFunction.textValueVar)
-
-                    // get information about the queryVar's type
-                    if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
-
-                        // get type information for regexFunction.textValueVar
-                        val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
-
-                        typeInfo match {
-
-                            case nonPropInfo: NonPropertyTypeInfo =>
-
-                                nonPropInfo.typeIri.toString match {
-
-                                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
-
-                                    case _ => throw SparqlSearchException(s"${regexFunction.textValueVar} is expected to be of type xsd:string")
-                                }
-
-                            case _ => throw SparqlSearchException(s"${regexFunction.textValueVar} is expected to be of type NonPropertyTypeInfo")
-                        }
-
-                    } else {
-                        throw SparqlSearchException(s"type information about ${regexFunction.textValueVar} is missing")
-                    }
-
-                    // create a variable representing the string literal
-                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(regexFunction.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
-
-                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                    valueVariablesCreatedInFilters.put(regexFunction.textValueVar, textValHasString)
-
-                    TransformedFilterPattern(
-                        Some(RegexFunction(textValHasString, regexFunction.pattern, regexFunction.modifier)),
-                        Seq(
-                            // connects the value object with the value literal
-                            StatementPattern.makeExplicit(subj = regexFunction.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
-                        )
-                    )
+                    handleRegexFunctionCall(regexFunction, typeInspectionResult)
 
                 case functionCall: FunctionCallExpression =>
 
