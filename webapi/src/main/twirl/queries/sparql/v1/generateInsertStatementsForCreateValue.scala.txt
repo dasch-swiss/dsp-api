@@ -60,8 +60,10 @@
         @value match {
 
             case textValueSimple: TextValueSimpleV1 => {
-               # knora-base:valueHasString  @textValueSimple.language.map(lang => "\"" + value.toString + "\""+ "@" + lang).getOrElse("\"" + value.toString + "\"") .
-                <@newValueIri> knora-base:valueHasLanguage """@textValueSimple.language.toString""" .
+
+               @if(!textValueSimple.language.isEmpty) {
+                    <@newValueIri> knora-base:valueHasLanguage """@textValueSimple.language.get""" .
+                }
             }
 
             case textValueWithStandoff: TextValueWithStandoffV1 => {
@@ -71,7 +73,7 @@
 
                 <@newValueIri> knora-base:valueHasMapping <@textValueWithStandoff.mappingIri> .
                 @if(!textValueWithStandoff.language.isEmpty) {
-                    <@newValueIri> knora-base:valueHasLanguage """@textValueWithStandoff.language.toString""" .
+                    <@newValueIri> knora-base:valueHasLanguage """@textValueWithStandoff.language.get""" .
                 }
                 @for((createStandoff, standoffNodeIndex) <- textValueWithStandoff.prepareForSparqlInsert(newValueIri).zipWithIndex) {
 

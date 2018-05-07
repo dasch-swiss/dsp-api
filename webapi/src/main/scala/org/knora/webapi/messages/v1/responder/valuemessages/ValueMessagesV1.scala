@@ -659,14 +659,15 @@ case class TextValueWithStandoffV1(utf8str: String,
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue = {
-
         // TODO: depending on the given mapping, decide how serialize the text with standoff markup
 
         val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, standoff, mapping)
-
+        val textLang = language.map(l => "f***" + l).getOrElse("None")
+        print(textLang)
         JsObject(
             "xml" -> JsString(xml),
-            "mapping_id" -> JsString(mappingIri)
+            "mapping_id" -> JsString(mappingIri),
+            "language" -> JsString(textLang),
         )
     }
 
@@ -755,7 +756,7 @@ case class TextValueWithStandoffV1(utf8str: String,
         }
     }
 
-    override def toString = utf8str
+    override def toString =utf8str
 
     /**
       * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
@@ -790,8 +791,12 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String]= None) ex
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue = {
+        val textLang = language.map(l => "f***" + l).getOrElse("None")
+        print(textLang)
         JsObject(
-            "utf8str" -> JsString(utf8str)
+            "utf8str" -> JsString(utf8str),
+            "language" -> JsString(textLang)
+
         )
     }
 
@@ -811,6 +816,7 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String]= None) ex
     }
 
     override def toString = utf8str
+
 
     /**
       * It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
