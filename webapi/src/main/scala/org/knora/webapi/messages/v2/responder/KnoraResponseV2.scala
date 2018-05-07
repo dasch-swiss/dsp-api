@@ -177,12 +177,13 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
     def internalValueTypeIri: IRI = OntologyConstants.KnoraBase.TextValue
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
-
         // TODO: check targetSchema and return JSON-LD accordingly.
+        val stringWithLang = valueHasLanguage
+            .map(l => valueHasString + "@" + l)
+            .getOrElse(valueHasString)
 
         val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
-
-            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
+            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(stringWithLang, standoff.get.standoff, standoff.get.mapping)
 
             // check if there is an XSL transformation
             if (standoff.get.XSLT.nonEmpty) {
@@ -214,17 +215,12 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
                 // xml is returned
                 Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri),
-                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(valueHasLanguage.getOrElse(""))
+                    OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri)
                 )
             }
-
         } else {
             // no markup given
-            Map(
-                OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
-                OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(valueHasLanguage.getOrElse(""))
-            )
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(stringWithLang))
         }
 
         JsonLDObject(objectMap)

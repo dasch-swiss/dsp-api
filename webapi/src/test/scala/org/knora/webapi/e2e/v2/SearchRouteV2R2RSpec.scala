@@ -1802,7 +1802,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?text a xsd:string .
                   |
-                  |     FILTER(lang(?text) = "de")
+                  |     FILTER(lang(?text) = "fr")
                   |}
                 """.stripMargin
 
