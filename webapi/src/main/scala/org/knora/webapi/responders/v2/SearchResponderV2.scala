@@ -760,6 +760,119 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
+          * Handles a [[FilterPattern]] containing a query variable.
+          *
+          * @param queryVar the query variable.
+          * @param compareExpression the filter pattern's compare expression.
+          * @param typeInspection the type inspection results.
+          * @return a [[TransformedFilterPattern]].
+          */
+        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+
+            // make a key to look up information in type inspection results
+            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(queryVar)
+
+            // get information about the queryVar's type
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+
+                // get type information for queryVar
+                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+
+                // check if queryVar represents a property or a value
+                typeInfo match {
+
+                    case propInfo: PropertyTypeInfo =>
+
+                        // left arg queryVar is a variable representing a property
+                        // therefore the right argument must be an Iri restricting the property variable to a certain property
+                        compareExpression.rightArg match {
+                            case iriRef: IriRef =>
+
+                                handlePropertyIriQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    iriRef = iriRef,
+                                    propInfo = propInfo
+                                )
+
+                            case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
+                        }
+
+                    case nonPropInfo: NonPropertyTypeInfo =>
+
+                        // depending on the value type, transform the given Filter pattern.
+                        // add an extra level by getting the value literal from the value object.
+                        // queryVar refers to the value object, for the value literal an extra variable has to be created, taking its type into account.
+                        nonPropInfo.typeIri.toString match {
+
+                            case OntologyConstants.Xsd.Integer =>
+
+                                handleLiteralQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    literalValueExpression = compareExpression.rightArg,
+                                    xsdType = Set(OntologyConstants.Xsd.Integer),
+                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger
+                                )
+
+                            case OntologyConstants.Xsd.Decimal =>
+
+                                handleLiteralQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    literalValueExpression = compareExpression.rightArg,
+                                    xsdType = Set(OntologyConstants.Xsd.Decimal, OntologyConstants.Xsd.Integer), // an integer literal is also valid
+                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
+                                )
+
+                            case OntologyConstants.Xsd.Boolean =>
+
+                                handleLiteralQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    literalValueExpression = compareExpression.rightArg,
+                                    xsdType = Set(OntologyConstants.Xsd.Boolean),
+                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasBoolean,
+                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                )
+
+                            case OntologyConstants.Xsd.String =>
+
+                                handleLiteralQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    literalValueExpression = compareExpression.rightArg,
+                                    xsdType = Set(OntologyConstants.Xsd.String),
+                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasString,
+                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                )
+
+                            case OntologyConstants.Xsd.Uri =>
+
+                                handleLiteralQueryVar(
+                                    queryVar = queryVar,
+                                    comparisonOperator = compareExpression.operator,
+                                    literalValueExpression = compareExpression.rightArg,
+                                    xsdType = Set(OntologyConstants.Xsd.Uri),
+                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasUri,
+                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                )
+
+                            case OntologyConstants.KnoraApiV2Simple.Date =>
+
+                                handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
+
+                            case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
+
+                        }
+                }
+
+            } else {
+                throw SparqlSearchException(s"type information about $queryVar is missing")
+            }
+        }
+
+        /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
           *
           * @param filterExpression the Filter expression to be transformed.
@@ -777,108 +890,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case queryVar: QueryVariable =>
 
-                            // make a key to look up information in type inspection results
-                            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(queryVar)
-
-                            // get information about the queryVar's type
-                            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
-
-                                // get type information for queryVar
-                                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
-
-                                // check if queryVar represents a property or a value
-                                typeInfo match {
-
-                                    case propInfo: PropertyTypeInfo =>
-
-                                        // left arg queryVar is a variable representing a property
-                                        // therefore the right argument must be an Iri restricting the property variable to a certain property
-                                        filterCompare.rightArg match {
-                                            case iriRef: IriRef =>
-
-                                                handlePropertyIriQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    iriRef = iriRef,
-                                                    propInfo = propInfo
-                                                )
-
-                                            case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
-                                        }
-
-                                    case nonPropInfo: NonPropertyTypeInfo =>
-
-                                        // depending on the value type, transform the given Filter expression.
-                                        // add an extra level by getting the value literal from the value object.
-                                        // queryVar refers to the value object, for the value literal an extra variable has to be created, taking its type into account.
-                                        nonPropInfo.typeIri.toString match {
-
-                                            case OntologyConstants.Xsd.Integer =>
-
-                                                handleLiteralQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    literalValueExpression = filterCompare.rightArg,
-                                                    xsdType = Set(OntologyConstants.Xsd.Integer),
-                                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger
-                                                )
-
-                                            case OntologyConstants.Xsd.Decimal =>
-
-                                                handleLiteralQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    literalValueExpression = filterCompare.rightArg,
-                                                    xsdType = Set(OntologyConstants.Xsd.Decimal, OntologyConstants.Xsd.Integer), // an integer literal is also valid
-                                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
-                                                )
-
-                                            case OntologyConstants.Xsd.Boolean =>
-
-                                                handleLiteralQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    literalValueExpression = filterCompare.rightArg,
-                                                    xsdType = Set(OntologyConstants.Xsd.Boolean),
-                                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasBoolean,
-                                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                                )
-
-                                            case OntologyConstants.Xsd.String =>
-
-                                                handleLiteralQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    literalValueExpression = filterCompare.rightArg,
-                                                    xsdType = Set(OntologyConstants.Xsd.String),
-                                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasString,
-                                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                                )
-
-                                            case OntologyConstants.Xsd.Uri =>
-
-                                                handleLiteralQueryVar(
-                                                    queryVar = queryVar,
-                                                    comparisonOperator = filterCompare.operator,
-                                                    literalValueExpression = filterCompare.rightArg,
-                                                    xsdType = Set(OntologyConstants.Xsd.Uri),
-                                                    valueHasProperty = OntologyConstants.KnoraBase.ValueHasUri,
-                                                    validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                                )
-
-                                            case OntologyConstants.KnoraApiV2Simple.Date =>
-
-                                                handleDateQueryVar(queryVar = queryVar, comparisonOperator = filterCompare.operator, dateValueExpression = filterCompare.rightArg)
-
-                                            case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
-
-                                        }
-
-                                }
-                                
-                            } else {
-                                throw SparqlSearchException(s"type information about $queryVar is missing")
-                            }
+                            handleQueryVar(queryVar = queryVar, compareExpression = filterCompare, typeInspection = typeInspection)
 
                         case lang: LangFunction =>
 
