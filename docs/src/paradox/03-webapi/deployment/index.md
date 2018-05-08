@@ -18,3 +18,11 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Deployment
+
+@@toc { depth=1 }
+
+@@@ index
+
+- [Getting Started with the Knora API Server](webapi-getting-started.md)
+
+@@@

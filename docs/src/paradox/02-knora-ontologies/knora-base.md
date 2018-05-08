@@ -113,7 +113,7 @@ specify the types that its subjects and objects must belong to (see
 
 Each project-specific resource class definition must use OWL cardinality
 restrictions to specify the properties that resources of that class can
-have (see @ref:[OWL Cardinalities](#owl-cardinalities)) for details).
+have (see @ref:[OWL Cardinalities](#owl-cardinalities) for details).
 
 Resources are not versioned; only their values are versioned (see
 @ref:[Values](#values)).
