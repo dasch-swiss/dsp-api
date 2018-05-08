@@ -126,7 +126,18 @@ class SearchParserV2Spec extends CoreSpec() {
 
         "parse an extended search query with a FILTER containing a regex function" in {
             val parsed = SearchParserV2.parseSearchQuery(queryWithFilterContainingRegex)
-            parsed should ===(ParsedqueryWithFilterContainingRegex)
+            parsed should ===(ParsedQueryWithFilterContainingRegex)
+        }
+
+        "accept a custom 'match' function in a FILTER" in {
+            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMatchFunction)
+            parsed should ===(ParsedQueryWithMatchFunction)
+        }
+
+        "parse an extended search query with a FILTER containing a lang function" in {
+            val parsed = SearchParserV2.parseSearchQuery(QueryWithFilterContainingLang)
+
+            parsed should ===(ParsedQueryWithLangFunction)
         }
     }
 
@@ -907,13 +918,13 @@ class SearchParserV2Spec extends CoreSpec() {
           |     }
         """.stripMargin
 
-    val ParsedqueryWithFilterContainingRegex = ConstructQuery(
+    val ParsedQueryWithFilterContainingRegex = ConstructQuery(
         ConstructClause(
             statements = Vector(
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,None),
-                    obj = XsdLiteral("true","http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+                    obj = XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
                 ),
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
@@ -926,8 +937,8 @@ class SearchParserV2Spec extends CoreSpec() {
             patterns = Vector(
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
-                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,None),None),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None), None),
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
                     pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
@@ -945,22 +956,151 @@ class SearchParserV2Spec extends CoreSpec() {
                 ),
                 StatementPattern(
                     subj = QueryVariable("propVal0"),
-                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
-                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None)
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
                 ),
-                FilterPattern(RegexFunction(QueryVariable("propVal0"),"Zeit","i"))
+                FilterPattern(RegexFunction(QueryVariable("propVal0"), "Zeit", "i"))
             ),
             positiveEntities = Set(
+
                 IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,None),
                 IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri,None),
                 IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,None),
                 IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,None),
                 IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None),
                 IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,None),
+
                 QueryVariable("propVal0"),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
                 QueryVariable("mainRes")
             )
         )
     )
+
+    val QueryWithMatchFunction: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?resource a anything:Thing .
+          |} WHERE {
+          |    ?resource a anything:Thing .
+          |    ?resource anything:hasText ?text .
+          |    FILTER(knora-api:match(?text, "foo"))
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithMatchFunction: ConstructQuery = ConstructQuery(
+        orderBy = Nil,
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    subj = QueryVariable(variableName = "resource")
+                ),
+                StatementPattern(
+                    obj = QueryVariable(variableName = "text"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri),
+                    subj = QueryVariable(variableName = "resource")
+                ),
+                FilterPattern(expression = FunctionCallExpression(
+                    functionIri = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#match".toSmartIri),
+                    args = Seq(QueryVariable(variableName = "text"), XsdLiteral(value = "foo", datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri))
+                ))
+            ),
+            positiveEntities = Set(
+                QueryVariable("resource"),
+                QueryVariable("text"),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
+            )
+        ),
+        constructClause = ConstructClause(statements = Vector(StatementPattern(
+            obj = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
+            pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+            subj = QueryVariable(variableName = "resource")
+        )))
+    )
+
+    val QueryWithFilterContainingLang: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?resource a anything:Thing .
+          |} WHERE {
+          |    ?resource a anything:Thing .
+          |    ?resource anything:hasText ?text .
+          |    FILTER(lang(?text) = "en")
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithLangFunction = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(StatementPattern(
+            subj = QueryVariable(variableName = "resource"),
+            pred = IriRef(
+                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                propertyPathOperator = None
+            ),
+            obj = IriRef(
+                iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                propertyPathOperator = None
+            ),
+            namedGraph = None
+        ))),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "resource"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "resource"),
+                    pred = IriRef(
+                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = QueryVariable(variableName = "text"),
+                    namedGraph = None
+                ),
+                FilterPattern(expression = CompareExpression(
+                    leftArg = LangFunction(textValueVar = QueryVariable(variableName = "text")),
+                    operator = CompareExpressionOperator.EQUALS,
+                    rightArg = XsdLiteral(
+                        value = "en",
+                        datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                    )
+                ))
+            ),
+            positiveEntities = Set(
+                IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                QueryVariable(variableName = "text"),
+                QueryVariable(variableName = "resource")
+            )
+        )
+    )
+
 }
