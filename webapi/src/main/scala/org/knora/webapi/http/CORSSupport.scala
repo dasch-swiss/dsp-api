@@ -33,15 +33,16 @@ import scala.collection.immutable.Seq
 
 object CORSSupport extends Directives {
 
-    val corsSettings = CorsSettings.Default(
-        allowGenericHttpRequests = true,
-        allowCredentials = true,
-        allowedOrigins = HttpOriginRange.*,
-        allowedHeaders = HttpHeaderRange.*,
-        allowedMethods = Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS),
-        exposedHeaders = Seq.empty,
-        maxAge = Some(30 * 60)
-    )
+    val age: Long = 30 * 60
+
+    val corsSettings = CorsSettings.defaultSettings.
+            withAllowGenericHttpRequests(true).
+            withAllowCredentials(true).
+            withAllowedOrigins(HttpOriginRange.*).
+            withAllowedHeaders(HttpHeaderRange.*).
+            withAllowedMethods(Seq(GET, PUT, POST, DELETE, HEAD, OPTIONS)).
+            withExposedHeaders(Seq.empty).
+            withMaxAge(Some(age))
 
     /**
       * Adds CORS support to a route. Also, any exceptions thrown inside the route are handled by

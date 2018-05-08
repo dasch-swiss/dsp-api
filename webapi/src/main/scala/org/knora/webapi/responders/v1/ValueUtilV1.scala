@@ -340,9 +340,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * {{{
       * prop                obj                                                     objPred                            objObj
       * ---------------------------------------------------------------------------------------------------------------------------------------------------
-      * incunabula:pagenum       http://data.knora.org/8a0b1e75/values/61cb927602        knora-base:valueHasString          a1r, Titelblatt
-      * incunabula:pagenum       http://data.knora.org/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:KnownUser
-      * incunabula:pagenum       http://data.knora.org/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:UnknownUser
+      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:valueHasString          a1r, Titelblatt
+      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:KnownUser
+      * incunabula:pagenum       http://rdfh.ch/8a0b1e75/values/61cb927602        knora-base:hasViewPermission       knora-base:UnknownUser
       * }}}
       *
       * The result will be a [[GroupedProperties]] containing a [[ValueProps]] with two keys, `valueHasString` and `hasPermission`.
@@ -629,7 +629,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     }
 
     /** Creates an attribute segment for the Salsah GUI from the given resource class.
-      * Example: if "http://www.knora.org/ontology/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/incunabula#book".
+      * Example: if "http://www.knora.org/ontology/0803/incunabula#book" is given, the function returns "restypeid=http://www.knora.org/ontology/0803/incunabula#book".
       *
       * @param resourceClass the resource class.
       * @return an attribute string to be included in the attributes for the GUI

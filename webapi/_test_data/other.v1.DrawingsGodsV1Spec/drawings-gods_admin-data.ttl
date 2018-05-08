@@ -15,7 +15,6 @@
         knora-base:projectShortcode "0105"^^xsd:string ;
         knora-base:projectDescription """Sur la base d’une collecte de plusieurs centaines de dessins dans diverses régions du monde, notamment au Brésil, en Iran, au Japon, aux Pays-Bas, en Roumanie, en Russie et en Suisse, ce projet prévoit d’étudier l’évolution de la représentation de Dieu ou d’autres êtres surnaturels (dieux, esprits, génies, etc) chez des enfants et des adolescents entre 5 et 18 ans. Il s’intéressera tout spécialement aux stratégies mises en place par les enfants : recours à des représentations religieuses traditionnelles, à des images d’êtres surnaturels véhiculées par des films d’animation ou des bandes dessinées. Au terme du projet, l’objectif est d’avoir pu décrire les stratégies principales utilisées les enfants en ayant pu mettre en évidence comment le choix d’une stratégie plutôt qu’une autre est influencé par l’âge, le sexe, l’éducation religieuse et l’environnement culturel de l’enfant."""^^xsd:string ;
         knora-base:projectKeywords "supernatural agents, cross-cultural, digital humanities, drawings, child development, interdisciplinarity, database"^^xsd:string ;
-		    knora-base:projectOntology <http://www.knora.org/ontology/0105/drawings-gods> ;
         knora-base:status "true"^^xsd:boolean ;
         knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 

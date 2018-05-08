@@ -244,26 +244,6 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
-    private val ProjectIri: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.ProjectIri,
-        propertyType = OntologyConstants.Owl.DatatypeProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "project IRI"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Represents the IRI of a Knora project"
-                )
-            )
-        ),
-        objectType = Some(OntologyConstants.Xsd.Uri)
-    )
-
     private val MappingHasName: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1397,7 +1377,6 @@ object KnoraApiV2WithValueObjects {
             IsLinkValueProperty,
             IsInherited,
             OntologyName,
-            ProjectIri,
             MappingHasName,
             ValueAsString,
             HasIncomingLink,

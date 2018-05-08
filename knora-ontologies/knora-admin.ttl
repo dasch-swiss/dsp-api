@@ -41,7 +41,9 @@
 
                    rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                   rdfs:comment "Connects a Resource or a ListNode (only the root node) to a project"@en ;
+                   rdfs:label "attached to project"@en ;
+
+                   rdfs:comment "Connects something to a project"@en ;
 
                    :objectClassConstraint :knoraProject .
 
@@ -53,7 +55,9 @@
 
                 rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-                rdfs:comment "Connects a Resource or a Value to a user"@en ;
+                rdfs:label "attached to user"@en ;
+
+                rdfs:comment "Connects something to a user"@en ;
 
                 :objectClassConstraint :User .
 
@@ -218,8 +222,6 @@
 
              rdfs:comment "A description of a user group"@en ;
 
-             rdfs:subPropertyOf :description ;
-
              :subjectClassConstraint :UserGroup ;
 
              :objectDatatypeConstraint xsd:string .
@@ -262,9 +264,7 @@
 
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
-            rdfs:comment "A description of a user group"@en ;
-
-            rdfs:subPropertyOf :description ;
+            rdfs:comment "A description of an institution"@en ;
 
             :subjectClassConstraint :Institution ;
 
@@ -324,7 +324,7 @@
 
           rdfs:comment "An encrypted credential for access"@en ;
 
-          :subjectClassConstraint foaf:Person ;
+          :subjectClassConstraint :User ;
 
           :objectDatatypeConstraint xsd:string .
 
@@ -361,8 +361,6 @@
             rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
             rdfs:comment "A description of a Knora project"@en ;
-
-            rdfs:subPropertyOf :description ;
 
             :subjectClassConstraint :knoraProject ;
 
@@ -455,8 +453,6 @@
         rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
         rdfs:comment "The email address and login name of a user of Knora"@en ;
-
-        :subjectClassConstraint :User ;
 
         :objectDatatypeConstraint xsd:string .
 
@@ -600,7 +596,7 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortcode ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:cardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;

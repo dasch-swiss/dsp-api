@@ -24,10 +24,10 @@ let addIntervalValueRequest: addValueFormats.addIntervalValueRequest = {"interva
 
 let addIntervalValueResponse: addValueFormats.addValueResponse = {"id":"http://data.knora.org/a-thing/values/7iX8sKUGQMiInDP9PF_bOw","status":0,"comment":null,"rights":8,"value":{"timeval1":0,"timeval2":0}};
 
-let addSimpletextValueRequest: addValueFormats.addRichtextValueRequest = {"richtext_value":{"utf8str":"test"},"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology/anything#hasText","project_id":"http://data.knora.org/projects/anything"};
+let addSimpletextValueRequest: addValueFormats.addRichtextValueRequest = {"richtext_value":{"utf8str":"test"},"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology/0001/anything#hasText","project_id":"http://data.knora.org/projects/anything"};
 
 let addSimpletextValueResponse: addValueFormats.addValueResponse = {"id":"http://data.knora.org/a-thing/values/lfwoLx9LT7-JnA_wKjeZYg","status":0,"comment":null,"rights":8,"value":{"utf8str":"test"}};
 
-let addRichtextValueRequest: addValueFormats.addRichtextValueRequest = {"richtext_value":{"xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><strong>Test</strong><br/>text</text>", "mapping_id": "http://rdfh.ch/standoff/mappings/StandardMapping"},"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology/anything#hasText","project_id":"http://data.knora.org/projects/anything"};
+let addRichtextValueRequest: addValueFormats.addRichtextValueRequest = {"richtext_value":{"xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><strong>Test</strong><br/>text</text>", "mapping_id": "http://rdfh.ch/standoff/mappings/StandardMapping"},"res_id":"http://data.knora.org/a-thing","prop":"http://www.knora.org/ontology/0001/anything#hasText","project_id":"http://data.knora.org/projects/anything"};
 
 let addRichtextValueResponse: addValueFormats.addValueResponse = {"id":"http://data.knora.org/a-thing/values/lfwoLx9LT7-JnA_wKjeZYg","status":0,"comment":null,"rights":8,"value":{"xml":"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><strong>Test</strong><br/>text</text>", "mapping_id": "http://rdfh.ch/standoff/mappings/StandardMapping"}};

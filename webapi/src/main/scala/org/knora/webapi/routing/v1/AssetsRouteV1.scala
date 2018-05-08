@@ -53,8 +53,8 @@ object AssetsRouteV1 extends Authenticator {
                             case _ => (16, 16, assetId)
                         }
 
-                        val dummyImage = if (text.contains("http://data.knora.org/0a077e5a93bf".toCharArray)) {
-                            //calling this should get me here: http://localhost:3333/v1/assets/http%3A%2F%2Fdata.knora.org%2F0a077e5a93bf
+                        val dummyImage = if (text.contains("http://rdfh.ch/0a077e5a93bf".toCharArray)) {
+                            //calling this should get me here: http://localhost:3333/v1/assets/http%3A%2F%2Frdfh.ch%2F0a077e5a93bf
                             val tmpImage = ImageIO.read(new File("_assets/4KUN_7_000169.png"))
                             tmpImage
                         } else {

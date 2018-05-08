@@ -69,11 +69,9 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     private val password = "test"
 
     private val rdfDataObjects = List(
-
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
-
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 
     "Load test data" in {
@@ -100,7 +98,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
         "produce the expected JSONLD context object (on the server side)" in {
 
-            Get("/v2/resources/" + URLEncoder.encode("http://data.knora.org/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
+            Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

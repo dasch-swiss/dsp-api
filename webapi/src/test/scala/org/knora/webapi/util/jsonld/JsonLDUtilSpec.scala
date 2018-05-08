@@ -33,14 +33,14 @@ class JsonLDUtilSpec extends CoreSpec {
                 """
                   |{
                   |  "knora-api:hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |    "@type" : "owl:Ontology",
                   |    "knora-api:hasProperties" : {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
                   |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
                   |          "@value" : "The name of a Thing"
@@ -66,7 +66,7 @@ class JsonLDUtilSpec extends CoreSpec {
                   |    "owl" : "http://www.w3.org/2002/07/owl#",
                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/anything/v2#"
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
                   |  }
                   |}
                 """.stripMargin
@@ -75,14 +75,14 @@ class JsonLDUtilSpec extends CoreSpec {
                 """
                   |{
                   |  "http://api.knora.org/ontology/knora-api/v2#hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/anything/v2",
+                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |    "@type" : "http://www.w3.org/2002/07/owl#Ontology",
                   |    "http://api.knora.org/ontology/knora-api/v2#hasProperties" : {
-                  |      "http://0.0.0.0:3333/ontology/anything/v2#hasName" : {
-                  |        "@id" : "http://0.0.0.0:3333/ontology/anything/v2#hasName",
+                  |      "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName" : {
+                  |        "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                   |        "@type" : "http://www.w3.org/2002/07/owl#ObjectProperty",
                   |        "http://api.knora.org/ontology/knora-api/v2#objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                  |        "http://api.knora.org/ontology/knora-api/v2#subjectType" : "http://0.0.0.0:3333/ontology/anything/v2#Thing",
+                  |        "http://api.knora.org/ontology/knora-api/v2#subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
                   |        "http://www.w3.org/2000/01/rdf-schema#comment" : [ {
                   |          "@language" : "en",
                   |          "@value" : "The name of a Thing"
