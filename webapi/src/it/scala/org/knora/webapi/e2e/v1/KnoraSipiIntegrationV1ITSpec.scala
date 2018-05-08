@@ -410,7 +410,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
                     "label" -> JsString("XSLT"),
-                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/0001"),
                     "properties" -> JsObject()
                 )
             )
@@ -473,7 +473,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val paramsCreateLetterMappingFromXML =
                 s"""
                    |{
-                   |  "project_id": "http://rdfh.ch/projects/anything",
+                   |  "project_id": "http://rdfh.ch/projects/0001",
                    |  "label": "mapping for letters with XSLT",
                    |  "mappingName": "LetterMappingXSLT"
                    |}
