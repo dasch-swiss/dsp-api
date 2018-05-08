@@ -1813,7 +1813,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 // TODO: add some test data that have a language annotation and check for results
 
-                checkCountQuery(responseAs[String], 0)
+                checkCountSearchQuery(responseAs[String], 0)
 
             }
 
