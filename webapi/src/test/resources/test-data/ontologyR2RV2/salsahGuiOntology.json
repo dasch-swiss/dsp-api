@@ -88,8 +88,7 @@
       "salsah-gui:guiAttribute" : {
         "@id" : "salsah-gui:guiAttribute",
         "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string",
-        "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#ObjectProperty"
+        "knora-api:objectType" : "http://www.w3.org/2001/XMLSchema#string"
       },
       "salsah-gui:guiAttributeDefinition" : {
         "@id" : "salsah-gui:guiAttributeDefinition",
@@ -99,8 +98,7 @@
       },
       "salsah-gui:guiElement" : {
         "@id" : "salsah-gui:guiElement",
-        "@type" : "owl:ObjectProperty",
-        "knora-api:subjectType" : "http://www.w3.org/2002/07/owl#ObjectProperty"
+        "@type" : "owl:ObjectProperty"
       },
       "salsah-gui:guiOrder" : {
         "@id" : "salsah-gui:guiOrder",

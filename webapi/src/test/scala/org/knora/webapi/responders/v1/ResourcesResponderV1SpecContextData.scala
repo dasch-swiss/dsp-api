@@ -25,7 +25,7 @@ import akka.actor.ActorSystem
 import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.util.FileUtil
-import spray.json.JsonParser
+import spray.json.{JsValue, JsonParser}
 
 object ResourcesResponderV1SpecContextData {
 
@@ -47,7 +47,7 @@ object ResourcesResponderV1SpecContextData {
         settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"
     )
 
-    val expectedBookResourceContextResponse = JsonParser(expectedBookResourceContextResponseStr)
+    val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
     val expectedPageResourceContextResponse = ResourceContextResponseV1(
         resource_context = ResourceContextV1(
@@ -63,12 +63,12 @@ object ResourcesResponderV1SpecContextData {
                 restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
                 restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
                 restype_label = Some("Buch"),
-                restype_name = Some("http://www.knora.org/ontology/incunabula#book"),
-                restype_id = "http://www.knora.org/ontology/incunabula#book",
+                restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
+                restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
                 person_id = "http://rdfh.ch/users/91e19f1e01",
-                project_id = "http://rdfh.ch/projects/77275339"
+                project_id = "http://rdfh.ch/projects/0803"
             )),
-            parent_res_id = Some("http://data.knora.org/c5058f3a"),
+            parent_res_id = Some("http://rdfh.ch/c5058f3a"),
             resinfo = Some(ResourceInfoV1(
                 firstproperty = Some("a1r, Titelblatt"),
                 value_of = 0,
@@ -170,12 +170,12 @@ object ResourcesResponderV1SpecContextData {
                 restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
                 restype_label = Some("Seite"),
-                restype_name = Some("http://www.knora.org/ontology/incunabula#page"),
-                restype_id = "http://www.knora.org/ontology/incunabula#page",
+                restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
+                restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
                 person_id = "http://rdfh.ch/users/91e19f1e01",
-                project_id = "http://rdfh.ch/projects/77275339"
+                project_id = "http://rdfh.ch/projects/0803"
             )),
-            canonical_res_id = "http://data.knora.org/8a0b1e75",
+            canonical_res_id = "http://rdfh.ch/8a0b1e75",
             context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
             region = None,
             firstprop = None,

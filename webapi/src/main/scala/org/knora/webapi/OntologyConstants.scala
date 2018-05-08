@@ -77,6 +77,14 @@ object OntologyConstants {
         )
 
         val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
+
+        /**
+          * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+          */
+        val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
+            Class,
+            Restriction
+        )
     }
 
     object Xsd {
@@ -104,7 +112,7 @@ object OntologyConstants {
 
     object KnoraInternal {
         // The start and end of an internal Knora ontology IRI.
-        val InternalOntologyStart = "http://www.knora.org/ontology/"
+        val InternalOntologyStart = "http://www.knora.org/ontology"
     }
 
     /**
@@ -119,7 +127,7 @@ object OntologyConstants {
 
     object KnoraBase {
         val KnoraBaseOntologyLabel: String = "knora-base"
-        val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + KnoraBaseOntologyLabel
+        val KnoraBaseOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + KnoraBaseOntologyLabel
 
         val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
         val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
@@ -157,6 +165,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
         val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+        val MatchFunctionIri: IRI = KnoraBasePrefixExpansion + "match"
 
         val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"
@@ -483,7 +492,7 @@ object OntologyConstants {
 
     object Standoff {
         val StandoffOntologyLabel: String = "standoff"
-        val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + StandoffOntologyLabel
+        val StandoffOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + StandoffOntologyLabel
         val StandoffPrefixExpansion: IRI = StandoffOntologyIri + "#"
 
         val StandoffRootTag: IRI = StandoffPrefixExpansion + "StandoffRootTag"
@@ -510,7 +519,7 @@ object OntologyConstants {
 
     object SalsahGui {
         val SalsahGuiOntologyLabel: String = "salsah-gui"
-        val SalsahGuiOntologyIri: IRI = KnoraInternal.InternalOntologyStart + SalsahGuiOntologyLabel
+        val SalsahGuiOntologyIri: IRI = KnoraInternal.InternalOntologyStart + "/" + SalsahGuiOntologyLabel
         val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
         val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
@@ -560,7 +569,9 @@ object OntologyConstants {
     }
 
     object XPathFunctions {
-        val Contains = "http://www.w3.org/2005/xpath-functions#contains"
+        val XPathPrefixExpansion: IRI = "http://www.w3.org/2005/xpath-functions#"
+
+        val Contains: IRI = XPathPrefixExpansion + "contains"
     }
 
     object KnoraXmlImportV1 {
@@ -615,7 +626,6 @@ object OntologyConstants {
         val IsValueClass: IRI = KnoraApiV2PrefixExpansion + "isValueClass"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
         val OntologyName: IRI = KnoraApiV2PrefixExpansion + "ontologyName"
-        val ProjectIri: IRI = KnoraApiV2PrefixExpansion + "projectIri"
 
         val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
         val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
@@ -749,7 +759,6 @@ object OntologyConstants {
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
-        // TODO: Add this to the ontology in the complex schema
         val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
 
     }

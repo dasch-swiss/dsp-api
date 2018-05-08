@@ -48,11 +48,11 @@ object PerformanceFakeTriplestoreSpec {
                         }
                         {
                             path = "_test_data/ontologies/incunabula-onto.ttl"
-                            name = "http://www.knora.org/ontology/incunabula"
+                            name = "http://www.knora.org/ontology/0803/incunabula"
                         }
                         {
                             path = "_test_data/ontologies/dokubib-onto.ttl"
-                            name = "http://www.knora.org/ontology/dokubib"
+                            name = "http://www.knora.org/ontology/0804/dokubib"
                         }
                     ]
             }

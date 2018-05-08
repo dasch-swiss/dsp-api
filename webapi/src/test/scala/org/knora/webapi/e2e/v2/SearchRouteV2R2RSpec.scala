@@ -70,10 +70,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val password = "test"
 
     private val rdfDataObjects = List(
-
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
 
     )
 
@@ -132,7 +131,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -170,7 +169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -207,7 +206,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -243,7 +242,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -281,7 +280,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -323,13 +322,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -337,10 +336,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -369,13 +368,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -383,10 +382,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -413,7 +412,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -425,10 +424,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -458,13 +457,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -472,10 +471,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -503,13 +502,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the pages of a book and return them ordered by their seqnum" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -517,10 +516,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -546,13 +545,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "perform an extended search for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
 
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -560,10 +559,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://data.knora.org/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/b6b5ff1eb703> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -590,7 +589,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -630,7 +629,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -677,7 +676,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -726,7 +725,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -775,7 +774,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -823,7 +822,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -871,7 +870,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -919,7 +918,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -967,7 +966,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
             val sparqlSimplified =
-                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -1015,7 +1014,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "get the regions belonging to a page" in {
             val sparqlSimplified =
-                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |    CONSTRUCT {
@@ -1023,7 +1022,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?region a knora-api:Region .
                   |
-                  |        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |
@@ -1035,10 +1034,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?region a knora-api:Region .
                   |        ?region a knora-api:Resource .
                   |
-                  |        ?region knora-api:isRegionOf <http://data.knora.org/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
                   |        knora-api:isRegionOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://data.knora.org/9d626dc76c03> a knora-api:Resource .
+                  |        <http://rdfh.ch/9d626dc76c03> a knora-api:Resource .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |        knora-api:hasGeometry knora-api:objectType knora-api:Geom .
@@ -1077,7 +1076,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             val sparqlSimplified =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-            PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 
             CONSTRUCT {
 
@@ -1085,11 +1084,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?book incunabula:title ?title .
 
-                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
 
-                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
 
             } WHERE {
 
@@ -1101,17 +1100,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?title a xsd:string .
 
-                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
                 knora-api:isPartOf knora-api:objectType knora-api:Resource .
 
-                <http://data.knora.org/50e7460a7203> a knora-api:Resource .
+                <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
 
-                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
                 knora-api:seqnum knora-api:objectType xsd:integer .
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
                 knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
                 ?file a knora-api:File .
@@ -1136,7 +1135,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             val sparqlSimplified =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-            PREFIX incunabula: <http://0.0.0.0:3333/ontology/incunabula/simple/v2#>
+            PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 
             CONSTRUCT {
 
@@ -1144,7 +1143,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?book incunabula:title ?title .
 
-                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
 
             } WHERE {
 
@@ -1156,17 +1155,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 ?title a xsd:string .
 
-                <http://data.knora.org/50e7460a7203> knora-api:isPartOf ?book .
+                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
                 knora-api:isPartOf knora-api:objectType knora-api:Resource .
 
-                <http://data.knora.org/50e7460a7203> a knora-api:Resource .
+                <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
 
-                <http://data.knora.org/50e7460a7203> knora-api:seqnum ?seqnum .
+                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
                 knora-api:seqnum knora-api:objectType xsd:integer .
 
                 ?seqnum a xsd:integer .
 
-                <http://data.knora.org/50e7460a7203> knora-api:hasStillImageFile ?file .
+                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
                 knora-api:hasStillImageFile knora-api:objectType knora-api:File .
 
                 ?file a knora-api:File .
@@ -1196,15 +1195,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?incomingRes knora-api:isMainResource true .
                   |
-                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/8be1b7cf7103> .
                   |
                   |} WHERE {
                   |
                   |     ?incomingRes a knora-api:Resource .
                   |
-                  |     ?incomingRes ?incomingProp <http://data.knora.org/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/8be1b7cf7103> .
                   |
-                  |     <http://data.knora.org/8be1b7cf7103> a knora-api:Resource .
+                  |     <http://rdfh.ch/8be1b7cf7103> a knora-api:Resource .
                   |
                   |     ?incomingProp knora-api:objectType knora-api:Resource .
                   |
@@ -1212,11 +1211,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes  knora-api:isRegionOf <http://data.knora.org/8be1b7cf7103> .
+                  |         ?incomingRes  knora-api:isRegionOf <http://rdfh.ch/8be1b7cf7103> .
                   |     }
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes  knora-api:isPartOf <http://data.knora.org/8be1b7cf7103> .
+                  |         ?incomingRes  knora-api:isPartOf <http://rdfh.ch/8be1b7cf7103> .
                   |     }
                   |
                   |} OFFSET 0
@@ -1238,7 +1237,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value of 2.1" ignore { // literals are not supported
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1273,7 +1272,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value of 2.1 2" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1315,7 +1314,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value bigger than 2.0" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1357,7 +1356,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a decimal value smaller than 3.0" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1399,7 +1398,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1434,7 +1433,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "search for an anything:Thing that has a Boolean value that is true 2" in {
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1478,7 +1477,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             // set OFFSET to 1 to get "Testding for extended search"
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1525,7 +1524,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             val sparqlSimplified =
                 """
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
                   |CONSTRUCT {
@@ -1585,17 +1584,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes knora-api:isMainResource true .
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
                   |
                   |     } WHERE {
                   |
                   |        ?mainRes a knora-api:Resource .
                   |
-                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
                   |
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
-                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
                   |        FILTER regex(?propVal0, "Zeit", "i")
@@ -1618,7 +1617,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
             val sparqlSimplified =
                 """
@@ -1627,19 +1626,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes knora-api:isMainResource true .
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
                   |
                   |     } WHERE {
                   |
                   |        ?mainRes a knora-api:Resource .
                   |
-                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
-                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER contains(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -1660,7 +1659,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
 
             val sparqlSimplified =
                 """
@@ -1669,19 +1668,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?mainRes knora-api:isMainResource true .
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
                   |
                   |     } WHERE {
                   |
                   |        ?mainRes a knora-api:Resource .
                   |
-                  |        ?mainRes a <http://0.0.0.0:3333/ontology/incunabula/simple/v2#book> .
+                  |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
                   |
-                  |        ?mainRes <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> ?propVal0 .
-                  |        <http://0.0.0.0:3333/ontology/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+                  |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+                  |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER contains(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -1748,7 +1747,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             val sparqlSimplified =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/anything/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |
                   |    CONSTRUCT {
                   |        ?thing knora-api:isMainResource true .
@@ -1840,6 +1839,45 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                     </p>
                 </text>
                  */
+
+                checkCountSearchQuery(responseAs[String], 0)
+
+            }
+
+        }
+
+        "search for a text using the lang function" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |} WHERE {
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     anything:hasText knora-api:objectType xsd:string .
+                  |
+                  |     ?text a xsd:string .
+                  |
+                  |     FILTER(lang(?text) = "en")
+                  |}
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // TODO: add some test data that have a language annotation and check for results
 
                 checkCountSearchQuery(responseAs[String], 0)
 

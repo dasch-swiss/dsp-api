@@ -7,814 +7,814 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
-@prefix anything: <http://www.knora.org/ontology/anything#> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
-<http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ> a anything:Thing ;
+<http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw> ;
-	anything:isPartOfOtherThing <http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw> ;
 	rdfs:label "Sierra" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ> ;
+<http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw> ;
+	rdf:object <http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ> a anything:Thing ;
+<http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ/values/SEYcShT7SPywgEyv6hOYww> ;
-	anything:hasOtherThing <http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ/values/SEYcShT7SPywgEyv6hOYww> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA> ;
 	rdfs:label "India" ;
 	knora-base:isDeleted true .
 
-<http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ/values/SEYcShT7SPywgEyv6hOYww> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ> ;
+<http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ/values/SEYcShT7SPywgEyv6hOYww> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA> ;
+	rdf:object <http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA> a anything:Thing ;
+<http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.911+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA/values/tG3SVtW6R--TlS32mG2LXw> ;
-	anything:hasOtherThing <http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA/values/tG3SVtW6R--TlS32mG2LXw> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA> ;
 	rdfs:label "Delta" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA/values/tG3SVtW6R--TlS32mG2LXw> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/5IEswyQFQp2bxXDrOyEfEA> ;
+<http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA/values/tG3SVtW6R--TlS32mG2LXw> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA> ;
+	rdf:object <http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.911+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/7uuGcnFcQJq08dMOralyCQ> a anything:Thing ;
+<http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/7uuGcnFcQJq08dMOralyCQ/values/RY20oXOrQYqSKTDosI3iew> ;
-	anything:hasOtherThing <http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ/values/RY20oXOrQYqSKTDosI3iew> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ> ;
 	rdfs:label "Hotel" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/7uuGcnFcQJq08dMOralyCQ/values/RY20oXOrQYqSKTDosI3iew> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/7uuGcnFcQJq08dMOralyCQ> ;
+<http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ/values/RY20oXOrQYqSKTDosI3iew> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ> ;
+	rdf:object <http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/2qMtTWvVRXWMBcRNlduvCQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA> a anything:Thing ;
+<http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.911+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA/values/q68Kb8tZSbqGWE29WypLXA> ;
-	anything:hasOtherThing <http://data.knora.org/YgL4JhwfSQq-1davjrp8Ow> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA/values/q68Kb8tZSbqGWE29WypLXA> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow> ;
 	rdfs:label "excluded Bravo" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA/values/q68Kb8tZSbqGWE29WypLXA> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA> ;
+<http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA/values/q68Kb8tZSbqGWE29WypLXA> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/YgL4JhwfSQq-1davjrp8Ow> ;
+	rdf:object <http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.911+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/YgL4JhwfSQq-1davjrp8Ow" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/A67ka6UQRHWf313tbhQBjw> a anything:Thing ;
+<http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "Victor" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA> a anything:Thing ;
+<http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA/values/FXo12_BBRs-CtWcV_WoDJQ> ;
-	anything:hasOtherThing <http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA/values/FXo12_BBRs-CtWcV_WoDJQ> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw> ;
 	rdfs:label "Juliet" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA/values/FXo12_BBRs-CtWcV_WoDJQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/CNhWoNGGT7iWOrIwxsEqvA> ;
+<http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA/values/FXo12_BBRs-CtWcV_WoDJQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw> ;
+	rdf:object <http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA> a anything:Thing ;
+<http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA/values/vljTxO0vRoOYObsl9P1Wlw> ;
-	anything:hasOtherThing <http://data.knora.org/iqW_PBiHRdyTFzik8tuSog> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA/values/vljTxO0vRoOYObsl9P1Wlw> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog> ;
 	rdfs:label "Papa" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA/values/vljTxO0vRoOYObsl9P1Wlw> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA> ;
+<http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA/values/vljTxO0vRoOYObsl9P1Wlw> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/iqW_PBiHRdyTFzik8tuSog> ;
+	rdf:object <http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/iqW_PBiHRdyTFzik8tuSog" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw> a anything:Thing ;
+<http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw/values/shtOsekcQU--C_H9Ld0YkQ> ;
-	anything:hasOtherThing <http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw/values/shtOsekcQU--C_H9Ld0YkQ> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ> ;
 	rdfs:label "Uniform" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw/values/shtOsekcQU--C_H9Ld0YkQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/LOV-6aLYQFW15jwdyS51Yw> ;
+<http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw/values/shtOsekcQU--C_H9Ld0YkQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ> ;
+	rdf:object <http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> a anything:Thing ;
+<http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> ;
-	anything:hasOtherThing <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> ;
-	anything:hasOtherThingValue <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> ;
-	anything:hasOtherThing <http://data.knora.org/anything/start> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/start> ;
 	rdfs:label "Foxtrot" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+<http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/anything/start> ;
+	rdf:object <http://rdfh.ch/0001/start> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/anything/start" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/start" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+<http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg/values/nkMp5_JZTtWH55bkotxeDQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> ;
+	rdf:object <http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ> a anything:Thing ;
+<http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ/values/5sEWCx2SSdqm-eeYG2V3IQ> ;
-	anything:hasOtherThing <http://data.knora.org/nResNuvARcWYUdWyo0GWGw> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ/values/5sEWCx2SSdqm-eeYG2V3IQ> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw> ;
 	rdfs:label "Whiskey" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ/values/5sEWCx2SSdqm-eeYG2V3IQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/MiBwAFcxQZGHNL-WfgFAPQ> ;
+<http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ/values/5sEWCx2SSdqm-eeYG2V3IQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/nResNuvARcWYUdWyo0GWGw> ;
+	rdf:object <http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/nResNuvARcWYUdWyo0GWGw" ;
+	knora-base:valueHasString "http://rdfh.ch/nResNuvARcWYUdWyo0GWGw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w> a anything:Thing ;
+<http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w/values/9pU4o0UxReyNUNic0VyVKg> ;
-	anything:hasOtherThing <http://data.knora.org/A67ka6UQRHWf313tbhQBjw> ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w/values/hKsiMs4tRw250pTbxcibhQ> ;
-	anything:isPartOfOtherThing <http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w/values/9pU4o0UxReyNUNic0VyVKg> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w/values/hKsiMs4tRw250pTbxcibhQ> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw> ;
 	rdfs:label "Tango" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w/values/9pU4o0UxReyNUNic0VyVKg> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w> ;
+<http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w/values/9pU4o0UxReyNUNic0VyVKg> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/A67ka6UQRHWf313tbhQBjw> ;
+	rdf:object <http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/A67ka6UQRHWf313tbhQBjw" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w/values/hKsiMs4tRw250pTbxcibhQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w> ;
+<http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w/values/hKsiMs4tRw250pTbxcibhQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw> ;
+	rdf:object <http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/YgL4JhwfSQq-1davjrp8Ow> a anything:Thing ;
+<http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "November" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/ZYNUiHtsTROWblui9xHEuw> a anything:Thing ;
+<http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.910+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/ZYNUiHtsTROWblui9xHEuw/values/YFmzwushTbeuIDF_oWeY7g> ;
-	anything:hasOtherThing <http://data.knora.org/cL5AwEioRLOm6Vrqwl1RmQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw/values/YFmzwushTbeuIDF_oWeY7g> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ> ;
 	rdfs:label "excluded Alpha" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/ZYNUiHtsTROWblui9xHEuw/values/YFmzwushTbeuIDF_oWeY7g> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/ZYNUiHtsTROWblui9xHEuw> ;
+<http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw/values/YFmzwushTbeuIDF_oWeY7g> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/cL5AwEioRLOm6Vrqwl1RmQ> ;
+	rdf:object <http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.910+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/cL5AwEioRLOm6Vrqwl1RmQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/a-thing> a anything:Thing ;
+<http://rdfh.ch/0001/a-thing> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "A thing" ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/a-thing-with-text-values> a anything:Thing ;
+<http://rdfh.ch/0001/a-thing-with-text-values> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "Ein Ding für jemanden, dem die Dinge gefallen" ;
-	anything:hasText <http://data.knora.org/a-thing-with-text-values/values/1> , <http://data.knora.org/a-thing-with-text-values/values/2> ;
-	knora-base:hasStandoffLinkTo <http://data.knora.org/a-thing> ;
-	knora-base:hasStandoffLinkToValue <http://data.knora.org/a-thing-with-text-values/values/0> ;
+	anything:hasText <http://rdfh.ch/0001/a-thing-with-text-values/values/1> , <http://rdfh.ch/0001/a-thing-with-text-values/values/2> ;
+	knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/a-thing> ;
+	knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/a-thing-with-text-values/values/0> ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/a-thing-with-text-values/values/0> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/a-thing-with-text-values> ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/0> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/a-thing-with-text-values> ;
 	rdf:predicate knora-base:hasStandoffLinkTo ;
-	rdf:object <http://data.knora.org/a-thing> ;
-	knora-base:valueHasString "http://data.knora.org/a-thing" ;
+	rdf:object <http://rdfh.ch/0001/a-thing> ;
+	knora-base:valueHasString "http://rdfh.ch/0001/a-thing" ;
 	knora-base:valueHasRefCount 2 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
-<http://data.knora.org/a-thing-with-text-values/values/1> a knora-base:TextValue ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/1> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:valueHasString "Ich liebe die Dinge, sie sind alles für mich." ;
 	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> , <http://data.knora.org/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> ;
+	knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> , <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> ;
 	knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator" .
 
-<http://data.knora.org/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> a standoff:StandoffRootTag ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> a standoff:StandoffRootTag ;
     knora-base:standoffTagHasStart "0"^^xsd:int ;
     knora-base:standoffTagHasEnd "45"^^xsd:int ;
     knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
     knora-base:standoffTagHasUUID "2e136103-2a4b-4e59-ac8f-79a53f54b496"^^xsd:string .
 
-<http://data.knora.org/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> a knora-base:StandoffLinkTag ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/HNhqZ6fdQP26Tgmt7MTeQg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 14 ;
 	knora-base:standoffTagHasEnd 19 ;
 	knora-base:standoffTagHasStartIndex 1 ;
-	knora-base:standoffTagHasStartParent <http://data.knora.org/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> ;
-	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
+	knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/3km_kXVuQQiD9WKmA7J6cw> ;
+	knora-base:standoffTagHasLink <http://rdfh.ch/0001/a-thing> ;
 	knora-base:standoffTagHasUUID "80133696-26a1-4941-967b-6bf210d7d5e1" .
 
-<http://data.knora.org/a-thing-with-text-values/values/2> a knora-base:TextValue ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/2> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:valueHasString "Na ja, die Dinge sind OK." ;
 	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasStandoff <http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> , <http://data.knora.org/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> ;
+	knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> , <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> ;
 	knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator" .
 
-<http://data.knora.org/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> a standoff:StandoffRootTag ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> a standoff:StandoffRootTag ;
     knora-base:standoffTagHasStart "0"^^xsd:int ;
     knora-base:standoffTagHasEnd "25"^^xsd:int ;
     knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
     knora-base:standoffTagHasUUID "fd583868-2a3c-4941-a330-990f5a972f71"^^xsd:string .
 
-<http://data.knora.org/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> a knora-base:StandoffLinkTag ;
+<http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/Ht76B6DqTDCWHo_WICC1Xg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 11 ;
 	knora-base:standoffTagHasEnd 16 ;
 	knora-base:standoffTagHasStartIndex 1 ;
-	knora-base:standoffTagHasStartParent <http://data.knora.org/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> ;
-	knora-base:standoffTagHasLink <http://data.knora.org/a-thing> ;
+	knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/snoDk5pHQze0-8A_Kck51A> ;
+	knora-base:standoffTagHasLink <http://rdfh.ch/0001/a-thing> ;
 	knora-base:standoffTagHasUUID "59a36237-95a9-4acc-8361-7c8fac311063" .
 
-<http://data.knora.org/another-thing> a anything:Thing ;
+<http://rdfh.ch/0001/another-thing> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "Another thing" ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/anything/start> a anything:Thing ;
+<http://rdfh.ch/0001/start> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.903+02:00"^^xsd:dateTimeStamp ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/anything/start/values/xlMF1_mZRfmhKDTuTCKt3g> ;
-	anything:isPartOfOtherThing <http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA> ;
-	anything:hasOtherThingValue <http://data.knora.org/anything/start/values/kIg2c0hXTXyWNz2FcWbFug> ;
-	anything:hasOtherThing <http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ> ;
-	anything:hasOtherThingValue <http://data.knora.org/anything/start/values/1-Xd0mUMQdKM73SlCpypag> ;
-	anything:hasOtherThing <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w> ;
-	anything:hasOtherThingValue <http://data.knora.org/anything/start/values/m6ma6x3jS1GQMLK4U6iKag> ;
-	anything:hasOtherThing <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/start/values/xlMF1_mZRfmhKDTuTCKt3g> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/start/values/kIg2c0hXTXyWNz2FcWbFug> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/start/values/1-Xd0mUMQdKM73SlCpypag> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/start/values/m6ma6x3jS1GQMLK4U6iKag> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	rdfs:label "Romeo" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/anything/start/values/1-Xd0mUMQdKM73SlCpypag> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/anything/start> ;
+<http://rdfh.ch/0001/start/values/1-Xd0mUMQdKM73SlCpypag> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/start> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w> ;
+	rdf:object <http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.910+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/WLSHxQUgTOmG1T0lBU2r5w" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/anything/start/values/kIg2c0hXTXyWNz2FcWbFug> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/anything/start> ;
+<http://rdfh.ch/0001/start/values/kIg2c0hXTXyWNz2FcWbFug> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/start> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ> ;
+	rdf:object <http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.909+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/0C-0L1kORryKzJAJxxRyRQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/anything/start/values/m6ma6x3jS1GQMLK4U6iKag> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/anything/start> ;
+<http://rdfh.ch/0001/start/values/m6ma6x3jS1GQMLK4U6iKag> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/start> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+	rdf:object <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.910+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/anything/start/values/xlMF1_mZRfmhKDTuTCKt3g> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/anything/start> ;
+<http://rdfh.ch/0001/start/values/xlMF1_mZRfmhKDTuTCKt3g> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/start> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA> ;
+	rdf:object <http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.909+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/9eSuQ_J7T0aOqoImTkwPxA" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/anything/treeList> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Tree list root"@en ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-	knora-base:hasSubListNode <http://data.knora.org/anything/treeList01> , <http://data.knora.org/anything/treeList02> , <http://data.knora.org/anything/treeList03> .
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0001/treeList01> , <http://rdfh.ch/lists/0001/treeList02> , <http://rdfh.ch/lists/0001/treeList03> .
 
-<http://data.knora.org/anything/treeList01> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList01> a knora-base:ListNode ;
 	knora-base:listNodeName "Tree list node 01" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList> ;
 	knora-base:listNodePosition 0 ;
 	rdfs:label "Tree list node 01"@en .
 
-<http://data.knora.org/anything/treeList02> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList02> a knora-base:ListNode ;
 	knora-base:listNodeName "Tree list node 02" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "Tree list node 02"@en ;
 	rdfs:label "Baumlistenknoten 02"@de .
 
-<http://data.knora.org/anything/treeList03> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList03> a knora-base:ListNode ;
 	knora-base:listNodeName "Tree list node 03" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList> ;
 	knora-base:listNodePosition 2 ;
 	rdfs:label "Tree list node 03"@en ;
-	knora-base:hasSubListNode <http://data.knora.org/anything/treeList10> , <http://data.knora.org/anything/treeList11> .
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0001/treeList10> , <http://rdfh.ch/lists/0001/treeList11> .
 
-<http://data.knora.org/anything/treeList10> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList10> a knora-base:ListNode ;
 	knora-base:listNodeName "Tree list node 10" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList> ;
 	knora-base:listNodePosition 0 ;
 	rdfs:label "Tree list node 10"@en .
 
-<http://data.knora.org/anything/treeList11> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/treeList11> a knora-base:ListNode ;
 	knora-base:listNodeName "Tree list node 11" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/treeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/treeList> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "Tree list node 11"@en .
 
-<http://data.knora.org/anything/otherTreeList> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	rdfs:label "Tree list root"@en ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-	knora-base:hasSubListNode <http://data.knora.org/anything/otherTreeList01> , <http://data.knora.org/anything/otherTreeList02> , <http://data.knora.org/anything/otherTreeList03> .
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0001/otherTreeList01> , <http://rdfh.ch/lists/0001/otherTreeList02> , <http://rdfh.ch/lists/0001/otherTreeList03> .
 
-<http://data.knora.org/anything/otherTreeList01> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList01> a knora-base:ListNode ;
 	knora-base:listNodeName "Other Tree list node 01" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/otherTreeList> ;
 	knora-base:listNodePosition 0 ;
 	rdfs:label "Other Tree list node 01"@en .
 
-<http://data.knora.org/anything/otherTreeList02> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList02> a knora-base:ListNode ;
 	knora-base:listNodeName "Other Tree list node 02" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/otherTreeList> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "Other Tree list node 02"@en .
 
-<http://data.knora.org/anything/otherTreeList03> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList03> a knora-base:ListNode ;
 	knora-base:listNodeName "Other Tree list node 03" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/otherTreeList> ;
 	knora-base:listNodePosition 2 ;
 	rdfs:label "Other Tree list node 03"@en ;
-	knora-base:hasSubListNode <http://data.knora.org/anything/otherTreeList10> , <http://data.knora.org/anything/otherTreeList11> .
+	knora-base:hasSubListNode <http://rdfh.ch/lists/0001/otherTreeList10> , <http://rdfh.ch/lists/0001/otherTreeList11> .
 
-<http://data.knora.org/anything/otherTreeList10> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList10> a knora-base:ListNode ;
 	knora-base:listNodeName "Other Tree list node 10" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/otherTreeList> ;
 	knora-base:listNodePosition 0 ;
 	rdfs:label "Other Tree list node 10"@en .
 
-<http://data.knora.org/anything/otherTreeList11> a knora-base:ListNode ;
+<http://rdfh.ch/lists/0001/otherTreeList11> a knora-base:ListNode ;
 	knora-base:listNodeName "Other Tree list node 11" ;
-	knora-base:hasRootNode <http://data.knora.org/anything/otherTreeList> ;
+	knora-base:hasRootNode <http://rdfh.ch/lists/0001/otherTreeList> ;
 	knora-base:listNodePosition 1 ;
 	rdfs:label "Other Tree list node 11"@en .
 
-<http://data.knora.org/cL5AwEioRLOm6Vrqwl1RmQ> a anything:Thing ;
+<http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "Oscar" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA> a anything:Thing ;
+<http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:ProjectMember|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA/values/wxNiN3TERlKcvvlxhgYRag> ;
-	anything:hasOtherThing <http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA/values/wxNiN3TERlKcvvlxhgYRag> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA> ;
 	rdfs:label "Mike" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA/values/wxNiN3TERlKcvvlxhgYRag> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/cmfk1DMHRBiR4-_6HXpEFA> ;
+<http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA/values/wxNiN3TERlKcvvlxhgYRag> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA> ;
+	rdf:object <http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/L5xU7Qe5QUu6Wz3cDaCxbA" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/contained-thing-1> a anything:Thing ;
+<http://rdfh.ch/0001/contained-thing-1> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "A contained thing that only project members can see" ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
-	anything:isPartOfOtherThing <http://data.knora.org/containing-thing> ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/contained-thing-1/values/0> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/containing-thing> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/contained-thing-1/values/0> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/contained-thing-1/values/0> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/contained-thing-1> ;
+<http://rdfh.ch/0001/contained-thing-1/values/0> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/contained-thing-1> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/containing-thing> ;
-	knora-base:valueHasString "http://data.knora.org/containing-thing" ;
+	rdf:object <http://rdfh.ch/0001/containing-thing> ;
+	knora-base:valueHasString "http://rdfh.ch/0001/containing-thing" ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://data.knora.org/contained-thing-2> a anything:Thing ;
+<http://rdfh.ch/0001/contained-thing-2> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "Another contained thing that only project members can see" ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
-	anything:isPartOfOtherThing <http://data.knora.org/containing-thing> ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/contained-thing-2/values/0> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/containing-thing> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/contained-thing-2/values/0> ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/contained-thing-2/values/0> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/contained-thing-2> ;
+<http://rdfh.ch/0001/contained-thing-2/values/0> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/contained-thing-2> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/containing-thing> ;
-	knora-base:valueHasString "http://data.knora.org/containing-thing" ;
+	rdf:object <http://rdfh.ch/0001/containing-thing> ;
+	knora-base:valueHasString "http://rdfh.ch/0001/containing-thing" ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
 	knora-base:hasPermissions "CR knora-base:Creator" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://data.knora.org/containing-thing> a anything:Thing ;
+<http://rdfh.ch/0001/containing-thing> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "A containing thing" ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:KnownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/iqW_PBiHRdyTFzik8tuSog> a anything:Thing ;
+<http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.915+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg> ;
-	anything:hasOtherThing <http://data.knora.org/anything/start> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/start> ;
 	rdfs:label "Quebec" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/iqW_PBiHRdyTFzik8tuSog> ;
+<http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/anything/start> ;
+	rdf:object <http://rdfh.ch/0001/start> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/anything/start" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/start" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/lklGBGI2RR-nWemGTL4uOQ> a anything:Thing ;
+<http://rdfh.ch/0001/lklGBGI2RR-nWemGTL4uOQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "Lima" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/nResNuvARcWYUdWyo0GWGw> a anything:Thing ;
+<http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/nResNuvARcWYUdWyo0GWGw/values/0NR5kyQfS-GAlphPxUEOMQ> ;
-	anything:hasOtherThing <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/0NR5kyQfS-GAlphPxUEOMQ> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	rdfs:label "X-ray" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/nResNuvARcWYUdWyo0GWGw/values/0NR5kyQfS-GAlphPxUEOMQ> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/nResNuvARcWYUdWyo0GWGw> ;
+<http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/0NR5kyQfS-GAlphPxUEOMQ> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+	rdf:object <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.917+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/nVh9YJ1ZStSmCHb9hIdwWw> a anything:Thing ;
+<http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.911+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "excluded Charlie" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/project-thing-1> a anything:Thing ;
+<http://rdfh.ch/0001/project-thing-1> a anything:Thing ;
 	knora-base:isDeleted false ;
-	anything:hasOtherThing <http://data.knora.org/project-thing-2> ;
-	anything:hasOtherThingValue <http://data.knora.org/project-thing-1/values/0> ;
-	anything:hasText <http://data.knora.org/project-thing-1/values/2> ;
-	knora-base:hasStandoffLinkTo <http://data.knora.org/project-thing-2> ;
-	knora-base:hasStandoffLinkToValue <http://data.knora.org/project-thing-1/values/1> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/project-thing-2> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/project-thing-1/values/0> ;
+	anything:hasText <http://rdfh.ch/0001/project-thing-1/values/2> ;
+	knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/project-thing-2> ;
+	knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/project-thing-1/values/1> ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "A thing that only project members can see" ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/project-thing-1/values/0> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/project-thing-1> ;
+<http://rdfh.ch/0001/project-thing-1/values/0> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/project-thing-1> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/project-thing-2> ;
-	knora-base:valueHasString "http://data.knora.org/project-thing-2" ;
+	rdf:object <http://rdfh.ch/0001/project-thing-2> ;
+	knora-base:valueHasString "http://rdfh.ch/0001/project-thing-2" ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
 	knora-base:hasPermissions "CR knora-base:Creator" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://data.knora.org/project-thing-1/values/1> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/project-thing-1> ;
+<http://rdfh.ch/0001/project-thing-1/values/1> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/project-thing-1> ;
 	rdf:predicate knora-base:hasStandoffLinkTo ;
-	rdf:object <http://data.knora.org/project-thing-2> ;
-	knora-base:valueHasString "http://data.knora.org/project-thing-2" ;
+	rdf:object <http://rdfh.ch/0001/project-thing-2> ;
+	knora-base:valueHasString "http://rdfh.ch/0001/project-thing-2" ;
 	knora-base:valueHasRefCount 1 ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:isDeleted false ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:UnknownUser" ;
 	knora-base:attachedToUser knora-base:SystemUser .
 
-<http://data.knora.org/project-thing-1/values/2> a knora-base:TextValue ;
+<http://rdfh.ch/0001/project-thing-1/values/2> a knora-base:TextValue ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:valueHasString "This is a standoff link." ;
 	knora-base:valueHasOrder 0 ;
-	knora-base:valueHasStandoff <http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> , <http://data.knora.org/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> ;
+	knora-base:valueHasStandoff <http://rdfh.ch/0001/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> , <http://rdfh.ch/0001/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> ;
 	knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
 	knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
 	knora-base:hasPermissions "CR knora-base:Creator" .
 
-<http://data.knora.org/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> a standoff:StandoffRootTag ;
+<http://rdfh.ch/0001/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> a standoff:StandoffRootTag ;
     knora-base:standoffTagHasStart "0"^^xsd:int ;
     knora-base:standoffTagHasEnd "24"^^xsd:int ;
     knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
     knora-base:standoffTagHasUUID "b3cf218a-0a81-4937-9c3d-1d7a7f5fffe3"^^xsd:string .
 
-<http://data.knora.org/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> a knora-base:StandoffLinkTag ;
+<http://rdfh.ch/0001/project-thing-1/values/2/standoff/NEDbEA85RgO1L1qkDXOVwg> a knora-base:StandoffLinkTag ;
 	knora-base:standoffTagHasStart 10 ;
 	knora-base:standoffTagHasEnd 23 ;
 	knora-base:standoffTagHasStartIndex 1 ;
-	knora-base:standoffTagHasStartParent <http://data.knora.org/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> ;
-	knora-base:standoffTagHasLink <http://data.knora.org/project-thing-2> ;
+	knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/project-thing-1/values/2/standoff/tlSUd3aPSBOf1dA1XVfo2Q> ;
+	knora-base:standoffTagHasLink <http://rdfh.ch/0001/project-thing-2> ;
 	knora-base:standoffTagHasUUID "9af1fc4e-359a-4842-89f3-7b64a1a153d6" .
 
-<http://data.knora.org/project-thing-2> a anything:Thing ;
+<http://rdfh.ch/0001/project-thing-2> a anything:Thing ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "Another thing that only project members can see" ;
 	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw> a anything:Thing ;
+<http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw/values/yJnDnIPwSkuMG8JKSXIONw> ;
-	anything:hasOtherThing <http://data.knora.org/lklGBGI2RR-nWemGTL4uOQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw/values/yJnDnIPwSkuMG8JKSXIONw> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/lklGBGI2RR-nWemGTL4uOQ> ;
 	rdfs:label "Kilo" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw/values/yJnDnIPwSkuMG8JKSXIONw> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/rzRrc2G1StKUMyZVjJnxuw> ;
+<http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw/values/yJnDnIPwSkuMG8JKSXIONw> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/lklGBGI2RR-nWemGTL4uOQ> ;
+	rdf:object <http://rdfh.ch/0001/lklGBGI2RR-nWemGTL4uOQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.914+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/lklGBGI2RR-nWemGTL4uOQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/lklGBGI2RR-nWemGTL4uOQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> a anything:Thing ;
+<http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	anything:hasOtherThingValue <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ/values/5VpsgqTORCSJA7wEOazoAg> ;
-	anything:hasOtherThing <http://data.knora.org/7uuGcnFcQJq08dMOralyCQ> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ/values/5VpsgqTORCSJA7wEOazoAg> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ> ;
 	rdfs:label "Golf" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ/values/5VpsgqTORCSJA7wEOazoAg> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/sHCLAGg-R5qJ6oPZPV-zOQ> ;
+<http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ/values/5VpsgqTORCSJA7wEOazoAg> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/7uuGcnFcQJq08dMOralyCQ> ;
+	rdf:object <http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:ProjectMember|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.913+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/7uuGcnFcQJq08dMOralyCQ" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> a anything:Thing ;
+<http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> a anything:Thing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTimeStamp ;
-	anything:isPartOfOtherThingValue <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A/values/e1fDWXuvT3exFHJejfycow> ;
-	anything:isPartOfOtherThing <http://data.knora.org/ZYNUiHtsTROWblui9xHEuw> ;
-	anything:hasOtherThingValue <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A/values/dIsKwAFVT12_Q60Mo0oG9Q> ;
-	anything:hasOtherThing <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+	anything:isPartOfOtherThingValue <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A/values/e1fDWXuvT3exFHJejfycow> ;
+	anything:isPartOfOtherThing <http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw> ;
+	anything:hasOtherThingValue <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A/values/dIsKwAFVT12_Q60Mo0oG9Q> ;
+	anything:hasOtherThing <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg> ;
 	rdfs:label "Echo" ;
 	knora-base:isDeleted false .
 
-<http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A/values/dIsKwAFVT12_Q60Mo0oG9Q> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+<http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A/values/dIsKwAFVT12_Q60Mo0oG9Q> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	rdf:predicate anything:hasOtherThing ;
-	rdf:object <http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg> ;
+	rdf:object <http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/Lz7WEqJETJqqsUZQYexBQg" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A/values/e1fDWXuvT3exFHJejfycow> a knora-base:LinkValue ;
-	rdf:subject <http://data.knora.org/tPfZeNMvRVujCQqbIbvO0A> ;
+<http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A/values/e1fDWXuvT3exFHJejfycow> a knora-base:LinkValue ;
+	rdf:subject <http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A> ;
 	rdf:predicate anything:isPartOfOtherThing ;
-	rdf:object <http://data.knora.org/ZYNUiHtsTROWblui9xHEuw> ;
+	rdf:object <http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw> ;
 	knora-base:isDeleted false ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:valueCreationDate "2016-10-17T19:16:04.912+02:00"^^xsd:dateTimeStamp ;
-	knora-base:valueHasString "http://data.knora.org/ZYNUiHtsTROWblui9xHEuw" ;
+	knora-base:valueHasString "http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw" ;
 	knora-base:valueHasRefCount "1"^^xsd:int .
 
-<http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg> a anything:Thing ;
+<http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg> a anything:Thing ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2017-07-25T09:13:16.732+02:00"^^xsd:dateTimeStamp ;
     rdfs:label "Testding for extended search" ;
     knora-base:isDeleted false ;
-    anything:hasDecimal <http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ> ;
-    anything:hasBoolean <http://rdfh.ch/anything/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> .
+    anything:hasDecimal <http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ> ;
+    anything:hasBoolean <http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> .
 
-<http://rdfh.ch/anything/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ> a knora-base:DecimalValue ;
+<http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ> a knora-base:DecimalValue ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2017-07-25T09:13:16.732+02:00"^^xsd:dateTimeStamp ;
 	knora-base:valueHasDecimal "2.1"^^xsd:decimal ;
@@ -823,7 +823,7 @@
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://rdfh.ch/anything/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> a knora-base:BooleanValue ;
+<http://rdfh.ch/0001/WOPBNzp4TM-QxrEVt6U6hQ/values/azE8tXC6RFKv296GXYEg5Q> a knora-base:BooleanValue ;
 	knora-base:isDeleted false ;
 	knora-base:valueCreationDate "2017-07-25T10:45:16.322+02:00"^^xsd:dateTimeStamp ;
 	knora-base:valueHasBoolean true ;
@@ -832,16 +832,16 @@
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> .
 
-<http://rdfh.ch/anything/thing_with_BCE_date> a anything:Thing ;
+<http://rdfh.ch/0001/thing_with_BCE_date> a anything:Thing ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-    anything:hasDate <http://rdfh.ch/anything/thing_with_BCE_date/date_value> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date/date_value> ;
     rdfs:label "A thing that has a BCE date value" ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://rdfh.ch/anything/thing_with_BCE_date/date_value> a knora-base:DateValue ;
+<http://rdfh.ch/0001/thing_with_BCE_date/date_value> a knora-base:DateValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:valueHasOrder 0 ;
@@ -855,16 +855,16 @@
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
-<http://rdfh.ch/anything/thing_with_BCE_date2> a anything:Thing ;
+<http://rdfh.ch/0001/thing_with_BCE_date2> a anything:Thing ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-    anything:hasDate <http://rdfh.ch/anything/thing_with_BCE_date2/date_value> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    anything:hasDate <http://rdfh.ch/0001/thing_with_BCE_date2/date_value> ;
     rdfs:label "A thing that has a BCE date value" ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://rdfh.ch/anything/thing_with_BCE_date2/date_value> a knora-base:DateValue ;
+<http://rdfh.ch/0001/thing_with_BCE_date2/date_value> a knora-base:DateValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:valueHasOrder 0 ;
@@ -878,104 +878,104 @@
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
-<http://data.knora.org/a-blue-thing> a anything:BlueThing ;
+<http://rdfh.ch/0001/a-blue-thing> a anything:BlueThing ;
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-	knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-10-17T19:16:04.916+02:00"^^xsd:dateTimeStamp ;
 	rdfs:label "A blue thing" ;
 	knora-base:isDeleted false .
 
-<http://rdfh.ch/anything/thing_with_list_value> a anything:Thing ;
+<http://rdfh.ch/0001/thing_with_list_value> a anything:Thing ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-    anything:hasListItem <http://rdfh.ch/anything/thing_with_list_value/list_value> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    anything:hasListItem <http://rdfh.ch/0001/thing_with_list_value/list_value> ;
     rdfs:label "A thing that has a list value" ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://rdfh.ch/anything/thing_with_list_value/list_value> a knora-base:ListValue ;
+<http://rdfh.ch/0001/thing_with_list_value/list_value> a knora-base:ListValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
     knora-base:valueHasOrder 0 ;
-    knora-base:valueHasString "http://data.knora.org/anything/treeList02" ;
+    knora-base:valueHasString "http://rdfh.ch/lists/0001/treeList02" ;
     knora-base:valueHasOrder 0 ;
-    knora-base:valueHasListNode	<http://data.knora.org/anything/treeList02> ;
+    knora-base:valueHasListNode	<http://rdfh.ch/lists/0001/treeList02> ;
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
-<http://rdfh.ch/anything/thing_with_two_list_values> a anything:Thing ;
+<http://rdfh.ch/0001/thing_with_two_list_values> a anything:Thing ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-    anything:hasListItem <http://rdfh.ch/anything/thing_with_two_list_values/first_list_value> ;
-    anything:hasOtherListItem <http://rdfh.ch/anything/thing_with_two_list_values/second_list_value> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    anything:hasListItem <http://rdfh.ch/0001/thing_with_two_list_values/first_list_value> ;
+    anything:hasOtherListItem <http://rdfh.ch/0001/thing_with_two_list_values/second_list_value> ;
     rdfs:label "A thing that has two list values" ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://rdfh.ch/anything/thing_with_two_list_values/first_list_value> a knora-base:ListValue ;
+<http://rdfh.ch/0001/thing_with_two_list_values/first_list_value> a knora-base:ListValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:valueHasString "http://data.knora.org/anything/treeList01" ;
+    knora-base:valueHasString "http://rdfh.ch/lists/0001/treeList01" ;
     knora-base:valueHasOrder 0 ;
-    knora-base:valueHasListNode	<http://data.knora.org/anything/treeList01> ;
+    knora-base:valueHasListNode	<http://rdfh.ch/lists/0001/treeList01> ;
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
-<http://rdfh.ch/anything/thing_with_two_list_values/second_list_value> a knora-base:ListValue ;
+<http://rdfh.ch/0001/thing_with_two_list_values/second_list_value> a knora-base:ListValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:valueHasString "http://data.knora.org/anything/otherTreeList02" ;
+    knora-base:valueHasString "http://rdfh.ch/lists/0001/otherTreeList02" ;
     knora-base:valueHasOrder 0 ;
-    knora-base:valueHasListNode	<http://data.knora.org/anything/otherTreeList02> ;
+    knora-base:valueHasListNode	<http://rdfh.ch/lists/0001/otherTreeList02> ;
     knora-base:valueCreationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup> a anything:Thing ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup> a anything:Thing ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/anything> ;
-    anything:hasRichtext <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1> ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    anything:hasRichtext <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1> ;
     rdfs:label "test thing with markup" ;
     knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
     knora-base:creationDate "2018-01-31T15:05:10Z"^^xsd:dateTimeStamp .
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup/text1> knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1> knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
     knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
     knora-base:isDeleted "false"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
     knora-base:valueCreationDate "2018-04-16T13:24:53.578Z"^^<http://www.w3.org/2001/XMLSchema#dateTimeStamp> ;
     knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
     knora-base:valueHasOrder "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
-    knora-base:valueHasStandoff <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff1> , <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff2> , <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff3> , <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff4> ;
+    knora-base:valueHasStandoff <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff3> , <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff4> ;
     knora-base:valueHasString "This is a test that contains marked up elements. This is interesting text in italics. This is boring text in italics." ;
     a knora-base:TextValue .
 
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff1> knora-base:standoffTagHasEnd 118 ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> knora-base:standoffTagHasEnd 118 ;
 	knora-base:standoffTagHasStart 0 ;
 	knora-base:standoffTagHasStartIndex 0 ;
 	knora-base:standoffTagHasUUID "2cb01d47-bf01-4705-a5de-5e967e1c97fc" ;
 	a standoff:StandoffRootTag .
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff2> knora-base:standoffTagHasEnd 117 ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2> knora-base:standoffTagHasEnd 117 ;
 	knora-base:standoffTagHasStart 0 ;
 	knora-base:standoffTagHasStartIndex 1 ;
-	knora-base:standoffTagHasStartParent <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff1> ;
+	knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff1> ;
 	knora-base:standoffTagHasUUID "0a3e72a7-ac7b-430b-81ed-1c4239598231" ;
 	a standoff:StandoffParagraphTag .
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff3> knora-base:standoffTagHasEnd 73 ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff3> knora-base:standoffTagHasEnd 73 ;
     knora-base:standoffTagHasStart 57 ;
     knora-base:standoffTagHasStartIndex 2 ;
-    knora-base:standoffTagHasStartParent <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff2> ;
+    knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2> ;
     knora-base:standoffTagHasUUID "265262c7-3919-4727-9178-60bb2ddec11c" ;
     a standoff:StandoffItalicTag .
 
-<http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff4> knora-base:standoffTagHasEnd 105 ;
+<http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff4> knora-base:standoffTagHasEnd 105 ;
     knora-base:standoffTagHasStart 94 ;
     knora-base:standoffTagHasStartIndex 3 ;
-    knora-base:standoffTagHasStartParent <http://rdfh.ch/anything/thing_with_richtext_with_markup/text1/standoff2> ;
+    knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/thing_with_richtext_with_markup/text1/standoff2> ;
     knora-base:standoffTagHasUUID "9c9fa856-6462-4337-94f7-9328668bb17d" ;
     a standoff:StandoffItalicTag .

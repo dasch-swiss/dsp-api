@@ -8,14 +8,14 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
-@prefix biblio: <http://www.knora.org/ontology/biblio#> .
+@prefix biblio: <http://www.knora.org/ontology/0802/biblio#> .
 @base <http://www.knora.org/ontology/0801/beol#> .
 
 @prefix : <http://www.knora.org/ontology/0801/beol#> .
 
 <http://www.knora.org/ontology/0801/beol> rdf:type owl:Ontology ;
     rdfs:label "The BEOL ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0801> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
 
 ##########################################################
 #

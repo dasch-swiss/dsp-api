@@ -28,7 +28,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import kamon.Kamon
-import kamon.jaeger.Jaeger
+import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app._
@@ -213,8 +213,6 @@ trait KnoraService {
             println("... loading of demo data finished.")
         }
 
-        // TODO: make a generic V2 ontology responder that handles this and is called by V1 ontology responder
-        // TODO: forward LoadOntologies to V2 (V1 can still be called)
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
 
@@ -239,8 +237,8 @@ trait KnoraService {
         }
 
         val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
-        if (zipkinReporter) {
-            Kamon.addReporter(new Jaeger()) // tracing
+        if (jaegerReporter) {
+            Kamon.addReporter(new JaegerReporter()) // tracing
         }
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)

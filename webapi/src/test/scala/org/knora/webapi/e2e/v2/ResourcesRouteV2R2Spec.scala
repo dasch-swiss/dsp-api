@@ -68,9 +68,9 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
     private val rdfDataObjects = List(
 
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
     )
 
@@ -82,7 +82,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
     "The resources v2 endpoint" should {
         "perform a resource request for the book 'Reise ins Heilige Land'" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://data.knora.org/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -95,7 +95,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
         "perform a full resource request for a resource with a BCE date property" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_BCE_date", "UTF-8")}") ~> resourcesPath ~> check {
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -109,7 +109,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
         "perform a full resource request for a resource with a date property that represents a period going from BCE to CE" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_BCE_date2", "UTF-8")}") ~> resourcesPath ~> check {
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_BCE_date2", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -123,7 +123,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
         "perform a full resource request for a resource with a list value" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/anything/thing_with_list_value", "UTF-8")}") ~> resourcesPath ~> check {
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/thing_with_list_value", "UTF-8")}") ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

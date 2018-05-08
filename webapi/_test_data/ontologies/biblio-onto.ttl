@@ -10,11 +10,11 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
-@base <http://www.knora.org/ontology/biblio#> .
+@base <http://www.knora.org/ontology/0802/biblio#> .
 
-@prefix : <http://www.knora.org/ontology/biblio#> .
+@prefix : <http://www.knora.org/ontology/0802/biblio#> .
 
-<http://www.knora.org/ontology/biblio> rdf:type owl:Ontology ;
+<http://www.knora.org/ontology/0802/biblio> rdf:type owl:Ontology ;
     rdfs:label "The Biblio ontology" ;
     knora-base:attachedToProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
 
@@ -27,7 +27,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasTitle
+###  http://www.knora.org/ontology/0802/biblio#publicationHasTitle
 
 :publicationHasTitle rdf:type owl:ObjectProperty ;
 
@@ -47,7 +47,7 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasSubtitle
+###  http://www.knora.org/ontology/0802/biblio#publicationHasSubtitle
 
 :publicationHasSubtitle rdf:type owl:ObjectProperty ;
 
@@ -67,7 +67,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasDate
+###  http://www.knora.org/ontology/0802/biblio#publicationHasDate
 :publicationHasDate rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Datum der Veröffentlichung "@de ,
@@ -87,7 +87,7 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasLocation
+###  http://www.knora.org/ontology/0802/biblio#publicationHasLocation
 
 :publicationHasLocation rdf:type owl:ObjectProperty ;
 
@@ -105,7 +105,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasPublisher
+###  http://www.knora.org/ontology/0802/biblio#publicationHasPublisher
 :publicationHasPublisher rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Verlag"@de ,
@@ -125,7 +125,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasPublisherValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasPublisherValue
 
 :publicationHasPublisherValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Verlag"@de ,
@@ -143,7 +143,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsEdited
+###  http://www.knora.org/ontology/0802/biblio#publicationIsEdited
 :publicationIsEdited rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist bearbeitet"@de ,
@@ -161,7 +161,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsEditedValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsEditedValue
 
 :publicationIsEditedValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist bearbeitet"@de ,
@@ -177,7 +177,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsEditionOf
+###  http://www.knora.org/ontology/0802/biblio#publicationIsEditionOf
 :publicationIsEditionOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Edition von"@de ,
@@ -195,7 +195,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsEditionOfValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsEditionOfValue
 
 :publicationIsEditionOfValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Edition von"@de ,
@@ -211,7 +211,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasAuthor
+###  http://www.knora.org/ontology/0802/biblio#publicationHasAuthor
 
 :publicationHasAuthor rdf:type owl:ObjectProperty ;
 
@@ -233,7 +233,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasAuthorValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasAuthorValue
 
 :publicationHasAuthorValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Autor"@de ,
@@ -251,7 +251,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasEditor
+###  http://www.knora.org/ontology/0802/biblio#publicationHasEditor
 
 :publicationHasEditor rdf:type owl:ObjectProperty ;
 
@@ -271,7 +271,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasEditorValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasEditorValue
 
 :publicationHasEditorValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Redaktor (person)"@de ,
@@ -286,7 +286,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasEditorOrg
+###  http://www.knora.org/ontology/0802/biblio#publicationHasEditorOrg
 
 :publicationHasEditorOrg rdf:type owl:ObjectProperty ;
 
@@ -306,7 +306,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasEditorOrgValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasEditorOrgValue
 
 :publicationHasEditorOrgValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Editorische Organisation"@de ,
@@ -320,7 +320,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#publisherHasLocation
+###  http://www.knora.org/ontology/0802/biblio#publisherHasLocation
 
 :publisherHasLocation rdf:type owl:ObjectProperty ;
 
@@ -341,7 +341,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReprinted
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReprinted
 :publicationIsReprinted rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt"@de ,
@@ -359,7 +359,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReprintedValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReprintedValue
 
 :publicationIsReprintedValue rdf:type owl:ObjectProperty ;
                     rdfs:label "wieder abgedruckt"@de ,
@@ -374,7 +374,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReprintOf
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReprintOf
 :publicationIsReprintOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "wieder abgedruckt von"@de ,
@@ -390,7 +390,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReprintOfValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReprintOfValue
 
 :publicationIsReprintOfValue rdf:type owl:ObjectProperty ;
 
@@ -405,7 +405,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReviewed
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReviewed
 :publicationIsReviewed rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Bewertet"@de ,
@@ -421,7 +421,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReviewedValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReviewedValue
 
 :publicationIsReviewedValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Bewertet"@de ,
@@ -434,7 +434,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReviewOf
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReviewOf
 :publicationIsReviewOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Kritik von"@de ,
@@ -450,7 +450,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsReviewOfValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsReviewOfValue
 
 :publicationIsReviewOfValue rdf:type owl:ObjectProperty ;
 
@@ -463,7 +463,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasManuscript
+###  http://www.knora.org/ontology/0802/biblio#publicationHasManuscript
 :publicationHasManuscript rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Manuskript"@de ,
@@ -479,7 +479,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasManuscriptValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasManuscriptValue
 
 :publicationHasManuscriptValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Manuskript"@de ,
@@ -492,7 +492,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsTranslationOf
+###  http://www.knora.org/ontology/0802/biblio#publicationIsTranslationOf
 :publicationIsTranslationOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Übersetztung von "@de ,
@@ -508,7 +508,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsTranslationOfValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsTranslationOfValue
 
 :publicationIsTranslationOfValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Übersetztung von "@de ,
@@ -521,7 +521,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsTranslated
+###  http://www.knora.org/ontology/0802/biblio#publicationIsTranslated
 :publicationIsTranslated rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist übersetzt"@de ,
@@ -537,7 +537,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationIsTranslatedValue
+###  http://www.knora.org/ontology/0802/biblio#publicationIsTranslatedValue
 
 :publicationIsTranslatedValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist übersetzt"@de ,
@@ -551,7 +551,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasDOI
+###  http://www.knora.org/ontology/0802/biblio#publicationHasDOI
 
 :publicationHasDOI rdf:type owl:ObjectProperty ;
 
@@ -570,7 +570,7 @@
                     rdfs:subPropertyOf knora-base:hasValue , bibo:doi.
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasAbbreviation
+###  http://www.knora.org/ontology/0802/biblio#publicationHasAbbreviation
 
 :publicationHasAbbreviation rdf:type owl:ObjectProperty ;
 
@@ -586,7 +586,7 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
-###  http://www.knora.org/ontology/biblio#hasLink
+###  http://www.knora.org/ontology/0802/biblio#hasLink
 :hasLink rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Link"@de ,
@@ -602,7 +602,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#hasLinkValue
+###  http://www.knora.org/ontology/0802/biblio#hasLinkValue
 
 :hasLinkValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Link"@de ,
@@ -615,7 +615,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#editionHasEditor
+###  http://www.knora.org/ontology/0802/biblio#editionHasEditor
 
 :editionHasEditor rdf:type owl:ObjectProperty ;
 
@@ -635,7 +635,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#editionHasEditorValue
+###  http://www.knora.org/ontology/0802/biblio#editionHasEditorValue
 
 :editionHasEditorValue rdf:type owl:ObjectProperty ;
 
@@ -653,7 +653,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#editionHasOrganization
+###  http://www.knora.org/ontology/0802/biblio#editionHasOrganization
 
 :editionHasOrganization rdf:type owl:ObjectProperty ;
 
@@ -673,7 +673,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#editionHasorganizationValue
+###  http://www.knora.org/ontology/0802/biblio#editionHasorganizationValue
 
 :editionHasOrganizationValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Organisation"@de ,
@@ -688,7 +688,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#editionHasNumber
+###  http://www.knora.org/ontology/0802/biblio#editionHasNumber
 
 :editionHasNumber rdf:type owl:ObjectProperty ;
 
@@ -705,7 +705,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#editionHasName
+###  http://www.knora.org/ontology/0802/biblio#editionHasName
 
 :editionHasName rdf:type owl:ObjectProperty ;
 
@@ -722,7 +722,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#hasName
+###  http://www.knora.org/ontology/0802/biblio#hasName
 
 :hasName rdf:type owl:ObjectProperty ;
 
@@ -740,7 +740,7 @@
                     rdfs:subPropertyOf knora-base:hasValue  .
 
 
-###  http://www.knora.org/ontology/biblio#hasURI
+###  http://www.knora.org/ontology/0802/biblio#hasURI
 
 :hasURI rdf:type owl:ObjectProperty ;
 
@@ -758,7 +758,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#startPage
+###  http://www.knora.org/ontology/0802/biblio#startPage
 
 :startPage rdf:type owl:ObjectProperty ;
 
@@ -777,7 +777,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#endPage
+###  http://www.knora.org/ontology/0802/biblio#endPage
 
 :endPage rdf:type owl:ObjectProperty ;
 
@@ -795,7 +795,7 @@
                     rdfs:subPropertyOf knora-base:hasValue, bibo:endPage .
 
 
-###  http://www.knora.org/ontology/biblio#volumeSubtitle
+###  http://www.knora.org/ontology/0802/biblio#volumeSubtitle
 
 :volumeSubtitle rdf:type owl:ObjectProperty ;
 
@@ -811,7 +811,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#ispartOfJournal
+###  http://www.knora.org/ontology/0802/biblio#ispartOfJournal
 :isPartOfJournal rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
@@ -829,7 +829,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfJournalValue
+###  http://www.knora.org/ontology/0802/biblio#isPartOfJournalValue
 
 :isPartOfJournalValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Teil von"@de ,
@@ -844,7 +844,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfEditedBook
+###  http://www.knora.org/ontology/0802/biblio#isPartOfEditedBook
 :isPartOfEditedBook rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
@@ -863,7 +863,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfEditedBookValue
+###  http://www.knora.org/ontology/0802/biblio#isPartOfEditedBookValue
 
 :isPartOfEditedBookValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Teil von"@de ,
@@ -877,7 +877,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#isPartOfCollection
+###  http://www.knora.org/ontology/0802/biblio#isPartOfCollection
 :isPartOfCollection rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
@@ -894,7 +894,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfCollectionValue
+###  http://www.knora.org/ontology/0802/biblio#isPartOfCollectionValue
 
 :isPartOfCollectionValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Teil von"@de ,
@@ -909,7 +909,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#journalVolume
+###  http://www.knora.org/ontology/0802/biblio#journalVolume
 
 :journalVolume rdf:type owl:ObjectProperty ;
 
@@ -929,7 +929,7 @@
                      rdfs:subPropertyOf knora-base:hasValue, bibo:volume .
 
 
-###  http://www.knora.org/ontology/biblio#journalIssue
+###  http://www.knora.org/ontology/0802/biblio#journalIssue
 
 :journalIssue rdf:type owl:ObjectProperty ;
 
@@ -950,7 +950,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#bookHasISBN
+###  http://www.knora.org/ontology/0802/biblio#bookHasISBN
 
 :bookHasISBN rdf:type owl:ObjectProperty ;
 
@@ -969,7 +969,7 @@
                     rdfs:subPropertyOf knora-base:hasValue , bibo:isbn.
 
 
-###  http://www.knora.org/ontology/biblio#bookHasContent
+###  http://www.knora.org/ontology/0802/biblio#bookHasContent
 :bookHasContent rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Buch-Inhalt"@de ,
@@ -984,7 +984,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
-###  http://www.knora.org/ontology/biblio#bookHasContentValue
+###  http://www.knora.org/ontology/0802/biblio#bookHasContentValue
 
 :bookHasContentValue rdf:type owl:ObjectProperty ;
 
@@ -997,7 +997,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#hasIntroduction
+###  http://www.knora.org/ontology/0802/biblio#hasIntroduction
 :hasIntroduction rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Einleitung"@de ,
@@ -1012,7 +1012,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
-###  http://www.knora.org/ontology/biblio#hasIntroductionValue
+###  http://www.knora.org/ontology/0802/biblio#hasIntroductionValue
 
 :hasIntroductionValue rdf:type owl:ObjectProperty ;
 
@@ -1026,7 +1026,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#hasContent
+###  http://www.knora.org/ontology/0802/biblio#hasContent
 :hasContent rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Inhalt"@de ,
@@ -1041,7 +1041,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo .
 
 
-###  http://www.knora.org/ontology/biblio#hasContentValue
+###  http://www.knora.org/ontology/0802/biblio#hasContentValue
 
 :hasContentValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Inhalt"@de ,
@@ -1053,7 +1053,7 @@
 
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
-###  http://www.knora.org/ontology/biblio#numPages
+###  http://www.knora.org/ontology/0802/biblio#numPages
 
 :numPages rdf:type owl:ObjectProperty ;
 
@@ -1071,7 +1071,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#numVolumes
+###  http://www.knora.org/ontology/0802/biblio#numVolumes
 
 :numVolumes rdf:type owl:ObjectProperty ;
 
@@ -1088,7 +1088,7 @@
                     rdfs:subPropertyOf knora-base:hasValue , bibo:numVolumes .
 
 
-###  http://www.knora.org/ontology/biblio#webpageHasHrefTag
+###  http://www.knora.org/ontology/0802/biblio#webpageHasHrefTag
 
 :webpageHasHrefTag rdf:type owl:ObjectProperty ;
 
@@ -1104,7 +1104,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#translationOf
+###  http://www.knora.org/ontology/0802/biblio#translationOf
 :translationOf rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Übersetzung von"@de ,
@@ -1121,7 +1121,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo, bibo:translationOf .
 
 
-###  http://www.knora.org/ontology/biblio#translationOfValue
+###  http://www.knora.org/ontology/0802/biblio#translationOfValue
 
 :translationOfValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Übersetzung von"@de ,
@@ -1136,7 +1136,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#translationHasLanguage
+###  http://www.knora.org/ontology/0802/biblio#translationHasLanguage
 
 :translationHasLanguage rdf:type owl:ObjectProperty ;
 
@@ -1153,7 +1153,7 @@
                     rdfs:subPropertyOf knora-base:hasValue , dcterms:language .
 
 
-###  http://www.knora.org/ontology/biblio#translationHasTitle
+###  http://www.knora.org/ontology/0802/biblio#translationHasTitle
 
 :translationHasTitle rdf:type owl:ObjectProperty ;
 
@@ -1170,7 +1170,7 @@
                     rdfs:subPropertyOf knora-base:hasValue, dcterms:title .
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasTranslator
+###  http://www.knora.org/ontology/0802/biblio#publicationHasTranslator
 
 :publicationHasTranslator rdf:type owl:ObjectProperty ;
 
@@ -1190,7 +1190,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#publicationHasTranslatorValue
+###  http://www.knora.org/ontology/0802/biblio#publicationHasTranslatorValue
 
 :publicationHasTranslatorValue rdf:type owl:ObjectProperty ;
                     rdfs:label "Übersetzer"@de ,
@@ -1205,7 +1205,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
-###  http://www.knora.org/ontology/biblio#translationHasDate
+###  http://www.knora.org/ontology/0802/biblio#translationHasDate
 :translationHasDate rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Datum der Übersetzung"@de ,
@@ -1222,7 +1222,7 @@
 
                     rdfs:subPropertyOf knora-base:hasValue .
 
-###  http://www.knora.org/ontology/biblio#collectionNumber
+###  http://www.knora.org/ontology/0802/biblio#collectionNumber
 
 :collectionNumber rdf:type owl:ObjectProperty ;
 
@@ -1239,7 +1239,7 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfWebsite
+###  http://www.knora.org/ontology/0802/biblio#isPartOfWebsite
 :isPartOfWebsite rdf:type owl:ObjectProperty ;
 
                     rdfs:label "ist Teil von"@de ,
@@ -1257,7 +1257,7 @@
                     rdfs:subPropertyOf knora-base:hasLinkTo, dcterms:isPartOf .
 
 
-###  http://www.knora.org/ontology/biblio#isPartOfWebsiteValue
+###  http://www.knora.org/ontology/0802/biblio#isPartOfWebsiteValue
 
 :isPartOfWebsiteValue rdf:type owl:ObjectProperty ;
                     rdfs:label "ist Teil von"@de ,
@@ -1280,7 +1280,7 @@
 #################################################################
 
 
-###  http://www.knora.org/ontology/biblio#Publication
+###  http://www.knora.org/ontology/0802/biblio#Publication
 
 :Publication rdf:type owl:Class ;
 
@@ -1446,7 +1446,7 @@
                     rdfs:comment "A resource representing a publication"@en .
 
 
-###  http://www.knora.org/ontology/biblio#Edition
+###  http://www.knora.org/ontology/0802/biblio#Edition
 :Edition rdf:type owl:Class ;
 
                     rdfs:subClassOf knora-base:Resource,
@@ -1485,7 +1485,7 @@
 
                     rdfs:comment "A resource representing an edition"@en .
 
-###  http://www.knora.org/ontology/biblio#Organization
+###  http://www.knora.org/ontology/0802/biblio#Organization
 :Organization rdf:type owl:Class ;
 
                     rdfs:subClassOf knora-base:Resource, foaf:organization,
@@ -1510,7 +1510,7 @@
                     rdfs:comment "A resource representing an organization"@en .
 
 
-###  http://www.knora.org/ontology/biblio#Publisher
+###  http://www.knora.org/ontology/0802/biblio#Publisher
 
 :Publisher rdf:type owl:Class ;
 
@@ -1529,7 +1529,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#Article
+###  http://www.knora.org/ontology/0802/biblio#Article
 
 :Article rdf:type owl:Class ;
 
@@ -1543,7 +1543,7 @@
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ],
                                     [ rdf:type owl:Restriction ;
-                                      owl:onProperty :volumeSubitle ;
+                                      owl:onProperty :volumeSubtitle ;
                                       owl:minCardinality "0"^^xsd:nonNegativeInteger
                                     ];
 
@@ -1555,7 +1555,7 @@
 
                     rdfs:comment "A resource representing an article"@en .
 
-###  http://www.knora.org/ontology/biblio#JournalArticle
+###  http://www.knora.org/ontology/0802/biblio#JournalArticle
 
 :JournalArticle rdf:type owl:Class ;
 
@@ -1583,7 +1583,7 @@
 
                     rdfs:comment "A resource representing a journal article"@en .
 
-###  http://www.knora.org/ontology/biblio#CollectionArticle
+###  http://www.knora.org/ontology/0802/biblio#CollectionArticle
 
 :CollectionArticle rdf:type owl:Class ;
 
@@ -1607,7 +1607,7 @@
 
                     rdfs:comment "A resource representing a collection article"@en .
 
-###  http://www.knora.org/ontology/biblio#Translation
+###  http://www.knora.org/ontology/0802/biblio#Translation
 
 :Translation rdf:type owl:Class ;
 
@@ -1652,7 +1652,7 @@
 
 
 
-###  http://www.knora.org/ontology/biblio#Journal
+###  http://www.knora.org/ontology/0802/biblio#Journal
 
 :Journal rdf:type owl:Class ;
 
@@ -1687,7 +1687,7 @@
 
                     rdfs:comment "A resource representing a journal "@en .
 
-###  http://www.knora.org/ontology/biblio#BookContent
+###  http://www.knora.org/ontology/0802/biblio#BookContent
 
 :BookContent rdf:type owl:Class ;
                     rdfs:subClassOf knora-base:Resource,
@@ -1713,7 +1713,7 @@
 
                     rdfs:comment "A resource representing content of a book "@en .
 
-###  http://www.knora.org/ontology/biblio#Book
+###  http://www.knora.org/ontology/0802/biblio#Book
 
 :Book rdf:type owl:Class ;
 
@@ -1763,7 +1763,7 @@
 
                     rdfs:comment "A resource representing a book "@en .
 
-###  http://www.knora.org/ontology/biblio#EditedBook
+###  http://www.knora.org/ontology/0802/biblio#EditedBook
 
 :EditedBook rdf:type owl:Class ;
 
@@ -1775,7 +1775,7 @@
 
                     rdfs:comment "A resource representing the book which is collection of articles "@en .
 
-###  http://www.knora.org/ontology/biblio#Collection
+###  http://www.knora.org/ontology/0802/biblio#Collection
 
 :Collection rdf:type owl:Class ;
 
@@ -1818,7 +1818,7 @@
                     rdfs:comment "A resource representing a collection "@en .
 
 
-###  http://www.knora.org/ontology/biblio#Website
+###  http://www.knora.org/ontology/0802/biblio#Website
 
 :Website rdf:type owl:Class ;
 
@@ -1846,7 +1846,7 @@
 
                     rdfs:comment "A resource representing a website "@en .
 
-###  http://www.knora.org/ontology/biblio#Webpage
+###  http://www.knora.org/ontology/0802/biblio#Webpage
 :Webpage rdf:type owl:Class ;
 
                     rdfs:subClassOf knora-base:Resource, bibo:Webpage,
@@ -1885,7 +1885,7 @@
 
                     rdfs:comment "A resource representing a webpage "@en .
 
-###  http://www.knora.org/ontology/biblio#WebsiteArticle
+###  http://www.knora.org/ontology/0802/biblio#WebsiteArticle
 
 :WebsiteArticle rdf:type owl:Class ;
 

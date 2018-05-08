@@ -263,15 +263,6 @@ case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expre
 }
 
 /**
-  * Represents a FILTER pattern in a query.
-  *
-  * @param expression the expression in the FILTER.
-  */
-case class FilterPattern(expression: Expression) extends QueryPattern {
-    def toSparql: String = s"FILTER(${expression.toSparql})\n"
-}
-
-/**
   * Represents a regex function in a query (in a FILTER).
   *
   * @param textValueVar the variable representing the text value to be checked against the provided pattern.
@@ -283,15 +274,71 @@ case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier:
 }
 
 /**
-  * Represents a match function in a query (in a FILTER).
+  * Represents a lang function in  a query (in a FILTER).
   *
-  * This function has to be rewritten using a special property which is supported by Lucene.
-  *
-  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
-  * @param searchTerm the term to search for.
+  * @param textValueVar the variable representing the text value to be restricted to the specified language.
   */
-case class MatchFunction(textValueVar: QueryVariable, searchTerm: String) extends Expression {
-    def toSparql = s"""""" // additional statements will be generated, this expression won't end up in generated SPARQL as a FILTER
+case class LangFunction(textValueVar: QueryVariable) extends Expression {
+    def toSparql: String = s"""lang(${textValueVar.toSparql})"""
+}
+
+/**
+  * Represents a function call in a filter.
+  *
+  * @param functionIri the IRI of the function.
+  * @param args the arguments passed to the function.
+  */
+case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
+    def toSparql: String = s"<${functionIri.iri.toString}>(${args.map(_.toSparql).mkString(", ")})"
+
+    /**
+      * Gets the argument at the given position as a [[QueryVariable]].
+      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[QueryVariable]].
+      *
+      * @param pos the argument to be returned from [[args]].
+      * @return a [[QueryVariable]].
+      */
+    def getArgAsQueryVar(pos: Int): QueryVariable = {
+
+        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+
+        args(pos) match {
+            case queryVar: QueryVariable => queryVar
+
+            case other => throw SparqlSearchException(s"$other is expected to be a QueryVariable")
+        }
+
+    }
+
+    /**
+      * Gets the argument at the given position as a [[XsdLiteral]] of the given datatype.
+      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[XsdLiteral]] of the requested datatype.
+      *
+      * @param pos the argument to be returned from [[args]].
+      * @param xsdDatatype the argeument's datatype.
+      * @return an [[XsdLiteral]].
+      */
+    def getArgAsLiteral(pos: Int, xsdDatatype: SmartIri): XsdLiteral = {
+
+        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+
+        args(pos) match {
+            case literal: XsdLiteral if literal.datatype == xsdDatatype => literal
+
+            case other => throw SparqlSearchException(s"other is expected to be a literal of type ${xsdDatatype.toString}")
+
+        }
+
+    }
+}
+
+/**
+  * Represents a FILTER pattern in a query.
+  *
+  * @param expression the expression in the FILTER.
+  */
+case class FilterPattern(expression: Expression) extends QueryPattern {
+    def toSparql: String = s"FILTER(${expression.toSparql})\n"
 }
 
 /**

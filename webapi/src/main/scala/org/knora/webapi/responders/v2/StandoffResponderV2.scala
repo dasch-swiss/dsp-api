@@ -31,9 +31,9 @@ import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetRequestV1, ProjectInfoResponseV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
@@ -367,7 +367,6 @@ class StandoffResponderV2 extends Responder {
 
         for {
             // Don't allow anonymous users to create a mapping.
-            // Don't allow anonymous users to create a mapping.
             userIri: IRI <- Future {
                 if (userProfile.isAnonymousUser) {
                     throw ForbiddenException("Anonymous users aren't allowed to create mappings")
@@ -377,10 +376,12 @@ class StandoffResponderV2 extends Responder {
             }
 
             // check if the given project IRI represents an actual project
-            projectInfo: ProjectInfoResponseV1 <- (responderManager ? ProjectInfoByIRIGetRequestV1(
-                iri = projectIri.toString,
-                Some(userProfile.asUserProfileV1)
-            )).mapTo[ProjectInfoResponseV1]
+            projectInfoMaybe: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
+                maybeIri = Some(projectIri.toString),
+                maybeShortname = None,
+                maybeShortcode= None,
+                requestingUser = userProfile
+            )).mapTo[Option[ProjectADM]]
 
             knoraIdUtil = new KnoraIdUtil
 
@@ -389,8 +390,10 @@ class StandoffResponderV2 extends Responder {
             // create the mapping IRI from the project IRI and the name provided by the user
             mappingIri = knoraIdUtil.makeProjectMappingIri(projectIri.toString, mappingName)
 
+            _ = if (projectInfoMaybe.isEmpty) throw BadRequestException(s"Project with Iri ${projectIri.toString} does not exist")
+
             // put the mapping into the named graph of the project
-            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfo.project_info)
+            namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectInfoMaybe.get)
 
             result: CreateMappingResponseV2 <- IriLocker.runWithIriLock(
                 apiRequestID,

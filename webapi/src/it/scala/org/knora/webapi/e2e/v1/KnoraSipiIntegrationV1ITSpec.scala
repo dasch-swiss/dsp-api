@@ -53,8 +53,8 @@ object KnoraSipiIntegrationV1ITSpec {
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
 
     private val rdfDataObjects = List(
-        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+        RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+        RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val username = "root@example.com"
@@ -89,30 +89,30 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val paramsPageWithBinaries =
                 s"""
                    |{
-                   |     "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                   |     "restype_id": "http://www.knora.org/ontology/0803/incunabula#page",
                    |     "label": "test",
-                   |     "project_id": "http://rdfh.ch/projects/77275339",
+                   |     "project_id": "http://rdfh.ch/projects/0803",
                    |     "properties": {
-                   |         "http://www.knora.org/ontology/incunabula#pagenum": [
+                   |         "http://www.knora.org/ontology/0803/incunabula#pagenum": [
                    |             {
                    |                 "richtext_value": {
                    |                     "utf8str": "test_page"
                    |                 }
                    |             }
                    |         ],
-                   |         "http://www.knora.org/ontology/incunabula#origname": [
+                   |         "http://www.knora.org/ontology/0803/incunabula#origname": [
                    |             {
                    |                 "richtext_value": {
                    |                     "utf8str": "test"
                    |                 }
                    |             }
                    |         ],
-                   |         "http://www.knora.org/ontology/incunabula#partOf": [
+                   |         "http://www.knora.org/ontology/0803/incunabula#partOf": [
                    |             {
-                   |                 "link_value": "http://data.knora.org/5e77e98d2603"
+                   |                 "link_value": "http://rdfh.ch/5e77e98d2603"
                    |             }
                    |         ],
-                   |         "http://www.knora.org/ontology/incunabula#seqnum": [
+                   |         "http://www.knora.org/ontology/0803/incunabula#seqnum": [
                    |             {
                    |                 "int_value": 999
                    |             }
@@ -230,22 +230,22 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val knoraParams =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/incunabula#page",
+                   |    "restype_id": "http://www.knora.org/ontology/0803/incunabula#page",
                    |    "properties": {
-                   |        "http://www.knora.org/ontology/incunabula#pagenum": [
+                   |        "http://www.knora.org/ontology/0803/incunabula#pagenum": [
                    |            {"richtext_value": {"utf8str": "test page"}}
                    |        ],
-                   |        "http://www.knora.org/ontology/incunabula#origname": [
+                   |        "http://www.knora.org/ontology/0803/incunabula#origname": [
                    |            {"richtext_value": {"utf8str": "Chlaus"}}
                    |        ],
-                   |        "http://www.knora.org/ontology/incunabula#partOf": [
-                   |            {"link_value": "http://data.knora.org/5e77e98d2603"}
+                   |        "http://www.knora.org/ontology/0803/incunabula#partOf": [
+                   |            {"link_value": "http://rdfh.ch/5e77e98d2603"}
                    |        ],
-                   |        "http://www.knora.org/ontology/incunabula#seqnum": [{"int_value": 99999999}]
+                   |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
                    |    },
                    |    "file": ${fileParams.compactPrint},
                    |    "label": "test page",
-                   |    "project_id": "http://rdfh.ch/projects/77275339"
+                   |    "project_id": "http://rdfh.ch/projects/0803"
                    |}
                 """.stripMargin
 
@@ -308,18 +308,18 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val standoffXml =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
-                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://data.knora.org/9935159f67">heart</a> sing
+                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/9935159f67">heart</a> sing
                   |</text>
                 """.stripMargin
 
             val knoraParams = JsObject(
                 Map(
-                    "restype_id" -> JsString("http://www.knora.org/ontology/anything#Thing"),
+                    "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#Thing"),
                     "label" -> JsString("Wild thing"),
-                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/0001"),
                     "properties" -> JsObject(
                         Map(
-                            "http://www.knora.org/ontology/anything#hasText" -> JsArray(
+                            "http://www.knora.org/ontology/0001/anything#hasText" -> JsArray(
                                 JsObject(
                                     Map(
                                         "richtext_value" -> JsObject(
@@ -329,7 +329,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                                     )
                                 )
                             ),
-                            "http://www.knora.org/ontology/anything#hasInteger" -> JsArray(
+                            "http://www.knora.org/ontology/0001/anything#hasInteger" -> JsArray(
                                 JsObject(
                                     Map(
                                         "int_value" -> JsNumber(12345)
@@ -347,34 +347,34 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         }
 
 
-        "create an 'incunabula:book' and an 'incunabula:page' with file parameters via XML import" in {
+        "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
             val fileToUpload = new File(pathToChlaus)
             val absoluteFilePath = fileToUpload.getAbsolutePath
 
             val knoraParams =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/incunabula/xml-import/v1# incunabula.xsd"
-                   |    xmlns:incunabula="http://api.knora.org/ontology/incunabula/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0803/incunabula/xml-import/v1# p0803-incunabula.xsd"
+                   |    xmlns:p0803-incunabula="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <incunabula:book id="test_book">
+                   |    <p0803-incunabula:book id="test_book">
                    |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
-                   |        <incunabula:title knoraType="richtext_value">the title of a book with one page</incunabula:title>
-                   |    </incunabula:book>
-                   |    <incunabula:page id="test_page">
+                   |        <p0803-incunabula:title knoraType="richtext_value">the title of a book with one page</p0803-incunabula:title>
+                   |    </p0803-incunabula:book>
+                   |    <p0803-incunabula:page id="test_page">
                    |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
                    |        <knoraXmlImport:file path="$absoluteFilePath" mimetype="${MediaTypes.`image/jpeg`.toString}"/>
-                   |        <incunabula:origname knoraType="richtext_value">Chlaus</incunabula:origname>
-                   |        <incunabula:pagenum knoraType="richtext_value">1a</incunabula:pagenum>
-                   |        <incunabula:partOf>
-                   |            <incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
-                   |        </incunabula:partOf>
-                   |        <incunabula:seqnum knoraType="int_value">1</incunabula:seqnum>
-                   |    </incunabula:page>
+                   |        <p0803-incunabula:origname knoraType="richtext_value">Chlaus</p0803-incunabula:origname>
+                   |        <p0803-incunabula:pagenum knoraType="richtext_value">1a</p0803-incunabula:pagenum>
+                   |        <p0803-incunabula:partOf>
+                   |            <p0803-incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
+                   |        </p0803-incunabula:partOf>
+                   |        <p0803-incunabula:seqnum knoraType="int_value">1</p0803-incunabula:seqnum>
+                   |    </p0803-incunabula:page>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/77275339", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
             // Send the JSON in a POST request to the Knora API server.
             val knoraPostRequest = Post(baseApiUrl + s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(BasicHttpCredentials(username, password))
@@ -410,7 +410,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 Map(
                     "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
                     "label" -> JsString("XSLT"),
-                    "project_id" -> JsString("http://rdfh.ch/projects/anything"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/0001"),
                     "properties" -> JsObject()
                 )
             )
@@ -473,7 +473,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val paramsCreateLetterMappingFromXML =
                 s"""
                    |{
-                   |  "project_id": "http://rdfh.ch/projects/anything",
+                   |  "project_id": "http://rdfh.ch/projects/0001",
                    |  "label": "mapping for letters with XSLT",
                    |  "mappingName": "LetterMappingXSLT"
                    |}

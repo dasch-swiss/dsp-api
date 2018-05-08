@@ -50,7 +50,7 @@ class ResponderManagerV1Spec extends CoreSpec("ResponderManagerTestSystem") with
         "start the 'ResourcesResponder' router " in {
             mockResourcesRouter.isInstanceOf[TestProbe] should ===(true)
 
-            val testMsg = ResourceInfoGetRequestV1("http://data.knora.org/xyz", SharedTestDataADM.anonymousUser)
+            val testMsg = ResourceInfoGetRequestV1("http://rdfh.ch/xyz", SharedTestDataADM.anonymousUser)
             actorUnderTest ! testMsg
             mockResourcesRouter.expectMsg(testMsg)
         }

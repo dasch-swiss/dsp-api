@@ -10,10 +10,10 @@ git:
 language: scala
 
 scala:
-- 2.12.1
+  - 2.12.1
 
 jdk:
-- oraclejdk8
+  - oraclejdk8
 
 services:
   - docker
@@ -49,6 +49,7 @@ stages:
 
 jobs:
   include:
+    # unit and e2e tests
     - stage: test
       script:
         # prepare needed graphdb-se files
@@ -68,6 +69,7 @@ jobs:
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
         # - docker push $WEBAPI_REPO
+    # integration tests
     - stage: test
       script:
         # prepare needed graphdb-se files
@@ -83,6 +85,30 @@ jobs:
         - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
+    # testing docs generation
+    - stage: test
+      script:
+        # install the necessary packages
+        - sudo apt-get install -y python3-sphinx graphviz software-properties-common
+        - sudo apt-add-repository -y ppa:rael-gc/rvm
+        - sudo apt-get update
+        - sudo apt-get install rvm
+        - rvm install ruby 2.5.1
+        - rvm use 2.5.1 --default
+        - ruby -v
+        # install bundler
+        - gem install bundler
+        # install jekyll
+        - gem install jekyll -v 3.8.1
+        # check if sphinx is working
+        - sphinx-build --version
+        # install typedoc
+        - npm install --global typedoc
+        # install jekyll dependencies
+        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
+        # compile and build all docs (sphinx, paradox, typescript, jekyll)
+        - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
+    # Salsah browser tests
     #- stage: test
     #  script:
     #    # prepare needed graphdb-se files

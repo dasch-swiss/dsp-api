@@ -1,0 +1,20 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+### Default Object Access Permissions on Resource and Property Combination
+ <http://rdfh.ch/permissions/0001/additional-d01>
+
+                       rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                       knora-base:forProject <http://rdfh.ch/projects/0001> ;
+
+                       knora-base:forResourceClass <http://www.knora.org/ontology/0001/anything#Thing> ;
+
+                       knora-base:forProperty <http://www.knora.org/ontology/0001/anything#hasText> ;
+
+                       knora-base:hasPermissions "CR knora-base:Creator"^^xsd:string .
