@@ -1616,7 +1616,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
             val sparqlSimplified =
                 """
@@ -1658,7 +1658,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
 
             val sparqlSimplified =
                 """
