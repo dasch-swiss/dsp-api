@@ -1666,7 +1666,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
             val sparqlSimplified =
                 """
@@ -1687,7 +1687,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER contains(?propVal0, "Zeitglöcklein")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
                   |
                   |     }
                 """.stripMargin
@@ -1708,7 +1708,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the contains function" in {
+        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
 
             val sparqlSimplified =
                 """
@@ -1729,7 +1729,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
                   |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
                   |
-                  |        FILTER contains(?propVal0, "Zeitglöcklein Lebens")
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
                   |
                   |     }
                 """.stripMargin
@@ -1825,6 +1825,45 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLD(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 checkCountQuery(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a text using the lang function" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |} WHERE {
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     anything:hasText knora-api:objectType xsd:string .
+                  |
+                  |     ?text a xsd:string .
+                  |
+                  |     FILTER(lang(?text) = "en")
+                  |}
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // TODO: add some test data that have a language annotation and check for results
+
+                checkCountQuery(responseAs[String], 0)
 
             }
 
