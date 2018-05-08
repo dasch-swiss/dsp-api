@@ -17,19 +17,27 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Development
+# Monitoring the Webapi Server
 
-@@toc { depth=1 }
+Monitoring is implemented by using the Prometheus / Grafana stack.
 
-@@@ index
+## Usage:
 
-- [Overview](overview.md)
-- [Starting Fuseki 3](fuseki.md)
-- [Starting GraphDB](graphdb.md)
-- [Build Process](build-process.md)
-- [Setup IntelliJ for development of Knora](intellij-config.md)
-- [Testing](testing.md)
-- [Docker Cheat Sheet](docker-cheat-sheet.md)
-- [Monitoring the Webapi Server](monitoring.md)
+1)  Start webapi with the necessary -p option (e.g., from inside sbt:
+    run -p or reStart -p
+2)  Start the monitoring stack by executing the following line inside
+    the monitoring
+    folder:
 
-@@@
+<!-- end list -->
+
+    $ WEBAPIHOST=<YourLocalIP> ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose up -d
+
+3)  Head over to localhost:3000, log in using the admin username and
+    password, and open the "Webapi Akka Actor System" dashboard.
+4)  To shut down the monitoring stack, run the following line inside the
+    monitoring folder:
+
+<!-- end list -->
+
+    $ docker-compose down

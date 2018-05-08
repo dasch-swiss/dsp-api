@@ -43,8 +43,8 @@ removed in the future.
 
 Built-in support and configuration for other triplestores is planned.
 
-See the chapters on (TODO: link to "Starting GraphDB") and
-(TODO: link to "Starting Fuseki") for more details.
+See the chapters on @ref:[Starting GraphDB](../development/graphdb.md) and
+@ref:[Starting Fuseki](../development/fuseki.md) for more details.
 
 ### Creating Repositories and Loading Test Data
 
@@ -92,8 +92,8 @@ important data.** To delete the repository, stop GraphDB, delete the
 
 ### Run a supported triplestore
 
-See the chapters on (TODO: link to "Starting GraphDB") and
-(TODO: link to "Starting Fuseki") on how to start a supported
+See the chapters on @ref:[Starting GraphDB](../development/graphdb.md) and
+@ref:[Starting Fuseki](../development/fuseki.md) on how to start a supported
 triplestore.
 
 ### Creating and running the WEBAPI Server distribution package
