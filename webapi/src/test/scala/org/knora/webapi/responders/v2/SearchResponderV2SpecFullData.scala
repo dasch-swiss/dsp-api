@@ -51,7 +51,6 @@ class SearchResponderV2SpecFullData {
                 resourceInfos = Map(),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-
                         comment = None,
                         standoff = None,
                         valueHasString = "Beginn Kapitel 99.\nHolzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches\nAuf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie m\u00F6gen die Narrenkappe verschm\u00E4hen. Im Hintergrund kommentieren zwei weitere Narren \u00FCber die Hofmauer hinweg das Geschehen mit ungl\u00E4ubigen Gesten, 11.7 x 8.5 cm."
@@ -66,7 +65,6 @@ class SearchResponderV2SpecFullData {
                 resourceInfos = Map(),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-
                         comment = None,
                         standoff = None,
                         valueHasString = "Beginn Kapitel 109.\nHolzschnitt zu Kap. 109: Von Verachtung des Ungl\u00FCcks\nEin Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr h\u00E4lt sich an einem Seil der Takelage fest, 11.6 x 8.4 cm."
@@ -81,7 +79,6 @@ class SearchResponderV2SpecFullData {
                 resourceInfos = Map(),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-
                         comment = None,
                         standoff = None,
                         valueHasString = "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom L\u00E4rmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm h\u00E4lt, von Hunden begleitet wird, und klappernde Schuhsohlen tr\u00E4gt, geht auf ein Portal zu, in dem eine Frau steht und ihm sch\u00F6ne Augen macht.\n11.7 x 8.5 cm.\nUnkoloriert."
@@ -124,7 +121,6 @@ class SearchResponderV2SpecFullData {
                 resourceInfos = Map(),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-
                         comment = None,
                         standoff = None,
                         valueHasString = "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, w\u00E4hrend sich unter dem Narren die H\u00F6lle in Gestalt eines gefr\u00E4ssigen Drachenkopfs auftut, 11.7 x 8.5 cm.\n"
@@ -139,7 +135,6 @@ class SearchResponderV2SpecFullData {
                 resourceInfos = Map(),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description" -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-
                         comment = None,
                         standoff = None,
                         valueHasString = "Beginn Kapitel 43.\nHolzschnitt zu Kap. 43: Missachten der ewigen Seligkeit\nEin Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schl\u00E4gt zugunsten der Burg aus, 11.5 x 8.4 cm.\n"
