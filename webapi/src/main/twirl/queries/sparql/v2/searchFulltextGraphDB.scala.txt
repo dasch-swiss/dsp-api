@@ -36,6 +36,7 @@
  * @param separator the separator to be used in aggregation functions.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
+ * @param limitToStandoffClass limit the search to given standoff class.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
  * @param countQuery indicates whether it is a count query or the actual resources should be returned.
@@ -43,6 +44,7 @@
 @(searchTerms: CombineSearchTerms,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
+  limitToStandoffClass: Option[IRI],
   separator: Option[Char],
   limit: Int,
   offset: Int,
@@ -66,6 +68,32 @@ WHERE {
             }
 
             ?literal <http://www.ontotext.com/owlim/lucene#fullTextSearchIndex> '@searchTerms.combineSearchTermsWithLogicalAnd' .
+
+            @* standoff search *@
+            @if(limitToStandoffClass.nonEmpty) {
+
+                # ?matchingSubject is expected to be a TextValue
+                ?matchingSubject a knora-base:TextValue .
+
+                ?matchingSubject knora-base:valueHasStandoff ?standoffNode .
+
+                ?standoffNode a <@limitToStandoffClass.get> .
+
+                ?standoffNode knora-base:standoffTagHasStart ?start .
+
+                ?standoffNode knora-base:standoffTagHasEnd ?end .
+
+                # https://www.w3.org/TR/xpath-functions/#func-substring
+                # The first character of a string is located at position 1, not position 0. -> standoff uses a 0 based index
+                BIND(SUBSTR(?literal, ?start+1, ?end - ?start) AS ?markedup)
+
+                @* Loop over search terms and make sure they are all contained in the specified standoff markup *@
+                @for(term <- searchTerms.terms) {
+                    FILTER REGEX(?markedup, '@term', "i")
+                }
+
+            }
+
         }
     }
 

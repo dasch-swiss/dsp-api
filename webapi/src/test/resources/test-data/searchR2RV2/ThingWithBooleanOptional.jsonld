@@ -41,6 +41,10 @@
     "@type" : "p0001-anything:Thing",
     "schema:name" : "A thing that has a list value"
   }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup",
+    "@type" : "p0001-anything:Thing",
+    "schema:name" : "test thing with markup"
+  }, {
     "@id" : "http://rdfh.ch/0001/thing_with_two_list_values",
     "@type" : "p0001-anything:Thing",
     "schema:name" : "A thing that has two list values"
@@ -54,7 +58,7 @@
     },
     "schema:name" : "Testding for extended search"
   } ],
-  "schema:numberOfItems" : 12,
+  "schema:numberOfItems" : 13,
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",

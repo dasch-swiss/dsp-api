@@ -39,11 +39,13 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
   * @param searchValue the values to search for.
   * @param limitToProject limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param limitToStandoffClass limit the search to given standoff class.
   * @param requestingUser the user making the request.
   */
 case class FullTextSearchCountGetRequestV2(searchValue: String,
                                            limitToProject: Option[IRI],
                                            limitToResourceClass: Option[SmartIri],
+                                           limitToStandoffClass: Option[SmartIri],
                                            requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -53,12 +55,14 @@ case class FullTextSearchCountGetRequestV2(searchValue: String,
   * @param offset the offset to be used for paging.
   * @param limitToProject limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param limitToStandoffClass limit the search to given standoff class.
   * @param requestingUser the user making the request.
   */
 case class FulltextSearchGetRequestV2(searchValue: String,
                                       offset: Int,
                                       limitToProject: Option[IRI],
                                       limitToResourceClass: Option[SmartIri],
+                                      limitToStandoffClass: Option[SmartIri],
                                       requestingUser: UserADM) extends SearchResponderRequestV2
 
 
