@@ -214,7 +214,7 @@ object ResponseCheckerR2RV2 {
 
         val receivedResponseAsScala: Map[IRI, Any] = JSONToScala(receivedJSONLD)
 
-        assert(expectedResponseAsScala == expectedResponseAsScala, "Mapping creation request response did not match expected response")
+        assert(expectedResponseAsScala == receivedResponseAsScala, "Mapping creation request response did not match expected response")
 
     }
 
