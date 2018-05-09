@@ -17,4 +17,31 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The SALSAH GUI
+# The SALSAH 1 GUI
+
+## Running the automated tests
+
+In order to run the tests, the Selenium driver for Chrome has to be
+installed.
+
+It is architecture-dependant, so go to the `salsah1/lib/chromedriver`
+directory and unzip the distribution that matches your architecture, or
+download it from
+[here](https://sites.google.com/a/chromium.org/chromedriver/downloads)
+and install it in this directory.
+
+Then, launch the services as described above; the triple store with the
+test data, the api server with the `-r` option, Sipi
+with the test configuration and SALSAH 1 where you can run the tests in
+the same SBT session:
+
+```
+$ cd KNORA_PROJECT_DIRECTORY/salsah
+$ sbt
+> compile
+> reStart
+> test
+```
+
+Note: please be patient as SALSAH 1 can take up to one mimute (end of a
+time-out) before reporting some errors.

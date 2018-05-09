@@ -69,9 +69,9 @@ Please note that the resource IRI has to be URL encoded.
 There are two ways to change a file of a resource: Either by submitting
 directly the binaries of the file in a HTTP Multipart request or by
 indicating the location of the file. The two cases are referred to as
-Non GUI-case and GUI-case (TODO: add a link to "Sipi and Knora").
+non-GUI case and GUI case (TODO: add a link to "Sipi and Knora").
 
-### Including the binaries (Non GUI-case)
+### Including the binaries (non-GUI case)
 
 Here, a HTTP MULTIPART request has to be made simply providing the
 binaries (without JSON):
@@ -96,7 +96,7 @@ r = requests.put("http://host/filevalue/" + resIri,
 Please note that the file has to be read in binary mode (by default it
 would be read in text mode).
 
-### Indicating the location of a file (GUI-case)
+### Indicating the location of a file (GUI case)
 
 Here, simply the location of the new file has to be submitted as JSON.
 The JSON format is described in the TypeScript interface

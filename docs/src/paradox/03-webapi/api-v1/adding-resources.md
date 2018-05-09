@@ -53,9 +53,9 @@ Certain resource classes allow for digital representations (e.g. an
 image). There are two ways to attach a file to a resource: Either by
 submitting directly the binaries of the file in a HTTP Multipart request
 or by indicating the location of the file. The two cases are referred to
-as Non GUI-case and GUI-case (TODO: add a link to "Sipi and Knora").
+as non-GUI case and GUI case (TODO: add a link to "Sipi and Knora").
 
-### Including the binaries (Non GUI-case)
+### Including the binaries (non-GUI case)
 
 In order to include the binaries, a HTTP Multipart request has to be
 sent. One part contains the JSON (same format as described for
@@ -99,7 +99,7 @@ r = requests.post("http://host/v1/resources",
 Please note that the file has to be read in binary mode (by default it
 would be read in text mode).
 
-### Indicating the location of a file (GUI-case)
+### Indicating the location of a file (GUI case)
 
 This request works similarly to
 [Adding Resources Without a Digital Representation](#adding-resources-without-a-digital-representation). The JSON format is described
