@@ -22,7 +22,7 @@ package org.knora.webapi.responders
 import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.standoffmessages.{GetMappingRequestV1, GetMappingResponseV1, GetXSLTransformationRequestV1, GetXSLTransformationResponseV1}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
@@ -49,27 +49,27 @@ abstract class ResponderWithStandoffV2 extends Responder {
         }.toSet
 
         // get all the mappings
-        val mappingResponsesFuture: Vector[Future[GetMappingResponseV1]] = mappingIris.map {
+        val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map {
             (mappingIri: IRI) =>
                 for {
-                    mappingResponse: GetMappingResponseV1 <- (responderManager ? GetMappingRequestV1(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV1]
+                    mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV2]
                 } yield mappingResponse
         }.toVector
 
 
         for {
 
-            mappingResponses: Vector[GetMappingResponseV1] <- Future.sequence(mappingResponsesFuture)
+            mappingResponses: Vector[GetMappingResponseV2] <- Future.sequence(mappingResponsesFuture)
 
             // get the default XSL transformations
             mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
-                (mapping: GetMappingResponseV1) =>
+                (mapping: GetMappingResponseV2) =>
 
                     for {
                     // if given, get the default XSL transformation
                         xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
                             for {
-                                xslTransformation: GetXSLTransformationResponseV1 <- (responderManager ? GetXSLTransformationRequestV1(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV1]
+                                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(mapping.mapping.defaultXSLTransformation.get, userProfile = userProfile)).mapTo[GetXSLTransformationResponseV2]
                             } yield Some(xslTransformation.xslt)
                         } else {
                             Future(None)

@@ -244,6 +244,26 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
+    private val MappingHasName: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Name of a mapping (will be part of the mapping's Iri)"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Represents the name of a mapping"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.String)
+    )
+
     private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink,
         isResourceProp = true,
@@ -1293,7 +1313,6 @@ object KnoraApiV2WithValueObjects {
           */
         val KnoraBaseClassesToRemove: Set[SmartIri] = Set(
             OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
-            OntologyConstants.KnoraBase.XSLTransformation,
             OntologyConstants.KnoraBase.MappingElement,
             OntologyConstants.KnoraBase.MappingComponent,
             OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
@@ -1358,6 +1377,7 @@ object KnoraApiV2WithValueObjects {
             IsLinkValueProperty,
             IsInherited,
             OntologyName,
+            MappingHasName,
             ValueAsString,
             HasIncomingLink,
             SubjectType,

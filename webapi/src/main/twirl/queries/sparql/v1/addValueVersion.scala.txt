@@ -19,7 +19,6 @@
 
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.twirl.StandoffTagInternalReferenceAttributeV1
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 
 @**

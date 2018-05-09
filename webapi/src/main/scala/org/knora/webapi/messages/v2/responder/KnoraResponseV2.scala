@@ -24,12 +24,12 @@ import java.io.{StringReader, StringWriter}
 import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
 
 /**
@@ -182,7 +182,7 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
 
         val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
 
-            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
+            val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
 
             // check if there is an XSL transformation
             if (standoff.get.XSLT.nonEmpty) {
@@ -231,12 +231,12 @@ case class TextValueContentV2(valueHasString: String, standoff: Option[StandoffA
   * Represents standoff and the corresponding mapping.
   * May include an XSL transformation.
   *
-  * @param standoff   a sequence of [[StandoffTagV1]].
+  * @param standoff   a sequence of [[StandoffTagV2]].
   * @param mappingIri the IRI of the mapping
   * @param mapping    a mapping between XML and standoff.
   * @param XSLT       an XSL transformation.
   */
-case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
+case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
 
 /**
   * Represents a Knora integer value.
