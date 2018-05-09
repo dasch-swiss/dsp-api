@@ -2,26 +2,21 @@ import scala.sys.process._
 
 // Define `Configuration` instances representing our different documentation trees
 val ParadoxSite = config("paradox")
-val SphinxSite = config("sphinx")
-
 
 lazy val root = (project in file(".")).
     configs(
-        ParadoxSite,
-        SphinxSite
+        ParadoxSite
     ).
-    enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, SphinxPlugin, GhpagesPlugin).
+    enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin).
     settings(
         // Apply default settings to our two custom configuration instances
         ParadoxSitePlugin.paradoxSettings(ParadoxSite),
         ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
-        ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite),
-        SphinxPlugin.sphinxSettings(SphinxSite)
+        ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite)
     ).
     settings(
         // Set version string
         version in ParadoxSite := "v1.4.0",
-        version in SphinxSite := "v1.4.0",
 
         // Ghpages settings
         ghpagesNoJekyll := true,
@@ -34,11 +29,9 @@ lazy val root = (project in file(".")).
         // (sbt-site) Customize the source directory
         // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
         sourceDirectory in ParadoxSite := sourceDirectory.value / "paradox",
-        sourceDirectory in SphinxSite := sourceDirectory.value / "sphinx",
 
         // (sbt-site) Customize the output directory (subdirectory of site)
         siteSubdirName in ParadoxSite := "paradox",
-        siteSubdirName in SphinxSite := "sphinx",
 
         // Set some paradox properties
         paradoxProperties in ParadoxSite ++= Map(

@@ -9,7 +9,7 @@ FORMATDOCDIRV2  = target/site/api-v2
 
 TYPEDOC         = typedoc
 
-# User-friendly check for sphinx-build
+# User-friendly check for typedoc
 ifeq ($(shell which $(TYPEDOC) >/dev/null 2>&1; echo $$?), 1)
 $(error The '$(TYPEDOC)' command was not found. Make sure you have Typedoc installed.
 endif

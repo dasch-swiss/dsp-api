@@ -89,7 +89,7 @@ jobs:
     - stage: test
       script:
         # install the necessary packages
-        - sudo apt-get install -y python3-sphinx graphviz software-properties-common
+        - sudo apt-get install -y graphviz software-properties-common
         - sudo apt-add-repository -y ppa:rael-gc/rvm
         - sudo apt-get update
         - sudo apt-get install rvm
@@ -100,13 +100,11 @@ jobs:
         - gem install bundler
         # install jekyll
         - gem install jekyll -v 3.8.1
-        # check if sphinx is working
-        - sphinx-build --version
         # install typedoc
         - npm install --global typedoc
         # install jekyll dependencies
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
-        # compile and build all docs (sphinx, paradox, typescript, jekyll)
+        # compile and build all docs (paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
     #- stage: test
