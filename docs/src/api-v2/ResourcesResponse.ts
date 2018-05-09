@@ -1,4 +1,5 @@
 import {Basic} from "./Basic";
+import IriObject = Basic.IriObject;
 
 /**
  * This module contains response formats for resource instances.
@@ -9,6 +10,7 @@ export module ResourcesResponse {
      * This module contains resource response format definitions for API Schema V2 with value objects.
      */
     export module ApiV2WithValueObjects {
+
         /**
          * Represents a value.
          */
@@ -28,7 +30,7 @@ export module ResourcesResponse {
              *
              * In case of a link value, this may again contain a `Resource` as a nested structure.
              */
-            [valueHasPropertyIri: string]: number | string | boolean | Resource;
+            [valueHasPropertyIri: string]: number | string | boolean | Resource | IriObject;
 
         }
 
@@ -47,9 +49,9 @@ export module ResourcesResponse {
             "@type": Basic.KnoraEntityIri;
 
             /**
-             * Short description of this resource (corresponds to rdfs:label).
+             * Short description of this resource.
              */
-            "http://schema.org/name": string;
+            "http://www.w3.org/2000/01/rdf-schema#label": string;
 
             /**
              * Properties of this resource.

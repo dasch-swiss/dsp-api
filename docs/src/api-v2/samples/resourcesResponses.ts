@@ -64,7 +64,7 @@ let zeitgloecklein: ResourcesSequence =
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
             },
-            "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+            "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
         },
         "http://schema.org/numberOfItems": 1
     };
@@ -81,7 +81,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 105.\nHolzschnitt identisch mit Kap. 95: In einer Landschaft fasst ein Narr, der ein Zepter in der Linken hÃ¤lt, einem Mann an die Schulter und redet auf ihn ein, er mÃ¶ge die Feiertage missachten, 11.7 x 8.6 cm."
             },
-            "http://schema.org/name": "p7v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "p7v"
         },
         {
             "@id": "http://data.knora.org/00c650d23303",
@@ -91,7 +91,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 21.\nHolzschnitt zu Kap. 21: Andere tadeln und selbst unrecht handeln.\nEin Narr, der mit seinen Beinen im Sumpf steckt, zeigt auf einen nahen Weg, an dem ein Bildstock die Richtung weist.\n11.7 x 8.5 cm.\nUnkoloriert.\n"
             },
-            "http://schema.org/name": "d4v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "d4v"
         },
         {
             "@id": "http://data.knora.org/02abe871e903",
@@ -101,7 +101,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 99.\nHolzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches\nAuf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie mÃ¶gen die Narrenkappe verschmÃ¤hen. Im Hintergrund kommentieren zwei weitere Narren Ã¼ber die Hofmauer hinweg das Geschehen mit unglÃ¤ubigen Gesten, 11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "o5v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "o5v"
         },
         {
             "@id": "http://data.knora.org/04416f64ef03",
@@ -111,7 +111,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 109.\nHolzschnitt zu Kap. 109: Von Verachtung des UnglÃ¼cks\nEin Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr hÃ¤lt sich an einem Seil der Takelage fest, 11.6 x 8.4 cm."
             },
-            "http://schema.org/name": "q2v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "q2v"
         },
         {
             "@id": "http://data.knora.org/04f25db73f03",
@@ -121,7 +121,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom LÃ¤rmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hÃ¤lt, von Hunden begleitet wird, und klappernde Schuhsohlen trÃ¤gt, geht auf ein Portal zu, in dem eine Frau steht und ihm schÃ¶ne Augen macht.\n11.7 x 8.5 cm.\nUnkoloriert."
             },
-            "http://schema.org/name": "g6v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "g6v"
         },
         {
             "@id": "http://data.knora.org/05c7acceb703",
@@ -131,7 +131,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Titelblatt (Hartl 2001: Stultitia Navis I).\nHolzschnitt: \nErsatzholzschnitt fÃ¼r Titelblatt, recto:\nEin Schiff voller Narren fÃ¤hrt nach links. Hinten auf der BrÃ¼cke trinkt ein Narr aus einer Flasche, vorne prÃ¼geln sich zwei weitere narren so sehr, dass einer von ihnen Ã¼ber Bord zu gehen droht. Oben die Inschrift \"Nauis stultoru(m).\"; auf dem Schiffsrumpf die Datierung \"1.4.9.7.\".\n6.5 x 11.5 cm.\noben rechts die bibliographische Angabe  (Graphitstift) \"Hain 3750\"; unten rechts Bibliotheksstempel (queroval, schwarz): \"BIBL. PUBL.| BASILEENSIS\"."
             },
-            "http://schema.org/name": "a1r; Titelblatt, recto"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a1r; Titelblatt, recto"
         },
         {
             "@id": "http://data.knora.org/075d33c1bd03",
@@ -141,7 +141,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher hÃ¤lt einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und JÃ¼ngling steht der Name â€ž.VLI.â€œ; Ã¼ber den beiden schwebt eine Banderole mit der Aufschrift â€žvly . von . stouffen .  . frisch . vnd vngschaffenâ€œ; zwischen den FÃ¼ssen des JÃ¼nglings ist die Jahreszahl â€ž.1.4.9.4.â€œ zu lesen.\n11.6 x 8.5 cm."
             },
-            "http://schema.org/name": "b6r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b6r"
         },
         {
             "@id": "http://data.knora.org/0b8940a6c903",
@@ -151,7 +151,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, wÃ¤hrend sich unter dem Narren die HÃ¶lle in Gestalt eines gefrÃ¤ssigen Drachenkopfs auftut, 11.7 x 8.5 cm.\n"
             },
-            "http://schema.org/name": "e8r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "e8r"
         },
         {
             "@id": "http://data.knora.org/0d1fc798cf03",
@@ -161,7 +161,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 43.\nHolzschnitt zu Kap. 43: Missachten der ewigen Seligkeit\nEin Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schlÃ¤gt zugunsten der Burg aus, 11.5 x 8.4 cm.\n"
             },
-            "http://schema.org/name": "g5r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "g5r"
         },
         {
             "@id": "http://data.knora.org/0d5ac1099503",
@@ -171,7 +171,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 66.\nHolzschnitt zu Kap. 66: Von der Erforschung der Welt.\nEin Narr hat ein Schema des Universums auf den Boden Gezeichnet und vermisst es mit einem Zirkel. Von hinten blickt ein zweiter Narr Ã¼ber eine Mauer und wendet sich dem ersten mit spÃ¶ttischen Gesten zu.\n11.6 x 8.4 cm."
             },
-            "http://schema.org/name": "k4r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "k4r"
         },
         {
             "@id": "http://data.knora.org/0fb54d8bd503",
@@ -181,7 +181,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 58.\nHolzschnitt zu Kap. 58: Sich um die Angelegenheiten anderer kÃ¼mmern.\nEin Narr versucht mit einem Wassereimer den Brand im Haus des Nachbarn zu lÃ¶schen und wird dabei von einem anderen Narren, der an seinem Mantel zerrt, unterbrochen, den hinter ihm steht auch sein eigenes Haus in Flammen.\n11.6 x 8.5 cm."
             },
-            "http://schema.org/name": "i2r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "i2r"
         },
         {
             "@id": "http://data.knora.org/0ff047fc9a03",
@@ -191,7 +191,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 81.\nHolzschnitt zu Kap. 81: Aus KÃ¼che und Keller.\nEin Narr fÃ¼hrt von einem Boot aus vier Knechte am Strick, die sich in einer KÃ¼che Ã¼ber Spreis und Trank hermachen, wÃ¤hrend eine Frau, die am Herdfeuer sitzt, das Essen zubereitet, 11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "m1r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "m1r"
         },
         {
             "@id": "http://data.knora.org/114bd47ddb03",
@@ -201,7 +201,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 69.\nHolzschnitt Lemmer 1979, S. 117: Variante zu Kap. 69.\nEin Narr, der vor einer Stadtkulisse steht, hat mit seiner Rechten einen Ball in die Luft geworfen und schlÃ¤gt mit seiner Linken einen Mann, der sogleich nach seinem Dolch greift. Ein junger Mann beobachtet das Geschehen.\nDer Bildinhalt stimmt weitgehend mit dem ursprÃ¼nglichen Holzschnitt Ã¼berein.\n11.7 x 8.4 cm."
             },
-            "http://schema.org/name": "k7r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "k7r"
         },
         {
             "@id": "http://data.knora.org/14dd8cbc3403",
@@ -211,7 +211,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 23.\nHolzschnitt zu Kap. 23: Vom blinden Vertrauen auf das GlÃ¼ck.\nEin Narr schaut oben aus dem Fenster seines Hauses, das unten lichterloh brennt. Am Himmel erscheint die rÃ¤chende Gotteshand, die mit einen Hammer auf Haus und Narr einschlÃ¤gt. Auf der Fahne Ã¼ber dem Erker des Hauses ist der Baselstab zu erkennen.\n11.5 x 8.2 cm.\nUnkoloriert.\n"
             },
-            "http://schema.org/name": "d6v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "d6v"
         },
         {
             "@id": "http://data.knora.org/167313af3a03",
@@ -221,7 +221,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 34.\nHolzschnitt zu Kap. 34: Ein Narr sein und es bleiben.\nEin Narr wird von drei GÃ¤nsen umgeben, deren eine von ihm wegfliegt.\n11.7 x 8.4 cm.\nUnkoloriert."
             },
-            "http://schema.org/name": "f3v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "f3v"
         },
         {
             "@id": "http://data.knora.org/1b746fabbe03",
@@ -231,7 +231,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 6.\nHolzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.\nZwei Jungen geraten am Spieltisch Ã¼ber Karten und WÃ¼rfen in Streit. WÃ¤hrend der eine einen Dolch zÃ¼ckt und der andere nach seinem Schwert greift, sitzt ein Ã¤lterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.\n11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "b8r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b8r"
         },
         {
             "@id": "http://data.knora.org/1baf691c8403",
@@ -241,7 +241,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 28.\nHolzschnitt zu Kap. 28: Vom NÃ¶rgeln an Gottes Werken.\nEin Narr, der auf einem Berg ein Feuer entfacht hat, hÃ¤lt seine Hand schÃ¼tzend Ã¼ber die Augen, wÃ¤hrend er seinen Blick auf die hell am Himmel strahlende Sonne richtet. 11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "e7r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "e7r"
         },
         {
             "@id": "http://data.knora.org/1d0af69dc403",
@@ -251,7 +251,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 18.\nHolzschnitt zu Kap. 18: Vom Dienst an zwei Herren.\nEin mit Spiess bewaffneter Narr blÃ¤st in ein Horn. Sein Hund versucht derweil im Hintergrund zwei Hasen gleichzeitig zu erjagen, 11.6 x 8.4 cm.\n"
             },
-            "http://schema.org/name": "d5r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "d5r"
         },
         {
             "@id": "http://data.knora.org/1fa07c90ca03",
@@ -261,7 +261,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 31.\nHolzschnitt zu Kap. 31: Vom Hinausschieben auf morgen.\nEin Narr steht mit ausgebreiteten Armen auf einer Strasse. Auf seinen HÃ¤nden sitzen zwei Raben, die beide â€žCrasâ€œ â€“ das lateinische Wort fÃ¼r â€žmorgenâ€œ â€“ rufen. Auf dem Kopf des Narren sitzt ein Papagei und ahmt den Ruf der KrÃ¤hen nach, 11.6 x 8.5 cm."
             },
-            "http://schema.org/name": "f2r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "f2r"
         },
         {
             "@id": "http://data.knora.org/1fdb76019003",
@@ -271,7 +271,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 57.\nHolzschnitt zu Kap. 57: Von der Gnadenwahl Gottes.\nEin Narr, der auf einem Krebs reitet, stÃ¼tzt sich auf ein brechendes Schildrohr, das ihm die Hand  durchbohrt. Ein Vogel fliegt auf den offenen Mund des Narren zu.\n11.6 x 8.5 cm."
             },
-            "http://schema.org/name": "i1r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "i1r"
         },
         {
             "@id": "http://data.knora.org/21360383d003",
@@ -281,7 +281,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 45.\nHolzschnitt zu Kap. 45: Von selbstverschuldetem UnglÃ¼ck.\nIn Gestalt eines Narren springt Empedokles in den lodernden Krater des Ã„tna. Im Vordergrund lÃ¤sst sich ein anderer Narr in einen Brunnen fallen. Beide werden von drei MÃ¤nnern beobachtet, die das Verhalten mit â€žJn geschicht rechtâ€œ  kommentieren, 11.7 x 8.3 cm.\n"
             },
-            "http://schema.org/name": "g7r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "g7r"
         },
         {
             "@id": "http://data.knora.org/2171fdf39503",
@@ -291,7 +291,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 68.\nHolzschnitt zu Kap. 68: Keinen Scherz verstehen.\nEin Kind, das auf einem Steckenpferd reitet und mit einem Stock als Gerte umher fuchtelt, wird von einem Narren am rechten Rand ausgeschimpft. Ein anderer Narr, der neben dem Kind steht, ist dabei, sein Schwert aus der Scheide zu ziehen.\n11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "k6r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "k6r"
         },
         {
             "@id": "http://data.knora.org/230784e69b03",
@@ -301,7 +301,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 83.\nneuer Holzschitt (nicht in Lemmer 1979): Vor einer HÃ¤userkulisse kniet ein Narr mit einem Beutel in der Linken und zwei Keulen in der Rechten vor einem Mann mit Hut und einem jÃ¼ngeren Begleiter, 11.6 x 8.6 cm."
             },
-            "http://schema.org/name": "m3r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "m3r"
         },
         {
             "@id": "http://data.knora.org/23427e576103",
@@ -311,7 +311,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, Ã¼berreicht einem bÃ¤rtigen Alten ein Geschenk, kratzt sich dabei aber unschlÃ¼ssig am Kopf.\n11.6 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"128\"."
             },
-            "http://schema.org/name": "q8r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "q8r"
         },
         {
             "@id": "http://data.knora.org/23cc8975d603",
@@ -321,7 +321,7 @@ let fulltextSearchForNarr: ResourcesSequence = {
                 "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 60.\nHolzschnitt zu Kap. 60: Von SelbstgefÃ¤lligkeit.\nEin alter Narr steht am Ofen und rÃ¼hrt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.\n11.7 x 8.5 cm."
             },
-            "http://schema.org/name": "i4r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "i4r"
         }
     ],
     "http://schema.org/numberOfItems": 25
@@ -340,7 +340,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "Zeitglöcklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -370,7 +370,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a1r, Titelblatt"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a1r, Titelblatt"
         },
         {
             "@id": "http://data.knora.org/4f11adaf",
@@ -381,7 +381,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "Zeitglöcklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -411,7 +411,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a1v, Titelblatt, RÃ¼ckseite"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a1v, Titelblatt, RÃ¼ckseite"
         },
         {
             "@id": "http://data.knora.org/14173cea",
@@ -422,7 +422,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -452,7 +452,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a2r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a2r"
         },
         {
             "@id": "http://data.knora.org/d91ccb2401",
@@ -463,7 +463,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -493,7 +493,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a2v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a2v"
         },
         {
             "@id": "http://data.knora.org/9e225a5f01",
@@ -504,7 +504,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -534,7 +534,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a3r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a3r"
         },
         {
             "@id": "http://data.knora.org/6328e99901",
@@ -545,7 +545,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -575,7 +575,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a3v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a3v"
         },
         {
             "@id": "http://data.knora.org/282e78d401",
@@ -586,7 +586,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -616,7 +616,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a4r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a4r"
         },
         {
             "@id": "http://data.knora.org/ed33070f02",
@@ -627,7 +627,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -657,7 +657,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a4v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a4v"
         },
         {
             "@id": "http://data.knora.org/b239964902",
@@ -668,7 +668,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -698,7 +698,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a5r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a5r"
         },
         {
             "@id": "http://data.knora.org/773f258402",
@@ -709,7 +709,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -739,7 +739,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a5v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a5v"
         },
         {
             "@id": "http://data.knora.org/3c45b4be02",
@@ -750,7 +750,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -780,7 +780,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a6r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a6r"
         },
         {
             "@id": "http://data.knora.org/014b43f902",
@@ -791,7 +791,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -821,7 +821,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a6v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a6v"
         },
         {
             "@id": "http://data.knora.org/c650d23303",
@@ -832,7 +832,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -862,7 +862,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a7r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a7r"
         },
         {
             "@id": "http://data.knora.org/8b56616e03",
@@ -873,7 +873,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -903,7 +903,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a7v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a7v"
         },
         {
             "@id": "http://data.knora.org/505cf0a803",
@@ -914,7 +914,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -944,7 +944,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a8r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a8r"
         },
         {
             "@id": "http://data.knora.org/15627fe303",
@@ -955,7 +955,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -985,7 +985,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "a8v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "a8v"
         },
         {
             "@id": "http://data.knora.org/da670e1e04",
@@ -996,7 +996,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1026,7 +1026,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b1r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b1r"
         },
         {
             "@id": "http://data.knora.org/9f6d9d5804",
@@ -1037,7 +1037,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1067,7 +1067,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b1v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b1v"
         },
         {
             "@id": "http://data.knora.org/64732c9304",
@@ -1078,7 +1078,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1108,7 +1108,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b2r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b2r"
         },
         {
             "@id": "http://data.knora.org/2979bbcd04",
@@ -1119,7 +1119,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1149,7 +1149,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b2v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b2v"
         },
         {
             "@id": "http://data.knora.org/ee7e4a0805",
@@ -1160,7 +1160,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1190,7 +1190,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b3r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b3r"
         },
         {
             "@id": "http://data.knora.org/b384d94205",
@@ -1201,7 +1201,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1231,7 +1231,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b3v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b3v"
         },
         {
             "@id": "http://data.knora.org/788a687d05",
@@ -1242,7 +1242,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1272,7 +1272,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b4r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b4r"
         },
         {
             "@id": "http://data.knora.org/3d90f7b705",
@@ -1283,7 +1283,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1313,7 +1313,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b4v"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b4v"
         },
         {
             "@id": "http://data.knora.org/029686f205",
@@ -1324,7 +1324,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
                     "@id": "http://data.knora.org/c5058f3a",
                     "@type": "http://api.knora.org/ontology/incunabula/v2#book",
-                    "http://schema.org/name": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
+                    "http://www.w3.org/2000/01/rdf-schema#label": "ZeitglÃ¶cklein des Lebens und Leidens Christi"
                 }
             },
             "http://api.knora.org/ontology/incunabula/v2#seqnum": {
@@ -1354,8 +1354,308 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
                     "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
                 }
             ],
-            "http://schema.org/name": "b5r"
+            "http://www.w3.org/2000/01/rdf-schema#label": "b5r"
         }
     ],
     "http://schema.org/numberOfItems": 25
 };
+
+// Euler letter L176-O
+const EulerLetter: ResourcesSequence = {
+    "@type": "http://schema.org/ItemList",
+    "http://schema.org/itemListElement": {
+        "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w",
+        "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#creationDate": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/w3ZlkuU2T0-0DMrvW8HLJA",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": "GREGORIAN",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": 3,
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": "CE",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": 1,
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 1756,
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": 3,
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": 1,
+            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 1756,
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GREGORIAN:1756-01-03 CE"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasAuthorValue": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/-dzjDkhPRzy-9q0v7QtI7w",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                "@id": "http://rdfh.ch/biblio/QNWEqmjxQ9W-_hTwKlKP-Q",
+                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                "http://www.w3.org/2000/01/rdf-schema#label": "Leonhard Euler"
+            }
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasRecipientValue": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/gkdrd8ZXQhucrNLXIf2-qw",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                "@id": "http://rdfh.ch/biblio/Yv2elBDtSMqoJeKRcxsW8A",
+                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                "http://www.w3.org/2000/01/rdf-schema#label": "Christian Goldbach"
+            }
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasSubject": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/JpGklfqZSxuu7VI1zIyucw",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/other_quadratic_forms"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Other quadratic forms"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/SiEBL-EASQSNeFBprbjY3A",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/berlin_academy"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Berlin Academy"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/H4IZDQ1eS2WBrMhZRX-vkA",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/other_professional_tasks"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Other professional tasks"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/MdjXlOTNRfqYKEWNIh6kfg",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/errands"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Errands"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/rfao0tqnQTiYyLdlJrNF6w",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/book_trade_orders"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Book trade, orders"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/_fCIiKjzRYqjXkEhykto5A",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+                    "@id": "http://rdfh.ch/lists/0801/johann_albrecht_euler"
+                },
+                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Johann Albrecht Euler"
+            }
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/GJQB9IHYTl2RhG4g4ru0YA",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#textValueAsHtml": "<div>\n   <div id=\"transcription\">\n      \n      <p>Hochwohlgebohrner Herr</p>\n      \n      <p>Hochgeehrtester Herr <em>Etats</em> Rath\n      </p>\n      \n      <p>Bey dem Antritt dieses neuen Jahrs lege ich zuvorderst meinen herzlichsten Wunsch\n         für das beständige Wohlseyn Eur. Hochwohlgeb. ab, und empfehle mich dabey gehorsamst\n         sammt den meinigen zu Dero fortdaurenden Wohlgewogenheit<span class=\"math\">\\(\\,.\\,\\)</span> Zugleich statte ich auch Eur. Hochwohlgeb. meine verpflichtetste Danksagung ab für\n         den gütigen Antheil welchen Dieselben an unserem Zustand zu nehmen belieben und habe\n         das Vergnügen Eur. Hochwohlgeb. zu berichten, daß&nbsp;S[ein]<span class=\"math\">\\(\\,{}^{\\text{e}}\\,\\)</span> Königl[iche] <em>Majestät<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg\"></a></em> bey dem Anfang dieses Jahrs Dero Pathen unsern ältesten Sohn mit einer jährlichen\n         Besoldung von <a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA\"></a><span class=\"math\">\\(\\,200\\,\\)</span> Rthl. begnadiget.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw\"><sup>1</sup></a></p>\n      \n      <p>Ich habe nun schon eine geraume Zeit so viel andere Geschäfte gehabt daß&nbsp;ich an <em>numeri</em>sche <em>Theoremata</em>, dergleichen ich Eur. Hochwohlgeb. das letste mal vorzulegen die Ehre gehabt, nicht\n         habe denken können. Die <em>Partes Matheseos applicatae</em> nehmen mir die meiste Zeit weg, wo es immer mehr zu untersuchen gibt, je mehr man\n         damit umgeht.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg\"><sup>2</sup></a></p>\n      \n      <p>Weil nun mein Kopf mit so viel anderen Sachen angefüllet ist, so mag das wohl die\n         Ursache seyn, daß&nbsp;ich mich in das von Eur. Hochwohlgeb. <em>communicir</em>te und nach der Hand verbesserte <em>Theorema</em> nicht finden kan. Vielleicht haben Eur. Hochwohlgeb. vergessen noch eine wesentliche\n         <em>Condition</em> hinzuzusetzen.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw\"><sup>3</sup></a></p>\n      \n      <p>Das <em>Theorema</em> war: <em>Si sit</em><span class=\"math\">\\(\\,aa+bb=P^{2}+eQ^{2}\\,\\)</span><em>erit etiam</em></p>\n      \n      <p>\n         <span class=\"math\">\\(\\,a^{2}+\\left(\\left(2e+1\\right)b-eP-eQ\\right)^{2}=M^{2}+eN^{2}\\text{;}\\,\\)</span>\n         \n      </p>\n      \n      <p>weil ich den Grund desselben nicht einsehen konnte, so habe ich die Richtigkeit desselben\n         durch <em>Exempel</em> erforschen wollen.\n      </p>\n      \n      <p>I. Da <span class=\"math\">\\(\\,1^{2}+4^{2}=17=3^{2}+2\\cdot 2^{2}\\,\\)</span>, so ist <span class=\"math\">\\(\\,a=1\\,\\)</span>, <span class=\"math\">\\(\\,b=4\\,\\)</span>, <span class=\"math\">\\(\\,P=3\\,\\)</span>, <span class=\"math\">\\(\\,Q=2\\,\\)</span> und <span class=\"math\">\\(\\,e=2\\,\\)</span>, allso müste seyn\n      </p>\n      \n      <p>\n         <span class=\"math\">\\(\\,1^{2}+\\left(5\\cdot 4-2\\cdot 3-2\\cdot 2\\right)^{2}=1^{2}+10^{2}=101=M^{2}+2N^{2}\\,\\)</span>\n         \n      </p>\n      \n      <p>welches unmöglich ist.</p>\n      \n      <p>II. Da <span class=\"math\">\\(\\,9^{2}+4^{2}=97=7^{2}+3\\cdot 4^{2}\\,\\)</span>, so ist <span class=\"math\">\\(\\,a=9\\,\\)</span>; <span class=\"math\">\\(\\,b=4\\,\\)</span>; <span class=\"math\">\\(\\,P=7\\,\\)</span>; <span class=\"math\">\\(\\,Q=4\\,\\)</span> und <span class=\"math\">\\(\\,e=3\\,\\)</span>, allso müsste seyn\n      </p>\n      \n      <p>\n         <span class=\"math\">\\(\\,9^{2}+\\left(7\\cdot 4-3\\cdot 7-3\\cdot 4\\right)^{2}=9^{2}+5^{2}=106=M^{2}+3N^{2}\\,\\)</span>\n         \n      </p>\n      \n      <p>welches ebenfalls unmöglich ist.</p>\n      \n      <p>Da ich nun nicht einmal ein <em>Exempel</em> finden kan, welches einträfe, so schliesse ich daraus, daß&nbsp;eine gewisse Bedingung\n         in den Zahlen <span class=\"math\">\\(\\,a\\,\\)</span>, <span class=\"math\">\\(\\,b\\,\\)</span>, <span class=\"math\">\\(\\,P\\,\\)</span> und <span class=\"math\">\\(\\,Q\\,\\)</span> müsse weggelassen seyn, welche ich aber nicht ausfündig machen kan.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g\"><sup>4</sup></a></p>\n      \n      <p>Ich habe dem H. <em>Spener<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w\"></a></em> zu wissen gethan, daß&nbsp;Eur. Hochwohlgeb. die Rechnung für die überschickten Bücher\n         verlangen; bekomme ich dieselbe vor Schliessung dieses Briefs, wie ich ihm habe sagen\n         lassen, so werde ich sie beylegen.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw\"><sup>5</sup></a></p>\n      \n      <p>Sonsten da er nicht alle verlangte Bücher gehabt, so werde ich inskünftige dergleichen\n         <em>Commission</em>en dem <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span>Neaulme<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg\"></a></em>, welcher weit <em>activer</em> ist und alles schaffen kan, auftragen. Wegen des Werks: <em>La Clef du Cabinet des Princes<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA\"></a><a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw\"></a></em> füge hier die Antwort des <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span>de Bourdeaux<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA\"></a></em> bey.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w\"><sup>6</sup></a></p>\n      \n      <p>Sollte dasselbe vor der Ankunft einer <em>Resolution</em> von Eur. Hochwohlgeb. schon verkauft worden seyn, so hat sich <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span></em><em>Neaulme<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg\"></a></em> anheischig gemacht, dasselbe auch zu liefern.\n      </p>\n      \n      <p>Ich habe die Ehre mit der schuldigsten Hochachtung zu verharren</p>\n      \n      <p>Eur. Hochwohlgebohrnen</p>\n      \n      <p>gehorsamster Diener</p>\n      \n      <p>\n         <em>L. Euler</em>\n         \n      </p>\n      \n      <p><em>Berlin</em> den 3<span class=\"math\">\\(\\,{}^{\\text{ten}}\\,\\)</span><em>Januarii</em></p>\n      \n      <p>1756.</p>\n      \n      <p>\n         <sub>Berlin, January 3rd, 1756</sub>\n         \n      </p>\n      \n      <p>\n         <sub>Original, 1 fol. – RGADA, f. 181, n. 1413, č. V, fol. 123rv</sub>\n         \n      </p>\n      \n      <p>\n         <sub>Published: <em>Correspondance</em> (1843), t. I, p. 636–637; <em>Euler-Goldbach</em> (1965), p. 385–386</sub>\n         \n      </p>\n      \n   </div>\n   <div id=\"references\">\n      <ol></ol>\n   </div>\n</div>"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasLanguage": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/ilKXhfZnS9uAYDNQzi6m8Q",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "German"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasNumber": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/hS_gqlOtQsCqA-gqrgIHCQ",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "176"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasOriginalValue": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/veu6BVjbTcKFPAEmcYRjXQ",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                "@id": "http://rdfh.ch/0801/beol/1PUuT3mcRGmeunDS3ZNyOA",
+                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#manuscript",
+                "http://www.w3.org/2000/01/rdf-schema#label": "L176 Original Manuscript"
+            }
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasRepertoriumNumber": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/na-JeCAxSXyYjpx0Cn-qrA",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "890"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasTranslationValue": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/_iqsIP5NSLiBE8hPnDwAKw",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                "@id": "http://rdfh.ch/0801/beol/yBr2EjBMTkeCeVmGPfjCtw",
+                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
+                "http://www.w3.org/2000/01/rdf-schema#label": "L176-T"
+            }
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterIsPublishedValue": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/gOwn9vzMT-2XHkgZe42fTA",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/79Rz6MaAQESBalJeWl2TVA",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#publishedLetter",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176-O published in Fuß edition"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/5-CVslP4R9KY1_d3d83qMw",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/pFN8MlXBSYaB7oZRxUpV0Q",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#publishedLetter",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176-O published in Yushkevich-Winter edition"
+                }
+            }
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterIsReplyToValue": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/iW0aQbZ2Qaeigqr5RN-Hlg",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/_iz5PE4rT8KNfbmfW8DxrQ",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L174-O"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/utSZPRdcSjC78DHtGBVZ3Q",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/f5a92GjJRriC1GTY_NzfvQ",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L175-O"
+                }
+            }
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#location": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/xpStwEfxSdGH14StZ_KWHQ",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Berlin"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/v2#title": {
+            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/rqHQuCoeRAmfUElMDuEfFg",
+            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": " Euler to Goldbach, January 3rd, 1756"
+        },
+        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/fsxYuF6BSl6opUqcetx4Zg",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-2"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/aMwl67I7RGa5Dvk-lczTdQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Claude Jordan"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/1F3yY5ywSfS8n8U6RYE12w",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Johann Carl (the Elder) Spener"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/NIpFHSbKSe-BDC8RUmuhqg",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-6"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/wu7kCf2CR-e2aAvT8Q1DhQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-1"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/YQRbSoBGR_-QrpHB_o0ReQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Jean Neaulme"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/mEhOhC8STn6t816gMUMLUQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-5"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/IG_gpA_vQBW-8hBbP1y0LQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Friedrich II."
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/veG9DY7pR46P62Ylvm7Nzw",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Johann Albrecht Euler"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/udl1maFWTUu1MLcla4bm1g",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-4"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/uwc5JnP4R36elNlokOTX7A",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "Etienne de Bourdeaux"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/dyhBkbFrQBSRevFJGMUfwQ",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw",
+                    "@type": "http://0.0.0.0:3333/ontology/0802/biblio/v2#Book",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "jordanclbhae"
+                }
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/6ry3IMMKRNq9x29EiAhYTw",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+                    "@id": "http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw",
+                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
+                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-3"
+                }
+            }
+        ],
+        "http://www.w3.org/2000/01/rdf-schema#label": "L176-O"
+    },
+    "http://schema.org/numberOfItems": 1
+}
