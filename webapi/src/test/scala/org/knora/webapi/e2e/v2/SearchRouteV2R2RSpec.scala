@@ -1812,7 +1812,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 // TODO: add some test data that have a language annotation and check for results
 
-                checkCountQuery(responseAs[String], 1)
+                checkCountQuery(responseAs[String], 0)
             }
 
         }

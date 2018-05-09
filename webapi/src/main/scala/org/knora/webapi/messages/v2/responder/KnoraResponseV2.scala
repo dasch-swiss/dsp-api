@@ -179,12 +179,10 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
 
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
-        val stringWithLang = valueHasLanguage
-            .map(l => valueHasString + "@" + l)
-            .getOrElse(valueHasString)
+
 
         var objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
-            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(stringWithLang, standoff.get.standoff, standoff.get.mapping)
+            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString , standoff.get.standoff, standoff.get.mapping)
 
             // check if there is an XSL transformation
             if (standoff.get.XSLT.nonEmpty) {
@@ -221,7 +219,7 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
             }
         } else {
             // no markup given
-            Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(stringWithLang))
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
         }
         valueHasLanguage match {
             case Some(lang) =>
