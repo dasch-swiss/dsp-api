@@ -937,7 +937,7 @@
 <http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1> a knora-base:TextValue ;
     knora-base:isDeleted false ;
     knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
-    knora-base:valueHasString "Bonjour" ;
+    knora-base:valueHasString "Bonjour"@fr ;
     knora-base:valueHasLanguage "fr" ;
     knora-base:valueHasOrder 0 ;
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;

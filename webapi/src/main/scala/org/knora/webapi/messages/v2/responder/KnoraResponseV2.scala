@@ -169,6 +169,7 @@ case class DateValueContentV2(valueHasString: String,
   * Represents a Knora text value.
   *
   * @param valueHasString the string representation of the text (without markup).
+  * @param valueHasLanguage the language of text, if any.
   * @param standoff       a [[StandoffAndMapping]], if any.
   * @param comment        a comment on this `TextValueContentV2`, if any.
   */
@@ -182,7 +183,7 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
             .map(l => valueHasString + "@" + l)
             .getOrElse(valueHasString)
 
-        val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
+        var objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
             val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(stringWithLang, standoff.get.standoff, standoff.get.mapping)
 
             // check if there is an XSL transformation
@@ -222,7 +223,12 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
             // no markup given
             Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(stringWithLang))
         }
-
+        valueHasLanguage match {
+            case Some(lang) =>
+                objectMap += (OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(lang))
+            case None =>
+                objectMap
+        }
         JsonLDObject(objectMap)
     }
 
@@ -626,7 +632,7 @@ case class CreateResource(label: String, resourceClass: IRI, values: Map[IRI, Se
 trait KnoraResponseV2 {
 
     /**
-      * Converts the response to a data structure that can be used to generate JSON-LD.
+      * vonverts the response to a data structure that can be used to generate JSON-LD.
       *
       * @param targetSchema the Knora API schema to be used in the JSON-LD document.
       * @return a [[JsonLDDocument]] representing the response.
