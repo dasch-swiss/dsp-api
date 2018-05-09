@@ -1,8 +1,9 @@
 import {ResourcesResponse} from "../ResourcesResponse";
-import ResourcesSequence = ResourcesResponse.ApiV2WithValueObjects.ResourcesSequence;
+import ApiV2WithValueObjects = ResourcesResponse.ApiV2WithValueObjects;
+import ApiV2Simple = ResourcesResponse.ApiV2Simple
 
 // http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
-let zeitgloecklein: ResourcesSequence = {
+const Zeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
     "@type": "http://schema.org/ItemList",
     "http://schema.org/itemListElement": {
         "@id": "http://rdfh.ch/c5058f3a",
@@ -74,8 +75,32 @@ let zeitgloecklein: ResourcesSequence = {
     "http://schema.org/numberOfItems": 1
 };
 
+// http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?schema=simple
+const ZeitgloeckleinSimple: ApiV2Simple.ResourcesSequence = {
+    "@type": "http://schema.org/ItemList",
+    "http://schema.org/itemListElement": {
+        "@id": "http://rdfh.ch/c5058f3a",
+        "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#citation": [
+            "Schramm Bd. XXI, S. 27",
+            "GW 4168",
+            "ISTC ib00512000"
+        ],
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#hasAuthor": "Berthold, der Bruder",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#location": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#physical_desc": "Dimension: 8°",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate": "JULIAN:1492 CE",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher": "Johann Amerbach",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc": "Basel",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title": "Zeitglöcklein des Lebens und Leidens Christi",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#url": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1",
+        "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
+    },
+    "http://schema.org/numberOfItems": 1
+};
+
 // http://localhost:3333/v2/search/Narr
-let fulltextSearchForNarr: ResourcesSequence = {
+let fulltextSearchForNarr: ApiV2WithValueObjects.ResourcesSequence = {
     "@type": "http://schema.org/ItemList",
     "http://schema.org/itemListElement": [
         {
@@ -332,8 +357,166 @@ let fulltextSearchForNarr: ResourcesSequence = {
     "http://schema.org/numberOfItems": 25
 };
 
+// http://localhost:3333/v2/search/Narr?schema=simple
+const fulltextSearchForNarrSimple: ApiV2Simple.ResourcesSequence = {
+    "@type": "http://schema.org/ItemList",
+    "http://schema.org/itemListElement": [
+        {
+            "@id": "http://rdfh.ch/00505cf0a803",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 105.\nHolzschnitt identisch mit Kap. 95: In einer Landschaft fasst ein Narr, der ein Zepter in der Linken hält, einem Mann an die Schulter und redet auf ihn ein, er möge die Feiertage missachten, 11.7 x 8.6 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "p7v"
+        },
+        {
+            "@id": "http://rdfh.ch/00c650d23303",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 21.\nHolzschnitt zu Kap. 21: Andere tadeln und selbst unrecht handeln.\nEin Narr, der mit seinen Beinen im Sumpf steckt, zeigt auf einen nahen Weg, an dem ein Bildstock die Richtung weist.\n11.7 x 8.5 cm.\nUnkoloriert.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "d4v"
+        },
+        {
+            "@id": "http://rdfh.ch/02abe871e903",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 99.\nHolzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches\nAuf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie mögen die Narrenkappe verschmähen. Im Hintergrund kommentieren zwei weitere Narren über die Hofmauer hinweg das Geschehen mit ungläubigen Gesten, 11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "o5v"
+        },
+        {
+            "@id": "http://rdfh.ch/04416f64ef03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 109.\nHolzschnitt zu Kap. 109: Von Verachtung des Unglücks\nEin Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr hält sich an einem Seil der Takelage fest, 11.6 x 8.4 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "q2v"
+        },
+        {
+            "@id": "http://rdfh.ch/04f25db73f03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom Lärmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm hält, von Hunden begleitet wird, und klappernde Schuhsohlen trägt, geht auf ein Portal zu, in dem eine Frau steht und ihm schöne Augen macht.\n11.7 x 8.5 cm.\nUnkoloriert.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "g6v"
+        },
+        {
+            "@id": "http://rdfh.ch/05c7acceb703",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Titelblatt (Hartl 2001: Stultitia Navis I).\nHolzschnitt: \nErsatzholzschnitt für Titelblatt, recto:\nEin Schiff voller Narren fährt nach links. Hinten auf der Brücke trinkt ein Narr aus einer Flasche, vorne prügeln sich zwei weitere narren so sehr, dass einer von ihnen über Bord zu gehen droht. Oben die Inschrift \"Nauis stultoru(m).\"; auf dem Schiffsrumpf die Datierung \"1.4.9.7.\".\n6.5 x 11.5 cm.\noben rechts die bibliographische Angabe  (Graphitstift) \"Hain 3750\"; unten rechts Bibliotheksstempel (queroval, schwarz): \"BIBL. PUBL.| BASILEENSIS\".",
+            "http://www.w3.org/2000/01/rdf-schema#label": "a1r; Titelblatt, recto"
+        },
+        {
+            "@id": "http://rdfh.ch/075d33c1bd03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher hält einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und Jüngling steht der Name „.VLI.“; über den beiden schwebt eine Banderole mit der Aufschrift „vly . von . stouffen .  . frisch . vnd vngschaffen“; zwischen den Füssen des Jünglings ist die Jahreszahl „.1.4.9.4.“ zu lesen.\n11.6 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "b6r"
+        },
+        {
+            "@id": "http://rdfh.ch/0801/beol/4BhkDasRSLaB-ujyKWplaw",
+            "@type": "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter",
+            "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasText": "\n      \n          Bâle ce 28. Mars 1730. \u001e\n      Monsieur et treshonoré Ami\u001e\n      J'ai toujours differé de Vous repondre dans l'esperance de pouvoir Vous mander l'issue de l'affaire du Diac. W. mais selon le train qu'elle prend, elle pourra bien trotter encore quelque temps avant qu'on en vienne à la sentence finale. Mrs. les Theologiens ont livré au Conseil une deduction de leurs griefs tres vigoureuse et longue, contenant environ 300 pages in folio; la Lecture a couté au Magistrat cinq seances, chacune de 4 heures. Non obstant les plus foudroyantes accusations dont W. est chargé, il ne laisse pas de trouver encore des Patrons dans le Conseil, qui voudroient bien le sauver s'ils pouvoient, mais il n'y a pas moyen, quoique le Pere de l'accusé et l'accusé lui meme ayent eu assés de temps d'user de toutes leurs ruses et artifices (dont ils sont capables) pour gagner la pluralité des suffrages, ce qu'on a pu remarquer en ce que la lecture de la seconde partie ayant été faite il y eût une si grande emotion dans les Esprits des Conseillers Auditeurs, à cause des crimes inoüis dont cette partie étoit remplie à la charge de W. que peu s'en falloit qu'on n'on n'envoyat sur le champ 4 fuseliers pour le saisir et trainer en prison; mais on fut bien surpris de voir qu'à la troisieme lecture et les suivantes, ce feu fut extremement rallenti quoi qu'on y eut entendu des imputations pour le moins aussi importantes que celles qui furent lües par la seconde lecture; il y en eut meme, à ce que j'apprends, qui opinerent pour la suppression des deux dernieres parties sans en faire la lecture;  d'où Vous voyés que les W. Pere et fils ont bien sçû mettre à profit le delai qu'ils avoient d'une session à l'autre; Cependant les plus zelés pour la cause de Dieu ont prévalu, malgrés les infatigables pratiques qu'on a mises en oeuvre, ensorte qu'à la derniere des 5 Sessions il fut decreté, que dans le Conseil des treize on questionneroit sur touts les articles d'accusations le D. W. et cela en presence de Msrs. les Theologiens ses Accusateurs; Ce qui fut executé jeudi passé à la maison de Ville; l'examen dura depuis 2 heures jusqu'à 8 heures du soir; j'ai appris que W. se defendit miserablement, ne faisant autre chose que nier les faits les plus averés par temoins irreprochables, suivant en cela le dogme 15 qu'il a enseigné à ses Disciples. Ainsi le rapport des treise étant fait au Magistrat samedi aprés, et voyant qu'il n'y avoit pas moyen de ramener le Delinquent à la reconnoissance de ses Crimes, ni à la repentance spontanée, il fut conclû que les Theologiens dresseroient des interrogatoires sur les quels on ecouteroit chacun des Temoins sous un sermant corporel; Ce qui demandera encore du temps, d'autant plus que quelques uns des Temoins demeurent ailleurs, qu'il faudra ou citer s'ils ne sont pas loins, ou leur faire faire leurs depositions sous sermant devant le Magistrat du lieu où ils se trouvent. Quelques uns croyent que le D. W. quand il verra le serieux, il se resoudra plutot à chanter le peccavi qu'à se voir convaincu par les Temoins; il le fera peutetre déja demain par une Requete qu'il presentera peutetre au Conseil. Voici en attendant la sentence definitive, la quintessence des Heresies, telles que Mrs. les Theolog. l'ont tirée eux memes de leur long Memoire. Je Vous suis bien obligé de la communication de la Lettre du Ministere de Schafouse au Notre, je l'avois déja luë auparavant; elle contient bien plus de vigueur et de bon sens que celle de chés Vous et celle de Berne. Je suis avec toute la sincerité de mon ame Monsieur Votre tres humble et tr. ob. serviteur J. Bernoulli \u001e\n      \n          P. S. Je viens d'apprendre que les partisans de W. courent en effet de maison en maison chés les Conseillers, pour demander grace en faveur de l'accusé promettant, qu'il reconnoitra ses crimes et les confessera; c'est sans doute pour prevenir la conviction juridique par les Temoins jurés, ce qui le ruineroit entierement. Mais voilà une repentance par force, qui ne le reconciliera pas avec Dieu, qu'il a si horriblement offensé. \u001e\n      \n          Recapitulation\u001e\n      H. Diaconus W. ist folgend. Irrthumer überwiesen, welche er den Leüthen beyzubringen getrachtet hat: \u001e\n      1. Das hohe Geheimnuß der Dreyeinigkeit vernichtet er. \u001e\n      2. hat er auf allerhand weiß zu verstehen geben, Christus seye nicht der wahre Gott und eines wesens mit dem Vatter, und deßwegen alle örter H. Schrifft, so davon handlen, verdrähet, derowegen möge Christus auch nicht inn allen fählen angebetten werden. \u001e\n      3. Christus habe nicht für unsere Sünden genuggethan sondern den Menschen nur gute Lehren und Exempel gegeben. \u001e\n      4. Der H. Geyst seye nicht der wahre Gott, sondern etwas mehr als ein Mensch, deßwegen könne man nicht gewiß seyn, daß er müsse angebetten werden. \u001e\n      5. Die H. Schrifft seye nicht in allen Stucken das ohnfehlbare wort Gottes, nachdem die Heyl. Scribenten nicht inn allen dingen von Gott inspirirt, oder unfehlbar gewesen.\u001e\n      6. Die Verfasser haben geredt nach den Vorurtheylen und irrigen meynungen der Menschen.\u001e\n      7. Christus selbst habe sich gerichtet nach d. Superstition und Aberglauben der Juden.\u001e\n      8. Die H. Schrifft seye aus vielen Ursachen gantz undeütlich. \u001e\n      9. Hat Er alle so gar die außtrucklichste wort u. örter d. H. Schrifft von dem Satan, welche Er in seinen Collegiis berühret, von anderen dingen erkläret, und den teüffel fast gäntzlich darauß gemustert.\u001e\n      \n          10. Es seyen keine vom teüffel besessene gewesen, deren die H. Evangelisten meldung thun, sondern man müsse dieses nur von Kranckheiten verstehen.\u001e\n      11. In dem H. Christo haben sich böse gelüst u. gedancken befunden. \u001e\n      12. Die bösen gelüst seyen keine Sünd, so lang sie nicht ins werck außbrechen, sondern nur eitele gedancken.\u001e\n      13. Man könne inn denen unterschiedlichen Religionen, Papistisch, griechisch etc. seelig werden.\u001e\n      14. Um gelds willen od. auß boßheit die Religion änderen seye keine Sünd, sondern eine blosse narrheit.\u001e\n      15. In dem nothfall und um sein Leben zu Salviren seye es wohl erlaubt List, betrug und ränck zu gebrauchen, dieweilen auch d. Apostel Paulus dergleichen gebraucht habe, ja man dörffe die allergrösten Missethaten vor d. hohen Obrigkeit selbst ablaügnen, u. seye d. ein narr, der sie bekenne, ehe er sonst überwiesen seye. \u001e\n      16. Man müsse das Christenthum den Leüthen nicht schwer sondern leicht machen, ihnen daher nicht vorstellen, d. sie dadurch inn noth und Trübsal gerathen können. \u001e\n      17. Die Seelen d. Menschen schlaffen nach dem Todt und seyen unempfindlich biß an jüngsten tag.\u001e\n      18. Die Peyn d. verdammten in d. Höll werde nicht ewig währen. \u001e\n      Neben diesen gehegten Irrthümmern hatte er vor ein gefährliches griechisches testament außzugeben u. von deßen beschaffenheit U. G. H. biß auff dreymahl falschen bericht abgestattet, deren bericht keiner mit dem noch endlich gelüfferten Muster Diac. XII ersten Cap. Matth. überein kommt.\n\u001e\n   ",
+            "http://www.w3.org/2000/01/rdf-schema#label": "1730-03-28_Bernoulli_Johann_I-Scheuchzer_Johann_Jakob"
+        },
+        {
+            "@id": "http://rdfh.ch/0b8940a6c903",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, während sich unter dem Narren die Hölle in Gestalt eines gefrässigen Drachenkopfs auftut, 11.7 x 8.5 cm.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "e8r"
+        },
+        {
+            "@id": "http://rdfh.ch/0d1fc798cf03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 43.\nHolzschnitt zu Kap. 43: Missachten der ewigen Seligkeit\nEin Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schlägt zugunsten der Burg aus, 11.5 x 8.4 cm.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "g5r"
+        },
+        {
+            "@id": "http://rdfh.ch/0d5ac1099503",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 66.\nHolzschnitt zu Kap. 66: Von der Erforschung der Welt.\nEin Narr hat ein Schema des Universums auf den Boden Gezeichnet und vermisst es mit einem Zirkel. Von hinten blickt ein zweiter Narr über eine Mauer und wendet sich dem ersten mit spöttischen Gesten zu.\n11.6 x 8.4 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "k4r"
+        },
+        {
+            "@id": "http://rdfh.ch/0fb54d8bd503",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 58.\nHolzschnitt zu Kap. 58: Sich um die Angelegenheiten anderer kümmern.\nEin Narr versucht mit einem Wassereimer den Brand im Haus des Nachbarn zu löschen und wird dabei von einem anderen Narren, der an seinem Mantel zerrt, unterbrochen, den hinter ihm steht auch sein eigenes Haus in Flammen.\n11.6 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "i2r"
+        },
+        {
+            "@id": "http://rdfh.ch/0ff047fc9a03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 81.\nHolzschnitt zu Kap. 81: Aus Küche und Keller.\nEin Narr führt von einem Boot aus vier Knechte am Strick, die sich in einer Küche über Spreis und Trank hermachen, während eine Frau, die am Herdfeuer sitzt, das Essen zubereitet, 11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "m1r"
+        },
+        {
+            "@id": "http://rdfh.ch/114bd47ddb03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 69.\nHolzschnitt Lemmer 1979, S. 117: Variante zu Kap. 69.\nEin Narr, der vor einer Stadtkulisse steht, hat mit seiner Rechten einen Ball in die Luft geworfen und schlägt mit seiner Linken einen Mann, der sogleich nach seinem Dolch greift. Ein junger Mann beobachtet das Geschehen.\nDer Bildinhalt stimmt weitgehend mit dem ursprünglichen Holzschnitt überein.\n11.7 x 8.4 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "k7r"
+        },
+        {
+            "@id": "http://rdfh.ch/14dd8cbc3403",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 23.\nHolzschnitt zu Kap. 23: Vom blinden Vertrauen auf das Glück.\nEin Narr schaut oben aus dem Fenster seines Hauses, das unten lichterloh brennt. Am Himmel erscheint die rächende Gotteshand, die mit einen Hammer auf Haus und Narr einschlägt. Auf der Fahne über dem Erker des Hauses ist der Baselstab zu erkennen.\n11.5 x 8.2 cm.\nUnkoloriert.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "d6v"
+        },
+        {
+            "@id": "http://rdfh.ch/167313af3a03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 34.\nHolzschnitt zu Kap. 34: Ein Narr sein und es bleiben.\nEin Narr wird von drei Gänsen umgeben, deren eine von ihm wegfliegt.\n11.7 x 8.4 cm.\nUnkoloriert.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "f3v"
+        },
+        {
+            "@id": "http://rdfh.ch/1b746fabbe03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 6.\nHolzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.\nZwei Jungen geraten am Spieltisch über Karten und Würfen in Streit. Während der eine einen Dolch zückt und der andere nach seinem Schwert greift, sitzt ein älterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.\n11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "b8r"
+        },
+        {
+            "@id": "http://rdfh.ch/1baf691c8403",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 28.\nHolzschnitt zu Kap. 28: Vom Nörgeln an Gottes Werken.\nEin Narr, der auf einem Berg ein Feuer entfacht hat, hält seine Hand schützend über die Augen, während er seinen Blick auf die hell am Himmel strahlende Sonne richtet. 11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "e7r"
+        },
+        {
+            "@id": "http://rdfh.ch/1d0af69dc403",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 18.\nHolzschnitt zu Kap. 18: Vom Dienst an zwei Herren.\nEin mit Spiess bewaffneter Narr bläst in ein Horn. Sein Hund versucht derweil im Hintergrund zwei Hasen gleichzeitig zu erjagen, 11.6 x 8.4 cm.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "d5r"
+        },
+        {
+            "@id": "http://rdfh.ch/1fa07c90ca03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 31.\nHolzschnitt zu Kap. 31: Vom Hinausschieben auf morgen.\nEin Narr steht mit ausgebreiteten Armen auf einer Strasse. Auf seinen Händen sitzen zwei Raben, die beide „Cras“ – das lateinische Wort für „morgen“ – rufen. Auf dem Kopf des Narren sitzt ein Papagei und ahmt den Ruf der Krähen nach, 11.6 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "f2r"
+        },
+        {
+            "@id": "http://rdfh.ch/1fdb76019003",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 57.\nHolzschnitt zu Kap. 57: Von der Gnadenwahl Gottes.\nEin Narr, der auf einem Krebs reitet, stützt sich auf ein brechendes Schildrohr, das ihm die Hand  durchbohrt. Ein Vogel fliegt auf den offenen Mund des Narren zu.\n11.6 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "i1r"
+        },
+        {
+            "@id": "http://rdfh.ch/21360383d003",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 45.\nHolzschnitt zu Kap. 45: Von selbstverschuldetem Unglück.\nIn Gestalt eines Narren springt Empedokles in den lodernden Krater des Ätna. Im Vordergrund lässt sich ein anderer Narr in einen Brunnen fallen. Beide werden von drei Männern beobachtet, die das Verhalten mit „Jn geschicht recht“  kommentieren, 11.7 x 8.3 cm.\n",
+            "http://www.w3.org/2000/01/rdf-schema#label": "g7r"
+        },
+        {
+            "@id": "http://rdfh.ch/2171fdf39503",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 68.\nHolzschnitt zu Kap. 68: Keinen Scherz verstehen.\nEin Kind, das auf einem Steckenpferd reitet und mit einem Stock als Gerte umher fuchtelt, wird von einem Narren am rechten Rand ausgeschimpft. Ein anderer Narr, der neben dem Kind steht, ist dabei, sein Schwert aus der Scheide zu ziehen.\n11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "k6r"
+        },
+        {
+            "@id": "http://rdfh.ch/230784e69b03",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 83.\nneuer Holzschitt (nicht in Lemmer 1979): Vor einer Häuserkulisse kniet ein Narr mit einem Beutel in der Linken und zwei Keulen in der Rechten vor einem Mann mit Hut und einem jüngeren Begleiter, 11.6 x 8.6 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "m3r"
+        },
+        {
+            "@id": "http://rdfh.ch/23427e576103",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, überreicht einem bärtigen Alten ein Geschenk, kratzt sich dabei aber unschlüssig am Kopf.\n11.6 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"128\".",
+            "http://www.w3.org/2000/01/rdf-schema#label": "q8r"
+        }
+    ],
+    "http://schema.org/numberOfItems": 25
+};
+
 // http://localhost:3333/v2/searchextended/%20%20%20PREFIX%20knora-api%3A%20%3Chttp%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-api%2Fsimple%2Fv2%23%3E%0A%0A%20%20%20CONSTRUCT%20%7B%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisMainResource%20true%20.%20%23%20marking%20of%20the%20component%20searched%20for%20as%20the%20main%20resource%2C%20mandatory%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3Aseqnum%20%3Fseqnum%20.%20%23%20return%20the%20sequence%20number%20in%20the%20response%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AhasStillImageFileValue%20%3Ffile%20.%20%23%20return%20the%20StillImageFile%20in%20the%20response%0A%20%20%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisPartOf%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20.%0A%20%20%20%7D%20WHERE%20%7B%0A%20%20%20%20%20%20%3Fcomponent%20a%20knora-api%3AResource%20.%20%23%20explicit%20type%20annotation%20for%20the%20component%20searched%20for%2C%20mandatory%0A%20%20%20%20%20%20%3Fcomponent%20a%20knora-api%3AStillImageRepresentation%20.%20%23%20additional%20restriction%20of%20the%20type%20of%20component%2C%20optional%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisPartOf%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20.%20%23%20component%20relates%20to%20compound%20resource%20via%20this%20property%0A%20%20%20%20%20%20knora-api%3AisPartOf%20knora-api%3AobjectType%20knora-api%3AResource%20.%20%23%20type%20annotation%20for%20linking%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20a%20knora-api%3AResource%20.%20%23%20type%20annotation%20for%20compound%20resource%2C%20mandatory%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3Aseqnum%20%3Fseqnum%20.%20%23%20component%20must%20have%20a%20sequence%20number%2C%20no%20further%20restrictions%20given%0A%20%20%20%20%20%20knora-api%3Aseqnum%20knora-api%3AobjectType%20xsd%3Ainteger%20.%20%23%20type%20annotation%20for%20the%20value%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Fseqnum%20a%20xsd%3Ainteger%20.%20%23%20type%20annotation%20for%20the%20sequence%20number%2C%20mandatory%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AhasStillImageFileValue%20%3Ffile%20.%20%23%20component%20must%20have%20a%20StillImageFile%2C%20no%20further%20restrictions%20given%0A%20%20%20%20%20%20knora-api%3AhasStillImageFileValue%20knora-api%3AobjectType%20knora-api%3AFile%20.%20%23%20type%20annotation%20for%20the%20value%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Ffile%20a%20knora-api%3AFile%20.%20%23%20type%20annotation%20for%20the%20StillImageFile%2C%20mandatory%0A%20%20%20%7D%0A%20%20%20ORDER%20BY%20ASC(%3Fseqnum)%20%23%20order%20by%20sequence%20number%2C%20ascending%0A%20%20%20OFFSET%200%20%23get%20first%20page%20of%20results
-let pagesOfZeitgloecklein: ResourcesSequence = {
+let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
     "@type": "http://schema.org/ItemList",
     "http://schema.org/itemListElement": [
         {
@@ -816,7 +999,7 @@ let pagesOfZeitgloecklein: ResourcesSequence = {
 };
 
 // Euler letter L176-O
-const EulerLetter: ResourcesSequence = {
+const EulerLetter: ApiV2WithValueObjects.ResourcesSequence = {
     "@type": "http://schema.org/ItemList",
     "http://schema.org/itemListElement": {
         "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w",
@@ -1113,4 +1296,122 @@ const EulerLetter: ResourcesSequence = {
         "http://www.w3.org/2000/01/rdf-schema#label": "L176-O"
     },
     "http://schema.org/numberOfItems": 1
-}
+};
+
+const EulerLetterSimple: ApiV2Simple.ResourcesSequence = {
+    "@type": "http://schema.org/ItemList",
+    "http://schema.org/itemListElement": {
+        "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w",
+        "@type": "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate": "GREGORIAN:1756-01-03 CE",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor": {
+            "@id": "http://rdfh.ch/biblio/QNWEqmjxQ9W-_hTwKlKP-Q"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient": {
+            "@id": "http://rdfh.ch/biblio/Yv2elBDtSMqoJeKRcxsW8A"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasSubject": [
+            "Other quadratic forms",
+            "Berlin Academy",
+            "Other professional tasks",
+            "Errands",
+            "Book trade, orders",
+            "Johann Albrecht Euler"
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasText": "\n        Hochwohlgebohrner Herr\u001e\n        Hochgeehrtester Herr Etats Rath\u001e\n        Bey dem Antritt dieses neuen Jahrs lege ich zuvorderst meinen herzlichsten Wunsch für das beständige Wohlseyn Eur. Hochwohlgeb. ab, und empfehle mich dabey gehorsamst sammt den meinigen zu Dero fortdaurenden Wohlgewogenheit\\,.\\, Zugleich statte ich auch Eur. Hochwohlgeb. meine verpflichtetste Danksagung ab für den gütigen Antheil welchen Dieselben an unserem Zustand zu nehmen belieben und habe das Vergnügen Eur. Hochwohlgeb. zu berichten, daß S[ein]\\,{}^{\\text{e}}\\, Königl[iche] Majestät bey dem Anfang dieses Jahrs Dero Pathen unsern ältesten Sohn mit einer jährlichen Besoldung von \\,200\\, Rthl. begnadiget.1\u001e\n        Ich habe nun schon eine geraume Zeit so viel andere Geschäfte gehabt daß ich an numerische Theoremata, dergleichen ich Eur. Hochwohlgeb. das letste mal vorzulegen die Ehre gehabt, nicht habe denken können. Die Partes Matheseos applicatae nehmen mir die meiste Zeit weg, wo es immer mehr zu untersuchen gibt, je mehr man damit umgeht.2\u001e\n        Weil nun mein Kopf mit so viel anderen Sachen angefüllet ist, so mag das wohl die Ursache seyn, daß ich mich in das von Eur. Hochwohlgeb. communicirte und nach der Hand verbesserte Theorema nicht finden kan. Vielleicht haben Eur. Hochwohlgeb. vergessen noch eine wesentliche Condition hinzuzusetzen.3\u001e\n        Das Theorema war: Si sit\\,aa+bb=P^{2}+eQ^{2}\\,erit etiam\u001e\n        \n          \\,a^{2}+\\left(\\left(2e+1\\right)b-eP-eQ\\right)^{2}=M^{2}+eN^{2}\\text{;}\\,\n        \u001e\n        weil ich den Grund desselben nicht einsehen konnte, so habe ich die Richtigkeit desselben durch Exempel erforschen wollen.\u001e\n        I. Da \\,1^{2}+4^{2}=17=3^{2}+2\\cdot 2^{2}\\,, so ist \\,a=1\\,, \\,b=4\\,, \\,P=3\\,, \\,Q=2\\, und \\,e=2\\,, allso müste seyn\u001e\n        \n          \\,1^{2}+\\left(5\\cdot 4-2\\cdot 3-2\\cdot 2\\right)^{2}=1^{2}+10^{2}=101=M^{2}+2N^{2}\\,\n        \u001e\n        welches unmöglich ist.\u001e\n        II. Da \\,9^{2}+4^{2}=97=7^{2}+3\\cdot 4^{2}\\,, so ist \\,a=9\\,; \\,b=4\\,; \\,P=7\\,; \\,Q=4\\, und \\,e=3\\,, allso müsste seyn\u001e\n        \n          \\,9^{2}+\\left(7\\cdot 4-3\\cdot 7-3\\cdot 4\\right)^{2}=9^{2}+5^{2}=106=M^{2}+3N^{2}\\,\n        \u001e\n        welches ebenfalls unmöglich ist.\u001e\n        Da ich nun nicht einmal ein Exempel finden kan, welches einträfe, so schliesse ich daraus, daß eine gewisse Bedingung in den Zahlen \\,a\\,, \\,b\\,, \\,P\\, und \\,Q\\, müsse weggelassen seyn, welche ich aber nicht ausfündig machen kan.4\u001e\n        Ich habe dem H. Spener zu wissen gethan, daß Eur. Hochwohlgeb. die Rechnung für die überschickten Bücher verlangen; bekomme ich dieselbe vor Schliessung dieses Briefs, wie ich ihm habe sagen lassen, so werde ich sie beylegen.5\u001e\n        Sonsten da er nicht alle verlangte Bücher gehabt, so werde ich inskünftige dergleichen Commissionen dem M.\\,{}^{\\text{r}}\\,Neaulme, welcher weit activer ist und alles schaffen kan, auftragen. Wegen des Werks: La Clef du Cabinet des Princes füge hier die Antwort des M.\\,{}^{\\text{r}}\\,de Bourdeaux bey.6\u001e\n        Sollte dasselbe vor der Ankunft einer Resolution von Eur. Hochwohlgeb. schon verkauft worden seyn, so hat sich M.\\,{}^{\\text{r}}\\,Neaulme anheischig gemacht, dasselbe auch zu liefern.\u001e\n        Ich habe die Ehre mit der schuldigsten Hochachtung zu verharren\u001e\n        Eur. Hochwohlgebohrnen\u001e\n        gehorsamster Diener\u001e\n        \n          L. Euler\n        \u001e\n        Berlin den 3\\,{}^{\\text{ten}}\\,Januarii\u001e\n        1756.\u001e\n        \n          Berlin, January 3rd, 1756\n        \u001e\n        \n          Original, 1 fol. – RGADA, f. 181, n. 1413, č. V, fol. 123rv\n        \u001e\n        \n          Published: Correspondance (1843), t. I, p. 636–637; Euler-Goldbach (1965), p. 385–386\n        \u001e\n      ",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasLanguage": "German",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasNumber": "176",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasOriginal": {
+            "@id": "http://rdfh.ch/0801/beol/1PUuT3mcRGmeunDS3ZNyOA"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasRepertoriumNumber": "890",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasTranslation": {
+            "@id": "http://rdfh.ch/0801/beol/yBr2EjBMTkeCeVmGPfjCtw"
+        },
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterIsPublished": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/79Rz6MaAQESBalJeWl2TVA"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/pFN8MlXBSYaB7oZRxUpV0Q"
+            }
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterIsReplyTo": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/_iz5PE4rT8KNfbmfW8DxrQ"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/f5a92GjJRriC1GTY_NzfvQ"
+            }
+        ],
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#location": "Berlin",
+        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#title": " Euler to Goldbach, January 3rd, 1756",
+        "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo": [
+            {
+                "@id": "http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA"
+            },
+            {
+                "@id": "http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw"
+            },
+            {
+                "@id": "http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw"
+            }
+        ],
+        "http://www.w3.org/2000/01/rdf-schema#label": "L176-O"
+    },
+    "http://schema.org/numberOfItems": 1
+};
+
+// http://0.0.0.0:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?schema=simple
+const PageOfZeitgloecklein: ApiV2Simple.ResourcesSequence = {
+    "@type": "http://schema.org/ItemList",
+    "http://schema.org/itemListElement": {
+        "@id": "http://rdfh.ch/8a0b1e75",
+        "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBordüre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\".",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#origname": "ad+s167_druck1=0001.tif",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page_comment": "Schramm, Bd. 21, Abb. 601.",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pagenum": "a1r, Titelblatt",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf": {
+            "@id": "http://rdfh.ch/c5058f3a"
+        },
+        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum": 1,
+        "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile": [
+            "http://localhost:1024/knora/incunabula_0000000002.jpg/full/95,128/0/default.jpg",
+            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg"
+        ],
+        "http://www.w3.org/2000/01/rdf-schema#label": "a1r, Titelblatt"
+    },
+    "http://schema.org/numberOfItems": 1
+};
+
