@@ -628,7 +628,7 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 // Get the class's standoff data type, if any. A standoff class that has a datatype is a subclass of one of the classes
-                // in org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses.
+                // in StandoffDataTypeClasses.
 
                 val standoffDataType: Set[SmartIri] = allSubClassOfRelations(classIri).intersect(StandoffDataTypeClasses.getStandoffClassIris.map(_.toSmartIri))
 

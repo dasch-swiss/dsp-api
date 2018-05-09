@@ -80,7 +80,7 @@ $ sbt
 > reStart
 ```
 
-Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
+Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
 
 To shut down the Knora API server:
 
