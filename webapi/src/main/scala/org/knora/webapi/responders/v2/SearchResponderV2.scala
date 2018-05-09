@@ -910,23 +910,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 throw SparqlSearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
             }
 
-            // create a variable representing the string literal
-            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
-
             // comparison operator is expected to be '='
             if (compareExpression.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator is expected to be '=' for the use with a 'lang' function call.")
 
-            compareExpression.rightArg match {
-                case stringLiteral: XsdLiteral if stringLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri =>
+            val langLiteral: XsdLiteral = compareExpression.rightArg match {
+                case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri => strLiteral
 
                 case other => throw SparqlSearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
             }
 
             TransformedFilterPattern(
-                Some(CompareExpression(LangFunction(textValHasString), compareExpression.operator, compareExpression.rightArg)),
+                None,
                 Seq(
-                    // connects the value object with the value literal
-                    StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                    // connects the value object with the value language code
+                    StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri), langLiteral)
                 )
             )
 
@@ -1092,8 +1089,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case filterOr: OrExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft = transformFilterPattern(filterOr.leftArg, typeInspection)
-                    val filterExpressionRight = transformFilterPattern(filterOr.rightArg, typeInspection)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterOr.leftArg, typeInspection)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterOr.rightArg, typeInspection)
 
                     // recreate Or expression and include additional statements
                     TransformedFilterPattern(
@@ -1104,8 +1101,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case filterAnd: AndExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft = transformFilterPattern(filterAnd.leftArg, typeInspection)
-                    val filterExpressionRight = transformFilterPattern(filterAnd.rightArg, typeInspection)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterAnd.leftArg, typeInspection)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterAnd.rightArg, typeInspection)
 
                     // recreate And expression and include additional statements
                     TransformedFilterPattern(
