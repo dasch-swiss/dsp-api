@@ -804,17 +804,14 @@ case class TextValueSimpleV1(utf8str: String, language: Option[String]= None) ex
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
 
     def toJsValue = {
-        println(s"toJsValue called for utf8str $utf8str")
         language match {
             case Some(lang) =>
-                println(s"for text value '$utf8str', lang is = $lang")
                 JsObject(
                     "utf8str" -> JsString(utf8str),
                     "language" -> JsString(lang)
                 )
 
             case None =>
-                println(s"for text value '$utf8str', lang is None")
                 JsObject("utf8str" -> JsString(utf8str))
         }
     }
