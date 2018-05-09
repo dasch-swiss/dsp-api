@@ -17,20 +17,27 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The Sipi Media Server
+# Monitoring the Webapi Server
 
-Sipi is a high-performance media server written in C++, for serving and
-converting binary media files such as images and video. Sipi can
-efficiently convert between many different formats on demand, preserving
-embedded metadata, and implements the [International Image
-Interoperability Framework (IIIF)](http://iiif.io/). Knora is designed
-to use Sipi for converting and serving media files.
+Monitoring is implemented by using the Prometheus / Grafana stack.
 
-@@toc { depth=1 }
+## Usage:
 
-@@@ index
+1)  Start webapi with the necessary -p option (e.g., from inside sbt:
+    run -p or reStart -p
+2)  Start the monitoring stack by executing the following line inside
+    the monitoring
+    folder:
 
-* [Setting Up Sipi for Knora](setup-sipi-for-knora.md)
-* [Interaction Between Sipi and Knora](sipi-and-knora.md)
+<!-- end list -->
 
-@@@
+    $ WEBAPIHOST=<YourLocalIP> ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose up -d
+
+3)  Head over to localhost:3000, log in using the admin username and
+    password, and open the "Webapi Akka Actor System" dashboard.
+4)  To shut down the monitoring stack, run the following line inside the
+    monitoring folder:
+
+<!-- end list -->
+
+    $ docker-compose down

@@ -17,20 +17,20 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The Sipi Media Server
-
-Sipi is a high-performance media server written in C++, for serving and
-converting binary media files such as images and video. Sipi can
-efficiently convert between many different formats on demand, preserving
-embedded metadata, and implements the [International Image
-Interoperability Framework (IIIF)](http://iiif.io/). Knora is designed
-to use Sipi for converting and serving media files.
+# Knora API v1
 
 @@toc { depth=1 }
 
 @@@ index
 
-* [Setting Up Sipi for Knora](setup-sipi-for-knora.md)
-* [Interaction Between Sipi and Knora](sipi-and-knora.md)
+- [Introduction](introduction.md)
+- [Reading and Searching Resources](reading-and-searching-resources.md)
+- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
+- [Adding Resources](adding-resources.md)
+- [Reading and Searching Resources](reading-and-searching-resources.md)
+- [Reading Values](reading-values.md)
+- [Adding a Value](adding-values.md)
+- [Changing a Value](changing-values.md)
+- [Deleting Resources and Values](delete-resources-and-values.md)
 
 @@@

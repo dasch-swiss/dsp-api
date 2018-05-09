@@ -1,5 +1,8 @@
-Release Notes
-=============
+# Release Notes
+
+These are the release notes for each version of Knora.
+
+@@toc { depth=1 }
 
 @@@ index
 
