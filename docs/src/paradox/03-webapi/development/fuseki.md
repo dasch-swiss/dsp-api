@@ -17,20 +17,19 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The Sipi Media Server
+# Starting Fuseki 3
 
-Sipi is a high-performance media server written in C++, for serving and
-converting binary media files such as images and video. Sipi can
-efficiently convert between many different formats on demand, preserving
-embedded metadata, and implements the [International Image
-Interoperability Framework (IIIF)](http://iiif.io/). Knora is designed
-to use Sipi for converting and serving media files.
+## Locally
 
-@@toc { depth=1 }
+Inside the Knora API server git repository, there is a folder called
+`triplestores/fuseki` containing a script named `fuseki-server`. All
+needed configuration files are in place. To start Fuseki 3, just run
+this script:
 
-@@@ index
+    $ ./fuseki-server
 
-* [Setting Up Sipi for Knora](setup-sipi-for-knora.md)
-* [Interaction Between Sipi and Knora](sipi-and-knora.md)
+## Inside Docker
 
-@@@
+We can use the `dhlabbasel:fuseki` docker image from docker hub:
+
+    $ docker run --rm -it -p 3030:3030 dhlabbasel/fuseki
