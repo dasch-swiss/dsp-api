@@ -665,7 +665,6 @@ case class TextValueWithStandoffV1(utf8str: String,
 
         language match {
             case Some(lang) =>
-                println(s"for text value '$utf8str', lang is = $lang")
                 JsObject(
                     "xml" -> JsString(xml),
                     "mapping_id" -> JsString(mappingIri),
@@ -674,8 +673,6 @@ case class TextValueWithStandoffV1(utf8str: String,
 
 
             case None =>
-                println(s"for text value '$utf8str', lang is None")
-
                 JsObject(
                     "xml" -> JsString(xml),
                     "mapping_id" -> JsString(mappingIri)
