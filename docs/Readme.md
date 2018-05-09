@@ -17,7 +17,7 @@ All the different documentations are build by invoking the following command:
 $ sbt makeSite
 ```
 
-The generated documentation can be found under `target/site/`.
+The generated documentation can be found under `target/site/`. To open it locally, load `target/site/paradox/index.html`.
 
 ## 2 Previewing the Documentation Site
 
