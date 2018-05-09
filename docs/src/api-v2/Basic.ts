@@ -13,4 +13,9 @@ export module Basic {
      */
     export type KnoraInstanceIri = string;
 
+    /**
+     * IRI representing an instance or entity in Knora that is neither a resource or a value (e.g., a project, a user, or a mapping).
+     */
+    export type KnoraIri = string;
+
 }
