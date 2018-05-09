@@ -87,7 +87,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
             // expected result after expansion
             val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))
 
-            compareParsedJSONLD(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
+            compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
 
         }
 

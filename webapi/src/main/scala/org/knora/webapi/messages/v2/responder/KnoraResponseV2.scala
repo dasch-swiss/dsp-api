@@ -69,4 +69,3 @@ case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
 trait KnoraContentV2[C <: KnoraContentV2[C]] { this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
-

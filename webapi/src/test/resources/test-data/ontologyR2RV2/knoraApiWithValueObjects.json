@@ -3259,6 +3259,85 @@
         "@id" : "knora-api:ValueBase",
         "@type" : "owl:Class"
       },
+      "knora-api:XSLTransformation" : {
+        "@id" : "knora-api:XSLTransformation",
+        "@type" : "owl:Class",
+        "knora-api:isResourceClass" : true,
+        "rdfs:comment" : "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.",
+        "rdfs:label" : "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.",
+        "rdfs:subClassOf" : [ {
+          "@id" : "knora-api:TextRepresentation"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToProject"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToUser"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:creationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasIncomingLink"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasPermissions"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkTo"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkToValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasTextFileValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:lastModificationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "rdfs:label"
+          }
+        } ]
+      },
       "knora-api:knoraProject" : {
         "@id" : "knora-api:knoraProject",
         "@type" : "owl:Class",
@@ -4196,6 +4275,15 @@
         "rdfs:subPropertyOf" : {
           "@id" : "knora-api:valueHas"
         }
+      },
+      "knora-api:mappingHasName" : {
+        "@id" : "knora-api:mappingHasName",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : {
+          "@id" : "xsd:string"
+        },
+        "rdfs:comment" : "Represents the name of a mapping",
+        "rdfs:label" : "Name of a mapping (will be part of the mapping's Iri)"
       },
       "knora-api:movingImageFileValueHasDimX" : {
         "@id" : "knora-api:movingImageFileValueHasDimX",

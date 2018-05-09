@@ -31,11 +31,11 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store._
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util._
 
 import scala.concurrent.duration._
@@ -1079,13 +1079,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val citation1 = TextValueWithStandoffV1(
                 utf8str = "This comment refers to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 31,
                         endPosition = 39,
                         startIndex = 0,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = nonexistentIri)),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None
                     )
@@ -1130,7 +1130,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val citation2 = TextValueWithStandoffV1(
                 utf8str = "This citation refers to another resource",
                 standoff = Vector(
-                    StandoffTagV1(
+                    StandoffTagV2(
                         standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
                         startPosition = 5,
                         endPosition = 13,
@@ -1138,12 +1138,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         originalXMLID = None,
                         startIndex = 0
                     ),
-                    StandoffTagV1(
+                    StandoffTagV2(
                         standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
                         dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                         startPosition = 32,
                         endPosition = 40,
-                        attributes = Vector(StandoffTagIriAttributeV1(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/c5058f3a")),
+                        attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/c5058f3a")),
                         uuid = UUID.randomUUID().toString,
                         originalXMLID = None,
                         startIndex = 0

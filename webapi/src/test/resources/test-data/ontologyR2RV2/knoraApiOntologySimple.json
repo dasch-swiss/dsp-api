@@ -1269,6 +1269,51 @@
             "@id" : "rdfs:label"
           }
         } ]
+      },
+      "knora-api:XSLTransformation" : {
+        "@id" : "knora-api:XSLTransformation",
+        "@type" : "owl:Class",
+        "rdfs:comment" : "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.",
+        "rdfs:label" : "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.",
+        "rdfs:subClassOf" : [ {
+          "@id" : "knora-api:TextRepresentation"
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:creationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasIncomingLink"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkTo"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasTextFile"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:lastModificationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "rdfs:label"
+          }
+        } ]
       }
     },
     "knora-api:hasProperties" : {

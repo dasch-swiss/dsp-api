@@ -26,10 +26,10 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
-import org.knora.webapi.twirl.{StandoffTagAttributeV1, StandoffTagInternalReferenceAttributeV1, StandoffTagV1}
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, _}
 import spray.json._
@@ -620,14 +620,14 @@ object KnoraPrecisionV1 extends Enumeration {
 
 /**
   *
-  * Represents a [[StandoffTagV1]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
+  * Represents a [[StandoffTagV2]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
   *
   * @param standoffNode           the standoff node to be created.
   * @param standoffTagInstanceIri the standoff node's IRI.
   * @param startParentIri         the IRI of the parent of the start tag.
   * @param endParentIri           the IRI of the parent of the end tag, if any.
   */
-case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV1, standoffTagInstanceIri: IRI, startParentIri: Option[IRI] = None, endParentIri: Option[IRI] = None)
+case class CreateStandoffTagV1InTriplestore(standoffNode: StandoffTagV2, standoffTagInstanceIri: IRI, startParentIri: Option[IRI] = None, endParentIri: Option[IRI] = None)
 
 sealed trait TextValueV1 {
 
@@ -639,12 +639,12 @@ sealed trait TextValueV1 {
   * Represents a textual value with additional information in standoff format.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
-  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV1]]).
+  * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV2]]).
   * @param resource_reference referred Knora resources.
   * @param mapping            the mapping used to create standoff from another format.
   */
 case class TextValueWithStandoffV1(utf8str: String,
-                                   standoff: Seq[StandoffTagV1],
+                                   standoff: Seq[StandoffTagV2],
                                    resource_reference: Set[IRI] = Set.empty[IRI],
                                    mappingIri: IRI,
                                    mapping: MappingXMLtoStandoff) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
@@ -658,7 +658,7 @@ case class TextValueWithStandoffV1(utf8str: String,
 
         // TODO: depending on the given mapping, decide how serialize the text with standoff markup
 
-        val xml = StandoffTagUtilV1.convertStandoffTagV1ToXML(utf8str, standoff, mapping)
+        val xml = StandoffTagUtilV2.convertStandoffTagV2ToXML(utf8str, standoff, mapping)
 
         JsObject(
             "xml" -> JsString(xml),
@@ -667,9 +667,9 @@ case class TextValueWithStandoffV1(utf8str: String,
     }
 
     /**
-      * A convenience method that creates an IRI for each [[StandoffTagV1]] and resolves internal references to standoff node Iris.
+      * A convenience method that creates an IRI for each [[StandoffTagV2]] and resolves internal references to standoff node Iris.
       *
-      * @return a list of [[CreateStandoffTagV1InTriplestore]] each representing a [[StandoffTagV1]] object
+      * @return a list of [[CreateStandoffTagV1InTriplestore]] each representing a [[StandoffTagV2]] object
       *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
       */
     def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV1InTriplestore] = {
@@ -677,7 +677,7 @@ case class TextValueWithStandoffV1(utf8str: String,
         // create an IRI for each standoff tag
         // internal references to XML ids are not resolved yet
         val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV1InTriplestore] = standoff.map {
-            case (standoffNode: StandoffTagV1) =>
+            case (standoffNode: StandoffTagV2) =>
                 CreateStandoffTagV1InTriplestore(
                     standoffNode = standoffNode,
                     standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
@@ -708,10 +708,10 @@ case class TextValueWithStandoffV1(utf8str: String,
             (standoffTag: CreateStandoffTagV1InTriplestore) =>
 
                 // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
-                val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV1] = standoffTag.standoffNode.attributes.map {
-                    (attributeWithOriginalXMLID: StandoffTagAttributeV1) =>
+                val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
+                    (attributeWithOriginalXMLID: StandoffTagAttributeV2) =>
                         attributeWithOriginalXMLID match {
-                            case refAttr: StandoffTagInternalReferenceAttributeV1 =>
+                            case refAttr: StandoffTagInternalReferenceAttributeV2 =>
                                 // resolve the XML id to the corresponding standoff node IRI
                                 refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
                             case attr => attr

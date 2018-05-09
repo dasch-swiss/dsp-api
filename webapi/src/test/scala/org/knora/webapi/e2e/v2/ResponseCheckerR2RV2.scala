@@ -114,7 +114,7 @@ object ResponseCheckerR2RV2 {
       * @param expectedResponse expected response.
       * @param receivedResponse received response.
       */
-    def compareParsedJSONLD(expectedResponse: JsonLDDocument, receivedResponse: JsonLDDocument): Unit = {
+    def compareParsedJSONLDForResourcesResponse(expectedResponse: JsonLDDocument, receivedResponse: JsonLDDocument): Unit = {
 
         // make sure the indicated amount of results is correct
         assert(expectedResponse.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt] == receivedResponse.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt], s"numberOfItems did not match: expected ${expectedResponse.body.value(numberOfItemsMember)}, but received ${receivedResponse.body.value(numberOfItemsMember)}")
@@ -144,23 +144,23 @@ object ResponseCheckerR2RV2 {
       * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
       * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
       */
-    def compareJSONLD(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+    def compareJSONLDForResourcesResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
 
         val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
-        compareParsedJSONLD(expectedResponse = expectedJsonLDDocument, receivedResponse = receivedJsonLDDocument)
+        compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonLDDocument, receivedResponse = receivedJsonLDDocument)
 
     }
 
     /**
       * Checks for the number of expected results to be returned.
       *
-      * @param receivedJSONLD   the response send back by the search route.
+      * @param receivedJSONLD the response send back by the search route.
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
-    def checkCountQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
+    def checkCountSearchQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
@@ -168,6 +168,19 @@ object ResponseCheckerR2RV2 {
         assert(receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value == expectedNumber, s"$numberOfItemsMember is incorrect.")
 
 
+    }
+
+    /**
+      * Checks the response of a mapping creation request.
+      *
+      * @param expectedJSONLD the expected response as JSONLD.
+      * @param receivedJSONLD the received response as JSONLD.
+      */
+    def compareJsonForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+        val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
+
+        assert(expectedJsonLDDocument == receivedJsonLDDocument, "Mapping creation request response did not match expected response")
     }
 
 }

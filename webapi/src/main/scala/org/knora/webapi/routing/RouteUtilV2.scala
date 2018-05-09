@@ -142,4 +142,38 @@ object RouteUtilV2 {
         requestContext.complete(httpResponse)
     }
 
+    /**
+      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
+      *
+      * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+      * @param requestContext   the akka-http [[RequestContext]].
+      * @param settings         the application's settings.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a [[Future]] containing a [[RouteResult]].
+      */
+    def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV2](requestMessageF: Future[KnoraRequestV2],
+                                                                  requestContext: RequestContext,
+                                                                  settings: SettingsImpl,
+                                                                  responderManager: ActorSelection,
+                                                                  log: LoggingAdapter,
+                                                                  responseSchema: ApiV2Schema)
+                                                                 (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+        for {
+            requestMessage <- requestMessageF
+            routeResult <- runJsonRoute(
+                requestMessage = requestMessage,
+                requestContext = requestContext,
+                settings = settings,
+                responderManager = responderManager,
+                log = log,
+                responseSchema = responseSchema
+            )
+
+        } yield routeResult
+    }
+
 }
