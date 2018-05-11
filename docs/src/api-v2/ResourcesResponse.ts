@@ -7,7 +7,7 @@ import IriObject = Basic.IriObject;
 export module ResourcesResponse {
 
     /**
-     * This module contains resource response format definitions for API Schema V2 with value objects.
+     * This module contains resource response format definitions for API Schema V2 complex schema (with value objects).
      */
     export module ApiV2WithValueObjects {
 
@@ -26,7 +26,7 @@ export module ResourcesResponse {
             "@type": Basic.KnoraEntityIri;
 
             /**
-             * Assertions about the value.
+             * Assertions about the value (object).
              *
              * In case of a link value, this may again contain a `Resource` as a nested structure.
              */
@@ -35,7 +35,7 @@ export module ResourcesResponse {
         }
 
         /**
-         * Represents an resource (instance).
+         * Represents a resource (instance).
          */
         interface Resource {
             /**
@@ -59,7 +59,7 @@ export module ResourcesResponse {
              * For a property, a `Value` or an Array of `Value` is given.
              *
              * Please note that the type `string` is not a valid value for a property.
-             * This is a mere requirement of Typescript to make the index signature return types consistent with other members of this interface.
+             * This is a mere requirement of TypeScript to make the index signature return types consistent with other members of this interface.
              */
             [propertyIri: string]: Value | Array<Value> | string;
         }
@@ -90,12 +90,12 @@ export module ResourcesResponse {
     }
 
     /**
-     * This module contains This module contains resource response format definitions for Api V2 simplified.
+     * This module contains This module contains resource response format definitions for Api V2 simple schema.
      */
     export module ApiV2Simple {
 
         /**
-         * Represents an resource (instance).
+         * Represents a resource (instance).
          */
         interface Resource {
             /**
@@ -114,7 +114,7 @@ export module ResourcesResponse {
             "http://www.w3.org/2000/01/rdf-schema#label": string;
 
             /**
-             * Properties of this resource.
+             * Properties of this resource (values are literals or an [[IriObject]]).
              *
              */
             [propertyIri: string]: string | Array<string> | number | Array<number> | boolean | Array<boolean> | IriObject | Array<IriObject> ;
