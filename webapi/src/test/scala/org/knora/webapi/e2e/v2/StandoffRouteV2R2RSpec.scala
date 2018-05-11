@@ -30,7 +30,7 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi._
-import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJsonForMappingCreationResponse
+import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{ResponderManager, _}
@@ -140,7 +140,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
-                compareJsonForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 

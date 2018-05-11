@@ -176,7 +176,7 @@ object ResponseCheckerR2RV2 {
       * @param expectedJSONLD the expected response as JSONLD.
       * @param receivedJSONLD the received response as JSONLD.
       */
-    def compareJsonForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+    def compareJSONLDForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
         val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
