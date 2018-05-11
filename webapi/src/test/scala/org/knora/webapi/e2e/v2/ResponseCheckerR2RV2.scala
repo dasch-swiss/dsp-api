@@ -79,7 +79,7 @@ object ResponseCheckerR2RV2 {
       * @param expectedResource the expected resource.
       * @param receivedResource the received resource.
       */
-    private def compareResources(expectedResource: Map[IRI, Any], receivedResource: Map[IRI, Any]) = {
+    private def compareResources(expectedResource: Map[IRI, Any], receivedResource: Map[IRI, Any]): Unit = {
 
         assert(expectedResource(jsonldId) == receivedResource(jsonldId), s"Received resource Iri ${receivedResource(jsonldId)} does not match expected Iri ${expectedResource(jsonldId)}")
 
@@ -131,7 +131,7 @@ object ResponseCheckerR2RV2 {
       * @param expectedResponseAsScala expected response.
       * @param receivedResponseAsScala received response.
       */
-    def compareParsedJSONLD(expectedResponseAsScala: Map[IRI, Any], receivedResponseAsScala: Map[IRI, Any]): Unit = {
+    def compareParsedJSONLDForResourcesResponse(expectedResponseAsScala: Map[IRI, Any], receivedResponseAsScala: Map[IRI, Any]): Unit = {
 
         // make sure the indicated amount of results is correct
         assert(expectedResponseAsScala(numberOfItemsMember).asInstanceOf[Int] == receivedResponseAsScala(numberOfItemsMember).asInstanceOf[Int], s"numberOfItems did not match: expected ${expectedResponseAsScala(numberOfItemsMember)}, but received ${receivedResponseAsScala(numberOfItemsMember)}")
@@ -154,41 +154,67 @@ object ResponseCheckerR2RV2 {
     }
 
     /**
+      * Convert JSONld to a Scala Map.
+      *
+      * @param JSONLD the JSONLD to be converted.
+      * @return a Map.
+      */
+    private def JSONToScala(JSONLD: String): Map[IRI, Any] = {
+
+        val compactedAsJava: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(JsonUtils.fromString(JSONLD), new util.HashMap[String, String](), new JsonLdOptions())
+
+        val asScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(compactedAsJava).asInstanceOf[Map[IRI, Any]]
+
+        asScala
+
+    }
+
+    /**
       * Compares the received JSON response to the expected JSON.
       *
       * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
       * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
       */
-    def compareJSONLD(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+    def compareJSONLDForResourcesResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
 
-        val expectedResponseCompactedAsJava: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(JsonUtils.fromString(expectedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
+        val expectedResponseAsScala: Map[IRI, Any] = JSONToScala(expectedJSONLD)
 
-        val expectedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(expectedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
+        val receivedResponseAsScala: Map[IRI, Any] = JSONToScala(receivedJSONLD)
 
-        val receivedResponseCompactedAsJava: util.Map[IRI, AnyRef] = JsonLdProcessor.compact(JsonUtils.fromString(receivedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
-
-        val receivedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(receivedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
-
-        compareParsedJSONLD(expectedResponseAsScala = expectedResponseAsScala, receivedResponseAsScala = receivedResponseAsScala)
+        compareParsedJSONLDForResourcesResponse(expectedResponseAsScala = expectedResponseAsScala, receivedResponseAsScala = receivedResponseAsScala)
 
     }
 
     /**
-      * Checks for the number of expected results to be returned.
+      * Checks for the number of expected results to be returned for a count search query.
       *
       * @param receivedJSONLD   the response send back by the search route.
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
-    def checkCountQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
+    def checkCountSearchQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
-        val receivedResponseCompactedAsJava = JsonLdProcessor.compact(JsonUtils.fromString(receivedJSONLD), new util.HashMap[String, String](), new JsonLdOptions())
-
-        val receivedResponseAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(receivedResponseCompactedAsJava).asInstanceOf[Map[IRI, Any]]
+        val receivedResponseAsScala: Map[IRI, Any] = JSONToScala(receivedJSONLD)
 
         // make sure the indicated amount of results is correct
         assert(receivedResponseAsScala(numberOfItemsMember).asInstanceOf[Int] == expectedNumber, s"$numberOfItemsMember is incorrect.")
 
+
+    }
+
+    /**
+      * Checks the response of a mapping creation request.
+      *
+      * @param expectedJSONLD the expected response as JSONLD.
+      * @param receivedJSONLD the received response as JSONLD.
+      */
+    def compareJsonForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
+
+        val expectedResponseAsScala: Map[IRI, Any] = JSONToScala(expectedJSONLD)
+
+        val receivedResponseAsScala: Map[IRI, Any] = JSONToScala(receivedJSONLD)
+
+        assert(expectedResponseAsScala == receivedResponseAsScala, "Mapping creation request response did not match expected response")
 
     }
 

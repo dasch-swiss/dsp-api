@@ -22,12 +22,12 @@ package org.knora.webapi.util
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
-import org.knora.webapi.messages.v1.responder.ontologymessages.StandoffEntityInfoGetResponseV1
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.twirl._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 
 
@@ -68,7 +68,7 @@ object ConstructResponseUtilV2 {
       * @param standoffEntities  information about the standoff entities referred to in the mapping.
       * @param XSLTransformation the default XSL transformation to convert the resulting XML (e.g., to HTML), if any.
       */
-    case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV1, XSLTransformation: Option[String])
+    case class MappingAndXSLTransformation(mapping: MappingXMLtoStandoff, standoffEntities: StandoffEntityInfoGetResponseV2, XSLTransformation: Option[String])
 
     /**
       * A [[SparqlConstructResponse]] may contain both resources and value RDF data objects as well as standoff.
@@ -436,7 +436,7 @@ object ConstructResponseUtilV2 {
 
                     val mapping: MappingAndXSLTransformation = mappings(mappingIri)
 
-                    val standoffTags: Vector[StandoffTagV1] = StandoffTagUtilV1.createStandoffTagsV1FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
+                    val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
                     TextValueContentV2(valueHasString = valueObjectValueHasString, valueHasLanguage = valueLanguageOption, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
 

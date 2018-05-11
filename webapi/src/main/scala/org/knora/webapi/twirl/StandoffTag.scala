@@ -22,7 +22,7 @@ package org.knora.webapi.twirl
 import java.util.UUID
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 
 /**
   * The following case classes represent standoff classes and attributes
@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffDataTypeC
 /*
     trait for standoff tag attribute
  */
-trait StandoffTagAttributeV1 {
+trait StandoffTagAttributeV2 {
 
     def standoffPropertyIri: IRI
 
@@ -50,7 +50,7 @@ trait StandoffTagAttributeV1 {
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV1 {
+case class StandoffTagIriAttributeV2(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV2 {
 
     def stringValue = value
 
@@ -64,7 +64,7 @@ case class StandoffTagIriAttributeV1(standoffPropertyIri: IRI, value: IRI) exten
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagUriAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
+case class StandoffTagUriAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
     def stringValue = value
 
@@ -78,7 +78,7 @@ case class StandoffTagUriAttributeV1(standoffPropertyIri: IRI, value: String) ex
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
+case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
     def stringValue = value.toString
 
@@ -92,7 +92,7 @@ case class StandoffTagInternalReferenceAttributeV1(standoffPropertyIri: IRI, val
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV1 {
+case class StandoffTagStringAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
     def stringValue = value
 
@@ -106,7 +106,7 @@ case class StandoffTagStringAttributeV1(standoffPropertyIri: IRI, value: String)
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV1 {
+case class StandoffTagIntegerAttributeV2(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV2 {
 
     def stringValue = value.toString
 
@@ -120,7 +120,7 @@ case class StandoffTagIntegerAttributeV1(standoffPropertyIri: IRI, value: Int) e
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV1 {
+case class StandoffTagDecimalAttributeV2(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV2 {
 
     def stringValue = value.toString
 
@@ -134,7 +134,7 @@ case class StandoffTagDecimalAttributeV1(standoffPropertyIri: IRI, value: BigDec
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
   */
-case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV1 {
+case class StandoffTagBooleanAttributeV2(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV2 {
 
     def stringValue = value.toString
 
@@ -158,7 +158,7 @@ case class StandoffTagBooleanAttributeV1(standoffPropertyIri: IRI, value: Boolea
   * @param endParentIndex      the index of the the parent node (only in case of a virtual hierarchy tag), if any, that contains the end position.
   * @param attributes          the attributes attached to this tag.
   */
-case class StandoffTagV1(standoffTagClassIri: IRI,
+case class StandoffTagV2(standoffTagClassIri: IRI,
                          dataType: Option[StandoffDataTypeClasses.Value] = None,
                          uuid: String,
                          originalXMLID: Option[String],
@@ -168,7 +168,7 @@ case class StandoffTagV1(standoffTagClassIri: IRI,
                          endIndex: Option[Int] = None,
                          startParentIndex: Option[Int] = None,
                          endParentIndex: Option[Int] = None,
-                         attributes: Seq[StandoffTagAttributeV1] = Seq.empty[StandoffTagAttributeV1])
+                         attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2])
 
 
 

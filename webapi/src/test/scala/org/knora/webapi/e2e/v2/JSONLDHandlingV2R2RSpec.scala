@@ -92,7 +92,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
             // expected result after expansion
             val expectedJsonldExpandedAsScala = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))).asInstanceOf[Map[IRI, Any]]
 
-            compareParsedJSONLD(expectedResponseAsScala = expectedJsonldExpandedAsScala, receivedResponseAsScala = jsonldExpandedAsScala)
+            compareParsedJSONLDForResourcesResponse(expectedResponseAsScala = expectedJsonldExpandedAsScala, receivedResponseAsScala = jsonldExpandedAsScala)
 
         }
 

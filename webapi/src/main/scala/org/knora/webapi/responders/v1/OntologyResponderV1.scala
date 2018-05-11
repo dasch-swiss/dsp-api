@@ -84,24 +84,6 @@ class OntologyResponderV1 extends Responder {
     }
 
     /**
-      * Wraps OWL class information from `OntologyResponderV2` for use in API v1.
-      */
-    private def classInfoMapV2ToV1(classInfoMap: Map[SmartIri, ReadClassInfoV2]): Map[IRI, ClassInfoV1] = {
-        classInfoMap.map {
-            case (smartIri, classInfoV2) => smartIri.toString -> new ClassInfoV1(classInfoV2)
-        }
-    }
-
-    /**
-      * Wraps OWL property information from `OntologyResponderV2` for use in API v1.
-      */
-    private def propertyInfoMapV2ToV1(propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2]): Map[IRI, PropertyInfoV1] = {
-        propertyInfoMap.map {
-            case (smartIri, propertyInfoV2) => smartIri.toString -> new PropertyInfoV1(propertyInfoV2)
-        }
-    }
-
-    /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV1]] describing both resource and property entities.
       *
       * @param resourceClassIris the IRIs of the resource entities to be queried.
@@ -112,7 +94,7 @@ class OntologyResponderV1 extends Responder {
     private def getEntityInfoResponseV1(resourceClassIris: Set[IRI] = Set.empty[IRI], propertyIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM): Future[EntityInfoGetResponseV1] = {
         for {
             response: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(resourceClassIris.map(_.toSmartIri), propertyIris.map(_.toSmartIri), userProfile)).mapTo[EntityInfoGetResponseV2]
-        } yield EntityInfoGetResponseV1(resourceClassInfoMap = classInfoMapV2ToV1(response.classInfoMap), propertyInfoMap = propertyInfoMapV2ToV1(response.propertyInfoMap))
+        } yield EntityInfoGetResponseV1(resourceClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.classInfoMap), propertyInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.propertyInfoMap))
     }
 
 
@@ -129,7 +111,7 @@ class OntologyResponderV1 extends Responder {
             response: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(standoffClassIris.map(_.toSmartIri), standoffPropertyIris.map(_.toSmartIri), userProfile)).mapTo[StandoffEntityInfoGetResponseV2]
 
 
-        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap), standoffPropertyInfoMap = propertyInfoMapV2ToV1(response.standoffPropertyInfoMap))
+        } yield StandoffEntityInfoGetResponseV1(standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap), standoffPropertyInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.standoffPropertyInfoMap))
     }
 
     /**
@@ -141,7 +123,7 @@ class OntologyResponderV1 extends Responder {
     private def getStandoffStandoffClassesWithDataTypeV1(userProfile: UserADM): Future[StandoffClassesWithDataTypeGetResponseV1] = {
         for {
             response: StandoffClassesWithDataTypeGetResponseV2 <- (responderManager ? StandoffClassesWithDataTypeGetRequestV2(userProfile)).mapTo[StandoffClassesWithDataTypeGetResponseV2]
-        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = classInfoMapV2ToV1(response.standoffClassInfoMap))
+        } yield StandoffClassesWithDataTypeGetResponseV1(standoffClassInfoMap = ConvertOntologyClassV2ToV1.classInfoMapV2ToV1(response.standoffClassInfoMap))
     }
 
     /**
@@ -153,7 +135,7 @@ class OntologyResponderV1 extends Responder {
     private def getAllStandoffPropertyEntities(userProfile: UserADM): Future[StandoffAllPropertiesGetResponseV1] = {
         for {
             response: StandoffAllPropertyEntitiesGetResponseV2 <- (responderManager ? StandoffAllPropertyEntitiesGetRequestV2(userProfile)).mapTo[StandoffAllPropertyEntitiesGetResponseV2]
-        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap))
+        } yield StandoffAllPropertiesGetResponseV1(standoffAllPropertiesInfoMap = ConvertOntologyClassV2ToV1.propertyInfoMapV2ToV1(response.standoffAllPropertiesEntityInfoMap))
     }
 
     /**

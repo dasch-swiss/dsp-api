@@ -2,9 +2,9 @@ package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
 import org.knora.webapi.Settings
-import org.knora.webapi.messages.v1.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV1, StandoffTagV1}
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
@@ -659,7 +659,7 @@ class SearchResponderV2SpecFullData {
                             ),
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
-                                StandoffTagV1(
+                                StandoffTagV2(
                                     attributes = Nil,
                                     endParentIndex = None,
                                     startParentIndex = None,
@@ -672,8 +672,8 @@ class SearchResponderV2SpecFullData {
                                     dataType = None,
                                     standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
                                 ),
-                                StandoffTagV1(
-                                    attributes = Vector(StandoffTagIriAttributeV1(
+                                StandoffTagV2(
+                                    attributes = Vector(StandoffTagIriAttributeV2(
                                         value = "http://rdfh.ch/0001/a-thing",
                                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
                                     )),
@@ -975,8 +975,8 @@ class SearchResponderV2SpecFullData {
                             ),
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                             standoff = Vector(
-                                StandoffTagV1(
-                                    attributes = Vector(StandoffTagIriAttributeV1(
+                                StandoffTagV2(
+                                    attributes = Vector(StandoffTagIriAttributeV2(
                                         value = "http://rdfh.ch/0001/a-thing",
                                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink"
                                     )),
@@ -991,7 +991,7 @@ class SearchResponderV2SpecFullData {
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
                                 ),
-                                StandoffTagV1(
+                                StandoffTagV2(
                                     attributes = Nil,
                                     endParentIndex = None,
                                     startParentIndex = None,

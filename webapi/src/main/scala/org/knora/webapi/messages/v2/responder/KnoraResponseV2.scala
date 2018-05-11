@@ -24,12 +24,12 @@ import java.io.{StringReader, StringWriter}
 import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.LiteralV2
-import org.knora.webapi.messages.v1.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.twirl.StandoffTagV1
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.standoff.StandoffTagUtilV1
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
 
 /**
@@ -37,7 +37,8 @@ import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
   *
   * @tparam C the type of the content class that extends this trait.
   */
-trait KnoraContentV2[C <: KnoraContentV2[C]] { this: C =>
+trait KnoraContentV2[C <: KnoraContentV2[C]] {
+    this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
@@ -168,10 +169,10 @@ case class DateValueContentV2(valueHasString: String,
 /**
   * Represents a Knora text value.
   *
-  * @param valueHasString the string representation of the text (without markup).
+  * @param valueHasString   the string representation of the text (without markup).
   * @param valueHasLanguage the language of text, if any.
-  * @param standoff       a [[StandoffAndMapping]], if any.
-  * @param comment        a comment on this `TextValueContentV2`, if any.
+  * @param standoff         a [[StandoffAndMapping]], if any.
+  * @param comment          a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[String] = None, standoff: Option[StandoffAndMapping], comment: Option[String]) extends ValueContentV2 {
 
@@ -180,9 +181,8 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         // TODO: check targetSchema and return JSON-LD accordingly.
 
-
-        var objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
-            val xmlFromStandoff = StandoffTagUtilV1.convertStandoffTagV1ToXML(valueHasString , standoff.get.standoff, standoff.get.mapping)
+        val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
+            val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
 
             // check if there is an XSL transformation
             if (standoff.get.XSLT.nonEmpty) {
@@ -221,13 +221,15 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
             // no markup given
             Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
         }
-        valueHasLanguage match {
+
+        val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
             case Some(lang) =>
-                objectMap += (OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(lang))
+                objectMap + (OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(lang))
             case None =>
                 objectMap
         }
-        JsonLDObject(objectMap)
+
+        JsonLDObject(objectMapWithLanguage)
     }
 
 }
@@ -236,12 +238,12 @@ case class TextValueContentV2(valueHasString: String, valueHasLanguage: Option[S
   * Represents standoff and the corresponding mapping.
   * May include an XSL transformation.
   *
-  * @param standoff   a sequence of [[StandoffTagV1]].
+  * @param standoff   a sequence of [[StandoffTagV2]].
   * @param mappingIri the IRI of the mapping
   * @param mapping    a mapping between XML and standoff.
   * @param XSLT       an XSL transformation.
   */
-case class StandoffAndMapping(standoff: Seq[StandoffTagV1], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
+case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, XSLT: Option[String])
 
 /**
   * Represents a Knora integer value.

@@ -26,6 +26,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Introduction](introduction.md)
 - [Knora IRIs](knora-iris.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
+- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [KnarQL: Knora Query Language](query-language.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
 - [Response Formats](response-formats.md)

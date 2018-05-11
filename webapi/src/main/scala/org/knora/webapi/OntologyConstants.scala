@@ -761,6 +761,8 @@ object OntologyConstants {
 
         val ResourceIcon: IRI = KnoraApiV2PrefixExpansion + "resourceIcon"
 
+        val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
+
     }
 
     object SalsahGuiApiV2WithValueObjects {
