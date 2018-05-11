@@ -65,10 +65,6 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val allOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.json")))
     private val imagesOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyMetadata.json")))
-    private val imagesOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologySimple.json")))
-    private val imagesOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyWithValueObjects.json")))
-    private val bildSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildSimple.json")))
-    private val bildWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/bildWithValueObjects.json")))
     private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
     private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
     private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
@@ -95,7 +91,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val classDef = ontology.value(OntologyConstants.KnoraApiV2WithValueObjects.HasClasses).asInstanceOf[JsonLDObject].value.values.head.asInstanceOf[JsonLDObject]
 
         classDef.value(OntologyConstants.Rdfs.SubClassOf).asInstanceOf[JsonLDArray].value.collect {
-            case obj: JsonLDObject => obj.value(OntologyConstants.Owl.OnProperty).asInstanceOf[JsonLDString].value.toSmartIri
+            case obj: JsonLDObject if !JsonLDUtil.isIriValue(obj) => obj.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
         }.toSet
     }
 
@@ -270,38 +266,6 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
-        "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
-            Get("/ontology/00FF/images/simple/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == imagesOntologySimple)
-            }
-        }
-
-        "serve a project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
-            Get("/ontology/00FF/images/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == imagesOntologyWithValueObjects)
-            }
-        }
-
-        "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the simple schema" in {
-            val bildIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/00FF/images/simple/v2#bild", "UTF-8")
-
-            Get(s"/v2/ontologies/classes/$bildIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == bildSimple)
-            }
-        }
-
-        "serve a class from project-specific ontology whose IRI contains a project ID, as JSON-LD, using the value object schema" in {
-            val bildIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/00FF/images/v2#bild", "UTF-8")
-
-            Get(s"/v2/ontologies/classes/$bildIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == bildWithValueObjects)
-            }
-        }
-
         "create an empty ontology called 'foo' with a project code" in {
             val label = "The foo ontology"
 
@@ -309,7 +273,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:ontologyName": "foo",
-                   |    "knora-api:attachedToProject": "$imagesProjectIri",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$imagesProjectIri"
+                   |    },
                    |    "rdfs:label": "$label",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
@@ -396,8 +362,12 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                  |        "knora-api:subjectType" : {
+                  |          "@id" : "anything:Thing"
+                  |        },
+                  |        "knora-api:objectType" : {
+                  |          "@id" : "knora-api:TextValue"
+                  |        },
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
                   |          "@value" : "The name of a Thing"
@@ -412,8 +382,14 @@ class OntologyV2R2RSpec extends R2RSpec {
                   |          "@language" : "de",
                   |          "@value" : "hat Namen"
                   |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ],
-                  |        "salsah-gui:guiElement" : "http://api.knora.org/ontology/salsah-gui/v2#SimpleText",
+                  |        "rdfs:subPropertyOf" : [ {
+                  |          "@id" : "knora-api:hasValue"
+                  |        }, {
+                  |          "@id" : "http://schema.org/name"
+                  |        } ],
+                  |        "salsah-gui:guiElement" : {
+                  |          "@id" : "salsah-gui:SimpleText"
+                  |        },
                   |        "salsah-gui:guiAttribute" : [ "size=80", "maxlength=100" ]
                   |      }
                   |    },
@@ -580,13 +556,17 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@value" : "A thing that is wild"
                    |        },
                    |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-                   |                "salsah-gui:guiOrder": 1
-                   |            }
+                   |          {
+                   |            "@id": "anything:Thing"
+                   |          },
+                   |          {
+                   |            "@type": "http://www.w3.org/2002/07/owl#Restriction",
+                   |            "owl:maxCardinality": 1,
+                   |            "owl:onProperty": {
+                   |              "@id": "anything:hasName"
+                   |            },
+                   |            "salsah-gui:guiOrder": 1
+                   |          }
                    |        ]
                    |      }
                    |    },
@@ -676,7 +656,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@language" : "en",
                    |          "@value" : "Represents nothing"
                    |        },
-                   |        "rdfs:subClassOf" : "http://api.knora.org/ontology/knora-api/v2#Resource"
+                   |        "rdfs:subClassOf" : {
+                   |          "@id" : "knora-api:Resource"
+                   |        }
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "$anythingLastModDate"
@@ -840,8 +822,12 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |      "anything:hasNothingness" : {
                    |        "@id" : "anything:hasNothingness",
                    |        "@type" : "owl:ObjectProperty",
-                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing",
-                   |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+                   |        "knora-api:subjectType" : {
+                   |          "@id" : "anything:Nothing"
+                   |        },
+                   |        "knora-api:objectType" : {
+                   |          "@id" : "knora-api:BooleanValue"
+                   |        },
                    |        "rdfs:comment" : {
                    |          "@language" : "en",
                    |          "@value" : "Indicates whether a Nothing has nothingness"
@@ -850,7 +836,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@language" : "en",
                    |          "@value" : "has nothingness"
                    |        },
-                   |        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+                   |        "rdfs:subPropertyOf" : {
+                   |          "@id" : "knora-api:hasValue"
+                   |        }
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "$anythingLastModDate"
@@ -896,13 +884,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |      "anything:Nothing" : {
                    |        "@id" : "anything:Nothing",
                    |        "@type" : "owl:Class",
-                   |        "rdfs:subClassOf" : [
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness"
-                   |            }
-                   |        ]
+                   |        "rdfs:subClassOf" : {
+                   |          "@type": "owl:Restriction",
+                   |          "owl:maxCardinality" : 1,
+                   |          "owl:onProperty" : {
+                   |            "@id" : "anything:hasNothingness"
+                   |          }
+                   |        }
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "$anythingLastModDate"
@@ -963,8 +951,12 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |      "anything:hasEmptiness" : {
                    |        "@id" : "anything:hasEmptiness",
                    |        "@type" : "owl:ObjectProperty",
-                   |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing",
-                   |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+                   |        "knora-api:subjectType" : {
+                   |          "@id" : "anything:Nothing"
+                   |        },
+                   |        "knora-api:objectType" : {
+                   |          "@id" : "knora-api:BooleanValue"
+                   |        },
                    |        "rdfs:comment" : {
                    |          "@language" : "en",
                    |          "@value" : "Indicates whether a Nothing has emptiness"
@@ -973,7 +965,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |          "@language" : "en",
                    |          "@value" : "has emptiness"
                    |        },
-                   |        "rdfs:subPropertyOf" : "http://api.knora.org/ontology/knora-api/v2#hasValue"
+                   |        "rdfs:subPropertyOf" : {
+                   |          "@id" : "knora-api:hasValue"
+                   |        }
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "$anythingLastModDate"
@@ -1019,13 +1013,13 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |      "anything:Nothing" : {
                    |        "@id" : "anything:Nothing",
                    |        "@type" : "owl:Class",
-                   |        "rdfs:subClassOf" : [
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness"
-                   |            }
-                   |        ]
+                   |        "rdfs:subClassOf" : {
+                   |          "@type": "owl:Restriction",
+                   |          "owl:maxCardinality": 1,
+                   |          "owl:onProperty": {
+                   |            "@id" : "anything:hasEmptiness"
+                   |          }
+                   |        }
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "$anythingLastModDate"

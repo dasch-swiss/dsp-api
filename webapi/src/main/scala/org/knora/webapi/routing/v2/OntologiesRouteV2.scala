@@ -109,7 +109,8 @@ object OntologiesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        responseSchema = ApiV2WithValueObjects
                     )
                 }
             } ~ put {
@@ -147,7 +148,8 @@ object OntologiesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        responseSchema = ApiV2WithValueObjects
                     )
                 }
             }

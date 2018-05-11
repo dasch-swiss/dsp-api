@@ -47,10 +47,10 @@
           "knora-api:stillImageFileValueHasDimY" : 2700,
           "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
         } ],
-        "schema:name" : "vorderer Spiegel"
+        "rdfs:label" : "vorderer Spiegel"
       }
     },
-    "schema:name" : "[Das] Narrenschiff (lat.)"
+    "rdfs:label" : "[Das] Narrenschiff (lat.)"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

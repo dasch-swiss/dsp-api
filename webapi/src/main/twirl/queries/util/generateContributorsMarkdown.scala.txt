@@ -32,4 +32,4 @@
 
 # Contributors:
 @for(contributor <- contributors) {
-    - @{contributor.name} <@{contributor.htmlUrl}>}
+    - @if(contributor.name.nonEmpty){@{contributor.name} }<@{contributor.htmlUrl}>}

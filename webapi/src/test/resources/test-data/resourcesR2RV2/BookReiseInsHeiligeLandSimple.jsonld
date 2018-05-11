@@ -1,0 +1,26 @@
+{
+  "@type" : "schema:ItemList",
+  "schema:itemListElement" : {
+    "@id" : "http://rdfh.ch/2a6221216701",
+    "@type" : "p0803-incunabula:book",
+    "p0803-incunabula:book_comment" : "Katalogaufnahme anhand ISTC und v.d.Haegen",
+    "p0803-incunabula:citation" : [ "Van der Haegen I: 9,14", "Goff M165", "C 3833", "Klebs 651.2", "Schr 4799", "Schramm XXI p. 9 & 26", "FairMur(G) 283", "IBP 3556", "Borm 1751" ],
+    "p0803-incunabula:location" : "Basel UB, Sign: Aleph D III 13:1",
+    "p0803-incunabula:note" : [ "deutsch von Otto von Diemeringen", "Rubr. mit Init. J zu Beginn", "Holzschnitte nicht koloriert", "Besitzervermerke: Kartause, H. Zscheckenbürlin", "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516" ],
+    "p0803-incunabula:physical_desc" : "Extent: 1 Bd.; Dimensions: f°",
+    "p0803-incunabula:pubdate" : "JULIAN:1481 CE",
+    "p0803-incunabula:publisher" : "Bernhard Richel",
+    "p0803-incunabula:publoc" : "Basel",
+    "p0803-incunabula:title" : [ "Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius" ],
+    "p0803-incunabula:url" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320",
+    "rdfs:label" : "Reise ins Heilige Land"
+  },
+  "schema:numberOfItems" : 1,
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+    "schema" : "http://schema.org/",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+  }
+}

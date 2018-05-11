@@ -146,7 +146,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
             }
         } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
@@ -175,7 +176,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -194,7 +196,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -213,7 +216,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
 
@@ -249,7 +253,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -286,7 +291,8 @@ object SearchRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }

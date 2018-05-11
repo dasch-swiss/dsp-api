@@ -21,14 +21,12 @@ package org.knora.webapi.e2e.v2
 
 import java.io.File
 import java.net.URLEncoder
-import java.util
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
-import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
@@ -37,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.util.{FileUtil, JavaUtil}
 
 import scala.concurrent.duration.DurationInt
@@ -44,7 +43,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
   * End-to-end specification for the handling of JSONLD documents.
- */
+  */
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
@@ -63,10 +62,6 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
-
-    private val anythingUser = SharedTestDataADM.anythingUser1
-
-    private val password = "test"
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
@@ -87,12 +82,12 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
             val jsonldWithPrefixes = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"))
 
             // expand JSONLD with JSONLD processor
-            val jsonldExpandedAsScala = JavaUtil.deepJavatoScala(JsonLdProcessor.compact(JsonUtils.fromString(jsonldWithPrefixes), new util.HashMap[String, String](), new JsonLdOptions())).asInstanceOf[Map[IRI, Any]]
+            val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
 
             // expected result after expansion
-            val expectedJsonldExpandedAsScala = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))).asInstanceOf[Map[IRI, Any]]
+            val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld")))
 
-            compareParsedJSONLDForResourcesResponse(expectedResponseAsScala = expectedJsonldExpandedAsScala, receivedResponseAsScala = jsonldExpandedAsScala)
+            compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed, receivedResponse = jsonldParsedExpanded)
 
         }
 
@@ -104,7 +99,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
                 val receivedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(responseAs[String])).asInstanceOf[Map[IRI, Any]]
 
-                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[IRI, Any]]
+                val expectedJSONLDAsScala: Map[IRI, Any] = JavaUtil.deepJavatoScala(JsonUtils.fromString(FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/NarrenschiffFirstPage.jsonld")))).asInstanceOf[Map[String, Any]]
 
                 assert(receivedJSONLDAsScala("@context") == expectedJSONLDAsScala("@context"), "@context incorrect")
 

@@ -67,8 +67,14 @@ object GenerateContributorsFile extends App {
         contributor =>
             val userJson = getFromGitHubApi(contributor.apiUrl)
 
+            val userName = userJson.asJsObject.fields("name") match {
+                case JsString(value) => Some(value)
+                case JsNull => None
+                case other => throw AssertionException(s"Unexpected JSON type $other")
+            }
+
             contributor.copy(
-                name = Some(userJson.asJsObject.fields("name").asInstanceOf[JsString].value)
+                name = userName
             )
     }
 

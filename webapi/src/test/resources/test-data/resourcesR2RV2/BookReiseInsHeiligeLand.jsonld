@@ -84,7 +84,7 @@
       "knora-api:dateValueHasEndYear" : 1481,
       "knora-api:dateValueHasStartEra" : "CE",
       "knora-api:dateValueHasStartYear" : 1481,
-      "knora-api:valueAsString" : "1481-01-01 - 1481-12-31"
+      "knora-api:valueAsString" : "JULIAN:1481 CE"
     },
     "incunabula:publisher" : {
       "@id" : "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
@@ -114,7 +114,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
     },
-    "schema:name" : "Reise ins Heilige Land"
+    "rdfs:label" : "Reise ins Heilige Land"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

@@ -3,47 +3,47 @@
   "schema:itemListElement" : [ {
     "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "excluded Charlie"
+    "rdfs:label" : "excluded Charlie"
   }, {
     "@id" : "http://rdfh.ch/0001/project-thing-1",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "A thing that only project members can see"
+    "rdfs:label" : "A thing that only project members can see"
   }, {
     "@id" : "http://rdfh.ch/0001/project-thing-2",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "Another thing that only project members can see"
+    "rdfs:label" : "Another thing that only project members can see"
   }, {
     "@id" : "http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "Kilo"
+    "rdfs:label" : "Kilo"
   }, {
     "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "Golf"
+    "rdfs:label" : "Golf"
   }, {
     "@id" : "http://rdfh.ch/0001/start",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "Romeo"
+    "rdfs:label" : "Romeo"
   }, {
     "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "Echo"
+    "rdfs:label" : "Echo"
   }, {
     "@id" : "http://rdfh.ch/0001/thing_with_BCE_date",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   }, {
     "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   }, {
     "@id" : "http://rdfh.ch/0001/thing_with_list_value",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "A thing that has a list value"
+    "rdfs:label" : "A thing that has a list value"
   }, {
     "@id" : "http://rdfh.ch/0001/thing_with_two_list_values",
     "@type" : "p0001-anything:Thing",
-    "schema:name" : "A thing that has two list values"
+    "rdfs:label" : "A thing that has two list values"
   }, {
     "@id" : "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
     "@type" : "p0001-anything:Thing",
@@ -52,7 +52,7 @@
       "@type" : "knora-api:BooleanValue",
       "knora-api:booleanValueAsBoolean" : true
     },
-    "schema:name" : "Testding for extended search"
+    "rdfs:label" : "Testding for extended search"
   } ],
   "schema:numberOfItems" : 12,
   "@context" : {

@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v2.responder.searchmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search.ConstructQuery
 

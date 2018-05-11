@@ -26,9 +26,7 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
-import org.knora.webapi.routing.RouteUtilV1.runJsonRoute
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,6 +35,55 @@ import scala.concurrent.{ExecutionContext, Future}
   * Convenience methods for Knora routes.
   */
 object RouteUtilV2 {
+    /**
+      * The name of the HTTP header in which an ontology schema can be requested.
+      */
+    val SCHEMA_HEADER: String = "x-knora-accept-schema"
+
+    /**
+      * The name of the URL parameter in which an ontology schema can be requested.
+      */
+    val SCHEMA_PARAM: String = "schema"
+
+    /**
+      * The name of the complex schema.
+      */
+    val SIMPLE_SCHEMA_NAME: String = "simple"
+
+    /**
+      * The name of the simple schema.
+      */
+    val COMPLEX_SCHEMA_NAME: String = "complex"
+
+    /**
+      * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
+      * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
+      * If no schema is specified in the request, the default of [[ApiV2WithValueObjects]] is returned.
+      *
+      * @param requestContext the akka-http [[RequestContext]].
+      * @return the specified schema, or [[ApiV2WithValueObjects]] if no schema was specified in the request.
+      */
+    def getOntologySchema(requestContext: RequestContext): ApiV2Schema = {
+        def nameToSchema(schemaName: String): ApiV2Schema = {
+            schemaName match {
+                case SIMPLE_SCHEMA_NAME => ApiV2Simple
+                case COMPLEX_SCHEMA_NAME => ApiV2WithValueObjects
+                case _ => throw BadRequestException(s"Unrecognised ontology schema name: $schemaName")
+            }
+        }
+
+        val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+        params.get(SCHEMA_PARAM) match {
+            case Some(schemaParam) => nameToSchema(schemaParam)
+
+            case None =>
+                requestContext.request.headers.find(_.lowercaseName == SCHEMA_HEADER) match {
+                    case Some(header) => nameToSchema(header.value)
+                    case None => ApiV2WithValueObjects
+                }
+        }
+    }
 
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
@@ -56,7 +103,7 @@ object RouteUtilV2 {
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
                      log: LoggingAdapter,
-                     responseSchema: ApiV2Schema = ApiV2WithValueObjects)
+                     responseSchema: ApiV2Schema)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
@@ -103,6 +150,7 @@ object RouteUtilV2 {
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
       * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
@@ -111,7 +159,8 @@ object RouteUtilV2 {
                                                                   requestContext: RequestContext,
                                                                   settings: SettingsImpl,
                                                                   responderManager: ActorSelection,
-                                                                  log: LoggingAdapter)
+                                                                  log: LoggingAdapter,
+                                                                  responseSchema: ApiV2Schema)
                                                                  (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
             requestMessage <- requestMessageF
@@ -120,7 +169,8 @@ object RouteUtilV2 {
                 requestContext = requestContext,
                 settings = settings,
                 responderManager = responderManager,
-                log = log
+                log = log,
+                responseSchema = responseSchema
             )
 
         } yield routeResult

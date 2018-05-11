@@ -28,7 +28,7 @@ import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 /**
   * Represents a value in a JSON-LD document.
   */
-sealed trait JsonLDValue {
+sealed trait JsonLDValue extends Ordered[JsonLDValue] {
     /**
       * Converts this JSON-LD value to a Scala object that can be passed to [[org.knora.webapi.util.JavaUtil.deepScalaToJava]],
       * whose return value can then be passed to the JSON-LD Java library.
@@ -44,6 +44,13 @@ sealed trait JsonLDValue {
   */
 case class JsonLDString(value: String) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatStr: JsonLDString => value.compare(thatStr.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -53,6 +60,13 @@ case class JsonLDString(value: String) extends JsonLDValue {
   */
 case class JsonLDInt(value: Int) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatInt: JsonLDInt => value.compare(thatInt.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -62,6 +76,13 @@ case class JsonLDInt(value: Int) extends JsonLDValue {
   */
 case class JsonLDBoolean(value: Boolean) extends JsonLDValue {
     override def toAny: Any = value
+
+    override def compare(that: JsonLDValue): Int = {
+        that match {
+            case thatBoolean: JsonLDBoolean => value.compare(thatBoolean.value)
+            case _ => 0
+        }
+    }
 }
 
 /**
@@ -112,6 +133,36 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
             case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
         }
+    }
+
+    /**
+      * Gets a required IRI value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a JSON-LD object.
+      * Then parses the object's ID with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the required value.
+      * @return the validated IRI.
+      */
+    def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T = {
+        JsonLDUtil.iriFromJsonLDObject(requireObject(key), validationFun)
+    }
+
+    /**
+      * Gets an optional IRI value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a JSON-LD object. Parses the object's ID with the
+      * specified validation function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions),
+      * throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the optional value.
+      * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
+      *                      that throws an exception if the string is invalid. The function's return value is the
+      *                      validated string, possibly converted to another type T.
+      * @tparam T the type of the validation function's return value.
+      * @return the return value of the validation function, or `None` if the value was not present.
+      */
+    def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
+        maybeObject(key).map(obj => JsonLDUtil.iriFromJsonLDObject(obj, validationFun))
     }
 
     /**
@@ -227,6 +278,8 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
             case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
         }
     }
+
+    override def compare(that: JsonLDValue): Int = 0
 }
 
 /**
@@ -261,6 +314,8 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
         }
     }
+
+    override def compare(that: JsonLDValue): Int = 0
 }
 
 /**
@@ -279,6 +334,16 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
       * A convenience function that calls `body.maybeString`.
       */
     def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeString(key, validationFun)
+
+    /**
+      * A convenience function that calls `body.requireIriInObject`.
+      */
+    def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireIriInObject(key, validationFun)
+
+    /**
+      * A convenience function that calls `body.maybeIriInObject`.
+      */
+    def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeIriInObject(key, validationFun)
 
     /**
       * A convenience function that calls `body.requireObject`.
@@ -337,6 +402,55 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
   * Utility functions for working with JSON-LD.
   */
 object JsonLDUtil {
+
+    /**
+      * Returns `true` if the specified JSON-LD object represents an IRI value.
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return `true` if the object represents an IRI value.
+      */
+    def isIriValue(jsonLDObject: JsonLDObject): Boolean = {
+        jsonLDObject.value.keySet == Set("@id")
+    }
+
+    /**
+      * Converts an IRI value to its JSON-LD object value representation.
+      *
+      * @param iri the IRI to be converted.
+      * @return the JSON-LD representation of the IRI as an object value.
+      */
+    def iriToJsonLDObject(iri: IRI): JsonLDObject = {
+        JsonLDObject(Map("@id" -> JsonLDString(iri)))
+    }
+
+    /**
+      * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
+      * function.
+      *
+      * @param jsonLDObject a JSON-LD object value representing an IRI.
+      * @return the return value of the validation function.
+      */
+    def iriFromJsonLDObject[T](jsonLDObject: JsonLDObject, validationFun: (String, => Nothing) => T): T = {
+        if (isIriValue(jsonLDObject)) {
+            jsonLDObject.value.values.head match {
+                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
+                case other => throw BadRequestException(s"Expected an IRI: $other")
+            }
+        } else {
+            throw BadRequestException(s"Expected a JSON-LD object containing an IRI: $jsonLDObject")
+        }
+    }
+
+    /**
+      * Returns `true` if the specified JSON-LD object represents a string with a language tag.
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return `true` if the object represents a string with a language tag.
+      */
+    def isStringWithLang(jsonLDObject: JsonLDObject): Boolean = {
+        jsonLDObject.value.keySet == Set("@value", "@language")
+    }
+
     /**
       * Given a map of language codes to predicate values, returns a JSON-LD array in which each element
       * has a `@value` predicate and a `@language` predicate.

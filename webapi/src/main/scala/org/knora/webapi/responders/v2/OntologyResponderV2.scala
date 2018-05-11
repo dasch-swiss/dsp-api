@@ -885,7 +885,7 @@ class OntologyResponderV2 extends Responder {
         Future {
             CacheUtil.get[OntologyCacheData](cacheName = OntologyCacheName, key = OntologyCacheKey) match {
                 case Some(data) => data
-                case None => throw ApplicationCacheException(s"Key '$OntologyCacheKey' not found in application cache '$OntologyCacheName'")
+                case None => throw ApplicationCacheException(s"The Knora API server has not loaded any ontologies, perhaps because of an invalid ontology")
             }
         }
     }

@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingReq
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, SettingsImpl}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -94,7 +94,7 @@ object StandoffRouteV2 extends Authenticator {
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
                         val requestMessageFuture: Future[CreateMappingRequestV2] = allPartsFuture.map {
-                            (allParts: Map[Name, String]) =>
+                            allParts: Map[Name, String] =>
 
                                 val jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
 
@@ -116,7 +116,8 @@ object StandoffRouteV2 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            log
+                            log,
+                            ApiV2WithValueObjects
                         )
 
                 }

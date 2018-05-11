@@ -32,6 +32,13 @@ format that is consistent and hence easier to use for a client.
 Please note that V2 is still in development. We do not yet recommend
 using it on productive systems.
 
+## V2 Path Segment
+
+Every request to API V1 includes `v2` as a path segment, e.g.
+`http://host/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a`.
+Accordingly, requests using any other version of the API will require
+another path segment.
+
 ## JSON-LD
 
 Our preferred format for data exchange is
@@ -60,21 +67,18 @@ use content negotiation to specify the preferred exchange format.
 
 ## Support of schema.org Entities
 
-In our API responses (e.g., `ResourcesSequence`, see
-@ref:[Response Formats](response-formats.md)), we use entities
-defined in [schema.org](http://schema.org/).
+Some entities defined in [schema.org](http://www.schema.org) are used in
+API v2 responses (e.g., `ResourcesSequence`, see
+@ref:[Response Formats](response-formats.md)). For example,
+`knora-api:Resource` is declared to be a subclass of
+`http://schema.org/Thing`, so we can use a `knora-api:Resource` or
+any of its subclasses where `http://schema.org` requires a
+`http://schema.org/Thing`.
 
-Our intent is that any client familiar with
-[schema.org](http://schema.org/) should be able to understand our
-response format.
+## Knora IRIs
 
-A resource's `rdfs:label` is represented as a `http://schema.org/name`
-although they might not be equivalent in a strict sense (see
-[schemaorg#1762](https://github.com/schemaorg/schemaorg/issues/1762)).
-
-Likewise, `knora-api:Resource` is declared to be a subclass of
-`http://schema.org/Thing`, so we can use a `knora-api:Resource` or any of its subclasses where
-`http://schema.org` requires a `http://schema.org/Thing`.
+Resources and entities are identified by IRIs. The format of these IRIs
+is explained in @ref:[Knora IRIs](knora-iris.md).
 
 ## API Schema
 
@@ -83,26 +87,36 @@ and a simple one. The main difference is that the complex schema exposes
 the complexity of value objects, while the simple version does not. A
 client that needs to edit values must use the complex schema in order to
 obtain the IRI of each value. A client that reads but does not update
-data can use the simplified schema.
+data can use the simplified schema. The simple schema is mainly intended
+to facilitate interoperability with other RDF-based systems in the
+context of Linked Open Data. It is therefore designed to use the
+simplest possible datatypes and to require minimal knowledge of Knora.
 
 In either case, the client deals only with data whose structure and
 semantics are defined by Knora API ontologies, which are distinct from
 the ontologies that are used to store date in the triplestore. The Knora
 API server automatically converts back and forth between these internal
 and external representations. This approach encapsulates the internals
-and adds a layer of abstraction to them. The client will be able to use
-content negotiation to specify its preferred exchange format. For more
-information, see
-@ref:[Querying, Creating, and Updating Ontologies](ontology-information.md).
+and adds a layer of abstraction to them.
 
-## Knora IRIs
+Some API operations inherently require the client to accept responses in
+the complex schema, while others can return data in either schema. In
+the latter case, the complex schema is used by default in the response,
+unless the request specifically asks for the simple schema. For example,
+if an ontology is requested using an IRI indicating the simple schema,
+the ontology will be returned in the simple schema (see
+@ref:[Querying, Creating, and Updating Ontologies](ontology-information.md)). The
+client can also specify the desired schema by using an HTTP header or a
+URL parameter:
 
-Resources and entities are identified by IRIs. The format of these IRIs
-is explained in @ref:[Knora IRIs](knora-iris.md).
+  - the HTTP header `X-Knora-Accept-Schema`
+  - the URL parameter `schema`
 
-## V2 Path Segment
+Both the HTTP header and the URL parameter accept the values `simple` or
+`complex`.
 
-Every request to API V1 includes `v2` as a path segment, e.g.
-`http://host/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a`.
-Accordingly, requests using any other version of the API will require
-another path segment.
+Although the KnarQL query language
+(see @ref:[KnarQL: Knora Query Language](query-language.md)) requires the simple
+schema to be used in the request, search results are returned in the
+complex schema by default, unless the client requests the simple schema
+by using the HTTP header or the URL parameter.

@@ -15,9 +15,9 @@
       "knora-api:dateValueHasStartEra" : "BCE",
       "knora-api:dateValueHasStartMonth" : 1,
       "knora-api:dateValueHasStartYear" : 10,
-      "knora-api:valueAsString" : "0010-01-10 BCE - 0010-01-10 CE"
+      "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE"
     },
-    "schema:name" : "A thing that has a BCE date value"
+    "rdfs:label" : "A thing that has a BCE date value"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

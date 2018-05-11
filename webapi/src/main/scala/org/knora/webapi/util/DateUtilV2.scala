@@ -21,6 +21,7 @@ package org.knora.webapi.util
 
 import java.util.{Calendar, GregorianCalendar}
 
+import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
@@ -62,6 +63,22 @@ object DateUtilV2 {
       * @param precision the given date's precision.
       */
     case class DateYearMonthDay(year: Int, month: Int, day: Int, era: KnoraEraV2.Value, precision: KnoraPrecisionV1.Value) {
+
+        override def toString: String = {
+            precision match {
+                case KnoraPrecisionV1.YEAR =>
+                    // Year precision: just include the year.
+                    f"$year%04d${StringFormatter.EraSeparator}$era"
+
+                case KnoraPrecisionV1.MONTH =>
+                    // Month precision: include the year and the month.
+                    f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.EraSeparator}$era"
+
+                case KnoraPrecisionV1.DAY =>
+                    // Day precision: include the year, the month, and the day.
+                    f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.PrecisionSeparator}$day%02d${StringFormatter.EraSeparator}$era"
+            }
+        }
 
         /**
           * Converts the [[DateYearMonthDay]] to knora-api assertions representing a start date.
@@ -147,7 +164,45 @@ object DateUtilV2 {
 
         }
 
+        /**
+          * Determines whether two [[DateYearMonthDay]] objects represent the same date, considering their precisions.
+          *
+          * @param that the [[DateYearMonthDay]] to be compared to this one.
+          * @return `true` if the two dates have the same precision and era and if their differences are smaller than their
+          *         precision.
+          */
+        def equalsWithinPrecision(that: DateYearMonthDay): Boolean = {
+            if (this.precision == that.precision && this.era == that.era) {
+                precision match {
+                    case KnoraPrecisionV1.YEAR => this.year == that.year
+                    case KnoraPrecisionV1.MONTH => this.year == that.year && this.month == that.month
+                    case KnoraPrecisionV1.DAY => this.year == that.year && this.month == that.month && this.day == that.day
+                }
+            } else {
+                false
+            }
+        }
+    }
 
+    /**
+      * Converts a date range to a string for use in API v2 responses.
+      *
+      * @param startDate the start date.
+      * @param endDate   the end date.
+      * @param calendar  the calendar.
+      * @return a string representing the date range.
+      */
+    def dateRangeToString(startDate: DateYearMonthDay, endDate: DateYearMonthDay, calendar: KnoraCalendarV1.Value): String = {
+        val str = new StringBuilder(calendar.toString).append(StringFormatter.CalendarSeparator)
+        str.append(startDate.toString)
+
+        // Can we represent the start and end dates as a single date?
+        if (!startDate.equalsWithinPrecision(endDate)) {
+            // No. Include the end date.
+            str.append(StringFormatter.CalendarSeparator).append(endDate.toString)
+        }
+
+        str.toString
     }
 
     /**
@@ -158,7 +213,7 @@ object DateUtilV2 {
       * @param calendar        the calendar to which the JDN should be converted.
       * @return a [[DateYearMonthDay]].
       */
-    def convertJDNToDate(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {
+    def jdnToDateYearMonthDay(julianDayNumber: Int, precision: KnoraPrecisionV1.Value, calendar: KnoraCalendarV1.Value): DateYearMonthDay = {
         val javaGregorianCalendarDate: GregorianCalendar = DateUtilV1.convertJulianDayNumberToJavaGregorianCalendar(julianDayNumber, calendar)
 
         val year: Int = javaGregorianCalendarDate.get(Calendar.YEAR)

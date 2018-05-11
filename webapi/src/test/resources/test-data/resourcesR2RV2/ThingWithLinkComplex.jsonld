@@ -1,17 +1,18 @@
 {
   "@type" : "schema:ItemList",
   "schema:itemListElement" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_list_value",
+    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
     "@type" : "p0001-anything:Thing",
-    "p0001-anything:hasListItem" : {
-      "@id" : "http://rdfh.ch/0001/thing_with_list_value/list_value",
-      "@type" : "knora-api:ListValue",
-      "knora-api:listValueAsListNode" : {
-        "@id" : "http://rdfh.ch/lists/0001/treeList02"
-      },
-      "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
+    "p0001-anything:isPartOfOtherThingValue" : {
+      "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw",
+      "@type" : "knora-api:LinkValue",
+      "knora-api:linkValueHasTarget" : {
+        "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+        "@type" : "p0001-anything:Thing",
+        "rdfs:label" : "Uniform"
+      }
     },
-    "rdfs:label" : "A thing that has a list value"
+    "rdfs:label" : "Sierra"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

@@ -1,29 +1,34 @@
 {
-  "knora-api:hasOntologies": {
-    "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2",
-    "@type": "owl:Ontology",
-    "knora-api:hasProperties": {
-      "p0803-incunabula:pubdate": {
-        "knora-api:subjectType": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book",
-        "rdfs:subPropertyOf": [
-          "http://api.knora.org/ontology/knora-api/simple/v2#hasValue",
-          "http://purl.org/dc/terms/date"
-        ],
-        "rdfs:label": "Datum der Herausgabe",
-        "rdfs:comment": "Datum der Herausgabe",
-        "@type": "owl:DatatypeProperty",
-        "knora-api:objectType": "http://api.knora.org/ontology/knora-api/simple/v2#Date",
-        "@id": "p0803-incunabula:pubdate"
+  "knora-api:hasOntologies" : {
+    "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:hasProperties" : {
+      "p0803-incunabula:pubdate" : {
+        "@id" : "p0803-incunabula:pubdate",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : {
+          "@id" : "knora-api:Date"
+        },
+        "knora-api:subjectType" : {
+          "@id" : "p0803-incunabula:book"
+        },
+        "rdfs:comment" : "Datum der Herausgabe",
+        "rdfs:label" : "Datum der Herausgabe",
+        "rdfs:subPropertyOf" : [ {
+          "@id" : "knora-api:hasValue"
+        }, {
+          "@id" : "http://purl.org/dc/terms/date"
+        } ]
       }
     },
-    "rdfs:label": "The incunabula ontology"
+    "rdfs:label" : "The incunabula ontology"
   },
-  "@context": {
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "owl": "http://www.w3.org/2002/07/owl#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "p0803-incunabula": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
   }
 }

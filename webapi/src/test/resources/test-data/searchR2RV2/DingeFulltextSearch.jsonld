@@ -14,7 +14,7 @@
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
       "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
     } ],
-    "schema:name" : "Ein Ding für jemanden, dem die Dinge gefallen"
+    "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

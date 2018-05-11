@@ -46,8 +46,12 @@ class InputOntologiesV2Spec extends CoreSpec {
                   |      "anything:hasName" : {
                   |        "@id" : "anything:hasName",
                   |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                  |        "knora-api:subjectType" : {
+                  |          "@id" : "anything:Thing"
+                  |        },
+                  |        "knora-api:objectType" : {
+                  |          "@id" : "knora-api:TextValue"
+                  |        },
                   |        "rdfs:comment" : [ {
                   |          "@language" : "en",
                   |          "@value" : "The name of a 'Thing'"
@@ -62,7 +66,11 @@ class InputOntologiesV2Spec extends CoreSpec {
                   |          "@language" : "de",
                   |          "@value" : "hat Namen"
                   |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+                  |        "rdfs:subPropertyOf" : [ {
+                  |          "@id" : "knora-api:hasValue"
+                  |        }, {
+                  |          "@id" : "http://schema.org/name"
+                  |        } ]
                   |      }
                   |    },
                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -101,14 +109,15 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@language" : "en",
                    |          "@value" : "A thing that is wild"
                    |        },
-                   |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
-                   |            }
-                   |        ]
+                   |        "rdfs:subClassOf" : [ {
+                   |          "@id" : "anything:Thing"
+                   |        }, {
+                   |          "@type": "owl:Restriction",
+                   |          "owl:maxCardinality": 1,
+                   |          "owl:onProperty": {
+                   |            "@id" : "anything:hasName"
+                   |          }
+                   |        } ]
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -147,14 +156,15 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@language" : "en",
                    |          "@value" : "A thing that is wild"
                    |        },
-                   |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
-                   |            }
-                   |        ]
+                   |        "rdfs:subClassOf" : [ {
+                   |          "@id" : "anything:Thing"
+                   |        }, {
+                   |          "@type": "owl:Restriction",
+                   |          "owl:maxCardinality": 1,
+                   |          "owl:onProperty": {
+                   |            "@id" : "anything:hasName"
+                   |          }
+                   |        } ]
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
@@ -194,14 +204,15 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |          "@language" : "en",
                    |          "@value" : "A thing that is wild"
                    |        },
-                   |        "rdfs:subClassOf" : [
-                   |            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                   |            {
-                   |                "@type": "http://www.w3.org/2002/07/owl#Restriction",
-                   |                "owl:maxCardinality": 1,
-                   |                "owl:onProperty": "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
-                   |            }
-                   |        ]
+                   |        "rdfs:subClassOf" : [ {
+                   |          "@id" : "anything:Thing"
+                   |        }, {
+                   |          "@type": "owl:Restriction",
+                   |          "owl:maxCardinality": 1,
+                   |          "owl:onProperty": {
+                   |            "@id" : "anything:hasName"
+                   |          }
+                   |        } ]
                    |      }
                    |    },
                    |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
