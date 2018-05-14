@@ -2579,7 +2579,7 @@
                            ],
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasLanguage ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ],
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :valueHasMapping ;
