@@ -24,10 +24,10 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "schema:name" : "u1r"
+        "rdfs:label" : "u1r"
       }
     },
-    "schema:name" : "Siehe Seite c5v"
+    "rdfs:label" : "Siehe Seite c5v"
   }, {
     "@id" : "http://rdfh.ch/b6b64a62b006",
     "@type" : "knora-api:Region",
@@ -52,16 +52,16 @@
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-        "schema:name" : "u1r"
+        "rdfs:label" : "u1r"
       }
     },
-    "schema:name" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
+    "rdfs:label" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
   } ],
   "schema:numberOfItems" : 2,
   "@context" : {
-    "schema" : "http://schema.org/",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "schema" : "http://schema.org/",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
   }
 }

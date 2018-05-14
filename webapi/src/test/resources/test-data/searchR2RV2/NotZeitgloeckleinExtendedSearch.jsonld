@@ -8,7 +8,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
     },
-    "schema:name" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
+    "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
     "@id" : "http://rdfh.ch/21abac2162",
     "@type" : "incunabula:book",
@@ -17,7 +17,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Lob der Glieder Mariens"
     },
-    "schema:name" : "Lob der Glieder Mariens"
+    "rdfs:label" : "Lob der Glieder Mariens"
   }, {
     "@id" : "http://rdfh.ch/2a6221216701",
     "@type" : "incunabula:book",
@@ -34,7 +34,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius"
     } ],
-    "schema:name" : "Reise ins Heilige Land"
+    "rdfs:label" : "Reise ins Heilige Land"
   }, {
     "@id" : "http://rdfh.ch/3341c4984004",
     "@type" : "incunabula:book",
@@ -43,7 +43,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Die wunderbare Meerfahrt des hl. Brandan"
     },
-    "schema:name" : "Die wunderbare Meerfahrt des hl. Brandan"
+    "rdfs:label" : "Die wunderbare Meerfahrt des hl. Brandan"
   }, {
     "@id" : "http://rdfh.ch/41d01bd9fb",
     "@type" : "incunabula:book",
@@ -52,7 +52,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
     },
-    "schema:name" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
+    "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
     "@id" : "http://rdfh.ch/5e77e98d2603",
     "@type" : "incunabula:book",
@@ -61,7 +61,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "[Das] Narrenschiff (dt.)"
     },
-    "schema:name" : "[Das] Narrenschiff (dt.)"
+    "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
     "@id" : "http://rdfh.ch/6fad5b8c1e03",
     "@type" : "incunabula:book",
@@ -70,7 +70,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Passio sancti Meynrhadi martyris et heremite"
     },
-    "schema:name" : "Passio sancti Meynrhadi martyris et heremite"
+    "rdfs:label" : "Passio sancti Meynrhadi martyris et heremite"
   }, {
     "@id" : "http://rdfh.ch/861b5644b302",
     "@type" : "incunabula:book",
@@ -79,7 +79,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Quadragesimale de filio prodigo"
     },
-    "schema:name" : "Quadragesimale de filio prodigo"
+    "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
     "@id" : "http://rdfh.ch/8be1b7cf7103",
     "@type" : "incunabula:book",
@@ -92,7 +92,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
-    "schema:name" : "[Das] Narrenschiff (lat.)"
+    "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/9311a421b501",
     "@type" : "incunabula:book",
@@ -101,7 +101,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
     },
-    "schema:name" : "Bereitung zu dem Heiligen Sakrament"
+    "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
     "@id" : "http://rdfh.ch/939baf3f2a02",
     "@type" : "incunabula:book",
@@ -110,7 +110,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Postilla super epistolas et evangelia"
     },
-    "schema:name" : "Postilla super epistolas et evangelia"
+    "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
     "@id" : "http://rdfh.ch/9935159f67",
     "@type" : "incunabula:book",
@@ -119,7 +119,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
     },
-    "schema:name" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
+    "rdfs:label" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
   }, {
     "@id" : "http://rdfh.ch/b6b5ff1eb703",
     "@type" : "incunabula:book",
@@ -132,7 +132,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
-    "schema:name" : "[Das] Narrenschiff (lat.)"
+    "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/c3f913666f",
     "@type" : "incunabula:book",
@@ -145,7 +145,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
     } ],
-    "schema:name" : "De generatione Christi"
+    "rdfs:label" : "De generatione Christi"
   }, {
     "@id" : "http://rdfh.ch/cf0892760104",
     "@type" : "incunabula:book",
@@ -154,7 +154,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Geschichte von der schönen Melusine"
     },
-    "schema:name" : "Geschichte von der schönen Melusine"
+    "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
     "@id" : "http://rdfh.ch/de6d83112e04",
     "@type" : "incunabula:book",
@@ -163,7 +163,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae"
     },
-    "schema:name" : "Itinerarius seu peregrinatio beatae virginis Mariae"
+    "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
     "@id" : "http://rdfh.ch/e41ab5695c",
     "@type" : "incunabula:book",
@@ -176,7 +176,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Sant Brigitten gebettly"
     } ],
-    "schema:name" : "Orationes"
+    "rdfs:label" : "Orationes"
   }, {
     "@id" : "http://rdfh.ch/ff17e5ef9601",
     "@type" : "incunabula:book",
@@ -185,7 +185,7 @@
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
     },
-    "schema:name" : "Zeitglöcklein des Lebens und Leidens Christi"
+    "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "schema:numberOfItems" : 18,
   "@context" : {

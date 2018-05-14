@@ -8,7 +8,7 @@
       "@type" : "knora-api:BooleanValue",
       "knora-api:booleanValueAsBoolean" : true
     },
-    "schema:name" : "Testding for extended search"
+    "rdfs:label" : "Testding for extended search"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

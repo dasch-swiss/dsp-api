@@ -64,7 +64,8 @@ object ResourcesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }
@@ -87,7 +88,8 @@ object ResourcesRouteV2 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        log
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
                     )
                 }
             }

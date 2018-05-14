@@ -18,4 +18,13 @@ export module Basic {
      */
     export type KnoraIri = string;
 
+    /**
+     * Represents an Iri in JSON-LD (if not a value of the key @id or @type).
+     */
+    export interface IriObject {
+
+        "@id": string;
+
+    }
+
 }

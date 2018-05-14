@@ -116,8 +116,8 @@ of `knora-base` is called `knora-api`.
 The API version identifier indicates not only the version of the API,
 but also an API 'schema'. The Knora API v2 is available in two schemas:
 
-  - A default schema, which is suitable both for reading and for editing
-    data. The default schema represents values primarily as complex
+  - A complex schema, which is suitable both for reading and for editing
+    data. The complex schema represents values primarily as complex
     objects. Its version identifier is `v2`.
   - A simple schema, which is suitable for reading data but not for
     editing it. The simple schema facilitates interoperability between
@@ -135,7 +135,7 @@ For example, suppose a Knora API server is running at
 `http://www.knora.org/ontology/0001/example`. That ontology can then be
 requested using either of these IRIs:
 
-  - `http://knora.example.org/ontology/0001/example/v2` (for the default
+  - `http://knora.example.org/ontology/0001/example/v2` (for the complex
     schema)
   - `http://knora.example.org/ontology/0001/example/simple/v2` (for the
     simple schema)
@@ -145,7 +145,7 @@ While the internal `example` ontology refers to definitions in
 refers instead to a `knora-api` ontology, whose IRI depends on the
 schema being used:
 
-  - `http://api.knora.org/ontology/knora-api/v2` (for the default
+  - `http://api.knora.org/ontology/knora-api/v2` (for the complex
     schema)
   - `http://api.knora.org/ontology/knora-api/simple/v2` (for the simple
     schema)
@@ -166,7 +166,7 @@ has the following IRIs:
   - `http://www.knora.org/ontology/0001/example#ExampleThing` (in the
     internal ontology)
   - `http://HOST[:PORT]/ontology/0001/example/v2#ExampleThing` (in the
-    API v2 default schema)
+    API v2 complex schema)
   - `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing`
     (in the API v2 simple schema)
 

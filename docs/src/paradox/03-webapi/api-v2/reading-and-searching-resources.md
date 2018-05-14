@@ -25,6 +25,11 @@ To retrieve an existing resource, the HTTP method `GET` has to be used.
 Reading resources may require authentication, since some resources may
 have restricted viewing permissions.
 
+Operations for reading and searching resources can return responses in either the
+simple or the complex ontology schema. The complex schema is used by default.
+To receive a response in the simple schema, use the HTTP request header or URL
+parameter described in @ref:[API Schema](introduction.md#api-schema).
+
 ## Get the Representation of a Resource by its IRI
 
 ### Get a Full Representation of a Resource by its IRI
@@ -82,12 +87,12 @@ resource as you type. E.g., the user wants to get a list of resources
 whose `rdfs:label` contain some search terms separated by a whitespace
 character:
 
->   - Zeit
->   - Zeitg
->   - ...
->   - Zeitglöcklein d
->   - ...
->   - Zeitglöcklein des Lebens
+   - Zeit
+   - Zeitg
+   - ...
+   - Zeitglöcklein d
+   - ...
+   - Zeitglöcklein des Lebens
 
 With each character added to the last term, the selection gets more
 specific. The first term should at least contain four characters. To

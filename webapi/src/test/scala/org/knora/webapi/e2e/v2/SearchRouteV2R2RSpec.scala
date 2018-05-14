@@ -33,6 +33,7 @@ import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
+import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
 import org.knora.webapi.util.FileUtil
@@ -107,12 +108,24 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform a fulltext search for 'Dinge'" in {
+        "perform a fulltext search for 'Dinge' (in the complex schema)" in {
             Get("/v2/search/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearch.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "perform a fulltext search for 'Dinge' (in the simple schema)" in {
+            Get("/v2/search/Dinge").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/DingeFulltextSearchSimple.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -129,7 +142,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
             val sparqlSimplified =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -160,6 +173,44 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
+            val sparqlSimplified =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -202,7 +253,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
             val sparqlSimplified =

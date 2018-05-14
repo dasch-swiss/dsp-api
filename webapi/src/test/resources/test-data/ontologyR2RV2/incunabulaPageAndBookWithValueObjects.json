@@ -1,307 +1,353 @@
 {
-  "knora-api:hasOntologies": {
-    "rdfs:label": "The incunabula ontology",
-    "knora-api:hasClasses": {
-      "p0803-incunabula:book": {
-        "rdfs:label": "Book",
-        "knora-api:isResourceClass": true,
-        "rdfs:comment": "Diese Resource-Klasse beschreibt ein Buch",
-        "knora-api:canBeInstantiated": true,
-        "@type": "owl:Class",
-        "rdfs:subClassOf": [
-          "http://api.knora.org/ontology/knora-api/v2#Resource",
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#creationDate"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://www.w3.org/2000/01/rdf-schema#label"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 1,
-            "owl:minCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 2,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 2,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasAuthor"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 3,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 4,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 5,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 5,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 6,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#location"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 7,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#url"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 9,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 10,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#note"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 12,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment"
+  "knora-api:hasOntologies" : {
+    "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:hasClasses" : {
+      "p0803-incunabula:book" : {
+        "@id" : "p0803-incunabula:book",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
+        "knora-api:resourceIcon" : "book.gif",
+        "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
+        "rdfs:label" : "Book",
+        "rdfs:subClassOf" : [ {
+          "@id" : "knora-api:Resource"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToProject"
           }
-        ],
-        "knora-api:resourceIcon": "book.gif",
-        "@id": "p0803-incunabula:book"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToUser"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:creationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasIncomingLink"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasPermissions"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkTo"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkToValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:lastModificationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "rdfs:label"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:title"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:description"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:hasAuthor"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:publisher"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 4,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:publoc"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:citation"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:pubdate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:location"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:url"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 9,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:physical_desc"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:note"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:book_comment"
+          }
+        } ]
       },
-      "p0803-incunabula:page": {
-        "rdfs:label": "Page",
-        "knora-api:isResourceClass": true,
-        "rdfs:comment": "A page is a part of a book",
-        "knora-api:canBeInstantiated": true,
-        "@type": "owl:Class",
-        "rdfs:subClassOf": [
-          "http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation",
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#attachedToProject"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#attachedToUser"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#creationDate"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasPermissions"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:minCardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://api.knora.org/ontology/knora-api/v2#lastModificationDate"
-          },
-          {
-            "@type": "owl:Restriction",
-            "knora-api:isInherited": true,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://www.w3.org/2000/01/rdf-schema#label"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 1,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 2,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 2,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOf"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 2,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 3,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 5,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 6,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page_comment"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 7,
-            "owl:cardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#origname"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 10,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSideband"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 10,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSidebandValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 11,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSideband"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 11,
-            "owl:maxCardinality": 1,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSidebandValue"
-          },
-          {
-            "@type": "owl:Restriction",
-            "salsah-gui:guiOrder": 12,
-            "owl:minCardinality": 0,
-            "owl:onProperty": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#transcription"
+      "p0803-incunabula:page" : {
+        "@id" : "p0803-incunabula:page",
+        "@type" : "owl:Class",
+        "knora-api:canBeInstantiated" : true,
+        "knora-api:isResourceClass" : true,
+        "knora-api:resourceIcon" : "page.gif",
+        "rdfs:comment" : "A page is a part of a book",
+        "rdfs:label" : "Page",
+        "rdfs:subClassOf" : [ {
+          "@id" : "knora-api:StillImageRepresentation"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToProject"
           }
-        ],
-        "knora-api:resourceIcon": "page.gif",
-        "@id": "p0803-incunabula:page"
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:attachedToUser"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:creationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasIncomingLink"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasPermissions"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkTo"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStandoffLinkToValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:minCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:hasStillImageFileValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:lastModificationDate"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "knora-api:isInherited" : true,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "rdfs:label"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 1,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:pagenum"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:description"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:partOf"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 2,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:partOfValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 3,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:seqnum"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 5,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:citation"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 6,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:page_comment"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 7,
+          "owl:cardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:origname"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:hasLeftSideband"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 10,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:hasLeftSidebandValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:hasRightSideband"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 11,
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:hasRightSidebandValue"
+          }
+        }, {
+          "@type" : "owl:Restriction",
+          "salsah-gui:guiOrder" : 12,
+          "owl:minCardinality" : 0,
+          "owl:onProperty" : {
+            "@id" : "p0803-incunabula:transcription"
+          }
+        } ]
       }
     },
-    "@type": "owl:Ontology",
-    "knora-api:attachedToProject": "http://rdfh.ch/projects/0803",
-    "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2"
+    "rdfs:label" : "The incunabula ontology"
   },
-  "@context": {
-    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
-    "owl": "http://www.w3.org/2002/07/owl#",
-    "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
-    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd": "http://www.w3.org/2001/XMLSchema#",
-    "p0803-incunabula": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }

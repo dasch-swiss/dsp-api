@@ -10,14 +10,16 @@
         "rdfs:label" : "Date literal",
         "rdfs:subClassOf" : {
           "@type" : "rdfs:Datatype",
-          "owl:onDatatype" : "http://www.w3.org/2001/XMLSchema#string",
+          "owl:onDatatype" : {
+            "@id" : "xsd:string"
+          },
           "owl:withRestrictions" : {
             "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
           }
         }
       }
     },
-    "rdfs:label" : "The simplified knora-api ontology"
+    "rdfs:label" : "The knora-api ontology in the simple schema"
   },
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

@@ -128,7 +128,7 @@ case class SparqlExtendedConstructRequest(sparql: String) extends TriplestoreReq
 /**
   * A response to a [[SparqlExtendedConstructRequest]].
   *
-  * @param statements a map of subjects to statements about each subject.
+  * @param statements a map of subjects to statements about each subject. TODO: use SmartIri for the predicate.
   */
 case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]])
 

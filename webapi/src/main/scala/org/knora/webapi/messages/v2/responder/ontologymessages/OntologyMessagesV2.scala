@@ -75,7 +75,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 
         val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
-        val projectIri: SmartIri = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
@@ -359,7 +359,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
 
         propertyInfoContent.predicates.get(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri).foreach {
             subjectTypePred =>
-                val subjectType = subjectTypePred.requireIriObject(throw BadRequestException(s"No object provided for predicate knora-api:subjectType"))
+                val subjectType = subjectTypePred.requireIriObject(throw BadRequestException(s"Missing or invalid object for predicate knora-api:subjectType"))
 
                 if (!(subjectType.isKnoraApiV2EntityIri && subjectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
                     throw BadRequestException(s"Invalid knora-api:subjectType: $subjectType")
@@ -1287,7 +1287,7 @@ object InputOntologyV2 {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val projectIri = ontologyObj.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         val ontologyLabel = ontologyObj.maybeString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
@@ -1878,16 +1878,10 @@ sealed trait EntityInfoContentV2 {
   * Processes predicates from a JSON-LD class or property definition.
   */
 object EntityInfoContentV2 {
-    private def stringToLiteral(str: String): OntologyLiteralV2 = {
+    private def stringToLiteral(str: String): StringLiteralV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val sparqlEncodedString = stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
-
-        if (stringFormatter.isIri(sparqlEncodedString)) {
-            SmartIriLiteralV2(sparqlEncodedString.toSmartIri)
-        } else {
-            StringLiteralV2(sparqlEncodedString)
-        }
+        StringLiteralV2(stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str")))
     }
 
     /**
@@ -1921,10 +1915,21 @@ object EntityInfoContentV2 {
                         )
 
                     case objObj: JsonLDObject =>
-                        PredicateInfoV2(
-                            predicateIri = predicateIri,
-                            objects = JsonLDArray(Seq(objObj)).toObjsWithLang
-                        )
+                        if (JsonLDUtil.isIriValue(objObj)) {
+                            // This is a JSON-LD IRI value.
+                            PredicateInfoV2(
+                                predicateIri = predicateIri,
+                                objects = Seq(SmartIriLiteralV2(JsonLDUtil.iriFromJsonLDObject(objObj, stringFormatter.toSmartIriWithErr)))
+                            )
+                        } else if (JsonLDUtil.isStringWithLang(objObj)) {
+                            // This is a string with a language tag.
+                            PredicateInfoV2(
+                                predicateIri = predicateIri,
+                                objects = JsonLDArray(Seq(objObj)).toObjsWithLang
+                            )
+                        } else {
+                            throw BadRequestException(s"Unexpected object value: $objObj")
+                        }
 
                     case objArray: JsonLDArray =>
                         if (objArray.value.isEmpty) {
@@ -1932,6 +1937,7 @@ object EntityInfoContentV2 {
                         }
 
                         if (objArray.value.forall(_.isInstanceOf[JsonLDString])) {
+                            // All the elements of the array are strings.
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.value.map {
@@ -1939,7 +1945,25 @@ object EntityInfoContentV2 {
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
                                 }
                             )
-                        } else if (objArray.value.forall(_.isInstanceOf[JsonLDObject])) {
+                        } else if (objArray.value.forall {
+                            case jsonObjElem: JsonLDObject if JsonLDUtil.isIriValue(jsonObjElem) =>
+                                // All the elements of the array are IRI values.
+                                true
+                            case _ => false
+                        }) {
+                            PredicateInfoV2(
+                                predicateIri = predicateIri,
+                                objects = objArray.value.map {
+                                    case jsonObjElem: JsonLDObject => SmartIriLiteralV2(JsonLDUtil.iriFromJsonLDObject(jsonObjElem, stringFormatter.toSmartIriWithErr))
+                                    case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
+                                }
+                            )
+                        } else if (objArray.value.forall {
+                            case jsonObjElem: JsonLDObject if JsonLDUtil.isStringWithLang(jsonObjElem) =>
+                                // All the elements of the array are strings with language codes.
+                                true
+                            case _ => false
+                        }) {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.toObjsWithLang
@@ -2207,7 +2231,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Owl.Restriction),
-                    OntologyConstants.Owl.OnProperty -> JsonLDString(propertyIri.toString),
+                    OntologyConstants.Owl.OnProperty -> JsonLDUtil.iriToJsonLDObject(propertyIri.toString),
                     prop2card
                 ) ++ isInheritedStatement ++ guiOrderStatement)
         }
@@ -2225,7 +2249,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
             (pattern: String) =>
                 JsonLDObject(Map(
                     "@type" -> JsonLDString(OntologyConstants.Rdfs.Datatype),
-                    OntologyConstants.Owl.OnDatatype -> JsonLDString(OntologyConstants.Xsd.String),
+                    OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(OntologyConstants.Xsd.String),
                     OntologyConstants.Owl.WithRestrictions -> JsonLDArray(Seq(
                         JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern))
                         ))
@@ -2233,7 +2257,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         val jsonSubClassOf = entityInfoContent.subClassOf.toArray.sorted.map {
-            superClass => JsonLDString(superClass.toString)
+            superClass => JsonLDUtil.iriToJsonLDObject(superClass.toString)
         } ++ owlCardinalities ++ jsonRestriction
 
         val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
@@ -2322,11 +2346,11 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         // Make the property's knora-api:subjectType and knora-api:objectType statements.
-        val subjectTypeStatement: Option[(IRI, JsonLDString)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDString(subjectTypeObj.toString)))
-        val objectTypeStatement: Option[(IRI, JsonLDString)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDString(objectTypeObj.toString)))
+        val subjectTypeStatement: Option[(IRI, JsonLDObject)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDUtil.iriToJsonLDObject(subjectTypeObj.toString)))
+        val objectTypeStatement: Option[(IRI, JsonLDObject)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDUtil.iriToJsonLDObject(objectTypeObj.toString)))
 
-        val jsonSubPropertyOf: Seq[JsonLDString] = entityInfoContent.subPropertyOf.toSeq.map {
-            superProperty => JsonLDString(superProperty.toString)
+        val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.map {
+            superProperty => JsonLDUtil.iriToJsonLDObject(superProperty.toString)
         }
 
         val jsonSubPropertyOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubPropertyOf.nonEmpty) {
@@ -2359,9 +2383,9 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
             None
         }
 
-        val guiElementStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
+        val guiElementStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2WithValueObjects) {
             entityInfoContent.getPredicateIriObject(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri).map {
-                obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDString(obj.toString)
+                obj => OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp -> JsonLDUtil.iriToJsonLDObject(obj.toString)
             }
         } else {
             None
@@ -2401,9 +2425,9 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
         val jsonLDPredicates: Map[IRI, JsonLDValue] = entityInfoContent.predicates.foldLeft(Map.empty[IRI, JsonLDValue]) {
             case (acc, (predicateIri, predicateInfo)) =>
                 if (predicateInfo.objects.nonEmpty) {
-                    val nonLanguageSpecificObjectsAsJson: Seq[JsonLDString] = predicateInfo.objects.collect {
+                    val nonLanguageSpecificObjectsAsJson: Seq[JsonLDValue] = predicateInfo.objects.collect {
                         case StringLiteralV2(str, None) => JsonLDString(str)
-                        case SmartIriLiteralV2(iri) => JsonLDString(iri.toString)
+                        case SmartIriLiteralV2(iri) => JsonLDUtil.iriToJsonLDObject(iri.toString)
                     }
 
                     acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
@@ -2571,12 +2595,21 @@ object ClassInfoContentV2 {
 
         val (subClassOf: Set[SmartIri], directCardinalities: Map[SmartIri, KnoraCardinalityInfo]) = filteredClassDef.maybeArray(OntologyConstants.Rdfs.SubClassOf) match {
             case Some(valueArray: JsonLDArray) =>
-                val baseClasses: Set[SmartIri] = valueArray.value.collect {
-                    case JsonLDString(baseClass) => baseClass.toSmartIri
+                val arrayElemsAsObjs: Seq[JsonLDObject] = valueArray.value.map {
+                    case jsonLDObj: JsonLDObject => jsonLDObj
+                    case other => throw BadRequestException(s"Unexpected value for rdfs:subClassOf: $other")
+                }
+
+                // Get the base classes from the objects of rdfs:subClassOf.
+                val baseClasses: Set[SmartIri] = arrayElemsAsObjs.filter {
+                    jsonLDObj => JsonLDUtil.isIriValue(jsonLDObj)
+                }.map {
+                    jsonLDObj => JsonLDUtil.iriFromJsonLDObject(jsonLDObj, stringFormatter.toSmartIriWithErr)
                 }.toSet
 
-                val restrictions: Seq[JsonLDObject] = valueArray.value.collect {
-                    case cardinalityObj: JsonLDObject => cardinalityObj
+                // Any object of rdfs:subClassOf that isn't a base class should be an owl:Restriction.
+                val restrictions: Seq[JsonLDObject] = arrayElemsAsObjs.filter {
+                    jsonLDObj => !JsonLDUtil.isIriValue(jsonLDObj)
                 }
 
                 val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
@@ -2616,7 +2649,7 @@ object ClassInfoContentV2 {
                                     }
                             }
 
-                            val onProperty = restriction.requireString(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
+                            val onProperty = restriction.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
                             val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder).map(_.value)
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
@@ -2785,7 +2818,7 @@ object PropertyInfoContentV2 {
         val subPropertyOf: Set[SmartIri] = filteredPropertyDef.maybeArray(OntologyConstants.Rdfs.SubPropertyOf) match {
             case Some(valueArray: JsonLDArray) =>
                 valueArray.value.map {
-                    case JsonLDString(superProperty) => superProperty.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $superProperty"))
+                    case superPropertyIriObj: JsonLDObject => JsonLDUtil.iriFromJsonLDObject(superPropertyIriObj, stringFormatter.toSmartIriWithErr)
                     case other => throw BadRequestException(s"Expected a property IRI: $other")
                 }.toSet
 
@@ -2927,9 +2960,9 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
     def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {
 
-        val projectIriStatement: Option[(IRI, JsonLDString)] = if (targetSchema == ApiV2WithValueObjects) {
+        val projectIriStatement: Option[(IRI, JsonLDObject)] = if (targetSchema == ApiV2WithValueObjects) {
             projectIri.map {
-                definedProjectIri => OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDString(definedProjectIri.toString)
+                definedProjectIri => OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(definedProjectIri.toString)
             }
         } else {
             None

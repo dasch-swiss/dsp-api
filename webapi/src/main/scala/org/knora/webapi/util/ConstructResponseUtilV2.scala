@@ -21,14 +21,14 @@ package org.knora.webapi.util
 
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{LiteralV2, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.twirl._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
-
 
 
 object ConstructResponseUtilV2 {
@@ -79,6 +79,8 @@ object ConstructResponseUtilV2 {
       * @return a Map[resource IRI -> [[ResourceWithValueRdfData]]].
       */
     def splitMainResourcesAndValueRdfData(constructQueryResults: SparqlConstructResponse, requestingUser: UserADM): Map[IRI, ResourceWithValueRdfData] = {
+        // TODO: use SparqlExtendedConstructResponse for better type safety.
+
         // split statements about resources and other statements (value objects and standoff)
         // resources are identified by the triple "resourceIri a knora-base:Resource" which is an inferred information returned by the SPARQL Construct query.
         val (resourceStatements: Map[IRI, Seq[(IRI, String)]], nonResourceStatements: Map[IRI, Seq[(IRI, String)]]) = constructQueryResults.statements.partition {
@@ -219,7 +221,7 @@ object ConstructResponseUtilV2 {
                                             assertions = predicateMapForValueAssertions,
                                             standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
                                             listNode = Map.empty[IRI, String] // link value cannot point to a list node
-                                            ))
+                                        ))
                                     } else {
                                         // Return None for the removed link value; it will be filtered out by flatMap.
                                         None
@@ -334,25 +336,26 @@ object ConstructResponseUtilV2 {
                     propIri -> transformedValues
             }
 
-            if (incomingLinksForResource(resourceIri).nonEmpty) {
-                // incomingResourcesWithLinkValueProps contains resources that have incoming link values
-                // flatResourcesWithValues contains the complete information
+            // incomingLinksForResource contains incoming link values for each resource
+            // flatResourcesWithValues contains the complete information
 
-                // filter out those resources that already have been processed
-                // and the main resources (they are already present on the top level of the response)
-                //
-                // the main resources point to dependent resources and would be treated as incoming links of dependent resources
-                // this would create circular dependencies
-                val incomingValueProps: Map[IRI, Seq[ValueRdfData]] = incomingLinksForResource(resourceIri).filterNot {
-                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                        alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-                }.flatMap {
-                    case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                        assertions.valuePropertyAssertions
-                }
+            // filter out those resources that already have been processed
+            // and the main resources (they are already present on the top level of the response)
+            //
+            // the main resources point to dependent resources and would be treated as incoming links of dependent resources
+            // this would create circular dependencies
 
+            val incomingLinks = incomingLinksForResource(resourceIri).filterNot {
+                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                    alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
+            }.flatMap {
+                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
+                    assertions.valuePropertyAssertions
+            }
+
+            if (incomingLinks.nonEmpty) {
                 // create a virtual property representing an incoming link
-                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingValueProps.values.toSeq.flatten.map {
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingLinks.values.toSeq.flatten.map {
                     (linkValue: ValueRdfData) =>
 
                         // get the source of the link value (it points to the resource that is currently processed)
@@ -417,7 +420,7 @@ object ConstructResponseUtilV2 {
       * @return a [[ValueContentV2]] representing a value.
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
-        val stringFormatter = StringFormatter.getGeneralInstance
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
         val valueObjectValueHasString: String = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString)
@@ -425,10 +428,13 @@ object ConstructResponseUtilV2 {
         // every knora-base:value (any of its subclasses) may have a comment
         val valueCommentOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-        valueObject.valueObjectClass match {
+        val valueType = valueObject.valueObjectClass
+
+        valueType match {
             case OntologyConstants.KnoraBase.TextValue =>
-                // every knora-base:TextValue may have a language
+                // Any knora-base:TextValue may have a language
                 val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
+
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
                     // get the IRI of the mapping
@@ -438,18 +444,37 @@ object ConstructResponseUtilV2 {
 
                     val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
 
-                    TextValueContentV2(valueHasString = valueObjectValueHasString, valueHasLanguage = valueLanguageOption, standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)), comment = valueCommentOption)
+                    TextValueContentV2(
+                        valueType = valueType.toSmartIri,
+                        valueHasString = valueObjectValueHasString,
+                        valueHasLanguage = valueLanguageOption,
+                        standoff = Some(
+                            StandoffAndMapping(
+                                standoff = standoffTags,
+                                mappingIri = mappingIri,
+                                mapping = mapping.mapping,
+                                XSLT = mapping.XSLTransformation
+                            )
+                        ),
+                        comment = valueCommentOption
+                    )
 
                 } else {
                     // no standoff nodes given
-                    TextValueContentV2(valueHasString = valueObjectValueHasString, valueHasLanguage = valueLanguageOption, standoff = None, comment = valueCommentOption)
+                    TextValueContentV2(
+                        valueType = valueType.toSmartIri,
+                        valueHasString = valueObjectValueHasString,
+                        valueHasLanguage = valueLanguageOption,
+                        standoff = None,
+                        comment = valueCommentOption
+                    )
                 }
 
 
             case OntologyConstants.KnoraBase.DateValue =>
 
                 DateValueContentV2(
-                    valueHasString = valueObjectValueHasString,
+                    valueType = valueObject.valueObjectClass.toSmartIri,
                     valueHasStartJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                     valueHasEndJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
                     valueHasStartPrecision = KnoraPrecisionV1.lookup(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
@@ -459,25 +484,60 @@ object ConstructResponseUtilV2 {
                 )
 
             case OntologyConstants.KnoraBase.IntValue =>
-                IntegerValueContentV2(valueHasString = valueObjectValueHasString, valueHasInteger = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasInteger).toInt, comment = valueCommentOption)
+                IntegerValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasInteger = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasInteger).toInt,
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.DecimalValue =>
-                DecimalValueContentV2(valueHasString = valueObjectValueHasString, valueHasDecimal = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasDecimal)), comment = valueCommentOption)
+                DecimalValueContentV2(
+                    valueType = valueObject.valueObjectClass.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasDecimal = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasDecimal)),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.BooleanValue =>
-                BooleanValueContentV2(valueHasString = valueObjectValueHasString, valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean, comment = valueCommentOption)
+                BooleanValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean,
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.UriValue =>
-                UriValueContentV2(valueHasString = valueObjectValueHasString, valueHasUri = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasUri), comment = valueCommentOption)
+                UriValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasUri = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasUri),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.ColorValue =>
-                ColorValueContentV2(valueHasString = valueObjectValueHasString, valueHasColor = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasColor), comment = valueCommentOption)
+                ColorValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasColor = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasColor),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.GeomValue =>
-                GeomValueContentV2(valueHasString = valueObjectValueHasString, valueHasGeometry = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeometry), comment = valueCommentOption)
+                GeomValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasGeometry = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeometry),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.GeonameValue =>
-                GeonameValueContentV2(valueHasString = valueObjectValueHasString, valueHasGeonameCode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeonameCode), comment = valueCommentOption)
+                GeonameValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasGeonameCode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeonameCode),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.ListValue =>
 
@@ -486,10 +546,23 @@ object ConstructResponseUtilV2 {
                     case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
                 }
 
-                HierarchicalListValueContentV2(valueHasString = valueObjectValueHasString, valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode), listNodeLabel = listNodeLabel, comment = valueCommentOption)
+                HierarchicalListValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode),
+                    listNodeLabel = listNodeLabel,
+                    comment = valueCommentOption,
+                    ontologySchema = InternalSchema
+                )
 
             case OntologyConstants.KnoraBase.IntervalValue =>
-                IntervalValueContentV2(valueHasString = valueObjectValueHasString, valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)), valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)), comment = valueCommentOption)
+                IntervalValueContentV2(
+                    valueType = valueType.toSmartIri,
+                    valueHasString = valueObjectValueHasString,
+                    valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)),
+                    valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)),
+                    comment = valueCommentOption
+                )
 
             case OntologyConstants.KnoraBase.LinkValue =>
 
@@ -497,9 +570,10 @@ object ConstructResponseUtilV2 {
                 val targetResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
 
                 val linkValue = LinkValueContentV2(
+                    valueType = valueType.toSmartIri,
                     valueHasString = valueObjectValueHasString,
                     subject = sourceResourceIri,
-                    predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate),
+                    predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate).toSmartIri,
                     target = targetResourceIri,
                     comment = valueCommentOption,
                     incomingLink = valueObject.incomingLink,
@@ -532,6 +606,7 @@ object ConstructResponseUtilV2 {
                 val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
 
                 StillImageFileValueContentV2(
+                    valueType = valueType.toSmartIri,
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
                     internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
                     originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
@@ -547,6 +622,7 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.TextFileValue =>
 
                 TextFileValueContentV2(
+                    valueType = valueType.toSmartIri,
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
                     internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
                     originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
@@ -570,17 +646,15 @@ object ConstructResponseUtilV2 {
       * @return a [[ReadResourceV2]].
       */
     def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
-
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
-
         val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
-
-        val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type)
+        val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type).toSmartIri
 
         // get the resource's values
-        val valueObjects: Map[IRI, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
+        val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                (property, valObjs.sortBy { // order values by knora-base:valueHasOrder
+                val readValues = valObjs.sortBy { // order values by knora-base:valueHasOrder
                     (valObj: ValueRdfData) =>
 
                         valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
@@ -594,17 +668,17 @@ object ConstructResponseUtilV2 {
                         val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
 
                         ReadValueV2(valObj.valueObjectIri, readValue)
-                })
+                }
+
+                property.toSmartIri -> readValues
         }
 
         ReadResourceV2(
             resourceIri = resourceIri,
             resourceClass = resourceClass,
             label = rdfLabel,
-            values = valueObjects,
-            resourceInfos = Map.empty[IRI, LiteralV2]
+            values = valueObjects
         )
-
     }
 
     /**

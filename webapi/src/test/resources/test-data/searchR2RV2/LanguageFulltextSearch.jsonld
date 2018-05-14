@@ -9,7 +9,7 @@
       "knora-api:textValueHasLanguage" : "fr",
       "knora-api:valueAsString" : "Bonjour"
     }],
-    "schema:name" : "ein verdammtes Ding mit einer Sprache"
+    "rdfs:label" : "ein verdammtes Ding mit einer Sprache"
   },
   "schema:numberOfItems" : 1,
   "@context" : {

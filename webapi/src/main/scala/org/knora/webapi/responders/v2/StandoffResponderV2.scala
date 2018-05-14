@@ -36,9 +36,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
-import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesGetRequestV2
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2, TextFileValueContentV2}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
@@ -87,15 +86,18 @@ class StandoffResponderV2 extends Responder {
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = userProfile)).mapTo[ReadResourcesSequenceV2]
 
             xsltFileValue: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClass == OntologyConstants.KnoraBase.XSLTransformation => resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue) match {
-                    case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
-                        case value: ReadValueV2 => value.valueContent match {
-                            case textRepr: TextFileValueContentV2 => textRepr
-                            case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                case Some(resource: ReadResourceV2) if resource.resourceClass.toString == OntologyConstants.KnoraBase.XSLTransformation =>
+                    resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+                        case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                            case value: ReadValueV2 => value.valueContent match {
+                                case textRepr: TextFileValueContentV2 => textRepr
+                                case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                            }
                         }
+
+                        case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
                     }
-                    case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
-                }
+
                 case None => throw BadRequestException(s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
             }
 
@@ -379,7 +381,7 @@ class StandoffResponderV2 extends Responder {
             projectInfoMaybe: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
                 maybeIri = Some(projectIri.toString),
                 maybeShortname = None,
-                maybeShortcode= None,
+                maybeShortcode = None,
                 requestingUser = userProfile
             )).mapTo[Option[ProjectADM]]
 

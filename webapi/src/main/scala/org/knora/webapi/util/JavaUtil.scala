@@ -86,6 +86,6 @@ object JavaUtil {
       * [[https://stackoverflow.com/a/18794646]].
       */
     object Optional {
-        def unapply[T](a: T) = if (null == a) Some(None) else Some(Some(a))
+        def unapply[T](a: T): Some[Option[T]] = if (null == a) Some(None) else Some(Some(a))
     }
 }

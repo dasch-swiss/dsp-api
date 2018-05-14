@@ -19,10 +19,10 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.v2.responder.{ReadResourceV2, ReadResourcesSequenceV2, ReadValueV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.util.SmartIri
 
-object ResponseCheckerResponderV2 {
+object ResourcesResponseCheckerV2 {
 
     /**
       * Compares the response to a full resource request with the expected response.
@@ -45,14 +45,14 @@ object ResponseCheckerResponderV2 {
                 // compare the properties
                 // convert Map to a sequence of tuples and sort by property Iri)
                 expectedResource.values.toSeq.sortBy(_._1).zip(receivedResource.values.toSeq.sortBy(_._1)).foreach {
-                    case ((expectedPropIri: IRI, expectedPropValues: Seq[ReadValueV2]), (receivedPropIri: IRI, receivedPropValues: Seq[ReadValueV2])) =>
+                    case ((expectedPropIri: SmartIri, expectedPropValues: Seq[ReadValueV2]), (receivedPropIri: SmartIri, receivedPropValues: Seq[ReadValueV2])) =>
 
                         assert(expectedPropIri == receivedPropIri)
 
                         expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
                             case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
 
-                                assert(expectedVal == receivedVal,  s"value objects does not match: ${expectedVal} != ${receivedVal}")
+                                assert(expectedVal == receivedVal,  s"value objects does not match: $expectedVal != $receivedVal")
                         }
 
 
