@@ -55,6 +55,48 @@ object RouteUtilV2 {
       */
     val COMPLEX_SCHEMA_NAME: String = "complex"
 
+    private sealed trait ResponseFormat {
+        def toContentType: ContentType.NonBinary
+    }
+
+    private case object JsonLDResponseFormat extends ResponseFormat {
+        override def toString: String = "application/ld+json"
+
+        def toContentType: ContentType.NonBinary = MediaType.customWithFixedCharset("application", "ld+json", HttpCharsets.`UTF-8`).toContentType
+    }
+
+    private case object TurtleResponseFormat extends ResponseFormat {
+        override def toString: String = "text/turtle"
+
+        def toContentType: ContentType.NonBinary = MediaType.customWithFixedCharset("text", "turtle", HttpCharsets.`UTF-8`).toContentType
+    }
+
+    private case object ApplicationXmlResponseFormat extends ResponseFormat {
+        override def toString: String = MediaTypes.`application/xml`.toString
+
+        def toContentType: ContentType.NonBinary = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+    }
+
+    private case object TextXmlResponseFormat extends ResponseFormat {
+        override def toString: String = MediaTypes.`text/xml`.toString
+
+        def toContentType: ContentType.NonBinary = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)
+    }
+
+    private case object HtmlResponseFormat extends ResponseFormat {
+        override def toString: String = MediaTypes.`text/html`.toString
+
+        def toContentType: ContentType.NonBinary = MediaTypes.`text/html`.toContentType(HttpCharsets.`UTF-8`)
+    }
+
+    private val MimeTypesToResponseFormats: Map[String, ResponseFormat] = Map(
+        JsonLDResponseFormat.toString -> JsonLDResponseFormat,
+        TurtleResponseFormat.toString -> TurtleResponseFormat,
+        ApplicationXmlResponseFormat.toString -> ApplicationXmlResponseFormat,
+        TextXmlResponseFormat.toString -> TextXmlResponseFormat,
+        HtmlResponseFormat.toString -> HtmlResponseFormat
+    )
+
     /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
       * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
@@ -126,20 +168,62 @@ object RouteUtilV2 {
                 log.debug(knoraResponse.toString)
             }
 
-            // TODO: check whether to send back JSON-LD or XML (content negotiation: HTTP accept header)
+            // Get the client's HTTP Accept header, if provided.
+            maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
+
+            responseFormat: ResponseFormat = maybeAcceptHeader match {
+                case Some(acceptHeader) =>
+                    // Does it specify a MIME type we support?
+
+                    val accept: Seq[String] = acceptHeader.value.split(',').map(_.trim)
+
+                    accept.filter(MimeTypesToResponseFormats.keySet).map(MimeTypesToResponseFormats).headOption match {
+                        case Some(requestedResponseFormat) =>
+                            // Yes. Return the response in that format.
+                            requestedResponseFormat
+
+                        case None =>
+                            // No. Return JSON-LD.
+                            JsonLDResponseFormat
+                    }
+
+                case None => JsonLDResponseFormat
+            }
+
+            formattedResponse = formatResponse(
+                knoraResponse = knoraResponse,
+                responseFormat = responseFormat,
+                responseSchema = responseSchema,
+                settings = settings
+            )
 
             // The request was successful
-            jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
-            jsonLDString = jsonLDDocument.toPrettyString
-        } yield HttpResponse(
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                jsonLDString
-            )
-        )
+        } yield formattedResponse
 
         requestContext.complete(httpResponse)
+    }
+
+    private def formatResponse(knoraResponse: KnoraResponseV2,
+                               responseFormat: ResponseFormat,
+                               responseSchema: ApiV2Schema,
+                               settings: SettingsImpl): HttpResponse = {
+        val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
+        val jsonLDString = jsonLDDocument.toPrettyString
+
+        responseFormat match {
+            case JsonLDResponseFormat =>
+                HttpResponse(
+                    status = StatusCodes.OK,
+                    entity = HttpEntity(
+                        JsonLDResponseFormat.toContentType,
+                        jsonLDString
+                    )
+                )
+
+            // TODO: implement other formats.
+
+            case other => throw BadRequestException(s"Content type $other not implemented")
+        }
     }
 
     /**

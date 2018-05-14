@@ -44,7 +44,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor}
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
-class ResourcesRouteV2R2Spec extends R2RSpec {
+class ResourcesRouteV2R2RSpec extends R2RSpec {
 
     override def testConfigSource: String =
         """

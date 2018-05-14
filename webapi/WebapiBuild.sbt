@@ -185,9 +185,11 @@ lazy val webApiLibs = Seq(
     library.kamonZipkin,
     library.kamonJaeger,
     library.logbackClassic,
+    library.rdf4jRioJsonLD,
+    library.rdf4jRioRdfXml,
     library.rdf4jRioTurtle,
     library.rdf4jQueryParserSparql,
-    library.sayonHE,
+    library.saxonHE,
     library.scalaArm,
     library.scalaJava8Compat,
     library.scalaLogging,
@@ -270,11 +272,13 @@ lazy val library =
         val xmlunitCore            = "org.xmlunit"                   % "xmlunit-core"             % "2.1.1"
 
         // other
-        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.3.0"
-        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.2.4"
+        val rdf4jRioJsonLD         = "org.eclipse.rdf4j"             % "rdf4j-rio-jsonld"         % "2.3.2" % "runtime"
+        val rdf4jRioRdfXml         = "org.eclipse.rdf4j"             % "rdf4j-rio-rdfxml"         % "2.3.2" % "runtime"
+        val rdf4jRioTurtle         = "org.eclipse.rdf4j"             % "rdf4j-rio-turtle"         % "2.3.2"
+        val rdf4jQueryParserSparql = "org.eclipse.rdf4j"             % "rdf4j-queryparser-sparql" % "2.3.2"
         val scallop                = "org.rogach"                   %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
-        val sayonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
+        val saxonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
 
         val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.0"
         val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
