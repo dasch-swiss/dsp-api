@@ -117,6 +117,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val eighthThingIri = new MutableTestIri
     private val abelAuthorIri = new MutableTestIri
     private val mathIntelligencerIri = new MutableTestIri
+    private val deutschesDingIri = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
@@ -1605,6 +1606,95 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseStr should include("createdResources")
             }
         }
+        "create a resource of type anything:Thing with textValue which has language" in {
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "label": "Ein Ding auf deutsch",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "properties": {
+                   |      "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value": {"utf8str": "Ein deutscher Text", "language": "de"}}]
+                   |    }
+                   }
+                """.stripMargin
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                deutschesDingIri.set(resId)
+            }
+        }
+
+        "get the deutschesDing Resource and check its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                textObj.fields.get("utf8str") match {
+                    case Some(JsString(textVal)) => assert(textVal == "Ein deutscher Text")
+
+                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
+
+                }
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "de")
+
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
+
+
+
+            }
+
+        }
+
+        "get the resource created by bulk import and check language of its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0801/beol#personHasTitle") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                textObj.fields.get("utf8str") match {
+                    case Some(JsString(textVal)) => assert(textVal == "Sir")
+
+                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
+
+                }
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "en")
+
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
+
+
+
+            }
+
+        }
+
     }
 
 }
