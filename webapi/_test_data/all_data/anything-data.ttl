@@ -941,7 +941,7 @@
     knora-base:valueHasLanguage "fr" ;
     knora-base:valueHasOrder 0 ;
     knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTimeStamp ;
-    knora-base:hasPermissions "CR knora-base:Creator" .
+    knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" .
 
 <http://rdfh.ch/0001/a-thing-with-text-valuesLanguage> a anything:Thing ;
 	knora-base:isDeleted false ;
@@ -949,5 +949,5 @@
 	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "ein verdammtes Ding mit einer Sprache" ;
 	anything:hasText <http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1> ;
-	knora-base:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember" ;
+	knora-base:hasPermissions "V knora-base:UnknownUser|M knora-base:ProjectMember" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp .
