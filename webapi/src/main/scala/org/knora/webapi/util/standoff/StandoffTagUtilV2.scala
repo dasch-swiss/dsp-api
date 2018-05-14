@@ -193,6 +193,7 @@ object StandoffTagUtilV2 {
       * Represents a text with standoff markup including the mapping.
       *
       * @param text          the text as a mere sequence of characters.
+      * @param language      the language of the text, if known.
       * @param standoffTagV2 the text's standoff markup.
       */
     case class TextWithStandoffTagsV2(text: String, language: Option[String] = None, standoffTagV2: Seq[StandoffTagV2], mapping: GetMappingResponseV2)

@@ -639,10 +639,10 @@ sealed trait TextValueV1 {
 }
 
 /**
-  * Represents a textual value with additional information in standoff format.
+  * Represents a text value with standoff markup.
   *
   * @param utf8str            text in mere utf8 representation (including newlines and carriage returns).
-  * @param language           language specification for text
+  * @param language           the language of the text, if known.
   * @param standoff           attributes of the text in standoff format. For each attribute, several ranges may be given (a list of [[StandoffTagV2]]).
   * @param resource_reference referred Knora resources.
   * @param mapping            the mapping used to create standoff from another format.
@@ -797,6 +797,12 @@ case class TextValueWithStandoffV1(utf8str: String,
 
 }
 
+/**
+  * Represents a text value without standoff markup.
+  *
+  * @param utf8str  the text.
+  * @param language the language of the text, if known.
+  */
 case class TextValueSimpleV1(utf8str: String, language: Option[String] = None) extends TextValueV1 with UpdateValueV1 with ApiValueV1 {
 
     def valueTypeIri = OntologyConstants.KnoraBase.TextValue
