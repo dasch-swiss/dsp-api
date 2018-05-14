@@ -39,6 +39,7 @@ import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderRequestV
 import org.knora.webapi.messages.v1.responder.standoffmessages.StandoffResponderRequestV1
 import org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages.ValuesResponderRequestV1
+import org.knora.webapi.messages.v2.responder.listsmessages.ListsResponderRequestV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
@@ -212,6 +213,11 @@ class ResponderManager extends Actor with ActorLogging {
     protected final def makeDefaultStandoffRouterV2: ActorRef = makeActor(FromConfig.props(Props[StandoffResponderV2]), STANDOFF_ROUTER_V2_ACTOR_NAME)
 
     /**
+      * Constructs the default Akka routing actor that routes messages to [[ListsResponderV2]].
+      */
+    protected final def makeDefaultListsRouterV2: ActorRef = makeActor(FromConfig.props(Props[ListsResponderV2]), LISTS_ROUTER_V2_ACTOR_NAME)
+
+    /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
       * member to substitute a custom actor instead of the default ontology responder.
       */
@@ -241,6 +247,11 @@ class ResponderManager extends Actor with ActorLogging {
       */
     protected val standoffRouterV2: ActorRef = makeDefaultStandoffRouterV2
 
+    /**
+      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default resources responder.
+      */
+    protected val listsRouterV2: ActorRef = makeDefaultListsRouterV2
 
     //
     // Admin responders
@@ -332,6 +343,7 @@ class ResponderManager extends Actor with ActorLogging {
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => standoffRouterV2.forward(standoffResponderRequestV2)
+        case listsResponderRequestV2: ListsResponderRequestV2 => listsRouterV2.forward(listsResponderRequestV2)
 
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
