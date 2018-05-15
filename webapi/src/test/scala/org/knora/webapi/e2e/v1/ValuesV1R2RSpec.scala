@@ -65,7 +65,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val integerValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri
     private val linkValueIri = new MutableTestIri
-
+    private val textValueWithLangIri = new MutableTestIri
     private val boringComment = "This is a boring comment."
 
     private val rdfDataObjects = List(
@@ -295,6 +295,49 @@ class ValuesV1R2RSpec extends R2RSpec {
                         linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1 &&
                         comment == boringComment
                 )
+            }
+        }
+        "add a text value with language to a resource" in {
+            val params =
+                """
+                  |{
+                  |    "res_id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
+                  |    "richtext_value": {"utf8str":"Guten Tag", "language": "de"}
+                  |}
+                """.stripMargin
+
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                assert(responseJson("value").asInstanceOf[JsObject].fields("utf8str").toString.contains("Guten Tag"))
+                assert(responseJson("value").asInstanceOf[JsObject].fields("language").toString.contains("de"))
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+                textValueWithLangIri.set(valueIri)
+            }
+        }
+
+        "change the previous text value with German language to Persian" in {
+
+
+            val params =
+                s"""
+                   |{
+                   |    "res_id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
+                   |    "richtext_value": {"utf8str": "Salam", "language": "fa"}
+                   |}
+                """.stripMargin
+
+            Put(s"/v1/values/${URLEncoder.encode(textValueWithLangIri.get, "UTF-8")}", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+                assert(responseJson("value").asInstanceOf[JsObject].fields("utf8str").toString.contains("Salam"))
+                assert(responseJson("value").asInstanceOf[JsObject].fields("language").toString.contains("fa"))
+
+                val valueIri: IRI = responseJson("id").asInstanceOf[JsString].value
+
+                textValueWithLangIri.set(valueIri)
             }
         }
     }

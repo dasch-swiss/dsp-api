@@ -304,6 +304,7 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.ObjectClassConstraint,
             OntologyConstants.KnoraBase.SubjectClassConstraint,
             OntologyConstants.KnoraBase.StandoffParentClassConstraint,
+            OntologyConstants.KnoraBase.ValueHasLanguage,
             OntologyConstants.KnoraBase.ValueHasStandoff,
             OntologyConstants.KnoraBase.ValueHasMapping,
             OntologyConstants.KnoraBase.HasMappingElement,

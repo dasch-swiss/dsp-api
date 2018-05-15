@@ -216,6 +216,7 @@ script. The XML looks like this:
         <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
         <p0801-beol:hasFamilyName knoraType="richtext_value">Abel</p0801-beol:hasFamilyName>
         <p0801-beol:hasGivenName knoraType="richtext_value">Niels Henrik</p0801-beol:hasGivenName>
+        <p0801-beol:personHasTitle knoraType="richtext_value" lang="en">Sir</p0801-beol:personHasTitle>
     </p0801-beol:person>
     <p0801-beol:person id="holmes">
         <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
@@ -243,7 +244,7 @@ script. The XML looks like this:
             <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
         </p0802-biblio:publicationHasAuthor>
         <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</p0802-biblio:publicationHasDate>
-        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
+        <p0802-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
         <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
         <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
     </p0802-biblio:JournalArticle>
@@ -322,6 +323,9 @@ This illustrates several aspects of XML imports:
         using the standard mapping, the standoff link to
         `math_intelligencer` has the target
         `ref:math_intelligencer`.
+
+  - A text value can have a `lang` attribute, whose value is an ISO 639-1
+    code specifying the language of the text.
 
 To create these resources, we use the following route, specifying the
 IRI of the project in which the resources should be created:
