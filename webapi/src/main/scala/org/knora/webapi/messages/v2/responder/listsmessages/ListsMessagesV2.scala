@@ -36,7 +36,7 @@ sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 /**
   * Requests a list. A successful response will be a [[ListsGetRequestV2]]
   *
-  * @param listIris            the IRIs of the lists.
+  * @param listIris       the IRIs of the lists.
   * @param requestingUser the user making the request.
   */
 case class ListsGetRequestV2(listIris: Seq[IRI],
@@ -53,10 +53,16 @@ case class ListsGetResponseV2(lists: Vector[ListADM], userLang: String, fallback
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        val label = Map(
+            OntologyConstants.Rdfs.Label -> lists.head.listinfo.labels.getPreferredLanguage(userLang, fallbackLang)
+        ).collect {
+            case (iri: IRI, Some(strVal)) => iri -> JsonLDString(strVal)
+        }
+
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(lists.head.listinfo.id),
             "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(targetSchema).toString)
-        ))
+        ) ++ label)
 
         val context = JsonLDObject(Map(
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
