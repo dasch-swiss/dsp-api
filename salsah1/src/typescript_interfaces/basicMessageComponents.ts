@@ -145,7 +145,7 @@ export module basicMessageComponents {
         /**
          * The optional language of the text.
          */
-        language:string;
+        language?:string;
 
     }
 
@@ -161,7 +161,7 @@ export module basicMessageComponents {
         /**
          * The optional language of the text.
          */
-        language:string;
+        language?:string;
 
     }
 
