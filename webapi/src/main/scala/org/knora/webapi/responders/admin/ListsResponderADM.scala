@@ -349,11 +349,11 @@ class ListsResponderADM extends Responder {
                 id = nodeIri,
                 name = firstRowMap.get("nodeName"),
                 labels = if (firstRowMap.get("label").nonEmpty) {
-                    Seq(StringLiteralV2(firstRowMap.get("label").get))
+                    StringLiteralSequenceV2(Vector(StringLiteralV2(firstRowMap.get("label").get)))
                 } else {
-                    Seq.empty[StringLiteralV2]
+                    StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
                 },
-                comments = Seq.empty[StringLiteralV2],
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = if (firstRowMap.get("child").isEmpty) {
                     // If this node has no children, childRows will just contain one row with no value for "child".
                     Seq.empty[ListNodeADM]
@@ -421,11 +421,11 @@ class ListsResponderADM extends Responder {
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
-                    Seq(StringLiteralV2(nodeData("label")))
+                    StringLiteralSequenceV2(Vector(StringLiteralV2(nodeData("label"))))
                 } else {
-                    Seq.empty[StringLiteralV2]
+                    StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
                 },
-                comments = Seq.empty[StringLiteralV2],
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
                 position = None
             )

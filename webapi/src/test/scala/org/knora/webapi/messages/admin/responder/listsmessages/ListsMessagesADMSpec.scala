@@ -76,8 +76,8 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringLiteralV2("Sommer")),
-                comments = Seq.empty[StringLiteralV2],
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )
@@ -103,8 +103,8 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringLiteralV2("Sommer")),
-                comments = Seq.empty[StringLiteralV2],
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )

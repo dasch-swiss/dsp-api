@@ -365,7 +365,7 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
   * @param children the list node's child nodes.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListNodeADM(id: IRI, name: Option[String], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2], children: Seq[ListNodeADM], position: Option[Int]) {
+case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListNodeADM], position: Option[Int]) {
 
     /**
       * Sorts the whole hierarchy.
@@ -376,11 +376,33 @@ case class ListNodeADM(id: IRI, name: Option[String], labels: Seq[StringLiteralV
         ListNodeADM(
             id = id,
             name = name,
-            labels = labels.sortBy(_.value),
-            comments = comments.sortBy(_.value),
+            labels = labels.sortByStringValue,
+            comments = comments.sortByStringValue,
             children = children.sortBy(_.id).map(_.sorted),
             position = position
         )
+    }
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
@@ -508,8 +530,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             JsObject(
                 "id" -> node.id.toJson,
                 "name" -> node.name.toJson,
-                "labels" -> JsArray(node.labels.map(_.toJson).toVector),
-                "comments" -> JsArray(node.comments.map(_.toJson).toVector),
+                "labels" -> JsArray(node.labels.stringLiterals.map(_.toJson)),
+                "comments" -> JsArray(node.comments.stringLiterals.map(_.toJson)),
                 "children" -> JsArray(node.children.map(write).toVector),
                 "position" -> node.position.toJson
             )
@@ -550,8 +572,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             ListNodeADM(
                 id = id,
                 name = name,
-                labels = labels,
-                comments = comments,
+                labels = StringLiteralSequenceV2(labels.toVector),
+                comments = StringLiteralSequenceV2(comments.toVector),
                 children = children,
                 position = position
             )
