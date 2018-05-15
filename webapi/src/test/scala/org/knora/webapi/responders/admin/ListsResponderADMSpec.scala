@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MessageUtil, MutableTestIri}
+import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 /**
@@ -174,8 +174,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 // log.debug("returned whole keyword list: {}", MessageUtil.toSource(received.items.head))
 
                 received.list.listinfo.sorted should be(bigListInfo.sorted)
-
-                //println(MessageUtil.toSource(received.list.children))
 
                 received.list.children.map(_.sorted) should be(bigListNodes.map(_.sorted))
             }
