@@ -343,7 +343,7 @@ object KnoraApiV2WithValueObjects {
 
     private val TextValueHasStandoff: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasStandoff,
-        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
         subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
         objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag),
@@ -358,6 +358,28 @@ object KnoraApiV2WithValueObjects {
                 predicateIri = OntologyConstants.Rdfs.Comment,
                 objectsWithLang = Map(
                     LanguageCodes.EN -> "Standoff markup attached to a text value."
+                )
+            )
+        )
+    )
+
+    private val TextValueHasLanguage: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
+        objectType = Some(OntologyConstants.Xsd.String),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "text value has language"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Language code attached to a text value."
                 )
             )
         )
@@ -1164,6 +1186,7 @@ object KnoraApiV2WithValueObjects {
 
         private val TextValueCardinalities = Map(
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasStandoff -> Cardinality.MayHaveMany,
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne
         )
@@ -1218,6 +1241,7 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraBase.SubjectClassConstraint,
             OntologyConstants.KnoraBase.StandoffParentClassConstraint,
             OntologyConstants.KnoraBase.ValueHasStandoff,
+            OntologyConstants.KnoraBase.ValueHasLanguage,
             OntologyConstants.KnoraBase.ValueHasMapping,
             OntologyConstants.KnoraBase.HasMappingElement,
             OntologyConstants.KnoraBase.MappingHasStandoffClass,
@@ -1383,6 +1407,7 @@ object KnoraApiV2WithValueObjects {
             SubjectType,
             ObjectType,
             TextValueHasStandoff,
+            TextValueHasLanguage,
             TextValueAsXml,
             TextValueAsHtml,
             DateValueHasStartYear,

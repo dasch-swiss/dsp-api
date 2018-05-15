@@ -467,7 +467,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param userProfile      the client that is making the request.
       * @return a [[TextValueWithStandoffV1]].
       */
-    private def makeTextValueWithStandoff(utf8str: String, valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
+    private def makeTextValueWithStandoff(utf8str: String, language: Option[String] = None, valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueWithStandoffV1] = {
 
         // get the IRI of the mapping
         val mappingIri = valueProps.literalData.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueProps.valueIri}")).literals.head
@@ -482,6 +482,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
 
         } yield TextValueWithStandoffV1(
             utf8str = utf8str,
+            language = language,
             standoff = standoffTags,
             mappingIri = mappingIri,
             mapping = mappingResponse.mapping,
@@ -496,9 +497,9 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @param utf8str the string representation of the TextValue.
       * @return a [[TextValueSimpleV1]].
       */
-    private def makeTextValueSimple(utf8str: String)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueSimpleV1] = {
+    private def makeTextValueSimple(utf8str: String, language: Option[String] = None)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueSimpleV1] = {
         Future(TextValueSimpleV1(
-            utf8str = utf8str
+            utf8str = utf8str, language = language
         ))
     }
 
@@ -511,15 +512,16 @@ class ValueUtilV1(private val settings: SettingsImpl) {
     private def makeTextValue(valueProps: ValueProps, responderManager: ActorSelection, userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
 
 
-        val valueHasString = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
+        val valueHasString: String = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasString).map(_.literals.head).getOrElse(throw InconsistentTriplestoreDataException(s"Value ${valueProps.valueIri} has no knora-base:valueHasString"))
+        val valueHasLanguage: Option[String] = valueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasLanguage).map(_.literals.head)
 
         if (valueProps.standoff.nonEmpty) {
             // there is standoff markup
-            makeTextValueWithStandoff(valueHasString, valueProps, responderManager, userProfile)
+            makeTextValueWithStandoff(valueHasString, valueHasLanguage, valueProps, responderManager, userProfile)
 
         } else {
             // there is no standoff markup
-            makeTextValueSimple(valueHasString)
+            makeTextValueSimple(valueHasString, valueHasLanguage)
 
         }
     }

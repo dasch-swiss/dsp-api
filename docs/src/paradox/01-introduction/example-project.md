@@ -238,7 +238,7 @@ a triple (in this case, the triple that links a page to a book). For
 more details about this, see knora-base-linkvalue.
 
 Note that the property `incunabula:hasAuthor` points to a
-`knora-base:TextValue`, because the `incunabula` project repåresents
+`knora-base:TextValue`, because the `incunabula` project represents
 authors simply by their names. A more complex project could represent
 each author as a resource, in which case `incunabula:hasAuthor` would
 need to be a subproperty of `knora-base:hasLinkTo`.
@@ -468,7 +468,7 @@ starting with `knora-base:Representation`:
 This says that a `Representation` must have at least one instance of the
 property `hasFileValue`, which is defined like this:
 
-``` 
+```
 :hasFileValue rdf:type owl:ObjectProperty ;
 
   rdfs:subPropertyOf :hasValue ;
@@ -499,7 +499,7 @@ This is the definition of `knora-base:StillImageRepresentation`:
 It must have at least one instance of the property
 `hasStillImageFileValue`, which is defined as follows:
 
-``` 
+```
 :hasStillImageFileValue rdf:type owl:ObjectProperty ;
 
   rdfs:subPropertyOf :hasFileValue ;

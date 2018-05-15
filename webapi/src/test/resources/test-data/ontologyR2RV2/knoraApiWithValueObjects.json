@@ -3115,6 +3115,12 @@
           }
         }, {
           "@type" : "owl:Restriction",
+          "owl:maxCardinality" : 1,
+          "owl:onProperty" : {
+            "@id" : "knora-api:textValueHasLanguage"
+          }
+        }, {
+          "@type" : "owl:Restriction",
           "owl:minCardinality" : 0,
           "owl:onProperty" : {
             "@id" : "knora-api:textValueHasStandoff"
@@ -4597,9 +4603,24 @@
           "@id" : "knora-api:valueHas"
         }
       },
+      "knora-api:textValueHasLanguage" : {
+        "@id" : "knora-api:textValueHasLanguage",
+        "@type" : "owl:DatatypeProperty",
+        "knora-api:objectType" : {
+          "@id" : "xsd:string"
+        },
+        "knora-api:subjectType" : {
+          "@id" : "knora-api:TextValue"
+        },
+        "rdfs:comment" : "Language code attached to a text value.",
+        "rdfs:label" : "text value has language",
+        "rdfs:subPropertyOf" : {
+          "@id" : "knora-api:valueHas"
+        }
+      },
       "knora-api:textValueHasStandoff" : {
         "@id" : "knora-api:textValueHasStandoff",
-        "@type" : "owl:DatatypeProperty",
+        "@type" : "owl:ObjectProperty",
         "knora-api:objectType" : {
           "@id" : "knora-api:StandoffTag"
         },

@@ -1959,5 +1959,23 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
+
+        "add a new text value with language" in {
+
+            actorUnderTest ! CreateValueRequestV1(
+                value = TextValueSimpleV1(utf8str = "Hello World!", language= Some("en")),
+                userProfile = anythingUser,
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasText",
+                resourceIri = "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+                apiRequestID = UUID.randomUUID
+            )
+
+                expectMsgPF(timeout) {
+                    case msg: CreateValueResponseV1 =>
+                        msg.value should ===(TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")))
+
+                }
+        }
+
     }
 }

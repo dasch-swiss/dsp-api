@@ -102,7 +102,7 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")), richtext.language),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
@@ -126,6 +126,7 @@ object ValuesRouteV1 extends Authenticator {
 
                             } yield (TextValueWithStandoffV1(
                                 utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                language = textWithStandoffTags.language,
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV2,
                                 mappingIri = textWithStandoffTags.mapping.mappingIri,
@@ -203,7 +204,7 @@ object ValuesRouteV1 extends Authenticator {
                         // check if text has markup
                         if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
                             // simple text
-                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'"))),
+                            Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")), richtext.language),
                                 apiRequest.comment))
                         } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
                             // XML: text with markup
@@ -227,6 +228,7 @@ object ValuesRouteV1 extends Authenticator {
 
                             } yield (TextValueWithStandoffV1(
                                 utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                                language = richtext.language,
                                 resource_reference = resourceReferences,
                                 standoff = textWithStandoffTags.standoffTagV2,
                                 mappingIri = textWithStandoffTags.mapping.mappingIri,

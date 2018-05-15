@@ -32,7 +32,7 @@ import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.responders._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
@@ -1564,7 +1564,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountSearchQuery(responseAs[String], 12)
+                checkCountSearchQuery(responseAs[String], 13)
             }
 
         }
@@ -1841,6 +1841,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     ?thing knora-api:isMainResource true .
                   |
                   |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
                   |} WHERE {
                   |     ?thing a knora-api:Resource .
                   |
@@ -1852,7 +1854,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?text a xsd:string .
                   |
-                  |     FILTER(lang(?text) = "en")
+                  |     FILTER(lang(?text) = "fr")
                   |}
                 """.stripMargin
 
@@ -1861,10 +1863,61 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                // TODO: add some test data that have a language annotation and check for results
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 0)
+                checkCountSearchQuery(responseAs[String], 1)
+            }
+        }
 
+        "search for a specific text using the lang function" in {
+
+            val sparqlSimplified =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     anything:hasText knora-api:objectType xsd:string .
+                  |
+                  |     ?text a xsd:string .
+                  |
+                  |     FILTER(lang(?text) = "fr")
+                  |
+                  |     FILTER(?text = "Bonjour")
+                  |}
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkCountSearchQuery(responseAs[String], 1)
+            }
+        }
+
+        "perform a fulltext search for 'Bonjour'" in {
+            Get("/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
 
         }

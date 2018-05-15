@@ -117,6 +117,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val eighthThingIri = new MutableTestIri
     private val abelAuthorIri = new MutableTestIri
     private val mathIntelligencerIri = new MutableTestIri
+    private val deutschesDingIri = new MutableTestIri
+    private val standoffLangDingIri = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
@@ -1275,7 +1277,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <knoraXmlImport:label>Niels Henrik Abel</knoraXmlImport:label>
                    |        <p0801-beol:hasFamilyName knoraType="richtext_value">Abel</p0801-beol:hasFamilyName>
                    |        <p0801-beol:hasGivenName knoraType="richtext_value">Niels Henrik</p0801-beol:hasGivenName>
-                   |        <p0801-beol:personHasTitle knoraType="richtext_value">Sir</p0801-beol:personHasTitle>
+                   |        <p0801-beol:personHasTitle knoraType="richtext_value" lang="en">Sir</p0801-beol:personHasTitle>
                    |    </p0801-beol:person>
                    |    <p0801-beol:person id="holmes">
                    |        <knoraXmlImport:label>Sherlock Holmes</knoraXmlImport:label>
@@ -1363,7 +1365,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
                    |        </p0802-biblio:publicationHasAuthor>
                    |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</p0802-biblio:publicationHasDate>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
+                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
                    |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
                    |        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
                    |    </p0802-biblio:JournalArticle>
@@ -1605,6 +1607,146 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseStr should include("createdResources")
             }
         }
+        "create a resource of type anything:Thing with textValue which has language" in {
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "label": "Ein Ding auf deutsch",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "properties": {
+                   |      "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value": {"utf8str": "Ein deutscher Text", "language": "de"}}]
+                   |    }
+                   }
+                """.stripMargin
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+
+                deutschesDingIri.set(resId)
+            }
+        }
+
+        "get the deutschesDing Resource and check its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                textObj.fields.get("utf8str") match {
+                    case Some(JsString(textVal)) => assert(textVal == "Ein deutscher Text")
+
+                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
+
+                }
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "de")
+
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
+
+
+
+            }
+
+        }
+
+        "get the resource created by bulk import and check language of its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0801/beol#personHasTitle") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+                textObj.fields.get("utf8str") match {
+                    case Some(JsString(textVal)) => assert(textVal == "Sir")
+
+                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
+
+                }
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "en")
+
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
+            }
+
+        }
+        "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
+
+            val xml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>This text links to <a href="http://www.google.ch">Google</a>.</text>
+                """.stripMargin
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "label": "A second thing",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri", "language": "en"}}]
+                   |    }
+                   |}
+                 """.stripMargin
+
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+                standoffLangDingIri.set(resId)
+            }
+        }
+        "get the Resource with standoff and language and check its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "en")
+                    case None => throw InvalidApiJsonException("'lang' is not specified but expected")
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
+
+
+
+            }
+
+        }
+
+
     }
 
 }
