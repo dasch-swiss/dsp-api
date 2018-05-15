@@ -112,7 +112,7 @@ export module basicMessageComponents {
      * Obsolete
      *
      * String representing the user's permission on a resource.
-     * 
+     *
      * "OK": the user has sufficient permission to view the resource
      */
     export type KnoraAccess = string;
@@ -141,6 +141,12 @@ export module basicMessageComponents {
          * The IRI of the mapping to be used to convert the XML into a standoff representation and back.
          */
         mapping_id: KnoraIRI;
+
+        /**
+         * The optional language of the text.
+         */
+        language:string;
+
     }
 
     /**
@@ -151,6 +157,11 @@ export module basicMessageComponents {
          * Mere string representation
          */
         utf8str:string;
+
+        /**
+         * The optional language of the text.
+         */
+        language:string;
 
     }
 
