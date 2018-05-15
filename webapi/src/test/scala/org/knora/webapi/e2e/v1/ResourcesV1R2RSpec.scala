@@ -118,6 +118,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val abelAuthorIri = new MutableTestIri
     private val mathIntelligencerIri = new MutableTestIri
     private val deutschesDingIri = new MutableTestIri
+    private val standoffLangDingIri = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
@@ -1688,12 +1689,63 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     case _ => throw InvalidApiJsonException("'lang' is not a JsString")
 
                 }
+            }
+
+        }
+        "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
+
+            val xml =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>This text links to <a href="http://www.google.ch">Google</a>.</text>
+                """.stripMargin
+
+            val params =
+                s"""
+                   |{
+                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "label": "A second thing",
+                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "properties": {
+                   |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri", "language": "en"}}]
+                   |    }
+                   |}
+                 """.stripMargin
+
+
+            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val resId = getResIriFromJsonResponse(response)
+                standoffLangDingIri.set(resId)
+            }
+        }
+        "get the Resource with standoff and language and check its textValue" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+                    case vals: JsArray =>
+                        vals.elements.head.asInstanceOf[JsObject]
+                    case _ =>
+                        throw new InvalidApiJsonException("values is not an array")
+                }
+
+
+                textObj.fields.get("language") match {
+                    case Some(JsString(lang)) => assert(lang == "en")
+                    case None => throw InvalidApiJsonException("'lang' is not specified but expected")
+                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+                }
 
 
 
             }
 
         }
+
 
     }
 
