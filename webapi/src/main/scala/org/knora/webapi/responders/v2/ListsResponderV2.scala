@@ -53,7 +53,7 @@ class ListsResponderV2 extends Responder {
         for {
             listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIris.head, requestingUser = userProfile)).mapTo[ListGetResponseADM]
 
-        } yield ListsGetResponseV2(lists = Vector(listResponseADM.list), Some((userProfile.lang, settings.fallbackLanguage)))
+        } yield ListsGetResponseV2(lists = Vector(listResponseADM.list), userProfile.lang, settings.fallbackLanguage)
 
 
     }

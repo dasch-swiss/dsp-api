@@ -47,7 +47,7 @@ case class ListsGetRequestV2(listIris: Seq[IRI],
   *
   * @param lists the list the are to be returned.
   */
-case class ListsGetResponseV2(lists: Vector[ListADM], preferredLangs: Option[(String, String)] = None) extends KnoraResponseV2 {
+case class ListsGetResponseV2(lists: Vector[ListADM], userLang: String, fallbackLang: String) extends KnoraResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
