@@ -24,7 +24,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
 
 
@@ -47,7 +47,7 @@ case class ListsGetRequestV2(listIris: Seq[IRI],
   *
   * @param lists the list the are to be returned.
   */
-case class ListsGetResponseV2(lists: Vector[ListADM]) extends KnoraResponseV2 {
+case class ListsGetResponseV2(lists: Vector[ListADM], preferredLangs: Option[(String, String)] = None) extends KnoraResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
@@ -55,8 +55,7 @@ case class ListsGetResponseV2(lists: Vector[ListADM]) extends KnoraResponseV2 {
 
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(lists.head.listinfo.id),
-            "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(targetSchema).toString),
-            "rdfs:label" -> JsonLDString(lists.head.listinfo.labels.head.value)
+            "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(targetSchema).toString)
         ))
 
         val context = JsonLDObject(Map(
