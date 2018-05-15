@@ -316,7 +316,7 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
   * @param comments the comments attached to the node in all available languages.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListNodeInfoADM(id: IRI, name: Option[String], labels: Seq[StringLiteralV2], comments: Seq[StringLiteralV2], position: Option[Int]) {
+case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -326,8 +326,8 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: Seq[StringLite
         ListNodeInfoADM(
             id = id,
             name = name,
-            labels = labels.sortBy(_.value),
-            comments = comments.sortBy(_.value),
+            labels = labels.sortByStringValue,
+            comments = comments.sortByStringValue,
             position = position
         )
     }
@@ -340,7 +340,7 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: Seq[StringLite
       * @return the label in the preferred language.
       */
     def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        StringLiteralSequenceV2(labels.toVector).getPreferredLanguage(userLang, fallbackLang)
+        labels.getPreferredLanguage(userLang, fallbackLang)
     }
 
     /**
@@ -351,7 +351,7 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: Seq[StringLite
       * @return the comment in the preferred language.
       */
     def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        StringLiteralSequenceV2(comments.toVector).getPreferredLanguage(userLang, fallbackLang)
+        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
@@ -454,8 +454,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             JsObject(
                 "id" -> nodeInfo.id.toJson,
                 "name" -> nodeInfo.name.toJson,
-                "labels" -> JsArray(nodeInfo.labels.map(_.toJson).toVector),
-                "comments" -> JsArray(nodeInfo.comments.map(_.toJson).toVector),
+                "labels" -> JsArray(nodeInfo.labels.stringLiterals.map(_.toJson)),
+                "comments" -> JsArray(nodeInfo.comments.stringLiterals.map(_.toJson)),
                 "position" -> nodeInfo.position.toJson
             )
         }
@@ -489,8 +489,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             ListNodeInfoADM(
                 id = id,
                 name = name,
-                labels = labels,
-                comments = comments,
+                labels = StringLiteralSequenceV2(labels.toVector),
+                comments = StringLiteralSequenceV2(comments.toVector),
                 position = position
             )
 

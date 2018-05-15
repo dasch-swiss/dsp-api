@@ -42,8 +42,8 @@ object SharedListsTestDataADM {
     val summerNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
-        labels = Seq(StringLiteralV2("Sommer")),
-        comments = Seq.empty[StringLiteralV2],
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         position = Some(0)
     )
 

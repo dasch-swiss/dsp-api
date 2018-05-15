@@ -268,11 +268,15 @@ class ListsResponderADM extends Responder {
 
             nodeinfo: ListNodeInfoADM = statements.head match {
                 case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+
+                    val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                    val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
                     ListNodeInfoADM (
                         id = nodeIri.toString,
                         name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+                        labels = StringLiteralSequenceV2(labels.toVector),
+                        comments = StringLiteralSequenceV2(comments.toVector),
                         position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
                     )
             }
