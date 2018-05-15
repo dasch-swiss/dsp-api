@@ -310,6 +310,15 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
 case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
 
     /**
+      * Sort sequence of [[StringLiteralV2]] by their text value.
+      *
+      * @return a [[StringLiteralSequenceV2]] sorted by string value.
+      */
+    def sortByStringValue: StringLiteralSequenceV2 = {
+        StringLiteralSequenceV2(stringLiterals.sortBy(_.value))
+    }
+
+    /**
       * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
       * If not available, returns the string value of the fallback language or any available language.
       *

@@ -20,7 +20,7 @@
 package org.knora.webapi
 
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListInfoADM, ListNodeADM, ListNodeInfoADM}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 
 object SharedListsTestDataADM {
 
@@ -28,15 +28,15 @@ object SharedListsTestDataADM {
     val otherTreeListInfo: ListInfoADM = ListInfoADM (
         id = "http://rdfh.ch/lists/0001/otherTreeList",
         projectIri = "http://rdfh.ch/projects/0001",
-        labels = Seq(StringLiteralV2("Tree list root", Some("en"))),
-        comments = Seq.empty[StringLiteralV2]
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Tree list root", Some("en")))),
+        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
     )
 
     val bigListInfo: ListInfoADM = ListInfoADM(
         id = "http://rdfh.ch/lists/00FF/73d0ec0302",
         projectIri = "http://rdfh.ch/projects/00FF",
-        labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
-        comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
+        comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
     )
 
     val summerNodeInfo: ListNodeInfoADM = ListNodeInfoADM (

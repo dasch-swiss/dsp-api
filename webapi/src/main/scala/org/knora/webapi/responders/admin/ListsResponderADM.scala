@@ -101,11 +101,14 @@ class ListsResponderADM extends Responder {
             lists: Seq[ListADM] = statements.map {
                 case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
+                    val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                    val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
                     val info = ListInfoADM(
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                        labels = StringLiteralSequenceV2(labels.toVector),
+                        comments = StringLiteralSequenceV2(comments.toVector)
                     )
 
                     ListADM(
@@ -150,11 +153,15 @@ class ListsResponderADM extends Responder {
                     statements = listInfoResponse.statements
                     listinfo = statements.head match {
                         case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+
+                            val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                            val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
                             ListInfoADM(
                                 id = nodeIri.toString,
                                 projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
-                                labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                                comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                                labels = StringLiteralSequenceV2(labels.toVector),
+                                comments = StringLiteralSequenceV2(comments.toVector)
                             )
                     }
 
@@ -215,11 +222,15 @@ class ListsResponderADM extends Responder {
 
             listinfo: ListInfoADM = statements.head match {
                 case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+
+                    val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                    val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
                     ListInfoADM (
                         id = nodeIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
-                        labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
-                        comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                        labels = StringLiteralSequenceV2(labels.toVector),
+                        comments = StringLiteralSequenceV2(comments.toVector)
                     )
             }
 
@@ -599,11 +610,11 @@ class ListsResponderADM extends Responder {
 
 
             _ = if (changeListRequest.labels.nonEmpty) {
-                if (updatedList.listinfo.labels.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.labels.stringLiterals.sorted != changeListRequest.labels.sorted) throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
             }
 
             _ = if (changeListRequest.comments.nonEmpty) {
-                if (updatedList.listinfo.comments.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
+                if (updatedList.listinfo.comments.stringLiterals.sorted != changeListRequest.comments.sorted) throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
             }
 
             // _ = log.debug(s"listInfoChangeRequest - updatedList: {}", updatedList)
