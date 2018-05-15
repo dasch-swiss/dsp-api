@@ -386,15 +386,30 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
     def maybeBoolean(key: String): Option[JsonLDBoolean] = body.maybeBoolean(key)
 
     /**
+      * Converts this JSON-LD object to its compacted Java representation.
+      */
+    private def makeCompactedObject: java.util.Map[IRI, AnyRef] = {
+        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
+        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
+        JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+    }
+
+    /**
       * Converts this [[JsonLDDocument]] to a pretty-printed JSON-LD string.
       *
       * @return the formatted document.
       */
     def toPrettyString: String = {
-        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
-        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
-        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
-        JsonUtils.toPrettyString(compacted)
+        JsonUtils.toPrettyString(makeCompactedObject)
+    }
+
+    /**
+      * Converts this [[JsonLDDocument]] to a compact JSON-LD string.
+      *
+      * @return the formatted document.
+      */
+    def toCompactString: String = {
+        JsonUtils.toString(makeCompactedObject)
     }
 }
 

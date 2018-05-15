@@ -19,12 +19,16 @@
 
 package org.knora.webapi.routing
 
+import java.io.{StringReader, StringWriter}
+
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
+import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.JsonLDDocument
@@ -59,10 +63,18 @@ object RouteUtilV2 {
         def toContentType: ContentType.NonBinary
     }
 
-    private case object JsonLDResponseFormat extends ResponseFormat {
-        override def toString: String = "application/ld+json"
+    private case object JsonResponseFormat extends ResponseFormat {
+        override def toString: String = MediaTypes.`application/json`.toString
 
-        def toContentType: ContentType.NonBinary = MediaType.customWithFixedCharset("application", "ld+json", HttpCharsets.`UTF-8`).toContentType
+        def toContentType: ContentType.NonBinary = MediaTypes.`application/json`
+    }
+
+    private case object JsonLDResponseFormat extends ResponseFormat {
+        // Akka HTTP doesn't have a marshaller for application/ld+json, so we use the application/json MIME type instead.
+
+        override def toString: String = JsonResponseFormat.toString // "application/ld+json"
+
+        def toContentType: ContentType.NonBinary = JsonResponseFormat.toContentType // MediaType.customWithFixedCharset("application", "ld+json", HttpCharsets.`UTF-8`).toContentType
     }
 
     private case object TurtleResponseFormat extends ResponseFormat {
@@ -90,6 +102,7 @@ object RouteUtilV2 {
     }
 
     private val MimeTypesToResponseFormats: Map[String, ResponseFormat] = Map(
+        JsonResponseFormat.toString -> JsonResponseFormat,
         JsonLDResponseFormat.toString -> JsonLDResponseFormat,
         TurtleResponseFormat.toString -> TurtleResponseFormat,
         ApplicationXmlResponseFormat.toString -> ApplicationXmlResponseFormat,
@@ -207,22 +220,53 @@ object RouteUtilV2 {
                                responseFormat: ResponseFormat,
                                responseSchema: ApiV2Schema,
                                settings: SettingsImpl): HttpResponse = {
+        // Generate a JSON-LD data structure from the API response message.
         val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
-        val jsonLDString = jsonLDDocument.toPrettyString
 
+        // Is the response format JSON or JSON-LD?
         responseFormat match {
-            case JsonLDResponseFormat =>
+            case JsonResponseFormat | JsonLDResponseFormat =>
+                // Yes. Pretty-print the JSON-LD and return it.
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
-                        JsonLDResponseFormat.toContentType,
-                        jsonLDString
+                        responseFormat.toContentType,
+                        jsonLDDocument.toPrettyString
                     )
                 )
 
-            // TODO: implement other formats.
+            case _ =>
+                // No, some other format was requested. Convert the JSON-LD to the requested format.
 
-            case other => throw BadRequestException(s"Content type $other not implemented")
+                val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
+                val stringReader = new StringReader(jsonLDDocument.toCompactString)
+                val stringWriter = new StringWriter()
+
+                val rdfWriter: RDFWriter = responseFormat match {
+                    case TurtleResponseFormat =>
+                        val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
+
+                        turtleWriter.getWriterConfig.
+                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true).
+                            set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true)
+
+                        turtleWriter
+
+                    // TODO: add XML and HTML.
+
+                    case other => throw BadRequestException(s"Content type $other not implemented")
+                }
+
+                rdfParser.setRDFHandler(rdfWriter)
+                rdfParser.parse(stringReader, "")
+
+                HttpResponse(
+                    status = StatusCodes.OK,
+                    entity = HttpEntity(
+                        responseFormat.toContentType,
+                        stringWriter.toString
+                    )
+                )
         }
     }
 
