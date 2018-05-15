@@ -59,7 +59,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(15).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -81,6 +81,7 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
     }
 
     "The resources v2 endpoint" should {
+
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema" in {
 
             Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
@@ -201,6 +202,13 @@ class ResourcesRouteV2R2Spec extends R2RSpec {
             }
         }
 
+        "perform a full resource request for a resource with a Text language (in the simple schema)" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-text-valuesLanguage", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+            }
+        }
     }
 
 }
