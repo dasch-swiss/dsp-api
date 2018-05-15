@@ -1763,47 +1763,18 @@ sealed trait EntityInfoContentV2 {
         // Does the predicate exist?
         predicates.get(predicateIri) match {
             case Some(predicateInfo) =>
-                // Yes. Make a map of optional language codes to string values.
-                val objMap: Map[Option[String], String] = predicateInfo.objects.collect {
-                    case StringLiteralV2(str, maybeLang) => maybeLang -> str
-                }.toMap
+                // Yes. Make a sequence of its string values.
+                val stringLiterals: Vector[StringLiteralV2] = predicateInfo.objects.collect {
+                    case strLit: StringLiteralV2 => strLit
+                }.toVector
+
+                val stringLiteralSequence = StringLiteralSequenceV2(stringLiterals)
 
                 // Were preferred languages specified?
                 preferredLangs match {
                     case Some((userLang, defaultLang)) =>
-                        // Yes. Is the object available in the user's preferred language?
-                        objMap.get(Some(userLang)) match {
-                            case Some(objectInUserLang) =>
-                                // Yes.
-                                Some(objectInUserLang)
-                            case None =>
-                                // The object is not available in the user's preferred language. Is it available
-                                // in the system default language?
-                                objMap.get(Some(defaultLang)) match {
-                                    case Some(objectInDefaultLang) =>
-                                        // Yes.
-                                        Some(objectInDefaultLang)
-                                    case None =>
-                                        // The object is not available in the system default language. Is it available
-                                        // without a language tag?
-                                        objMap.get(None) match {
-                                            case Some(objectWithoutLang) =>
-                                                // Yes.
-                                                Some(objectWithoutLang)
-                                            case None =>
-                                                // The object is not available without a language tag. Sort the
-                                                // available objects by language code to get a deterministic result,
-                                                // and return the object in the language with the lowest sort
-                                                // order.
-                                                objMap.toVector.sortBy {
-                                                    case (lang, _) => lang
-                                                }.headOption.map {
-                                                    case (_, obj) => obj
-                                                }
-                                        }
-                                }
-                        }
-
+                        // Yes.
+                        stringLiteralSequence.getPreferredLanguage(userLang, defaultLang)
                     case None =>
                         // Preferred languages were not specified. Take the first object.
                         predicateInfo.objects.headOption match {

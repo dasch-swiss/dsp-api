@@ -272,7 +272,7 @@ case class IriLiteralV2(value: IRI) extends LiteralV2 {
 
 /**
   * Represents an IRI literal as a [[SmartIri]].
-
+  *
   * @param value the IRI.
   */
 case class SmartIriLiteralV2(value: SmartIri) extends OntologyLiteralV2 {
@@ -300,6 +300,62 @@ case class StringLiteralV2(value: String, language: Option[String] = None) exten
     override def toString: String = value
 
     def compare(that: StringLiteralV2): Int = this.value.compareTo(that.value)
+}
+
+/**
+  * Represents a sequence of [[StringLiteralV2]].
+  *
+  * @param stringLiterals a sequence of [[StringLiteralV2]].
+  */
+case class StringLiteralSequenceV2(stringLiterals: Vector[StringLiteralV2]) {
+
+    /**
+      * Gets the string value of the [[StringLiteralV2]] corresponding to the preferred language.
+      * If not available, returns the string value of the fallback language or any available language.
+      *
+      * @param preferredLang the preferred language.
+      * @param fallbackLang  language to use if preferred language is not available.
+      */
+    def getPreferredLanguage(preferredLang: String, fallbackLang: String): Option[String] = {
+
+        val stringLiteralMap: Map[Option[String], String] = stringLiterals.map {
+            case StringLiteralV2(str, lang) => lang -> str
+        }.toMap
+
+        stringLiteralMap.get(Some(preferredLang)) match {
+            // Is the string value available in the user's preferred language?
+            case Some(strVal: String) =>
+                // Yes.
+                Some(strVal)
+            case None =>
+                // The string value is not available in the user's preferred language. Is it available
+                // in the system default language?
+                stringLiteralMap.get(Some(fallbackLang)) match {
+                    case Some(strValFallbackLang) =>
+                        // Yes.
+                        Some(strValFallbackLang)
+                    case None =>
+                        // The string value is not available in the system default language. Is it available
+                        // without a language tag?
+                        stringLiteralMap.get(None) match {
+                            case Some(strValWithoutLang) =>
+                                // Yes.
+                                Some(strValWithoutLang)
+                            case None =>
+                                // The string value is not available without a language tag. Sort the
+                                // available `StringLiteralV2` by language code to get a deterministic result,
+                                // and return the object in the language with the lowest sort
+                                // order.
+                                stringLiteralMap.toVector.sortBy {
+                                    case (lang, _) => lang
+                                }.headOption.map {
+                                    case (_, obj) => obj
+                                }
+                        }
+
+                }
+        }
+    }
 }
 
 /**
