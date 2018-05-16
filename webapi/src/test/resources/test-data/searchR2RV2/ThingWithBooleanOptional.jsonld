@@ -1,6 +1,6 @@
 {
   "@type" : "schema:ItemList",
-  "schema:itemListElement" : [  {
+  "schema:itemListElement" : [ {
     "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
     "@type" : "p0001-anything:Thing",
     "rdfs:label" : "X-ray"
@@ -45,6 +45,10 @@
     "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has a list value"
   }, {
+    "@id" : "http://rdfh.ch/0001/thing_with_richtext_with_markup",
+    "@type" : "p0001-anything:Thing",
+    "rdfs:label" : "test thing with markup"
+  }, {
     "@id" : "http://rdfh.ch/0001/thing_with_two_list_values",
     "@type" : "p0001-anything:Thing",
     "rdfs:label" : "A thing that has two list values"
@@ -58,7 +62,7 @@
     },
     "rdfs:label" : "Testding for extended search"
   } ],
-  "schema:numberOfItems" : 13,
+  "schema:numberOfItems" : 14,
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",

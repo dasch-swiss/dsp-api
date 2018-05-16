@@ -45,6 +45,7 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 case class FullTextSearchCountGetRequestV2(searchValue: String,
                                            limitToProject: Option[IRI],
                                            limitToResourceClass: Option[SmartIri],
+                                           limitToStandoffClass: Option[SmartIri],
                                            requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
@@ -60,6 +61,7 @@ case class FulltextSearchGetRequestV2(searchValue: String,
                                       offset: Int,
                                       limitToProject: Option[IRI],
                                       limitToResourceClass: Option[SmartIri],
+                                      limitToStandoffClass: Option[SmartIri],
                                       requestingUser: UserADM) extends SearchResponderRequestV2
 
 
