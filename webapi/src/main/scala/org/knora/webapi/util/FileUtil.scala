@@ -51,7 +51,13 @@ object FileUtil {
       * @return the contents of the file.
       */
     def readTextFile(file: File): String = {
-        Source.fromFile(file)(Codec.UTF8).mkString
+        val source = Source.fromFile(file)(Codec.UTF8)
+
+        try {
+            source.mkString
+        } finally {
+            source.close()
+        }
     }
 
     /**
@@ -61,7 +67,7 @@ object FileUtil {
       * @return the contents of the file.
       */
     def readTextResource(filename: String): String = {
-        val source: BufferedSource = scala.io.Source.fromResource(filename)
+        val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
 
         try {
             source.mkString
