@@ -1,6 +1,10 @@
 {
   "@type" : "schema:ItemList",
-  "schema:itemListElement" : [ {
+  "schema:itemListElement" : [  {
+    "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+    "@type" : "p0001-anything:Thing",
+    "rdfs:label" : "X-ray"
+  }, {
     "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw",
     "@type" : "p0001-anything:Thing",
     "rdfs:label" : "excluded Charlie"
@@ -54,7 +58,7 @@
     },
     "rdfs:label" : "Testding for extended search"
   } ],
-  "schema:numberOfItems" : 12,
+  "schema:numberOfItems" : 13,
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",

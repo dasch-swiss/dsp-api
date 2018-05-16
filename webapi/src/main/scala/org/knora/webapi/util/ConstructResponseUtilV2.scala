@@ -221,7 +221,7 @@ object ConstructResponseUtilV2 {
                                             assertions = predicateMapForValueAssertions,
                                             standoff = Map.empty[IRI, Map[IRI, String]], // link value does not contain standoff
                                             listNode = Map.empty[IRI, String] // link value cannot point to a list node
-                                            ))
+                                        ))
                                     } else {
                                         // Return None for the removed link value; it will be filtered out by flatMap.
                                         None
@@ -432,6 +432,8 @@ object ConstructResponseUtilV2 {
 
         valueType match {
             case OntologyConstants.KnoraBase.TextValue =>
+                // Any knora-base:TextValue may have a language
+                val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
 
                 if (valueObject.standoff.nonEmpty) {
                     // standoff nodes given
@@ -445,7 +447,15 @@ object ConstructResponseUtilV2 {
                     TextValueContentV2(
                         valueType = valueType.toSmartIri,
                         valueHasString = valueObjectValueHasString,
-                        standoff = Some(StandoffAndMapping(standoff = standoffTags, mappingIri = mappingIri, mapping = mapping.mapping, XSLT = mapping.XSLTransformation)),
+                        valueHasLanguage = valueLanguageOption,
+                        standoff = Some(
+                            StandoffAndMapping(
+                                standoff = standoffTags,
+                                mappingIri = mappingIri,
+                                mapping = mapping.mapping,
+                                XSLT = mapping.XSLTransformation
+                            )
+                        ),
                         comment = valueCommentOption
                     )
 
@@ -454,6 +464,7 @@ object ConstructResponseUtilV2 {
                     TextValueContentV2(
                         valueType = valueType.toSmartIri,
                         valueHasString = valueObjectValueHasString,
+                        valueHasLanguage = valueLanguageOption,
                         standoff = None,
                         comment = valueCommentOption
                     )

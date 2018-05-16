@@ -72,6 +72,7 @@
             <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
         </xs:sequence>
         <xs:attribute name="knoraType" use="required" fixed="richtext_value"/>
+        <xs:attribute name="lang" use="optional" type="xs:string"/>
         <xs:attribute name="mapping_id" use="optional" type="xs:string"/>
     </xs:complexType>
 

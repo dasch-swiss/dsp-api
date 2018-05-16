@@ -101,7 +101,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
       * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
       *
-      * @param key the key of the required value.
+      * @param key           the key of the required value.
       * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
       *                      that throws an exception if the string is invalid. The function's return value is the
       *                      validated string, possibly converted to another type T.
@@ -121,7 +121,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions), throwing
       * [[BadRequestException]] if the validation fails.
       *
-      * @param key the key of the optional value.
+      * @param key           the key of the optional value.
       * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
       *                      that throws an exception if the string is invalid. The function's return value is the
       *                      validated string, possibly converted to another type T.
@@ -154,7 +154,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * specified validation function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions),
       * throwing [[BadRequestException]] if the validation fails.
       *
-      * @param key the key of the optional value.
+      * @param key           the key of the optional value.
       * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
       *                      that throws an exception if the string is invalid. The function's return value is the
       *                      validated string, possibly converted to another type T.
@@ -467,6 +467,20 @@ object JsonLDUtil {
     }
 
     /**
+      * Given a predicate value and a language code, returns a JSON-LD object containing a
+      * a `@value` predicate and a `@language` predicate.
+      *
+      * @param obj a predicate value.
+      * @return a JSON-LD object containing a `@value` predicate and a `@language` predicate.
+      */
+    def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject = {
+        JsonLDObject(Map(
+            "@value" -> JsonLDString(obj),
+            "@language" -> JsonLDString(lang)
+        ))
+    }
+
+    /**
       * Given a map of language codes to predicate values, returns a JSON-LD array in which each element
       * has a `@value` predicate and a `@language` predicate.
       *
@@ -475,10 +489,11 @@ object JsonLDUtil {
       */
     def objectsWithLangsToJsonLDArray(objectsWithLangs: Map[String, String]): JsonLDArray = {
         val objects: Seq[JsonLDObject] = objectsWithLangs.toSeq.map {
-            case (lang, obj) => JsonLDObject(Map(
-                "@value" -> JsonLDString(obj),
-                "@language" -> JsonLDString(lang)
-            ))
+            case (lang, obj) =>
+                objectWithLangToJsonLDObject(
+                    obj = obj,
+                    lang = lang
+                )
         }
 
         JsonLDArray(objects)

@@ -371,6 +371,11 @@ Markup is stored using this property:
     convert it back to the original XML. See
     @ref:[Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
 
+A text value can have a specified language:
+
+`valueHasLanguage` (0-1)
+: is an ISO 639-1 code as string specifying the language of the text.
+
 ##### DateValue
 
 Humanities data includes many different types of dates. In Knora, a date

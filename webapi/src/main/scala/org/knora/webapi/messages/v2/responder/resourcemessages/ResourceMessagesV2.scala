@@ -84,31 +84,30 @@ case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOVa
       * Converts this value to JSON-LD.
       *
       * @param targetSchema the target schema.
-      * @param settings the application settings.
+      * @param settings     the application settings.
       * @return a JSON-LD representation of this value.
       */
     def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         val valueContentAsJsonLD = valueContent.toJsonLDValue(targetSchema, settings)
 
-        // Is the value represented as a JSON-LD object in the target schema?
-        valueContentAsJsonLD match {
-            case jsonLDObject: JsonLDObject =>
-                // Yes. Is it just an IRI?
-                if (JsonLDUtil.isIriValue(jsonLDObject)) {
-                    // Yes. Leave it as is.
-                    jsonLDObject
-                } else {
-                    // No. Add the value's IRI and type.
-                    JsonLDObject(
-                        jsonLDObject.value +
-                            ("@id" -> JsonLDString(valueIri)) +
-                            ("@type" -> JsonLDString(valueContent.valueType.toString))
-                    )
+        // In the complex schema, add the value's IRI and type to the JSON-LD object that represents it.
+        targetSchema match {
+            case ApiV2WithValueObjects =>
+                // In the complex schema, the value must be represented as a JSON-LD object.
+                valueContentAsJsonLD match {
+                    case jsonLDObject: JsonLDObject =>
+                        // Add the value's IRI and type.
+                        JsonLDObject(
+                            jsonLDObject.value +
+                                ("@id" -> JsonLDString(valueIri)) +
+                                ("@type" -> JsonLDString(valueContent.valueType.toString))
+                        )
+
+                    case other =>
+                        throw AssertionException(s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other")
                 }
 
-            case literal: JsonLDValue =>
-                // No, it's a literal, so leave it as is.
-                literal
+            case ApiV2Simple => valueContentAsJsonLD
         }
     }
 }
@@ -265,6 +264,7 @@ case class DateValueContentV2(valueType: SmartIri,
   */
 case class TextValueContentV2(valueType: SmartIri,
                               valueHasString: String,
+                              valueHasLanguage: Option[String] = None,
                               standoff: Option[StandoffAndMapping],
                               comment: Option[String]) extends ValueContentV2 {
 
@@ -276,7 +276,18 @@ case class TextValueContentV2(valueType: SmartIri,
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
-            case ApiV2Simple => JsonLDString(valueHasString)
+            case ApiV2Simple =>
+                valueHasLanguage match {
+                    case Some(lang) =>
+                        // In the simple schema, if this text value specifies a language, return it using a JSON-LD
+                        // @language key as per <https://json-ld.org/spec/latest/json-ld/#string-internationalization>.
+                        JsonLDUtil.objectWithLangToJsonLDObject(
+                            obj = valueHasString,
+                            lang = lang
+                        )
+
+                    case None => JsonLDString(valueHasString)
+                }
 
             case ApiV2WithValueObjects =>
                 val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
@@ -321,7 +332,16 @@ case class TextValueContentV2(valueType: SmartIri,
                     Map(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString))
                 }
 
-                JsonLDObject(objectMap)
+                // In the complex schema, if this text value specifies a language, return it using the predicate
+                // knora-api:textValueHasLanguage.
+                val objectMapWithLanguage: Map[IRI, JsonLDValue] = valueHasLanguage match {
+                    case Some(lang) =>
+                        objectMap + (OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> JsonLDString(lang))
+                    case None =>
+                        objectMap
+                }
+
+                JsonLDObject(objectMapWithLanguage)
         }
     }
 
@@ -770,9 +790,9 @@ case class LinkValueContentV2(valueType: SmartIri,
                     case None =>
                         // check whether it is an outgoing or incoming link
                         if (!incomingLink) {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDString(target))
+                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(target))
                         } else {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDString(subject))
+                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(subject))
                         }
                 }
 
@@ -823,10 +843,11 @@ case class ReadResourceV2(resourceIri: IRI,
                     // In the simple schema, use link properties instead of link value properties.
                     val adaptedPropertyIri = if (targetSchema == ApiV2Simple) {
                         val isLinkProp = readValues.forall {
-                            readValue => readValue.valueContent match {
-                                case _: LinkValueContentV2 => true
-                                case _ => false
-                            }
+                            readValue =>
+                                readValue.valueContent match {
+                                    case _: LinkValueContentV2 => true
+                                    case _ => false
+                                }
                         }
 
                         if (isLinkProp) {

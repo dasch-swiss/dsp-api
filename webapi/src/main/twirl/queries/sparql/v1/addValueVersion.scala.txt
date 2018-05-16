@@ -92,7 +92,9 @@ DELETE {
 
         @value match {
             case textValueSimple: TextValueSimpleV1 => {
-                @* nothing to do *@
+                 @if(!textValueSimple.language.isEmpty) {
+                                    <@newValueIri> knora-base:valueHasLanguage """@textValueSimple.language.get""" .
+                                }
             }
 
             case textValueWithStandoff: TextValueWithStandoffV1 => {
@@ -100,6 +102,9 @@ DELETE {
                 @* Create a Standoff node for each StandoffTagV1. *@
 
                 ?newValue knora-base:valueHasMapping <@textValueWithStandoff.mappingIri> .
+                 @if(!textValueWithStandoff.language.isEmpty) {
+                        <@newValueIri> knora-base:valueHasLanguage """@textValueWithStandoff.language.get""" .
+                 }
 
                 @for((createStandoff, standoffNodeIndex) <- textValueWithStandoff.prepareForSparqlInsert(newValueIri).zipWithIndex) {
 
