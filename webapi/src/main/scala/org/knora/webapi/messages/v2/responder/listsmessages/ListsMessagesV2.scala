@@ -20,12 +20,12 @@
 package org.knora.webapi.messages.v2.responder.listsmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListADM
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListADM, ListNodeADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.jsonld.{JsonLDArray, JsonLDDocument, JsonLDObject, JsonLDString}
 
 
 /**
@@ -53,16 +53,71 @@ case class ListsGetResponseV2(lists: Vector[ListADM], userLang: String, fallback
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val label = Map(
+        val label: Map[IRI, JsonLDString] = Map(
             OntologyConstants.Rdfs.Label -> lists.head.listinfo.labels.getPreferredLanguage(userLang, fallbackLang)
         ).collect {
-            case (iri: IRI, Some(strVal)) => iri -> JsonLDString(strVal)
+            case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
+        }
+
+        val comment: Map[IRI, JsonLDString] = Map(
+            OntologyConstants.Rdfs.Comment -> lists.head.listinfo.comments.getPreferredLanguage(userLang, fallbackLang)
+        ).collect {
+            case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
+        }
+
+        /**
+          * Given a [[ListNodeADM]], constructs a [[JsonLDObject]].
+          *
+          * @param node the node to be turned into JSON-LD.
+          * @return a [[JsonLDObject]] representing the node.
+          */
+        def makeNode(node: ListNodeADM): JsonLDObject = {
+
+            val label: Map[IRI, JsonLDString] = Map(
+                OntologyConstants.Rdfs.Label -> node.labels.getPreferredLanguage(userLang, fallbackLang)
+            ).collect {
+                case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
+            }
+
+            val comment: Map[IRI, JsonLDString] = Map(
+                OntologyConstants.Rdfs.Comment -> node.comments.getPreferredLanguage(userLang, fallbackLang)
+            ).collect {
+                case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
+            }
+
+            val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
+                Map(
+                    OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDArray(
+                        node.children.map {
+                            childNode: ListNodeADM =>
+                                makeNode(childNode) // recursion
+                        })
+                )
+            } else {
+                // no children (abort condition for recursion)
+                Map.empty[IRI, JsonLDArray]
+            }
+
+            JsonLDObject(
+                Map(
+                    "@id" -> JsonLDString(node.id),
+                    "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(targetSchema).toString)
+                ) ++ children ++ label ++ comment
+            )
+        }
+
+        val children: Map[IRI, JsonLDArray] = Map(
+            OntologyConstants.KnoraBase.HasSubListNode.toSmartIri.toOntologySchema(targetSchema).toString -> lists.head.children.map {
+            childNode: ListNodeADM =>
+                makeNode(childNode)
+        }).collect {
+            case (iri: IRI, children: Seq[JsonLDObject]) if children.nonEmpty => iri -> JsonLDArray(children)
         }
 
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(lists.head.listinfo.id),
             "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(targetSchema).toString)
-        ) ++ label)
+        ) ++ children ++ label ++ comment)
 
         val context = JsonLDObject(Map(
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
