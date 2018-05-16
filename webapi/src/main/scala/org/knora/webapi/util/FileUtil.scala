@@ -28,7 +28,7 @@ import akka.event.LoggingAdapter
 import org.knora.webapi.{FileWriteException, SettingsImpl}
 import resource._
 
-import scala.io.{Codec, Source}
+import scala.io.{BufferedSource, Codec, Source}
 
 /**
   * Functions for reading and writing files.
@@ -52,6 +52,22 @@ object FileUtil {
       */
     def readTextFile(file: File): String = {
         Source.fromFile(file)(Codec.UTF8).mkString
+    }
+
+    /**
+      * Reads a file from the classpath into a string.
+      *
+      * @param filename the name of the file.
+      * @return the contents of the file.
+      */
+    def readTextResource(filename: String): String = {
+        val source: BufferedSource = scala.io.Source.fromResource(filename)
+
+        try {
+            source.mkString
+        } finally {
+            source.close()
+        }
     }
 
     /**

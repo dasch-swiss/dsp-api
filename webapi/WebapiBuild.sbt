@@ -164,7 +164,7 @@ lazy val webApiLibs = Seq(
     library.bcprov,
     library.commonsBeanUtil,
     library.commonsIo,
-    library.commonsLang3,
+    library.commonsText,
     library.commonsValidator,
     library.diff,
     library.ehcache,
@@ -259,7 +259,7 @@ lazy val library =
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-        val commonsLang3           = "org.apache.commons"            % "commons-lang3"            % "3.7"
+        val commonsText            = "org.apache.commons"            % "commons-text"             % "1.3"
         val commonsIo              = "commons-io"                    % "commons-io"               % "2.6"
         val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.3" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
         val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
@@ -368,6 +368,9 @@ val aopMerge: MergeStrategy = new MergeStrategy {
 val customMergeStrategy: String => MergeStrategy = {
     case PathList("META-INF", "aop.xml") =>
         aopMerge
+    case PathList(ps @ _*) if ps.exists(_.contains("aopalliance")) || ps.exists(_.contains("lucene")) || ps.exists(_.contains("joda")) =>
+        // Workaround for #855. TODO: find a better way to resolve these conflicts.
+        MergeStrategy.first
     case s =>
         defaultMergeStrategy(s)
 }

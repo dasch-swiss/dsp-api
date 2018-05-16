@@ -519,9 +519,7 @@ object ResourcesRouteV1 extends Authenticator {
                 )
 
                 // Read the standard Knora XML import v1 schema from a file.
-                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(
-                    new File("src/main/resources/" + OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd")
-                )
+                knoraXmlImportSchemaXml: String = FileUtil.readTextResource(OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd")
 
                 // Construct an XmlImportSchemaV1 for the standard Knora XML import v1 schema.
                 knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
