@@ -125,7 +125,8 @@ combined using the Boolean `AND` operator. Please note that the search
 terms have to be URL-encoded.
 
 ```
-HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
+HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClassIRI]
+[limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
 
 Please note that the first parameter has to be preceded by a question
@@ -135,6 +136,9 @@ The default value for the parameter `offset` is 0 which returns the
 first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
 in `app/v2` in `application.conf`.
+
+If the parameter `limitToStandoffClass` is provided, Knora will look for search terms 
+that are marked up with the indicated standoff class.
 
 The response to a full-text search request is a `ResourcesSequence` (see
 @ref:[Response Formats](response-formats.md)).
@@ -182,7 +186,7 @@ In order to perform a count query, just append the segment `count`:
 ```
 HTTP GET to http://host/v2/searchbylabel/count/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
 
-HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
+HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI][limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 
 HTTP GET to http://host/v2/searchextended/count/KnarQLQuery
 ```
