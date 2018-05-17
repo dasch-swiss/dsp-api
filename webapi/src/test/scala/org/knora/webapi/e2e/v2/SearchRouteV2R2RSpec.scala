@@ -1558,13 +1558,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-
+                
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountSearchQuery(responseAs[String], 13)
+                checkCountSearchQuery(responseAs[String], 14)
             }
 
         }
@@ -1921,6 +1921,106 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
+
+        "do a fulltext search for the term 'text' marked up as a paragraph" in {
+
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "do a fulltext search count query for the term 'text' marked up as a paragraph" in {
+
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountSearchQuery(responseAs[String], 1)
+
+            }
+
+        }
+
+        "do a fulltext search for the term 'text' marked up as italic" in {
+
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "do a fulltext search count query for the term 'text' marked up as italic" in {
+
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountSearchQuery(responseAs[String], 1)
+            }
+
+        }
+
+        "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
+
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
+
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountSearchQuery(responseAs[String], 1)
+            }
+
+        }
+
+        "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
+
+            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // there is no single italic element that contains both 'interesting' and 'boring':
+
+                /*
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <text>
+                     <p>
+                         This is a test that contains marked up elements. This is <em>interesting text</em> in italics. This is <em>boring text</em> in italics.
+                     </p>
+                    </text>
+                */
+
+                checkCountSearchQuery(responseAs[String], 0)
+
+            }
+
+        }
+
 
     }
 }
