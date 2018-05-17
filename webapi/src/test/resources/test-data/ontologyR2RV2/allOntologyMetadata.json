@@ -1,5 +1,5 @@
 {
-  "knora-api:hasOntologies" : [ {
+  "@graph" : [ {
     "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
     "@type" : "http://www.w3.org/2002/07/owl#Ontology",
     "knora-api:attachedToProject" : {

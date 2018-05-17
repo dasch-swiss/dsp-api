@@ -81,8 +81,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = Set(requestedOntology),
-                        responseSchema = responseSchema,
+                        ontologyIri = requestedOntology,
                         allLanguages = allLanguages,
                         requestingUser = requestingUser
                     )
@@ -153,31 +152,16 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "allentities" / Segments) { externalOntologyIris: List[IRI] =>
+        } ~ path("v2" / "ontologies" / "allentities" / Segment) { externalOntologyIriStr: IRI =>
             get {
                 requestContext => {
                     val requestingUser = getUserADM(requestContext)
 
-                    val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
-                        (namedGraphStr: IRI) =>
-                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
+                    val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr"))
 
-                            val schema = requestedOntologyIri.getOntologySchema match {
-                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
-                            }
-
-                            (requestedOntologyIri, schema)
-                    }.toSet
-
-                    val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
-
-                    // Decide which API schema to use for the response.
-                    val responseSchema = if (schemas.size == 1) {
-                        schemas.head
-                    } else {
-                        // The client requested different schemas.
-                        throw BadRequestException("The request refers to multiple API schemas")
+                    val responseSchema = requestedOntologyIri.getOntologySchema match {
+                        case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                        case _ => throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
                     }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -185,8 +169,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = ontologiesForResponder,
-                        responseSchema = responseSchema,
+                        ontologyIri = requestedOntologyIri,
                         allLanguages = allLanguages,
                         requestingUser = requestingUser
                     )
@@ -316,6 +299,10 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
 
+                    if (classesForResponder.map(_.getOntologyFromEntity).size != 1) {
+                        throw BadRequestException(s"Only one ontology may be queried per request")
+                    }
+
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {
                         schemas.head
@@ -444,6 +431,10 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
+
+                    if (propsForResponder.map(_.getOntologyFromEntity).size != 1) {
+                        throw BadRequestException(s"Only one ontology may be queried per request")
+                    }
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {

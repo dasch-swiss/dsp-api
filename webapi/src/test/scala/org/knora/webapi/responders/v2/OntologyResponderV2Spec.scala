@@ -447,13 +447,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val property = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val property = externalOntology.properties(propertyIri)
                     property.entityInfoContent should ===(propertyInfoContent)
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -471,11 +469,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.properties.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
             }
         }
@@ -533,15 +530,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val property = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    val property = externalOntology.properties(propertyIri)
                     assert(property.isLinkProp)
                     assert(!property.isLinkValueProp)
-                    ontology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
-                    val metadata = ontology.ontologyMetadata
+                    externalOntology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -558,11 +553,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.properties.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
                     assert(!readPropertyInfo.isLinkProp)
                     assert(readPropertyInfo.isLinkValueProp)
@@ -580,11 +574,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.properties.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.isLinkProp)
                     assert(!readPropertyInfo.isLinkValueProp)
                     readPropertyInfo.entityInfoContent should ===(propertyInfoContent)
@@ -597,11 +590,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.properties.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val readPropertyInfo: ReadPropertyInfoV2 = externalMsg.ontologies.head.properties.values.head
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
                     assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
                     assert(!readPropertyInfo.isLinkProp)
                     assert(readPropertyInfo.isLinkValueProp)
@@ -1670,14 +1662,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readPropertyInfo = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo = externalOntology.properties(propertyIri)
                     readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(newObjects)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -1733,14 +1724,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readPropertyInfo = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val readPropertyInfo = externalOntology.properties(propertyIri)
                     readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(newObjectsUnescaped)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -1848,17 +1838,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ).map(_.toSmartIri)
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.classes.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.inheritedCardinalities.keySet.contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(false)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -1907,16 +1895,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ).map(_.toSmartIri)
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.classes.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -1965,14 +1951,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(newObjects)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2026,14 +2011,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(newObjectsUnescaped)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2324,15 +2308,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
                     readClassInfo.allCardinalities(AnythingOntologyIri.makeEntityIri("hasBoolean")).cardinality should ===(Cardinality.MustHaveOne)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2431,13 +2414,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val property = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val property = externalOntology.properties(propertyIri)
                     property.entityInfoContent should ===(propertyInfoContent)
-                    val metadata = ontology.ontologyMetadata
+
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2565,15 +2548,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    assert(msg.ontologies.head.classes.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent should ===(classInfoContent)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2710,15 +2691,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2801,13 +2781,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val property = ontology.properties(propertyIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.properties.size == 1)
+                    val property = externalOntology.properties(propertyIri)
+
                     property.entityInfoContent should ===(propertyInfoContent)
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2851,15 +2831,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(expectedDirectCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -2928,15 +2907,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate
@@ -3051,15 +3029,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: ReadOntologiesV2 =>
-                    assert(msg.ontologies.size == 1)
-                    val externalMsg = msg.toOntologySchema(ApiV2WithValueObjects)
-                    val ontology = externalMsg.ontologies.head
-                    val readClassInfo = ontology.classes(classIri)
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
                     readClassInfo.entityInfoContent.directCardinalities should ===(classInfoContent.directCardinalities)
                     readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
-                    val metadata = ontology.ontologyMetadata
+                    val metadata = externalOntology.ontologyMetadata
                     val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
                     assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                     anythingLastModDate = newAnythingLastModDate

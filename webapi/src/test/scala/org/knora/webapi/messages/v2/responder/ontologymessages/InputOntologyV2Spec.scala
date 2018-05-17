@@ -29,52 +29,49 @@ import org.knora.webapi.util.jsonld.JsonLDUtil
 import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, CoreSpec}
 
 /**
-  * Tests [[InputOntologiesV2]].
+  * Tests [[InputOntologyV2]].
   */
-class InputOntologiesV2Spec extends CoreSpec {
-    import InputOntologiesV2Spec._
+class InputOntologyV2Spec extends CoreSpec {
 
-    "InputOntologiesV2" should {
+    import InputOntologyV2Spec._
+
+    "InputOntologyV2" should {
         "parse a property definition" in {
             val params =
                 """
                   |{
-                  |  "knora-api:hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                  |    "@type" : "owl:Ontology",
-                  |    "knora-api:hasProperties" : {
-                  |      "anything:hasName" : {
-                  |        "@id" : "anything:hasName",
-                  |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:subjectType" : {
-                  |          "@id" : "anything:Thing"
-                  |        },
-                  |        "knora-api:objectType" : {
-                  |          "@id" : "knora-api:TextValue"
-                  |        },
-                  |        "rdfs:comment" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "The name of a 'Thing'"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "Der Name eines Dinges"
-                  |        } ],
-                  |        "rdfs:label" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "has name"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "hat Namen"
-                  |        } ],
-                  |        "rdfs:subPropertyOf" : [ {
-                  |          "@id" : "knora-api:hasValue"
-                  |        }, {
-                  |          "@id" : "http://schema.org/name"
-                  |        } ]
-                  |      }
+                  |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+                  |  "@type" : "owl:Ontology",
+                  |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                  |  "@graph" : [ {
+                  |    "@id" : "anything:hasName",
+                  |    "@type" : "owl:ObjectProperty",
+                  |    "knora-api:subjectType" : {
+                  |      "@id" : "anything:Thing"
                   |    },
-                  |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                  |  },
+                  |    "knora-api:objectType" : {
+                  |      "@id" : "knora-api:TextValue"
+                  |    },
+                  |    "rdfs:comment" : [ {
+                  |      "@language" : "en",
+                  |      "@value" : "The name of a 'Thing'"
+                  |    }, {
+                  |      "@language" : "de",
+                  |      "@value" : "Der Name eines Dinges"
+                  |    } ],
+                  |    "rdfs:label" : [ {
+                  |      "@language" : "en",
+                  |      "@value" : "has name"
+                  |    }, {
+                  |      "@language" : "de",
+                  |      "@value" : "hat Namen"
+                  |    } ],
+                  |    "rdfs:subPropertyOf" : [ {
+                  |      "@id" : "knora-api:hasValue"
+                  |    }, {
+                  |      "@id" : "http://schema.org/name"
+                  |    } ]
+                  |  } ],
                   |  "@context" : {
                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -86,7 +83,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                   |}
                 """.stripMargin
 
-            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
             paramsAsInput should ===(PropertyDef)
         }
 
@@ -94,34 +91,30 @@ class InputOntologiesV2Spec extends CoreSpec {
             val params =
                 s"""
                    |{
-                   |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |    "@type" : "owl:Ontology",
-                   |    "knora-api:hasClasses" : {
-                   |      "anything:WildThing" : {
-                   |        "@id" : "anything:WildThing",
-                   |        "@type" : "owl:Class",
-                   |        "rdfs:label" : {
-                   |          "@language" : "en",
-                   |          "@value" : "wild thing"
-                   |        },
-                   |        "rdfs:comment" : {
-                   |          "@language" : "en",
-                   |          "@value" : "A thing that is wild"
-                   |        },
-                   |        "rdfs:subClassOf" : [ {
-                   |          "@id" : "anything:Thing"
-                   |        }, {
-                   |          "@type": "owl:Restriction",
-                   |          "owl:maxCardinality": 1,
-                   |          "owl:onProperty": {
-                   |            "@id" : "anything:hasName"
-                   |          }
-                   |        } ]
-                   |      }
+                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "@graph" : [ {
+                   |    "@id" : "anything:WildThing",
+                   |    "@type" : "owl:Class",
+                   |    "rdfs:label" : {
+                   |      "@language" : "en",
+                   |      "@value" : "wild thing"
                    |    },
-                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                   |  },
+                   |    "rdfs:comment" : {
+                   |      "@language" : "en",
+                   |      "@value" : "A thing that is wild"
+                   |    },
+                   |    "rdfs:subClassOf" : [ {
+                   |      "@id" : "anything:Thing"
+                   |    }, {
+                   |      "@type": "owl:Restriction",
+                   |      "owl:maxCardinality": 1,
+                   |      "owl:onProperty": {
+                   |        "@id" : "anything:hasName"
+                   |      }
+                   |    } ]
+                   |  } ],
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -133,7 +126,7 @@ class InputOntologiesV2Spec extends CoreSpec {
                    |}
             """.stripMargin
 
-            val paramsAsInput: InputOntologiesV2 = InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
             paramsAsInput should ===(ClassDef)
         }
 
@@ -141,34 +134,30 @@ class InputOntologiesV2Spec extends CoreSpec {
             val params =
                 s"""
                    |{
-                   |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
-                   |    "@type" : "owl:Ontology",
-                   |    "knora-api:hasClasses" : {
-                   |      "anything:WildThing" : {
-                   |        "@id" : "anything:WildThing",
-                   |        "@type" : "owl:Class",
-                   |        "rdfs:label" : {
-                   |          "@language" : "en",
-                   |          "@value" : "wild thing"
-                   |        },
-                   |        "rdfs:comment" : {
-                   |          "@language" : "en",
-                   |          "@value" : "A thing that is wild"
-                   |        },
-                   |        "rdfs:subClassOf" : [ {
-                   |          "@id" : "anything:Thing"
-                   |        }, {
-                   |          "@type": "owl:Restriction",
-                   |          "owl:maxCardinality": 1,
-                   |          "owl:onProperty": {
-                   |            "@id" : "anything:hasName"
-                   |          }
-                   |        } ]
-                   |      }
+                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
+                   |  "@graph" : [ {
+                   |    "@id" : "anything:WildThing",
+                   |    "@type" : "owl:Class",
+                   |    "rdfs:label" : {
+                   |      "@language" : "en",
+                   |      "@value" : "wild thing"
                    |    },
-                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                   |  },
+                   |    "rdfs:comment" : {
+                   |      "@language" : "en",
+                   |      "@value" : "A thing that is wild"
+                   |    },
+                   |    "rdfs:subClassOf" : [ {
+                   |      "@id" : "anything:Thing"
+                   |    }, {
+                   |      "@type": "owl:Restriction",
+                   |      "owl:maxCardinality": 1,
+                   |      "owl:onProperty": {
+                   |        "@id" : "anything:hasName"
+                   |      }
+                   |    } ]
+                   |  } ],
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -181,64 +170,16 @@ class InputOntologiesV2Spec extends CoreSpec {
             """.stripMargin
 
             assertThrows[BadRequestException] {
-                InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
-            }
-        }
-
-        "reject an entity definition with the wrong IRI" in {
-            val params =
-                s"""
-                   |{
-                   |  "knora-api:hasOntologies" : {
-                   |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                   |    "@type" : "owl:Ontology",
-                   |    "knora-api:hasClasses" : {
-                   |      "anything:WildThing" : {
-                   |        "@id" : "anything:NonWildThing",
-                   |        "@type" : "owl:Class",
-                   |        "rdfs:label" : {
-                   |          "@language" : "en",
-                   |          "@value" : "wild thing"
-                   |        },
-                   |        "rdfs:comment" : {
-                   |          "@language" : "en",
-                   |          "@value" : "A thing that is wild"
-                   |        },
-                   |        "rdfs:subClassOf" : [ {
-                   |          "@id" : "anything:Thing"
-                   |        }, {
-                   |          "@type": "owl:Restriction",
-                   |          "owl:maxCardinality": 1,
-                   |          "owl:onProperty": {
-                   |            "@id" : "anything:hasName"
-                   |          }
-                   |        } ]
-                   |      }
-                   |    },
-                   |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                   |  },
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "owl" : "http://www.w3.org/2002/07/owl#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}
-            """.stripMargin
-
-            assertThrows[BadRequestException] {
-                InputOntologiesV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+                InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
             }
         }
     }
 }
 
-object InputOntologiesV2Spec {
+object InputOntologyV2Spec {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val PropertyDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
+    val PropertyDef = InputOntologyV2(
         ontologyMetadata = OntologyMetadataV2(
             ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
             label = None,
@@ -280,9 +221,9 @@ object InputOntologiesV2Spec {
             ),
             ontologySchema = ApiV2WithValueObjects
         ))
-    )))
+    )
 
-    val ClassDef = InputOntologiesV2(ontologies = Vector(InputOntologyV2(
+    val ClassDef = InputOntologyV2(
         classes = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
             predicates = Map(
                 "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
@@ -308,5 +249,5 @@ object InputOntologiesV2Spec {
             lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
         ),
         properties = Map()
-    )))
+    )
 }

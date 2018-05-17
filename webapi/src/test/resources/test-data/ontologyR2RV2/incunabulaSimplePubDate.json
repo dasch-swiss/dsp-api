@@ -1,28 +1,24 @@
 {
-  "knora-api:hasOntologies" : {
-    "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:hasProperties" : {
-      "p0803-incunabula:pubdate" : {
-        "@id" : "p0803-incunabula:pubdate",
-        "@type" : "owl:DatatypeProperty",
-        "knora-api:objectType" : {
-          "@id" : "knora-api:Date"
-        },
-        "knora-api:subjectType" : {
-          "@id" : "p0803-incunabula:book"
-        },
-        "rdfs:comment" : "Datum der Herausgabe",
-        "rdfs:label" : "Datum der Herausgabe",
-        "rdfs:subPropertyOf" : [ {
-          "@id" : "knora-api:hasValue"
-        }, {
-          "@id" : "http://purl.org/dc/terms/date"
-        } ]
-      }
+  "@graph" : [ {
+    "@id" : "p0803-incunabula:pubdate",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:Date"
     },
-    "rdfs:label" : "The incunabula ontology"
-  },
+    "knora-api:subjectType" : {
+      "@id" : "p0803-incunabula:book"
+    },
+    "rdfs:comment" : "Datum der Herausgabe",
+    "rdfs:label" : "Datum der Herausgabe",
+    "rdfs:subPropertyOf" : [ {
+      "@id" : "knora-api:hasValue"
+    }, {
+      "@id" : "http://purl.org/dc/terms/date"
+    } ]
+  } ],
+  "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2",
+  "@type" : "owl:Ontology",
+  "rdfs:label" : "The incunabula ontology",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",

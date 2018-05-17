@@ -86,9 +86,9 @@ class OntologyResponderV2 extends Responder {
         case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, requestingUser), log)
         case SubClassesGetRequestV2(resourceClassIri, requestingUser) => future2Message(sender(), getSubClassesV2(resourceClassIri, requestingUser), log)
         case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) => future2Message(sender(), getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser), log)
-        case OntologyEntitiesGetRequestV2(namedGraphIris, responseSchema, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(namedGraphIris, responseSchema, allLanguages, requestingUser), log)
-        case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsV2(resourceClassIris, allLanguages, requestingUser), log)
-        case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsV2(propertyIris, allLanguages, requestingUser), log)
+        case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser), log)
+        case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser), log)
+        case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser), log)
         case OntologyMetadataGetRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
@@ -1159,13 +1159,13 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Requests the entities defined in the given ontologies.
+      * Requests the entities defined in the given ontology.
       *
-      * @param ontologyIris the IRIs (internal or external) of the ontologies to be queried.
+      * @param ontologyIri the IRI (internal or external) of the ontology to be queried.
       * @param requestingUser  the user making the request.
-      * @return a [[ReadOntologiesV2]].
+      * @return a [[ReadOntologyV2]].
       */
-    private def getOntologyEntitiesV2(ontologyIris: Set[SmartIri], responseSchema: ApiV2Schema, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologiesV2] = {
+    private def getOntologyEntitiesV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
 
@@ -1177,32 +1177,31 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-
-            ontologies = ontologyIris.map {
-                ontologyIri =>
-                    val ontologyIriForCache = ontologyIri.toOntologySchema(InternalSchema)
-
-                    cacheData.ontologies(ontologyIriForCache).copy(
-                        userLang = userLang
-                    )
-            }.toVector.sortBy(_.ontologyMetadata.ontologyIri)
-
-        } yield ReadOntologiesV2(ontologies = ontologies)
+        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
+            userLang = userLang
+        )
     }
 
     /**
-      * Requests information about OWL classes.
+      * Requests information about OWL classes in a single ontology.
       *
       * @param classIris   the IRIs (internal or external) of the classes to query for.
       * @param requestingUser the user making the request.
-      * @return a [[ReadOntologiesV2]].
+      * @return a [[ReadOntologyV2]].
       */
-    private def getClassDefinitionsV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologiesV2] = {
+    private def getClassDefinitionsFromOntologyV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
 
-            // request information about the given resource class Iris
-            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
+            ontologyIris = classIris.map(_.getOntologyFromEntity)
+
+            _ = if (ontologyIris.size != 1) {
+                throw BadRequestException(s"Only one ontology may be queried per request")
+            }
+
+            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            internalClassIris = classIris.map(_.toOntologySchema(InternalSchema))
+            readOntologyInfo = cacheData.ontologies(internalOntologyIri)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1212,34 +1211,35 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-
-            classesInOntologies = classInfoResponse.classInfoMap.values.groupBy(_.entityInfoContent.classIri.getOntologyFromEntity).map {
-                case (ontologyIri, classInfos) =>
-                    ReadOntologyV2(
-                        ontologyMetadata = cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).ontologyMetadata,
-                        classes = classInfos.map {
-                            classInfo => classInfo.entityInfoContent.classIri -> classInfo
-                        }.toMap,
-                        userLang = userLang
-                    )
-            }.toSeq
-
-        } yield ReadOntologiesV2(ontologies = classesInOntologies)
+        } yield readOntologyInfo.copy(
+            classes = readOntologyInfo.classes.filterKeys(internalClassIris),
+            properties = Map.empty[SmartIri, ReadPropertyInfoV2],
+            individuals = Map.empty[SmartIri, ReadIndividualInfoV2],
+            userLang = userLang,
+            isWholeOntology = false
+        )
     }
 
     /**
-      * Requests information about property entities.
+      * Requests information about properties in a single ontology.
       *
       * @param propertyIris the IRIs (internal or external) of the properties to query for.
       * @param requestingUser  the user making the request.
-      * @return a [[ReadOntologiesV2]].
+      * @return a [[ReadOntologyV2]].
       */
-    private def getPropertyDefinitionsV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) = {
-
+    private def getPropertyDefinitionsFromOntologyV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
 
-            propertiesResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
+            ontologyIris = propertyIris.map(_.getOntologyFromEntity)
+
+            _ = if (ontologyIris.size != 1) {
+                throw BadRequestException(s"Only one ontology may be queried per request")
+            }
+
+            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            internalPropertyIris = propertyIris.map(_.toOntologySchema(InternalSchema))
+            readOntologyInfo = cacheData.ontologies(internalOntologyIri)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1249,19 +1249,13 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-
-            propertiesInOntologies = propertiesResponse.propertyInfoMap.values.groupBy(_.entityInfoContent.propertyIri.getOntologyFromEntity).map {
-                case (ontologyIri, propertyInfos) =>
-                    ReadOntologyV2(
-                        ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
-                        properties = propertyInfos.map {
-                            propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
-                        }.toMap,
-                        userLang = userLang
-                    )
-            }.toSeq
-
-        } yield ReadOntologiesV2(ontologies = propertiesInOntologies)
+        } yield readOntologyInfo.copy(
+            classes = Map.empty[SmartIri, ReadClassInfoV2],
+            properties = readOntologyInfo.properties.filterKeys(internalPropertyIris),
+            individuals = Map.empty[SmartIri, ReadIndividualInfoV2],
+            userLang = userLang,
+            isWholeOntology = false
+        )
     }
 
     /**
@@ -1511,10 +1505,10 @@ class OntologyResponderV2 extends Responder {
       * Creates a class in an existing ontology.
       *
       * @param createClassRequest the request to create the class.
-      * @return a [[ReadOntologiesV2]] in the internal schema, the containing the definition of the new class.
+      * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new class.
       */
-    private def createClass(createClassRequest: CreateClassRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def createClass(createClassRequest: CreateClassRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
                 internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -1647,7 +1641,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getClassDefinitionsV2(
+                response <- getClassDefinitionsFromOntologyV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
                     requestingUser = createClassRequest.requestingUser
@@ -1796,10 +1790,10 @@ class OntologyResponderV2 extends Responder {
       * Adds cardinalities to an existing class definition.
       *
       * @param addCardinalitiesRequest the request to add the cardinalities.
-      * @return a [[ReadOntologiesV2]] in the internal schema, containing the new class definition.
+      * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
       */
-    private def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def addCardinalitiesToClass(addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
                 internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -1933,7 +1927,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getClassDefinitionsV2(
+                response <- getClassDefinitionsFromOntologyV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
                     requestingUser = addCardinalitiesRequest.requestingUser
@@ -1972,10 +1966,10 @@ class OntologyResponderV2 extends Responder {
       * Replaces a class's cardinalities with new ones.
       *
       * @param changeCardinalitiesRequest the request to add the cardinalities.
-      * @return a [[ReadOntologiesV2]] in the internal schema, containing the new class definition.
+      * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
       */
-    private def changeClassCardinalities(changeCardinalitiesRequest: ChangeCardinalitiesRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def changeClassCardinalities(changeCardinalitiesRequest: ChangeCardinalitiesRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
                 internalClassDef: ClassInfoContentV2 = changeCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
@@ -2096,7 +2090,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getClassDefinitionsV2(
+                response <- getClassDefinitionsFromOntologyV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
                     requestingUser = changeCardinalitiesRequest.requestingUser
@@ -2414,10 +2408,10 @@ class OntologyResponderV2 extends Responder {
       * Creates a property in an existing ontology.
       *
       * @param createPropertyRequest the request to create the property.
-      * @return a [[ReadOntologiesV2]] in the internal schema, the containing the definition of the new property.
+      * @return a [[ReadOntologyV2]] in the internal schema, the containing the definition of the new property.
       */
-    private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
                 internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
@@ -2644,7 +2638,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getPropertyDefinitionsV2(
+                response <- getPropertyDefinitionsFromOntologyV2(
                     propertyIris = Set(internalPropertyIri),
                     allLanguages = true,
                     requestingUser = createPropertyRequest.requestingUser
@@ -2683,10 +2677,10 @@ class OntologyResponderV2 extends Responder {
       * Changes the values of `rdfs:label` or `rdfs:comment` in a property definition.
       *
       * @param changePropertyLabelsOrCommentsRequest the request to change the property's labels or comments.
-      * @return a [[ReadOntologiesV2]] containing the modified property definition.
+      * @return a [[ReadOntologyV2]] containing the modified property definition.
       */
-    private def changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
 
@@ -2809,7 +2803,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getPropertyDefinitionsV2(propertyIris = Set(internalPropertyIri), allLanguages = true, requestingUser = changePropertyLabelsOrCommentsRequest.requestingUser)
+                response <- getPropertyDefinitionsFromOntologyV2(propertyIris = Set(internalPropertyIri), allLanguages = true, requestingUser = changePropertyLabelsOrCommentsRequest.requestingUser)
             } yield response
         }
 
@@ -2845,10 +2839,10 @@ class OntologyResponderV2 extends Responder {
       * Changes the values of `rdfs:label` or `rdfs:comment` in a class definition.
       *
       * @param changeClassLabelsOrCommentsRequest the request to change the class's labels or comments.
-      * @return a [[ReadOntologiesV2]] containing the modified class definition.
+      * @return a [[ReadOntologyV2]] containing the modified class definition.
       */
-    private def changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2): Future[ReadOntologiesV2] = {
-        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologiesV2] = {
+    private def changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
+        def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
             for {
                 cacheData <- getCacheData
 
@@ -2927,7 +2921,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Read the data back from the cache.
 
-                response <- getClassDefinitionsV2(
+                response <- getClassDefinitionsFromOntologyV2(
                     classIris = Set(internalClassIri),
                     allLanguages = true,
                     requestingUser = changeClassLabelsOrCommentsRequest.requestingUser

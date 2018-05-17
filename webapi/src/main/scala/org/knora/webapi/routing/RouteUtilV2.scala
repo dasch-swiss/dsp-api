@@ -184,7 +184,7 @@ object RouteUtilV2 {
             // Get the client's HTTP Accept header, if provided.
             maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
 
-            responseFormat: ResponseFormat = maybeAcceptHeader match {
+            responseFormat: ResponseFormat = JsonLDResponseFormat /*maybeAcceptHeader match {
                 case Some(acceptHeader) =>
                     // Does it specify a MIME type we support?
 
@@ -201,7 +201,7 @@ object RouteUtilV2 {
                     }
 
                 case None => JsonLDResponseFormat
-            }
+            } */
 
             formattedResponse = formatResponse(
                 knoraResponse = knoraResponse,
