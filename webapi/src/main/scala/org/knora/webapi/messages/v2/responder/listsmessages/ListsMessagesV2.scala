@@ -54,8 +54,8 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val nodeHasRootNode: Map[IRI, JsonLDString] = Map(
-            OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDString(list.listinfo.id)
+        val nodeHasRootNode: Map[IRI, JsonLDObject] = Map(
+            OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDUtil.iriToJsonLDObject(list.listinfo.id)
         )
 
         /**
@@ -128,8 +128,8 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
             Map.empty[IRI, JsonLDArray]
         }
 
-        val project: Map[IRI, JsonLDString] = Map(
-            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDString(list.listinfo.projectIri)
+        val project: Map[IRI, JsonLDObject] = Map(
+            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDUtil.iriToJsonLDObject(list.listinfo.projectIri)
         )
 
         val body = JsonLDObject(Map(
