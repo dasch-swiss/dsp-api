@@ -44,7 +44,10 @@ case class ListsGetRequestV2(listIri: IRI,
                              requestingUser: UserADM) extends ListsResponderRequestV2
 
 
-trait ListNodeResponseV2 {
+/**
+  * An abstract trait providing a convenience method for language handling.
+  */
+trait ListResponderResponseV2 {
 
     /**
       * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
@@ -68,7 +71,7 @@ trait ListNodeResponseV2 {
   *
   * @param list the list the are to be returned.
   */
-case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListNodeResponseV2 {
+case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
@@ -168,7 +171,7 @@ case class NodeGetRequestV2(nodeIri: IRI,
   *
   * @param node the node to be returned.
   */
-case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListNodeResponseV2 {
+case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
