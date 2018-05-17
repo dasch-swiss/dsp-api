@@ -286,20 +286,13 @@ class OntologyV2R2RSpec extends R2RSpec {
             Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-
-                responseJsonDoc.body.requireArray("@graph") match {
-                    case JsonLDArray(Seq(metadata: JsonLDObject)) =>
-                        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
-                        assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
-                        fooIri.set(ontologyIri)
-
-                        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
-
-                        val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
-                        fooLastModDate = lastModDate
-
-                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
-                }
+                val metadata = responseJsonDoc.body
+                val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                assert(ontologyIri == "http://0.0.0.0:3333/ontology/00FF/foo/v2")
+                fooIri.set(ontologyIri)
+                assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                fooLastModDate = lastModDate
             }
         }
 
@@ -322,20 +315,13 @@ class OntologyV2R2RSpec extends R2RSpec {
             Put("/v2/ontologies/metadata", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-
-                responseJsonDoc.body.requireArray("@graph") match {
-                    case JsonLDArray(Seq(metadata: JsonLDObject)) =>
-                        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
-                        assert(ontologyIri == fooIri.get)
-
-                        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
-
-                        val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
-                        assert(lastModDate.isAfter(fooLastModDate))
-                        fooLastModDate = lastModDate
-
-                    case _ => throw AssertionException(s"Unexpected response: $responseJsonDoc")
-                }
+                val metadata = responseJsonDoc.body
+                val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                assert(ontologyIri == fooIri.get)
+                assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                assert(lastModDate.isAfter(fooLastModDate))
+                fooLastModDate = lastModDate
             }
         }
 

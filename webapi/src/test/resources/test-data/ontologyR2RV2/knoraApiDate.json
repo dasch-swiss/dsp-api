@@ -1,26 +1,22 @@
 {
-  "knora-api:hasOntologies" : {
-    "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
-    "@type" : "owl:Ontology",
-    "knora-api:hasClasses" : {
-      "knora-api:Date" : {
-        "@id" : "knora-api:Date",
-        "@type" : "rdfs:Datatype",
-        "rdfs:comment" : "Represents a date as a period with different possible precisions.",
-        "rdfs:label" : "Date literal",
-        "rdfs:subClassOf" : {
-          "@type" : "rdfs:Datatype",
-          "owl:onDatatype" : {
-            "@id" : "xsd:string"
-          },
-          "owl:withRestrictions" : {
-            "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
-          }
-        }
+  "@graph" : [ {
+    "@id" : "knora-api:Date",
+    "@type" : "rdfs:Datatype",
+    "rdfs:comment" : "Represents a date as a period with different possible precisions.",
+    "rdfs:label" : "Date literal",
+    "rdfs:subClassOf" : {
+      "@type" : "rdfs:Datatype",
+      "owl:onDatatype" : {
+        "@id" : "xsd:string"
+      },
+      "owl:withRestrictions" : {
+        "xsd:pattern" : "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
       }
-    },
-    "rdfs:label" : "The knora-api ontology in the simple schema"
-  },
+    }
+  } ],
+  "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
+  "@type" : "owl:Ontology",
+  "rdfs:label" : "The knora-api ontology in the simple schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",

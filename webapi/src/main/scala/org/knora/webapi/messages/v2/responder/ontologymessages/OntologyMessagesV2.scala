@@ -1178,52 +1178,59 @@ object InputOntologyV2 {
             lastModificationDate = lastModificationDate
         )
 
-        val graph = ontologyObj.requireArray("@graph")
+        val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray("@graph")
 
-        // Make a list of (entity definition, entity type IRI)
-        val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
-            case jsonLDObj: JsonLDObject =>
-                val entityType = jsonLDObj.requireString("@type", stringFormatter.toSmartIriWithErr)
-                (jsonLDObj, entityType)
+        maybeGraph match {
+            case Some(graph) =>
+                // Make a list of (entity definition, entity type IRI)
+                val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
+                    case jsonLDObj: JsonLDObject =>
+                        val entityType = jsonLDObj.requireString("@type", stringFormatter.toSmartIriWithErr)
+                        (jsonLDObj, entityType)
 
-            case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
+                    case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
+                }
+
+                val classes: Map[SmartIri, ClassInfoContentV2] = entitiesWithTypes.collect {
+                    case (jsonLDObj, entityType) if OntologyConstants.ClassTypes.contains(entityType.toString) =>
+                        val classInfoContent = ClassInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
+                        classInfoContent.classIri -> classInfoContent
+                }.toMap
+
+                val properties: Map[SmartIri, PropertyInfoContentV2] = entitiesWithTypes.collect {
+                    case (jsonLDObj, entityType) if OntologyConstants.PropertyTypes.contains(entityType.toString) =>
+                        val propertyInfoContent = PropertyInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
+                        propertyInfoContent.propertyIri -> propertyInfoContent
+                }.toMap
+
+                val individuals = entitiesWithTypes.collect {
+                    case (jsonLDObj, entityType) if entityType.toString == OntologyConstants.Owl.NamedIndividual =>
+                        val individualInfoContent = IndividualInfoContentV2.fromJsonLDObject(jsonLDObj)
+                        individualInfoContent.individualIri -> individualInfoContent
+                }.toMap
+
+                // Check whether any entities are in the wrong ontology.
+
+                val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
+                    individuals.values.map(_.individualIri)
+
+                val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
+
+                if (entityIrisInWrongOntology.nonEmpty) {
+                    throw BadRequestException(s"One or more entities are not in ontology $externalOntologyIri: ${entityIrisInWrongOntology.mkString(", ")}")
+                }
+
+                InputOntologyV2(
+                    ontologyMetadata = ontologyMetadata,
+                    classes = classes,
+                    properties = properties,
+                    individuals = individuals
+                )
+
+            case None =>
+                // We could get an ontology with no entities in a test.
+                InputOntologyV2(ontologyMetadata = ontologyMetadata)
         }
-
-        val classes: Map[SmartIri, ClassInfoContentV2] = entitiesWithTypes.collect {
-            case (jsonLDObj, entityType) if OntologyConstants.ClassTypes.contains(entityType.toString) =>
-                val classInfoContent = ClassInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
-                classInfoContent.classIri -> classInfoContent
-        }.toMap
-
-        val properties: Map[SmartIri, PropertyInfoContentV2] = entitiesWithTypes.collect {
-            case (jsonLDObj, entityType) if OntologyConstants.PropertyTypes.contains(entityType.toString) =>
-                val propertyInfoContent = PropertyInfoContentV2.fromJsonLDObject(jsonLDObj, ignoreExtraData)
-                propertyInfoContent.propertyIri -> propertyInfoContent
-        }.toMap
-
-        val individuals = entitiesWithTypes.collect {
-            case (jsonLDObj, entityType) if entityType.toString == OntologyConstants.Owl.NamedIndividual =>
-                val individualInfoContent = IndividualInfoContentV2.fromJsonLDObject(jsonLDObj)
-                individualInfoContent.individualIri -> individualInfoContent
-        }.toMap
-
-        // Check whether any entities are in the wrong ontology.
-
-        val entityIris: Iterable[SmartIri] = classes.values.map(_.classIri) ++ properties.values.map(_.propertyIri) ++
-            individuals.values.map(_.individualIri)
-
-        val entityIrisInWrongOntology = entityIris.filter(_.getOntologyFromEntity != externalOntologyIri)
-
-        if (entityIrisInWrongOntology.nonEmpty) {
-            throw BadRequestException(s"One or more entities are not in ontology $externalOntologyIri: ${entityIrisInWrongOntology.mkString(", ")}")
-        }
-
-        InputOntologyV2(
-            ontologyMetadata = ontologyMetadata,
-            classes = classes,
-            properties = properties,
-            individuals = individuals
-        )
     }
 }
 

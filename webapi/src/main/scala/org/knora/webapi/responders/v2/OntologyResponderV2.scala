@@ -1199,9 +1199,8 @@ class OntologyResponderV2 extends Responder {
                 throw BadRequestException(s"Only one ontology may be queried per request")
             }
 
+            classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
             internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
-            internalClassIris = classIris.map(_.toOntologySchema(InternalSchema))
-            readOntologyInfo = cacheData.ontologies(internalOntologyIri)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1211,12 +1210,10 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-        } yield readOntologyInfo.copy(
-            classes = readOntologyInfo.classes.filterKeys(internalClassIris),
-            properties = Map.empty[SmartIri, ReadPropertyInfoV2],
-            individuals = Map.empty[SmartIri, ReadIndividualInfoV2],
-            userLang = userLang,
-            isWholeOntology = false
+        } yield ReadOntologyV2(
+            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+            classes = classInfoResponse.classInfoMap,
+            userLang = userLang
         )
     }
 
@@ -1237,9 +1234,8 @@ class OntologyResponderV2 extends Responder {
                 throw BadRequestException(s"Only one ontology may be queried per request")
             }
 
+            propertyInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
             internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
-            internalPropertyIris = propertyIris.map(_.toOntologySchema(InternalSchema))
-            readOntologyInfo = cacheData.ontologies(internalOntologyIri)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1249,12 +1245,10 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-        } yield readOntologyInfo.copy(
-            classes = Map.empty[SmartIri, ReadClassInfoV2],
-            properties = readOntologyInfo.properties.filterKeys(internalPropertyIris),
-            individuals = Map.empty[SmartIri, ReadIndividualInfoV2],
-            userLang = userLang,
-            isWholeOntology = false
+        } yield ReadOntologyV2(
+            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+            properties = propertyInfoResponse.propertyInfoMap,
+            userLang = userLang
         )
     }
 
