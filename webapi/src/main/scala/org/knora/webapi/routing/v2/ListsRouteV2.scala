@@ -28,7 +28,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.listsmessages.ListsGetRequestV2
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
+import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, SettingsImpl}
 
 import scala.collection.immutable
 import scala.concurrent.ExecutionContextExecutor
@@ -66,7 +66,7 @@ object ListsRouteV2 extends Authenticator {
                         settings,
                         responderManager,
                         log,
-                        RouteUtilV2.getOntologySchema(requestContext)
+                        ApiV2WithValueObjects
                     )
 
             }
