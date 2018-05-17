@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetRequestV2, 
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.util.{MessageUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
 
 import scala.concurrent.duration._
