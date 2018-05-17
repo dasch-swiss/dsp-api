@@ -272,12 +272,22 @@ class ListsResponderADM extends Responder {
                     val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
 
+                    val rootNodeOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.HasRootNode) match {
+                        case Some(iris: Seq[LiteralV2]) =>
+                            iris.headOption match {
+                                case Some(iri: IriLiteralV2) => Some(iri.value)
+                                case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                            }
+                        case None => None
+                    }
+
                     ListNodeInfoADM (
                         id = nodeIri.toString,
                         name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
                         labels = StringLiteralSequenceV2(labels.toVector),
                         comments = StringLiteralSequenceV2(comments.toVector),
-                        position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
+                        position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value),
+                        rootNode = rootNodeOption
                     )
             }
 

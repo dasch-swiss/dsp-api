@@ -25,12 +25,11 @@ import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.listsmessages.ListsGetRequestV2
+import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, SettingsImpl}
 
-import scala.collection.immutable
 import scala.concurrent.ExecutionContextExecutor
 
 /**
@@ -46,19 +45,38 @@ object ListsRouteV2 extends Authenticator {
         implicit val materializer = ActorMaterializer()
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "lists" / Segments) { lIris: immutable.Seq[String] =>
+        path("v2" / "list" / Segment) { lIri: String =>
             get {
 
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
                     val requestingUser = getUserADM(requestContext)
 
-                    val listIris: Seq[IRI] = lIris.map {
-                        lIri: String =>
-                            stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-                    }
+                    val listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
 
-                    val requestMessage = ListsGetRequestV2(listIris, requestingUser)
+                    val requestMessage = ListsGetRequestV2(listIri, requestingUser)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        ApiV2WithValueObjects
+                    )
+
+            }
+        } ~
+        path("v2" / "node" / Segment) { nIri: String =>
+            get {
+
+                /* return a list (a graph with all list nodes) */
+                requestContext =>
+                    val requestingUser = getUserADM(requestContext)
+
+                    val nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
+
+                    val requestMessage = NodeGetRequestV2(nodeIri, requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

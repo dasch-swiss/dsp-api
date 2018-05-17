@@ -59,7 +59,8 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
                 name = Some("sommer"),
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
                 comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                position = Some(0)
+                position = Some(0),
+                rootNode = None // rootNode is not contained in JSON format
             )
 
             val json = listNodeInfo.toJson.compactPrint

@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.v2.responder.listsmessages
 
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListADM, ListNodeADM}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListADM, ListNodeADM, ListNodeInfoADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
@@ -35,20 +35,40 @@ import org.knora.webapi.util.jsonld._
 sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 
 /**
-  * Requests a list. A successful response will be a [[ListsGetRequestV2]]
+  * Requests a list. A successful response will be a [[ListsGetResponseV2]]
   *
-  * @param listIris       the IRIs of the lists.
+  * @param listIri        the IRI of the list (Iri of the list's root node).
   * @param requestingUser the user making the request.
   */
-case class ListsGetRequestV2(listIris: Seq[IRI],
+case class ListsGetRequestV2(listIri: IRI,
                              requestingUser: UserADM) extends ListsResponderRequestV2
 
+
+trait ListNodeResponseV2 {
+
+    /**
+      * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
+      *
+      * @param iri        the Iri pointing to the string value.
+      * @param stringVals the string values to choose from.
+      * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
+      */
+    def makeMapIriToJSONLDString(iri: IRI, stringVals: StringLiteralSequenceV2, userLang: String, fallbackLang: String): Map[IRI, JsonLDString] = {
+        Map(
+            iri -> stringVals.getPreferredLanguage(userLang, fallbackLang)
+        ).collect {
+            case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
+        }
+    }
+
+}
+
 /**
-  * Represents an answer to a [[ListsGetRequestV2]].
+  * Represents a response to a [[ListsGetRequestV2]].
   *
   * @param list the list the are to be returned.
   */
-case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 {
+case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListNodeResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
@@ -59,21 +79,6 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
         )
 
         /**
-          * Given an Iri and a [[StringLiteralSequenceV2]], gets he string value in the user's preferred language.
-          *
-          * @param iri the Iri pointing to the string value.
-          * @param stringVals the string values to choose from.
-          * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
-          */
-        def makeMapIriToJSONLDString(iri: IRI, stringVals: StringLiteralSequenceV2): Map[IRI, JsonLDString] = {
-            Map(
-                iri -> stringVals.getPreferredLanguage(userLang, fallbackLang)
-            ).collect {
-                case (iri: IRI, Some(strVal: String)) => iri -> JsonLDString(strVal)
-            }
-        }
-
-        /**
           * Given a [[ListNodeADM]], constructs a [[JsonLDObject]].
           *
           * @param node the node to be turned into JSON-LD.
@@ -81,9 +86,9 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
           */
         def makeNode(node: ListNodeADM): JsonLDObject = {
 
-            val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels)
+            val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
 
-            val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments)
+            val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments, userLang, fallbackLang)
 
             val position: Map[IRI, JsonLDInt] = node.position match {
                 case Some(pos: Int) => Map(
@@ -114,9 +119,9 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
             )
         }
 
-        val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, list.listinfo.labels)
+        val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, list.listinfo.labels, userLang, fallbackLang)
 
-        val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, list.listinfo.comments)
+        val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, list.listinfo.comments, userLang, fallbackLang)
 
         val children: Map[IRI, JsonLDArray] = if (list.children.nonEmpty) {
             Map(
@@ -148,6 +153,66 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
 
         JsonLDDocument(body, context)
     }
+}
+
+/**
+  * Requests a list node. A successful response will be a [[NodeGetResponseV2]]
+  *
+  * @param nodeIri the IRI of the node to retrieve.
+  */
+case class NodeGetRequestV2(nodeIri: IRI,
+                            requestingUser: UserADM) extends ListsResponderRequestV2
+
+/**
+  * Represents a response to a [[NodeGetRequestV2]].
+  *
+  * @param node the node to be returned.
+  */
+case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListNodeResponseV2 {
+
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
+
+        val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments, userLang, fallbackLang)
+
+        val position: Map[IRI, JsonLDInt] = node.position match {
+            case Some(pos: Int) => Map(
+                OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDInt(pos)
+            )
+
+            case None => Map.empty[IRI, JsonLDInt]
+        }
+
+        val rootNode = node.rootNode match {
+            case Some(rNode: IRI) =>
+                Map(
+                    OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDUtil.iriToJsonLDObject(rNode)
+                )
+            case None => Map.empty[IRI, JsonLDString]
+        }
+
+        val body = JsonLDObject(
+            Map(
+                "@id" -> JsonLDString(node.id),
+                "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString)
+            ) ++ rootNode ++ label ++ comment ++ position
+        )
+
+        val context = JsonLDObject(Map(
+            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
+            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
+            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+            "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
+            "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
+        ))
+
+        JsonLDDocument(body, context)
+    }
 
 }
+
+
 

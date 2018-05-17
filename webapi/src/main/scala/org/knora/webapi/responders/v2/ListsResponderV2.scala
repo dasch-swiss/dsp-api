@@ -23,9 +23,9 @@ import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM}
+import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ListNodeInfoGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetRequestV2, ListsGetResponseV2}
+import org.knora.webapi.messages.v2.responder.listsmessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 
@@ -44,17 +44,24 @@ class ListsResponderV2 extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ListsGetRequestV2(listIris, userProfile) => future2Message(sender(), getList(listIris, userProfile), log)
+        case ListsGetRequestV2(listIri, userProfile) => future2Message(sender(), getList(listIri, userProfile), log)
+        case NodeGetRequestV2(nodeIri, userProfile) => future2Message(sender(), getNode(nodeIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    def getList(listIris: Seq[IRI], userProfile: UserADM): Future[ListsGetResponseV2] = {
+    def getList(listIri: IRI, userProfile: UserADM): Future[ListsGetResponseV2] = {
 
         for {
-            listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIris.head, requestingUser = userProfile)).mapTo[ListGetResponseADM]
+            listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIri, requestingUser = userProfile)).mapTo[ListGetResponseADM]
 
         } yield ListsGetResponseV2(list = listResponseADM.list, userProfile.lang, settings.fallbackLanguage)
+    }
 
+    def getNode(nodeIri: IRI, userProfile: UserADM) = {
+
+        for {
+            nodeResponse: ListNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(iri = nodeIri, requestingUser = userProfile)).mapTo[ListNodeInfoGetResponseADM]
+        } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, userProfile.lang, settings.fallbackLanguage)
 
     }
 }

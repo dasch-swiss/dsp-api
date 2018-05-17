@@ -315,8 +315,9 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
   * @param labels   the labels of the node in all available languages.
   * @param comments the comments attached to the node in all available languages.
   * @param position the position of the node among its siblings (optional).
+  * @param rootNode the Iri of the root node, if this is not the root node.
   */
-case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int]) {
+case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int], rootNode: Option[IRI]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -328,7 +329,8 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
             name = name,
             labels = labels.sortByStringValue,
             comments = comments.sortByStringValue,
-            position = position
+            position = position,
+            rootNode = rootNode
         )
     }
 
@@ -513,7 +515,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 name = name,
                 labels = StringLiteralSequenceV2(labels.toVector),
                 comments = StringLiteralSequenceV2(comments.toVector),
-                position = position
+                position = position,
+                rootNode = None
             )
 
         }
