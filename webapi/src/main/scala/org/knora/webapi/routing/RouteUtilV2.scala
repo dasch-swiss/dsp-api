@@ -215,16 +215,13 @@ object RouteUtilV2 {
                             set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
                         turtleWriter
 
-                    case RdfMediaTypes.`application/rdf+xml` | RdfMediaTypes.`text/html` =>
-                        new RDFXMLPrettyWriter(stringWriter)
+                    case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
 
                     case _ => throw BadRequestException(s"Media type $requestedMediaType not implemented")
                 }
 
                 rdfParser.setRDFHandler(rdfWriter)
                 rdfParser.parse(stringReader, "")
-
-                // TODO: If HTML was requested, convert the XML to HTML.
 
                 HttpResponse(
                     status = StatusCodes.OK,

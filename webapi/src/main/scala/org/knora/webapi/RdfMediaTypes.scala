@@ -53,8 +53,6 @@ object RdfMediaTypes {
 
     val `text/xml`: MediaType.WithOpenCharset = MediaTypes.`text/xml`
 
-    val `text/html`: MediaType.WithOpenCharset = MediaTypes.`text/html`
-
     val registry: Map[String, MediaType.NonBinary] = Set(
         `application/json`,
         `text/turtle`,
