@@ -59,57 +59,6 @@ object RouteUtilV2 {
       */
     val COMPLEX_SCHEMA_NAME: String = "complex"
 
-    private sealed trait ResponseFormat {
-        def toContentType: ContentType.NonBinary
-    }
-
-    private case object JsonResponseFormat extends ResponseFormat {
-        override def toString: String = MediaTypes.`application/json`.toString
-
-        def toContentType: ContentType.NonBinary = MediaTypes.`application/json`
-    }
-
-    private case object JsonLDResponseFormat extends ResponseFormat {
-        // Akka HTTP doesn't have a marshaller for application/ld+json, so we use the application/json MIME type instead.
-
-        override def toString: String = JsonResponseFormat.toString // "application/ld+json"
-
-        def toContentType: ContentType.NonBinary = JsonResponseFormat.toContentType // MediaType.customWithFixedCharset("application", "ld+json", HttpCharsets.`UTF-8`).toContentType
-    }
-
-    private case object TurtleResponseFormat extends ResponseFormat {
-        override def toString: String = "text/turtle"
-
-        def toContentType: ContentType.NonBinary = MediaType.customWithFixedCharset("text", "turtle", HttpCharsets.`UTF-8`).toContentType
-    }
-
-    private case object ApplicationXmlResponseFormat extends ResponseFormat {
-        override def toString: String = MediaTypes.`application/xml`.toString
-
-        def toContentType: ContentType.NonBinary = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
-    }
-
-    private case object TextXmlResponseFormat extends ResponseFormat {
-        override def toString: String = MediaTypes.`text/xml`.toString
-
-        def toContentType: ContentType.NonBinary = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)
-    }
-
-    private case object HtmlResponseFormat extends ResponseFormat {
-        override def toString: String = MediaTypes.`text/html`.toString
-
-        def toContentType: ContentType.NonBinary = MediaTypes.`text/html`.toContentType(HttpCharsets.`UTF-8`)
-    }
-
-    private val MimeTypesToResponseFormats: Map[String, ResponseFormat] = Map(
-        JsonResponseFormat.toString -> JsonResponseFormat,
-        JsonLDResponseFormat.toString -> JsonLDResponseFormat,
-        TurtleResponseFormat.toString -> TurtleResponseFormat,
-        ApplicationXmlResponseFormat.toString -> ApplicationXmlResponseFormat,
-        TextXmlResponseFormat.toString -> TextXmlResponseFormat,
-        HtmlResponseFormat.toString -> HtmlResponseFormat
-    )
-
     /**
       * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
       * either in the HTTP header [[SCHEMA_HEADER]] or in the URL parameter [[SCHEMA_PARAM]].
@@ -184,28 +133,29 @@ object RouteUtilV2 {
             // Get the client's HTTP Accept header, if provided.
             maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
 
-            responseFormat: ResponseFormat = maybeAcceptHeader match {
+            // Determine the requested media type, or use JSON-LD as the default.
+            requestedMediaType: MediaType.NonBinary = maybeAcceptHeader match {
                 case Some(acceptHeader) =>
-                    // Does it specify a MIME type we support?
-
+                    // Does the Accept header specify a media type we support?
                     val accept: Seq[String] = acceptHeader.value.split(',').map(_.trim)
 
-                    accept.filter(MimeTypesToResponseFormats.keySet).map(MimeTypesToResponseFormats).headOption match {
-                        case Some(requestedResponseFormat) =>
+                    accept.filter(RdfMediaTypes.registry.keySet).map(RdfMediaTypes.registry).headOption match {
+                        case Some(requested) =>
                             // Yes. Return the response in that format.
-                            requestedResponseFormat
+                            requested
 
                         case None =>
                             // No. Return JSON-LD.
-                            JsonLDResponseFormat
+                            RdfMediaTypes.`application/ld+json`
                     }
 
-                case None => JsonLDResponseFormat
+                case None => RdfMediaTypes.`application/ld+json`
             }
 
+            // Format the response message as an HTTP response.
             formattedResponse = formatResponse(
                 knoraResponse = knoraResponse,
-                responseFormat = responseFormat,
+                requestedMediaType = requestedMediaType,
                 responseSchema = responseSchema,
                 settings = settings
             )
@@ -216,34 +166,48 @@ object RouteUtilV2 {
         requestContext.complete(httpResponse)
     }
 
+    /**
+      * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
+      *
+      * @param knoraResponse the response message.
+      * @param requestedMediaType the requested media type.
+      * @param responseSchema the response schema.
+      * @param settings the application settings.
+      * @return an HTTP response.
+      */
     private def formatResponse(knoraResponse: KnoraResponseV2,
-                               responseFormat: ResponseFormat,
+                               requestedMediaType: MediaType.NonBinary,
                                responseSchema: ApiV2Schema,
                                settings: SettingsImpl): HttpResponse = {
+        // Find the most specific media type that is compatible with the one requested.
+        val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(requestedMediaType)
+
+        // Convert the requested media type to a UTF-8 content type.
+        val contentType = RdfMediaTypes.toUTF8ContentType(requestedMediaType)
+
         // Generate a JSON-LD data structure from the API response message.
         val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
 
         // Is the response format JSON or JSON-LD?
-        responseFormat match {
-            case JsonResponseFormat | JsonLDResponseFormat =>
+        specificMediaType match {
+            case RdfMediaTypes.`application/ld+json` =>
                 // Yes. Pretty-print the JSON-LD and return it.
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
-                        responseFormat.toContentType,
+                        contentType,
                         jsonLDDocument.toPrettyString
                     )
                 )
 
             case _ =>
                 // No, some other format was requested. Convert the JSON-LD to the requested format.
-
                 val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
                 val stringReader = new StringReader(jsonLDDocument.toCompactString)
                 val stringWriter = new StringWriter()
 
-                val rdfWriter: RDFWriter = responseFormat match {
-                    case TurtleResponseFormat =>
+                val rdfWriter: RDFWriter = specificMediaType match {
+                    case RdfMediaTypes.`text/turtle` =>
                         val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
 
                         turtleWriter.getWriterConfig.
@@ -263,7 +227,7 @@ object RouteUtilV2 {
                 HttpResponse(
                     status = StatusCodes.OK,
                     entity = HttpEntity(
-                        responseFormat.toContentType,
+                        contentType,
                         stringWriter.toString
                     )
                 )

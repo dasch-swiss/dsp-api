@@ -1,18 +1,16 @@
 package org.knora.webapi.e2e.v2
 
-import java.io.{File, StringReader}
+import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.headers.Accept
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, LoadOntologiesRequestV2}
@@ -65,10 +63,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val rdfDataObjects = List()
-
-    private def parseTurtle(turtleStr: String): Model = {
-        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
-    }
 
     private val allOntologyMetadataJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.json")))
     private val allOntologyMetadataTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.ttl")))
@@ -124,20 +118,6 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
-    private val `text/turtle`: MediaType = MediaType.customWithFixedCharset(
-            mainType = "text",
-            subType = "turtle",
-            charset = HttpCharsets.`UTF-8`,
-            fileExtensions = List("ttl")
-        )
-
-    private val `application/rdf+xml`: MediaType = MediaType.customWithFixedCharset(
-            mainType = "application",
-            subType = "rdf+xml",
-            charset = HttpCharsets.`UTF-8`,
-            fileExtensions = List("rdf")
-        )
-
     private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
         val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
 
@@ -154,13 +134,13 @@ class OntologyV2R2RSpec extends R2RSpec {
     "The Ontologies v2 Endpoint" should {
         "serve metadata for all ontologies in JSON-LD" in {
             Get(s"/v2/ontologies/metadata") ~> ontologiesPath ~> check {
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == allOntologyMetadataJsonLD)
             }
         }
 
         "serve metadata for all ontologies in Turtle" in {
-            Get(s"/v2/ontologies/metadata").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/metadata").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == allOntologyMetadataTurtle)
             }
         }
@@ -169,7 +149,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val projectIri = URLEncoder.encode(imagesProjectIri, "UTF-8")
 
             Get(s"/v2/ontologies/metadata/$projectIri") ~> ontologiesPath ~> check {
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == imagesOntologyMetadataJsonLD)
             }
         }
@@ -177,7 +157,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve metadata for the ontologies of one project in Turtle" in {
             val projectIri = URLEncoder.encode(imagesProjectIri, "UTF-8")
 
-            Get(s"/v2/ontologies/metadata/$projectIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/metadata/$projectIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == imagesOntologyMetadataTurtle)
             }
         }
@@ -186,7 +166,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiOntologySimpleJsonLD)
             }
         }
@@ -194,20 +174,20 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve the knora-api simple ontology via the allentities route in Turtle" in {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2", "UTF-8")
 
-            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiOntologySimpleTurtle)
             }
         }
 
         "serve the knora-api simple ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/knora-api/simple/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiOntologySimpleJsonLD)
             }
         }
 
         "serve the knora-api simple ontology via the /ontology route in Turtle" in {
-            Get("/ontology/knora-api/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/knora-api/simple/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiOntologySimpleTurtle)
             }
         }
@@ -216,7 +196,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiWithValueObjectsJsonLD)
             }
         }
@@ -224,59 +204,59 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve the knora-api with value objects ontology via the /ontologies/allentities route in Turtle" in {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2", "UTF-8")
 
-            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsTurtle)
             }
         }
 
         "serve the knora-api with value objects ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/knora-api/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiWithValueObjectsJsonLD)
             }
         }
 
         "serve the knora-api with value objects ontology via the /ontology route in Turtle" in {
-            Get("/ontology/knora-api/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/knora-api/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsTurtle)
             }
         }
 
         "serve the salsah-gui ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == salsahGuiJsonLD)
             }
         }
 
         "serve the salsah-gui ontology via the /ontology route in Turtle" in {
-            Get("/ontology/salsah-gui/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/salsah-gui/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == salsahGuiTurtle)
             }
         }
 
         "serve the standoff ontology via the /ontology route using the simple schema in JSON-LD" in {
             Get("/ontology/standoff/simple/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == standoffSimpleJsonLD)
             }
         }
 
         "serve the standoff ontology via the /ontology route using the simple schema in Turtle" in {
-            Get("/ontology/standoff/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/standoff/simple/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == standoffSimpleTurtle)
             }
         }
 
         "serve the standoff ontology via the /ontology route using the value object schema in JSON-LD" in {
             Get("/ontology/standoff/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == standoffWithValueObjectsJsonLD)
             }
         }
 
         "serve the standoff ontology via the /ontology route using the value object schema in Turtle" in {
-            Get("/ontology/standoff/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/standoff/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == standoffWithValueObjectsTurtle)
             }
         }
@@ -285,7 +265,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaOntologySimpleJsonLD)
             }
         }
@@ -293,20 +273,20 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a project-specific ontology via the /ontologies/allentities route using the simple schema in Turtle" in {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
 
-            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaOntologySimpleTurtle)
             }
         }
 
         "serve a project-specific ontology via the /ontology route using the simple schema in JSON-LD" in {
             Get("/ontology/0803/incunabula/simple/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaOntologySimpleJsonLD)
             }
         }
 
         "serve a project-specific ontology via the /ontology route using the simple schema in Turtle" in {
-            Get("/ontology/0803/incunabula/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/0803/incunabula/simple/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaOntologySimpleTurtle)
             }
         }
@@ -315,7 +295,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaOntologyWithValueObjectsJsonLD)
             }
         }
@@ -323,20 +303,20 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a project-specific ontology via the /ontologies/allentities route using the value object schema in Turtle" in {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
 
-            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaOntologyWithValueObjectsTurtle)
             }
         }
 
         "serve a project-specific ontology via the /ontology route using the value object schema in JSON-LD" in {
             Get("/ontology/0803/incunabula/v2") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaOntologyWithValueObjectsJsonLD)
             }
         }
 
         "serve a project-specific ontology via the /ontology route using the value object schema in Turtle" in {
-            Get("/ontology/0803/incunabula/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get("/ontology/0803/incunabula/v2").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaOntologyWithValueObjectsTurtle)
             }
         }
@@ -345,7 +325,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiDateJsonLD)
             }
         }
@@ -353,7 +333,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a knora-api custom datatype from the simple schema in Turtle" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
 
-            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiDateTurtle)
             }
         }
@@ -362,7 +342,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiDateValueJsonLD)
             }
         }
@@ -370,7 +350,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a knora-api value class from the value object schema in Turtle" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
 
-            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiDateValueTurtle)
             }
         }
@@ -379,7 +359,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiSimpleHasColorJsonLD)
             }
         }
@@ -387,7 +367,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a knora-api property from the simple schema in Turtle" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
 
-            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiSimpleHasColorTurtle)
             }
         }
@@ -396,7 +376,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == knoraApiWithValueObjectsHasColorJsonLD)
             }
         }
@@ -404,7 +384,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a knora-api property from the value object schema in Turtle" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
 
-            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsHasColorTurtle)
             }
         }
@@ -413,7 +393,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaSimplePubDateJsonLD)
             }
         }
@@ -421,7 +401,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a project-specific property using the simple schema in Turtle" in {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
 
-            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaSimplePubDateTurtle)
             }
         }
@@ -430,7 +410,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaWithValueObjectsPubDateJsonLD)
             }
         }
@@ -438,7 +418,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         "serve a project-specific property using the value object schema in Turtle" in {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
 
-            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaWithValueObjectsPubDateTurtle)
             }
         }
@@ -448,7 +428,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$pageIri/$bookIri") ~> ontologiesPath ~> check {
-                val responseJson = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson = JsonParser(responseAs[String])
                 assert(responseJson == incunabulaPageAndBookWithValueObjectsJsonLD)
             }
         }
@@ -457,7 +437,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
 
-            Get(s"/v2/ontologies/classes/$pageIri/$bookIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+            Get(s"/v2/ontologies/classes/$pageIri/$bookIri").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> ontologiesPath ~> check {
                 assert(parseTurtle(responseAs[String]) == incunabulaPageAndBookWithValueObjectsTurtle)
             }
         }
