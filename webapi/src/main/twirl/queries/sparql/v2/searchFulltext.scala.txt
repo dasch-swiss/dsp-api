@@ -31,6 +31,7 @@
  * @param searchTerms search terms.
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
+ * @param limitToStandoffClass limit the search to given standoff class.
  * @param separator the separator to be used in aggregation functions.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
@@ -40,6 +41,7 @@
   searchTerms: CombineSearchTerms,
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
+  limitToStandoffClass: Option[IRI],
   separator: Option[Char],
   limit: Int,
   offset: Int,
@@ -50,6 +52,7 @@
         queries.sparql.v2.txt.searchFulltextGraphDB(searchTerms = searchTerms,
                                                     limitToProject = limitToProject,
                                                     limitToResourceClass = limitToResourceClass,
+                                                    limitToStandoffClass = limitToStandoffClass,
                                                     separator = separator,
                                                     limit = limit,
                                                     offset = offset,
@@ -61,6 +64,7 @@
                                                      searchTerms = searchTerms,
                                                      limitToProject = limitToProject,
                                                      limitToResourceClass = limitToResourceClass,
+                                                     limitToStandoffClass = limitToStandoffClass,
                                                      separator = separator,
                                                      limit = limit,
                                                      offset = offset,
