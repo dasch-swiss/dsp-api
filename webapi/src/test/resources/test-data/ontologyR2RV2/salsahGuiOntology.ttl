@@ -1,0 +1,67 @@
+@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://api.knora.org/ontology/salsah-gui/v2> a owl:Ontology;
+  knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
+  rdfs:label "The salsah-gui ontology" .
+
+salsah-gui:Checkbox a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Guielement a owl:Class .
+
+salsah-gui:Colorpicker a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "ncolors:integer" .
+
+salsah-gui:Date a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Fileupload a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Geometry a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Geonames a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Interval a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:List a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "hlist(required):iri" .
+
+salsah-gui:Pulldown a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "hlist(required):iri" .
+
+salsah-gui:Radio a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "hlist(required):iri" .
+
+salsah-gui:Richtext a salsah-gui:Guielement, owl:NamedIndividual .
+
+salsah-gui:Searchbox a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "numprops:integer" .
+
+salsah-gui:SimpleText a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "maxlength:integer", "size:integer" .
+
+salsah-gui:Slider a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "max(required):decimal", "min(required):decimal" .
+
+salsah-gui:Spinbox a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "max:decimal", "min:decimal" .
+
+salsah-gui:Textarea a salsah-gui:Guielement, owl:NamedIndividual;
+  salsah-gui:guiAttributeDefinition "cols:integer", "rows:integer", "width:percent",
+    "wrap:string(soft|hard)" .
+
+salsah-gui:guiAttribute a owl:DatatypeProperty;
+  knora-api:objectType xsd:string .
+
+salsah-gui:guiAttributeDefinition a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType salsah-gui:Guielement .
+
+salsah-gui:guiElement a owl:ObjectProperty .
+
+salsah-gui:guiOrder a owl:DatatypeProperty;
+  knora-api:objectType xsd:nonNegativeInteger;
+  knora-api:subjectType owl:Restriction .

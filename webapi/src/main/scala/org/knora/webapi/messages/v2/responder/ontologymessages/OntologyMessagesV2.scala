@@ -1263,7 +1263,8 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
 
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiOntologyPrefixExpansion),
-            "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion)
+            "rdfs" -> JsonLDString(OntologyConstants.Rdfs.RdfsPrefixExpansion),
+            "owl" -> JsonLDString(OntologyConstants.Owl.OwlPrefixExpansion)
         ))
 
         val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))

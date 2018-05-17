@@ -1,15 +1,18 @@
 package org.knora.webapi.e2e.v2
 
-import java.io.File
+import java.io.{File, StringReader}
 import java.net.URLEncoder
 import java.time.Instant
 
 import akka.actor.{ActorSystem, Props}
+import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
+import org.eclipse.rdf4j.model.Model
+import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, LoadOntologiesRequestV2}
@@ -63,28 +66,77 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val rdfDataObjects = List()
 
-    private val allOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.json")))
-    private val imagesOntologyMetadata: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyMetadata.json")))
-    private val knoraApiOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
-    private val knoraApiWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
-    private val salsahGui: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
-    private val standoffSimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.json")))
-    private val standoffWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.json")))
-    private val incunabulaOntologySimple: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
-    private val incunabulaOntologyWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
-    private val knoraApiDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
-    private val knoraApiDateValue: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDateValue.json")))
-    private val knoraApiSimpleHasColor: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiSimpleHasColor.json")))
-    private val knoraApiWithValueObjectsHasColor: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjectsHasColor.json")))
-    private val incunabulaSimplePubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaSimplePubDate.json")))
-    private val incunabulaWithValueObjectsPubDate: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaWithValueObjectsPubDate.json")))
-    private val incunabulaPageAndBookWithValueObjects: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaPageAndBookWithValueObjects.json")))
+    private def parseTurtle(turtleStr: String): Model = {
+        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
+    }
+
+    private val allOntologyMetadataJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.json")))
+    private val allOntologyMetadataTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/allOntologyMetadata.ttl")))
+
+    private val imagesOntologyMetadataJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyMetadata.json")))
+    private val imagesOntologyMetadataTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/imagesOntologyMetadata.ttl")))
+
+    private val knoraApiOntologySimpleJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.json")))
+    private val knoraApiOntologySimpleTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiOntologySimple.ttl")))
+
+    private val knoraApiWithValueObjectsJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.json")))
+    private val knoraApiWithValueObjectsTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjects.ttl")))
+
+    private val salsahGuiJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.json")))
+    private val salsahGuiTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/salsahGuiOntology.ttl")))
+
+    private val standoffSimpleJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.json")))
+    private val standoffSimpleTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologySimple.ttl")))
+
+    private val standoffWithValueObjectsJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.json")))
+    private val standoffWithValueObjectsTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/standoffOntologyWithValueObjects.ttl")))
+
+    private val incunabulaOntologySimpleJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.json")))
+    private val incunabulaOntologySimpleTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologySimple.ttl")))
+
+    private val incunabulaOntologyWithValueObjectsJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.json")))
+    private val incunabulaOntologyWithValueObjectsTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaOntologyWithValueObjects.ttl")))
+
+    private val knoraApiDateJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.json")))
+    private val knoraApiDateTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDate.ttl")))
+
+    private val knoraApiDateValueJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDateValue.json")))
+    private val knoraApiDateValueTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiDateValue.ttl")))
+
+    private val knoraApiSimpleHasColorJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiSimpleHasColor.json")))
+    private val knoraApiSimpleHasColorTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiSimpleHasColor.ttl")))
+
+    private val knoraApiWithValueObjectsHasColorJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjectsHasColor.json")))
+    private val knoraApiWithValueObjectsHasColorTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/knoraApiWithValueObjectsHasColor.ttl")))
+
+    private val incunabulaSimplePubDateJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaSimplePubDate.json")))
+    private val incunabulaSimplePubDateTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaSimplePubDate.ttl")))
+
+    private val incunabulaWithValueObjectsPubDateJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaWithValueObjectsPubDate.json")))
+    private val incunabulaWithValueObjectsPubDateTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaWithValueObjectsPubDate.ttl")))
+
+    private val incunabulaPageAndBookWithValueObjectsJsonLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaPageAndBookWithValueObjects.json")))
+    private val incunabulaPageAndBookWithValueObjectsTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/ontologyR2RV2/incunabulaPageAndBookWithValueObjects.ttl")))
 
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
 
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+
+    private val `text/turtle`: MediaType = MediaType.customWithFixedCharset(
+            mainType = "text",
+            subType = "turtle",
+            charset = HttpCharsets.`UTF-8`,
+            fileExtensions = List("ttl")
+        )
+
+    private val `application/rdf+xml`: MediaType = MediaType.customWithFixedCharset(
+            mainType = "application",
+            subType = "rdf+xml",
+            charset = HttpCharsets.`UTF-8`,
+            fileExtensions = List("rdf")
+        )
 
     private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
         val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
@@ -100,168 +152,313 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "The Ontologies v2 Endpoint" should {
-        "serve metadata for all ontologies" in {
+        "serve metadata for all ontologies in JSON-LD" in {
             Get(s"/v2/ontologies/metadata") ~> ontologiesPath ~> check {
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == allOntologyMetadata)
+                assert(responseJson == allOntologyMetadataJsonLD)
             }
         }
 
-        "serve metadata for the ontologies of one project" in {
+        "serve metadata for all ontologies in Turtle" in {
+            Get(s"/v2/ontologies/metadata").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == allOntologyMetadataTurtle)
+            }
+        }
+
+        "serve metadata for the ontologies of one project in JSON-LD" in {
             val projectIri = URLEncoder.encode(imagesProjectIri, "UTF-8")
 
             Get(s"/v2/ontologies/metadata/$projectIri") ~> ontologiesPath ~> check {
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == imagesOntologyMetadata)
+                assert(responseJson == imagesOntologyMetadataJsonLD)
             }
         }
 
-        "serve the knora-api simple ontology as JSON-LD via the allentities route" in {
+        "serve metadata for the ontologies of one project in Turtle" in {
+            val projectIri = URLEncoder.encode(imagesProjectIri, "UTF-8")
+
+            Get(s"/v2/ontologies/metadata/$projectIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == imagesOntologyMetadataTurtle)
+            }
+        }
+
+        "serve the knora-api simple ontology via the allentities route in JSON-LD" in {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiOntologySimple)
+                assert(responseJson == knoraApiOntologySimpleJsonLD)
             }
         }
 
-        "serve the knora-api simple ontology as JSON-LD via the /ontology route" in {
+        "serve the knora-api simple ontology via the allentities route in Turtle" in {
+            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2", "UTF-8")
+
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiOntologySimpleTurtle)
+            }
+        }
+
+        "serve the knora-api simple ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/knora-api/simple/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiOntologySimple)
+                assert(responseJson == knoraApiOntologySimpleJsonLD)
             }
         }
 
-        "serve the knora-api with value objects ontology as JSON-LD via the /ontologies/allentities route" in {
+        "serve the knora-api simple ontology via the /ontology route in Turtle" in {
+            Get("/ontology/knora-api/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiOntologySimpleTurtle)
+            }
+        }
+
+        "serve the knora-api with value objects ontology via the /ontologies/allentities route in JSON-LD" in {
             val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiWithValueObjects)
+                assert(responseJson == knoraApiWithValueObjectsJsonLD)
             }
         }
 
-        "serve the knora-api with value objects ontology as JSON-LD via the /ontology route" in {
+        "serve the knora-api with value objects ontology via the /ontologies/allentities route in Turtle" in {
+            val ontologyIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2", "UTF-8")
+
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsTurtle)
+            }
+        }
+
+        "serve the knora-api with value objects ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/knora-api/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiWithValueObjects)
+                assert(responseJson == knoraApiWithValueObjectsJsonLD)
             }
         }
 
-        "serve the salsah-gui ontology as JSON-LD via the /ontology route" in {
+        "serve the knora-api with value objects ontology via the /ontology route in Turtle" in {
+            Get("/ontology/knora-api/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsTurtle)
+            }
+        }
+
+        "serve the salsah-gui ontology via the /ontology route in JSON-LD" in {
             Get("/ontology/salsah-gui/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == salsahGui)
+                assert(responseJson == salsahGuiJsonLD)
             }
         }
 
-        "serve the standoff ontology as JSON-LD via the /ontology route using the simple schema" in {
+        "serve the salsah-gui ontology via the /ontology route in Turtle" in {
+            Get("/ontology/salsah-gui/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == salsahGuiTurtle)
+            }
+        }
+
+        "serve the standoff ontology via the /ontology route using the simple schema in JSON-LD" in {
             Get("/ontology/standoff/simple/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == standoffSimple)
+                assert(responseJson == standoffSimpleJsonLD)
             }
         }
 
-        "serve the standoff ontology as JSON-LD via the /ontology route using the value object schema" in {
+        "serve the standoff ontology via the /ontology route using the simple schema in Turtle" in {
+            Get("/ontology/standoff/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == standoffSimpleTurtle)
+            }
+        }
+
+        "serve the standoff ontology via the /ontology route using the value object schema in JSON-LD" in {
             Get("/ontology/standoff/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == standoffWithValueObjects)
+                assert(responseJson == standoffWithValueObjectsJsonLD)
             }
         }
 
-        "serve a project-specific ontology as JSON-LD via the /ontologies/allentities route using the simple schema" in {
+        "serve the standoff ontology via the /ontology route using the value object schema in Turtle" in {
+            Get("/ontology/standoff/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == standoffWithValueObjectsTurtle)
+            }
+        }
+
+        "serve a project-specific ontology via the /ontologies/allentities route using the simple schema in JSON-LD" in {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaOntologySimple)
+                assert(responseJson == incunabulaOntologySimpleJsonLD)
             }
         }
 
-        "serve a project-specific ontology as JSON-LD via the /ontology route using the simple schema" in {
+        "serve a project-specific ontology via the /ontologies/allentities route using the simple schema in Turtle" in {
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2", "UTF-8")
+
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaOntologySimpleTurtle)
+            }
+        }
+
+        "serve a project-specific ontology via the /ontology route using the simple schema in JSON-LD" in {
             Get("/ontology/0803/incunabula/simple/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaOntologySimple)
+                assert(responseJson == incunabulaOntologySimpleJsonLD)
             }
         }
 
-        "serve a project-specific ontology as JSON-LD via the /ontologies/allentities route using the value object schema" in {
+        "serve a project-specific ontology via the /ontology route using the simple schema in Turtle" in {
+            Get("/ontology/0803/incunabula/simple/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaOntologySimpleTurtle)
+            }
+        }
+
+        "serve a project-specific ontology via the /ontologies/allentities route using the value object schema in JSON-LD" in {
             val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
 
             Get(s"/v2/ontologies/allentities/$ontologyIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaOntologyWithValueObjects)
+                assert(responseJson == incunabulaOntologyWithValueObjectsJsonLD)
             }
         }
 
-        "serve a project-specific ontology as JSON-LD via the /ontology route using the value object schema" in {
+        "serve a project-specific ontology via the /ontologies/allentities route using the value object schema in Turtle" in {
+            val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2", "UTF-8")
+
+            Get(s"/v2/ontologies/allentities/$ontologyIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaOntologyWithValueObjectsTurtle)
+            }
+        }
+
+        "serve a project-specific ontology via the /ontology route using the value object schema in JSON-LD" in {
             Get("/ontology/0803/incunabula/v2") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaOntologyWithValueObjects)
+                assert(responseJson == incunabulaOntologyWithValueObjectsJsonLD)
             }
         }
 
-        "serve a knora-api custom datatype as JSON-LD from the simple schema" in {
+        "serve a project-specific ontology via the /ontology route using the value object schema in Turtle" in {
+            Get("/ontology/0803/incunabula/v2").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaOntologyWithValueObjectsTurtle)
+            }
+        }
+
+        "serve a knora-api custom datatype from the simple schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiDate)
+                assert(responseJson == knoraApiDateJsonLD)
             }
         }
 
-        "serve a knora-api value class as JSON-LD from the value object schema" in {
+        "serve a knora-api custom datatype from the simple schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#Date", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiDateTurtle)
+            }
+        }
+
+        "serve a knora-api value class from the value object schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiDateValue)
+                assert(responseJson == knoraApiDateValueJsonLD)
             }
         }
 
-        "serve a knora-api property as JSON-LD from the simple schema" in {
+        "serve a knora-api value class from the value object schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#DateValue", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiDateValueTurtle)
+            }
+        }
+
+        "serve a knora-api property from the simple schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiSimpleHasColor)
+                assert(responseJson == knoraApiSimpleHasColorJsonLD)
             }
         }
 
-        "serve a knora-api property as JSON-LD from the value object schema" in {
+        "serve a knora-api property from the simple schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/simple/v2#hasColor", "UTF-8")
+
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiSimpleHasColorTurtle)
+            }
+        }
+
+        "serve a knora-api property from the value object schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == knoraApiWithValueObjectsHasColor)
+                assert(responseJson == knoraApiWithValueObjectsHasColorJsonLD)
             }
         }
 
-        "serve a project-specific property as JSON-LD using the simple schema" in {
+        "serve a knora-api property from the value object schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://api.knora.org/ontology/knora-api/v2#hasColor", "UTF-8")
+
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == knoraApiWithValueObjectsHasColorTurtle)
+            }
+        }
+
+        "serve a project-specific property using the simple schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaSimplePubDate)
+                assert(responseJson == incunabulaSimplePubDateJsonLD)
             }
         }
 
-        "serve a project-specific property as JSON-LD using the value object schema" in {
+        "serve a project-specific property using the simple schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate", "UTF-8")
+
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaSimplePubDateTurtle)
+            }
+        }
+
+        "serve a project-specific property using the value object schema in JSON-LD" in {
             val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
 
             Get(s"/v2/ontologies/properties/$classIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaWithValueObjectsPubDate)
+                assert(responseJson == incunabulaWithValueObjectsPubDateJsonLD)
             }
         }
 
-        "serve two project-specific classes as JSON-LD using the value object schema" in {
+        "serve a project-specific property using the value object schema in Turtle" in {
+            val classIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
+
+            Get(s"/v2/ontologies/properties/$classIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaWithValueObjectsPubDateTurtle)
+            }
+        }
+
+        "serve two project-specific classes using the value object schema in JSON-LD" in {
             val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
             val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
 
             Get(s"/v2/ontologies/classes/$pageIri/$bookIri") ~> ontologiesPath ~> check {
                 val responseJson = AkkaHttpUtils.httpResponseToJson(response)
-                assert(responseJson == incunabulaPageAndBookWithValueObjects)
+                assert(responseJson == incunabulaPageAndBookWithValueObjectsJsonLD)
+            }
+        }
+
+        "serve two project-specific classes using the value object schema in Turtle" in {
+            val pageIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
+            val bookIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
+
+            Get(s"/v2/ontologies/classes/$pageIri/$bookIri").addHeader(Accept(`text/turtle`)) ~> ontologiesPath ~> check {
+                assert(parseTurtle(responseAs[String]) == incunabulaPageAndBookWithValueObjectsTurtle)
             }
         }
 
