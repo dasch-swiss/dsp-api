@@ -64,4 +64,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     protected def parseTurtle(turtleStr: String): Model = {
         Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
     }
+
+    protected def parseRdfXml(rdfXmlStr: String): Model = {
+        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+    }
 }

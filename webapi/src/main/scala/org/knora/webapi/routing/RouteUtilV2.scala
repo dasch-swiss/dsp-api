@@ -28,7 +28,8 @@ import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
+import org.eclipse.rdf4j.rio._
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.JsonLDDocument
@@ -202,6 +203,7 @@ object RouteUtilV2 {
 
             case _ =>
                 // No, some other format was requested. Convert the JSON-LD to the requested format.
+
                 val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
                 val stringReader = new StringReader(jsonLDDocument.toCompactString)
                 val stringWriter = new StringWriter()
@@ -209,20 +211,20 @@ object RouteUtilV2 {
                 val rdfWriter: RDFWriter = specificMediaType match {
                     case RdfMediaTypes.`text/turtle` =>
                         val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
-
-                        turtleWriter.getWriterConfig.
-                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true).
-                            set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true)
-
+                        turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
+                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
                         turtleWriter
 
-                    // TODO: add XML and HTML.
+                    case RdfMediaTypes.`application/rdf+xml` | RdfMediaTypes.`text/html` =>
+                        new RDFXMLPrettyWriter(stringWriter)
 
-                    case other => throw BadRequestException(s"Content type $other not implemented")
+                    case _ => throw BadRequestException(s"Media type $requestedMediaType not implemented")
                 }
 
                 rdfParser.setRDFHandler(rdfWriter)
                 rdfParser.parse(stringReader, "")
+
+                // TODO: If HTML was requested, convert the XML to HTML.
 
                 HttpResponse(
                     status = StatusCodes.OK,
