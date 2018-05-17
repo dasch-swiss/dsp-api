@@ -85,7 +85,13 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
 
             val comment: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments)
 
-            
+            val position: Map[IRI, JsonLDInt] = node.position match {
+                case Some(pos: Int) => Map(
+                    OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDInt(pos)
+                )
+
+                case None => Map.empty[IRI, JsonLDInt]
+            }
 
             val children: Map[IRI, JsonLDArray] = if (node.children.nonEmpty) {
                 Map(
@@ -104,7 +110,7 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
                 Map(
                     "@id" -> JsonLDString(node.id),
                     "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString)
-                ) ++ nodeHasRootNode ++ children ++ label ++ comment
+                ) ++ position ++ nodeHasRootNode ++ children ++ label ++ comment
             )
         }
 
@@ -122,11 +128,15 @@ case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: Str
             Map.empty[IRI, JsonLDArray]
         }
 
+        val project: Map[IRI, JsonLDString] = Map(
+            OntologyConstants.KnoraBase.AttachedToProject.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDString(list.listinfo.projectIri)
+        )
+
         val body = JsonLDObject(Map(
             "@id" -> JsonLDString(list.listinfo.id),
             "@type" -> JsonLDString(OntologyConstants.KnoraBase.ListNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString),
             OntologyConstants.KnoraBase.IsRootNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDBoolean(true)
-        ) ++ children ++ label ++ comment)
+        ) ++ project ++ children ++ label ++ comment)
 
         val context = JsonLDObject(Map(
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion),
