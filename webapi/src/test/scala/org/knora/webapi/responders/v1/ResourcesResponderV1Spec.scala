@@ -721,7 +721,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         sortedValuesExpected.foreach {
             case (propIri, propValuesExpected) =>
 
-                assert(propValuesExpected.size == sortedValuesReceived(propIri).size)
+                assert(propValuesExpected.size == sortedValuesReceived(propIri).size, "number of props did not match")
 
                 (propValuesExpected, sortedValuesReceived(propIri)).zipped.foreach {
                     case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
