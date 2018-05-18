@@ -99,8 +99,8 @@ case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOVa
                         // Add the value's IRI and type.
                         JsonLDObject(
                             jsonLDObject.value +
-                                ("@id" -> JsonLDString(valueIri)) +
-                                ("@type" -> JsonLDString(valueContent.valueType.toString))
+                                (JsonLDConstants.ID -> JsonLDString(valueIri)) +
+                                (JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString))
                         )
 
                     case other =>
@@ -876,8 +876,8 @@ case class ReadResourceV2(resourceIri: IRI,
         }
 
         JsonLDObject(Map(
-            "@id" -> JsonLDString(resourceIri),
-            "@type" -> JsonLDString(resourceClass.toString),
+            JsonLDConstants.ID -> JsonLDString(resourceIri),
+            JsonLDConstants.TYPE -> JsonLDString(resourceClass.toString),
             OntologyConstants.Rdfs.Label -> JsonLDString(label)
         ) ++ propertiesAndValuesAsJsonLD)
     }
@@ -940,14 +940,11 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         val context = JsonLDObject(Map(
             "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
             "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-            "schema" -> JsonLDString("http://schema.org/"),
             OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiPrefixExpansion)
         ) ++ projectSpecificOntologyPrefixes)
 
         val body = JsonLDObject(Map(
-            "@type" -> JsonLDString("http://schema.org/ItemList"),
-            "http://schema.org/numberOfItems" -> JsonLDInt(numberOfResources),
-            "http://schema.org/itemListElement" -> JsonLDArray(resourcesJsonObjects)
+            JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)
         ))
 
         JsonLDDocument(body = body, context = context)

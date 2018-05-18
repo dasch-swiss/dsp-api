@@ -1065,12 +1065,12 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         }.toVector
 
         val allEntities = jsonClasses ++ jsonProperties ++ jsonIndividuals
-        val allEntitiesSorted = allEntities.sortBy(_.value("@id"))
+        val allEntitiesSorted = allEntities.sortBy(_.value(JsonLDConstants.ID))
 
         // Assemble the JSON-LD document.
 
         val body = JsonLDObject(
-            ontologyMetadata.toJsonLD(targetSchema) + ("@graph" -> JsonLDArray(allEntitiesSorted))
+            ontologyMetadata.toJsonLD(targetSchema) + (JsonLDConstants.GRAPH -> JsonLDArray(allEntitiesSorted))
         )
 
         JsonLDDocument(body = body, context = context)
@@ -1157,7 +1157,7 @@ object InputOntologyV2 {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyObj = jsonLDDocument.body
-        val externalOntologyIri: SmartIri = ontologyObj.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val externalOntologyIri: SmartIri = ontologyObj.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraApiV2DefinitionIri && externalOntologyIri.isKnoraOntologyIri)) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
@@ -1178,14 +1178,14 @@ object InputOntologyV2 {
             lastModificationDate = lastModificationDate
         )
 
-        val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray("@graph")
+        val maybeGraph: Option[JsonLDArray] = ontologyObj.maybeArray(JsonLDConstants.GRAPH)
 
         maybeGraph match {
             case Some(graph) =>
                 // Make a list of (entity definition, entity type IRI)
                 val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
                     case jsonLDObj: JsonLDObject =>
-                        val entityType = jsonLDObj.requireString("@type", stringFormatter.toSmartIriWithErr)
+                        val entityType = jsonLDObj.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
                         (jsonLDObj, entityType)
 
                     case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
@@ -1270,7 +1270,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends K
         val ontologiesJson: Vector[JsonLDObject] = ontologies.toVector.sortBy(_.ontologyIri).map(ontology => JsonLDObject(ontology.toJsonLD(targetSchema)))
 
         val body = JsonLDObject(Map(
-            "@graph" -> JsonLDArray(ontologiesJson)
+            JsonLDConstants.GRAPH -> JsonLDArray(ontologiesJson)
         ))
 
         JsonLDDocument(body = body, context = context)
@@ -1679,14 +1679,14 @@ object EntityInfoContentV2 {
     def predicatesFromJsonLDObject(jsonLDObject: JsonLDObject): Map[SmartIri, PredicateInfoV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val entityType: SmartIri = jsonLDObject.requireString("@type", stringFormatter.toSmartIriWithErr)
+        val entityType: SmartIri = jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
             objects = Seq(SmartIriLiteralV2(entityType))
         )
 
-        val predicates = jsonLDObject.value - "@id" - "@type" - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf
+        val predicates = jsonLDObject.value - JsonLDConstants.ID - JsonLDConstants.TYPE - OntologyConstants.Rdfs.SubClassOf - OntologyConstants.Rdfs.SubPropertyOf
 
         predicates.map {
             case (predicateIriStr: IRI, predicateValue: JsonLDValue) =>
@@ -2015,7 +2015,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                 }
 
                 JsonLDObject(Map(
-                    "@type" -> JsonLDString(OntologyConstants.Owl.Restriction),
+                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Restriction),
                     OntologyConstants.Owl.OnProperty -> JsonLDUtil.iriToJsonLDObject(propertyIri.toString),
                     prop2card
                 ) ++ isInheritedStatement ++ guiOrderStatement)
@@ -2033,7 +2033,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         val jsonRestriction: Option[JsonLDObject] = entityInfoContent.xsdStringRestrictionPattern.map {
             (pattern: String) =>
                 JsonLDObject(Map(
-                    "@type" -> JsonLDString(OntologyConstants.Rdfs.Datatype),
+                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Rdfs.Datatype),
                     OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(OntologyConstants.Xsd.String),
                     OntologyConstants.Owl.WithRestrictions -> JsonLDArray(Seq(
                         JsonLDObject(Map(OntologyConstants.Xsd.Pattern -> JsonLDString(pattern))
@@ -2076,8 +2076,8 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         Map(
-            "@id" -> JsonLDString(entityInfoContent.classIri.toString),
-            "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
+            JsonLDConstants.ID -> JsonLDString(entityInfoContent.classIri.toString),
+            JsonLDConstants.TYPE -> JsonLDString(entityInfoContent.getRdfType.toString)
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
             isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
     }
@@ -2188,8 +2188,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         }
 
         Map(
-            "@id" -> JsonLDString(entityInfoContent.propertyIri.toString),
-            "@type" -> JsonLDString(entityInfoContent.getRdfType.toString)
+            JsonLDConstants.ID -> JsonLDString(entityInfoContent.propertyIri.toString),
+            JsonLDConstants.TYPE -> JsonLDString(entityInfoContent.getRdfType.toString)
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
             isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++
             isLinkPropertyStatement ++ guiElementStatement ++ guiAttributeStatement
@@ -2222,7 +2222,7 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
         }
 
         Map(
-            "@id" -> JsonLDString(entityInfoContent.individualIri.toString)
+            JsonLDConstants.ID -> JsonLDString(entityInfoContent.individualIri.toString)
         ) ++ jsonLDPredicates
     }
 }
@@ -2335,8 +2335,8 @@ object ClassInfoContentV2 {
 
     // The predicates that are allowed in a class definition that is read from JSON-LD.
     private val AllowedJsonLDClassPredicates = Set(
-        "@id",
-        "@type",
+        JsonLDConstants.ID,
+        JsonLDConstants.TYPE,
         OntologyConstants.Rdfs.SubClassOf,
         OntologyConstants.Rdfs.Label,
         OntologyConstants.Rdfs.Comment
@@ -2344,7 +2344,7 @@ object ClassInfoContentV2 {
 
     // The predicates that are allowed in an owl:Restriction that is read from JSON-LD.
     private val AllowedJsonLDRestrictionPredicates = Set(
-        "@type",
+        JsonLDConstants.TYPE,
         OntologyConstants.Owl.Cardinality,
         OntologyConstants.Owl.MinCardinality,
         OntologyConstants.Owl.MaxCardinality,
@@ -2363,7 +2363,7 @@ object ClassInfoContentV2 {
     def fromJsonLDObject(jsonLDClassDef: JsonLDObject, ignoreExtraData: Boolean): ClassInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val classIri: SmartIri = jsonLDClassDef.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val classIri: SmartIri = jsonLDClassDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
         // TODO: handle custom datatypes.
@@ -2413,7 +2413,7 @@ object ClassInfoContentV2 {
                                 throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
                             }
 
-                            val cardinalityType = restriction.requireString("@type", stringFormatter.toSmartIriWithErr)
+                            val cardinalityType = restriction.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
                             if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
                                 throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
@@ -2563,8 +2563,8 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
 object PropertyInfoContentV2 {
     // The predicates allowed in a property definition that is read from JSON-LD.
     private val AllowedJsonLDPropertyPredicates = Set(
-        "@id",
-        "@type",
+        JsonLDConstants.ID,
+        JsonLDConstants.TYPE,
         OntologyConstants.KnoraApiV2Simple.SubjectType,
         OntologyConstants.KnoraApiV2Simple.ObjectType,
         OntologyConstants.KnoraApiV2WithValueObjects.SubjectType,
@@ -2587,7 +2587,7 @@ object PropertyInfoContentV2 {
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val propertyIri: SmartIri = jsonLDPropertyDef.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val propertyIri: SmartIri = jsonLDPropertyDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
         if (!ignoreExtraData) {
@@ -2666,7 +2666,7 @@ object IndividualInfoContentV2 {
     def fromJsonLDObject(jsonLDIndividualDef: JsonLDObject): IndividualInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val individualIri: SmartIri = jsonLDIndividualDef.requireString("@id", stringFormatter.toSmartIriWithErr)
+        val individualIri: SmartIri = jsonLDIndividualDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = individualIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid named individual IRI: $individualIri"))
 
         IndividualInfoContentV2(
@@ -2767,8 +2767,8 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
                 lastModDateProp -> JsonLDString(lastModDate.toString)
         }
 
-        Map("@id" -> JsonLDString(ontologyIri.toString),
-            "@type" -> JsonLDString(OntologyConstants.Owl.Ontology)
+        Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
+            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
         ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement
     }
 }

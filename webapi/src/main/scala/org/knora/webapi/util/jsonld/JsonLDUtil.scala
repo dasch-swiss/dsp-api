@@ -25,6 +25,24 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.{JavaUtil, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
 
+
+/**
+  * Constant strings used in JSON-LD.
+  */
+object JsonLDConstants {
+    val CONTEXT: String = "@context"
+
+    val ID: String = "@id"
+
+    val TYPE: String = "@type"
+
+    val GRAPH: String = "@graph"
+
+    val LANGUAGE: String = "@language"
+
+    val VALUE: String = "@value"
+}
+
 /**
   * Represents a value in a JSON-LD document.
   */
@@ -99,14 +117,14 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * Returns `true` if this JSON-LD object represents an IRI value.
       */
     def isIri: Boolean = {
-        value.keySet == Set("@id")
+        value.keySet == Set(JsonLDConstants.ID)
     }
 
     /**
       * Returns `true` if this JSON-LD object represents a string with a language tag.
       */
     def isStringWithLang: Boolean = {
-        value.keySet == Set("@value", "@language")
+        value.keySet == Set(JsonLDConstants.VALUE, JsonLDConstants.LANGUAGE)
     }
 
 
@@ -334,13 +352,13 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
-                val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
+                val lang = obj.requireString(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
 
                 if (!LanguageCodes.SupportedLanguageCodes(lang)) {
                     throw BadRequestException(s"Unsupported language code: $lang")
                 }
 
-                val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
+                val text = obj.requireString(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
                 StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
@@ -457,7 +475,7 @@ object JsonLDUtil {
       * @return the JSON-LD representation of the IRI as an object value.
       */
     def iriToJsonLDObject(iri: IRI): JsonLDObject = {
-        JsonLDObject(Map("@id" -> JsonLDString(iri)))
+        JsonLDObject(Map(JsonLDConstants.ID -> JsonLDString(iri)))
     }
 
     /**
@@ -469,8 +487,8 @@ object JsonLDUtil {
       */
     def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject = {
         JsonLDObject(Map(
-            "@value" -> JsonLDString(obj),
-            "@language" -> JsonLDString(lang)
+            JsonLDConstants.VALUE -> JsonLDString(obj),
+            JsonLDConstants.LANGUAGE -> JsonLDString(lang)
         ))
     }
 

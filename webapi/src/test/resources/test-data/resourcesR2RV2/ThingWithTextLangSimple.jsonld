@@ -1,6 +1,5 @@
 {
-    "@type" : "schema:ItemList",
-    "schema:itemListElement" : {
+  "@graph" : {
     "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
     "@type" : "p0001-anything:Thing",
     "p0001-anything:hasText" : {
@@ -8,13 +7,11 @@
         "@value" : "Bonjour"
     },
     "rdfs:label" : "ein verdammtes Ding mit einer Sprache"
-    },
-    "schema:numberOfItems" : 1,
-    "@context" : {
-        "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-        "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#",
-        "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-        "schema" : "http://schema.org/",
-        "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
-    }
+  },
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+  }
 }
