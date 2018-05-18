@@ -53,8 +53,12 @@ object RdfMediaTypes {
 
     val `text/xml`: MediaType.WithOpenCharset = MediaTypes.`text/xml`
 
+    /**
+      * A map of MIME types (strings) to supported RDF media types.
+      */
     val registry: Map[String, MediaType.NonBinary] = Set(
         `application/json`,
+        `application/ld+json`,
         `text/turtle`,
         `application/rdf+xml`,
         `application/xml`,

@@ -138,6 +138,7 @@ object RouteUtilV2 {
             requestedMediaType: MediaType.NonBinary = maybeAcceptHeader match {
                 case Some(acceptHeader) =>
                     // Does the Accept header specify a media type we support?
+                    // TODO: take into account q parameters as per <https://tools.ietf.org/html/rfc7231#section-5.3.2>
                     val accept: Seq[String] = acceptHeader.value.split(',').map(_.trim)
 
                     accept.filter(RdfMediaTypes.registry.keySet).map(RdfMediaTypes.registry).headOption match {
