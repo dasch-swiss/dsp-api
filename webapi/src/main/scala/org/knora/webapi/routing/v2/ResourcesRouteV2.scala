@@ -24,7 +24,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesPreviewGetRequestV2, ResourceTEIGetRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, SettingsImpl}
@@ -81,7 +81,27 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
-                    val requestMessage = ResourcePreviewRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    val requestMessage = ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+
+                    RouteUtilV2.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
+                    )
+                }
+            }
+
+        } ~ path("v2" / "tei" / Segment) { (resIri: String) =>
+            get {
+                requestContext => {
+                    val requestingUser = getUserADM(requestContext)
+
+                    val resourceIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+
+                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, requestingUser = requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

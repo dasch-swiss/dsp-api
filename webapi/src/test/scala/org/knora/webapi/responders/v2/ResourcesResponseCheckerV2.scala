@@ -31,7 +31,9 @@ object ResourcesResponseCheckerV2 {
       * @param expected the expected response.
       */
     def compareReadResourcesSequenceV2Response(expected: ReadResourcesSequenceV2, received: ReadResourcesSequenceV2): Unit = {
-        assert(expected.numberOfResources == received.numberOfResources, "number of resources are not equal")
+        assert(expected.numberOfResources == received.numberOfResources, "number of resources is not equal")
+
+        assert(expected.resources.size == received.resources.size, "number of resources are not equal")
 
         // compare the resources one by one: resources have to returned in the correct order
         expected.resources.zip(received.resources).foreach {
@@ -41,6 +43,10 @@ object ResourcesResponseCheckerV2 {
                 assert(expectedResource.resourceIri == receivedResource.resourceIri, "resource Iri does not match")
                 assert(expectedResource.label == receivedResource.label, "label does not match")
                 assert(expectedResource.resourceClass == receivedResource.resourceClass, "resource class does not match")
+
+                // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                assert(expectedResource.values.size == receivedResource.values.size, "number of values is not equal")
 
                 // compare the properties
                 // convert Map to a sequence of tuples and sort by property Iri)

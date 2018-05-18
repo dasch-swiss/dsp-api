@@ -23,12 +23,12 @@ import akka.pattern._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcePreviewRequestV2, ResourcesGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesPreviewGetRequestV2, ResourcesGetRequestV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.ConstructResponseUtilV2
+import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
-import org.knora.webapi.{IRI, NotFoundException}
+import org.knora.webapi.{IRI, InternalServerException, NotFoundException}
 
 import scala.concurrent.Future
 
@@ -36,18 +36,19 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
-        case ResourcePreviewRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
+        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
+        case ResourceTEIGetRequestV2(resIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
+
     /**
-      * Get one or several resources and return them as a sequence.
+      * Gets the requested resources from the triplestore.
       *
-      * @param resourceIris the resources to query for.
-      * @param requestingUser  the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]].
+      * @param resourceIris the Iris of the requested resources.
+      * @return a [[Map[IRI, ResourceWithValueRdfData]]] representing the resources.
       */
-    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def getResourcesFromTriplestore(resourceIris: Seq[IRI], preview: Boolean, requestingUser: UserADM): Future[Map[IRI, ResourceWithValueRdfData]] = {
 
         // eliminate duplicate Iris
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
@@ -55,7 +56,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         for {
             resourceRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
                 triplestore = settings.triplestoreType,
-                resourceIris = resourceIrisDistinct
+                resourceIris = resourceIrisDistinct,
+                preview
             ).toString())
 
             // _ = println(resourceRequestSparql)
@@ -75,6 +77,25 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                         Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
 
             }
+        } yield queryResultsSeparated
+
+    }
+
+    /**
+      * Get one or several resources and return them as a sequence.
+      *
+      * @param resourceIris the resources to query for.
+      * @param requestingUser  the the client making the request.
+      * @return a [[ReadResourcesSequenceV2]].
+      */
+    private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+
+        // eliminate duplicate Iris
+        val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
+
+        for {
+
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = false, requestingUser = requestingUser)
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
@@ -101,27 +122,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         val resourceIrisDistinct: Seq[IRI] = resourceIris.distinct
 
         for {
-            resourcePreviewRequestSparql <- Future(queries.sparql.v2.txt.getResourcePropertiesAndValues(
-                triplestore = settings.triplestoreType,
-                resourceIris = resourceIrisDistinct,
-                preview = true
-            ).toString())
-
-            resourcePreviewRequestResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(resourcePreviewRequestSparql)).mapTo[SparqlConstructResponse]
-
-            // separate resources and values
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourcePreviewRequestResponse, requestingUser = requestingUser)
-
-            // check if all the requested resources were returned
-            requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
-
-            _ = if (requestedButMissing.nonEmpty) {
-                throw NotFoundException(
-                    s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
-                        maybe you do not have the right to see all of them or some are marked as deleted.
-                        Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
-
-            }
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
 
             resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
                 (resIri: IRI) =>
@@ -129,6 +130,21 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }.toVector
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
+
+    }
+
+    private def getResourceAsTEI(resourceIri: IRI, requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+
+        for {
+
+            // get requested resource
+            queryResultsSeparated <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
+
+            // _ = println(MessageUtil.toSource(queryResultsSeparated))
+
+        } yield ()
+
+        Future(ResourceTEIGetResponseV2(header = "", body = ""))
 
     }
 

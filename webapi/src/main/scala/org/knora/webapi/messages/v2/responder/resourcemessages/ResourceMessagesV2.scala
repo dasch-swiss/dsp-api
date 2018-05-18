@@ -51,12 +51,28 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Requests a preview of a resource.
+  * Requests a preview of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris   the Iris of the resources to obtain a preview for.
   * @param requestingUser the user making the request.
   */
-case class ResourcePreviewRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
+
+/**
+  * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
+  *
+  * @param resourceIri the IRI of the resource to be returned in TEI/XML.
+  * @param requestingUser the user making the request.
+  */
+case class ResourceTEIGetRequestV2(resourceIri: IRI, requestingUser: UserADM) extends ResourcesResponderRequestV2
+
+/**
+  * Represents a Knora resource as TEI/XML.
+  *
+  * @param header the header of the TEI document.
+  * @param body the body of the TEI document.
+  */
+case class ResourceTEIGetResponseV2(header: String, body: String)
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.

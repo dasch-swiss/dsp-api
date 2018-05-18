@@ -79,6 +79,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
+
+            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), userProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein, received = response)
+            }
+
+        }
+
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), userProfile)
@@ -95,6 +106,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
+            }
+
+        }
+
+        "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+
+            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), userProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise, received = response)
             }
 
         }
