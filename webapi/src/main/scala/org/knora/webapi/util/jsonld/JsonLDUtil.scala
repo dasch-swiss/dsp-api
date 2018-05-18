@@ -96,6 +96,38 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
+      * Returns `true` if this JSON-LD object represents an IRI value.
+      */
+    def isIri: Boolean = {
+        value.keySet == Set("@id")
+    }
+
+    /**
+      * Returns `true` if this JSON-LD object represents a string with a language tag.
+      */
+    def isStringWithLang: Boolean = {
+        value.keySet == Set("@value", "@language")
+    }
+
+
+    /**
+      * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
+      * function.
+      *
+      * @return the return value of the validation function.
+      */
+    def toIri[T](validationFun: (String, => Nothing) => T): T = {
+        if (isIri) {
+            value.values.head match {
+                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
+                case other => throw BadRequestException(s"Expected an IRI: $other")
+            }
+        } else {
+            throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
+        }
+    }
+
+    /**
       * Gets a required string value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a string.
       * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
@@ -145,7 +177,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @return the validated IRI.
       */
     def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T = {
-        JsonLDUtil.iriFromJsonLDObject(requireObject(key), validationFun)
+        requireObject(key).toIri(validationFun)
     }
 
     /**
@@ -162,7 +194,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @return the return value of the validation function, or `None` if the value was not present.
       */
     def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
-        maybeObject(key).map(obj => JsonLDUtil.iriFromJsonLDObject(obj, validationFun))
+        maybeObject(key).map(_.toIri(validationFun))
     }
 
     /**
@@ -419,16 +451,6 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
 object JsonLDUtil {
 
     /**
-      * Returns `true` if the specified JSON-LD object represents an IRI value.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return `true` if the object represents an IRI value.
-      */
-    def isIriValue(jsonLDObject: JsonLDObject): Boolean = {
-        jsonLDObject.value.keySet == Set("@id")
-    }
-
-    /**
       * Converts an IRI value to its JSON-LD object value representation.
       *
       * @param iri the IRI to be converted.
@@ -436,34 +458,6 @@ object JsonLDUtil {
       */
     def iriToJsonLDObject(iri: IRI): JsonLDObject = {
         JsonLDObject(Map("@id" -> JsonLDString(iri)))
-    }
-
-    /**
-      * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
-      * function.
-      *
-      * @param jsonLDObject a JSON-LD object value representing an IRI.
-      * @return the return value of the validation function.
-      */
-    def iriFromJsonLDObject[T](jsonLDObject: JsonLDObject, validationFun: (String, => Nothing) => T): T = {
-        if (isIriValue(jsonLDObject)) {
-            jsonLDObject.value.values.head match {
-                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
-                case other => throw BadRequestException(s"Expected an IRI: $other")
-            }
-        } else {
-            throw BadRequestException(s"Expected a JSON-LD object containing an IRI: $jsonLDObject")
-        }
-    }
-
-    /**
-      * Returns `true` if the specified JSON-LD object represents a string with a language tag.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return `true` if the object represents a string with a language tag.
-      */
-    def isStringWithLang(jsonLDObject: JsonLDObject): Boolean = {
-        jsonLDObject.value.keySet == Set("@value", "@language")
     }
 
     /**

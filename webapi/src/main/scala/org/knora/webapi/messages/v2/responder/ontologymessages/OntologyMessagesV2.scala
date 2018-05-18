@@ -1700,13 +1700,13 @@ object EntityInfoContentV2 {
                         )
 
                     case objObj: JsonLDObject =>
-                        if (JsonLDUtil.isIriValue(objObj)) {
+                        if (objObj.isIri) {
                             // This is a JSON-LD IRI value.
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
-                                objects = Seq(SmartIriLiteralV2(JsonLDUtil.iriFromJsonLDObject(objObj, stringFormatter.toSmartIriWithErr)))
+                                objects = Seq(SmartIriLiteralV2(objObj.toIri(stringFormatter.toSmartIriWithErr)))
                             )
-                        } else if (JsonLDUtil.isStringWithLang(objObj)) {
+                        } else if (objObj.isStringWithLang) {
                             // This is a string with a language tag.
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
@@ -1731,7 +1731,7 @@ object EntityInfoContentV2 {
                                 }
                             )
                         } else if (objArray.value.forall {
-                            case jsonObjElem: JsonLDObject if JsonLDUtil.isIriValue(jsonObjElem) =>
+                            case jsonObjElem: JsonLDObject if jsonObjElem.isIri =>
                                 // All the elements of the array are IRI values.
                                 true
                             case _ => false
@@ -1739,12 +1739,12 @@ object EntityInfoContentV2 {
                             PredicateInfoV2(
                                 predicateIri = predicateIri,
                                 objects = objArray.value.map {
-                                    case jsonObjElem: JsonLDObject => SmartIriLiteralV2(JsonLDUtil.iriFromJsonLDObject(jsonObjElem, stringFormatter.toSmartIriWithErr))
+                                    case jsonObjElem: JsonLDObject => SmartIriLiteralV2(jsonObjElem.toIri(stringFormatter.toSmartIriWithErr))
                                     case other => throw AssertionException(s"Invalid object for predicate $predicateIriStr: $other")
                                 }
                             )
                         } else if (objArray.value.forall {
-                            case jsonObjElem: JsonLDObject if JsonLDUtil.isStringWithLang(jsonObjElem) =>
+                            case jsonObjElem: JsonLDObject if jsonObjElem.isStringWithLang =>
                                 // All the elements of the array are strings with language codes.
                                 true
                             case _ => false
@@ -2387,14 +2387,14 @@ object ClassInfoContentV2 {
 
                 // Get the base classes from the objects of rdfs:subClassOf.
                 val baseClasses: Set[SmartIri] = arrayElemsAsObjs.filter {
-                    jsonLDObj => JsonLDUtil.isIriValue(jsonLDObj)
+                    jsonLDObj => jsonLDObj.isIri
                 }.map {
-                    jsonLDObj => JsonLDUtil.iriFromJsonLDObject(jsonLDObj, stringFormatter.toSmartIriWithErr)
+                    jsonLDObj => jsonLDObj.toIri(stringFormatter.toSmartIriWithErr)
                 }.toSet
 
                 // Any object of rdfs:subClassOf that isn't a base class should be an owl:Restriction.
                 val restrictions: Seq[JsonLDObject] = arrayElemsAsObjs.filter {
-                    jsonLDObj => !JsonLDUtil.isIriValue(jsonLDObj)
+                    jsonLDObj => !jsonLDObj.isIri
                 }
 
                 val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictions.foldLeft(Map.empty[SmartIri, KnoraCardinalityInfo]) {
@@ -2603,7 +2603,7 @@ object PropertyInfoContentV2 {
         val subPropertyOf: Set[SmartIri] = filteredPropertyDef.maybeArray(OntologyConstants.Rdfs.SubPropertyOf) match {
             case Some(valueArray: JsonLDArray) =>
                 valueArray.value.map {
-                    case superPropertyIriObj: JsonLDObject => JsonLDUtil.iriFromJsonLDObject(superPropertyIriObj, stringFormatter.toSmartIriWithErr)
+                    case superPropertyIriObj: JsonLDObject => superPropertyIriObj.toIri(stringFormatter.toSmartIriWithErr)
                     case other => throw BadRequestException(s"Expected a property IRI: $other")
                 }.toSet
 

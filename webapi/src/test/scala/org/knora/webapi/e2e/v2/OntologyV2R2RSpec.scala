@@ -158,7 +158,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
 
         classDef.value(OntologyConstants.Rdfs.SubClassOf).asInstanceOf[JsonLDArray].value.collect {
-            case obj: JsonLDObject if !JsonLDUtil.isIriValue(obj) => obj.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
+            case obj: JsonLDObject if !obj.isIri => obj.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
         }.toSet
     }
 
