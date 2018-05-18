@@ -479,16 +479,30 @@ object JsonLDUtil {
     }
 
     /**
-      * Given a predicate value and a language code, returns a JSON-LD object containing a
-      * a `@value` predicate and a `@language` predicate.
+      * Given a predicate value and a language code, returns a JSON-LD object containing `@value` and `@language`
+      * predicates.
       *
       * @param obj a predicate value.
-      * @return a JSON-LD object containing a `@value` predicate and a `@language` predicate.
+      * @return a JSON-LD object containing `@value` and `@language` predicates.
       */
     def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject = {
         JsonLDObject(Map(
             JsonLDConstants.VALUE -> JsonLDString(obj),
             JsonLDConstants.LANGUAGE -> JsonLDString(lang)
+        ))
+    }
+
+    /**
+      * Given a predicate value and a datatype, returns a JSON-LD object containing `@value` and `@type`
+      * predicates.
+      *
+      * @param value a predicate value.
+      * @return a JSON-LD object containing `@value` and `@type` predicates.
+      */
+    def datatypeValueToJsonLDObject(value: String, datatype: IRI): JsonLDObject = {
+        JsonLDObject(Map(
+            JsonLDConstants.VALUE -> JsonLDString(value),
+            JsonLDConstants.TYPE -> JsonLDString(datatype)
         ))
     }
 

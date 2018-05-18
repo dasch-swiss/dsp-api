@@ -24,6 +24,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
@@ -35,7 +36,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.{KnoraSystemInstances, LiveActorMaker, R2RSpec, SharedTestDataADM}
+import org.knora.webapi._
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -82,7 +83,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
     "The resources v2 endpoint" should {
 
-        "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema" in {
+        "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
 
             Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}") ~> resourcesPath ~> check {
 
@@ -95,7 +96,34 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header)" in {
+        "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in Turtle" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerTurtle = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+
+                assert(parseTurtle(responseAs[String]) == parseTurtle(expectedAnswerTurtle))
+
+            }
+        }
+
+        "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in RDF/XML" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerRdfXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"))
+
+                assert(parseRdfXml(responseAs[String]) == parseRdfXml(expectedAnswerRdfXml))
+
+            }
+        }
+
+
+        "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema (specified by an HTTP header) in JSON-LD" in {
 
             Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> resourcesPath ~> check {
 
@@ -105,6 +133,34 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
+            }
+        }
+
+        "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in Turtle" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").
+                addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)).
+                addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerTurtle = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"))
+
+                assert(parseTurtle(responseAs[String]) == parseTurtle(expectedAnswerTurtle))
+            }
+        }
+
+        "perform a resource request for the book 'Reise ins Heilige Land' using the simple schema in RDF/XML" in {
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").
+                addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)).
+                addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerRdfXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"))
+
+                assert(parseRdfXml(responseAs[String]) == parseRdfXml(expectedAnswerRdfXml))
             }
         }
 
