@@ -55,12 +55,15 @@ object ResourcesResponseCheckerV2 {
 
                         assert(expectedPropIri == receivedPropIri)
 
+                        // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                        // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                        assert(expectedPropValues.size == receivedPropValues.size, "number of value instances is not equal")
+
                         expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
                             case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
 
-                                assert(expectedVal == receivedVal,  s"value objects does not match: $expectedVal != $receivedVal")
+                                assert(expectedVal == receivedVal, s"value objects does not match: $expectedVal != $receivedVal")
                         }
-
 
 
                 }
