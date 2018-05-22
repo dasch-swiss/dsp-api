@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
+    <mappingElement>
+        <tag>
+            <name>text</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>documentType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                </attribute>
+            </attributes>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>ptr</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffHyperlinkTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+                <attributeName>target</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>p</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>em</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffItalicTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>b</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+
+</mapping>

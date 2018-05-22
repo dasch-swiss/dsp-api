@@ -20,15 +20,18 @@
 package org.knora.webapi.responders.v2
 
 import akka.pattern._
+import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
-import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesPreviewGetRequestV2, ResourcesGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
+import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil}
+import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
-import org.knora.webapi.{IRI, InternalServerException, NotFoundException}
+import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.{IRI, NotFoundException}
 
 import scala.concurrent.Future
 
@@ -84,8 +87,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     /**
       * Get one or several resources and return them as a sequence.
       *
-      * @param resourceIris the resources to query for.
-      * @param requestingUser  the the client making the request.
+      * @param resourceIris   the resources to query for.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
     private def getResources(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -112,8 +115,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     /**
       * Get the preview of a resource.
       *
-      * @param resourceIris the resource to query for.
-      * @param requestingUser  the the client making the request.
+      * @param resourceIris   the resource to query for.
+      * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]].
       */
     private def getResourcePreview(resourceIris: Seq[IRI], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -135,12 +138,30 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     private def getResourceAsTEI(resourceIri: IRI, requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
+        // proof of concept: works only for test resource:
+        // http://rdfh.ch/0001/thing_with_richtext_with_markup
+
         for {
 
             // get requested resource
             queryResultsSeparated <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
-            // _ = println(MessageUtil.toSource(queryResultsSeparated))
+            // get TEI mapping
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = "http://rdfh.ch/projects/0001/mappings/TEIMapping", userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+
+            // get value object representing the text value with standoff
+            valueObject: ConstructResponseUtilV2.ValueRdfData = queryResultsSeparated(resourceIri).valuePropertyAssertions("http://www.knora.org/ontology/0001/anything#hasRichtext").head
+
+            // convert standoff assertions to standoff tags
+            standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(teiMapping.standoffEntities, valueObject.standoff)
+
+            // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
+            xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
+
+
+
+
+            // _ = println(MessageUtil.toSource(xmlFromStandoff))
 
         } yield ()
 
