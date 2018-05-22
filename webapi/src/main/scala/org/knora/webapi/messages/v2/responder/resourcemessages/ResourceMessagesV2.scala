@@ -19,14 +19,11 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
-import java.io.{StringReader, StringWriter}
-
-import javax.xml.transform.stream.StreamSource
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
@@ -72,7 +69,19 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI, requestingUser: UserADM) ex
   * @param header the header of the TEI document.
   * @param body the body of the TEI document.
   */
-case class ResourceTEIGetResponseV2(header: String, body: String)
+case class ResourceTEIGetResponseV2(header: String, body: String) {
+
+    def toXML = {
+
+        s"""<?xml version="1.0" encoding="UTF-8"?>
+          |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+          | $header
+            $body
+          |</TEI>
+        """.stripMargin
+    }
+
+}
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.

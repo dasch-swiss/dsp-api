@@ -195,6 +195,8 @@ class StandoffResponderV2 extends Responder {
                 // get the schema the mapping has to be validated against
                 schemaFile: File = new File("src/main/resources/mappingXMLToStandoff.xsd")
 
+                _ = if (!schemaFile.canRead) throw NotFoundException("Cannot find schema file: 'src/main/resources/mappingXMLToStandoff.xsd'")
+
                 schemaSource: StreamSource = new StreamSource(schemaFile)
 
                 // create a schema instance
@@ -543,9 +545,7 @@ class StandoffResponderV2 extends Responder {
       */
     private def getMappingV2(mappingIri: IRI, userProfile: UserADM): Future[GetMappingResponseV2] = {
 
-        for {
-
-            mapping: GetMappingResponseV2 <- CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
+            val mappingFuture: Future[GetMappingResponseV2] = CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
                 case Some(mapping: MappingXMLtoStandoff) =>
 
                     for {
@@ -572,7 +572,14 @@ class StandoffResponderV2 extends Responder {
                     )
             }
 
-        } yield mapping
+            val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover {
+                case e: Exception =>
+                    throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
+            }
+
+            for {
+                mapping <- mappingRecovered
+            } yield mapping
 
     }
 
@@ -597,7 +604,7 @@ class StandoffResponderV2 extends Responder {
 
             // if the result is empty, the mapping does not exist
             _ = if (mappingResponse.statements.isEmpty) {
-                throw BadRequestException(s"mapping $mappingIri does not exist")
+                throw BadRequestException(s"mapping $mappingIri does not exist in triplestore")
             }
 
             // separate MappingElements from other statements (attributes and datatypes)

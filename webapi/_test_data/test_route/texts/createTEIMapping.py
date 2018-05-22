@@ -12,7 +12,7 @@ try:
 
     mappingRequest = requests.post("http://localhost:3333/v2/mapping",
                                    data={"json": json.dumps(mappingParams)},
-                                   files={"xml": ("TEImapping.xml", open("TEImapping.xml"))},
+                                   files={"xml": ("TEImapping.xml", open("../../../src/main/resources/TEImapping.xml"))},
                                    auth=("anything.user02@example.org", "test"),
                                    proxies={'http': 'http://localhost:3333'})
 

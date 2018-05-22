@@ -19,7 +19,10 @@
 
 package org.knora.webapi.responders.v2
 
+import java.io.File
+
 import akka.pattern._
+import org.apache.commons.io.FileUtils
 import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
@@ -30,7 +33,7 @@ import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.{IRI, NotFoundException}
 
 import scala.concurrent.Future
@@ -136,7 +139,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     }
 
-    private def getResourceAsTEI(resourceIri: IRI, requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTEI(resourceIri: IRI, requestingUser: UserADM) = {
 
         // proof of concept: works only for test resource:
         // http://rdfh.ch/0001/thing_with_richtext_with_markup
@@ -146,8 +149,12 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get requested resource
             queryResultsSeparated <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
+            // _ = println(queryResultsSeparated)
+
             // get TEI mapping
             teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = "http://rdfh.ch/projects/0001/mappings/TEIMapping", userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+
+            // _ = println(teiMapping)
 
             // get value object representing the text value with standoff
             valueObject: ConstructResponseUtilV2.ValueRdfData = queryResultsSeparated(resourceIri).valuePropertyAssertions("http://www.knora.org/ontology/0001/anything#hasRichtext").head
@@ -156,16 +163,46 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(teiMapping.standoffEntities, valueObject.standoff)
 
             // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-            xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
+            tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
 
+            teiXSLTFile: File = new File("src/main/resources/standoffToTEI.xsl")
 
+            _ = if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/standoffToTEI.xsl'")
 
+            // apply XSL transformation to temporary XML to create the TEI/XML body
+            xslt: String = FileUtils.readFileToString(teiXSLTFile, "UTF-8")
 
-            // _ = println(MessageUtil.toSource(xmlFromStandoff))
+            teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
 
-        } yield ()
+            _ = println(tmpXml)
 
-        Future(ResourceTEIGetResponseV2(header = "", body = ""))
+            _ = println("+++++")
+
+            header =
+            """
+              |<teiHeader>
+              |<fileDesc>
+              |<titleStmt>
+              |    <title>The shortest TEI Document Imaginable</title>
+              |   </titleStmt>
+              |<publicationStmt>
+              |    <p>First published as part of TEI P2, this is the P5
+              |         version using a name space.</p>
+              |   </publicationStmt>
+              |<sourceDesc>
+              |    <p>No source: this is an original work.</p>
+              |   </sourceDesc>
+              |</fileDesc>
+              |</teiHeader>
+            """.stripMargin
+
+            tei = ResourceTEIGetResponseV2(header = header, body = teiXMLBody)
+
+            _ = println(tei.toXML)
+
+        } yield
+            ReadResourcesSequenceV2(numberOfResources = 0, resources = Vector.empty[ReadResourceV2])
+
 
     }
 
