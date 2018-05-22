@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, Kn
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.standoff.StandoffTagUtilV2
+import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.util.{DateUtilV2, SmartIri, StringFormatter}
 
 /**
@@ -313,28 +313,10 @@ case class TextValueContentV2(valueType: SmartIri,
                     // check if there is an XSL transformation
                     if (standoff.get.XSLT.nonEmpty) {
 
-                        // apply the XSL transformation to xml
-                        val proc = new net.sf.saxon.s9api.Processor(false)
-                        val comp = proc.newXsltCompiler()
-
-                        val exp = comp.compile(new StreamSource(new StringReader(standoff.get.XSLT.get)))
-
-                        val source = try {
-                            proc.newDocumentBuilder().build(new StreamSource(new StringReader(xmlFromStandoff)))
-                        } catch {
-                            case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
-                        }
-
-                        val xmlTransformedStr: StringWriter = new StringWriter()
-                        val out = proc.newSerializer(xmlTransformedStr)
-
-                        val trans = exp.load()
-                        trans.setInitialContextNode(source)
-                        trans.setDestination(out)
-                        trans.transform()
+                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(xmlFromStandoff, standoff.get.XSLT.get)
 
                         // the xml was converted to HTML
-                        Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformedStr.toString))
+                        Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformed))
                     } else {
                         // xml is returned
                         Map(
