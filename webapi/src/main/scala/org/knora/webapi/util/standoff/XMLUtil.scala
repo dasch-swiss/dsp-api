@@ -22,6 +22,7 @@ package org.knora.webapi.util.standoff
 import java.io.{StringReader, StringWriter}
 
 import javax.xml.transform.stream.StreamSource
+import net.sf.saxon.s9api.XsltExecutable
 import org.knora.webapi.StandoffConversionException
 
 object XMLUtil {
@@ -39,7 +40,11 @@ object XMLUtil {
         val proc = new net.sf.saxon.s9api.Processor(false)
         val comp = proc.newXsltCompiler()
 
-        val exp = comp.compile(new StreamSource(new StringReader(xslt)))
+        val exp: XsltExecutable = try {
+            comp.compile(new StreamSource(new StringReader(xslt)))
+        } catch {
+            case e: Exception => throw StandoffConversionException(s"The provided XSLT could not be parsed: ${e.getMessage}")
+        }
 
         val source = try {
             proc.newDocumentBuilder().build(new StreamSource(new StringReader(xml)))
@@ -53,7 +58,12 @@ object XMLUtil {
         val trans = exp.load()
         trans.setInitialContextNode(source)
         trans.setDestination(out)
-        trans.transform()
+
+        try {
+            trans.transform()
+        } catch {
+            case e: Exception => throw StandoffConversionException(s"The provided XSLT could not be applied correctly: ${e.getMessage}")
+        }
 
         xmlTransformedStr.toString
 

@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util.standoff
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.{CoreSpec, StandoffConversionException}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -60,6 +60,33 @@ class XMLUtilSpec extends CoreSpec {
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expected)).withTest(Input.fromString(transformed)).build()
 
             xmlDiff.hasDifferences should be(false)
+
+        }
+
+        "attempt transform an XML document with an invalid XSL transformation" in {
+
+            val xml =
+                """<?xml version="1.0"?>
+                  |<text><i>test</i></text>
+                """.stripMargin
+
+            // closing root tag is invalid
+            val xsltInvalid =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |
+                  |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+                  |
+                  |    <xsl:output method="html" encoding="utf-8" indent="yes"/>
+                  |
+                  |    <xsl:template match="text"><div><xsl:apply-templates/></div></xsl:template>
+                  |
+                  |    <xsl:template match="i"><em><xsl:apply-templates/></em></xsl:template>
+                  |</xsl:transform
+                """.stripMargin
+
+            assertThrows[StandoffConversionException] {
+                val transformed: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
+            }
 
         }
     }
