@@ -1,6 +1,6 @@
+@prefix incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#> .
 @prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix p0803-incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
@@ -10,7 +10,7 @@
   knora-api:attachedToProject <http://rdfh.ch/projects/0803>;
   rdfs:label "The incunabula ontology" .
 
-p0803-incunabula:book a owl:Class;
+incunabula:book a owl:Class;
   knora-api:canBeInstantiated true;
   knora-api:isResourceClass true;
   knora-api:resourceIcon "book.gif";
@@ -27,43 +27,43 @@ p0803-incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:description
+      owl:onProperty incunabula:description
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:hasAuthor
+      owl:onProperty incunabula:hasAuthor
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 3;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:publisher
+      owl:onProperty incunabula:publisher
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 4;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:publoc
+      owl:onProperty incunabula:publoc
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 5;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:citation
+      owl:onProperty incunabula:citation
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 5;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:pubdate
+      owl:onProperty incunabula:pubdate
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 6;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:location
+      owl:onProperty incunabula:location
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 7;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:url
+      owl:onProperty incunabula:url
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 9;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:physical_desc
+      owl:onProperty incunabula:physical_desc
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 10;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:note
+      owl:onProperty incunabula:note
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -71,7 +71,7 @@ p0803-incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 12;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:book_comment
+      owl:onProperty incunabula:book_comment
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
@@ -99,10 +99,10 @@ p0803-incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 1;
       owl:minCardinality 1;
-      owl:onProperty p0803-incunabula:title
+      owl:onProperty incunabula:title
     ] .
 
-p0803-incunabula:page a owl:Class;
+incunabula:page a owl:Class;
   knora-api:canBeInstantiated true;
   knora-api:isResourceClass true;
   knora-api:resourceIcon "page.gif";
@@ -151,53 +151,53 @@ p0803-incunabula:page a owl:Class;
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 1;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:pagenum
+      owl:onProperty incunabula:pagenum
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:description
+      owl:onProperty incunabula:description
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:cardinality 1;
-      owl:onProperty p0803-incunabula:partOf
+      owl:onProperty incunabula:partOf
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:cardinality 1;
-      owl:onProperty p0803-incunabula:partOfValue
+      owl:onProperty incunabula:partOfValue
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 3;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:seqnum
+      owl:onProperty incunabula:seqnum
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 5;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:citation
+      owl:onProperty incunabula:citation
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 6;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:page_comment
+      owl:onProperty incunabula:page_comment
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 7;
       owl:cardinality 1;
-      owl:onProperty p0803-incunabula:origname
+      owl:onProperty incunabula:origname
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 10;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:hasLeftSideband
+      owl:onProperty incunabula:hasLeftSideband
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 10;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:hasLeftSidebandValue
+      owl:onProperty incunabula:hasLeftSidebandValue
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 11;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:hasRightSideband
+      owl:onProperty incunabula:hasRightSideband
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 11;
       owl:maxCardinality 1;
-      owl:onProperty p0803-incunabula:hasRightSidebandValue
+      owl:onProperty incunabula:hasRightSidebandValue
     ], [ a owl:Restriction;
       salsah-gui:guiOrder 12;
       owl:minCardinality 0;
-      owl:onProperty p0803-incunabula:transcription
+      owl:onProperty incunabula:transcription
     ] .

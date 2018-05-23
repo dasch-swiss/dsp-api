@@ -243,6 +243,22 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+
+        "not create an ontology called 'rdfs'" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "rdfs",
+                projectIri = imagesProjectIri,
+                label = "The rdfs ontology",
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+        }
+
         "not create an ontology called '0000'" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "0000",

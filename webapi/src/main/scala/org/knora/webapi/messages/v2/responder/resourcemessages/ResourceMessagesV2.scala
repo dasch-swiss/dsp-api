@@ -959,10 +959,6 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
                 propertyOntologies + resourceOntology
         }.toSet.filter(!_.isKnoraBuiltInDefinitionIri)
 
-        val projectSpecificOntologyPrefixes: Map[String, JsonLDString] = projectSpecificOntologiesUsed.map {
-            ontologyIri => ontologyIri.getPrefixLabel -> JsonLDString(ontologyIri + "#")
-        }.toMap
-
         // Make the knora-api prefix for the target schema.
 
         val knoraApiPrefixExpansion = targetSchema match {
@@ -972,11 +968,14 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         // Make the JSON-LD document.
 
-        val context = JsonLDObject(Map(
-            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiPrefixExpansion)
-        ) ++ projectSpecificOntologyPrefixes)
+        val context = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+            ),
+            knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
+        )
 
         val body = JsonLDObject(Map(
             JsonLDConstants.GRAPH -> JsonLDArray(resourcesJsonObjects)

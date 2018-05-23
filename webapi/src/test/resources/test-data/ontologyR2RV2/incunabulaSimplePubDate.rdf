@@ -4,8 +4,8 @@
 	xmlns:knora-api="http://api.knora.org/ontology/knora-api/simple/v2#"
 	xmlns:owl="http://www.w3.org/2002/07/owl#"
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-	xmlns:p0803-incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#">
+	xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
 <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2">
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The incunabula ontology</rdfs:label>
 </owl:Ontology>

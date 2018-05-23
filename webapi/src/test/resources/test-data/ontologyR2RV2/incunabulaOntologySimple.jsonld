@@ -1,6 +1,6 @@
 {
   "@graph" : [ {
-    "@id" : "p0803-incunabula:Sideband",
+    "@id" : "incunabula:Sideband",
     "@type" : "owl:Class",
     "rdfs:comment" : "Randleistentyp",
     "rdfs:label" : "Randleiste",
@@ -46,23 +46,23 @@
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:sbTitle"
+        "@id" : "incunabula:sbTitle"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:description"
+        "@id" : "incunabula:description"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:sideband_comment"
+        "@id" : "incunabula:sideband_comment"
       }
     } ]
   }, {
-    "@id" : "p0803-incunabula:book",
+    "@id" : "incunabula:book",
     "@type" : "owl:Class",
     "knora-api:resourceIcon" : "book.gif",
     "rdfs:comment" : "Diese Resource-Klasse beschreibt ein Buch",
@@ -103,83 +103,83 @@
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:title"
+        "@id" : "incunabula:title"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:description"
+        "@id" : "incunabula:description"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasAuthor"
+        "@id" : "incunabula:hasAuthor"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:publisher"
+        "@id" : "incunabula:publisher"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:publoc"
+        "@id" : "incunabula:publoc"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:citation"
+        "@id" : "incunabula:citation"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:pubdate"
+        "@id" : "incunabula:pubdate"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:location"
+        "@id" : "incunabula:location"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:url"
+        "@id" : "incunabula:url"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:physical_desc"
+        "@id" : "incunabula:physical_desc"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:note"
+        "@id" : "incunabula:note"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:book_comment"
+        "@id" : "incunabula:book_comment"
       }
     } ]
   }, {
-    "@id" : "p0803-incunabula:book_comment",
+    "@id" : "incunabula:book_comment",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
     "rdfs:label" : "Comment",
@@ -187,7 +187,7 @@
       "@id" : "knora-api:hasComment"
     }
   }, {
-    "@id" : "p0803-incunabula:citation",
+    "@id" : "incunabula:citation",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
@@ -201,7 +201,7 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:description",
+    "@id" : "incunabula:description",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
@@ -217,13 +217,13 @@
       "@id" : "http://purl.org/dc/terms/description"
     } ]
   }, {
-    "@id" : "p0803-incunabula:hasAuthor",
+    "@id" : "incunabula:hasAuthor",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Erzeuger/Autor",
     "rdfs:label" : "Creator",
@@ -233,13 +233,13 @@
       "@id" : "http://purl.org/dc/terms/creator"
     } ]
   }, {
-    "@id" : "p0803-incunabula:hasLeftSideband",
+    "@id" : "incunabula:hasLeftSideband",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "p0803-incunabula:Sideband"
+      "@id" : "incunabula:Sideband"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Verweis auf einen Randleistentyp",
     "rdfs:label" : "Randleistentyp links",
@@ -247,13 +247,13 @@
       "@id" : "knora-api:hasLinkTo"
     }
   }, {
-    "@id" : "p0803-incunabula:hasRightSideband",
+    "@id" : "incunabula:hasRightSideband",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "p0803-incunabula:Sideband"
+      "@id" : "incunabula:Sideband"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Verweis auf einen Randleistentyp",
     "rdfs:label" : "Randleistentyp rechts",
@@ -261,13 +261,13 @@
       "@id" : "knora-api:hasLinkTo"
     }
   }, {
-    "@id" : "p0803-incunabula:location",
+    "@id" : "incunabula:location",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Der Ort wo sich das physische Original befindet",
     "rdfs:label" : "Location",
@@ -275,7 +275,7 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:misc",
+    "@id" : "incunabula:misc",
     "@type" : "owl:Class",
     "rdfs:comment" : "A fake resource class that only has optional properties",
     "rdfs:label" : "Sonstiges",
@@ -315,68 +315,68 @@
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:miscHasColor"
+        "@id" : "incunabula:miscHasColor"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:miscHasGeometry"
+        "@id" : "incunabula:miscHasGeometry"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:miscHasBook"
+        "@id" : "incunabula:miscHasBook"
       }
     } ]
   }, {
-    "@id" : "p0803-incunabula:miscHasBook",
+    "@id" : "incunabula:miscHasBook",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:misc"
+      "@id" : "incunabula:misc"
     },
     "rdfs:label" : "Verbindung mit einem Buch",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasLinkTo"
     }
   }, {
-    "@id" : "p0803-incunabula:miscHasColor",
+    "@id" : "incunabula:miscHasColor",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "knora-api:Color"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:misc"
+      "@id" : "incunabula:misc"
     },
     "rdfs:label" : "Farbe",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:miscHasGeometry",
+    "@id" : "incunabula:miscHasGeometry",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "knora-api:Geom"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:misc"
+      "@id" : "incunabula:misc"
     },
     "rdfs:label" : "Geometrie",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:note",
+    "@id" : "incunabula:note",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "A note concerning the object",
     "rdfs:label" : "Note",
@@ -384,13 +384,13 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:origname",
+    "@id" : "incunabula:origname",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Der originale Dateiname",
     "rdfs:label" : "Original filename",
@@ -398,7 +398,7 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:page",
+    "@id" : "incunabula:page",
     "@type" : "owl:Class",
     "knora-api:resourceIcon" : "page.gif",
     "rdfs:comment" : "A page is a part of a book",
@@ -445,71 +445,71 @@
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:pagenum"
+        "@id" : "incunabula:pagenum"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:description"
+        "@id" : "incunabula:description"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:partOf"
+        "@id" : "incunabula:partOf"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:seqnum"
+        "@id" : "incunabula:seqnum"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:citation"
+        "@id" : "incunabula:citation"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:page_comment"
+        "@id" : "incunabula:page_comment"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:origname"
+        "@id" : "incunabula:origname"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasLeftSideband"
+        "@id" : "incunabula:hasLeftSideband"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasRightSideband"
+        "@id" : "incunabula:hasRightSideband"
       }
     }, {
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:transcription"
+        "@id" : "incunabula:transcription"
       }
     } ]
   }, {
-    "@id" : "p0803-incunabula:page_comment",
+    "@id" : "incunabula:page_comment",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
     "rdfs:label" : "Comment",
@@ -517,13 +517,13 @@
       "@id" : "knora-api:hasComment"
     }
   }, {
-    "@id" : "p0803-incunabula:pagenum",
+    "@id" : "incunabula:pagenum",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "A distinct identification of a book page",
     "rdfs:label" : "Page identifier",
@@ -531,13 +531,13 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:partOf",
+    "@id" : "incunabula:partOf",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
     "rdfs:label" : "is a part of",
@@ -545,13 +545,13 @@
       "@id" : "knora-api:isPartOf"
     }
   }, {
-    "@id" : "p0803-incunabula:physical_desc",
+    "@id" : "incunabula:physical_desc",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
     "rdfs:label" : "Phyiscal description",
@@ -559,13 +559,13 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:pubdate",
+    "@id" : "incunabula:pubdate",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "knora-api:Date"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Datum der Herausgabe",
     "rdfs:label" : "Datum der Herausgabe",
@@ -575,13 +575,13 @@
       "@id" : "http://purl.org/dc/terms/date"
     } ]
   }, {
-    "@id" : "p0803-incunabula:publisher",
+    "@id" : "incunabula:publisher",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
     "rdfs:label" : "Publisher",
@@ -591,13 +591,13 @@
       "@id" : "http://purl.org/dc/terms/publisher"
     } ]
   }, {
-    "@id" : "p0803-incunabula:publoc",
+    "@id" : "incunabula:publoc",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Ort der Herausgabe",
     "rdfs:label" : "Publication location",
@@ -605,13 +605,13 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:sbTitle",
+    "@id" : "incunabula:sbTitle",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:Sideband"
+      "@id" : "incunabula:Sideband"
     },
     "rdfs:label" : "Title",
     "rdfs:subPropertyOf" : [ {
@@ -620,13 +620,13 @@
       "@id" : "http://purl.org/dc/terms/title"
     } ]
   }, {
-    "@id" : "p0803-incunabula:seqnum",
+    "@id" : "incunabula:seqnum",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:integer"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "This property stands for the position within a set of rdered items (resoucres)",
     "rdfs:label" : "Sequence number",
@@ -634,13 +634,13 @@
       "@id" : "knora-api:seqnum"
     }
   }, {
-    "@id" : "p0803-incunabula:sideband_comment",
+    "@id" : "incunabula:sideband_comment",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:Sideband"
+      "@id" : "incunabula:Sideband"
     },
     "rdfs:comment" : "Unstrukturierte Bemerkungen zu einem Objekt",
     "rdfs:label" : "Kommentar (Richtext)",
@@ -648,13 +648,13 @@
       "@id" : "knora-api:hasComment"
     }
   }, {
-    "@id" : "p0803-incunabula:title",
+    "@id" : "incunabula:title",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Titel",
     "rdfs:label" : "Title",
@@ -664,13 +664,13 @@
       "@id" : "http://purl.org/dc/terms/title"
     } ]
   }, {
-    "@id" : "p0803-incunabula:transcription",
+    "@id" : "incunabula:transcription",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:page"
+      "@id" : "incunabula:page"
     },
     "rdfs:comment" : "Transkription",
     "rdfs:label" : "Transkription",
@@ -678,13 +678,13 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "p0803-incunabula:url",
+    "@id" : "incunabula:url",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
       "@id" : "xsd:string"
     },
     "knora-api:subjectType" : {
-      "@id" : "p0803-incunabula:book"
+      "@id" : "incunabula:book"
     },
     "rdfs:comment" : "Uniform Resource Identifier",
     "rdfs:label" : "URI",
@@ -700,7 +700,7 @@
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

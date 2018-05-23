@@ -153,6 +153,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
+    private var secondAnythingLastModDate: Instant = Instant.now
 
     private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
         val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
@@ -1024,6 +1025,82 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val newAnythingLastModDate = responseJsonDoc.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+
+        "create a second ontology called 'anything' in another project, and get a response containing prefix labels for both 'anything' ontologies" in {
+            val createOntologyRequest =
+                s"""
+                   |{
+                   |    "knora-api:ontologyName": "anything",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$imagesProjectIri"
+                   |    },
+                   |    "rdfs:label": "The second anything ontology",
+                   |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}
+                """.stripMargin
+
+            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, createOntologyRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+                val metadata = responseJsonDoc.body
+                secondAnythingLastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+            }
+
+            val createClassRequest =
+                s"""
+                   |{
+                   |  "@id" : "http://0.0.0.0:3333/ontology/00FF/anything/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "$secondAnythingLastModDate",
+                   |  "@graph" : [ {
+                   |    "@id" : "p00FF-anything:DerivedThing",
+                   |    "@type" : "owl:Class",
+                   |    "rdfs:label" : {
+                   |      "@language" : "en",
+                   |      "@value" : "derived thing"
+                   |    },
+                   |    "rdfs:comment" : {
+                   |      "@language" : "en",
+                   |      "@value" : "Represents a derived thing"
+                   |    },
+                   |    "rdfs:subClassOf" : {
+                   |      "@id" : "p0001-anything:Thing"
+                   |    }
+                   |  } ],
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "p0001-anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+                   |    "p00FF-anything" : "http://0.0.0.0:3333/ontology/00FF/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            Post("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, createClassRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                secondAnythingLastModDate = newAnythingLastModDate
+            }
+
+            Get(s"/v2/ontologies/allentities/${URLEncoder.encode("http://0.0.0.0:3333/ontology/00FF/anything/v2", "UTF-8")}") ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+
+                val jsonResponse = JsonParser(responseAs[String])
+                val context = jsonResponse.asJsObject.fields("@context").asJsObject.fields
+                assert(context("p0001-anything").asInstanceOf[JsString] == JsString("http://0.0.0.0:3333/ontology/0001/anything/v2#"))
+                assert(context("p00FF-anything").asInstanceOf[JsString] == JsString("http://0.0.0.0:3333/ontology/00FF/anything/v2#"))
             }
         }
     }

@@ -806,9 +806,9 @@ case class OntologyMetadataGetRequestV2(projectIris: Set[SmartIri] = Set.empty[S
 /**
   * Requests entity definitions for the given ontology.
   *
-  * @param ontologyIri the ontology to query for.
-  * @param allLanguages      true if information in all available languages should be returned.
-  * @param requestingUser    the user making the request.
+  * @param ontologyIri    the ontology to query for.
+  * @param allLanguages   true if information in all available languages should be returned.
+  * @param requestingUser the user making the request.
   */
 case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
 
@@ -968,13 +968,13 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
     }
 
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        toOntologySchema(targetSchema).generateJsonLD(targetSchema,settings)
+        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
-        // Get the ontologies of all entities mentioned in class definitions.
+        // Get the ontologies of all Knora entities mentioned in class definitions.
 
-        val ontologiesFromClasses: Set[SmartIri] = classes.values.flatMap {
+        val knoraOntologiesFromClasses: Set[SmartIri] = classes.values.flatMap {
             classInfo =>
                 val entityIris: Set[SmartIri] = classInfo.allCardinalities.keySet ++ classInfo.entityInfoContent.subClassOf
 
@@ -988,9 +988,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                 } + classInfo.entityInfoContent.classIri.getOntologyFromEntity
         }.toSet
 
-        // Get the ontologies of all entities mentioned in property definitions.
+        // Get the ontologies of all Knora entities mentioned in property definitions.
 
-        val ontologiesFromProperties: Set[SmartIri] = properties.values.flatMap {
+        val knoraOntologiesFromProperties: Set[SmartIri] = properties.values.flatMap {
             property =>
                 val entityIris = property.entityInfoContent.subPropertyOf ++
                     property.entityInfoContent.getPredicateIriObjects(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri) ++
@@ -1008,13 +1008,6 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                 } + property.entityInfoContent.propertyIri.getOntologyFromEntity
         }.toSet
 
-        val ontologiesUsed: Set[SmartIri] = ontologiesFromClasses ++ ontologiesFromProperties
-
-        // Make JSON-LD prefixes for the ontologies used in the response.
-        val ontologyPrefixes: Map[String, JsonLDString] = ontologiesUsed.map {
-            ontologyIri =>
-                ontologyIri.getPrefixLabel -> JsonLDString(ontologyIri.toString + "#")
-        }.toMap
 
         // Determine which ontology to use as the knora-api prefix expansion.
         val knoraApiPrefixExpansion = targetSchema match {
@@ -1022,21 +1015,30 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
         }
 
-        val salsahGuiPrefix: Option[(String, JsonLDString)] = targetSchema match {
+        // Add a salsah-gui prefix only if we're using the complex schema.
+        val salsahGuiPrefix: Option[(String, String)] = targetSchema match {
             case ApiV2WithValueObjects =>
-                Some(OntologyConstants.SalsahGui.SalsahGuiOntologyLabel -> JsonLDString(OntologyConstants.SalsahGuiApiV2WithValueObjects.SalsahGuiPrefixExpansion))
+                Some(OntologyConstants.SalsahGui.SalsahGuiOntologyLabel -> OntologyConstants.SalsahGuiApiV2WithValueObjects.SalsahGuiPrefixExpansion)
 
             case _ => None
         }
 
+        // Make a set of all other Knora ontologies used.
+        val otherKnoraOntologiesUsed: Set[SmartIri] = (knoraOntologiesFromClasses ++ knoraOntologiesFromProperties).filterNot {
+            ontology => ontology.getOntologyName == OntologyConstants.KnoraApi.KnoraApiOntologyLabel || ontology.getOntologyName == OntologyConstants.SalsahGui.SalsahGuiOntologyLabel
+        }
+
         // Make the JSON-LD context.
-        val context = JsonLDObject(Map(
-            OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(knoraApiPrefixExpansion),
-            "rdfs" -> JsonLDString("http://www.w3.org/2000/01/rdf-schema#"),
-            "rdf" -> JsonLDString("http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
-            "owl" -> JsonLDString("http://www.w3.org/2002/07/owl#"),
-            "xsd" -> JsonLDString("http://www.w3.org/2001/XMLSchema#")
-        ) ++ ontologyPrefixes ++ salsahGuiPrefix)
+        val context = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion,
+                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                "owl" -> OntologyConstants.Owl.OwlPrefixExpansion,
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion
+            ) ++ salsahGuiPrefix,
+            knoraOntologiesNeedingPrefixes = otherKnoraOntologiesUsed
+        )
 
         // Generate JSON-LD for the classes, properties, and individuals.
 
@@ -1148,7 +1150,7 @@ object InputOntologyV2 {
     /**
       * Constructs an [[InputOntologyV2]] based on a JSON-LD document.
       *
-      * @param jsonLDDocument     a JSON-LD document representing information about the ontology.
+      * @param jsonLDDocument  a JSON-LD document representing information about the ontology.
       * @param ignoreExtraData if `true`, extra data in the JSON-LD will be ignored. This is used only in testing.
       *                        Otherwise, extra data will cause an exception to be thrown.
       * @return an [[InputOntologyV2]] representing the same information.

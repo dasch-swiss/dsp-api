@@ -1,6 +1,6 @@
 {
   "@graph" : [ {
-    "@id" : "p0803-incunabula:book",
+    "@id" : "incunabula:book",
     "@type" : "owl:Class",
     "knora-api:canBeInstantiated" : true,
     "knora-api:isResourceClass" : true,
@@ -77,88 +77,88 @@
       "salsah-gui:guiOrder" : 1,
       "owl:minCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:title"
+        "@id" : "incunabula:title"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 2,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:description"
+        "@id" : "incunabula:description"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 2,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasAuthor"
+        "@id" : "incunabula:hasAuthor"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 3,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:publisher"
+        "@id" : "incunabula:publisher"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 4,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:publoc"
+        "@id" : "incunabula:publoc"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 5,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:citation"
+        "@id" : "incunabula:citation"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 5,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:pubdate"
+        "@id" : "incunabula:pubdate"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 6,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:location"
+        "@id" : "incunabula:location"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 7,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:url"
+        "@id" : "incunabula:url"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 9,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:physical_desc"
+        "@id" : "incunabula:physical_desc"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 10,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:note"
+        "@id" : "incunabula:note"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 12,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:book_comment"
+        "@id" : "incunabula:book_comment"
       }
     } ]
   }, {
-    "@id" : "p0803-incunabula:page",
+    "@id" : "incunabula:page",
     "@type" : "owl:Class",
     "knora-api:canBeInstantiated" : true,
     "knora-api:isResourceClass" : true,
@@ -242,91 +242,91 @@
       "salsah-gui:guiOrder" : 1,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:pagenum"
+        "@id" : "incunabula:pagenum"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 2,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:description"
+        "@id" : "incunabula:description"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 2,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:partOf"
+        "@id" : "incunabula:partOf"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 2,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:partOfValue"
+        "@id" : "incunabula:partOfValue"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 3,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:seqnum"
+        "@id" : "incunabula:seqnum"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 5,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:citation"
+        "@id" : "incunabula:citation"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 6,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:page_comment"
+        "@id" : "incunabula:page_comment"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 7,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:origname"
+        "@id" : "incunabula:origname"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 10,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasLeftSideband"
+        "@id" : "incunabula:hasLeftSideband"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 10,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasLeftSidebandValue"
+        "@id" : "incunabula:hasLeftSidebandValue"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 11,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasRightSideband"
+        "@id" : "incunabula:hasRightSideband"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 11,
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:hasRightSidebandValue"
+        "@id" : "incunabula:hasRightSidebandValue"
       }
     }, {
       "@type" : "owl:Restriction",
       "salsah-gui:guiOrder" : 12,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "p0803-incunabula:transcription"
+        "@id" : "incunabula:transcription"
       }
     } ]
   } ],
@@ -342,7 +342,7 @@
     "owl" : "http://www.w3.org/2002/07/owl#",
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

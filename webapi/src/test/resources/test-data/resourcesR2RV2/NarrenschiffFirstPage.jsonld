@@ -1,28 +1,28 @@
 {
   "@graph" : {
     "@id" : "http://rdfh.ch/7bbb8e59b703",
-    "@type" : "p0803-incunabula:page",
-    "p0803-incunabula:origname" : {
+    "@type" : "incunabula:page",
+    "incunabula:origname" : {
       "@id" : "http://rdfh.ch/7bbb8e59b703/values/457707ecda0e",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "IBB_1_002758921_0001.tif"
     },
-    "p0803-incunabula:pagenum" : {
+    "incunabula:pagenum" : {
       "@id" : "http://rdfh.ch/7bbb8e59b703/values/fcf90d40da0e",
       "@type" : "knora-api:TextValue",
       "knora-api:valueAsString" : "Vorsatzblatt, recto"
     },
-    "p0803-incunabula:partOfValue" : {
+    "incunabula:partOfValue" : {
       "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
       "@type" : "knora-api:LinkValue",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/b6b5ff1eb703",
-        "@type" : "p0803-incunabula:book",
+        "@type" : "incunabula:book",
         "knora-api:hasIncomingLink" : [ ],
         "rdfs:label" : "[Das] Narrenschiff (lat.)"
       }
     },
-    "p0803-incunabula:seqnum" : {
+    "incunabula:seqnum" : {
       "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
       "@type" : "knora-api:IntValue",
       "knora-api:intValueAsInt" : 1
@@ -52,6 +52,6 @@
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "p0803-incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }
