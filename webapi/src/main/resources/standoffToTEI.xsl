@@ -30,6 +30,27 @@
         </text>
     </xsl:template>
 
+    <xsl:template match="entity">
+        <ptr>
+            <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
+            <xsl:apply-templates/>
+        </ptr>
+    </xsl:template>
+
+    <xsl:template match="ptr">
+        <ptr>
+            <xsl:attribute name="target"><xsl:value-of select="@target"/></xsl:attribute>
+            <xsl:apply-templates/>
+        </ptr>
+    </xsl:template>
+
+    <xsl:template match="a">
+        <ptr>
+            <xsl:attribute name="target"><xsl:value-of select="@href"/></xsl:attribute>
+            <xsl:apply-templates/>
+        </ptr>
+    </xsl:template>
+
     <xsl:template match="p">
         <p>
             <xsl:apply-templates/>
@@ -42,6 +63,33 @@
             <xsl:apply-templates/>
         </hi>
     </xsl:template>
+
+    <xsl:template match="b">
+        <hi>
+            <xsl:attribute name="rend">bold</xsl:attribute>
+            <xsl:apply-templates/>
+        </hi>
+    </xsl:template>
+
+    <xsl:template match="u">
+        <hi>
+            <xsl:attribute name="rend">underline</xsl:attribute>
+            <xsl:apply-templates/>
+        </hi>
+    </xsl:template>
+
+    <xsl:template match="sup">
+        <hi>
+            <xsl:attribute name="rend">sup</xsl:attribute>
+            <xsl:apply-templates/>
+        </hi>
+    </xsl:template>
+
+
+
+
+
+
 
 
 </xsl:transform>

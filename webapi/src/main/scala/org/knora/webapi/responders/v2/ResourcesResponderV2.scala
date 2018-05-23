@@ -31,10 +31,10 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingReques
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.ConstructResponseUtilV2
+import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.{IRI, NotFoundException}
+import org.knora.webapi.{BadRequestException, IRI, NotFoundException, OntologyConstants}
 
 import scala.concurrent.Future
 
@@ -43,7 +43,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     def receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, requestingUser), log)
+        case ResourceTEIGetRequestV2(resIri, textProperty, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -139,7 +139,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     }
 
-    private def getResourceAsTEI(resourceIri: IRI, requestingUser: UserADM) = {
+    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM) = {
 
         // proof of concept: works only for test resource:
         // http://rdfh.ch/0001/thing_with_richtext_with_markup
@@ -147,17 +147,30 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         for {
 
             // get requested resource
-            queryResultsSeparated <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
+            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
             // _ = println(queryResultsSeparated)
 
             // get TEI mapping
+            // TODO: add this mapping to file standoff-data.ttl
             teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = "http://rdfh.ch/projects/0001/mappings/TEIMapping", userProfile = requestingUser)).mapTo[GetMappingResponseV2]
 
-            // _ = println(teiMapping)
-
             // get value object representing the text value with standoff
-            valueObject: ConstructResponseUtilV2.ValueRdfData = queryResultsSeparated(resourceIri).valuePropertyAssertions("http://www.knora.org/ontology/0001/anything#hasRichtext").head
+            valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
+
+            // get the value object the represents the resource's text
+            valueObject: ConstructResponseUtilV2.ValueRdfData = valueObjectOption match {
+                case Some(valObjs: Seq[ConstructResponseUtilV2.ValueRdfData]) =>
+
+                    // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
+                    if (valObjs.size == 1 && valObjs.head.valueObjectClass == OntologyConstants.KnoraBase.TextValue && valObjs.head.standoff.nonEmpty) {
+                        valObjs.head
+                    } else {
+                        throw BadRequestException(s"$textProperty is expected to occur once for $resourceIri and to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
+                    }
+
+                case None => throw BadRequestException(s"no value found for property ${textProperty.toString} for resource $resourceIri")
+            }
 
             // convert standoff assertions to standoff tags
             standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(teiMapping.standoffEntities, valueObject.standoff)
@@ -174,25 +187,25 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
 
-            _ = println(tmpXml)
-
-            _ = println("+++++")
+            resourceAssertionsMap = queryResultsSeparated(resourceIri).resourceAssertions.toMap
+            rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
             header =
-            """
+            s"""
               |<teiHeader>
-              |<fileDesc>
-              |<titleStmt>
-              |    <title>The shortest TEI Document Imaginable</title>
-              |   </titleStmt>
-              |<publicationStmt>
-              |    <p>First published as part of TEI P2, this is the P5
-              |         version using a name space.</p>
-              |   </publicationStmt>
-              |<sourceDesc>
-              |    <p>No source: this is an original work.</p>
-              |   </sourceDesc>
-              |</fileDesc>
+              | <fileDesc>
+              |     <titleStmt>
+              |         <title>$rdfLabel</title>
+              |     </titleStmt>
+              |     <publicationStmt>
+              |         <p>
+              |             This is the TEI/XML representation of a resource identified with the Iri <$resourceIri>.
+              |         </p>
+              |     </publicationStmt>
+              |     <sourceDesc>
+              |         <p>No source: this is an original work.</p>
+              |     </sourceDesc>
+              | </fileDesc>
               |</teiHeader>
             """.stripMargin
 

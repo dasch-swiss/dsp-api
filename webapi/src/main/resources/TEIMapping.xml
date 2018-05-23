@@ -22,13 +22,46 @@
 
     <mappingElement>
         <tag>
-            <name>ptr</name>
+            <name>entity</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffLinkTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
+                <attributeName>ref</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>a</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
             <separatesWords>false</separatesWords>
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffHyperlinkTag</classIri>
+            <datatype>
+                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+                <attributeName>href</attributeName>
+            </datatype>
+        </standoffClass>
+    </mappingElement>
+
+    <!-- knora-base standoff tags should not be used directly (use standoff ontology tags instead) -->
+    <mappingElement>
+        <tag>
+            <name>ptr</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/knora-base#StandoffUriTag</classIri>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
                 <attributeName>target</attributeName>
@@ -71,6 +104,47 @@
             <classIri>http://www.knora.org/ontology/standoff#StandoffBoldTag</classIri>
         </standoffClass>
     </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>u</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffUnderlineTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>sup</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffSuperscriptTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>sub</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffSubscriptTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+
+
+
+
 
 
 </mapping>
