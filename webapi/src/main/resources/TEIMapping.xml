@@ -71,6 +71,30 @@
 
     <mappingElement>
         <tag>
+            <name>quote</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffBlockquoteTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>code</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/standoff#StandoffCodeTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
             <name>p</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>

@@ -22,6 +22,14 @@
 
     <xsl:output method="html" encoding="utf-8" indent="yes"/>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffRootTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-text.html
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-body.html
+
+    -->
     <xsl:template match="text">
         <text>
             <body>
@@ -30,6 +38,13 @@
         </text>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/knora-base#StandoffLinkTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
+
+    -->
     <xsl:template match="entity">
         <ptr>
             <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
@@ -37,6 +52,12 @@
         </ptr>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHyperlinkTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
+    -->
     <xsl:template match="ptr">
         <ptr>
             <xsl:attribute name="target"><xsl:value-of select="@target"/></xsl:attribute>
@@ -44,6 +65,12 @@
         </ptr>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/knora-base#StandoffUriTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
+    -->
     <xsl:template match="a">
         <ptr>
             <xsl:attribute name="target"><xsl:value-of select="@href"/></xsl:attribute>
@@ -51,12 +78,49 @@
         </ptr>
     </xsl:template>
 
+    <!--
+        http://www.knora.org/ontology/standoff#StandoffBlockquoteTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-quote.html
+
+    -->
+    <xsl:template match="quote">
+        <quote>
+            <xsl:apply-templates/>
+        </quote>
+    </xsl:template>
+
+    <!--
+        http://www.knora.org/ontology/standoff#StandoffCodeTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-code.html
+
+    -->
+    <xsl:template match="code">
+        <code>
+            <xsl:apply-templates/>
+        </code>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffParagraphTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-p.html
+    -->
     <xsl:template match="p">
         <p>
             <xsl:apply-templates/>
         </p>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffItalicTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="italic"
+
+    -->
     <xsl:template match="em">
         <hi>
             <xsl:attribute name="rend">italic</xsl:attribute>
@@ -64,6 +128,15 @@
         </hi>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffBoldTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="bold"
+
+        see http://www.tei-c.org/release/doc/tei-p5-doc/en/html/examples-hi.html
+
+    -->
     <xsl:template match="b">
         <hi>
             <xsl:attribute name="rend">bold</xsl:attribute>
@@ -71,6 +144,15 @@
         </hi>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffUnderlineTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="underline"
+
+        see http://www.tei-c.org/release/doc/tei-p5-doc/en/html/examples-hi.html
+
+    -->
     <xsl:template match="u">
         <hi>
             <xsl:attribute name="rend">underline</xsl:attribute>
@@ -78,6 +160,15 @@
         </hi>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffSuperscriptTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="sup"
+
+        see http://www.tei-c.org/release/doc/tei-p5-doc/en/html/examples-hi.html
+
+    -->
     <xsl:template match="sup">
         <hi>
             <xsl:attribute name="rend">sup</xsl:attribute>
@@ -85,6 +176,16 @@
         </hi>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffSubscriptTag
+
+        Ignore since there seems to be no standard way in TEI to represent this.
+
+    -->
+    <xsl:template match="sub">
+        <xsl:apply-templates/>
+    </xsl:template>
 
 
 
