@@ -116,6 +116,186 @@
 
     <!--
 
+        http://www.knora.org/ontology/standoff#StandoffHeader1Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header1">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHeader2Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header2">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHeader3Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header3">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHeader4Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header4">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHeader5Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header5">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHeader6Tag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-head.html
+    -->
+    <xsl:template match="header6">
+        <head>
+            <xsl:apply-templates/>
+        </head>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#OrderedListTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-list.html with attribute rend="numbered"
+    -->
+    <xsl:template match="ol">
+        <list>
+            <xsl:attribute name="rend">numbered</xsl:attribute>
+            <xsl:apply-templates/>
+        </list>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#UnorderedListTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-list.html with attribute rend="bulleted"
+    -->
+    <xsl:template match="ul">
+        <list>
+            <xsl:attribute name="rend">bulleted</xsl:attribute>
+            <xsl:apply-templates/>
+        </list>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffListElementTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-item.html
+    -->
+    <xsl:template match="listitem">
+        <item>
+            <xsl:apply-templates/>
+        </item>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-table.html
+    -->
+    <xsl:template match="table">
+        <table>
+            <xsl:apply-templates/>
+        </table>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableTag
+
+        ignore this element
+    -->
+    <xsl:template match="tablebody">
+        <xsl:apply-templates/>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableRowTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-row.html
+    -->
+    <xsl:template match="row">
+        <row>
+            <xsl:apply-templates/>
+        </row>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableBrTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-cell.html
+    -->
+    <xsl:template match="cell">
+        <cell>
+            <xsl:apply-templates/>
+        </cell>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableCellTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-lb.html
+        -->
+    <xsl:template match="br">
+        <lb>
+            <xsl:apply-templates/>
+        </lb>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffTableCiteTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-lb.html
+    -->
+    <xsl:template match="cite">
+        <bibl>
+            <xsl:apply-templates/>
+        </bibl>
+    </xsl:template>
+
+    <!--
+
         http://www.knora.org/ontology/standoff#StandoffItalicTag
 
         http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="italic"
@@ -162,6 +342,19 @@
 
     <!--
 
+        http://www.knora.org/ontology/standoff#StandoffStrikethroughTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-del.html
+
+    -->
+    <xsl:template match="strike">
+        <del>
+            <xsl:apply-templates/>
+        </del>
+    </xsl:template>
+
+    <!--
+
         http://www.knora.org/ontology/standoff#StandoffSuperscriptTag
 
         http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-hi.html with attribute rend="sup"
@@ -187,8 +380,28 @@
         <xsl:apply-templates/>
     </xsl:template>
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffLineTag
+
+        Ignore since there seems to be no standard way in TEI to represent this.
+
+    -->
+    <xsl:template match="line">
+        <xsl:apply-templates/>
+    </xsl:template>
 
 
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffPreTag
+
+        Ignore since there seems to be no standard way in TEI to represent this.
+
+    -->
+    <xsl:template match="pre">
+        <xsl:apply-templates/>
+    </xsl:template>
 
 
 
