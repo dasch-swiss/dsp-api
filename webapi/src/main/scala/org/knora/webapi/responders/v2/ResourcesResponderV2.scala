@@ -152,8 +152,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // _ = println(queryResultsSeparated)
 
             // get TEI mapping
-            // TODO: add this mapping to file standoff-data.ttl
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = "http://rdfh.ch/projects/0001/mappings/TEIMapping", userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = OntologyConstants.KnoraBase.TEIMapping, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
 
             // get value object representing the text value with standoff
             valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
