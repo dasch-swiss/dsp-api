@@ -46,6 +46,8 @@ class StringLiteralSequenceV2Spec extends CoreSpec() {
         )
     )
 
+    private val emptySeq = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+
     "The StringLiteralSequenceV2 case class" should {
 
         "return the German literal of a given StringLiteralSequenceV2" in {
@@ -79,6 +81,14 @@ class StringLiteralSequenceV2Spec extends CoreSpec() {
             val anyLanguageLiteral: Option[String] = literalSeq.getPreferredLanguage("es", "ru")
 
             assert(anyLanguageLiteral.nonEmpty && anyLanguageLiteral.get == "Film und Foto")
+
+        }
+
+        "request a literal from an empty list" in {
+
+            val noLiteral: Option[String] = emptySeq.getPreferredLanguage("en", "de")
+
+            assert(noLiteral.isEmpty)
 
         }
 
