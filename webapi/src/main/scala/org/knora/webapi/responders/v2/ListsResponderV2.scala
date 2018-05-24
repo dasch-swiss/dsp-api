@@ -54,14 +54,14 @@ class ListsResponderV2 extends Responder {
       *
       * @param listIri the Iri of the list's root node.
       * @param userProfile the user making the request.
-      * @return a [[ListsGetResponseV2]].
+      * @return a [[ListGetResponseV2]].
       */
-    def getList(listIri: IRI, userProfile: UserADM): Future[ListsGetResponseV2] = {
+    def getList(listIri: IRI, userProfile: UserADM): Future[ListGetResponseV2] = {
 
         for {
             listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIri, requestingUser = userProfile)).mapTo[ListGetResponseADM]
 
-        } yield ListsGetResponseV2(list = listResponseADM.list, userProfile.lang, settings.fallbackLanguage)
+        } yield ListGetResponseV2(list = listResponseADM.list, userProfile.lang, settings.fallbackLanguage)
     }
 
     /**

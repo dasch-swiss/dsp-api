@@ -35,7 +35,7 @@ import org.knora.webapi.util.jsonld._
 sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 
 /**
-  * Requests a list. A successful response will be a [[ListsGetResponseV2]]
+  * Requests a list. A successful response will be a [[ListGetResponseV2]]
   *
   * @param listIri        the IRI of the list (Iri of the list's root node).
   * @param requestingUser the user making the request.
@@ -75,7 +75,7 @@ trait ListResponderResponseV2 {
   * @param userLang the user's preferred language.
   * @param fallbackLang the fallback language if the preferred language is not available.
   */
-case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
+case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 

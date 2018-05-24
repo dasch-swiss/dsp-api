@@ -84,7 +84,7 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
         "perform a request for a list" in {
 
-            Get(s"/v2/list/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
+            Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

@@ -2,12 +2,12 @@ package org.knora.webapi.responders.v2
 
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListADM, ListInfoADM, ListNodeADM, ListNodeInfoADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
-import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetResponseV2, NodeGetResponseV2}
+import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetResponseV2, NodeGetResponseV2}
 import org.knora.webapi.util.StringFormatter
 
 class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
-    val treeList = ListsGetResponseV2(
+    val treeList = ListGetResponseV2(
         list = ListADM(
             listinfo = ListInfoADM(
                 id = "http://rdfh.ch/lists/0001/treeList",

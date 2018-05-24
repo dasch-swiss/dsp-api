@@ -45,7 +45,7 @@ object ListsRouteV2 extends Authenticator {
         implicit val materializer = ActorMaterializer()
         val responderManager = system.actorSelection("/user/responderManager")
 
-        path("v2" / "list" / Segment) { lIri: String =>
+        path("v2" / "lists" / Segment) { lIri: String =>
             get {
 
                 /* return a list (a graph with all list nodes) */
