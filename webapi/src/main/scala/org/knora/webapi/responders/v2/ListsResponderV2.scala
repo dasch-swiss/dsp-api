@@ -49,6 +49,13 @@ class ListsResponderV2 extends Responder {
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
+    /**
+      * Gets a list from the triplestore.
+      *
+      * @param listIri the Iri of the list's root node.
+      * @param userProfile the user making the request.
+      * @return a [[ListsGetResponseV2]].
+      */
     def getList(listIri: IRI, userProfile: UserADM): Future[ListsGetResponseV2] = {
 
         for {
@@ -57,7 +64,14 @@ class ListsResponderV2 extends Responder {
         } yield ListsGetResponseV2(list = listResponseADM.list, userProfile.lang, settings.fallbackLanguage)
     }
 
-    def getNode(nodeIri: IRI, userProfile: UserADM) = {
+    /**
+      * Gets a single list node from the triplestore.
+      *
+      * @param nodeIri the Iri of the list node.
+      * @param userProfile the user making the request.
+      * @return a  [[NodeGetResponseV2]].
+      */
+    def getNode(nodeIri: IRI, userProfile: UserADM): Future[NodeGetResponseV2] = {
 
         for {
             nodeResponse: ListNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(iri = nodeIri, requestingUser = userProfile)).mapTo[ListNodeInfoGetResponseADM]
