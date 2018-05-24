@@ -54,6 +54,8 @@ trait ListResponderResponseV2 {
       *
       * @param iri        the Iri pointing to the string value.
       * @param stringVals the string values to choose from.
+      * @param userLang   the user's preferred language.
+      * @param fallbackLang the fallback language if the preferred language is not available.
       * @return a [[Map[IRI, JsonLDString]] (empty in case no string value is available).
       */
     def makeMapIriToJSONLDString(iri: IRI, stringVals: StringLiteralSequenceV2, userLang: String, fallbackLang: String): Map[IRI, JsonLDString] = {
@@ -69,7 +71,9 @@ trait ListResponderResponseV2 {
 /**
   * Represents a response to a [[ListsGetRequestV2]].
   *
-  * @param list the list the are to be returned.
+  * @param list     the list the are to be returned.
+  * @param userLang the user's preferred language.
+  * @param fallbackLang the fallback language if the preferred language is not available.
   */
 case class ListsGetResponseV2(list: ListADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
@@ -170,6 +174,8 @@ case class NodeGetRequestV2(nodeIri: IRI,
   * Represents a response to a [[NodeGetRequestV2]].
   *
   * @param node the node to be returned.
+  * @param userLang the user's preferred language.
+  * @param fallbackLang the fallback language if the preferred language is not available.
   */
 case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLang: String) extends KnoraResponseV2 with ListResponderResponseV2 {
 
