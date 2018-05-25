@@ -199,11 +199,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val listInfo = received.list.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = listInfo.labels
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
                 labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
-                val comments = received.list.listinfo.comments
+                val comments = received.list.listinfo.comments.stringLiterals
                 comments.isEmpty should be (true)
 
                 val children = received.list.children
@@ -251,14 +251,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 val listInfo = received.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = listInfo.labels
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (2)
                 labels.sorted should be (Seq(
                     StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                     StringLiteralV2(value = "Changed list", language = Some("en"))
                 ).sorted)
 
-                val comments = listInfo.comments
+                val comments = listInfo.comments.stringLiterals
                 comments.size should be (2)
                 comments.sorted should be (Seq(
                     StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),

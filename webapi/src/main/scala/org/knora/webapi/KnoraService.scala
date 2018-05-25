@@ -138,6 +138,7 @@ trait KnoraService {
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
             StandoffRouteV2.knoraApiPath(system, settings, log) ~
+            ListsRouteV2.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
             new GroupsRouteADM(system, settings, log).knoraApiPath ~
             new ListsRouteADM(system, settings, log).knoraApiPath ~
