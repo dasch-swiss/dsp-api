@@ -32,7 +32,7 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import scala.concurrent.Future
 
 /**
-  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
+  * Responds to requests relating to lists and nodes.
   */
 class ListsResponderV2 extends Responder {
 
