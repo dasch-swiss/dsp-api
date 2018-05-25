@@ -30,7 +30,7 @@ import org.knora.webapi.util.jsonld._
 
 
 /**
-  * An abstract trait representing a Knora v2 API request message that can be sent to `StandoffResponderV2`.
+  * An abstract trait representing a Knora v2 API request message that can be sent to `ListsResponderV2`.
   */
 sealed trait ListsResponderRequestV2 extends KnoraRequestV2
 
@@ -40,8 +40,8 @@ sealed trait ListsResponderRequestV2 extends KnoraRequestV2
   * @param listIri        the IRI of the list (Iri of the list's root node).
   * @param requestingUser the user making the request.
   */
-case class ListsGetRequestV2(listIri: IRI,
-                             requestingUser: UserADM) extends ListsResponderRequestV2
+case class ListGetRequestV2(listIri: IRI,
+                            requestingUser: UserADM) extends ListsResponderRequestV2
 
 
 /**
@@ -69,7 +69,7 @@ trait ListResponderResponseV2 {
 }
 
 /**
-  * Represents a response to a [[ListsGetRequestV2]].
+  * Represents a response to a [[ListGetRequestV2]].
   *
   * @param list     the list the are to be returned.
   * @param userLang the user's preferred language.

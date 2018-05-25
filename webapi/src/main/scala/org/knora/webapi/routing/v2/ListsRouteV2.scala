@@ -25,7 +25,7 @@ import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetRequestV2, NodeGetRequestV2}
+import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, SettingsImpl}
@@ -33,7 +33,7 @@ import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, Settin
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Provides a function for API routes that deal with search.
+  * Provides a function for API routes that deal with lists and nodes.
   */
 object ListsRouteV2 extends Authenticator {
 
@@ -54,7 +54,7 @@ object ListsRouteV2 extends Authenticator {
 
                     val listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
 
-                    val requestMessage = ListsGetRequestV2(listIri, requestingUser)
+                    val requestMessage = ListGetRequestV2(listIri, requestingUser)
 
                     RouteUtilV2.runJsonRoute(
                         requestMessage,

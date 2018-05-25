@@ -23,7 +23,7 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.listsmessages.{ListsGetRequestV2, ListGetResponseV2, NodeGetRequestV2, NodeGetResponseV2}
+import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, ListGetResponseV2, NodeGetRequestV2, NodeGetResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
@@ -72,7 +72,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a list" in {
 
-            actorUnderTest ! ListsGetRequestV2("http://rdfh.ch/lists/0001/treeList", userProfile)
+            actorUnderTest ! ListGetRequestV2("http://rdfh.ch/lists/0001/treeList", userProfile)
 
             expectMsgPF(timeout) {
                 case response: ListGetResponseV2 =>

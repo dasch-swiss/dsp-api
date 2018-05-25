@@ -41,7 +41,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
-  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
+  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
 class ListsRouteV2R2Spec extends R2RSpec {

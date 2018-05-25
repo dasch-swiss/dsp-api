@@ -44,7 +44,7 @@ class ListsResponderV2 extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive = {
-        case ListsGetRequestV2(listIri, userProfile) => future2Message(sender(), getList(listIri, userProfile), log)
+        case ListGetRequestV2(listIri, userProfile) => future2Message(sender(), getList(listIri, userProfile), log)
         case NodeGetRequestV2(nodeIri, userProfile) => future2Message(sender(), getNode(nodeIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
