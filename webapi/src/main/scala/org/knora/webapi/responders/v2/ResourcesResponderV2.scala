@@ -210,10 +210,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             tei = ResourceTEIGetResponseV2(header = header, body = teiXMLBody)
 
-            _ = println(tei.toXML)
+            //_ = println(tei.body)
 
-        } yield
-            ReadResourcesSequenceV2(numberOfResources = 0, resources = Vector.empty[ReadResourceV2])
+        } yield tei
 
 
     }
