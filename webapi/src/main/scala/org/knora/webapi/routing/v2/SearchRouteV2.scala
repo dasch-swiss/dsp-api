@@ -174,7 +174,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -213,7 +213,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -233,7 +233,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val requestMessage = ExtendedSearchCountGetRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -253,7 +253,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val requestMessage = ExtendedSearchGetRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -290,7 +290,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -328,7 +328,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,

@@ -27,14 +27,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
 import akka.pattern._
 import akka.util.Timeout
-import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio._
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.JsonLDDocument
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.Exception.catching
 
 /**
   * Convenience methods for Knora routes.
@@ -91,7 +92,7 @@ object RouteUtilV2 {
     }
 
     /**
-      * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
+      * Sends a message to a responder and completes the HTTP request by returning the response as RDF using content negotation.
       *
       * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
@@ -103,13 +104,13 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRoute(requestMessage: KnoraRequestV2,
-                     requestContext: RequestContext,
-                     settings: SettingsImpl,
-                     responderManager: ActorSelection,
-                     log: LoggingAdapter,
-                     responseSchema: ApiV2Schema)
-                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+    def runRdfRoute(requestMessage: KnoraRequestV2,
+                    requestContext: RequestContext,
+                    settings: SettingsImpl,
+                    responderManager: ActorSelection,
+                    log: LoggingAdapter,
+                    responseSchema: ApiV2Schema)
+                   (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
         if (settings.dumpMessages) {
             log.debug(requestMessage.toString)
@@ -131,28 +132,8 @@ object RouteUtilV2 {
                 log.debug(knoraResponse.toString)
             }
 
-            // Get the client's HTTP Accept header, if provided.
-            maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
-
-            // Determine the requested media type, or use JSON-LD as the default.
-            requestedMediaType: MediaType.NonBinary = maybeAcceptHeader match {
-                case Some(acceptHeader) =>
-                    // Does the Accept header specify a media type we support?
-                    // TODO: take into account q parameters as per <https://tools.ietf.org/html/rfc7231#section-5.3.2>
-                    val accept: Seq[String] = acceptHeader.value.split(',').map(_.trim)
-
-                    accept.filter(RdfMediaTypes.registry.keySet).map(RdfMediaTypes.registry).headOption match {
-                        case Some(requested) =>
-                            // Yes. Return the response in that format.
-                            requested
-
-                        case None =>
-                            // No. Return JSON-LD.
-                            RdfMediaTypes.`application/ld+json`
-                    }
-
-                case None => RdfMediaTypes.`application/ld+json`
-            }
+            // Choose a media type for the response.
+            requestedMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
 
             // Format the response message as an HTTP response.
             formattedResponse = formatResponse(
@@ -169,12 +150,63 @@ object RouteUtilV2 {
     }
 
     /**
+      * Chooses an RDF media type for the response, using content negotiation as per [[https://tools.ietf.org/html/rfc7231#section-5.3.2]].
+      *
+      * @param requestContext the request context.
+      * @return an RDF media type.
+      */
+    private def chooseRdfMediaTypeForResponse(requestContext: RequestContext): MediaType.NonBinary = {
+        // Get the client's HTTP Accept header, if provided.
+        val maybeAcceptHeader: Option[HttpHeader] = requestContext.request.headers.find(_.lowercaseName == "accept")
+
+        maybeAcceptHeader match {
+            case Some(acceptHeader) =>
+                // Parse the value of the accept header, filtering out non-RDF media types, and sort the results
+                // in reverse order by q value.
+                val acceptMediaTypes: Array[MediaType.NonBinary] = acceptHeader.value.split(',').flatMap {
+                    headerValueItem =>
+                        val mediaRangeParts: Array[String] = headerValueItem.trim.split(';')
+                        val mediaTypeStr: String = mediaRangeParts.headOption.getOrElse(throw BadRequestException(s"Invalid Accept header: ${acceptHeader.value}"))
+
+                        // Get the qValue, if provided; it defaults to 1.
+                        val qValue: Float = mediaRangeParts.tail.flatMap {
+                            param =>
+                                param.split('=') match {
+                                    case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
+                                    case _ => None // Ignore other parameters.
+                                }
+                        }.headOption.getOrElse(1)
+
+                        val maybeMediaType: Option[MediaType] = RdfMediaTypes.registry.get(mediaTypeStr) match {
+                            case Some(mediaType: MediaType) => Some(mediaType)
+                            case _ => None // Ignore non-RDF media types.
+                        }
+
+                        maybeMediaType.map(mediaType => MediaRange.One(mediaType, qValue))
+                }.sortBy(_.qValue).reverse.map(_.mediaType).collect {
+                    // All RDF media types are non-binary.
+                    case nonBinary: MediaType.NonBinary => nonBinary
+                }
+
+                // Select the highest-ranked supported media type.
+                acceptMediaTypes.headOption match {
+                    case Some(requested) => requested
+                    case None =>
+                        // If there isn't one, use JSON-LD.
+                        RdfMediaTypes.`application/ld+json`
+                }
+
+            case None => RdfMediaTypes.`application/ld+json`
+        }
+    }
+
+    /**
       * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
       *
-      * @param knoraResponse the response message.
+      * @param knoraResponse      the response message.
       * @param requestedMediaType the requested media type.
-      * @param responseSchema the response schema.
-      * @param settings the application settings.
+      * @param responseSchema     the response schema.
+      * @param settings           the application settings.
       * @return an HTTP response.
       */
     private def formatResponse(knoraResponse: KnoraResponseV2,
@@ -235,7 +267,7 @@ object RouteUtilV2 {
     }
 
     /**
-      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as JSON.
+      * Sends a message (resulting from a [[Future]]) to a responder and completes the HTTP request by returning the response as RDF using content negotation.
       *
       * @param requestMessageF  a [[Future]] containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
@@ -247,16 +279,16 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV2](requestMessageF: Future[KnoraRequestV2],
-                                                                  requestContext: RequestContext,
-                                                                  settings: SettingsImpl,
-                                                                  responderManager: ActorSelection,
-                                                                  log: LoggingAdapter,
-                                                                  responseSchema: ApiV2Schema)
-                                                                 (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+    def runRdfRouteWithFuture[RequestMessageT <: KnoraRequestV2](requestMessageF: Future[KnoraRequestV2],
+                                                                 requestContext: RequestContext,
+                                                                 settings: SettingsImpl,
+                                                                 responderManager: ActorSelection,
+                                                                 log: LoggingAdapter,
+                                                                 responseSchema: ApiV2Schema)
+                                                                (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
             requestMessage <- requestMessageF
-            routeResult <- runJsonRoute(
+            routeResult <- runRdfRoute(
                 requestMessage = requestMessage,
                 requestContext = requestContext,
                 settings = settings,

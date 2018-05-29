@@ -111,7 +111,7 @@ object StandoffRouteV2 extends Authenticator {
 
                         }
 
-                        RouteUtilV2.runJsonRouteWithFuture(
+                        RouteUtilV2.runRdfRouteWithFuture(
                             requestMessageFuture,
                             requestContext,
                             settings,

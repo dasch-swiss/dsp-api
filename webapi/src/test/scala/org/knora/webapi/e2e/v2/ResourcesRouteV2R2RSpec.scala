@@ -24,6 +24,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.MediaRange
 import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
@@ -98,7 +99,14 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
         "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in Turtle" in {
 
-            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> resourcesPath ~> check {
+            // Test correct handling of q values in the Accept header.
+            val acceptHeader: Accept = Accept(
+                MediaRange.One(RdfMediaTypes.`application/ld+json`, 0.5F),
+                MediaRange.One(RdfMediaTypes.`text/turtle`, 0.8F),
+                MediaRange.One(RdfMediaTypes.`application/rdf+xml`, 0.2F)
+            )
+
+            Get(s"/v2/resources/${URLEncoder.encode("http://rdfh.ch/2a6221216701", "UTF-8")}").addHeader(acceptHeader) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

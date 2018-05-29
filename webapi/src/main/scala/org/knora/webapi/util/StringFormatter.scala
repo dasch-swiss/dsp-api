@@ -1904,4 +1904,5 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
     }
 
+
 }

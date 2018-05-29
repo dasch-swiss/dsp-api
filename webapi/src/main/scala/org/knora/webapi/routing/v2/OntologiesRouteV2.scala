@@ -86,7 +86,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -103,7 +103,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val requestMessage = OntologyMetadataGetRequestV2(requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -124,7 +124,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -142,7 +142,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
                     val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -174,7 +174,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -198,7 +198,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -221,7 +221,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -246,7 +246,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -269,7 +269,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -325,7 +325,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -359,7 +359,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -383,7 +383,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -406,7 +406,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -462,7 +462,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -496,7 +496,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -520,7 +520,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -551,7 +551,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
