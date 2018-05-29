@@ -133,12 +133,12 @@ object RouteUtilV2 {
             }
 
             // Choose a media type for the response.
-            requestedMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
+            responseMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
 
             // Format the response message as an HTTP response.
             formattedResponse = formatResponse(
                 knoraResponse = knoraResponse,
-                requestedMediaType = requestedMediaType,
+                responseMediaType = responseMediaType,
                 responseSchema = responseSchema,
                 settings = settings
             )
@@ -203,21 +203,21 @@ object RouteUtilV2 {
     /**
       * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
       *
-      * @param knoraResponse      the response message.
-      * @param requestedMediaType the requested media type.
-      * @param responseSchema     the response schema.
-      * @param settings           the application settings.
+      * @param knoraResponse     the response message.
+      * @param responseMediaType the media type selected for the response.
+      * @param responseSchema    the response schema.
+      * @param settings          the application settings.
       * @return an HTTP response.
       */
     private def formatResponse(knoraResponse: KnoraResponseV2,
-                               requestedMediaType: MediaType.NonBinary,
+                               responseMediaType: MediaType.NonBinary,
                                responseSchema: ApiV2Schema,
                                settings: SettingsImpl): HttpResponse = {
         // Find the most specific media type that is compatible with the one requested.
-        val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(requestedMediaType)
+        val specificMediaType = RdfMediaTypes.toMostSpecificMediaType(responseMediaType)
 
         // Convert the requested media type to a UTF-8 content type.
-        val contentType = RdfMediaTypes.toUTF8ContentType(requestedMediaType)
+        val contentType = RdfMediaTypes.toUTF8ContentType(responseMediaType)
 
         // Generate a JSON-LD data structure from the API response message.
         val jsonLDDocument: JsonLDDocument = knoraResponse.toJsonLDDocument(responseSchema, settings)
@@ -250,7 +250,7 @@ object RouteUtilV2 {
 
                     case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
 
-                    case _ => throw BadRequestException(s"Media type $requestedMediaType not implemented")
+                    case _ => throw BadRequestException(s"Media type $responseMediaType not implemented")
                 }
 
                 rdfParser.setRDFHandler(rdfWriter)

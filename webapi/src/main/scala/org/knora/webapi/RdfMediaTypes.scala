@@ -48,10 +48,6 @@ object RdfMediaTypes {
         fileExtensions = List("rdf")
     )
 
-    val `application/xml`: MediaType.WithOpenCharset = MediaTypes.`application/xml`
-
-    val `text/xml`: MediaType.WithOpenCharset = MediaTypes.`text/xml`
-
     /**
       * A map of MIME types (strings) to supported RDF media types.
       */
@@ -59,9 +55,7 @@ object RdfMediaTypes {
         `application/json`,
         `application/ld+json`,
         `text/turtle`,
-        `application/rdf+xml`,
-        `application/xml`,
-        `text/xml`
+        `application/rdf+xml`
     ).map {
         mediaType => mediaType.toString -> mediaType
     }.toMap
@@ -89,7 +83,7 @@ object RdfMediaTypes {
     def toMostSpecificMediaType(mediaType: MediaType.NonBinary): MediaType.NonBinary = {
         mediaType match {
             case `application/json` | `application/ld+json` => `application/ld+json`
-            case `application/rdf+xml` | `application/xml` | `text/xml` => `application/rdf+xml`
+            case `application/rdf+xml` => `application/rdf+xml`
             case other => other
         }
     }
