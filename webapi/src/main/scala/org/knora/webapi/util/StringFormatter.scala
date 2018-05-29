@@ -1895,7 +1895,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
       *
       * @param shortcode the project's shortcode.
-      * @return the short ode in upper case.
+      * @return the shortcode in upper case.
       */
     def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {

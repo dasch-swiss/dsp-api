@@ -83,7 +83,6 @@ object RdfMediaTypes {
     def toMostSpecificMediaType(mediaType: MediaType.NonBinary): MediaType.NonBinary = {
         mediaType match {
             case `application/json` | `application/ld+json` => `application/ld+json`
-            case `application/rdf+xml` => `application/rdf+xml`
             case other => other
         }
     }
