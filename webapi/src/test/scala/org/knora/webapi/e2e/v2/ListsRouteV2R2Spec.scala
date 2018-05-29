@@ -90,7 +90,7 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
                 val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesList.jsonld")))
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == expectedAnswerJSONLD)
 
             }
@@ -104,7 +104,7 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
                 val expectedAnswerJSONLD: JsValue = JsonParser(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesListNode.jsonld")))
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val responseJson: JsValue = JsonParser(responseAs[String])
                 assert(responseJson == expectedAnswerJSONLD)
 
             }

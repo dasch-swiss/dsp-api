@@ -1903,4 +1903,5 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case None => errorFun
         }
     }
+
 }

@@ -42,10 +42,9 @@ object RdfMediaTypes {
         fileExtensions = List("ttl")
     )
 
-    val `application/rdf+xml`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
+    val `application/rdf+xml`: MediaType.WithOpenCharset = MediaType.customWithOpenCharset(
         mainType = "application",
         subType = "rdf+xml",
-        charset = HttpCharsets.`UTF-8`,
         fileExtensions = List("rdf")
     )
 
