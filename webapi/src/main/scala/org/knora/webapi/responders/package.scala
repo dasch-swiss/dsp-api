@@ -78,6 +78,9 @@ package object responders {
     val STANDOFF_ROUTER_V2_ACTOR_NAME = "standoffRouterV2"
     val STANDOFF_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + STANDOFF_ROUTER_V2_ACTOR_NAME
 
+    val LISTS_ROUTER_V2_ACTOR_NAME = "listsRouterV2"
+    val LISTS_ROUTER_V2_ACTOR_PATH = RESPONDER_MANAGER_ACTOR_PATH + "/" + LISTS_ROUTER_V2_ACTOR_NAME
+
 
     // ------------------------------------------------------------------------------------------
     // ------------------------------------- Admin Routers --------------------------------------

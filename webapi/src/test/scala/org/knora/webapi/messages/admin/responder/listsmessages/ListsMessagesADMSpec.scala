@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.{BadRequestException, SharedTestDataADM}
 import org.scalatest.{Matchers, WordSpecLike}
@@ -39,8 +39,8 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
-                labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
-                comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
+                comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
             )
 
             val json = listInfo.toJson.compactPrint
@@ -57,9 +57,10 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringLiteralV2("Sommer")),
-                comments = Seq.empty[StringLiteralV2],
-                position = Some(0)
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+                position = Some(0),
+                rootNode = None // rootNode is not contained in JSON format
             )
 
             val json = listNodeInfo.toJson.compactPrint
@@ -76,8 +77,8 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringLiteralV2("Sommer")),
-                comments = Seq.empty[StringLiteralV2],
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )
@@ -96,15 +97,15 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val listInfo: ListInfoADM = ListInfoADM (
                 id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
-                labels = Seq(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr"))),
-                comments = Seq(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
+                comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
             )
 
             val listNode: ListNodeADM = ListNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
-                labels = Seq(StringLiteralV2("Sommer")),
-                comments = Seq.empty[StringLiteralV2],
+                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
                 position = Some(0)
             )
