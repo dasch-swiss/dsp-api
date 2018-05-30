@@ -19,23 +19,24 @@
 
 package org.knora.webapi.e2e.v2
 
+import java.io.File
 import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
+import org.eclipse.rdf4j.model.Model
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v2.ListsRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.{KnoraSystemInstances, LiveActorMaker, R2RSpec, SharedTestDataADM}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil}
-import java.io.File
-
-import spray.json.{JsObject, JsValue, JsonParser}
+import org.knora.webapi.util.FileUtil
+import spray.json.{JsValue, JsonParser}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -63,10 +64,6 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val imagesUser01 = SharedTestDataADM.imagesUser01
-
-    private val password = "test"
-
     private val rdfDataObjects = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -82,7 +79,7 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
     "The lists v2 endpoint" should {
 
-        "perform a request for a list" in {
+        "perform a request for a list in JSON-LD" in {
 
             Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
 
@@ -96,7 +93,35 @@ class ListsRouteV2R2Spec extends R2RSpec {
             }
         }
 
-        "perform a request for a node" in {
+        "perform a request for a list in Turtle" in {
+
+            Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesList.ttl")))
+
+                val responseTurtle: Model = parseTurtle(responseAs[String])
+                assert(responseTurtle == expectedAnswerTurtle)
+
+            }
+        }
+
+        "perform a request for a list in RDF/XML" in {
+
+            Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerRdfXml: Model = parseRdfXml(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesList.rdf")))
+
+                val responseRdfXml: Model = parseRdfXml(responseAs[String])
+                assert(responseRdfXml == expectedAnswerRdfXml)
+
+            }
+        }
+
+        "perform a request for a node in JSON-LD" in {
 
             Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}") ~> listsPath ~> check {
 
@@ -112,6 +137,37 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
         }
 
+        "perform a request for a node in Turtle" in {
+
+            Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerTurtle: Model = parseTurtle(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesListNode.ttl")))
+
+                val responseTurtle: Model = parseTurtle(responseAs[String])
+                assert(responseTurtle == expectedAnswerTurtle)
+
+            }
+
+
+        }
+
+        "perform a request for a node in RDF/XML" in {
+
+            Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}").addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerRdfXml: Model = parseRdfXml(FileUtil.readTextFile(new File("src/test/resources/test-data/listsR2RV2/imagesListNode.rdf")))
+
+                val responseRdfXml: Model = parseRdfXml(responseAs[String])
+                assert(responseRdfXml == expectedAnswerRdfXml)
+
+            }
+
+
+        }
 
     }
 }

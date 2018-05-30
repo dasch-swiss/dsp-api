@@ -65,7 +65,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
     // If false, the responses from the server are compared to the contents fo the expected response files.
-    private val writeTestGets = false
+    private val writeGetTestResponses = false
 
     /**
       * Represents an HTTP GET test that requests ontology information.
@@ -142,7 +142,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     )
 
     // The media types that will be used in HTTP Accept headers in HTTP GET tests.
-    private val mediaTypesForTestGets = Seq(
+    private val mediaTypesForGetTests = Seq(
         RdfMediaTypes.`application/ld+json`,
         RdfMediaTypes.`text/turtle`,
         RdfMediaTypes.`application/rdf+xml`
@@ -175,12 +175,12 @@ class OntologyV2R2RSpec extends R2RSpec {
             for (httpGetTest <- httpGetTests) {
 
                 // Do each test with each media type.
-                for (mediaType <- mediaTypesForTestGets) {
+                for (mediaType <- mediaTypesForGetTests) {
 
                     Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
 
                         // Are we writing expected response files?
-                        if (writeTestGets) {
+                        if (writeGetTestResponses) {
                             // Yes.
                             httpGetTest.writeFile(responseAs[String], mediaType)
                         } else {
