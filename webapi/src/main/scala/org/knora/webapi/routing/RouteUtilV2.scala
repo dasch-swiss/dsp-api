@@ -199,13 +199,13 @@ object RouteUtilV2 {
                 // in reverse order by q value.
                 val acceptMediaTypes: Array[MediaType.NonBinary] = acceptHeader.value.split(',').flatMap {
                     headerValueItem =>
-                        val mediaRangeParts: Array[String] = headerValueItem.trim.split(';')
+                        val mediaRangeParts: Array[String] = headerValueItem.split(';').map(_.trim)
                         val mediaTypeStr: String = mediaRangeParts.headOption.getOrElse(throw BadRequestException(s"Invalid Accept header: ${acceptHeader.value}"))
 
                         // Get the qValue, if provided; it defaults to 1.
                         val qValue: Float = mediaRangeParts.tail.flatMap {
                             param =>
-                                param.split('=') match {
+                                param.split('=').map(_.trim) match {
                                     case Array("q", qValueStr) => catching(classOf[NumberFormatException]).opt(qValueStr.toFloat)
                                     case _ => None // Ignore other parameters.
                                 }
