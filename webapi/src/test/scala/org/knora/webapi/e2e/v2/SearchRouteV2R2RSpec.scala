@@ -1523,6 +1523,51 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that may have a Boolean value that is true" in {
+            val sparqlSimplified =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     }
+                  |} OFFSET 0
+                  |
+                """.stripMargin
+
+            // TODO: find a better way to submit spaces as %20
+            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the second page of results
+                checkSearchResponseNumberOfResults(responseAs[String], 25)
+            }
+
+        }
+
+        "search for an anything:Thing that may have a Boolean value that is true using an increased offset" in {
             // set OFFSET to 1 to get "Testding for extended search"
             val sparqlSimplified =
                 """
@@ -1558,12 +1603,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
                 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 15)
+                checkSearchResponseNumberOfResults(responseAs[String], 16)
             }
 
         }
