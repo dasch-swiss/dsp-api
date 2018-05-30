@@ -17,20 +17,23 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-Knora Documentation
-=======
+# The Knora APIs
+
+The Knora APIs include:
+
+* The Knora API versions 1 and 2, which is intended to be used by
+  virtual research environments and other clients for querying and updating
+  data.
+* The Knora Admin API, which is intended to be used only by the
+  [SALSAH](https://github.com/dhlab-basel/Salsah) user interface, for
+  administering projects that use Knora as well as Knora itself.
 
 @@toc { depth=2 }
 
 @@@ index
 
-* [Release Notes](00-release-notes/index.md)
-* [Introduction](01-introduction/index.md)
-* [Knora Ontologies](02-knora-ontologies/index.md)
-* [Knora APIs](03-apis/index.md)
-* [Deploying Knora](04-deployment/index.md)
-* [Knora Internals](05-internals/index.md)
-* [Salsah](06-salsah/index.md)
-* [Sipi](07-sipi/index.md)
+* [API v1](api-v1/index.md)
+* [API v2](api-v2/index.md)
+* [Admin API](api-admin/index.md)
 
 @@@

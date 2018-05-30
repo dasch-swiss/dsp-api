@@ -17,20 +17,27 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-Knora Documentation
-=======
+# Monitoring Knora
 
-@@toc { depth=2 }
+Monitoring is implemented by using the Prometheus / Grafana stack.
 
-@@@ index
+## Usage:
 
-* [Release Notes](00-release-notes/index.md)
-* [Introduction](01-introduction/index.md)
-* [Knora Ontologies](02-knora-ontologies/index.md)
-* [Knora APIs](03-apis/index.md)
-* [Deploying Knora](04-deployment/index.md)
-* [Knora Internals](05-internals/index.md)
-* [Salsah](06-salsah/index.md)
-* [Sipi](07-sipi/index.md)
+1)  Start webapi with the necessary -p option (e.g., from inside sbt:
+    run -p or reStart -p
+2)  Start the monitoring stack by executing the following line inside
+    the monitoring
+    folder:
 
-@@@
+<!-- end list -->
+
+    $ WEBAPIHOST=<YourLocalIP> ADMIN_USER=admin ADMIN_PASSWORD=admin docker-compose up -d
+
+3)  Head over to localhost:3000, log in using the admin username and
+    password, and open the "Webapi Akka Actor System" dashboard.
+4)  To shut down the monitoring stack, run the following line inside the
+    monitoring folder:
+
+<!-- end list -->
+
+    $ docker-compose down

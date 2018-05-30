@@ -20,7 +20,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 # What Is Knora?
 
 Knora (Knowledge Organization, Representation, and Annotation) is a
-software framework for storing, sharing, and working with humanities
+a server application for storing, sharing, and working with humanities
 data.
 
 Knora is based on the idea that the continuous availability and
@@ -51,39 +51,21 @@ for diverse humanities projects, Knora also deals with the issue of
 conversion and migration caused by the obsolescence of file and data
 formats in an efficient and feasible manner.
 
-To solve the access problem, Knora offers a generic HTTP-based API. In
-the Knora framework, the standard implementation of this API is a server
-program called the Knora API Server. The Knora API allows applications
-to query and work with data in terms of the concepts expressed by the
-Knora ontologies, without dealing with the complexities of the
-underlying storage system and its query language (e.g.
-[SPARQL](https://www.w3.org/TR/sparql11-overview/)). It also provides
-features that are not part of SPARQL, such as access control and
-automatic versioning of data. While the Knora API is best suited to
-interacting with RDF repositories based on the Knora ontologies, it can
-also be implemented as a gateway to other sorts of repositories,
-including non-RDF repositories.
+To solve the access problem, Knora offers generic HTTP-based APIs. These
+allow applications to query and work with data in terms of the concepts
+expressed by the Knora ontologies, without dealing with the complexities of the
+underlying storage system. This approach also allows Knora to provide
+features that are not part of the RDF standards, such as access control and
+automatic versioning of data, and to act as a gateway to other sorts of
+repositories, including non-RDF repositories.
 
-Knora uses a high-performance media server, called Sipi, for serving and
-converting binary media files such as images and video. Sipi can
+Knora uses a high-performance media server, called [Sipi](http://www.sipi.io/),
+for serving and converting binary media files such as images and video. Sipi can
 efficiently convert between many different formats on demand, preserving
 embedded metadata, and implements the [International Image
 Interoperability Framework (IIIF)](http://iiif.io/).
 
-Knora provides a general-purpose, browser-based VRE called SALSAH, which
-relies on the components described above. Using the Knora API, a project
+Knora can be used with a general-purpose, browser-based VRE called
+[SALSAH](https://dhlab-basel.github.io/Salsah/). Using the Knora API, a project
 can also create its own VRE or project-specific web site, optionally
 reusing components from SALSAH.
-
-Knora is thus a set of standard components that can be used separately
-or together, or extended to meet a project's specific needs. You can
-learn more about each component:
-
-* @ref:[The Knora ontologies](../02-knora-ontologies/index.md), a set of OWL
-  ontologies describing a common structure for describing humanities data in RDF.
-* @ref:[The Knora API server](../03-webapi/index.md), a server program 
-  that implements an HTTP-based API for accessing and working with data stored in an RDF triplestore according to the structures defined in the Knora
-  ontologies.
-* @ref:[Sipi](../05-sipi/index.md), a high-performance media server.
-* The SALSAH GUI (to be released soon), a web-based virtual research
-  environment for working with data managed by the Knora API server.

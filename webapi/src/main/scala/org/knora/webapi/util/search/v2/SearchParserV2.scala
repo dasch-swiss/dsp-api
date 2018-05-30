@@ -31,13 +31,13 @@ import org.knora.webapi.util.{SmartIri, StringFormatter, search}
 import scala.collection.JavaConverters._
 
 /**
-  * Parses a SPARQL CONSTRUCT query. The SPARQL that is accepted is restricted:
+  * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
   *
   * - The query must be a CONSTRUCT query.
   * - It must use no internal ontologies.
   * - The CONSTRUCT clause may contain only quad patterns.
   * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
-  * - No function calls are allowed.
+  * - BIND is not supported.
   * - A UNION or OPTIONAL may not contain a nested UNION or OPTIONAL.
   */
 object SearchParserV2 {
@@ -469,7 +469,7 @@ object SearchParserV2 {
                         // build the CONSTRUCT clause correctly later.
                         valueConstants.put(node.getName, valueConstant)
                     } else {
-                        // This is a BIND. Add it to the WHERE clause.
+                        // This is a BIND, which is not supported.
                         throw SparqlSearchException("BIND is not supported in search query")
                     }
                 case _ => ()

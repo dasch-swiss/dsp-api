@@ -17,20 +17,19 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-Knora Documentation
-=======
+# Starting Fuseki 3
 
-@@toc { depth=2 }
+## Locally
 
-@@@ index
+Inside Knora git repository, there is a folder called
+`triplestores/fuseki` containing a script named `fuseki-server`. All
+needed configuration files are in place. To start Fuseki 3, just run
+this script:
 
-* [Release Notes](00-release-notes/index.md)
-* [Introduction](01-introduction/index.md)
-* [Knora Ontologies](02-knora-ontologies/index.md)
-* [Knora APIs](03-apis/index.md)
-* [Deploying Knora](04-deployment/index.md)
-* [Knora Internals](05-internals/index.md)
-* [Salsah](06-salsah/index.md)
-* [Sipi](07-sipi/index.md)
+    $ ./fuseki-server
 
-@@@
+## Inside Docker
+
+We can use the `dhlabbasel:fuseki` docker image from docker hub:
+
+    $ docker run --rm -it -p 3030:3030 dhlabbasel/fuseki
