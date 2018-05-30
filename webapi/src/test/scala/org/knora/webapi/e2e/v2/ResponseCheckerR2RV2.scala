@@ -93,6 +93,10 @@ object ResponseCheckerR2RV2 {
                 val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
                 val sortedReceivedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(receivedResource.value(propIri)))
 
+                // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                assert(sortedExpectedPropertyValues.value.size == sortedReceivedPropertyValues.value.size, "number of values is not equal")
+
                 sortedExpectedPropertyValues.value.zip(sortedReceivedPropertyValues.value).foreach {
                     case (expectedVal, receivedVal) =>
                         compareValues(expectedVal, receivedVal)
@@ -118,6 +122,8 @@ object ResponseCheckerR2RV2 {
         val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value.getOrElse(JsonLDConstants.GRAPH, receivedResponse.body))
 
         // check that the actual amount of resources returned is correct
+        // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+        // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
         assert(expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size, s"received list of resources has wrong length")
 
         // loop over all the given resources and compare them (order of resources is determined by request)

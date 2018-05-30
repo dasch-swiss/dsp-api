@@ -32,6 +32,7 @@ object ResourcesResponseCheckerV2 {
       */
     def compareReadResourcesSequenceV2Response(expected: ReadResourcesSequenceV2, received: ReadResourcesSequenceV2): Unit = {
         assert(expected.numberOfResources == received.numberOfResources, "number of resources are not equal")
+        assert(expected.resources.size == received.resources.size, "number of resources are not equal")
 
         // compare the resources one by one: resources have to returned in the correct order
         expected.resources.zip(received.resources).foreach {
@@ -42,6 +43,10 @@ object ResourcesResponseCheckerV2 {
                 assert(expectedResource.label == receivedResource.label, "label does not match")
                 assert(expectedResource.resourceClass == receivedResource.resourceClass, "resource class does not match")
 
+                // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                assert(expectedResource.values.size == receivedResource.values.size, "number of values is not equal")
+
                 // compare the properties
                 // convert Map to a sequence of tuples and sort by property Iri)
                 expectedResource.values.toSeq.sortBy(_._1).zip(receivedResource.values.toSeq.sortBy(_._1)).foreach {
@@ -49,10 +54,14 @@ object ResourcesResponseCheckerV2 {
 
                         assert(expectedPropIri == receivedPropIri)
 
+                        // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                        // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                        assert(expectedPropValues.size == receivedPropValues.size, "number of value instances is not equal")
+
                         expectedPropValues.sortBy(_.valueIri).zip(receivedPropValues.sortBy(_.valueIri)).foreach {
                             case (expectedVal: ReadValueV2, receivedVal: ReadValueV2) =>
 
-                                assert(expectedVal == receivedVal,  s"value objects does not match: $expectedVal != $receivedVal")
+                                assert(expectedVal == receivedVal, s"value objects does not match: $expectedVal != $receivedVal")
                         }
 
 
