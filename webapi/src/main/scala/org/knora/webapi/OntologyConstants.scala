@@ -87,6 +87,18 @@ object OntologyConstants {
         )
     }
 
+    val ClassTypes: Set[IRI] = Set(
+        Owl.Class,
+        Rdfs.Datatype
+    )
+
+    val PropertyTypes: Set[IRI] = Set(
+        Rdf.Property,
+        Owl.ObjectProperty,
+        Owl.DatatypeProperty,
+        Owl.AnnotationProperty
+    )
+
     object Xsd {
         val XsdPrefixExpansion: IRI = "http://www.w3.org/2001/XMLSchema#"
 
@@ -107,7 +119,7 @@ object OntologyConstants {
     object SchemaOrg {
         val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
         val Name: IRI = SchemaOrgPrefixExpansion + "name"
-        val Thing: IRI = SchemaOrgPrefixExpansion + "Thing"
+        val NumberOfItems: IRI = SchemaOrgPrefixExpansion + "numberOfItems"
     }
 
     object KnoraInternal {
@@ -614,8 +626,6 @@ object OntologyConstants {
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
-        val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
-
         val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
 
         val IsEditable: IRI = KnoraApiV2PrefixExpansion + "isEditable"
@@ -628,10 +638,6 @@ object OntologyConstants {
         val IsValueClass: IRI = KnoraApiV2PrefixExpansion + "isValueClass"
         val IsInherited: IRI = KnoraApiV2PrefixExpansion + "isInherited"
         val OntologyName: IRI = KnoraApiV2PrefixExpansion + "ontologyName"
-
-        val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
-        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
@@ -824,15 +830,7 @@ object OntologyConstants {
 
         val BelongsToOntology: IRI = KnoraApiV2PrefixExpansion + "belongsToOntology"
 
-        val HasOntologies: IRI = KnoraApiV2PrefixExpansion + "hasOntologies"
-
         val HasShortname: IRI = KnoraApiV2PrefixExpansion + "hasShortname"
-
-        val HasOntologiesWithClasses: IRI = KnoraApiV2PrefixExpansion + "hasOntologiesWithClasses"
-
-        val HasClasses: IRI = KnoraApiV2PrefixExpansion + "hasClasses"
-        val HasProperties: IRI = KnoraApiV2PrefixExpansion + "hasProperties"
-        val HasIndividuals: IRI = KnoraApiV2PrefixExpansion + "hasIndividuals"
 
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
 

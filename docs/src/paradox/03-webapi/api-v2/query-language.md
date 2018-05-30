@@ -248,7 +248,7 @@ different types of compound resources defined in different ontologies).
 `OFFSET` is set to 0 to get the first page of results.
 
 Note that in a KnarQL query, the prefix `knora-api` refers to the
-Knora-Api simple schema.
+Knora API v2 simple schema.
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>

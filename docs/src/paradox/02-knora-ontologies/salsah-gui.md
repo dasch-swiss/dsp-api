@@ -74,9 +74,8 @@ The attributes used with each GUI element are described below under
 `guiAttributeDefinition`
 
 :   Used only in the `salsah-gui` ontology itself, as a predicate
-    attached to instances of `Guielement` (see
-    [salsah-gui-individuals]{role="ref"}), to specify the attributes
-    that can be given as objects of `guiAttribute` when a given
+    attached to instances of `Guielement` (see @ref:[Individuals](#individuals)),
+    to specify the attributes that can be given as objects of `guiAttribute` when a given
     `Guielement`. is used. The objects of this predicate are written in
     a DSL with the following syntax:
 
@@ -136,31 +135,31 @@ identifier = letter , { letter } ;
 `List`
 
 :   A GUI element for selecting an item in a hierarchical list (see
-    [knora-base-list-value]{role="ref"}). A property definition that
+    @ref:[ListValue](knora-base.md#listvalue)). A property definition that
     uses this element must also contain this `guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
-        `knora-base:ListNode`.
+        `knora-base:ListNode` that is the root node of a hierarchical list.
 
 `Pulldown`
 
 :   A GUI element for selecting an item in a flat list (see
-    [knora-base-list-value]{role="ref"}) using a pull-down menu. A
+    @ref:[ListValue](knora-base.md#listvalue)) using a pull-down menu. A
     property definition that uses this element must also contain this
     `guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
-        `knora-base:ListNode`.
+        `knora-base:ListNode` that is the root node of a hierarchical list.
 
 `Radio`
 
 :   A GUI element for selecting an item in a flat list (see
-    [knora-base-list-value]{role="ref"}) using radio buttons. A property
+    @ref:[ListValue](knora-base.md#listvalue)) using radio buttons. A property
     definition that uses this element must also contain this
     `guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
-        `knora-base:ListNode`.
+        `knora-base:ListNode` that is the root node of a hierarchical list.
 
 `Richtext`
 

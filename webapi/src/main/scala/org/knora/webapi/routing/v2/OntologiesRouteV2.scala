@@ -81,13 +81,12 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = Set(requestedOntology),
-                        responseSchema = responseSchema,
+                        ontologyIri = requestedOntology,
                         allLanguages = allLanguages,
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -104,7 +103,7 @@ object OntologiesRouteV2 extends Authenticator {
 
                     val requestMessage = OntologyMetadataGetRequestV2(requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -125,7 +124,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -143,7 +142,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
                     val requestMessage = OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -153,31 +152,16 @@ object OntologiesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "ontologies" / "allentities" / Segments) { externalOntologyIris: List[IRI] =>
+        } ~ path("v2" / "ontologies" / "allentities" / Segment) { externalOntologyIriStr: IRI =>
             get {
                 requestContext => {
                     val requestingUser = getUserADM(requestContext)
 
-                    val ontologiesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalOntologyIris.map {
-                        (namedGraphStr: IRI) =>
-                            val requestedOntologyIri: SmartIri = namedGraphStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr"))
+                    val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr"))
 
-                            val schema = requestedOntologyIri.getOntologySchema match {
-                                case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
-                                case _ => throw BadRequestException(s"Invalid ontology IRI: $namedGraphStr")
-                            }
-
-                            (requestedOntologyIri, schema)
-                    }.toSet
-
-                    val (ontologiesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = ontologiesAndSchemas.unzip
-
-                    // Decide which API schema to use for the response.
-                    val responseSchema = if (schemas.size == 1) {
-                        schemas.head
-                    } else {
-                        // The client requested different schemas.
-                        throw BadRequestException("The request refers to multiple API schemas")
+                    val responseSchema = requestedOntologyIri.getOntologySchema match {
+                        case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                        case _ => throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr")
                     }
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
@@ -185,13 +169,12 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = OntologyEntitiesGetRequestV2(
-                        ontologyGraphIris = ontologiesForResponder,
-                        responseSchema = responseSchema,
+                        ontologyIri = requestedOntologyIri,
                         allLanguages = allLanguages,
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -215,7 +198,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -238,7 +221,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -263,7 +246,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -286,7 +269,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -306,6 +289,10 @@ object OntologiesRouteV2 extends Authenticator {
                         (classIriStr: IRI) =>
                             val requestedClassIri: SmartIri = classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
 
+                            if (!requestedClassIri.isKnoraApiV2EntityIri) {
+                                throw BadRequestException(s"Invalid class IRI: $classIriStr")
+                            }
+
                             val schema = requestedClassIri.getOntologySchema match {
                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid class IRI: $classIriStr")
@@ -315,6 +302,10 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val (classesForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = classesAndSchemas.unzip
+
+                    if (classesForResponder.map(_.getOntologyFromEntity).size != 1) {
+                        throw BadRequestException(s"Only one ontology may be queried per request")
+                    }
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {
@@ -334,7 +325,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -368,7 +359,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -392,7 +383,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -415,7 +406,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -435,6 +426,10 @@ object OntologiesRouteV2 extends Authenticator {
                         (propIriStr: IRI) =>
                             val requestedPropIri: SmartIri = propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $propIriStr"))
 
+                            if (!requestedPropIri.isKnoraApiV2EntityIri) {
+                                throw BadRequestException(s"Invalid property IRI: $propIriStr")
+                            }
+
                             val schema = requestedPropIri.getOntologySchema match {
                                 case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
                                 case _ => throw BadRequestException(s"Invalid property IRI: $propIriStr")
@@ -444,6 +439,10 @@ object OntologiesRouteV2 extends Authenticator {
                     }.toSet
 
                     val (propsForResponder: Set[SmartIri], schemas: Set[ApiV2Schema]) = propsAndSchemas.unzip
+
+                    if (propsForResponder.map(_.getOntologyFromEntity).size != 1) {
+                        throw BadRequestException(s"Only one ontology may be queried per request")
+                    }
 
                     // Decide which API schema to use for the response.
                     val responseSchema = if (schemas.size == 1) {
@@ -463,7 +462,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -497,7 +496,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -521,7 +520,7 @@ object OntologiesRouteV2 extends Authenticator {
                             requestingUser = requestingUser
                         )
 
-                        RouteUtilV2.runJsonRoute(
+                        RouteUtilV2.runRdfRoute(
                             requestMessage,
                             requestContext,
                             settings,
@@ -552,7 +551,7 @@ object OntologiesRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,

@@ -56,7 +56,7 @@ object ListsRouteV2 extends Authenticator {
 
                     val requestMessage = ListGetRequestV2(listIri, requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -78,7 +78,7 @@ object ListsRouteV2 extends Authenticator {
 
                     val requestMessage = NodeGetRequestV2(nodeIri, requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,

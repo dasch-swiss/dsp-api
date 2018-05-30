@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:knora-api="http://api.knora.org/ontology/knora-api/simple/v2#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+<owl:Ontology rdf:about="http://api.knora.org/ontology/knora-api/simple/v2">
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The knora-api ontology in the simple schema</rdfs:label>
+</owl:Ontology>
+<rdfs:Datatype rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#Date">
+	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Represents a date as a period with different possible precisions.</rdfs:comment>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Date literal</rdfs:label>
+	<rdfs:subClassOf>
+		<rdfs:Datatype rdf:nodeID="genid-7a168a756cfc4e5ebc7810d0c03e384f-b0">
+			<owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+			<owl:withRestrictions>
+				<rdf:Description rdf:nodeID="genid-7a168a756cfc4e5ebc7810d0c03e384f-b1">
+					<xsd:pattern rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?</xsd:pattern>
+				</rdf:Description>
+			</owl:withRestrictions>
+		</rdfs:Datatype>
+	</rdfs:subClassOf>
+</rdfs:Datatype>
+
+</rdf:RDF>

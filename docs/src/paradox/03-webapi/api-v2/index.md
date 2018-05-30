@@ -30,6 +30,5 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [KnarQL: Knora Query Language](query-language.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
-- [Response Formats](response-formats.md)
 
 @@@

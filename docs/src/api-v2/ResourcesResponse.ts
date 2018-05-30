@@ -72,20 +72,9 @@ export module ResourcesResponse {
          */
         export interface ResourcesSequence {
             /**
-             * ResourcesSequence response format corresponds to http://schema.org/ItemList
-             */
-            "@type": "http://schema.org/ItemList";
-
-            /**
              * A resource or a sequence of resources (instances).
              */
-            "http://schema.org/itemListElement": Resource | Array<Resource>;
-
-            /**
-             * Length of the sequence of resources.
-             */
-            "http://schema.org/numberOfItems": number;
-
+            "@graph": Array<Resource>;
         }
     }
 
@@ -128,19 +117,9 @@ export module ResourcesResponse {
          */
         export interface ResourcesSequence {
             /**
-             * ResourcesSequence response format corresponds to http://schema.org/ItemList
-             */
-            "@type": "http://schema.org/ItemList";
-
-            /**
              * A resource or a sequence of resources (instances).
              */
-            "http://schema.org/itemListElement": Resource | Array<Resource>;
-
-            /**
-             * Length of the sequence of resources.
-             */
-            "http://schema.org/numberOfItems": number;
+            "@graph": Array<Resource>;
 
         }
 

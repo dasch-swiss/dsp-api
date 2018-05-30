@@ -85,7 +85,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -109,7 +109,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val requestMessage = ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,
@@ -134,7 +134,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, requestingUser = requestingUser)
 
-                    RouteUtilV2.runJsonRoute(
+                    RouteUtilV2.runRdfRoute(
                         requestMessage,
                         requestContext,
                         settings,

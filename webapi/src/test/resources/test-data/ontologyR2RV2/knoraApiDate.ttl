@@ -1,0 +1,17 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://api.knora.org/ontology/knora-api/simple/v2> a owl:Ontology;
+  rdfs:label "The knora-api ontology in the simple schema" .
+
+<http://api.knora.org/ontology/knora-api/simple/v2#Date> a rdfs:Datatype;
+  rdfs:comment "Represents a date as a period with different possible precisions.";
+  rdfs:label "Date literal";
+  rdfs:subClassOf [ a rdfs:Datatype;
+      owl:onDatatype xsd:string;
+      owl:withRestrictions [
+          xsd:pattern "(GREGORIAN|JULIAN):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
+        ]
+    ] .

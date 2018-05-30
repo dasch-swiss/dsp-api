@@ -2,7 +2,7 @@ package org.knora.webapi.util
 
 import java.time.Instant
 
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
