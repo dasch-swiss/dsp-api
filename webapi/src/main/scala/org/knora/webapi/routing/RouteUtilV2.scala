@@ -279,13 +279,13 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runRdfRouteWithFuture[RequestMessageT <: KnoraRequestV2](requestMessageF: Future[KnoraRequestV2],
-                                                                 requestContext: RequestContext,
-                                                                 settings: SettingsImpl,
-                                                                 responderManager: ActorSelection,
-                                                                 log: LoggingAdapter,
-                                                                 responseSchema: ApiV2Schema)
-                                                                (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+    def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
+                              requestContext: RequestContext,
+                              settings: SettingsImpl,
+                              responderManager: ActorSelection,
+                              log: LoggingAdapter,
+                              responseSchema: ApiV2Schema)
+                             (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
             requestMessage <- requestMessageF
             routeResult <- runRdfRoute(
