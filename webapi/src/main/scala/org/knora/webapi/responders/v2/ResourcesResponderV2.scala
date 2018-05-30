@@ -31,9 +31,9 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingReques
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
-import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
 import org.knora.webapi.{BadRequestException, IRI, NotFoundException, OntologyConstants}
 
 import scala.concurrent.Future
@@ -139,23 +139,22 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     }
 
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM) = {
-
-        // proof of concept: works only for test resource:
-        // http://rdfh.ch/0001/thing_with_richtext_with_markup
+    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         for {
 
             // get requested resource
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
-            // _ = println(queryResultsSeparated)
+            //_ = println(MessageUtil.toSource(queryResultsSeparated))
 
             // get TEI mapping
             teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = OntologyConstants.KnoraBase.TEIMapping, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
 
             // get value object representing the text value with standoff
             valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
+
+            // body
 
             // get the value object the represents the resource's text
             valueObject: ConstructResponseUtilV2.ValueRdfData = valueObjectOption match {
@@ -186,31 +185,51 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
 
+            // header
+
+            // get all the properties but the property representing the text for the body
+            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
+
+            // collect Iris of referred resources
+            referredResourceIris = headerProps.values.flatten.foldLeft(Seq.empty[IRI]) {
+
+                (referredResIris: Seq[IRI], valObj: ConstructResponseUtilV2.ValueRdfData) =>
+
+                    if (valObj.valueObjectClass == OntologyConstants.KnoraBase.LinkValue && !valueObject.incomingLink) {
+                        val refResIRI: IRI = valObj.assertions(OntologyConstants.Rdf.Object)
+
+                        referredResIris :+ refResIRI
+                    } else {
+                        referredResIris
+                    }
+
+            }
+
             resourceAssertionsMap = queryResultsSeparated(resourceIri).resourceAssertions.toMap
             rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
 
             header =
             s"""
-              |<teiHeader>
-              | <fileDesc>
-              |     <titleStmt>
-              |         <title>$rdfLabel</title>
-              |     </titleStmt>
-              |     <publicationStmt>
-              |         <p>
-              |             This is the TEI/XML representation of a resource identified with the Iri <$resourceIri>.
-              |         </p>
-              |     </publicationStmt>
-              |     <sourceDesc>
-              |         <p>No source: this is an original work.</p>
-              |     </sourceDesc>
-              | </fileDesc>
-              |</teiHeader>
+               |<teiHeader>
+               | <fileDesc>
+               |     <titleStmt>
+               |         <title>$rdfLabel</title>
+               |     </titleStmt>
+               |     <publicationStmt>
+               |         <p>
+               |             This is the TEI/XML representation of a resource identified with the Iri <$resourceIri>.
+               |         </p>
+               |     </publicationStmt>
+               |     <sourceDesc>
+               |         <p>No source: this is an original work.</p>
+               |     </sourceDesc>
+               | </fileDesc>
+               |</teiHeader>
             """.stripMargin
 
             tei = ResourceTEIGetResponseV2(header = header, body = teiXMLBody)
 
-            //_ = println(tei.body)
+            //_ = println(tei.toXML)
 
         } yield tei
 
