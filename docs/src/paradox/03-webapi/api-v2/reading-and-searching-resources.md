@@ -25,10 +25,38 @@ To retrieve an existing resource, the HTTP method `GET` has to be used.
 Reading resources may require authentication, since some resources may
 have restricted viewing permissions.
 
+## Responses Describing Resources
+
+Resources can be returned in
+[JSON-LD](https://json-ld.org/spec/latest/json-ld/),
+[Turtle](https://www.w3.org/TR/turtle/),
+or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/), using
+@extref[HTTP content negotiation](rfc:7231#section-5.3.2) (see
+@ref:[Response Formats](introduction.md#response-formats)).
+
 Operations for reading and searching resources can return responses in either the
 simple or the complex ontology schema. The complex schema is used by default.
 To receive a response in the simple schema, use the HTTP request header or URL
 parameter described in @ref:[API Schema](introduction.md#api-schema).
+
+Each Knora API v2 response describing one or more resources returns a
+single RDF graph. For example, a request for a single resource returns that
+resource and all its values. In a full-text search, the resource is returned with the
+values that matched the search criteria. A response to an extended search
+may represent a whole graph of interconnected resources.
+
+In JSON-LD, if only one resource is returned, it is the top-level object;
+if more than one resource is returned, they are represented as an array
+of objects of the `@graph` member of the top-level object (see
+[Named Graphs](https://json-ld.org/spec/latest/json-ld/#named-graphs) in the
+JSON-LD specification).
+
+In the complex schema, dependent resources, i.e. resources that are referred
+to by other resources on the top level, are nested in link value objects.
+
+See the interfaces `Resource` and `ResourcesSequence` in module
+`ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and
+`ApiV2WithValueObjects`).
 
 ## Get the Representation of a Resource by its IRI
 
@@ -59,9 +87,6 @@ More formally, the URL looks like this:
 HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ```
 
-The response to a resource request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
-
 ### Get the preview of a resource by its IRI
 
 In some cases, the client may only want to request the preview of a
@@ -73,9 +98,6 @@ the path segment `resourcespreview`:
 ```
 HTTP GET to http://host/v2/resourcespreview/resourceIRI(/anotherResourceIri)*
 ```
-
-The response to a resource preview request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
 
 ## Search for Resources
 
@@ -111,9 +133,6 @@ first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
 in `app/v2` in `application.conf`.
 
-The response to a label search request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
-
 For performance reasons, standoff markup is not queried for this route.
 
 ### Full-text Search
@@ -137,11 +156,8 @@ first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
 in `app/v2` in `application.conf`.
 
-If the parameter `limitToStandoffClass` is provided, Knora will look for search terms 
+If the parameter `limitToStandoffClass` is provided, Knora will look for search terms
 that are marked up with the indicated standoff class.
-
-The response to a full-text search request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
 
 ### Extended Search
 
@@ -165,9 +181,6 @@ HTTP GET to http://host/v2/searchextended/KnarQLQuery
 In the future, POST requests will also be supported, to allow longer
 queries. See @ref:[KnarQL: Knora Query Language](query-language.md) for detailed
 information about the query syntax and examples.
-
-The response to an extended search request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
 
 ### Count Queries
 
@@ -194,5 +207,5 @@ HTTP GET to http://host/v2/searchextended/count/KnarQLQuery
 The first parameter has to be preceded by a question mark `?`, and any
 following parameter by an ampersand `&`.
 
-The response to a count query request is a `ResourcesSequence` (see
-@ref:[Response Formats](response-formats.md)).
+The response to a count query request is an object with one predicate,
+`http://schema.org/numberOfItems`, with an integer value.

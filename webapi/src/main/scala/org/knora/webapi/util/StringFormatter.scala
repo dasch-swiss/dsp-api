@@ -431,9 +431,15 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     override def toOntologySchema(targetSchema: OntologySchema): SmartIri
 
     /**
-      * Constructs a prefix label that can be used to shorten this IRI's namespace in formats such as Turtle and JSON-LD.
+      * Constructs a short prefix label for the ontology that the IRI belongs to.
       */
-    def getPrefixLabel: String
+    def getShortPrefixLabel: String
+
+    /**
+      * Constructs a longer prefix label than the one returned by `getShortPrefixLabel`, which may be needed
+      * if there are ontology name collisions.
+      */
+    def getLongPrefixLabel: String
 
     /**
       * If this is the IRI of a link value property, returns the IRI of the corresponding link property. Throws
@@ -537,7 +543,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val versionSegmentWords = Set("simple", "v2")
 
     // Reserved words that cannot be used in project-specific ontology names.
-    private val reservedIriWords = Set("knora", "ontology") ++ versionSegmentWords
+    private val reservedIriWords = Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema") ++ versionSegmentWords
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
@@ -897,7 +903,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
 
-        override def getPrefixLabel: String = {
+        override def getShortPrefixLabel: String = getOntologyName
+
+        override def getLongPrefixLabel: String = {
             val prefix = new StringBuilder
 
             iriInfo.projectCode match {
@@ -906,11 +914,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             }
 
             val ontologyName = getOntologyName
-
-            // TODO: remove this when unil.ch have converted their ontology names to NCNames (#667).
-            if (!ontologyName(0).isLetter) {
-                prefix.append("onto")
-            }
 
             prefix.append(ontologyName).toString
         }
@@ -1767,7 +1770,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         namespace.append(internalOntologyIri.getOntologyName).append(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd)
-        XmlImportNamespaceInfoV1(namespace = namespace.toString, prefixLabel = internalOntologyIri.getPrefixLabel)
+        XmlImportNamespaceInfoV1(namespace = namespace.toString, prefixLabel = internalOntologyIri.getLongPrefixLabel)
     }
 
     /**
@@ -1892,7 +1895,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
       *
       * @param shortcode the project's shortcode.
-      * @return the short ode in upper case.
+      * @return the shortcode in upper case.
       */
     def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
         ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
@@ -1900,4 +1903,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case None => errorFun
         }
     }
+
+
 }

@@ -22,8 +22,26 @@ package org.knora.webapi.util.jsonld
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.util.{JavaUtil, StringFormatter}
-import org.knora.webapi.{BadRequestException, IRI, LanguageCodes}
+import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
+import org.knora.webapi._
+
+
+/**
+  * Constant strings used in JSON-LD.
+  */
+object JsonLDConstants {
+    val CONTEXT: String = "@context"
+
+    val ID: String = "@id"
+
+    val TYPE: String = "@type"
+
+    val GRAPH: String = "@graph"
+
+    val LANGUAGE: String = "@language"
+
+    val VALUE: String = "@value"
+}
 
 /**
   * Represents a value in a JSON-LD document.
@@ -96,6 +114,38 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
+      * Returns `true` if this JSON-LD object represents an IRI value.
+      */
+    def isIri: Boolean = {
+        value.keySet == Set(JsonLDConstants.ID)
+    }
+
+    /**
+      * Returns `true` if this JSON-LD object represents a string with a language tag.
+      */
+    def isStringWithLang: Boolean = {
+        value.keySet == Set(JsonLDConstants.VALUE, JsonLDConstants.LANGUAGE)
+    }
+
+
+    /**
+      * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
+      * function.
+      *
+      * @return the return value of the validation function.
+      */
+    def toIri[T](validationFun: (String, => Nothing) => T): T = {
+        if (isIri) {
+            value.values.head match {
+                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
+                case other => throw BadRequestException(s"Expected an IRI: $other")
+            }
+        } else {
+            throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
+        }
+    }
+
+    /**
       * Gets a required string value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a string.
       * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
@@ -145,7 +195,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @return the validated IRI.
       */
     def requireIriInObject[T](key: String, validationFun: (String, => Nothing) => T): T = {
-        JsonLDUtil.iriFromJsonLDObject(requireObject(key), validationFun)
+        requireObject(key).toIri(validationFun)
     }
 
     /**
@@ -162,7 +212,7 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @return the return value of the validation function, or `None` if the value was not present.
       */
     def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
-        maybeObject(key).map(obj => JsonLDUtil.iriFromJsonLDObject(obj, validationFun))
+        maybeObject(key).map(_.toIri(validationFun))
     }
 
     /**
@@ -302,13 +352,13 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
-                val lang = obj.requireString("@language", stringFormatter.toSparqlEncodedString)
+                val lang = obj.requireString(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
 
                 if (!LanguageCodes.SupportedLanguageCodes(lang)) {
                     throw BadRequestException(s"Unsupported language code: $lang")
                 }
 
-                val text = obj.requireString("@value", stringFormatter.toSparqlEncodedString)
+                val text = obj.requireString(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
                 StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
@@ -386,15 +436,30 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
     def maybeBoolean(key: String): Option[JsonLDBoolean] = body.maybeBoolean(key)
 
     /**
+      * Converts this JSON-LD object to its compacted Java representation.
+      */
+    private def makeCompactedObject: java.util.Map[IRI, AnyRef] = {
+        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
+        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
+        JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
+    }
+
+    /**
       * Converts this [[JsonLDDocument]] to a pretty-printed JSON-LD string.
       *
       * @return the formatted document.
       */
     def toPrettyString: String = {
-        val contextAsJava = JavaUtil.deepScalaToJava(context.toAny)
-        val jsonAsJava = JavaUtil.deepScalaToJava(body.toAny)
-        val compacted = JsonLdProcessor.compact(jsonAsJava, contextAsJava, new JsonLdOptions())
-        JsonUtils.toPrettyString(compacted)
+        JsonUtils.toPrettyString(makeCompactedObject)
+    }
+
+    /**
+      * Converts this [[JsonLDDocument]] to a compact JSON-LD string.
+      *
+      * @return the formatted document.
+      */
+    def toCompactString: String = {
+        JsonUtils.toString(makeCompactedObject)
     }
 }
 
@@ -404,13 +469,63 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
 object JsonLDUtil {
 
     /**
-      * Returns `true` if the specified JSON-LD object represents an IRI value.
+      * Makes a JSON-LD context containing prefixes for Knora and other ontologies.
       *
-      * @param jsonLDObject the JSON-LD object.
-      * @return `true` if the object represents an IRI value.
+      * @param fixedPrefixes                  a map of fixed prefixes (e.g. `rdfs` or `knora-base`) to namespaces.
+      * @param knoraOntologiesNeedingPrefixes a set of IRIs of other Knora ontologies that need prefixes.
+      * @return a JSON-LD context.
       */
-    def isIriValue(jsonLDObject: JsonLDObject): Boolean = {
-        jsonLDObject.value.keySet == Set("@id")
+    def makeContext(fixedPrefixes: Map[String, String], knoraOntologiesNeedingPrefixes: Set[SmartIri]): JsonLDObject = {
+        /**
+          * Given a function that makes a prefix from a Knora ontology IRI, returns an association list in which
+          * each element is a prefix associated with a namespace.
+          *
+          * @param prefixFun a function that makes a prefix from a Knora ontology IRI.
+          * @return an association list in which each element is a prefix associated with a namespace.
+          */
+        def makeKnoraPrefixes(prefixFun: SmartIri => String): Seq[(String, String)] = {
+            knoraOntologiesNeedingPrefixes.toSeq.map {
+                ontology => prefixFun(ontology) -> (ontology.toString + '#')
+            }
+        }
+
+        /**
+          * Determines whether an association list returned by `makeKnoraPrefixes` contains conflicts,
+          * including conflicts with `fixedPrefixes`.
+          *
+          * @param knoraPrefixes the association list to check.
+          * @return `true` if the list contains conflicts.
+          */
+        def hasPrefixConflicts(knoraPrefixes: Seq[(String, String)]): Boolean = {
+            val prefixSeq = knoraPrefixes.map(_._1) ++ fixedPrefixes.keys
+            prefixSeq.size != prefixSeq.distinct.size
+        }
+
+        // Make an association list of short prefixes to the ontologies in knoraOntologiesNeedingPrefixes.
+        val shortKnoraPrefixes: Seq[(String, String)] = makeKnoraPrefixes(ontology => ontology.getShortPrefixLabel)
+
+        // Are there conflicts in that list?
+        val knoraPrefixMap: Map[String, String] = if (hasPrefixConflicts(shortKnoraPrefixes)) {
+            // Yes. Try again with long prefixes.
+            val longKnoraPrefixes: Seq[(String, String)] = makeKnoraPrefixes(ontology => ontology.getLongPrefixLabel)
+
+            // Are there still conflicts?
+            if (hasPrefixConflicts(longKnoraPrefixes)) {
+                // Yes. This shouldn't happen, so throw InconsistentTriplestoreDataException.
+                throw InconsistentTriplestoreDataException(s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes.map(_.toString)).mkString(", ")}")
+            } else {
+                // No. Use the long prefixes.
+                longKnoraPrefixes.toMap
+            }
+        } else {
+            // No. Use the short prefixes.
+            shortKnoraPrefixes.toMap
+        }
+
+        // Make a JSON-LD context containing the fixed prefixes as well as the ones generated by this method.
+        JsonLDObject((fixedPrefixes ++ knoraPrefixMap).map {
+            case (prefix, namespace) => prefix -> JsonLDString(namespace)
+        })
     }
 
     /**
@@ -420,48 +535,34 @@ object JsonLDUtil {
       * @return the JSON-LD representation of the IRI as an object value.
       */
     def iriToJsonLDObject(iri: IRI): JsonLDObject = {
-        JsonLDObject(Map("@id" -> JsonLDString(iri)))
+        JsonLDObject(Map(JsonLDConstants.ID -> JsonLDString(iri)))
     }
 
     /**
-      * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
-      * function.
-      *
-      * @param jsonLDObject a JSON-LD object value representing an IRI.
-      * @return the return value of the validation function.
-      */
-    def iriFromJsonLDObject[T](jsonLDObject: JsonLDObject, validationFun: (String, => Nothing) => T): T = {
-        if (isIriValue(jsonLDObject)) {
-            jsonLDObject.value.values.head match {
-                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
-                case other => throw BadRequestException(s"Expected an IRI: $other")
-            }
-        } else {
-            throw BadRequestException(s"Expected a JSON-LD object containing an IRI: $jsonLDObject")
-        }
-    }
-
-    /**
-      * Returns `true` if the specified JSON-LD object represents a string with a language tag.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return `true` if the object represents a string with a language tag.
-      */
-    def isStringWithLang(jsonLDObject: JsonLDObject): Boolean = {
-        jsonLDObject.value.keySet == Set("@value", "@language")
-    }
-
-    /**
-      * Given a predicate value and a language code, returns a JSON-LD object containing a
-      * a `@value` predicate and a `@language` predicate.
+      * Given a predicate value and a language code, returns a JSON-LD object containing `@value` and `@language`
+      * predicates.
       *
       * @param obj a predicate value.
-      * @return a JSON-LD object containing a `@value` predicate and a `@language` predicate.
+      * @return a JSON-LD object containing `@value` and `@language` predicates.
       */
     def objectWithLangToJsonLDObject(obj: String, lang: String): JsonLDObject = {
         JsonLDObject(Map(
-            "@value" -> JsonLDString(obj),
-            "@language" -> JsonLDString(lang)
+            JsonLDConstants.VALUE -> JsonLDString(obj),
+            JsonLDConstants.LANGUAGE -> JsonLDString(lang)
+        ))
+    }
+
+    /**
+      * Given a predicate value and a datatype, returns a JSON-LD object containing `@value` and `@type`
+      * predicates.
+      *
+      * @param value a predicate value.
+      * @return a JSON-LD object containing `@value` and `@type` predicates.
+      */
+    def datatypeValueToJsonLDObject(value: String, datatype: IRI): JsonLDObject = {
+        JsonLDObject(Map(
+            JsonLDConstants.VALUE -> JsonLDString(value),
+            JsonLDConstants.TYPE -> JsonLDString(datatype)
         ))
     }
 

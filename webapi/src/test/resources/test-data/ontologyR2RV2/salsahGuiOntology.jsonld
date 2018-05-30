@@ -1,0 +1,168 @@
+{
+  "@graph" : [ {
+    "@id" : "salsah-gui:Checkbox",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Colorpicker",
+    "salsah-gui:guiAttributeDefinition" : "ncolors:integer",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Date",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Fileupload",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Geometry",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Geonames",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Guielement",
+    "@type" : "owl:Class"
+  }, {
+    "@id" : "salsah-gui:Interval",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:List",
+    "salsah-gui:guiAttributeDefinition" : "hlist(required):iri",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Pulldown",
+    "salsah-gui:guiAttributeDefinition" : "hlist(required):iri",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Radio",
+    "salsah-gui:guiAttributeDefinition" : "hlist(required):iri",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Richtext",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Searchbox",
+    "salsah-gui:guiAttributeDefinition" : "numprops:integer",
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:SimpleText",
+    "salsah-gui:guiAttributeDefinition" : [ "size:integer", "maxlength:integer" ],
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Slider",
+    "salsah-gui:guiAttributeDefinition" : [ "max(required):decimal", "min(required):decimal" ],
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Spinbox",
+    "salsah-gui:guiAttributeDefinition" : [ "max:decimal", "min:decimal" ],
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:Textarea",
+    "salsah-gui:guiAttributeDefinition" : [ "cols:integer", "rows:integer", "width:percent", "wrap:string(soft|hard)" ],
+    "rdf:type" : [ {
+      "@id" : "salsah-gui:Guielement"
+    }, {
+      "@id" : "owl:NamedIndividual"
+    } ]
+  }, {
+    "@id" : "salsah-gui:guiAttribute",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    }
+  }, {
+    "@id" : "salsah-gui:guiAttributeDefinition",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "salsah-gui:Guielement"
+    }
+  }, {
+    "@id" : "salsah-gui:guiElement",
+    "@type" : "owl:ObjectProperty"
+  }, {
+    "@id" : "salsah-gui:guiOrder",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:nonNegativeInteger"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Restriction"
+    }
+  } ],
+  "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
+  "@type" : "owl:Ontology",
+  "knora-api:attachedToProject" : {
+    "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
+  },
+  "rdfs:label" : "The salsah-gui ontology",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+}

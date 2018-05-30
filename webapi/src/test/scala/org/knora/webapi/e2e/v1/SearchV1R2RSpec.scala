@@ -30,6 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.v1.SearchRouteV1
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.scalatest.Assertion
 import spray.json._
 
 import scala.concurrent.duration.DurationInt
@@ -54,7 +55,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(30).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -76,7 +77,7 @@ class SearchV1R2RSpec extends R2RSpec {
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
-    def checkNumberOfHits(responseJson: String, expectedNumber: Int) = {
+    def checkNumberOfHits(responseJson: String, expectedNumber: Int): Assertion = {
 
         val response: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
 
@@ -211,7 +212,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfHits(responseAs[String], 1)
+                checkNumberOfHits(responseAs[String], 2)
 
             }
 
@@ -226,7 +227,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfHits(responseAs[String], 1)
+                checkNumberOfHits(responseAs[String], 2)
 
             }
 
@@ -241,7 +242,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfHits(responseAs[String], 1)
+                checkNumberOfHits(responseAs[String], 2)
 
             }
 
@@ -257,7 +258,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkNumberOfHits(responseAs[String], 1)
+                checkNumberOfHits(responseAs[String], 2)
 
             }
 

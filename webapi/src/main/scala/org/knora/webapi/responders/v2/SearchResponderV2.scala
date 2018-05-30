@@ -1302,7 +1302,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * Performs a fulltext search and returns the resources count (how man resources match the search criteria),
+      * Performs a fulltext search and returns the resources count (how many resources match the search criteria),
       * without taking into consideration permission checking.
       *
       * This method does not return the resources themselves.
@@ -1311,9 +1311,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
       * @param requestingUser          the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the amount of resources that have been found.
+      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
-    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
 
         val searchTerms: CombineSearchTerms = CombineSearchTerms(searchValue)
 
@@ -1341,10 +1341,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             count = countResponse.results.bindings.head.rowMap("count")
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = count.toInt,
-            resources = Seq.empty[ReadResourceV2] // no results for a count query
-        )
+        } yield ResourceCountV2(numberOfResources = count.toInt)
     }
 
     /**
@@ -1605,9 +1602,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       *
       * @param inputQuery  Sparql construct query provided by the client.
       * @param requestingUser the the client making the request.
-      * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
+      * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM) = {
+    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
 
         if (apiSchema != ApiV2Simple) {
             throw SparqlSearchException("Only api v2 simple is supported in v2 extended search count query")
@@ -1738,10 +1735,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             count: String = countResponse.results.bindings.head.rowMap("count")
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = count.toInt,
-            resources = Seq.empty[ReadResourceV2] // no results for a count query
-        )
+        } yield ResourceCountV2(numberOfResources = count.toInt)
 
     }
 

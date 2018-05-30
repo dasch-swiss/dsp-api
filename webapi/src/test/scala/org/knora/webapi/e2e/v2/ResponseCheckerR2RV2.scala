@@ -26,13 +26,7 @@ object ResponseCheckerR2RV2 {
 
     private val numberOfItemsMember: IRI = "http://schema.org/numberOfItems"
 
-    private val itemListElementMember: IRI = "http://schema.org/itemListElement"
-
-    private val jsonldId = "@id"
-
-    private val jsonldType = "@type"
-
-    private val noPropertyKeys: Set[IRI] = Set(jsonldId, jsonldType, OntologyConstants.Rdfs.Label)
+    private val noPropertyKeys: Set[IRI] = Set(JsonLDConstants.ID, JsonLDConstants.TYPE, OntologyConstants.Rdfs.Label)
 
 
     /**
@@ -44,6 +38,7 @@ object ResponseCheckerR2RV2 {
       */
     private def elementToArray(element: JsonLDValue): JsonLDArray = {
         element match {
+            case obj: JsonLDObject if obj.value.isEmpty => JsonLDArray(Seq.empty[JsonLDValue])
             case array: JsonLDArray => array
             case other: JsonLDValue => JsonLDArray(Seq(other))
         }
@@ -74,29 +69,33 @@ object ResponseCheckerR2RV2 {
             // Sort by the value object IRI if available, otherwise sort by the value itself.
 
             val sortedElements = values.value.sortBy {
-                case jsonLDObj: JsonLDObject => jsonLDObj.value(jsonldId)
+                case jsonLDObj: JsonLDObject => jsonLDObj.value(JsonLDConstants.ID)
                 case other => other
             }
 
             JsonLDArray(sortedElements)
         }
 
-        assert(expectedResource.value(jsonldId) == receivedResource.value(jsonldId), s"Received resource Iri ${receivedResource.value(jsonldId)} does not match expected Iri ${expectedResource.value(jsonldId)}")
+        assert(expectedResource.value(JsonLDConstants.ID) == receivedResource.value(JsonLDConstants.ID), s"Received resource Iri ${receivedResource.value(JsonLDConstants.ID)} does not match expected Iri ${expectedResource.value(JsonLDConstants.ID)}")
 
-        assert(expectedResource.value(jsonldType) == receivedResource.value(jsonldType), s"Received resource type ${receivedResource.value(jsonldType)} does not match expected type ${expectedResource.value(jsonldType)}")
+        assert(expectedResource.value(JsonLDConstants.TYPE) == receivedResource.value(JsonLDConstants.TYPE), s"Received resource type ${receivedResource.value(JsonLDConstants.TYPE)} does not match expected type ${expectedResource.value(JsonLDConstants.TYPE)}")
 
-        assert(expectedResource.value(OntologyConstants.Rdfs.Label) == receivedResource.value(OntologyConstants.Rdfs.Label), s"rdfs:label did not match for ${receivedResource.value(jsonldId)}")
+        assert(expectedResource.value(OntologyConstants.Rdfs.Label) == receivedResource.value(OntologyConstants.Rdfs.Label), s"rdfs:label did not match for ${receivedResource.value(JsonLDConstants.ID)}")
 
-        assert(expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource.value(jsonldId)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}")
+        assert(expectedResource.value.keySet -- noPropertyKeys == receivedResource.value.keySet -- noPropertyKeys, s"property Iris are different for resource ${receivedResource.value(JsonLDConstants.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}")
 
         (expectedResource.value -- noPropertyKeys).foreach {
             case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>
 
                 // make sure that the property Iri exists in the received resource
-                assert(receivedResource.value.contains(propIri), s"Property $propIri not found in received resource ${receivedResource.value(jsonldId)}")
+                assert(receivedResource.value.contains(propIri), s"Property $propIri not found in received resource ${receivedResource.value(JsonLDConstants.ID)}")
 
                 val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
                 val sortedReceivedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(receivedResource.value(propIri)))
+
+                // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+                // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+                assert(sortedExpectedPropertyValues.value.size == sortedReceivedPropertyValues.value.size, "number of values is not equal")
 
                 sortedExpectedPropertyValues.value.zip(sortedReceivedPropertyValues.value).foreach {
                     case (expectedVal, receivedVal) =>
@@ -116,16 +115,15 @@ object ResponseCheckerR2RV2 {
       */
     def compareParsedJSONLDForResourcesResponse(expectedResponse: JsonLDDocument, receivedResponse: JsonLDDocument): Unit = {
 
-        // make sure the indicated amount of results is correct
-        assert(expectedResponse.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt] == receivedResponse.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt], s"numberOfItems did not match: expected ${expectedResponse.body.value(numberOfItemsMember)}, but received ${receivedResponse.body.value(numberOfItemsMember)}")
+        // returns a list even if there is only one element
+        val expectedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value.getOrElse(JsonLDConstants.GRAPH, expectedResponse.body))
 
-        // returns a list also if there is only one element
-        val expectedResourcesAsArray: JsonLDArray = elementToArray(expectedResponse.body.value(itemListElementMember))
-
-        // returns a list also if there is only one element
-        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value(itemListElementMember))
+        // returns a list even if there is only one element
+        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedResponse.body.value.getOrElse(JsonLDConstants.GRAPH, receivedResponse.body))
 
         // check that the actual amount of resources returned is correct
+        // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+        // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
         assert(expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size, s"received list of resources has wrong length")
 
         // loop over all the given resources and compare them (order of resources is determined by request)
@@ -154,20 +152,33 @@ object ResponseCheckerR2RV2 {
     }
 
     /**
-      * Checks for the number of expected results to be returned.
+      * Checks the response to a count query.
       *
-      * @param receivedJSONLD the response send back by the search route.
+      * @param receivedJSONLD the response sent back by the search route.
       * @param expectedNumber the expected number of results for the query.
       * @return an assertion that the actual amount of results corresponds with the expected number of results.
       */
-    def checkCountSearchQuery(receivedJSONLD: String, expectedNumber: Int): Unit = {
+    def checkCountResponse(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
         val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
         // make sure the indicated amount of results is correct
         assert(receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value == expectedNumber, s"$numberOfItemsMember is incorrect.")
 
+    }
 
+    /**
+      * Checks the number of results in a search response.
+      *
+      * @param receivedJSONLD the response sent back by the search route.
+      * @param expectedNumber the expected number of results for the query.
+      * @return an assertion that the actual amount of results corresponds with the expected number of results.
+      */
+    def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
+        val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
+        val receivedResourcesAsArray: JsonLDArray = elementToArray(receivedJsonLDDocument.body.value.getOrElse(JsonLDConstants.GRAPH, receivedJsonLDDocument.body))
+        val numberOfResultsReceived = receivedResourcesAsArray.value.size
+        assert(numberOfResultsReceived == expectedNumber, s"Expected $expectedNumber results, received $numberOfResultsReceived")
     }
 
     /**

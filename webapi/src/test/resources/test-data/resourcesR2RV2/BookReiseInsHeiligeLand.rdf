@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
+	xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/v2#">
+<incunabula:book rdf:about="http://rdfh.ch/2a6221216701">
+	<incunabula:book_comment rdf:resource="http://rdfh.ch/2a6221216701/values/56c287fc9505"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/7b4a9bf89305"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/3e74ee319405"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/019e416b9405"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/c4c794a49405"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/87f1e7dd9405"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/4a1b3b179505"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/0d458e509505"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/d06ee1899505"/>
+	<incunabula:citation rdf:resource="http://rdfh.ch/2a6221216701/values/939834c39505"/>
+	<incunabula:location rdf:resource="http://rdfh.ch/2a6221216701/values/262655679205"/>
+	<incunabula:note rdf:resource="http://rdfh.ch/2a6221216701/values/ac79fbd99205"/>
+	<incunabula:note rdf:resource="http://rdfh.ch/2a6221216701/values/6fa34e139305"/>
+	<incunabula:note rdf:resource="http://rdfh.ch/2a6221216701/values/32cda14c9305"/>
+	<incunabula:note rdf:resource="http://rdfh.ch/2a6221216701/values/f5f6f4859305"/>
+	<incunabula:note rdf:resource="http://rdfh.ch/2a6221216701/values/b82048bf9305"/>
+	<incunabula:physical_desc rdf:resource="http://rdfh.ch/2a6221216701/values/e94fa8a09205"/>
+	<incunabula:pubdate rdf:resource="http://rdfh.ch/2a6221216701/values/63fc012e9205"/>
+	<incunabula:publisher rdf:resource="http://rdfh.ch/2a6221216701/values/dda85bbb9105"/>
+	<incunabula:publoc rdf:resource="http://rdfh.ch/2a6221216701/values/a0d2aef49105"/>
+	<incunabula:title rdf:resource="http://rdfh.ch/2a6221216701/values/d1010fd69005"/>
+	<incunabula:title rdf:resource="http://rdfh.ch/2a6221216701/values/942b620f9105"/>
+	<incunabula:title rdf:resource="http://rdfh.ch/2a6221216701/values/5755b5489105"/>
+	<incunabula:url rdf:resource="http://rdfh.ch/2a6221216701/values/f89173afca2704"/>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</rdfs:label>
+</incunabula:book>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/56c287fc9505">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Katalogaufnahme anhand ISTC und v.d.Haegen</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/7b4a9bf89305">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Van der Haegen I: 9,14</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/3e74ee319405">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Goff M165</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/019e416b9405">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C 3833</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/c4c794a49405">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Klebs 651.2</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/87f1e7dd9405">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schr 4799</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/4a1b3b179505">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schramm XXI p. 9 &amp; 26</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/0d458e509505">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FairMur(G) 283</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/d06ee1899505">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">IBP 3556</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/939834c39505">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Borm 1751</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/262655679205">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Basel UB, Sign: Aleph D III 13:1</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/ac79fbd99205">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">deutsch von Otto von Diemeringen</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/6fa34e139305">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rubr. mit Init. J zu Beginn</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/32cda14c9305">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Holzschnitte nicht koloriert</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/f5f6f4859305">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Besitzervermerke: Kartause, H. Zscheckenbürlin</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/b82048bf9305">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/e94fa8a09205">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Extent: 1 Bd.; Dimensions: f°</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:DateValue rdf:about="http://rdfh.ch/2a6221216701/values/63fc012e9205">
+	<knora-api:dateValueHasCalendar rdf:datatype="http://www.w3.org/2001/XMLSchema#string">JULIAN</knora-api:dateValueHasCalendar>
+	<knora-api:dateValueHasEndEra rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CE</knora-api:dateValueHasEndEra>
+	<knora-api:dateValueHasEndYear rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1481</knora-api:dateValueHasEndYear>
+	<knora-api:dateValueHasStartEra rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CE</knora-api:dateValueHasStartEra>
+	<knora-api:dateValueHasStartYear rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1481</knora-api:dateValueHasStartYear>
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">JULIAN:1481 CE</knora-api:valueAsString>
+</knora-api:DateValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/dda85bbb9105">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bernhard Richel</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/a0d2aef49105">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Basel</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/d1010fd69005">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/942b620f9105">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reysen und wanderschafften durch das Gelobte Land</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/5755b5489105">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Itinerarius</knora-api:valueAsString>
+</knora-api:TextValue>
+<knora-api:TextValue rdf:about="http://rdfh.ch/2a6221216701/values/f89173afca2704">
+	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">http://aleph.unibas.ch/F/?local_base=DSV01&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=002610320</knora-api:valueAsString>
+</knora-api:TextValue>
+
+</rdf:RDF>

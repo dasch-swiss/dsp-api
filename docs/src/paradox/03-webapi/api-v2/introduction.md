@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Introduction: Using API V2
+# Introduction: Using API v2
 
 @@toc
 
@@ -32,12 +32,27 @@ format that is consistent and hence easier to use for a client.
 Please note that V2 is still in development. We do not yet recommend
 using it on productive systems.
 
-## V2 Path Segment
+## API v2 Path Segment
 
-Every request to API V1 includes `v2` as a path segment, e.g.
+Every request to API v2 includes `v2` as a path segment, e.g.
 `http://host/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a`.
 Accordingly, requests using any other version of the API will require
 another path segment.
+
+## Response Formats
+
+All API v2 responses can be returned in
+[JSON-LD](https://json-ld.org/spec/latest/json-ld/),
+[Turtle](https://www.w3.org/TR/turtle/),
+or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/), using
+@extref[HTTP content negotiation](rfc:7231#section-5.3.2). The client
+can request these formats using the following MIME types:
+
+| Format  | MIME Type             |
+|---------|-----------------------|
+| JSON-LD | `application/ld+json` |
+| Turtle  | `text/turtle`         |
+| RDF/XML | `application/rdf+xml` |
 
 ## JSON-LD
 
@@ -53,27 +68,13 @@ RDF types (e.g. XSD datatypes) or more complex types whose IRIs can be
 dereferenced to get more information about their structure.
 
 At the same time, JSON-LD responses are relatively easy for software
-developers to work with. Items in a response can have human-readable
-names, which can nevertheless be expanded to full IRIs. Also, while a
-format such as [Turtle](https://www.w3.org/TR/turtle/) just provides a
+developers to work with, and are more concise and easier to read than
+the equivalent XML. Items in a response can have human-readable names,
+which can nevertheless be expanded to full IRIs. Also, while a format such as
+[Turtle](https://www.w3.org/TR/turtle/) just provides a
 set of RDF triples, an equivalent JSON-LD response can explicitly
 provide data in a hierarchical structure, with objects nested inside
 other objects.
-
-We designed the V2 routes in a way that would also allow for the usage
-of other formats such as XML. We plan to implement support for XML once
-the implementation of JSON-LD is completed. The client will be able to
-use content negotiation to specify the preferred exchange format.
-
-## Support of schema.org Entities
-
-Some entities defined in [schema.org](http://www.schema.org) are used in
-API v2 responses (e.g., `ResourcesSequence`, see
-@ref:[Response Formats](response-formats.md)). For example,
-`knora-api:Resource` is declared to be a subclass of
-`http://schema.org/Thing`, so we can use a `knora-api:Resource` or
-any of its subclasses where `http://schema.org` requires a
-`http://schema.org/Thing`.
 
 ## Knora IRIs
 
@@ -82,7 +83,7 @@ is explained in @ref:[Knora IRIs](knora-iris.md).
 
 ## API Schema
 
-Knora API V2 offers the query and response format in a complex schema
+Knora API v2 offers the query and response format in a complex schema
 and a simple one. The main difference is that the complex schema exposes
 the complexity of value objects, while the simple version does not. A
 client that needs to edit values must use the complex schema in order to

@@ -102,7 +102,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 210)
+                checkCountResponse(responseAs[String], 210)
 
             }
         }
@@ -137,7 +137,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
 
             }
         }
@@ -248,7 +248,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkCountResponse(responseAs[String], 2)
 
             }
 
@@ -363,7 +363,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
                 // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
 
-                checkCountSearchQuery(responseAs[String], 18)
+                checkCountResponse(responseAs[String], 18)
 
             }
 
@@ -452,7 +452,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
 
             }
@@ -671,7 +671,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -767,7 +767,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
 
             }
 
@@ -816,7 +816,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
 
             }
 
@@ -864,7 +864,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-                checkCountSearchQuery(responseAs[String], 15)
+                checkSearchResponseNumberOfResults(responseAs[String], 15)
 
             }
 
@@ -912,7 +912,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 4)
+                checkSearchResponseNumberOfResults(responseAs[String], 4)
 
             }
 
@@ -960,7 +960,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
@@ -1008,7 +1008,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 18)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
 
             }
 
@@ -1056,7 +1056,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 5)
+                checkSearchResponseNumberOfResults(responseAs[String], 5)
 
             }
 
@@ -1116,7 +1116,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1313,7 +1313,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
@@ -1355,7 +1355,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
@@ -1397,7 +1397,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
@@ -1439,7 +1439,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1474,7 +1474,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
@@ -1517,8 +1517,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
-
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
             }
 
         }
@@ -1564,7 +1563,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountSearchQuery(responseAs[String], 14)
+                checkSearchResponseNumberOfResults(responseAs[String], 15)
             }
 
         }
@@ -1618,7 +1617,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1660,7 +1659,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1701,7 +1700,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1743,7 +1742,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1785,7 +1784,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1824,7 +1823,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
 
             }
 
@@ -1866,7 +1865,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
         }
 
@@ -1908,7 +1907,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
         }
 
@@ -1942,7 +1941,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
 
             }
 
@@ -1968,7 +1967,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
             }
 
         }
@@ -1993,7 +1992,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
 
         }
@@ -2015,7 +2014,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                     </text>
                 */
 
-                checkCountSearchQuery(responseAs[String], 0)
+                checkSearchResponseNumberOfResults(responseAs[String], 0)
 
             }
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4348fb82f2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WALDWIRTSCHAFT</rdfs:label>
+</knora-api:ListNode>
+
+</rdf:RDF>

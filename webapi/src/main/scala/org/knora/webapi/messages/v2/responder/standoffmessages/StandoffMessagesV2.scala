@@ -26,7 +26,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDString}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
@@ -99,8 +99,8 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val body = JsonLDObject(Map(
-            "@id" -> JsonLDString(mappingIri),
-            "@type" -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
+            JsonLDConstants.ID -> JsonLDString(mappingIri),
+            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             "rdfs:label" -> JsonLDString(label),
             OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDString(projectIri.toString)
         ))

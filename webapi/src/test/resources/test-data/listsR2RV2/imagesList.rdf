@@ -1,0 +1,2247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/73d0ec0302">
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/00FF"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a8f4cd99a6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/738fc745a7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4ca9e7d3b5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/691eee1cbe"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f05d010ec5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8693f465c6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7d99d4c1c9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4834ce6dca"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/71a1543cce"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8d9fa100ea"/>
+	<knora-api:isRootNode rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isRootNode>
+	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hierarchisches Stichwortverzeichnis / Signatur der Bilder</rdfs:comment>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Title</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a8f4cd99a6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/412821d3a6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/da5b740ca7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ALLGEMEINES</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/412821d3a6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BIBLIOTHEKEN ST. MORITZ</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/da5b740ca7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SAMMELBÄNDE, FOTOALBEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/738fc745a7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0cc31a7fa7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3e2ac1f1a7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/70916764a8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/eed65ab1b2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b673f47bb4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/810eee27b5"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GEOGRAPHIE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0cc31a7fa7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a5f66db8a7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SCHWEIZ</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a5f66db8a7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3e2ac1f1a7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d75d142ba8"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GRAUBÜNDEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d75d142ba8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/70916764a8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/09c5ba9da8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a2f80dd7a8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3b2c6110a9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d45fb449a9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6d930783a9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/06c75abca9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9ffaadf5a9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/382e012faa"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/93022e70ae"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ENGADIN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/09c5ba9da8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Flugaufnahmen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a2f80dd7a8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Sommer ohne Ortschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3b2c6110a9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Sommer mit Ortschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d45fb449a9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Winter ohne Ortschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6d930783a9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Winter mit Ortschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/06c75abca9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Seen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9ffaadf5a9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaft Berge</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/382e012faa">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d1615468aa"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6a95a7a1aa"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/03c9fadaaa"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9cfc4d14ab"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3530a14dab"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ce63f486ab"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/679747c0ab"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/00cb9af9ab"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/99feed32ac"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3232416cac"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cb6594a5ac"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6499e7deac"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fdcc3a18ad"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/96008e51ad"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2f34e18aad"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c86734c4ad"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/619b87fdad"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/faceda36ae"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ortschaften Sommer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d1615468aa">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maloja</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6a95a7a1aa">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sils</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/03c9fadaaa">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Silvaplana</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9cfc4d14ab">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Surlej</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3530a14dab">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Champfèr</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ce63f486ab">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pontresina</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/679747c0ab">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Celerina</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/00cb9af9ab">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Samedan</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/99feed32ac">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bever</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3232416cac">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">La Punt</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cb6594a5ac">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Chamues-ch</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6499e7deac">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Madulain</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fdcc3a18ad">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zuoz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/96008e51ad">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S-chanf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2f34e18aad">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cinous-chel</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c86734c4ad">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fex</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/619b87fdad">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Unterengadin</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/faceda36ae">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/93022e70ae">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2c3681a9ae"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c569d4e2ae"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5e9d271caf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f7d07a55af"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9004ce8eaf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/293821c8af"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c26b7401b0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5b9fc73ab0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f4d21a74b0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8d066eadb0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/263ac1e6b0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bf6d1420b1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/58a16759b1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f1d4ba92b1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8a080eccb1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/233c6105b2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bc6fb43eb2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/55a30778b2"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ortschaften Winter</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2c3681a9ae">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Maloja</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c569d4e2ae">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sils</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5e9d271caf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Silvaplana</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f7d07a55af">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Surlej</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9004ce8eaf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Champfèr</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/293821c8af">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pontresina</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c26b7401b0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Celerina</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5b9fc73ab0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Samedan</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f4d21a74b0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bever</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8d066eadb0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">La Punt</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/263ac1e6b0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Chamues-ch</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bf6d1420b1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Madulain</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/58a16759b1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zuoz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f1d4ba92b1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">S-chanf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8a080eccb1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cinous-chel</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/233c6105b2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fex</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bc6fb43eb2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Unterengadin</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/55a30778b2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/eed65ab1b2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/870aaeeab2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/203e0124b3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b971545db3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/52a5a796b3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ebd8facfb3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/840c4e09b4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1d40a142b4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ST. MORITZ</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/870aaeeab2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Dorf und Bad Winter</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/203e0124b3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Dorf Sommer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b971545db3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Bad Sommer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/52a5a796b3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Denkmäler</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ebd8facfb3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Landschaft Sommer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/840c4e09b4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Landschaft Winter</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1d40a142b4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Schulhäuser</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b673f47bb4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4fa747b5b4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e8da9aeeb4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/45cfa1df0401"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SUEDTAELER</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4fa747b5b4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ortschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e8da9aeeb4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landschaften</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/45cfa1df0401">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/810eee27b5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1a424161b5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b375949ab5"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">LANDKARTEN UND PANORAMEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1a424161b5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Landkarten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b375949ab5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Panoramen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4ca9e7d3b5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/de02f5180501"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/773648520501"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/106a9b8b0501"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a99deec40501"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e5dc3a0db6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/37b747aabd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d0ea9ae3bd"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GESCHICHTE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/de02f5180501">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SCHWEIZ</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/773648520501">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GRAUBÜNDEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/106a9b8b0501">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ENGADIN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a99deec40501">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ST. MORITZ</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e5dc3a0db6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7e108e46b6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a1815452bc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3ab5a78bbc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d3e8fac4bc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6c1c4efebc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0550a137bd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9e83f470bd"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BIOGRAPHIEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7e108e46b6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1744e17fb6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b07734b9b6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/49ab87f2b6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e2deda2bb7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7b122e65b7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1446819eb7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ad79d4d7b7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/46ad2711b8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/dfe07a4ab8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7814ce83b8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/114821bdb8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/aa7b74f6b8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/43afc72fb9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/dce21a69b9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/75166ea2b9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0e4ac1dbb9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a77d1415ba"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/40b1674eba"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d9e4ba87ba"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/72180ec1ba"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0b4c61faba"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a47fb433bb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3db3076dbb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d6e65aa6bb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6f1aaedfbb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/084e0119bc"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen A-Z</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1744e17fb6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen A</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b07734b9b6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen B</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/49ab87f2b6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen C</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e2deda2bb7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen D</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7b122e65b7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen E</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1446819eb7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen F</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ad79d4d7b7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen G</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/46ad2711b8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen H</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/dfe07a4ab8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen I</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7814ce83b8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen J</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/114821bdb8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen K</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/aa7b74f6b8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen L</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/43afc72fb9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen M</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/dce21a69b9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen N</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/75166ea2b9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen O</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0e4ac1dbb9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen P</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a77d1415ba">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen Q</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/40b1674eba">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen R</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d9e4ba87ba">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">18</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen S</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/72180ec1ba">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen T</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0b4c61faba">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen U</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a47fb433bb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">21</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen V</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3db3076dbb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">22</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen W</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d6e65aa6bb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">23</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen X</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6f1aaedfbb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">24</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen Y</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/084e0119bc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">25</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen Z</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a1815452bc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen unbekannt</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3ab5a78bbc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gruppen Einheimische</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d3e8fac4bc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kinder Winter</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6c1c4efebc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kinder Sommer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0550a137bd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sonnenbadende</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9e83f470bd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zuschauer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/37b747aabd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WAPPEN UND FAHNEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d0ea9ae3bd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">KRIEGE UND MILITÄR</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/691eee1cbe">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/02524156be"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/988734aebf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2ebd2706c1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/928b74ebc1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c1f4ba7cc3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/25c30762c4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">KUNST</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/02524156be">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9b85948fbe"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/34b9e7c8be"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cdec3a02bf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/66208e3bbf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ff53e174bf"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MALEREI</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9b85948fbe">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ausstellungen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/34b9e7c8be">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gemälde</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cdec3a02bf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Karrikaturen und Kritik</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/66208e3bbf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Segantini und Museum</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ff53e174bf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sgrafitti</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/988734aebf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/31bb87e7bf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/caeeda20c0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/63222e5ac0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fc558193c0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9589d4ccc0"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MUSIK, THEATER UND RADIO</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/31bb87e7bf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kurorchester</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/caeeda20c0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Musik</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/63222e5ac0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zirkus</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fc558193c0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Theater</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9589d4ccc0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tanz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2ebd2706c1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c7f07a3fc1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6024ce78c1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f95721b2c1"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FILM UND FOTO</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c7f07a3fc1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heidi Film</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6024ce78c1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Foto</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f95721b2c1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Film</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/928b74ebc1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2bbfc724c2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c4f21a5ec2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5d266e97c2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f659c1d0c2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8f8d140ac3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/28c16743c3"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BILDHAUEREI UND KUNSTGEWERBE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2bbfc724c2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Modelle</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c4f21a5ec2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schneeskulpturen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5d266e97c2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Plastiken</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f659c1d0c2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Stiche</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8f8d140ac3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bildhauerei</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/28c16743c3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kunstgewerbe</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c1f4ba7cc3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5a280eb6c3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f35b61efc3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8c8fb428c4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ST. MORITZ GRAFIKEN UND PLAKATE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5a280eb6c3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Grafiken</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f35b61efc3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Holzschnitte</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8c8fb428c4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Plakate</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/25c30762c4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bef65a9bc4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/572aaed4c4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ARCHITEKTUR</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bef65a9bc4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Architektur / Inneneinrichtungen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/572aaed4c4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pläne</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f05d010ec5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/89915447c5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/22c5a780c5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ed5fa12cc6"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MEDIZIN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/89915447c5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">MEDIZIN UND NATURHEILKUNDE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/22c5a780c5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bbf8fab9c5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/542c4ef3c5"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">HEILBAD UND QUELLEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bbf8fab9c5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heilbad aussen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/542c4ef3c5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Heilbad innen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ed5fa12cc6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SPITAL UND KLINIKEN / KINDERHEIME</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8693f465c6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1fc7479fc6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/83959484c7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4e308e30c8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e763e169c8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e4658188c9"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">NATURKUNDE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1fc7479fc6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b8fa9ad8c6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/512eee11c7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ea61414bc7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FAUNA</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b8fa9ad8c6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fischen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/512eee11c7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Jagen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ea61414bc7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tiere</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/83959484c7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1cc9e7bdc7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b5fc3af7c7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FLORA</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1cc9e7bdc7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Blumen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b5fc3af7c7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bäume</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4e308e30c8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GEOLOGIE UND MINERALOGIE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e763e169c8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/809734a3c8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/19cb87dcc8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b2feda15c9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4b322e4fc9"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">KLIMATOLOGIE UND METEOROLOGIE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/809734a3c8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gewässer und Überschwemmungen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/19cb87dcc8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gletscher</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b2feda15c9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Lawinen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4b322e4fc9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schnee, Raureif, Eisblumen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e4658188c9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">UMWELT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7d99d4c1c9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/16cd27fbc9"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RELIGION</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/16cd27fbc9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/af007b34ca"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RELIGION UND KIRCHEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/af007b34ca">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">St. Moritz Kirchen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4834ce6dca">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e16721a7ca"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7a9b74e0ca"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/779d14ffcb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/10d16738cc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3f3aaec9cd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d86d0103ce"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SOZIALES</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e16721a7ca">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">VERFASSUNGEN UND GESETZE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7a9b74e0ca">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/13cfc719cb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ac021b53cb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/45366e8ccb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/de69c1c5cb"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GEMEINDEWESEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/13cfc719cb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wasserwirtschaft</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ac021b53cb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Feuer und Feuerwehr</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/45366e8ccb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Polizei und Behörde</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/de69c1c5cb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Abfallbewirtschaftung</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/779d14ffcb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SCHULWESEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/10d16738cc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a904bb71cc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/42380eabcc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/db6b61e4cc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/749fb41dcd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0dd30757cd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a6065b90cd"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">VOLKSKUNDE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a904bb71cc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bälle und Verkleidungen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/42380eabcc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Chalandamarz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/db6b61e4cc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Engadiner Museum</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/749fb41dcd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Feste und Umzüge</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0dd30757cd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schlitteda</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a6065b90cd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Trachten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3f3aaec9cd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PARTEIEN UND GRUPPIERUNGEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d86d0103ce">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SCHWESTERNSTÄTDE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/71a1543cce">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0ad5a775ce"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/01db87d1d1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/97107b29d3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5fad14f4d4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f8e0672dd5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/59b15431d7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/244c4eddd7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bd7fa116d8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/881a9bc2d8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1854ce57dc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e0f06722de"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/41c15426e0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3bc59463e2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d1fa87bbe3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/67307b13e5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2ccfb4fce7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0ad5a775ce">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a308fbaece"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3c3c4ee8ce"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d56fa121cf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6ea3f45acf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/07d74794cf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a00a9bcdcf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/393eee06d0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d2714140d0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6ba59479d0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/04d9e7b2d0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9d0c3becd0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/36408e25d1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cf73e15ed1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/68a73498d1"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a308fbaece">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bridge</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3c3c4ee8ce">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Boxen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d56fa121cf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Camping</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6ea3f45acf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fechten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/07d74794cf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fitness</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a00a9bcdcf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Höhentraining</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/393eee06d0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Krafttraining</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d2714140d0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Leichtathletik</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6ba59479d0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pokale, Preise, Medallien</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/04d9e7b2d0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schiessen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9d0c3becd0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Turnen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/36408e25d1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zeitmessung</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cf73e15ed1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hornussen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/68a73498d1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schwingen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/01db87d1d1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9a0edb0ad2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/33422e44d2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cc75817dd2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/65a9d4b6d2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fedc27f0d2"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WINTERSPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9a0edb0ad2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cricket</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/33422e44d2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schlitteln</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cc75817dd2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schneeschuhlaufen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/65a9d4b6d2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tailing</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fedc27f0d2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wind-, Schlittenhundrennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/97107b29d3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3044ce62d3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c977219cd3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/62ab74d5d3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fbdec70ed4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/94121b48d4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2d466e81d4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c679c1bad4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SKI</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3044ce62d3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Verschiedenes</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c977219cd3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skiakrobatik</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/62ab74d5d3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Corvatsch</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fbdec70ed4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skifahren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/94121b48d4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Kilometer-Lancé</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2d466e81d4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski SOS</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c679c1bad4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skitouren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5fad14f4d4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SKISCHULE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f8e0672dd5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9114bb66d5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2a480ea0d5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c37b61d9d5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5cafb412d6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f5e2074cd6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8e165b85d6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/274aaebed6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c07d01f8d6"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SKIRENNEN UND SKISPRINGEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9114bb66d5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skirennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2a480ea0d5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Rennpisten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c37b61d9d5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5cafb412d6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Guardia Grischa</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f5e2074cd6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Vorweltmeisterschaft 1973</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8e165b85d6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Weltmeisterschaft 1974</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/274aaebed6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ski Weltmeisterschaft 2003</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c07d01f8d6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skispringen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/59b15431d7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f2e4a76ad7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8b18fba3d7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SKILANGLAUF UND ENGADIN SKIMARATHON</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f2e4a76ad7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skilanglauf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8b18fba3d7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Engadin Skimarathon</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/244c4eddd7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">SNOWBOARD UND SNOWBOARDSCHULE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bd7fa116d8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/56b3f44fd8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/efe64789d8"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">OLYMPIADEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/56b3f44fd8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Olympiade 1928</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/efe64789d8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Olympiade 1948</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/881a9bc2d8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/214eeefbd8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ba814135d9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/821edbffda"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1b522e39db"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b4858172db"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e6ec27e5db"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7f207b1edc"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">EISSPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/214eeefbd8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eishockey und Bandy</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ba814135d9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/53b5946ed9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ece8e7a7d9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/851c3be1d9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1e508e1ada"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b783e153da"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/50b7348dda"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e9ea87c6da"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eislaufen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/53b5946ed9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gefrorene Seen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ece8e7a7d9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gymkhana</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/851c3be1d9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eisrevue</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1e508e1ada">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Paarlauf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b783e153da">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schnellauf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/50b7348dda">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kellner auf Eis</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e9ea87c6da">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/821edbffda">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eissegeln, -Surfen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1b522e39db">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eisstadion</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b4858172db">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4db9d4abdb"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Curling</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4db9d4abdb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e6ec27e5db">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eisstockschiessen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7f207b1edc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kunsteisbahn Ludains</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1854ce57dc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b1872191dc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/15566e76dd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/42d141fe0501"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CRESTA RUN UND BOB</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b1872191dc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4abb74cadc"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e3eec703dd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7c221b3ddd"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bob Run</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4abb74cadc">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e3eec703dd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Stürze</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7c221b3ddd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bau</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/15566e76dd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ae89c1afdd"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/47bd14e9dd"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Cresta Run</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ae89c1afdd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/47bd14e9dd">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bau</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/42d141fe0501">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rodeln</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e0f06722de">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7924bb5bde"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/12580e95de"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ab8b61cede"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/44bfb407df"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ddf20741df"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/76265b7adf"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0f5aaeb3df"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a88d01eddf"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">PFERDESPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7924bb5bde">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Concours Hippique</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/12580e95de">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Pferderennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ab8b61cede">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Polo</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/44bfb407df">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reiten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ddf20741df">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reithalle</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/76265b7adf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skikjöring</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0f5aaeb3df">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fahrturnier</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a88d01eddf">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zuschauer</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/41c15426e0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/daf4a75fe0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7328fb98e0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0c5c4ed2e0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a58fa10be1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/095eeef0e1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/a291412ae2"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">BALLSPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/daf4a75fe0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Billiard</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7328fb98e0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Fussball</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0c5c4ed2e0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kegeln</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a58fa10be1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/3ec3f444e1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d7f6477ee1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/702a9bb7e1"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Golf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3ec3f444e1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Minigolf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d7f6477ee1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Sommergolf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/702a9bb7e1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wintergolf</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/095eeef0e1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tennis</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/a291412ae2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Volleyball</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/3bc59463e2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/d4f8e79ce2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6d2c3bd6e2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/06608e0fe3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9f93e148e3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/38c73482e3"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ALPINISMUS</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d4f8e79ce2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Alpinismus</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6d2c3bd6e2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Berghütten und Restaurants</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/06608e0fe3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Trecking mit Tieren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9f93e148e3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wandern</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/38c73482e3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Spazieren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/d1fa87bbe3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6a2edbf4e3"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/03622e2ee4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9c958167e4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/35c9d4a0e4"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cefc27dae4"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FLIEGEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6a2edbf4e3">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Ballon</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/03622e2ee4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Delta</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9c958167e4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Flugzeuge</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/35c9d4a0e4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Helikopter</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cefc27dae4">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Segelflieger</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/67307b13e5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/0064ce4ce5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9699c1a4e6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2fcd14dee6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c8006817e7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/6134bb50e7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fa670e8ae7"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/939b61c3e7"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">RADSPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/0064ce4ce5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/99972186e5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/32cb74bfe5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/cbfec7f8e5"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/64321b32e6"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fd656e6be6"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Autorennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/99972186e5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Malojarennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/32cb74bfe5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Berninarennen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/cbfec7f8e5">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Shellstrasse</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/64321b32e6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fd656e6be6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Verschiedenes</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9699c1a4e6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Geschicklichkeitsfahren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2fcd14dee6">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schönheitskonkurrenz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c8006817e7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Inline Skating</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/6134bb50e7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Montainbiking</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fa670e8ae7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Radfahren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/939b61c3e7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Motorradfahren</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2ccfb4fce7">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c5020836e8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5e365b6fe8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f769aea8e8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/909d01e2e8"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/29d1541be9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c204a854e9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5b38fb8de9"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f46b4ec7e9"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WASSERSPORT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c5020836e8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schwimmen Hallenbäder</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5e365b6fe8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schwimmen Seen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f769aea8e8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rudern</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/909d01e2e8">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Segeln</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/29d1541be9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Windsurfen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c204a854e9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tauchen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5b38fb8de9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rafting</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f46b4ec7e9">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kitesurfen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8d9fa100ea">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/26d3f439ea"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/84a5815ced"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b60c28cfed"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1adb74b4ee"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7ea9c199ef"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e2770e7ff0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/46465b64f1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/aa14a849f2"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4348fb82f2"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WIRTSCHAFT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/26d3f439ea">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bf064873ea"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/583a9bacea"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f16deee5ea"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8aa1411feb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/23d59458eb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bc08e891eb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/553c3bcbeb"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ee6f8e04ec"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/87a3e13dec"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/20d73477ec"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b90a88b0ec"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/523edbe9ec"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/eb712e23ed"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">VERKEHR</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bf064873ea">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Autos, Busse und Postautos</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/583a9bacea">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Boote</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f16deee5ea">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Flugplatz Samedan</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8aa1411feb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kommunikation</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/23d59458eb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Kutschen und Pferdetransporte</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bc08e891eb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Luftseilbahnen und Stationen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/553c3bcbeb">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schneeräumungs- und Pistenfahrzeuge</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ee6f8e04ec">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schneekanonen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/87a3e13dec">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Skilifte</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/20d73477ec">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Standseilbahnen und Stationen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b90a88b0ec">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Strassen und Pässe</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/523edbe9ec">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Tram</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/eb712e23ed">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wegweiser</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/84a5815ced">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/1dd9d495ed"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">EISENBAHNEN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1dd9d495ed">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Eisenbahnen und Bahnhöfe</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b60c28cfed">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4f407b08ee"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e873ce41ee"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/81a7217bee"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FREMDENVERKEHR</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4f407b08ee">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Casino</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e873ce41ee">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Gäste</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/81a7217bee">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Mode</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/1adb74b4ee">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b30ec8edee"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4c421b27ef"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/e5756e60ef"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">HOTELLERIE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b30ec8edee">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/97744976b801"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/30a89cafb801"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c9dbefe8b801"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/620f4322b901"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/fb42965bb901"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9476e994b901"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2daa3cceb901"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c6dd8f07ba01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5f11e340ba01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f844367aba01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/917889b3ba01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/2aacdcecba01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c3df2f26bb01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5c13835fbb01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f546d698bb01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8e7a29d2bb01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/27ae7c0bbc01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/c0e1cf44bc01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5915237ebc01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/f24876b7bc01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/8b7cc9f0bc01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/24b01c2abd01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/9f29173c3b02"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/bde36f63bd01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/5617c39cbd01"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ef4a16d6bd01"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotels und Restaurants A-Z</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/97744976b801">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel A</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/30a89cafb801">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel B</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c9dbefe8b801">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel C</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/620f4322b901">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel D</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/fb42965bb901">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel E</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9476e994b901">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel F</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2daa3cceb901">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel G</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c6dd8f07ba01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel H</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5f11e340ba01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel I</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f844367aba01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel J</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/917889b3ba01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel K</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/2aacdcecba01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel L</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c3df2f26bb01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel M</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5c13835fbb01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">13</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel N</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f546d698bb01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">14</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel O</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8e7a29d2bb01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">15</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel P</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/27ae7c0bbc01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">16</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel Q</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/c0e1cf44bc01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">17</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel R</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5915237ebc01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">18</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel S</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/f24876b7bc01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">19</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel T</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/8b7cc9f0bc01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">20</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel U</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/24b01c2abd01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">21</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel V</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/9f29173c3b02">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">22</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel W</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/bde36f63bd01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">23</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel X</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/5617c39cbd01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">24</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel Y</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ef4a16d6bd01">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">25</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hotel Z</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4c421b27ef">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Essen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e5756e60ef">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Menükarten</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7ea9c199ef">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/17dd14d3ef"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/b010680cf0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/4944bb45f0"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">KURVEREIN</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/17dd14d3ef">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Personal und Büro</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/b010680cf0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Anlässe und Reisen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4944bb45f0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Markenzeichen St. Moritz</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/e2770e7ff0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/7bab61b8f0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/14dfb4f1f0"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/ad12082bf1"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GEWERBE</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/7bab61b8f0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Arbeitswelt</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/14dfb4f1f0">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reklame</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/ad12082bf1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bauwesen</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/46465b64f1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/df79ae9df1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/78ad01d7f1"/>
+	<knora-api:hasSubListNode rdf:resource="http://rdfh.ch/lists/00FF/11e15410f2"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">ENERGIEWIRTSCHAFT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/df79ae9df1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Elektrizität</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/78ad01d7f1">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Wasserkraft</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/11e15410f2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Solarenergie</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/aa14a849f2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">AGRARWIRTSCHAFT</rdfs:label>
+</knora-api:ListNode>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4348fb82f2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WALDWIRTSCHAFT</rdfs:label>
+</knora-api:ListNode>
+
+</rdf:RDF>

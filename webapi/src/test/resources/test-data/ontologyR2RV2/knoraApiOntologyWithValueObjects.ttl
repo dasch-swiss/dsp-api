@@ -1,0 +1,2491 @@
+@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix salsah-gui: <http://api.knora.org/ontology/salsah-gui/v2#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://api.knora.org/ontology/knora-api/v2> a owl:Ontology;
+  knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
+  rdfs:label "The knora-api ontology in the complex schema" .
+
+knora-api:Annotation a owl:Class;
+  knora-api:canBeInstantiated true;
+  knora-api:isResourceClass true;
+  rdfs:comment "A generic class for representing annotations";
+  rdfs:label "Annotation";
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:isAnnotationOf
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:isAnnotationOfValue
+    ] .
+
+knora-api:Resource a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "Represents something in the world, or an abstract thing";
+  rdfs:label "Resource";
+  rdfs:subClassOf [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:attachedToProject a owl:ObjectProperty;
+  knora-api:objectType knora-api:knoraProject;
+  rdfs:comment "Connects something to a project";
+  rdfs:label "attached to project" .
+
+knora-api:attachedToUser a owl:ObjectProperty;
+  knora-api:objectType knora-api:User;
+  rdfs:comment "Connects something to a user";
+  rdfs:label "attached to user" .
+
+knora-api:creationDate a owl:DatatypeProperty;
+  knora-api:objectType xsd:dateTimeStamp;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Indicates when a resource was created" .
+
+knora-api:hasComment a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:TextValue;
+  knora-api:subjectType knora-api:Resource;
+  salsah-gui:guiElement salsah-gui:Richtext;
+  rdfs:comment "Represents a comment on a resource as a knora-base:TextValue";
+  rdfs:label "Comment";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:hasIncomingLink a owl:ObjectProperty;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Indicates that this resource referred to by another resource";
+  rdfs:label "has incoming links";
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:hasPermissions a owl:DatatypeProperty;
+  knora-api:objectType xsd:string .
+
+knora-api:hasStandoffLinkTo a owl:ObjectProperty;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Represents a link in standoff markup from one resource to another.";
+  rdfs:label "has Standoff Link to";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:hasStandoffLinkToValue a owl:ObjectProperty;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Represents a link in standoff markup from one resource to another.";
+  rdfs:label "has Standoff Link to";
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:isAnnotationOf a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Annotation;
+  rdfs:label "is Annotation of";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:isAnnotationOfValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Annotation;
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:lastModificationDate a owl:DatatypeProperty;
+  knora-api:objectType xsd:dateTimeStamp .
+
+knora-api:AudioFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents an audio file";
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:audioFileValueHasDuration
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:FileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:subClassOf knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:audioFileValueHasDuration a owl:DatatypeProperty;
+  knora-api:objectType xsd:decimal;
+  knora-api:subjectType knora-api:AudioFileValue;
+  rdfs:comment "The duration of an audio file value.";
+  rdfs:label "Audio file value has duration";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:fileValueAsUrl a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:FileValue;
+  rdfs:comment "The URL at which the file can be accessed.";
+  rdfs:label "File value as URL";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:fileValueHasFilename a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:FileValue;
+  rdfs:comment "The name of the file that a file value represents.";
+  rdfs:label "File value has filename";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:fileValueIsPreview a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType knora-api:FileValue;
+  rdfs:comment "Indicates whether this is file value is a preview.";
+  rdfs:label "File value is preview";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:valueAsString a owl:ObjectProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:Value;
+  rdfs:comment "A plain string representation of a value" .
+
+knora-api:valueCreationDate a owl:DatatypeProperty;
+  knora-api:objectType xsd:dateTimeStamp;
+  knora-api:subjectType knora-api:Value;
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:valueHasComment a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:Value;
+  rdfs:comment "A comment on a value";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:AudioRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "Represents a file containing audio data";
+  rdfs:label "Representation (Audio)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasAudioFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:Representation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "A resource that can store one or more files";
+  rdfs:label "Representation";
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasAudioFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:AudioFileValue;
+  knora-api:subjectType knora-api:AudioRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to an audio file";
+  rdfs:label "has audio file";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:BooleanBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:booleanValueAsBoolean
+    ] .
+
+knora-api:ValueBase a owl:Class .
+
+knora-api:booleanValueAsBoolean a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType knora-api:BooleanValue;
+  rdfs:comment "Represents the literal boolean value of a BooleanValue.";
+  rdfs:label "Boolean value as decimal";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:BooleanValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a boolean value";
+  rdfs:subClassOf knora-api:BooleanBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:booleanValueAsBoolean
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:Value a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "The base class of classes representing Knora values";
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:ColorBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:colorValueAsColor
+    ] .
+
+knora-api:colorValueAsColor a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:ColorValue;
+  rdfs:comment "Represents the literal RGB value of a ColorValue.";
+  rdfs:label "Color value as color";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:ColorValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a color in HTML format, e.g. \"#33eeff\"";
+  rdfs:subClassOf knora-api:ColorBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:colorValueAsColor
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:DDDFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "This represents some 3D-object with mesh data, point cloud, etc.";
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:DDDRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "Represents a file containg 3D data";
+  rdfs:label "Representation (3D)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasDDDFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasDDDFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:DDDFileValue;
+  knora-api:subjectType knora-api:DDDRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to a 3D-file";
+  rdfs:label "has 3D-file";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:DateBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasCalendar
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndDay
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndEra
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndMonth
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndYear
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartDay
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartEra
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartMonth
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartYear
+    ] .
+
+knora-api:dateValueHasCalendar a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the calendar of a date value.";
+  rdfs:label "Date value has calendar";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasEndDay a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the end day of a date value.";
+  rdfs:label "Date value has end day";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasEndEra a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the end era of a date value.";
+  rdfs:label "Date value has end era";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasEndMonth a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the end month of a date value.";
+  rdfs:label "Date value has end month";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasEndYear a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the end year of a date value.";
+  rdfs:label "Date value has end year";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasStartDay a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the start day of a date value.";
+  rdfs:label "Date value has start day";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasStartEra a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the start era of a date value.";
+  rdfs:label "Date value has start era";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasStartMonth a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the start month of a date value.";
+  rdfs:label "Date value has start month";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:dateValueHasStartYear a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:DateValue;
+  rdfs:comment "Represents the start year of a date value.";
+  rdfs:label "Date value has start year";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:DateValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a Knora date value";
+  rdfs:subClassOf knora-api:DateBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasCalendar
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndMonth
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndYear
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartMonth
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartYear
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:DecimalBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:decimalValueAsDecimal
+    ] .
+
+knora-api:decimalValueAsDecimal a owl:DatatypeProperty;
+  knora-api:objectType xsd:decimal;
+  knora-api:subjectType knora-api:DecimalValue;
+  rdfs:comment "Represents the literal decimal value of a DecimalValue.";
+  rdfs:label "Decimal value as decimal";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:DecimalValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents an arbitrary-precision decimal value";
+  rdfs:subClassOf knora-api:DecimalBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:decimalValueAsDecimal
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:DocumentFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ] .
+
+knora-api:DocumentRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:label "Representation (Document)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasDocumentFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasDocumentFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:DocumentFileValue;
+  knora-api:subjectType knora-api:DocumentRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to a document";
+  rdfs:label "has document";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:ForbiddenResource a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
+  rdfs:label "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:GeomValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a geometrical objects as JSON string";
+  rdfs:subClassOf knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:geometryValueAsGeometry
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:geometryValueAsGeometry a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:GeomValue;
+  rdfs:comment "Represents a 2D geometry value as JSON.";
+  rdfs:label "Geometry value as JSON";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:GeonameValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:subClassOf knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:geonameValueAsGeonameCode
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:geonameValueAsGeonameCode a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:GeonameValue;
+  rdfs:comment "Represents the literal Geoname code of a GeonameValue.";
+  rdfs:label "Geoname value as Geoname code";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:IntBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intValueAsInt
+    ] .
+
+knora-api:intValueAsInt a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:IntValue;
+  rdfs:comment "Represents the literal integer value of an IntValue.";
+  rdfs:label "Integer value as integer";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:IntValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents an integer value";
+  rdfs:subClassOf knora-api:IntBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intValueAsInt
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:IntervalBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasEnd
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasStart
+    ] .
+
+knora-api:IntervalValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a time interval, e.g. in an audio recording";
+  rdfs:subClassOf knora-api:IntervalBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:LinkObj a owl:Class;
+  knora-api:canBeInstantiated true;
+  knora-api:isResourceClass true;
+  knora-api:resourceIcon "link.gif";
+  rdfs:comment "Represents a generic link object";
+  rdfs:label "Link Object";
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasLinkTo
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasLinkTo a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Represents a direct connection between two resources";
+  rdfs:label "has Link to";
+  rdfs:subPropertyOf knora-api:resourceProperty .
+
+knora-api:hasLinkToValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Points to a LinkValue reification describing a link between two resources";
+  rdfs:label "has Link to";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:LinkValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "A reification node that describes direct links between resources";
+  rdfs:subClassOf knora-api:Value, rdf:Statement, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty rdf:object
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty rdf:predicate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty rdf:subject
+    ] .
+
+knora-api:ListNode a owl:Class;
+  rdfs:comment "Represents a flat or hierarchical list";
+  rdfs:subClassOf [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ] .
+
+knora-api:ListValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:subClassOf knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:listValueAsListNode
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:listValueAsListNodeLabel
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:listValueAsListNode a owl:ObjectProperty;
+  knora-api:objectType knora-api:ListNode;
+  knora-api:subjectType knora-api:ListValue;
+  rdfs:comment "Represents a reference to a hierarchical list node.";
+  rdfs:label "Hierarchical list value as list node";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:listValueAsListNodeLabel a owl:ObjectProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:ListValue;
+  rdfs:comment "Represents the name of the list node pointed to.";
+  rdfs:label "Hierarchical list value as list node name";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:MovingImageFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a moving image file";
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:movingImageFileValueHasDimX
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:movingImageFileValueHasDimY
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:movingImageFileValueHasDuration
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:movingImageFileValueHasFps
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:movingImageFileValueHasQualityLevel
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:movingImageFileValueHasDimX a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:MovingImageFileValue;
+  rdfs:comment "The horizontal dimension of a moving image file value.";
+  rdfs:label "Moving image file value has X dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:movingImageFileValueHasDimY a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:MovingImageFileValue;
+  rdfs:comment "The vertical dimension of a moving image file value.";
+  rdfs:label "Moving image file value has Y dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:movingImageFileValueHasDuration a owl:DatatypeProperty;
+  knora-api:objectType xsd:decimal;
+  knora-api:subjectType knora-api:MovingImageFileValue;
+  rdfs:comment "The duration of a moving image file value.";
+  rdfs:label "Moving image file value has duration";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:movingImageFileValueHasFps a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:MovingImageFileValue;
+  rdfs:comment "The number of frames per second in a moving image file value.";
+  rdfs:label "Moving image file value has frames per second";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:movingImageFileValueHasQualityLevel a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:MovingImageFileValue;
+  rdfs:comment "The quality level of a moving image file value.";
+  rdfs:label "Moving image file value has quality level";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:MovingImageRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "A resource containing moving image data";
+  rdfs:label "Representation (Movie)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasMovingImageFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasMovingImageFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:MovingImageFileValue;
+  knora-api:subjectType knora-api:MovingImageRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to a movie file";
+  rdfs:label "has movie file";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:Region a owl:Class;
+  knora-api:canBeInstantiated true;
+  knora-api:isResourceClass true;
+  knora-api:resourceIcon "region.gif";
+  rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string.";
+  rdfs:label "Region";
+  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasColor
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasComment
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasGeometry
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isRegionOf
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isRegionOfValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasColor a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:ColorValue;
+  knora-api:subjectType knora-api:Region;
+  salsah-gui:guiAttribute "ncolors=8";
+  salsah-gui:guiElement salsah-gui:Colorpicker;
+  rdfs:comment "Specifies the color of a region.";
+  rdfs:label "Color";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:hasGeometry a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:GeomValue;
+  knora-api:subjectType knora-api:Region;
+  salsah-gui:guiElement salsah-gui:Geometry;
+  rdfs:comment "Represents a geometrical shape.";
+  rdfs:label "Geometry";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:isRegionOf a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Representation;
+  knora-api:subjectType knora-api:Region;
+  rdfs:comment "Region of interest within a digital object (e.g. an image)";
+  rdfs:label "is region of";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:isRegionOfValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Region;
+  rdfs:comment "Region of interest within a digital object (e.g. an image)";
+  rdfs:label "is region of";
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:hasFileValue a owl:ObjectProperty;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:FileValue;
+  knora-api:subjectType knora-api:Representation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to a file";
+  rdfs:label "has file";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:StandoffBooleanTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a boolean in a TextValue";
+  rdfs:subClassOf knora-api:BooleanBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:booleanValueAsBoolean
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffDataTypeTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a knora-base value type in a TextValue";
+  rdfs:subClassOf knora-api:StandoffTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:standoffTagHasEnd a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasEndIndex a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasEndParent a owl:ObjectProperty;
+  knora-api:objectType knora-api:StandoffTag;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasOriginalXMLID a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasStart a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasStartIndex a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasStartParent a owl:ObjectProperty;
+  knora-api:objectType knora-api:StandoffTag;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:standoffTagHasUUID a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:StandoffTag .
+
+knora-api:StandoffColorTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a color in a TextValue";
+  rdfs:subClassOf knora-api:ColorBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:colorValueAsColor
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a standoff markup tag";
+  rdfs:subClassOf [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffDateTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a date in a TextValue";
+  rdfs:subClassOf knora-api:DateBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasCalendar
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasEndMonth
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasEndYear
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartMonth
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartYear
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffDecimalTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a decimal (floating point) value in a TextValue";
+  rdfs:subClassOf knora-api:DecimalBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:decimalValueAsDecimal
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffIntegerTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents an integer value in a TextValue";
+  rdfs:subClassOf knora-api:IntBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intValueAsInt
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffInternalReferenceTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents an internal reference in a TextValue";
+  rdfs:subClassOf knora-api:StandoffDataTypeTag, knora-api:ValueBase, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasInternalReference
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:standoffTagHasInternalReference a owl:ObjectProperty;
+  knora-api:objectType knora-api:StandoffTag;
+  knora-api:subjectType knora-api:StandoffInternalReferenceTag .
+
+knora-api:StandoffIntervalTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents an interval in a TextValue";
+  rdfs:subClassOf knora-api:IntervalBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:intervalValueHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:StandoffLinkTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents a reference to a Knora resource in a TextValue";
+  rdfs:subClassOf knora-api:StandoffTag, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ] .
+
+knora-api:standoffTagHasLink a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:StandoffLinkTag .
+
+knora-api:StandoffUriTag a owl:Class;
+  knora-api:isStandoffClass true;
+  rdfs:comment "Represents an arbitrary URI in a TextValue";
+  rdfs:subClassOf knora-api:StandoffDataTypeTag, knora-api:UriBase, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasEnd
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasEndParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasOriginalXMLID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStart
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartIndex
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:standoffTagHasStartParent
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:standoffTagHasUUID
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:uriValueAsUri
+    ] .
+
+knora-api:UriBase a owl:Class;
+  rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:uriValueAsUri
+    ] .
+
+knora-api:uriValueAsUri a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:UriValue;
+  rdfs:comment "Represents the literal URI value of a UriValue.";
+  rdfs:label "URI value as URI";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:StillImageFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "A file containing a two-dimensional still image";
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:stillImageFileValueHasDimX
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:stillImageFileValueHasDimY
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:stillImageFileValueHasIIIFBaseUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:stillImageFileValueHasDimX a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StillImageFileValue;
+  rdfs:comment "The horizontal dimension of a still image file value.";
+  rdfs:label "Still image file value has X dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:stillImageFileValueHasDimY a owl:DatatypeProperty;
+  knora-api:objectType xsd:integer;
+  knora-api:subjectType knora-api:StillImageFileValue;
+  rdfs:comment "The vertical dimension of a still image file value.";
+  rdfs:label "Still image file value has Y dimension";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:stillImageFileValueHasIIIFBaseUrl a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:StillImageFileValue;
+  rdfs:comment "The IIIF base URL of a still image file value.";
+  rdfs:label "Still image file value has IIIF base URL";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:StillImageRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "A resource that can contain two-dimensional still image files";
+  rdfs:label "Representation (Image)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasStillImageFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasStillImageFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:StillImageFileValue;
+  knora-api:subjectType knora-api:StillImageRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to an image file";
+  rdfs:label "has image file";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:TextFileValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "A text file such as plain Unicode text, LaTeX, TEI/XML, etc.";
+  rdfs:subClassOf knora-api:FileValue, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueAsUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueHasFilename
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:fileValueIsPreview
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:TextRepresentation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "A resource containing text files";
+  rdfs:label "Representation (Text)";
+  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty knora-api:hasTextFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:hasTextFileValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:TextFileValue;
+  knora-api:subjectType knora-api:TextRepresentation;
+  salsah-gui:guiElement salsah-gui:Fileupload;
+  rdfs:comment "Connects a Representation to a text file";
+  rdfs:label "has text file";
+  rdfs:subPropertyOf knora-api:hasFileValue .
+
+knora-api:TextValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:subClassOf knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:textValueAsHtml
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:textValueAsXml
+    ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:textValueHasLanguage
+    ], [ a owl:Restriction;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:textValueHasStandoff
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:textValueAsHtml a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "A text value represented in HTML.";
+  rdfs:label "Text value as HTML";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:textValueAsXml a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "A Text value represented in XML.";
+  rdfs:label "Text value as XML";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:textValueHasLanguage a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "Language code attached to a text value.";
+  rdfs:label "text value has language";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:textValueHasStandoff a owl:ObjectProperty;
+  knora-api:objectType knora-api:StandoffTag;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "Standoff markup attached to a text value.";
+  rdfs:label "text value has standoff";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:UriValue a owl:Class;
+  knora-api:isValueClass true;
+  rdfs:comment "Represents a URI";
+  rdfs:subClassOf knora-api:UriBase, knora-api:Value, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:uriValueAsUri
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueAsString
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:valueCreationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:valueHasComment
+    ] .
+
+knora-api:User a owl:Class;
+  rdfs:comment "Represents a Knora user";
+  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person> .
+
+knora-api:XSLTransformation a owl:Class;
+  knora-api:isResourceClass true;
+  rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.";
+  rdfs:label "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.";
+  rdfs:subClassOf knora-api:TextRepresentation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasIncomingLink
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkTo
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:hasTextFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ] .
+
+knora-api:knoraProject a owl:Class;
+  rdfs:comment "Represents a project that uses Knora";
+  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Project> .
+
+knora-api:valueHas a rdf:Property;
+  knora-api:subjectType knora-api:ValueBase .
+
+knora-api:canBeInstantiated a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Class;
+  rdfs:comment "Indicates whether a resource class can be instantiated via the Knora API.";
+  rdfs:label "can be instantiated" .
+
+knora-api:hasValue a owl:ObjectProperty;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Value;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:subPropertyOf knora-api:resourceProperty .
+
+knora-api:resourceProperty a owl:ObjectProperty;
+  knora-api:isResourceProperty true;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used." .
+
+knora-api:hasRepresentation a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Representation;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc.";
+  rdfs:label "has Representation";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:hasRepresentationValue a owl:ObjectProperty;
+  knora-api:isEditable true;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:isEditable a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType rdf:Property;
+  rdfs:comment "Indicates whether a property's values can be updated via the Knora API.";
+  rdfs:label "is editable" .
+
+knora-api:isInherited a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Restriction;
+  rdfs:comment "Indicates whether a cardinality has been inherited from a base class";
+  rdfs:label "is inherited" .
+
+knora-api:isLinkProperty a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:ObjectProperty;
+  rdfs:comment "Indicates whether a property points to a resource";
+  rdfs:label "is link property" .
+
+knora-api:isLinkValueProperty a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:ObjectProperty;
+  rdfs:comment "Indicates whether a property points to a link value (reification)";
+  rdfs:label "is link value property" .
+
+knora-api:isMainResource a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Indicates if the given resource is the main resource of a request or a resource referred to by a link property." .
+
+knora-api:isPartOf a owl:ObjectProperty;
+  knora-api:isLinkProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Indicates that this resource is part of another resource";
+  rdfs:label "is part of";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:isPartOfValue a owl:ObjectProperty;
+  knora-api:isLinkValueProperty true;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:LinkValue;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:subPropertyOf knora-api:hasLinkToValue .
+
+knora-api:linkValueHasTarget a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the target resource of a link value.";
+  rdfs:label "Link value has target";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:linkValueHasTargetIri a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  knora-api:subjectType knora-api:LinkValue;
+  rdfs:comment "Represents the IRI of the target resource of a link value.";
+  rdfs:label "Link value has target IRI";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:mappingHasName a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  rdfs:comment "Represents the name of a mapping";
+  rdfs:label "Name of a mapping (will be part of the mapping's Iri)" .
+
+knora-api:objectType a rdf:Property;
+  rdfs:comment "Specifies the required type of the objects of a property";
+  rdfs:label "Object type" .
+
+knora-api:ontologyName a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  rdfs:comment "Represents the short name of an ontology";
+  rdfs:label "ontology name" .
+
+knora-api:resourceIcon a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType owl:Class .
+
+knora-api:result a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  rdfs:comment "Provides a message indicating that an operation was successful";
+  rdfs:label "result" .
+
+knora-api:seqnum a owl:ObjectProperty;
+  knora-api:isResourceProperty true;
+  knora-api:objectType knora-api:IntValue;
+  rdfs:comment "Indicates the position of a resource within a sequence";
+  rdfs:label "Sequence number";
+  rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:subjectType a rdf:Property;
+  rdfs:comment "Specifies the required type of the subjects of a property";
+  rdfs:label "Subject type" .
