@@ -21,7 +21,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## GraphDB SE
 
-Inside Knora git repository, there is a folder called
+Inside the Knora git repository, there is a folder called
 `/triplestores/graphdb-se` containing the latest supported version of
 the GraphDB-SE distribution archive.
 

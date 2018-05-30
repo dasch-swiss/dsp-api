@@ -21,7 +21,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Locally
 
-Inside Knora git repository, there is a folder called
+Inside the Knora git repository, there is a folder called
 `triplestores/fuseki` containing a script named `fuseki-server`. All
 needed configuration files are in place. To start Fuseki 3, just run
 this script:

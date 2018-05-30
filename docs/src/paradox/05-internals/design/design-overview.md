@@ -140,7 +140,7 @@ needs to do a SPARQL query, it sends a message to the store manager,
 which forwards it to a triplestore actor. The size of the pool(s) of
 triplestore actors sets the maximum number of concurrent SPARQL queries.
 
-The routes and actors in Knora uses Akka's `ask` pattern,
+The routes and actors in Knora use Akka's `ask` pattern,
 rather than the `tell` pattern, to send messages and receive responses,
 because this simplifies the code considerably (using `tell` would
 require actors to maintain complex mutable state), with no apparent
@@ -323,7 +323,7 @@ See @ref:[How to Add an API Route](how-to-add-a-route.md) for an example.
 
 ## JSON
 
-Knora parses and generate JSON using the
+Knora parses and generates JSON using the
 [spray-json](https://github.com/spray/spray-json) library.
 
 The triplestore returns results in JSON, and these are parsed into
