@@ -238,7 +238,7 @@ object RouteUtilV2 {
       * Constructs an HTTP response containing a Knora response message formatted in the requested media type.
       *
       * @param knoraResponse     the response message.
-      * @param responseMediaType the media type selected for the response.
+      * @param responseMediaType the media type selected for the response (must be one of the types in [[RdfMediaTypes]]).
       * @param responseSchema    the response schema.
       * @param settings          the application settings.
       * @return an HTTP response.
@@ -284,7 +284,7 @@ object RouteUtilV2 {
 
                     case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)
 
-                    case _ => throw BadRequestException(s"Media type $responseMediaType not implemented")
+                    case _ => throw AssertionException(s"Media type $responseMediaType not implemented")
                 }
 
                 rdfParser.setRDFHandler(rdfWriter)
