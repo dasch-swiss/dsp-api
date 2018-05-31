@@ -37,7 +37,7 @@ export module ResourcesResponse {
         /**
          * Represents a resource (instance).
          */
-        interface Resource {
+        export interface Resource {
             /**
              * IRI of the resource instance.
              */
@@ -61,7 +61,8 @@ export module ResourcesResponse {
              * Please note that the type `string` is not a valid value for a property.
              * This is a mere requirement of TypeScript to make the index signature return types consistent with other members of this interface.
              */
-            [propertyIri: string]: Value | Array<Value> | string;
+            [propertyIri: string]: Value | Array<Value> | string ;
+
         }
 
         /**
@@ -84,9 +85,25 @@ export module ResourcesResponse {
     export module ApiV2Simple {
 
         /**
+            Represents a value with the indication of its type.
+         */
+        interface ValueWithType {
+
+            /**
+             * The type of the value.
+             */
+            "@type": string;
+
+            /**
+             * String representation of the value.
+             */
+            "@value": string | Basic.DateLiteral;
+        }
+
+        /**
          * Represents a resource (instance).
          */
-        interface Resource {
+        export interface Resource {
             /**
              * IRI of the resource instance.
              */
@@ -106,7 +123,7 @@ export module ResourcesResponse {
              * Properties of this resource (values are literals or an [[IriObject]]).
              *
              */
-            [propertyIri: string]: string | Array<string> | number | Array<number> | boolean | Array<boolean> | IriObject | Array<IriObject> ;
+            [propertyIri: string]: string | Array<string> | number | Array<number> | boolean | Array<boolean> | IriObject | Array<IriObject> | ValueWithType | Array<ValueWithType>;
         }
 
         /**
