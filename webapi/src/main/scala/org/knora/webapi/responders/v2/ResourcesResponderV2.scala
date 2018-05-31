@@ -194,7 +194,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
 
             // collect Iris of referred resources
-            referredResourceIris = headerProps.values.flatten.foldLeft(Seq.empty[IRI]) {
+            /*referredResourceIris = headerProps.values.flatten.foldLeft(Seq.empty[IRI]) {
 
                 (referredResIris: Seq[IRI], valObj: ConstructResponseUtilV2.ValueRdfData) =>
 
@@ -206,7 +206,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                         referredResIris
                     }
 
-            }
+            }*/
 
             headerInfos = queryResultsSeparated(resourceIri).copy(
                 valuePropertyAssertions = headerProps
@@ -214,43 +214,14 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
-            headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerResource)).toJsonLDDocument(ApiV2WithValueObjects, settings)
+            tei = ResourceTEIGetResponseV2(
+                header = TEIHeader(
+                    headerInfo = headerResource
+                ),
+                body = teiXMLBody,
+                settings = settings
+            )
 
-            rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-            stringReader = new StringReader(headerJSONLD.toCompactString)
-            stringWriter = new StringWriter()
-
-            rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
-
-            _ = rdfParser.setRDFHandler(rdfWriter)
-            _ = rdfParser.parse(stringReader, "")
-
-            teiHeader = stringWriter.toString
-
-            _ = println(teiHeader)
-
-            header =
-            s"""
-               |<teiHeader>
-               | <fileDesc>
-               |     <titleStmt>
-               |         <title>${headerResource.label}</title>
-               |     </titleStmt>
-               |     <publicationStmt>
-               |         <p>
-               |             This is the TEI/XML representation of a resource identified with the Iri $resourceIri.
-               |         </p>
-               |     </publicationStmt>
-               |     <sourceDesc>
-               |         <p>No source: this is an original work.</p>
-               |     </sourceDesc>
-               | </fileDesc>
-               |</teiHeader>
-            """.stripMargin
-
-            tei = ResourceTEIGetResponseV2(header = header, body = teiXMLBody)
-
-            //_ = println(tei.toXML)
 
         } yield tei
 

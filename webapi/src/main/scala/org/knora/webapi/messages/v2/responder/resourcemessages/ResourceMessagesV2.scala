@@ -19,6 +19,10 @@
 
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
+import java.io.{StringReader, StringWriter}
+
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
+import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
@@ -58,8 +62,8 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: 
 /**
   * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
   *
-  * @param resourceIri the IRI of the resource to be returned in TEI/XML.
-  * @param textProperty the property representing the text (to be converted to the body of a TEI document).
+  * @param resourceIri    the IRI of the resource to be returned in TEI/XML.
+  * @param textProperty   the property representing the text (to be converted to the body of a TEI document).
   * @param requestingUser the user making the request.
   */
 case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM) extends ResourcesResponderRequestV2
@@ -68,21 +72,56 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, req
   * Represents a Knora resource as TEI/XML.
   *
   * @param header the header of the TEI document.
-  * @param body the body of the TEI document.
+  * @param body   the body of the TEI document.
   */
-case class ResourceTEIGetResponseV2(header: String, body: String) {
+case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: SettingsImpl) {
 
     def toXML = {
 
+        val headerJSONLD = ReadResourcesSequenceV2(1, Vector(header.headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
+
+        val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
+        val stringReader = new StringReader(headerJSONLD.toCompactString)
+        val stringWriter = new StringWriter()
+
+        val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
+
+        rdfParser.setRDFHandler(rdfWriter)
+        rdfParser.parse(stringReader, "")
+
+        val teiHeaderInfos = stringWriter.toString.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+
+
         s"""<?xml version="1.0" encoding="UTF-8"?>
-          |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-          | $header
+           |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+           | <teiHeader>
+           | <fileDesc>
+           |     <titleStmt>
+           |         <title>${header.headerInfo.label}</title>
+           |     </titleStmt>
+           |     <publicationStmt>
+           |         <p>
+           |             This is the TEI/XML representation of a resource identified by the Iri ${header.headerInfo.resourceIri}.
+           |         </p>
+           |     </publicationStmt>
+           |     <sourceDesc>
+                    $teiHeaderInfos
+               </sourceDesc>
+           | </fileDesc>
+           |</teiHeader>
             $body
-          |</TEI>
+           |</TEI>
         """.stripMargin
     }
 
 }
+
+/**
+  * Represents information tha is going to be contained in the header of a TEI/XML document.
+  *
+  * @param headerInfo the resource representing the header information.
+  */
+case class TEIHeader(headerInfo: ReadResourceV2)
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
