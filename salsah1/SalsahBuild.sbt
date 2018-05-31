@@ -75,8 +75,8 @@ lazy val javaHeadlessTestOptions = Seq(
     "-Dconfig.resource=headless-testing.conf"
 ) ++ javaTestOptions
 
-lazy val akkaVersion = "2.5.9"
-lazy val akkaHttpVersion = "10.0.11"
+lazy val akkaVersion = "2.5.11"
+lazy val akkaHttpVersion = "10.1.0"
 
 lazy val salsahLibs = Seq(
     // akka

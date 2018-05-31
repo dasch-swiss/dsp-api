@@ -29,8 +29,7 @@ import com.typesafe.config.Config
 class SettingsImpl(config: Config) extends Extension {
 
     val hostName = config.getString("app.http.hostname")
-    val httpPort = config.getInt("app.http.http-port")
-    val httpsPort = config.getInt("app.http.https-port")
+    val httpPort = config.getInt("app.http.port")
 
     // used for testing
     val headless = config.getBoolean("app.testing.headless")
@@ -40,8 +39,8 @@ class SettingsImpl(config: Config) extends Extension {
     val workingDirectory = config.getString("app.workdir")
 
     // Javascript Configuration
-    val webapiUrl = config.getString("app.jsconf.webapi-url")
-    val sipiUrl = config.getString("app.jsconf.sipi-url")
+    val webapiUrl = config.getString("app.jsconf.external-webapi-url")
+    val sipiUrl = config.getString("app.jsconf.external-sipi-url")
 }
 
 
