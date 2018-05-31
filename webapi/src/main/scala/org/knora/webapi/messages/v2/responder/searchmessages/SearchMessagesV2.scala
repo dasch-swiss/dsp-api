@@ -43,11 +43,11 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
   * @param limitToResourceClass limit search to given resource class.
   * @param requestingUser       the user making the request.
   */
-case class FullTextSearchCountGetRequestV2(searchValue: String,
-                                           limitToProject: Option[IRI],
-                                           limitToResourceClass: Option[SmartIri],
-                                           limitToStandoffClass: Option[SmartIri],
-                                           requestingUser: UserADM) extends SearchResponderRequestV2
+case class FullTextSearchCountRequestV2(searchValue: String,
+                                        limitToProject: Option[IRI],
+                                        limitToResourceClass: Option[SmartIri],
+                                        limitToStandoffClass: Option[SmartIri],
+                                        requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
@@ -58,34 +58,34 @@ case class FullTextSearchCountGetRequestV2(searchValue: String,
   * @param limitToResourceClass limit search to given resource class.
   * @param requestingUser       the user making the request.
   */
-case class FulltextSearchGetRequestV2(searchValue: String,
-                                      offset: Int,
-                                      limitToProject: Option[IRI],
-                                      limitToResourceClass: Option[SmartIri],
-                                      limitToStandoffClass: Option[SmartIri],
-                                      requestingUser: UserADM) extends SearchResponderRequestV2
+case class FulltextSearchRequestV2(searchValue: String,
+                                   offset: Int,
+                                   limitToProject: Option[IRI],
+                                   limitToResourceClass: Option[SmartIri],
+                                   limitToStandoffClass: Option[SmartIri],
+                                   requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
   *
-  * Requests the amount of results (resources count) of a given extended search. A successful response will be a [[ResourceCountV2]].
+  * Requests the amount of results (resources count) of a given Gravsearch query. A successful response will be a [[ResourceCountV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
   * @param requestingUser the user making the request.
   */
 
-case class ExtendedSearchCountGetRequestV2(constructQuery: ConstructQuery,
-                                           requestingUser: UserADM) extends SearchResponderRequestV2
+case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
+                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   *
-  * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Performs a Gravsearch query. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
   * @param requestingUser the user making the request.
   */
-case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
-                                      requestingUser: UserADM) extends SearchResponderRequestV2
+case class GravsearchRequestV2(constructQuery: ConstructQuery,
+                               requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
@@ -96,10 +96,10 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
   * @param limitToResourceClass limit search to given resource class.
   * @param requestingUser       the user making the request.
   */
-case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
-                                                  limitToProject: Option[IRI],
-                                                  limitToResourceClass: Option[SmartIri],
-                                                  requestingUser: UserADM) extends SearchResponderRequestV2
+case class SearchResourceByLabelCountRequestV2(searchValue: String,
+                                               limitToProject: Option[IRI],
+                                               limitToResourceClass: Option[SmartIri],
+                                               requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
@@ -110,11 +110,11 @@ case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
   * @param limitToResourceClass limit search to given resource class.
   * @param requestingUser       the user making the request.
   */
-case class SearchResourceByLabelGetRequestV2(searchValue: String,
-                                             offset: Int,
-                                             limitToProject: Option[IRI],
-                                             limitToResourceClass: Option[SmartIri],
-                                             requestingUser: UserADM) extends SearchResponderRequestV2
+case class SearchResourceByLabelRequestV2(searchValue: String,
+                                          offset: Int,
+                                          limitToProject: Option[IRI],
+                                          limitToResourceClass: Option[SmartIri],
+                                          requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   * Represents the number of resources found by a search query.

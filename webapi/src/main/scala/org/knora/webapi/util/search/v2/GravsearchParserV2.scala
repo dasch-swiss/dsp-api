@@ -46,12 +46,12 @@ object GravsearchParserV2 {
     private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
     /**
-      * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[ConstructQuery]].
+      * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
       *
-      * @param query the SPARQL string to be parsed.
+      * @param query the Gravsearch string to be parsed.
       * @return a [[ConstructQuery]].
       */
-    def parseGravsearchQuery(query: String): ConstructQuery = {
+    def parseQuery(query: String): ConstructQuery = {
         val visitor = new ConstructQueryModelVisitor
 
         val parsedQuery = try {

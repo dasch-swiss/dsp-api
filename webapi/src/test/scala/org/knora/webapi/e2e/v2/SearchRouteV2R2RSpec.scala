@@ -24,6 +24,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
@@ -37,6 +38,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.search.SparqlQueryConstants
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -143,7 +145,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -167,8 +169,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -181,7 +182,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -205,8 +206,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -219,7 +219,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -243,8 +243,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -255,7 +254,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -277,8 +276,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -291,7 +289,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -315,8 +313,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -329,7 +326,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -353,8 +350,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -371,7 +367,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -401,8 +397,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -417,7 +412,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -447,8 +442,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -461,7 +455,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -489,8 +483,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -506,7 +499,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -536,8 +529,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?seqnum
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -551,7 +543,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the pages of a book and return them ordered by their seqnum" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -579,8 +571,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?seqnum
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -594,7 +585,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "perform an extended search for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -623,8 +614,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    OFFSET 1
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -638,7 +628,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -666,8 +656,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -678,7 +667,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -710,8 +699,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -725,7 +713,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -757,8 +745,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -774,7 +761,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -806,8 +793,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -823,7 +809,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -854,8 +840,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -871,7 +856,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -902,8 +887,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -919,7 +903,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -950,8 +934,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -967,7 +950,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -998,8 +981,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1015,7 +997,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1047,8 +1029,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1063,7 +1044,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get the regions belonging to a page" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1107,8 +1088,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1123,7 +1103,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
             PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -1168,8 +1148,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             } OFFSET 0
             """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1182,7 +1161,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get a book a page points to and only include the page's partOf link in the results (none of the other properties)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
             PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -1223,8 +1202,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             } OFFSET 0
             """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1237,7 +1215,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
-            var sparqlSimplified =
+            var gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1271,8 +1249,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1285,7 +1262,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value of 2.1" ignore { // literals are not supported
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1308,8 +1285,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1320,7 +1296,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value of 2.1 2" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1346,8 +1322,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1362,7 +1337,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value bigger than 2.0" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1388,8 +1363,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1404,7 +1378,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value smaller than 3.0" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1430,8 +1404,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1446,7 +1419,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1469,8 +1442,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1481,7 +1453,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a Boolean value that is true 2" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1508,8 +1480,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1524,7 +1495,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for an anything:Thing that may have a Boolean value that is true" in {
             // set OFFSET to 1 to get "Testding for extended search"
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1553,11 +1524,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-                
+
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
@@ -1570,7 +1540,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1608,8 +1578,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1625,7 +1594,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeit' using the regex function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1650,8 +1619,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1667,7 +1635,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1691,8 +1659,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1709,7 +1676,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1733,8 +1700,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1751,7 +1717,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -1775,8 +1741,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1792,7 +1757,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a anything:Thing with a list value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1814,8 +1779,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1831,7 +1795,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a text using the lang function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1857,8 +1821,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1871,7 +1834,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a specific text using the lang function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1897,8 +1860,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

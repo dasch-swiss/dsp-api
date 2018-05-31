@@ -88,11 +88,11 @@ object SearchResponderV2Constants {
     }
 
     /**
-      * Constants for extended search.
+      * Constants used in the processing of Gravsearch queries.
       *
       * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
-    object ExtendedSearchConstants {
+    object GravsearchConstants {
 
         // SPARQL variable representing the main resource and its properties
         val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
@@ -139,12 +139,12 @@ object SearchResponderV2Constants {
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
-        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
-        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
-        case ExtendedSearchCountGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
-        case ExtendedSearchGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchV2(inputQuery = query, requestingUser = requestingUser), log)
-        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
-        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
+        case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
+        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
+        case GravsearchCountRequestV2(query, requestingUser) => future2Message(sender(), gravsearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
+        case GravsearchRequestV2(query, requestingUser) => future2Message(sender(), gravsearchV2(inputQuery = query, requestingUser = requestingUser), log)
+        case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -220,9 +220,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * An abstract base class providing shared methods to query transformers for extended search.
+      * An abstract base class providing shared methods for [[WhereTransformer]] instances.
       */
-    abstract class AbstractExtendedSearchTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
+    abstract class AbstractSparqlTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
@@ -559,10 +559,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles query variables that represent properties in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
+          * @param queryVar           the query variable to be handled.
           * @param comparisonOperator the comparison operator used in the filter pattern.
-          * @param iriRef the Iri the property query variable is restricted to.
-          * @param propInfo information about the query variable's type.
+          * @param iriRef             the Iri the property query variable is restricted to.
+          * @param propInfo           information about the query variable's type.
           * @return a [[TransformedFilterPattern]].
           */
         private def handlePropertyIriQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, iriRef: IriRef, propInfo: PropertyTypeInfo): TransformedFilterPattern = {
@@ -603,11 +603,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * Handles query variables that represent literals in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter pattern.
-          * @param literalValueExpression the literal provided in the [[FilterPattern]] as an [[Expression]].
-          * @param xsdType valid xsd types of the literal.
-          * @param valueHasProperty the property of the value object pointing to the literal.
+          * @param queryVar                 the query variable to be handled.
+          * @param comparisonOperator       the comparison operator used in the filter pattern.
+          * @param literalValueExpression   the literal provided in the [[FilterPattern]] as an [[Expression]].
+          * @param xsdType                  valid xsd types of the literal.
+          * @param valueHasProperty         the property of the value object pointing to the literal.
           * @param validComparisonOperators a set of valid comparison operators, if to be restricted.
           * @return a [[TransformedFilterPattern]].
           */
@@ -621,7 +621,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if comparison operator is supported for given type
-            if(validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
+            if (validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
                 throw GravsearchException(s"Filter expressions for a literal of type ${xsdType.mkString(", ")} supports the following operators: ${validComparisonOperators.mkString(", ")}, but $comparisonOperator given")
 
             // create a variable representing the literal attached to the value object
@@ -643,8 +643,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles query variables that represent a date in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter pattern.
+          * @param queryVar            the query variable to be handled.
+          * @param comparisonOperator  the comparison operator used in the filter pattern.
           * @param dateValueExpression the date literal provided in the [[FilterPattern]] as an [[Expression]].
           * @return a [[TransformedFilterPattern]].
           */
@@ -761,9 +761,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles a [[FilterPattern]] containing a query variable.
           *
-          * @param queryVar the query variable.
+          * @param queryVar          the query variable.
           * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -877,7 +877,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param langFunctionCall  the lang function call to be handled.
           * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -938,7 +938,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles the use of the SPARQL regex function in a [[FilterPattern]].
           *
           * @param regexFunctionCall the regex function call to be handled.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -993,7 +993,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles a Gravsearch specific function call in a [[FilterPattern]].
           *
           * @param functionCallExpression the function call to be handled.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection         the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
@@ -1320,7 +1320,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
     private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
@@ -1361,7 +1361,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -1608,16 +1608,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
 
     /**
-      * Performs a count query for an extended search Sparql query provided by the user.
+      * Performs a count query for a Gravsearch query provided by the user.
       *
-      * @param inputQuery  Sparql construct query provided by the client.
+      * @param inputQuery     a Gravsearch query provided by the client.
       * @param requestingUser the the client making the request.
       * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def gravsearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
 
         if (apiSchema != ApiV2Simple) {
-            throw GravsearchException("Only api v2 simple is supported in v2 extended search count query")
+            throw GravsearchException("Only api v2 simple is supported in a Gravsearch count query")
         }
 
         // make sure that OFFSET is 0
@@ -1630,7 +1630,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractExtendedSearchTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
@@ -1750,13 +1750,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * Performs an extended search using a Sparql query provided by the user.
+      * Performs a search using a Gravsearch query provided by the client.
       *
-      * @param inputQuery  Sparql construct query provided by the client.
+      * @param inputQuery     a Gravsearch query provided by the client.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1765,7 +1765,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractExtendedSearchTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -2050,7 +2050,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
 
-            import SearchResponderV2Constants.ExtendedSearchConstants._
+            import SearchResponderV2Constants.GravsearchConstants._
 
             // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
             val wherePatternsForMainResource = Seq(
@@ -2499,7 +2499,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
@@ -2542,7 +2542,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {

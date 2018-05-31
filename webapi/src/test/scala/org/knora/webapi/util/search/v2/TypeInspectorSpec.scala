@@ -15,14 +15,14 @@ class TypeInspectorSpec extends CoreSpec() {
 
     "TypeInspector" should {
         "get type information from a simple query" in {
-            val parsedQuery = GravsearchParserV2.parseGravsearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val parsedQuery = GravsearchParserV2.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2()
             val typeInspectionResult = typeInspector.inspectTypes(parsedQuery.whereClause)
             typeInspectionResult should ===(SimpleTypeInspectionResult)
         }
 
         "remove the type annotations from a WHERE clause" in {
-            val parsedQuery = GravsearchParserV2.parseGravsearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val parsedQuery = GravsearchParserV2.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2()
             val whereClauseWithoutAnnotations = typeInspector.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)

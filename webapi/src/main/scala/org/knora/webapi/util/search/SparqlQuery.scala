@@ -19,9 +19,25 @@
 
 package org.knora.webapi.util.search
 
+import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+
+/**
+  * Constants used in processing SPARQL queries.
+  */
+object SparqlQueryConstants {
+    /**
+      * The media type of SPARQL queries.
+      */
+    val `application/sparql-query`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
+        mainType = "application",
+        subType = "sparql-query",
+        charset = HttpCharsets.`UTF-8`,
+        fileExtensions = List("rq")
+    )
+}
 
 /**
   * Represents something that can generate SPARQL source code.
