@@ -89,7 +89,7 @@ properties `rdfs:label` and `kb:attachedToProject`.
 
 All the content produced by a project (e.g. digitised primary source
 materials or research data) must be stored in objects that belong to
-subclasses of `kb:Resource`, so that the Knora API server can query and
+subclasses of `kb:Resource`, so that Knora can query and
 update that content. Each project using the Knora base ontology must
 define its own OWL classes, derived from `kb:Resource`, to represent the
 types of data it deals with. A subclass of `kb:Resource` may
@@ -123,7 +123,7 @@ property is an `xsd:string`, rather than a Knora value; hence it is not
 versioned. A user who has modify permission on a resource (see
 @ref:[Authorisation](#authorisation)) can change its label.
 
-A resource can be marked as deleted; the Knora API server does this by
+A resource can be marked as deleted; Knora does this by
 adding the predicate `kb:isDeleted true` to the resource. An optional
 `kb:deleteComment` may be added to explain why the resource has been
 marked as deleted. Deleted resources are normally hidden. They cannot be
@@ -531,11 +531,11 @@ properties:
 
 `internalFilename` (1)
 
-:   The name of the file as stored by the Knora API server.
+:   The name of the file as stored by Knora.
 
 `internalMimeType` (1)
 
-:   The MIME type of the file as stored by the Knora API server.
+:   The MIME type of the file as stored by Knora.
 
 `originalFilename` (0-1)
 
@@ -634,9 +634,9 @@ For details about how links are created in Knora, see
 ##### ExternalResValue
 
 Represents a resource that is not stored in the RDF triplestore managed
-by the Knora API server, but instead resides in an external repository
+by Knora, but instead resides in an external repository
 managed by some other software. The `ExternalResValue` contains the
-information that the Knora API server needs in order to access the
+information that Knora needs in order to access the
 resource, assuming that a suitable gateway plugin is installed.
 
 `extResAccessInfo` (1)
@@ -792,7 +792,7 @@ the link. We can visualise the result as the following graph:
 
 ![Figure 2](knora-base-fig2.dot.png "Figure 2")
 
-The Knora API server allows a user to see a link if the requesting user
+Knora allows a user to see a link if the requesting user
 has permission to see the source and target resources as well as the
 `kb:LinkValue`.
 
@@ -942,7 +942,7 @@ One of the design goals of the Knora ontology is to make it easy and
 efficient to find out which resources contain references to a given
 resource. Direct links are easier and more efficient to query than
 indirect links. Therefore, when a text value contains a resource
-reference in its standoff nodes, the Knora API server automatically
+reference in its standoff nodes, Knora automatically
 creates a direct link between the containing resource and the target
 resource, along with an RDF reification (a `kb:LinkValue`) describing
 the link, as discussed in @ref:[Links Between Resources](#links-between-resources). In this case,
@@ -950,7 +950,7 @@ the link property is always `kb:hasStandoffLinkTo`, and the link value
 property (which points to the `LinkValue`) is always
 `kb:hasStandoffLinkToValue`.
 
-The Knora API server automatically updates direct links and reifications
+Knora automatically updates direct links and reifications
 for standoff resource references when text values are updated. To do
 this, it keeps track of the number of text values in each resource that
 contain at least one standoff reference to a given target resource. It
@@ -1015,7 +1015,7 @@ For links to a `kb:Resource`, see @ref:[StandoffLinkTag](#standofflinktag).
 A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements
 (with or without a class) and attributes and standoff classes and
-properties (see @ref:[XML to Standoff Mapping](../03-webapi/api-v1/xml-to-standoff-mapping.md)).
+properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v1/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains
 one or more `kb:MappingElement`. A `kb:MappingElement` maps an XML
@@ -1137,7 +1137,7 @@ properties:
 
 #### Querying Standoff in SPARQL
 
-A future version of the Knora API server will provide an API for
+A future version of Knora will provide an API for
 querying standoff markup. In the meantime, it is possible to query it
 directly in SPARQL. For example, here is a SPARQL query (using RDFS
 inference) that finds all the text values texts that have a standoff
@@ -1209,12 +1209,12 @@ users). There are four built-in groups:
 
 `UnknownUser`
 
-:   Any user who has not logged into the Knora API server is
+:   Any user who has not logged into Knora is
     automatically assigned to this group.
 
 `KnownUser`
 
-:   Any user who has logged into the Knora API server is automatically
+:   Any user who has logged into Knora is automatically
     assigned to this group.
 
 `ProjectMember`
@@ -1410,7 +1410,7 @@ properties:
     objects of the property must belong to. Every subproperty of
     `kb:hasValue` or a `kb:hasLinkTo` (i.e. every property of a resource
     that points to a `kb:Value` or to another resource) is required to
-    have this constraint, because the Knora API server relies on it to
+    have this constraint, because Knora relies on it to
     know what type of object to expect for the property. Knora will
     attempt to enforce this constraint.
 
@@ -1500,4 +1500,4 @@ proposed entities to be shared. Once a consensus was reached, the
 that could be used by multiple projects, and would ensure that such
 ontologies are not subsequently modified in ways that break
 compatibility with existing data. Functionality may be added to
-the Knora API server to facilitate this process.
+Knora to facilitate this process.

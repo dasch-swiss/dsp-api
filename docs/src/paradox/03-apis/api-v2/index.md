@@ -17,20 +17,18 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-Knora Documentation
-=======
+# Knora API v2
 
-@@toc { depth=2 }
+@@toc { depth=1 }
 
 @@@ index
 
-* [Release Notes](00-release-notes/index.md)
-* [Introduction](01-introduction/index.md)
-* [Knora Ontologies](02-knora-ontologies/index.md)
-* [Knora APIs](03-apis/index.md)
-* [Deploying Knora](04-deployment/index.md)
-* [Knora Internals](05-internals/index.md)
-* [Salsah](06-salsah/index.md)
-* [Sipi](07-sipi/index.md)
+- [Introduction](introduction.md)
+- [Knora IRIs](knora-iris.md)
+- [Reading and Searching Resources](reading-and-searching-resources.md)
+- [Getting Lists](getting-lists.md)
+- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
+- [Gravsearch: Virtual Graph Search](query-language.md)
+- [Querying, Creating, and Updating Ontologies](ontology-information.md)
 
 @@@

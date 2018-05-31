@@ -188,7 +188,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // convert external Iris to internal Iris if needed
 
             entity match {
-                case iriRef: IriRef => // if an Iri is an external knora-api entity (assumed to be API v2 simple because otherwise the KnarQL parser would have rejected it), convert it to an internal Iri
+                case iriRef: IriRef => // if an Iri is an external knora-api entity (assumed to be API v2 simple because otherwise the Gravsearch parser would have rejected it), convert it to an internal Iri
                     if (iriRef.iri.isKnoraApiV2EntityIri) {
                         IriRef(iriRef.iri.toOntologySchema(InternalSchema))
                     } else {
@@ -985,7 +985,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         /**
           *
-          * Handles a KnarQL specific function call in a [[FilterPattern]].
+          * Handles a Gravsearch specific function call in a [[FilterPattern]].
           *
           * @param functionCallExpression the function call to be handled.
           * @param typeInspection the type inspection results.
@@ -1054,7 +1054,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         )
                     )
 
-                case _ => throw NotImplementedException(s"KnarQL function ${functionCallExpression.functionIri} not implemented")
+                case _ => throw NotImplementedException(s"Gravsearch function ${functionCallExpression.functionIri} not implemented")
             }
 
         }
