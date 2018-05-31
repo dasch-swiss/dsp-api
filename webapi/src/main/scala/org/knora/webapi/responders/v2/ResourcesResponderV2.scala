@@ -215,7 +215,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
-            headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerResource)).toJsonLDDocument(ApiV2Simple, settings)
+            headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerResource)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
             rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
             stringReader = new StringReader(headerJSONLD.toCompactString)
