@@ -30,20 +30,23 @@ TODO: complete this file.
 
 ## Building and Running
 
-### Using Fuseki
+### Starting a Triplestore
 
-Start the provided Fuseki triplestore:
+Start a triplestore (GraphDB-Free or GraphDB-SE). Download distribution from [Ontotext](http://ontotext.com). Unzip distribution
+ to a place of your choosing and run the following:
 
 ```
-$ cd KNORA_PROJECT_DIRECTORY/triplestores/fuseki
-$ ./fuseki-server
+$ cd /to/unziped/location
+$ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
 ```
 
-Then in another terminal, load some test data into the triplestore:
+Here we use GraphDB-SE which needs to be licensed separately.
+
+Then in another terminal, initialize the data repository and load some test data:
 
 ```
 $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-$ ./fuseki-load-test-data.sh
+$ ./graphdb-se-local-init-knora-test.sh
 ```
 
 Then go back to the webapi root directory and use SBT to start the API
@@ -53,7 +56,7 @@ server:
 $ cd KNORA_PROJECT_DIRECTORY/webapi
 $ sbt
 > compile
-> re-start
+> reStart
 ```
 
 To shut down Knora:
@@ -198,7 +201,7 @@ $ sbt
 ```
 ### `allowReloadOverHTTP` - Flag
 
-When the webapi.server is started with the `allowReloadOverHTTP` flag,
+When the webapi.server is started with the `allowReloadOverHTTP` flag (`reStart -r`),
 then the `v1/store/ResetTriplestoreContent` route is activated. This
 route accepts a `POST` request, with a JSON payload consisting of the
 following example content:

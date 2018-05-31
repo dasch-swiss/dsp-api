@@ -31,8 +31,8 @@ download it from
 and install it in this directory.
 
 Then, launch the services as described above; the triple store with the
-test data, the api server with the `-r` option, Sipi
-with the test configuration and SALSAH 1 where you can run the tests in
+test data, the wapi server with `reStart -r` (`allowReloadOverHTTP`-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``), Sipi
+with the test configuration (`--config=config/sipi.knora-test-docker-config.lua`) and SALSAH 1 where you can run the tests in
 the same SBT session:
 
 ```
@@ -43,5 +43,5 @@ $ sbt
 > test
 ```
 
-Note: please be patient as SALSAH 1 can take up to one mimute (end of a
+Note: please be patient as SALSAH 1 can take up to one minute (end of a
 time-out) before reporting some errors.
