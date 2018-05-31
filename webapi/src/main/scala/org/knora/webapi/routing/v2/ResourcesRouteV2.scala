@@ -25,8 +25,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourceTEIGetRequestV2, ResourcesGetRequestV2, ResourcesPreviewGetRequestV2}
-import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
@@ -134,7 +134,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, requestingUser = requestingUser)
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runTEIXMLRoute(
                         requestMessage,
                         requestContext,
                         settings,

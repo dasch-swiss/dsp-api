@@ -23,9 +23,10 @@ import java.io.{File, StringReader, StringWriter}
 
 import akka.pattern._
 import org.apache.commons.io.FileUtils
-import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
+import org.eclipse.rdf4j.rio._
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi.OntologyConstants.KnoraBase
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
@@ -35,10 +36,8 @@ import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
-import org.knora.webapi._
-import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject}
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
+import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
+
 
 import scala.concurrent.Future
 
@@ -235,11 +234,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                |<teiHeader>
                | <fileDesc>
                |     <titleStmt>
-               |         <title>${headerResource}</title>
+               |         <title>${headerResource.label}</title>
                |     </titleStmt>
                |     <publicationStmt>
                |         <p>
-               |             This is the TEI/XML representation of a resource identified with the Iri <$resourceIri>.
+               |             This is the TEI/XML representation of a resource identified with the Iri $resourceIri.
                |         </p>
                |     </publicationStmt>
                |     <sourceDesc>
