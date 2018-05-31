@@ -19,10 +19,12 @@
 
 package org.knora.webapi.responders.v2
 
-import java.io.File
+import java.io.{File, StringReader, StringWriter}
 
 import akka.pattern._
 import org.apache.commons.io.FileUtils
+import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
+import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
@@ -34,7 +36,9 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
-import org.knora.webapi.{BadRequestException, IRI, NotFoundException, OntologyConstants}
+import org.knora.webapi._
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDObject}
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 
 import scala.concurrent.Future
 
@@ -205,15 +209,33 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             }
 
-            resourceAssertionsMap = queryResultsSeparated(resourceIri).resourceAssertions.toMap
-            rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
+            headerInfos = queryResultsSeparated(resourceIri).copy(
+                valuePropertyAssertions = headerProps
+            )
+
+            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+
+            headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerResource)).toJsonLDDocument(ApiV2Simple, settings)
+
+            rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
+            stringReader = new StringReader(headerJSONLD.toCompactString)
+            stringWriter = new StringWriter()
+
+            rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
+
+            _ = rdfParser.setRDFHandler(rdfWriter)
+            _ = rdfParser.parse(stringReader, "")
+
+            teiHeader = stringWriter.toString
+
+            _ = println(teiHeader)
 
             header =
             s"""
                |<teiHeader>
                | <fileDesc>
                |     <titleStmt>
-               |         <title>$rdfLabel</title>
+               |         <title>${headerResource}</title>
                |     </titleStmt>
                |     <publicationStmt>
                |         <p>
