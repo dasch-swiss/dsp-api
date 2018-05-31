@@ -36,7 +36,7 @@ with the test configuration (`--config=config/sipi.knora-test-docker-config.lua`
 the same SBT session:
 
 ```
-$ cd KNORA_PROJECT_DIRECTORY/salsah
+$ cd KNORA_PROJECT_DIRECTORY/salsah1
 $ sbt
 > compile
 > reStart

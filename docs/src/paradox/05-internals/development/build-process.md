@@ -98,7 +98,7 @@ server:
 $ cd KNORA_PROJECT_DIRECTORY/webapi
 $ sbt
 > compile
-> re-start
+> reStart
 ```
 
 To shut down Knora:
