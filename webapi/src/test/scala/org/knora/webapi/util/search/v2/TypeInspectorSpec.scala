@@ -10,19 +10,19 @@ import org.knora.webapi.util.search._
   * Tests [[TypeInspector]].
   */
 class TypeInspectorSpec extends CoreSpec() {
-    val searchParserV2Spec = new SearchParserV2Spec
+    val searchParserV2Spec = new GravsearchParserV2Spec
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "TypeInspector" should {
         "get type information from a simple query" in {
-            val parsedQuery = SearchParserV2.parseSearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val parsedQuery = GravsearchParserV2.parseGravsearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2()
             val typeInspectionResult = typeInspector.inspectTypes(parsedQuery.whereClause)
             typeInspectionResult should ===(SimpleTypeInspectionResult)
         }
 
         "remove the type annotations from a WHERE clause" in {
-            val parsedQuery = SearchParserV2.parseSearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val parsedQuery = GravsearchParserV2.parseGravsearchQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val typeInspector = new ExplicitTypeInspectorV2()
             val whereClauseWithoutAnnotations = typeInspector.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)

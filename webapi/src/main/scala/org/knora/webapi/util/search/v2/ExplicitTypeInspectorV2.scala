@@ -25,7 +25,7 @@ import org.knora.webapi.util.search._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * A [[TypeInspector]] that relies on explicit type annotations in SPARQL. There are two kinds of type annotations:
+  * A [[TypeInspector]] that relies on explicit type annotations in Gravsearch. There are two kinds of type annotations:
   *
   * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
   * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
@@ -88,7 +88,7 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: SmartIri)
 
     def inspectTypes(whereClause: WhereClause): TypeInspectionResult = {
-        val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntity, Option[SparqlEntityTypeInfo]]
+        val maybeTypedEntities = collection.mutable.Map.empty[TypeableEntity, Option[GravsearchEntityTypeInfo]]
 
         // Make a set of all the entities to be typed in the WHERE clause.
         val entitiesToType: Set[TypeableEntity] = getTypableEntitiesFromPatterns(whereClause.patterns)
@@ -121,10 +121,10 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
         }.keys.toVector
 
         if (nonTypedEntities.nonEmpty) {
-            throw SparqlSearchException(s"Types could not be determined for the following SPARQL entities: ${nonTypedEntities.mkString(", ")}")
+            throw GravsearchException(s"Types could not be determined for the following Gravsearch entities: ${nonTypedEntities.mkString(", ")}")
         }
 
-        val typedEntities: Map[TypeableEntity, SparqlEntityTypeInfo] = maybeTypedEntities.map {
+        val typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo] = maybeTypedEntities.map {
             case (typedEntity, typeInfo) => (typedEntity, typeInfo.get)
         }.toMap
 
@@ -132,7 +132,7 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
     }
 
     /**
-      * Removes type annotations from a SPARQL WHERE clause.
+      * Removes type annotations from a Gravsearch WHERE clause.
       *
       * @param whereClause the WHERE clause to be filtered.
       * @return the same WHERE clause, minus any type annotations.
@@ -242,7 +242,7 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
 
                     case Some(TypeAnnotationPropertiesV2.OBJECT_TYPE) =>
                         if (!isValidTypeInAnnotation(statementPattern.obj)) {
-                            throw SparqlSearchException(s"Object of ${statementPattern.pred} is not a valid type: ${statementPattern.obj}")
+                            throw GravsearchException(s"Object of ${statementPattern.pred} is not a valid type: ${statementPattern.obj}")
                         }
 
                         true
@@ -296,9 +296,9 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
     }
 
     /**
-      * Given a SPARQL entity that is known to need type information, converts it to a [[TypeableEntity]].
+      * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
       *
-      * @param entity a SPARQL entity that is known to need type information.
+      * @param entity a Gravsearch entity that is known to need type information.
       * @return a [[TypeableEntity]].
       */
     private def toTypeableEntity(entity: Entity): TypeableEntity = {

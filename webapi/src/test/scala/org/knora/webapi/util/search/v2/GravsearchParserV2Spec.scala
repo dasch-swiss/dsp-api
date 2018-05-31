@@ -22,120 +22,120 @@ package org.knora.webapi.util.search.v2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
-import org.knora.webapi.{CoreSpec, SparqlSearchException}
+import org.knora.webapi.{CoreSpec, GravsearchException}
 
 /**
-  * Tests [[SearchParserV2]].
+  * Tests [[GravsearchParserV2]].
   */
-class SearchParserV2Spec extends CoreSpec() {
+class GravsearchParserV2Spec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "The SearchParserV2 object" should {
+    "The GravsearchParserV2 object" should {
         "parse a CONSTRUCT query for an extended search" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(Query)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(Query)
             parsed should ===(ParsedQuery)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            val reparsed = GravsearchParserV2.parseGravsearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "reject a CONSTRUCT query with a BIND" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithBind)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryWithBind)
             }
         }
 
         "reject a SELECT query" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlSelect)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(SparqlSelect)
             }
         }
 
         "reject a DESCRIBE query" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlDescribe)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(SparqlDescribe)
             }
         }
 
         "reject an INSERT" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlInsert)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(SparqlInsert)
             }
         }
 
         "reject a DELETE" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlDelete)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(SparqlDelete)
             }
         }
 
         "reject an internal ontology IRI" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithInternalEntityIri)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryWithInternalEntityIri)
             }
         }
 
         "reject left-nested UNIONs" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithLeftNestedUnion)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryWithLeftNestedUnion)
             }
         }
 
         "reject right-nested UNIONs" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryStrWithRightNestedUnion)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryStrWithRightNestedUnion)
             }
         }
 
         "reject a nested OPTIONAL" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryStrWithNestedOptional)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryStrWithNestedOptional)
             }
         }
 
         "reject an unsupported FILTER" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithWrongFilter)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseGravsearchQuery(QueryWithWrongFilter)
             }
         }
 
         "parse an extended search query with a FILTER containing a Boolean operator" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryForAThingRelatingToAnotherThing)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(QueryForAThingRelatingToAnotherThing)
             parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            val reparsed = GravsearchParserV2.parseGravsearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse an extended search query with FILTER NOT EXISTS" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithFilterNotExists)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(QueryWithFilterNotExists)
             parsed should ===(ParsedQueryWithFilterNotExists)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            val reparsed = GravsearchParserV2.parseGravsearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse an extended search query with MINUS" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMinus)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(QueryWithMinus)
             parsed should ===(ParsedQueryWithMinus)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            val reparsed = GravsearchParserV2.parseGravsearchQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse an extended search query with OFFSET" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithOffset)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(QueryWithOffset)
             parsed should ===(ParsedQueryWithOffset)
         }
 
         "parse an extended search query with a FILTER containing a regex function" in {
-            val parsed = SearchParserV2.parseSearchQuery(queryWithFilterContainingRegex)
+            val parsed = GravsearchParserV2.parseGravsearchQuery(queryWithFilterContainingRegex)
             parsed should ===(ParsedQueryWithFilterContainingRegex)
         }
 
         "accept a custom 'match' function in a FILTER" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMatchFunction)
+            val parsed: ConstructQuery = GravsearchParserV2.parseGravsearchQuery(QueryWithMatchFunction)
             parsed should ===(ParsedQueryWithMatchFunction)
         }
 
         "parse an extended search query with a FILTER containing a lang function" in {
-            val parsed = SearchParserV2.parseSearchQuery(QueryWithFilterContainingLang)
+            val parsed = GravsearchParserV2.parseGravsearchQuery(QueryWithFilterContainingLang)
 
             parsed should ===(ParsedQueryWithLangFunction)
         }

@@ -61,7 +61,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
     val outputVariable = QueryVariable(outputVariableName)
 
     def toSparql: String = {
-        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='${separator}') AS ${outputVariable.toSparql})"
+        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='$separator') AS ${outputVariable.toSparql})"
     }
 }
 
@@ -72,7 +72,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
   * @param distinct indicates whether DISTINCT has to be used inside COUNT.
   * @param outputVariableName the name of the variable representing the result.
   */
-case class Count(inputVariable: QueryVariable, distinct: Boolean = true, outputVariableName: String) extends SelectQueryColumn {
+case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariableName: String) extends SelectQueryColumn {
 
     val outputVariable = QueryVariable(outputVariableName)
 
@@ -293,26 +293,26 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
 
     /**
       * Gets the argument at the given position as a [[QueryVariable]].
-      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[QueryVariable]].
+      * Throws a [[GravsearchException]] no argument exists at the given position or if it is not a [[QueryVariable]].
       *
       * @param pos the argument to be returned from [[args]].
       * @return a [[QueryVariable]].
       */
     def getArgAsQueryVar(pos: Int): QueryVariable = {
 
-        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+        if (args.size <= pos) throw GravsearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
 
         args(pos) match {
             case queryVar: QueryVariable => queryVar
 
-            case other => throw SparqlSearchException(s"$other is expected to be a QueryVariable")
+            case other => throw GravsearchException(s"$other is expected to be a QueryVariable")
         }
 
     }
 
     /**
       * Gets the argument at the given position as a [[XsdLiteral]] of the given datatype.
-      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[XsdLiteral]] of the requested datatype.
+      * Throws a [[GravsearchException]] no argument exists at the given position or if it is not a [[XsdLiteral]] of the requested datatype.
       *
       * @param pos the argument to be returned from [[args]].
       * @param xsdDatatype the argeument's datatype.
@@ -320,12 +320,12 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
       */
     def getArgAsLiteral(pos: Int, xsdDatatype: SmartIri): XsdLiteral = {
 
-        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+        if (args.size <= pos) throw GravsearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
 
         args(pos) match {
             case literal: XsdLiteral if literal.datatype == xsdDatatype => literal
 
-            case other => throw SparqlSearchException(s"other is expected to be a literal of type ${xsdDatatype.toString}")
+            case other => throw GravsearchException(s"$other is expected to be a literal of type ${xsdDatatype.toString}")
 
         }
 
