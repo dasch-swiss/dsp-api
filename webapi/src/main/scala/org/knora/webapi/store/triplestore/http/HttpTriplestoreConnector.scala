@@ -158,8 +158,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 FakeTriplestore.add(sparql, resultStr, log)
             }
 
-            // _ = println(s"SPARQL: $logDelimiter$sparql")
-            // _ = println(s"Result: $logDelimiter$resultStr")
+            _ = println(s"SPARQL: $logDelimiter$sparql")
+            _ = println(s"Result: $logDelimiter$resultStr")
 
             // Parse the response as a JSON object and generate a response message.
             responseMessage <- parseJsonResponse(sparql, resultStr)
@@ -211,11 +211,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         }
 
         def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
+            println(turtleStr)
+
             val parseTry = Try {
                 val turtleParser = new TurtleParser()
                 val handler = new ConstructResponseTurtleHandler
                 turtleParser.setRDFHandler(handler)
-                turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
+                turtleParser.parse(new StringReader(turtleStr), "")
                 handler.getConstructResponse
             }
 

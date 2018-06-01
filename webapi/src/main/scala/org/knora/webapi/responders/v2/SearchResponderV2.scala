@@ -224,11 +224,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       */
     abstract class AbstractSparqlTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
 
-        // Contains the variable representing the main resource: knora-base:isMainResource
-        protected var mainResourceVariable: Option[QueryVariable] = None
+        // Contains the variable or IRI representing the main resource: knora-base:isMainResource
+        protected var mainResourceEntity: Option[Entity] = None
 
         // get method for public access
-        def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw GravsearchException("Could not get main resource variable from transformer"))
+        def getMainResourceEntity: Entity = mainResourceEntity.getOrElse(throw GravsearchException("Could not get main resource entity from transformer"))
 
         // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
         // in order to prevent duplicates
@@ -302,12 +302,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
-          * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable representing the main resource if so.
+          * Checks if a statement represents the knora-base:isMainResource statement and returns the query variable or IRI representing the main resource if so.
           *
           * @param statementPattern the statement pattern to be checked.
-          * @return query variable representing the main resource or None.
+          * @return query variable or IRI representing the main resource or None.
           */
-        protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
+        protected def isMainResourceEntity(statementPattern: StatementPattern): Option[Entity] = {
+
             statementPattern.pred match {
                 case IriRef(SmartIri(OntologyConstants.KnoraBase.IsMainResource), _) =>
 
@@ -315,7 +316,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                             statementPattern.subj match {
                                 case queryVariable: QueryVariable => Some(queryVariable)
-                                case _ => throw GravsearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable")
+                                case iriRef: IriRef => Some(iriRef)
+                                case _ => throw GravsearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable or IRI")
                             }
 
                         case _ => None
@@ -343,7 +345,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 inputEntity match {
                     case queryVar: QueryVariable =>
                         // make sure that this is not the mainVar
-                        mainResourceVariable match {
+                        mainResourceEntity match {
                             case Some(mainVar: QueryVariable) =>
 
                                 if (mainVar != queryVar) {
@@ -351,11 +353,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     dependentResourceVariables += queryVar
                                 }
 
-                            case None =>
+                            case _ => ()
 
                         }
 
-                    case _ =>
+                    case _ => ()
                 }
 
                 Seq(
@@ -1633,11 +1635,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
-                // Just identify the main resource variable and put it in mainResourceVariable.
+                // Just identify the main resource variable and put it in mainResourceEntity.
 
-                isMainResourceVariable(statementPattern) match {
-                    case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
-                    case None => ()
+                isMainResourceEntity(statementPattern) match {
+                    case Some(mainVar: QueryVariable) => mainResourceEntity = Some(mainVar)
+                    case _ => ()
                 }
             }
 
@@ -1665,10 +1667,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             def getSelectVariables: Seq[SelectQueryColumn] = {
 
-                val mainResVar = mainResourceVariable match {
+                val mainResVar = mainResourceEntity match {
                     case Some(mainVar: QueryVariable) => mainVar
-
-                    case None => throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
+                    case other => throw GravsearchException(s"A variable must be the subject of ${OntologyConstants.KnoraBase.IsMainResource} in a Gravsearch count query GAGA 2 $other")
                 }
 
                 // return count aggregation function for main variable
@@ -1774,10 +1775,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               * @param statementPattern the statement to be handled.
               */
             override def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
-                // Just identify the main resource variable and put it in mainResourceVariable.
+                // Just identify the main resource entity and put it in mainResourceEntity.
 
-                isMainResourceVariable(statementPattern) match {
-                    case Some(queryVariable: QueryVariable) => mainResourceVariable = Some(queryVariable)
+                isMainResourceEntity(statementPattern) match {
+                    case Some(entity: Entity) => mainResourceEntity = Some(entity)
                     case None => ()
                 }
 
@@ -1843,10 +1844,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 valueObjectVarsGroupConcat = valueObjectGroupConcat.map(_.outputVariable)
 
-                mainResourceVariable match {
+                mainResourceEntity match {
                     case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
-
-                    case None => throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
+                    case Some(_: IriRef) => (dependentResourceGroupConcat ++ valueObjectGroupConcat).toSeq
+                    case _ => throw GravsearchException(s"Missing or invalid ${OntologyConstants.KnoraBase.IsMainResource} in Gravsearch query.")
                 }
 
             }
@@ -1859,56 +1860,66 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               */
             override def getOrderBy(inputOrderBy: Seq[OrderCriterion]): TransformedOrderBy = {
 
-                val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) {
-                    case (acc, criterion) =>
-                        // Did a FILTER already generate a unique variable for the literal value of this value object?
+                mainResourceEntity match {
+                    case Some(mainResVar: QueryVariable) =>
+                        // The main resource is a variable, so we could get more than one result. Make an ORDER by statement.
+                        // All variables present in the GROUP BY must be included in the ORDER BY statement to make the results predictable for paging.
 
-                        valueVariablesCreatedInFilters.get(criterion.queryVariable) match {
-                            case Some(generatedVariable) =>
-                                // Yes. Use the already generated variable in the ORDER BY.
-                                acc.copy(
-                                    orderBy = acc.orderBy :+ OrderCriterion(queryVariable = generatedVariable, isAscending = criterion.isAscending)
-                                )
+                        val transformedOrderBy = inputOrderBy.foldLeft(TransformedOrderBy()) {
+                            case (acc, criterion) =>
+                                // Did a FILTER already generate a unique variable for the literal value of this value object?
 
-                            case None =>
-                                // No. Generate such a variable and generate an additional statement to get its literal value in the WHERE clause.
+                                valueVariablesCreatedInFilters.get(criterion.queryVariable) match {
+                                    case Some(generatedVariable) =>
+                                        // Yes. Use the already generated variable in the ORDER BY.
+                                        acc.copy(
+                                            orderBy = acc.orderBy :+ OrderCriterion(queryVariable = generatedVariable, isAscending = criterion.isAscending)
+                                        )
 
-                                // What is the type of the literal value?
-                                val typeableEntity = TypeableVariable(criterion.queryVariable.variableName)
-                                val typeInfo: GravsearchEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw GravsearchException(s"No type information found for ${criterion.queryVariable}"))
+                                    case None =>
+                                        // No. Generate such a variable and generate an additional statement to get its literal value in the WHERE clause.
 
-                                // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
-                                val propertyIri: SmartIri = typeInfo match {
-                                    case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
+                                        // What is the type of the literal value?
+                                        val typeableEntity = TypeableVariable(criterion.queryVariable.variableName)
+                                        val typeInfo: GravsearchEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw GravsearchException(s"No type information found for ${criterion.queryVariable}"))
 
-                                    case _: PropertyTypeInfo => throw GravsearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
+                                        // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
+                                        val propertyIri: SmartIri = typeInfo match {
+                                            case nonPropertyTypeInfo: NonPropertyTypeInfo =>
+                                                literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
+
+                                            case _: PropertyTypeInfo => throw GravsearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
+                                        }
+
+                                        // Generate the variable name.
+                                        val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+
+                                        // Generate a statement to get the literal value.
+                                        val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+
+                                        acc.copy(
+                                            statementPatterns = acc.statementPatterns :+ statementPattern,
+                                            orderBy = acc.orderBy :+ OrderCriterion(queryVariable = variableForLiteral, isAscending = criterion.isAscending)
+                                        )
                                 }
-
-                                // Generate the variable name.
-                                val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
-
-                                // Generate a statement to get the literal value.
-                                val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
-
-                                acc.copy(
-                                    statementPatterns = acc.statementPatterns :+ statementPattern,
-                                    orderBy = acc.orderBy :+ OrderCriterion(queryVariable = variableForLiteral, isAscending = criterion.isAscending)
-                                )
                         }
+
+                        val orderByMainResVar = OrderCriterion(
+                            queryVariable = mainResVar,
+                            isAscending = true
+                        )
+
+                        // Add the main resource variable to the ORDER BY statement.
+                        transformedOrderBy.copy(
+                            orderBy = transformedOrderBy.orderBy :+ orderByMainResVar
+                        )
+
+                    case Some(_: IriRef) =>
+                        // The main resource is an IRI. There will be at most one result, so there's no need for an ORDER BY statement.
+                        TransformedOrderBy()
+
+                    case other => throw GravsearchException(s"Invalid main resource in Gravsearch query: $other")
                 }
-
-                // main resource variable as order by criterion
-                val orderByMainResVar: OrderCriterion = OrderCriterion(
-                    queryVariable = mainResourceVariable.getOrElse(throw GravsearchException("No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
-                    isAscending = true
-                )
-
-                // order by: user provided variables and main resource variable
-                // all variables present in the GROUP BY must be included in the order by statements to make the results predictable for paging
-                transformedOrderBy.copy(
-                    orderBy = transformedOrderBy.orderBy :+ orderByMainResVar
-                )
             }
 
             /**
@@ -1918,7 +1929,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               * @return a list of variables that the result rows are grouped by.
               */
             def getGroupBy(orderByCriteria: TransformedOrderBy): Seq[QueryVariable] = {
-                // get they query variables form the order by criteria and return them in reverse order:
+                // get they query variables from the order by criteria and return them in reverse order:
                 // main resource variable first, followed by other sorting criteria, if any.
                 orderByCriteria.orderBy.map(_.queryVariable).reverse
             }
@@ -2206,14 +2217,32 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
-            // variable representing the main resources
-            mainResourceVar: QueryVariable = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable
+            // _ = println(prequeryResponse)
 
-            // a sequence of resource Iris that match the search criteria
+            // Get the entity representing the main resources
+            mainResourceEntity: Entity = nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceEntity
+
+            // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
-            mainResourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
-                resultRow: VariableResultsRow =>
-                    resultRow.rowMap(mainResourceVar.variableName)
+            mainResourceIris: Seq[IRI] = mainResourceEntity match {
+                case mainResourceVar: QueryVariable =>
+                    // The main resource was specified as a variable in the prequery. Get all the values of that variable
+                    // in the prequery result rows.
+                    prequeryResponse.results.bindings.map {
+                        resultRow: VariableResultsRow =>
+                            resultRow.rowMap(mainResourceVar.variableName)
+                    }
+
+                case mainResourceIri: IriRef =>
+                    // The main resource was specified as an IRI in the prequery. If there's a result row, it must be
+                    // for the resource with that IRI.
+                    if (prequeryResponse.results.bindings.isEmpty) {
+                        Seq.empty[IRI]
+                    } else {
+                        Seq(mainResourceIri.iri.toString)
+                    }
+
+                case other => throw GravsearchException(s"Invalid main resource entity in Gravsearch query: $other")
             }
 
             queryResultsSeparatedWithFullQueryPath <- if (mainResourceIris.nonEmpty) {
@@ -2227,7 +2256,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
                         // collect all the values for the current main resource from prequery response
 
-                        val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+                        val mainResIri: IRI = mainResourceEntity match {
+                            case mainResourceVar: QueryVariable => resultRow.rowMap(mainResourceVar.variableName)
+                            case mainResourceIri: IriRef => mainResourceIri.iri.toString
+                            case other => throw GravsearchException(s"Invalid main resource entity in Gravsearch query: $other")
+                        }
 
                         val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
                             dependentResVar: QueryVariable =>
@@ -2254,15 +2287,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if nonPropTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Simple.Resource => QueryVariable(queryVar.variableName)
                 }.toSet
 
-                // the user may have defined Iris of dependent resources in the input query (type annotations)
-                // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
-                val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
+                // The user may have specified the main resource by its IRI, and/or have defined Iris of dependent resources in the input query (type annotations).
+                // Only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS).
+                val allResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
                     case (iri: TypeableIri, _: NonPropertyTypeInfo) if whereClauseWithoutAnnotations.positiveEntities.contains(IriRef(iri.iri)) =>
                         iri.iri.toString
                 }.toSet
 
                 // the Iris of all dependent resources for all main resources
-                val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
+                val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ allResourceIrisFromTypeInspection
 
                 // value objects variables present in the prequery's WHERE clause
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
@@ -2271,7 +2304,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
                     (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
 
-                        val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+                        val mainResIri: IRI = mainResourceEntity match {
+                            case mainResourceVar: QueryVariable => resultRow.rowMap(mainResourceVar.variableName)
+                            case mainResourceIri: IriRef => mainResourceIri.iri.toString
+                            case other => throw GravsearchException(s"Invalid main resource entity in Gravsearch query: $other")
+                        }
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
                             (valueObjVarConcat: QueryVariable) =>
@@ -2328,8 +2365,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // Convert the result to a SPARQL string and send it to the triplestore.
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-                // println("++++++++")
-                // println(triplestoreSpecificQuery.toSparql)
+                println("++++++++")
+                println(triplestoreSpecificQuery.toSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
@@ -2339,11 +2376,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole query path
-                    queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
+                    queryResWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
                         case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
-                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource, dependentResourceIrisFromTypeInspection
-                            val expectedDependenResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) ++ dependentResourceIrisFromTypeInspection
+                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource, allResourceIrisFromTypeInspection
+                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) ++ allResourceIrisFromTypeInspection
 
                             // check for presence of value objects: valueObjectIrisPerMainResource
                             val expectedValueObjects: Set[IRI] = valueObjectIrisPerMainResource(mainResIri).values.flatten.toSet
@@ -2355,7 +2392,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
 
                             // check if the client has sufficient permissions on all dependent resources present in the query path
-                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependenResources) == expectedDependenResources
+                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependentResources) == expectedDependentResources
 
                             // check if the client has sufficient permissions on all value objects Iris present in the query path
                             val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
@@ -2375,7 +2412,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             collectValueVariablesForResource(preprocessedQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
                     }
 
-                    valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
+                    valueObjectVariablesForDependentResIris: Set[QueryVariable] = allResourceIrisFromTypeInspection.flatMap {
                         depResIri =>
                             collectValueVariablesForResource(preprocessedQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
                     }
