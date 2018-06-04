@@ -2152,6 +2152,54 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "run a Gravserach query that searches for a person using foaf classes and properties" in {
+
+            val gravsearchQuery =
+                """
+                  |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |      PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |      PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+                  |
+                  |      CONSTRUCT {
+                  |          ?person knora-api:isMainResource true .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |
+                  |      } WHERE {
+                  |          ?person a knora-api:Resource .
+                  |          ?person a foaf:Person .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |          foaf:familyName knora-api:objectType xsd:string .
+                  |
+                  |          ?familyName a xsd:string .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |          foaf:givenName knora-api:objectType xsd:string .
+                  |
+                  |          ?givenName a xsd:string .
+                  |
+                  |          FILTER(?familyName = "Meier")
+                  |
+                  |      }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/foafPerson.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
         "run a Gravsearch query that searches for a single resource specified by its IRI" in {
             val gravsearchQuery =
                 """
