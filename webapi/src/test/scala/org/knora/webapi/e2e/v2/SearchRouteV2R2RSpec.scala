@@ -84,7 +84,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
-    "The Search v2 Endpoint" should { /*
+    "The Search v2 Endpoint" should {
         "perform a fulltext search for 'Narr'" in {
 
             Get("/v2/search/Narr") ~> searchPath ~> check {
@@ -144,7 +144,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -181,7 +181,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -218,7 +218,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
+        "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -253,7 +253,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
+        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -288,7 +288,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+        "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -325,7 +325,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+        "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -365,7 +365,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+        "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -410,7 +410,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+        "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -453,7 +453,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum" in {
+        "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -497,7 +497,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10" in {
+        "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -541,7 +541,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum" in {
+        "perform an extended search for the pages of a book and return them ordered by their seqnum" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -583,7 +583,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
+        "perform an extended search for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
 
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -627,7 +627,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -666,7 +666,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
+        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -712,7 +712,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -760,7 +760,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
+        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -808,7 +808,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar)" in {
+        "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
             val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -855,7 +855,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar)" in {
+        "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
             val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -902,7 +902,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar)" in {
+        "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
             val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -949,7 +949,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar)" in {
+        "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
             val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -996,7 +996,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
+        "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1870,51 +1870,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
         }
-*/
-        "run a Gravsearch query that searches for a resource specified by its IRI" in {
-            val gravsearchQuery =
-                """
-                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-                  |
-                  |CONSTRUCT {
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> knora-api:isMainResource true .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> a anything:Thing .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> anything:hasText ?text .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> anything:hasInteger ?integer .
-                  |
-                  |} WHERE {
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> a knora-api:Resource .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> a anything:Thing .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> anything:hasText ?text .
-                  |
-                  |     anything:hasText knora-api:objectType xsd:string .
-                  |
-                  |     ?text a xsd:string .
-                  |
-                  |     <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> anything:hasInteger ?integer .
-                  |
-                  |     anything:hasInteger knora-api:objectType xsd:integer .
-                  |
-                  |     ?integer a xsd:integer.
-                  |}
-                """.stripMargin
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                println(responseAs[String])
-
-                checkSearchResponseNumberOfResults(responseAs[String], 1)
-            }
-        }
-/*
         "perform a fulltext search for 'Bonjour'" in {
             Get("/v2/search/Bonjour") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
@@ -2023,7 +1979,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
 
         }
-*/
+
 
     }
 }

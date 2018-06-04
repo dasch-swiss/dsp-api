@@ -474,7 +474,7 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param limit       the maximum number of result rows to be returned.
   * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
   */
-case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
+case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
     def toSparql: String = {
         val selectWhereSparql = "SELECT " + {
             if (useDistinct) {
