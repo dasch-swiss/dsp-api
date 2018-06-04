@@ -77,7 +77,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
     val outputVariable = QueryVariable(outputVariableName)
 
     def toSparql: String = {
-        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='$separator') AS ${outputVariable.toSparql})"
+        s"(GROUP_CONCAT(DISTINCT(${inputVariable.toSparql}); SEPARATOR='$separator') AS ${outputVariable.toSparql})"
     }
 }
 
