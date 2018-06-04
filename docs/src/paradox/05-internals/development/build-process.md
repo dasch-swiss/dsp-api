@@ -65,60 +65,9 @@ To shut down Knora:
 > re-stop
 ```
 
-### Using GraphDB
-
-The archive with the newest supported version of the GraphDB SE
-triplestore is provided under `triplestores/graphdb-se`. Please keep
-in mind that GraphDB-SE must be licensed separately by the user, and
-that no license file is provided in the repository. GraphDB SE will not run
-without a license file.
-
-Unzip `graphdb-se-x.x.x-dist.zip` to a place of your choosing and run
-the following, to start graphdb:
-
-```
-$ cd /to/unziped/location
-$ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
-```
-
-After the GraphDB inside the docker container has started, you can find
-the GraphDB workbench here: <http://localhost:7200>
-
-Then in another terminal, load some test data into the triplestore:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-$ ./graphdb-se-local-init-knora-test.sh
-```
-
-Then go back to the webapi root directory and use SBT to start the API
-server:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/webapi
-$ sbt
-> compile
-> reStart
-```
-
-To shut down Knora:
-
-```
-> re-stop
-```
 ## Running the automated tests
 
-### Running Tests with Fuseki
-
-Make sure you've started Fuseki as shown above. Then at the SBT prompt:
-
-```
-> fuseki:test
-```
-
-### Running Tests with GraphDB
-
-Make sure GraphDB is running (as described earlier).
+Make sure you've started the triplestore as shown above.
 
 Then in another terminal, initialise the repository used for automated
 testing:
