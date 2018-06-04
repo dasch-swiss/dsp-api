@@ -2056,8 +2056,48 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "do a gravsearch  query for a book with a dc:title" in {
+        "do a gravsearch query for link objects that link to an incunabula book" in {
 
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?linkObj knora-api:isMainResource true .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |
+                  |} WHERE {
+                  |     ?linkObj a knora-api:Resource .
+                  |     ?linkObj a knora-api:LinkObj .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |     knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
+                  |
+                  |     ?book a knora-api:Resource .
+                  |     ?book a incunabula:book .
+                  |
+                  |     ?book incunabula:title ?title .
+                  |
+                  |     incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |     ?title a xsd:string .
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
+
+            }
 
 
         }
