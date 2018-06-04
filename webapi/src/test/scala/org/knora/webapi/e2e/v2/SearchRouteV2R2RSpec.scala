@@ -2333,7 +2333,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                println(responseAs[String])
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
         }
