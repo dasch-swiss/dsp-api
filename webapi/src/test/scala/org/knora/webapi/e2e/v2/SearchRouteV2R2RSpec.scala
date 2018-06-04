@@ -2260,8 +2260,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?letter a knora-api:Resource .
                   |        ?letter a beol:letter .
                   |
-                  |
-                  |
                   |        ?letter beol:creationDate ?date .
                   |
                   |        beol:creationDate knora-api:objectType knora-api:Date .
@@ -2288,7 +2286,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                println(responseAs[String])
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
         }
@@ -2338,7 +2337,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
-        
+
         "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
