@@ -162,7 +162,6 @@ object QueryTraverser {
 
                 Seq(FilterNotExistsPattern(patterns = transformedPatterns))
 
-
             case minusPattern: MinusPattern =>
                 val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
                     patterns = minusPattern.patterns,
@@ -191,6 +190,7 @@ object QueryTraverser {
 
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
+            case bindPattern: BindPattern => Seq(bindPattern)
         }
     }
 
@@ -222,7 +222,6 @@ object QueryTraverser {
 
         SelectQuery(
             variables = transformer.getSelectVariables,
-            useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             groupBy = groupBy,
             orderBy = transformedOrderBy.orderBy,

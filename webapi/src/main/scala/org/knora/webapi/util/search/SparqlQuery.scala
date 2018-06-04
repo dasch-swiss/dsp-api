@@ -168,6 +168,18 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 }
 
 /**
+  * Represents a BIND command in a query.
+  *
+  * @param variable the variable in the BIND.
+  * @param iriValue the value of the variable, which must be a Knora data IRI.
+  */
+case class BindPattern(variable: QueryVariable, iriValue: IriRef) extends QueryPattern {
+    def toSparql: String = {
+        s"BIND(${iriValue.toSparql} AS ${variable.toSparql})\n"
+    }
+}
+
+/**
   * Provides convenience methods for making statement patterns that are marked as needing inference or not.
   */
 object StatementPattern {

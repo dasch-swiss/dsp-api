@@ -167,6 +167,8 @@ class ExplicitTypeInspectorV2 extends TypeInspector {
                 UnionPattern(blocksWithoutAnnotations)
 
             case filterPattern: FilterPattern => filterPattern
+
+            case bindPattern: BindPattern => bindPattern
         }
     }
 

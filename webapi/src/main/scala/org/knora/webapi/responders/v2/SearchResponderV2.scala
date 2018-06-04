@@ -150,7 +150,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     /**
       * A [[ConstructToConstructTransformer]] that preprocesses the input CONSTRUCT query by converting external IRIs to internal ones
-      * and disabling inference for individual statements as necessary.
+      * and enabling inference for individual statements as necessary.
       */
     class Preprocessor extends ConstructToConstructTransformer {
 
@@ -200,7 +200,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
-          * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and disabling inference if necessary.
+          * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and enabling inference if necessary.
           *
           * @param statementPattern a statement provided by GravsearchParserV2.
           * @return the preprocessed statement pattern.
@@ -2329,7 +2329,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
                 // println("++++++++")
-                // println(triplestoreSpecificQuery.toSparql)
+                // println(triplestoreSpecificSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]

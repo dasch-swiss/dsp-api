@@ -469,9 +469,27 @@ object GravsearchParserV2 {
                         // build the CONSTRUCT clause correctly later.
                         valueConstants.put(node.getName, valueConstant)
                     } else {
-                        // This is a BIND, which is not supported.
-                        throw GravsearchException("BIND is not supported in a Gravsearch query")
+                        // It's a BIND. Accept it if it refers to a Knora data IRI.
+                        valueConstant.getValue match {
+                            case iri: rdf4j.model.IRI =>
+                                val variable = QueryVariable(node.getName)
+                                val iriValue: IriRef = makeIri(iri)
+
+                                if (!iriValue.iri.isKnoraDataIri) {
+                                    throw GravsearchException(s"Unsupported IRI in BIND: ${iriValue.iri}")
+                                }
+
+                                val bindPattern = BindPattern(
+                                    variable = variable,
+                                    iriValue = iriValue
+                                )
+
+                                wherePatterns.append(bindPattern)
+
+                            case other => throw GravsearchException(s"Unsupported value in BIND: $other")
+                        }
                     }
+
                 case _ => ()
             }
         }
