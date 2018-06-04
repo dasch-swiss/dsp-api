@@ -70,6 +70,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val anythingUser = SharedTestDataADM.anythingUser1
     private val anythingUserEmail = anythingUser.email
 
+    private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
+    private val incunabulaUserEmail = incunabulaUser.email
+
     private val password = "test"
 
     private val rdfDataObjects = List(
@@ -2235,8 +2238,108 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource" in {
+        /*
+        "do a Gravsearch query for a letter and get information about the persons associated with it" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |
+                  |
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |
+                  |        ?familyName a xsd:string .
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
 
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                println(responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page knora-api:isPartOf ?book ;
+                  |            incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/b6b5ff1eb703> AS ?book)
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |        ?title a xsd:string .
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf ?book .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                println(responseAs[String])
+
+            }
+        }
+        */
+
+        "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -2271,14 +2374,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?seqnum
                 """.stripMargin
 
-            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
-
-                println(responseAs[String])
+                assert(status == StatusCodes.BAD_REQUEST, response.toString)
 
             }
-
         }
+
+
     }
 }

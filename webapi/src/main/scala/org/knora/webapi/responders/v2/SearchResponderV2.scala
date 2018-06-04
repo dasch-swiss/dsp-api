@@ -156,7 +156,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
         def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(FilterPattern(preprocessFilterExpression(filterPattern.expression)))
 
@@ -370,7 +370,23 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
-        protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+            /**
+              * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
+              * is the main resource. Throws an exception otherwise.
+              *
+              * @param objectVar the variable that is the object of the statement.
+              */
+            def checkSubjectInOrderBy(objectVar: QueryVariable): Unit = {
+                statementPattern.subj match {
+                    case subjectVar: QueryVariable =>
+                        if (!mainResourceVariable.contains(subjectVar) && inputOrderBy.exists(criterion => criterion.queryVariable == objectVar)) {
+                            throw GravsearchException(s"Variable ${objectVar.toSparql} is used in ORDER BY, but does not represent a value of the main resource")
+                        }
+
+                    case _ => ()
+                }
+            }
 
             propertyTypeInfo.objectTypeIri.toString match {
                 case OntologyConstants.KnoraApiV2Simple.Resource =>
@@ -379,7 +395,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // make sure that the object is either an Iri or a variable (cannot be a literal)
                     statementPattern.obj match {
                         case _: IriRef => ()
-                        case _: QueryVariable => ()
+                        case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
                         case other => throw GravsearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
                     }
 
@@ -387,7 +403,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // a variable representing the corresponding link value has to be created
 
                     // create a variable representing the link value
-                    val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+                    val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                        base = statementPattern.obj,
+                        propertyIri = OntologyConstants.KnoraBase.LinkValue
+                    )
 
                     // add variable to collection representing value objects
                     valueObjectVariables += linkValueObjVar
@@ -398,11 +417,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // create a variable representing the link value property
                             // in case FILTER patterns are given restricting the linking property's possible Iris, the same variable will recreated when processing FILTER patterns
                             createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
+
                         case propIri: IriRef =>
                             // convert the given linking property Iri to the corresponding link value property Iri
                             // only matches the linking property's link value
                             IriRef(propIri.iri.fromLinkPropToLinkValueProp)
+
                         case literal: XsdLiteral => throw GravsearchException(s"literal $literal cannot be used as a predicate")
+
                         case other => throw GravsearchException(s"$other cannot be used as a predicate")
                     }
 
@@ -425,7 +447,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // make sure that the object is a query variable (literals are not supported yet)
                     statementPattern.obj match {
-                        case queryVar: QueryVariable => valueObjectVariables += queryVar // add variable to collection representing value objects
+                        case objectVar: QueryVariable =>
+                            checkSubjectInOrderBy(objectVar)
+                            valueObjectVariables += objectVar // add variable to collection representing value objects
+
                         case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
                     }
 
@@ -440,19 +465,33 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
         }
 
-        protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
             // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
             // transform the originally given statement if necessary when processing the predicate
 
             // check if there exists type information for the given statement's subject
-            val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
+            val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                entity = statementPattern.subj,
+                typeInspection = typeInspectionResult,
+                processedTypeInfo = processedTypeInformationKeysWhereClause,
+                conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+            )
 
             // check if there exists type information for the given statement's object
-            val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
+            val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                entity = statementPattern.obj,
+                typeInspection = typeInspectionResult,
+                processedTypeInfo = processedTypeInformationKeysWhereClause,
+                conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+            )
 
             // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-            val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(statementPattern, typeInspectionResult, convertStatementForPropertyType)
+            val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
+                statementPattern = statementPattern,
+                typeInspection = typeInspectionResult,
+                conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
+            )
 
             additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
 
@@ -515,10 +554,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
                 }
 
-                conversionFuncForPropertyType(
-                    propTypeInfo,
-                    statementPattern
-                )
+                conversionFuncForPropertyType(propTypeInfo, statementPattern)
 
             } else {
                 // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
@@ -544,7 +580,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return variable representing the corresponding link value property.
           */
         protected def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
-            createUniqueVariableNameFromEntityAndProperty(linkingPropertyQueryVariable, OntologyConstants.KnoraBase.HasLinkToValue)
+            createUniqueVariableNameFromEntityAndProperty(
+                base = linkingPropertyQueryVariable,
+                propertyIri = OntologyConstants.KnoraBase.HasLinkToValue
+            )
         }
 
         /**
@@ -625,7 +664,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 throw GravsearchException(s"Filter expressions for a literal of type ${xsdType.mkString(", ")} supports the following operators: ${validComparisonOperators.mkString(", ")}, but $comparisonOperator given")
 
             // create a variable representing the literal attached to the value object
-            val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(queryVar, valueHasProperty)
+            val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                base = queryVar,
+                propertyIri = valueHasProperty
+            )
 
             // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
             valueVariablesCreatedInFilters.put(queryVar, valueObjectLiteralVar)
@@ -663,13 +705,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
             // create a variable representing the period's start
-            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
+            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
             // sort dates by their period's start (in the prequery)
             valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
 
             // create a variable representing the period's end
-            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
+            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
             // connects the value object with the periods start variable
             val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
@@ -973,7 +1015,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // create a variable representing the string literal
-            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(regexFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
             // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
             valueVariablesCreatedInFilters.put(regexFunctionCall.textValueVar, textValHasString)
@@ -1045,7 +1087,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // create a variable representing the string literal
-                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
                     // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
                     valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
@@ -1160,7 +1202,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
@@ -1171,7 +1213,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
             Seq(statementPattern)
         }
@@ -1186,7 +1228,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
@@ -1199,7 +1241,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
             Seq(statementPattern)
         }
@@ -1279,12 +1321,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
                     }
                     // append results from recursion and current value object
-                    ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
+                    ResourceIrisAndValueObjectIris(
+                        resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri,
+                        valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri
+                    ) +: acc
                 } else {
                     // not a link value or no dependent resource given (in order to avoid infinite recursion)
                     // no dependent resource present
                     // append results for current value object
-                    ResourceIrisAndValueObjectIris(resourceIris = Set.empty[IRI], valueObjectIris = Set(assertion.valueObjectIri)) +: acc
+                    ResourceIrisAndValueObjectIris(
+                        resourceIris = Set.empty[IRI],
+                        valueObjectIris = Set(assertion.valueObjectIri)
+                    ) +: acc
                 }
         }
 
@@ -1641,13 +1689,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
             }
 
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
                 // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
                 // other information about the matching resources or values.
 
                 processStatementPatternFromWhereClause(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
 
             }
@@ -1787,14 +1836,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
               *
               * @param statementPattern the statement to be transformed.
+              * @param inputOrderBy     the ORDER BY clause in the input query.
               * @return the result of the transformation.
               */
-            override def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
                 // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
                 // other information about the matching resources or values.
 
                 processStatementPatternFromWhereClause(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
             }
 
