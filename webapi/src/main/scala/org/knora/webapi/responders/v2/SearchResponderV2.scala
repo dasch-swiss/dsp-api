@@ -2342,8 +2342,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
                         case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
-                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource, dependentResourceIrisFromTypeInspection
-                            val expectedDependenResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) ++ dependentResourceIrisFromTypeInspection
+                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource
+                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri)
 
                             // check for presence of value objects: valueObjectIrisPerMainResource
                             val expectedValueObjects: Set[IRI] = valueObjectIrisPerMainResource(mainResIri).values.flatten.toSet
@@ -2355,7 +2355,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
 
                             // check if the client has sufficient permissions on all dependent resources present in the query path
-                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependenResources) == expectedDependenResources
+                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependentResources) == expectedDependentResources
 
                             // check if the client has sufficient permissions on all value objects Iris present in the query path
                             val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
