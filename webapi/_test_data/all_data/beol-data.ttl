@@ -101,6 +101,151 @@
 	<http://www.knora.org/ontology/knora-base#hasPermissions> "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	<http://www.knora.org/ontology/knora-base#attachedToUser> <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> a <http://www.knora.org/ontology/0801/beol#letter> ;
+	rdfs:label "Testbrief1" ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+	knora-base:creationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
+	<http://www.knora.org/ontology/0801/beol#title> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/qhE8FcQfRImrDTL4GEtIJw> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/qhE8FcQfRImrDTL4GEtIJw> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Testbrief1" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> <http://www.knora.org/ontology/0801/beol#creationDate> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ> a knora-base:DateValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasCalendar "GREGORIAN" ;
+	knora-base:valueHasEndJDN "2458274"^^xsd:integer ;
+	knora-base:valueHasEndPrecision "DAY" ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasStartJDN "2458274"^^xsd:integer ;
+	knora-base:valueHasStartPrecision "DAY" ;
+	knora-base:valueHasString "2018-06-04 CE" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> <http://www.knora.org/ontology/0801/beol#hasAuthor> <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+
+<http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a <http://www.knora.org/ontology/0801/beol#person> ;
+	rdfs:label "Testperson2" ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+	knora-base:creationDate "2018-06-04T08:56:22.513Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
+	<http://www.knora.org/ontology/0801/beol#hasGivenName> <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw> .
+
+<http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:56:22.513Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Fritz" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> <http://www.knora.org/ontology/0801/beol#hasFamilyName> <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q> .
+
+<http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:56:22.513Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Meier" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> <http://www.knora.org/ontology/0801/beol#hasAuthorValue> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g> a knora-base:LinkValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	rdf:subject <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> <http://www.knora.org/ontology/0801/beol#hasRecipient> <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> ;
+	<http://www.knora.org/ontology/0801/beol#hasRecipientValue> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/DVqPKuBBSIauVqjUC7bNvA> ;
+	<http://www.knora.org/ontology/0801/beol#hasText> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g> rdf:predicate <http://www.knora.org/ontology/0801/beol#hasAuthor> ;
+	rdf:object <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> ;
+	knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasRefCount "1"^^xsd:integer ;
+	knora-base:valueHasString "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a <http://www.knora.org/ontology/0801/beol#person> ;
+	rdfs:label "Testperson1" ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+	knora-base:creationDate "2018-06-04T08:55:34.086Z"^^xsd:dateTimeStamp ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
+	<http://www.knora.org/ontology/0801/beol#hasGivenName> <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/aWKIm2DCTn-hEY9GFJ5TLQ> .
+
+<http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/aWKIm2DCTn-hEY9GFJ5TLQ> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:55:34.086Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Hans" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> <http://www.knora.org/ontology/0801/beol#hasFamilyName> <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/7LhL_JdpTA-E0oQ1hdtPDQ> .
+
+<http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA/values/7LhL_JdpTA-E0oQ1hdtPDQ> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueCreationDate "2018-06-04T08:55:34.086Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Muster" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/DVqPKuBBSIauVqjUC7bNvA> a knora-base:LinkValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	rdf:subject <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> ;
+	rdf:predicate <http://www.knora.org/ontology/0801/beol#hasRecipient> ;
+	rdf:object <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> ;
+	knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasRefCount "1"^^xsd:integer ;
+	knora-base:valueHasString "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> a knora-base:TextValue ;
+	knora-base:isDeleted "false"^^xsd:boolean ;
+	knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ> a <http://www.knora.org/ontology/standoff#StandoffRootTag> ;
+	knora-base:standoffTagHasStart "0"^^xsd:integer ;
+	knora-base:standoffTagHasEnd "10"^^xsd:integer ;
+	knora-base:standoffTagHasStartIndex "0"^^xsd:integer ;
+	knora-base:standoffTagHasUUID "5b78739b-05b5-478b-8f4f-263625013cf3" .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> knora-base:valueHasStandoff <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/n8MWj2r3TRuzpKL5K9vPxw> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/n8MWj2r3TRuzpKL5K9vPxw> a <http://www.knora.org/ontology/standoff#StandoffParagraphTag> ;
+	knora-base:standoffTagHasStart "0"^^xsd:integer ;
+	knora-base:standoffTagHasEnd "9"^^xsd:integer ;
+	knora-base:standoffTagHasStartIndex "1"^^xsd:integer ;
+	knora-base:standoffTagHasStartParent <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw/standoff/vLsZ6o56REqn3wpEPu1ppQ> ;
+	knora-base:standoffTagHasUUID "dafcc708-2755-4be4-9132-17dc6f3d73fd" .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/3WVAi8UwSyulC3QhQJL1iw> knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping> ;
+	knora-base:valueCreationDate "2018-06-04T08:56:33.879Z"^^xsd:dateTimeStamp ;
+	knora-base:valueHasOrder "0"^^xsd:integer ;
+	knora-base:valueHasString "Testbrief" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
+
 <http://rdfh.ch/lists/0801/subject_index> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
