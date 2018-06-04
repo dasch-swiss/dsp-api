@@ -345,12 +345,27 @@ object ConstructResponseUtilV2 {
             // the main resources point to dependent resources and would be treated as incoming links of dependent resources
             // this would create circular dependencies
 
-            val incomingLinks = incomingLinksForResource(resourceIri).filterNot {
+
+            val incomingLinks: Map[IRI, Seq[ValueRdfData]] = incomingLinksForResource(resourceIri).filterNot {
                 case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
                     alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-            }.flatMap {
-                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                    assertions.valuePropertyAssertions
+            }.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                case (acc: Map[IRI, Seq[ValueRdfData]], (_, assertions: ResourceWithValueRdfData)) =>
+
+                    val values: Map[IRI, Seq[ValueRdfData]] = assertions.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                        case (_, (propIri: IRI, values: Seq[ValueRdfData])) =>
+
+                            // check if the property Iri already exists (there could be several instances of the same property)
+                            if (acc.get(propIri).nonEmpty) {
+                                // add values to property Iri (keeping the already existing values)
+                                acc + (propIri -> (acc(propIri) ++ values))
+                            } else {
+                                // prop Iri does not exists yet, add it
+                                acc + (propIri -> values)
+                            }
+                    }
+
+                    values
             }
 
             if (incomingLinks.nonEmpty) {
