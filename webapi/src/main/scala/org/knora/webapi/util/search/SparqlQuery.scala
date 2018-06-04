@@ -473,7 +473,16 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param orderBy         the variables that the results should be ordered by.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0) extends SparqlGenerator {
-    def toSparql: String = constructClause.toSparql + whereClause.toSparql
+    def toSparql: String = {
+        val stringBuilder = new StringBuilder
+        stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)
+
+        if (offset > 0) {
+            stringBuilder.append("OFFSET ").append(offset)
+        }
+
+        stringBuilder.toString
+    }
 }
 
 /**

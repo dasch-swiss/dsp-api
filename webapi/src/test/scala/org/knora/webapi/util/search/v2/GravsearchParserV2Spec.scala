@@ -31,18 +31,69 @@ class GravsearchParserV2Spec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The GravsearchParserV2 object" should {
-        "parse a CONSTRUCT query for an extended search" in {
+        "parse a Gravsearch query" in {
             val parsed: ConstructQuery = GravsearchParserV2.parseQuery(Query)
             parsed should ===(ParsedQuery)
             val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
-        "reject a CONSTRUCT query with a BIND" in {
-            assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryWithBind)
-            }
+        "parse a Gravsearch query with a BIND" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithBind)
+            parsed should ===(ParsedQueryWithBind)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
         }
+
+        "parse a Gravsearch query with a FILTER containing a Boolean operator" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryForAThingRelatingToAnotherThing)
+            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with FILTER NOT EXISTS" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithFilterNotExists)
+            parsed should ===(ParsedQueryWithFilterNotExists)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with MINUS" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMinus)
+            parsed should ===(ParsedQueryWithMinus)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with OFFSET" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithOffset)
+            parsed should ===(ParsedQueryWithOffset)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a regex function" in {
+            val parsed = GravsearchParserV2.parseQuery(queryWithFilterContainingRegex)
+            parsed should ===(ParsedQueryWithFilterContainingRegex)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "accept a custom 'match' function in a FILTER" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMatchFunction)
+            parsed should ===(ParsedQueryWithMatchFunction)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a lang function" in {
+            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterContainingLang)
+            parsed should ===(ParsedQueryWithLangFunction)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
 
         "reject a SELECT query" in {
             assertThrows[GravsearchException] {
@@ -96,48 +147,6 @@ class GravsearchParserV2Spec extends CoreSpec() {
             assertThrows[GravsearchException] {
                 GravsearchParserV2.parseQuery(QueryWithWrongFilter)
             }
-        }
-
-        "parse an extended search query with a FILTER containing a Boolean operator" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryForAThingRelatingToAnotherThing)
-            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with FILTER NOT EXISTS" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithFilterNotExists)
-            parsed should ===(ParsedQueryWithFilterNotExists)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with MINUS" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMinus)
-            parsed should ===(ParsedQueryWithMinus)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with OFFSET" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithOffset)
-            parsed should ===(ParsedQueryWithOffset)
-        }
-
-        "parse an extended search query with a FILTER containing a regex function" in {
-            val parsed = GravsearchParserV2.parseQuery(queryWithFilterContainingRegex)
-            parsed should ===(ParsedQueryWithFilterContainingRegex)
-        }
-
-        "accept a custom 'match' function in a FILTER" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMatchFunction)
-            parsed should ===(ParsedQueryWithMatchFunction)
-        }
-
-        "parse an extended search query with a FILTER containing a lang function" in {
-            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterContainingLang)
-
-            parsed should ===(ParsedQueryWithLangFunction)
         }
     }
 
@@ -389,11 +398,92 @@ class GravsearchParserV2Spec extends CoreSpec() {
           |    ?thing a ?thingType .
           |    ?thing rdfs:label ?thingLabel .
           |} WHERE {
+          |    BIND(<http://rdfh.ch/a-thing> AS ?thing)
+          |    ?thing a knora-api:Resource .
           |    ?thing a anything:Thing .
-          |    BIND(<http://rdfh.ch/a-thing> AS ?aThing)
-          |    ?thing anything:hasOtherThing ?aThing .
           |}
         """.stripMargin
+
+    val ParsedQueryWithBind: ConstructQuery = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "thingType"),
+                namedGraph = None
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "thingLabel"),
+                namedGraph = None
+            )
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                BindPattern(
+                    variable = QueryVariable(variableName = "thing"),
+                    iriValue = IriRef(
+                        iri = "http://rdfh.ch/a-thing".toSmartIri,
+                        propertyPathOperator = None
+                    )
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef(
+                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    obj = IriRef(
+                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                        propertyPathOperator = None
+                    ),
+                    namedGraph = None
+                )
+            ),
+            positiveEntities = Set(
+                QueryVariable(variableName = "thing"),
+                IriRef(
+                    iri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                IriRef(
+                    iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                QueryVariable(variableName = "thingLabel"),
+                IriRef(
+                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+                    propertyPathOperator = None
+                ),
+                QueryVariable(variableName = "thingType"),
+                IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
+                    propertyPathOperator = None
+                )
+            )
+        ),
+        orderBy = Nil,
+        offset = 0
+    )
 
     val QueryWithFilterNotExists: String =
         """
