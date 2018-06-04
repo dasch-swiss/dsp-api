@@ -2238,7 +2238,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        /*
+
         "do a Gravsearch query for a letter and get information about the persons associated with it" in {
             val gravsearchQuery =
                 """
@@ -2338,8 +2338,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
-        */
-
+        
         "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
             val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
