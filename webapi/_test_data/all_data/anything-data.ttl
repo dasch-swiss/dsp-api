@@ -1000,7 +1000,7 @@
     knora-base:standoffTagHasUUID "9c9fa856-6462-4337-94f7-9328668bb17d" ;
     a standoff:StandoffItalicTag .
 
-<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g> a <http://www.knora.org/ontology/0001/something#Something> ;
+<http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g> a anything:Thing ;
 	rdfs:label "Something with a lot of markup" ;
 	knora-base:isDeleted "false"^^xsd:boolean ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;

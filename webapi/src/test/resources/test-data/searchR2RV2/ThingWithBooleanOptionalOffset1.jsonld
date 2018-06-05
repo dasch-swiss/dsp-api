@@ -21,7 +21,7 @@
     "rdfs:label" : "Another thing that only project members can see"
   }, {
     "@id" : "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
-    "@type" : "something:Something",
+    "@type" : "anything:Thing",
     "rdfs:label" : "Something with a lot of markup"
   }, {
     "@id" : "http://rdfh.ch/0001/rzRrc2G1StKUMyZVjJnxuw",
