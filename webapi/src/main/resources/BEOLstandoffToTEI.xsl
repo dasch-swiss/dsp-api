@@ -45,7 +45,7 @@
         http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
 
     -->
-    <xsl:template match="entity">
+    <xsl:template match="entity|entity2">
         <ptr>
             <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
             <xsl:apply-templates/>
@@ -458,6 +458,28 @@
         <pb>
             <xsl:apply-templates/>
         </pb>
+    </xsl:template>
+
+    <!--
+
+    http://www.knora.org/ontology/0801/beol#StandoffHrTag
+
+    ignore
+
+    -->
+    <xsl:template match="hr">
+            <xsl:apply-templates/>
+    </xsl:template>
+
+    <!--
+
+    http://www.knora.org/ontology/0801/beol#StandoffSmallTag
+
+    ignore
+
+    -->
+    <xsl:template match="small">
+        <xsl:apply-templates/>
     </xsl:template>
 
 
