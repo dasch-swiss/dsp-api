@@ -2,8 +2,8 @@
 
 # Knora
 
-[Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a software
-framework for storing, sharing, and working with primary sources and data in the humanities.
+[Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a server
+application for storing, sharing, and working with primary sources and data in the humanities.
 
 It is developed by the [Digital Humanities Lab](http://www.dhlab.unibas.ch/) at the [University of Basel](https://www.unibas.ch/en.html), and is supported by the [Swiss Academy of Humanities and Social Sciences](http://www.sagw.ch/en/sagw.html).
 
@@ -17,25 +17,25 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 * Offers a generic HTTP-based API, implemented in [Scala](http://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
     * Handles authentication and authorization.
     * Provides automatic versioning of data.
-* Includes [Sipi](https://github.com/dhlab-basel/Sipi), a high-performance media server implemented in C++.
-* Provides a general-purpose, browser-based Virtual Research Environment called SALSAH (to be released soon).
+* Uses [Sipi](http://www.sipi.io/), a high-performance media server implemented in C++.
+* Designed to be be used with [SALSAH](https://dhlab-basel.github.io/Salsah/), a general-purpose, browser-based virtual research environment,
+  as well as with custom user interfaces.
 
 ## Status
 
+### Stable
+
+* [Knora Ontologies](https://docs.knora.org/paradox/02-knora-ontologies/index.html)
+* [Knora API v1](https://docs.knora.org/paradox/03-apis/api-v1/index.html)
+
 ### Beta stage
 
-* The OWL ontologies
-* API operations for querying and updating data
-* API operations dealing with binary files and Sipi
-* The testing framework, which includes many tests
-* Integration of the SALSAH GUI
-* API operations for administering Knora
-* Documentation
-
-### Planned
-
+* [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
 * Distribution packaging using [Docker](https://www.docker.com/)
-* A simple GUI for creating ontologies (for now you can use an application such as [Protégé](http://protege.stanford.edu/) or [TopBraid Composer](http://www.topquadrant.com/tools/modeling-topbraid-composer-standard-edition/))
+
+### New features under development
+
+* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 
 ## Requirements
 
@@ -45,7 +45,8 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 * [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
 * [SBT](http://www.scala-sbt.org/)
 
-[Ontotext GraphDB](http://ontotext.com/products/graphdb/) is recommended.
+[Ontotext GraphDB](http://ontotext.com/products/graphdb/) is recommended. Support for
+other RDF triplestores is planned.
 
 ### For building the documentation
 
@@ -129,9 +130,7 @@ Whenever you add a new feature or fix a bug, you should add one or more tests fo
 
 ### Documentation
 
-A pull request should include tests and documentation for the changes that were made. Design and user documentation go under `docs` and are written in [reStructuredText](http://docutils.sourceforge.net/rst.html) format using the [Sphinx](http://www.sphinx-doc.org/en/stable/) documentation generator.
-
-
+A pull request should include tests and documentation for the changes that were made. See the [documentation README](https://github.com/dhlab-basel/Knora/blob/develop/docs/Readme.md) for information on writing Knora documentation.
 
 ## Contact information
 

@@ -78,7 +78,7 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
 
     val sse = path( ("v1" | "v2" | "admin") / "sse") {
         get {
-            throw SparqlSearchException("sparql search")
+            throw GravsearchException("sparql search")
         }
     }
 
@@ -222,26 +222,26 @@ class ExceptionHandlerR2RSpec extends R2RSpec {
             }
         }
 
-        "return correct status code and response for 'SparqlSearchException'" in {
+        "return correct status code and response for 'GravsearchException'" in {
             Get("/v1/sse") ~> route ~> check {
 
                 status should be(StatusCodes.BadRequest)
 
-                responseAs[String] should be("{\"status\":11,\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+                responseAs[String] should be("{\"status\":11,\"error\":\"org.knora.webapi.GravsearchException: sparql search\"}")
             }
 
             Get("/v2/sse") ~> route ~> check {
 
                 status should be(StatusCodes.BadRequest)
 
-                responseAs[String] should be("{\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.GravsearchException: sparql search\"}")
             }
 
             Get("/admin/sse") ~> route ~> check {
 
                 status should be(StatusCodes.BadRequest)
 
-                responseAs[String] should be("{\"error\":\"org.knora.webapi.SparqlSearchException: sparql search\"}")
+                responseAs[String] should be("{\"error\":\"org.knora.webapi.GravsearchException: sparql search\"}")
             }
         }
 

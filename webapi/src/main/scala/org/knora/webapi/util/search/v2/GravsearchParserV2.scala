@@ -20,8 +20,8 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.parser.sparql._
+import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
@@ -40,24 +40,24 @@ import scala.collection.JavaConverters._
   * - BIND is not supported.
   * - A UNION or OPTIONAL may not contain a nested UNION or OPTIONAL.
   */
-object SearchParserV2 {
+object GravsearchParserV2 {
     // This implementation uses the RDF4J SPARQL parser.
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
     /**
-      * Given a string representation of a simple SPARQL CONSTRUCT query, returns a [[ConstructQuery]].
+      * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
       *
-      * @param query the SPARQL string to be parsed.
+      * @param query the Gravsearch string to be parsed.
       * @return a [[ConstructQuery]].
       */
-    def parseSearchQuery(query: String): ConstructQuery = {
+    def parseQuery(query: String): ConstructQuery = {
         val visitor = new ConstructQueryModelVisitor
 
         val parsedQuery = try {
             sparqlParser.parseQuery(query, OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion)
         } catch {
-            case malformed: MalformedQueryException => throw SparqlSearchException(s"Invalid search query: ${malformed.getMessage}")
+            case malformed: MalformedQueryException => throw GravsearchException(s"Invalid search query: ${malformed.getMessage}")
         }
 
         parsedQuery.getTupleExpr.visit(visitor)
@@ -69,7 +69,7 @@ object SearchParserV2 {
       *
       * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
       */
-    class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[SparqlSearchException] {
+    class ConstructQueryModelVisitor(isInNegation: Boolean = false) extends algebra.QueryModelVisitor[GravsearchException] {
         private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Represents a statement pattern in the CONSTRUCT clause. Each string could be a variable name or a parser-generated
@@ -153,31 +153,31 @@ object SearchParserV2 {
         }
 
         private def unsupported(node: algebra.QueryModelNode) {
-            throw SparqlSearchException(s"SPARQL feature not supported in search query: $node")
+            throw GravsearchException(s"SPARQL feature not supported in Gravsearch query: $node")
         }
 
         private def checkIriSchema(smartIri: SmartIri): Unit = {
             if (smartIri.isKnoraOntologyIri) {
-                throw SparqlSearchException(s"Ontology IRI not allowed in search query: $smartIri")
+                throw GravsearchException(s"Ontology IRI not allowed in Gravsearch query: $smartIri")
             }
 
             if (smartIri.isKnoraEntityIri) {
                 smartIri.getOntologySchema match {
                     case Some(ApiV2Simple) => ()
-                    case _ => throw SparqlSearchException(s"Ontology schema not allowed in search query: $smartIri")
+                    case _ => throw GravsearchException(s"Ontology schema not allowed in Gravsearch query: $smartIri")
                 }
             }
         }
 
         private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
-            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
+            val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
             checkIriSchema(smartIri)
             IriRef(smartIri)
         }
 
         override def meet(node: algebra.Slice): Unit = {
             if (node.hasLimit) {
-                throw SparqlSearchException("LIMIT not supported in search query")
+                throw GravsearchException("LIMIT not supported in Gravsearch query")
             }
 
             node.getArg.visit(this)
@@ -185,7 +185,7 @@ object SearchParserV2 {
             if (node.hasOffset) {
                 offset = node.getOffset
             } else {
-                throw SparqlSearchException(s"Invalid OFFSET: ${node.getOffset}")
+                throw GravsearchException(s"Invalid OFFSET: ${node.getOffset}")
             }
         }
 
@@ -201,11 +201,11 @@ object SearchParserV2 {
                     case iri: rdf4j.model.IRI => makeIri(iri)
 
                     case literal: rdf4j.model.Literal =>
-                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
                         checkIriSchema(datatype)
                         XsdLiteral(value = literal.stringValue, datatype = datatype)
 
-                    case other => throw SparqlSearchException(s"Invalid object for triple patterns: $other")
+                    case other => throw GravsearchException(s"Invalid object for triple patterns: $other")
                 }
             } else {
                 QueryVariable(objVar.getName)
@@ -236,7 +236,7 @@ object SearchParserV2 {
             val obj: Entity = makeEntity(node.getObjectVar)
 
             if (Option(node.getContextVar).nonEmpty) {
-                throw SparqlSearchException("Named graphs are not supported in search queries")
+                throw GravsearchException("Named graphs are not supported in search queries")
             }
 
             wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
@@ -259,7 +259,7 @@ object SearchParserV2 {
         private def checkBlockPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
             for (pattern <- patterns) {
                 pattern match {
-                    case _: UnionPattern | _: OptionalPattern => throw SparqlSearchException(s"Nested blocks are not allowed in search queries, found $pattern")
+                    case _: UnionPattern | _: OptionalPattern => throw GravsearchException(s"Nested blocks are not allowed in search queries, found $pattern")
                     case _ => ()
                 }
             }
@@ -270,7 +270,7 @@ object SearchParserV2 {
         override def meet(node: algebra.Union): Unit = {
             // Get the block of query patterns on the left side of the UNION.
             val leftPatterns: Seq[QueryPattern] = node.getLeftArg match {
-                case _: algebra.Union => throw SparqlSearchException("Nested UNIONs are not allowed in search queries")
+                case _: algebra.Union => throw GravsearchException("Nested UNIONs are not allowed in search queries")
 
                 case otherLeftArg =>
                     val leftArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
@@ -290,12 +290,12 @@ object SearchParserV2 {
                     val rightWherePatterns = rightArgVisitor.getWherePatterns
 
                     if (rightWherePatterns.size > 1) {
-                        throw SparqlSearchException(s"Right argument of UNION is not a UnionPattern as expected: $rightWherePatterns")
+                        throw GravsearchException(s"Right argument of UNION is not a UnionPattern as expected: $rightWherePatterns")
                     }
 
                     rightWherePatterns.head match {
                         case rightUnionPattern: UnionPattern => rightUnionPattern.blocks
-                        case other => throw SparqlSearchException(s"Right argument of UNION is not a UnionPattern as expected: $other")
+                        case other => throw GravsearchException(s"Right argument of UNION is not a UnionPattern as expected: $other")
                     }
 
                 case otherRightArg =>
@@ -346,19 +346,19 @@ object SearchParserV2 {
                 val targetName: String = projectionElem.getTargetName
 
                 if (sourceName == targetName) {
-                    throw SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+                    throw GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
                 }
 
                 projectionElem.getTargetName match {
                     case "subject" => subj = Some(sourceName)
                     case "predicate" => pred = Some(sourceName)
                     case "object" => obj = Some(sourceName)
-                    case _ => SparqlSearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
+                    case _ => GravsearchException(s"SELECT queries are not allowed in search, please use a CONSTRUCT query instead")
                 }
             }
 
             if (subj.isEmpty || pred.isEmpty || obj.isEmpty) {
-                throw SparqlSearchException(s"Incomplete ProjectionElemList: $node")
+                throw GravsearchException(s"Incomplete ProjectionElemList: $node")
             }
 
             constructStatementsWithConstants.append(ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get))
@@ -385,10 +385,10 @@ object SearchParserV2 {
                     case objVar: algebra.Var =>
                         makeEntity(objVar) match {
                             case queryVar: QueryVariable => queryVar
-                            case _ => throw SparqlSearchException(s"Entity $objVar not allowed in ORDER BY")
+                            case _ => throw GravsearchException(s"Entity $objVar not allowed in ORDER BY")
                         }
 
-                    case _ => throw SparqlSearchException(s"Expression $expression not allowed in ORDER BY")
+                    case _ => throw GravsearchException(s"Expression $expression not allowed in ORDER BY")
                 }
 
                 orderBy.append(OrderCriterion(queryVariable = queryVariable, isAscending = ascending))
@@ -398,7 +398,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Or): Unit = {
-            // Does nothing, because this is handled in meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(node: algebra.Not): Unit = {
@@ -422,7 +422,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.Compare): Unit = {
-            // Do nothing, because this is handled by meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(node: algebra.CompareAll): Unit = {
@@ -469,9 +469,27 @@ object SearchParserV2 {
                         // build the CONSTRUCT clause correctly later.
                         valueConstants.put(node.getName, valueConstant)
                     } else {
-                        // This is a BIND, which is not supported.
-                        throw SparqlSearchException("BIND is not supported in search query")
+                        // It's a BIND. Accept it if it refers to a Knora data IRI.
+                        valueConstant.getValue match {
+                            case iri: rdf4j.model.IRI =>
+                                val variable = QueryVariable(node.getName)
+                                val iriValue: IriRef = makeIri(iri)
+
+                                if (!iriValue.iri.isKnoraDataIri) {
+                                    throw GravsearchException(s"Unsupported IRI in BIND: ${iriValue.iri}")
+                                }
+
+                                val bindPattern = BindPattern(
+                                    variable = variable,
+                                    iriValue = iriValue
+                                )
+
+                                wherePatterns.append(bindPattern)
+
+                            case other => throw GravsearchException(s"Unsupported value in BIND: $other")
+                        }
                     }
+
                 case _ => ()
             }
         }
@@ -535,7 +553,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.And): Unit = {
-            // Does nothing, because this is handled in meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(add: algebra.Add): Unit = {
@@ -547,7 +565,7 @@ object SearchParserV2 {
         }
 
         override def meet(node: algebra.DescribeOperator): Unit = {
-            throw SparqlSearchException(s"DESCRIBE queries are not allowed in search, please use a CONSTRUCT query instead")
+            throw GravsearchException(s"DESCRIBE queries are not allowed in search, please use a CONSTRUCT query instead")
         }
 
         override def meet(copy: algebra.Copy): Unit = {
@@ -578,6 +596,119 @@ object SearchParserV2 {
             unsupported(node)
         }
 
+        private def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
+            valueExpr match {
+                case compare: algebra.Compare =>
+                    val leftArg = makeFilterExpression(compare.getLeftArg)
+                    val rightArg = makeFilterExpression(compare.getRightArg)
+                    val operator = compare.getOperator.getSymbol
+
+                    CompareExpression(
+                        leftArg = leftArg,
+                        operator = CompareExpressionOperator.lookup(operator, throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")),
+                        rightArg = rightArg
+                    )
+
+                case and: algebra.And =>
+                    val leftArg = makeFilterExpression(and.getLeftArg)
+                    val rightArg = makeFilterExpression(and.getRightArg)
+
+                    AndExpression(
+                        leftArg = leftArg,
+                        rightArg = rightArg
+                    )
+
+                case or: algebra.Or =>
+                    val leftArg = makeFilterExpression(or.getLeftArg)
+                    val rightArg = makeFilterExpression(or.getRightArg)
+
+                    OrExpression(
+                        leftArg = leftArg,
+                        rightArg = rightArg
+                    )
+
+                case valueConstant: algebra.ValueConstant =>
+                    valueConstant.getValue match {
+                        case iri: rdf4j.model.IRI => makeIri(iri)
+
+                        case literal: rdf4j.model.Literal =>
+                            val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                            checkIriSchema(datatype)
+                            XsdLiteral(value = literal.stringValue, datatype = datatype)
+                        case other => throw GravsearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
+                    }
+
+                case sparqlVar: algebra.Var => makeEntity(sparqlVar)
+
+                case functionCall: algebra.FunctionCall =>
+                    val functionIri = IriRef(functionCall.getURI.toSmartIri)
+                    val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
+                        case entity: Entity => entity
+                        case other => throw GravsearchException(s"Unsupported argument in function: $other")
+                    }
+
+                    FunctionCallExpression(
+                        functionIri = functionIri,
+                        args = args
+                    )
+
+                case regex: algebra.Regex =>
+
+                    // first argument representing the text value to be checked
+                    val textValueArg: algebra.ValueExpr = regex.getArg
+
+                    val textValueVar: QueryVariable = textValueArg match {
+                        case objVar: algebra.Var =>
+                            makeEntity(objVar) match {
+                                case queryVar: QueryVariable => queryVar
+                                case _ => throw GravsearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
+                            }
+                        case other => throw GravsearchException(s"$other is not allowed in regex function as first argument, a variable is required")
+                    }
+
+                    // second argument representing the REGEX pattern to be used to perform the check
+                    val patternArg: algebra.ValueExpr = regex.getPatternArg
+
+                    val pattern: String = patternArg match {
+                        case valConstant: algebra.ValueConstant =>
+                            valConstant.getValue.stringValue()
+                        case other => throw GravsearchException(s"$other not allowed in regex function as the second argument, a string is expected")
+
+                    }
+
+                    // third argument representing the modifier to be used with when applying the REGEX pattern
+                    val modifierArg: algebra.ValueExpr = regex.getFlagsArg
+
+                    val modifier: String = modifierArg match {
+                        case valConstant: algebra.ValueConstant =>
+                            valConstant.getValue.stringValue()
+                        case other => throw GravsearchException(s"$other not allowed in regex function as the third argument, a string is expected")
+
+                    }
+
+                    RegexFunction(
+                        textValueVar = textValueVar,
+                        pattern = pattern,
+                        modifier = modifier
+                    )
+
+                case lang: algebra.Lang =>
+
+                    val textValueVar = lang.getArg match {
+                        case objVar: algebra.Var =>
+                            makeEntity(objVar) match {
+                                case queryVar: QueryVariable => queryVar
+                                case _ => throw GravsearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
+                            }
+                        case other => throw GravsearchException(s"$other is not allowed in lang function as an argument, a variable is required")
+                    }
+
+                    LangFunction(textValueVar)
+
+                case other => throw GravsearchException(s"Unsupported FILTER expression: ${other.getClass}")
+            }
+        }
+
         override def meet(node: algebra.Filter): Unit = {
             def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
                 not.getArg match {
@@ -586,123 +717,9 @@ object SearchParserV2 {
                         exists.getSubQuery.visit(subQueryVisitor)
                         FilterNotExistsPattern(subQueryVisitor.getWherePatterns)
 
-                    case _ => throw SparqlSearchException(s"Unsupported NOT expression: $not")
+                    case _ => throw GravsearchException(s"Unsupported NOT expression: $not")
                 }
             }
-
-            def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
-                valueExpr match {
-                    case compare: algebra.Compare =>
-                        val leftArg = makeFilterExpression(compare.getLeftArg)
-                        val rightArg = makeFilterExpression(compare.getRightArg)
-                        val operator = compare.getOperator.getSymbol
-
-                        CompareExpression(
-                            leftArg = leftArg,
-                            operator = CompareExpressionOperator.lookup(operator, throw SparqlSearchException(s"Operator $operator is not supported in a CompareExpression")),
-                            rightArg = rightArg
-                        )
-
-                    case and: algebra.And =>
-                        val leftArg = makeFilterExpression(and.getLeftArg)
-                        val rightArg = makeFilterExpression(and.getRightArg)
-
-                        AndExpression(
-                            leftArg = leftArg,
-                            rightArg = rightArg
-                        )
-
-                    case or: algebra.Or =>
-                        val leftArg = makeFilterExpression(or.getLeftArg)
-                        val rightArg = makeFilterExpression(or.getRightArg)
-
-                        OrExpression(
-                            leftArg = leftArg,
-                            rightArg = rightArg
-                        )
-
-                    case valueConstant: algebra.ValueConstant =>
-                        valueConstant.getValue match {
-                            case iri: rdf4j.model.IRI => makeIri(iri)
-
-                            case literal: rdf4j.model.Literal =>
-                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw SparqlSearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
-                                checkIriSchema(datatype)
-                                XsdLiteral(value = literal.stringValue, datatype = datatype)
-                            case other => throw SparqlSearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
-                        }
-
-                    case sparqlVar: algebra.Var => makeEntity(sparqlVar)
-
-                    case functionCall: algebra.FunctionCall =>
-                        val functionIri = IriRef(functionCall.getURI.toSmartIri)
-                        val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
-                            case entity: Entity => entity
-                            case other => throw SparqlSearchException(s"Unsupported argument in function: $other")
-                        }
-
-                        FunctionCallExpression(
-                            functionIri = functionIri,
-                            args = args
-                        )
-
-                    case regex: algebra.Regex =>
-
-                        // first argument representing the text value to be checked
-                        val textValueArg: algebra.ValueExpr = regex.getArg
-
-                        val textValueVar: QueryVariable = textValueArg match {
-                            case objVar: algebra.Var =>
-                                makeEntity(objVar) match {
-                                    case queryVar: QueryVariable => queryVar
-                                    case _ => throw SparqlSearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
-                                }
-                            case other => throw SparqlSearchException(s"$other is not allowed in regex function as first argument, a variable is required")
-                        }
-
-                        // second argument representing the REGEX pattern to be used to perform the check
-                        val patternArg: algebra.ValueExpr = regex.getPatternArg
-
-                        val pattern: String = patternArg match {
-                            case valConstant: algebra.ValueConstant =>
-                                valConstant.getValue.stringValue()
-                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the second argument, a string is expected")
-
-                        }
-
-                        // third argument representing the modifier to be used with when applying the REGEX pattern
-                        val modifierArg: algebra.ValueExpr = regex.getFlagsArg
-
-                        val modifier: String = modifierArg match {
-                            case valConstant: algebra.ValueConstant =>
-                                valConstant.getValue.stringValue()
-                            case other => throw SparqlSearchException(s"$other not allowed in regex function as the third argument, a string is expected")
-
-                        }
-
-                        RegexFunction(
-                            textValueVar = textValueVar,
-                            pattern = pattern,
-                            modifier = modifier
-                        )
-
-                    case lang: algebra.Lang =>
-
-                        val textValueVar = lang.getArg match {
-                            case objVar: algebra.Var =>
-                                makeEntity(objVar) match {
-                                    case queryVar: QueryVariable => queryVar
-                                    case _ => throw SparqlSearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
-                                }
-                            case other => throw SparqlSearchException(s"$other is not allowed in lang function as an argument, a variable is required")
-                        }
-
-                        LangFunction(textValueVar)
-
-                    case other => throw SparqlSearchException(s"Unsupported FILTER expression: ${other.getClass}")
-                }
-            }
-
 
             // Visit the nodes that the filter applies to.
             node.getArg.visit(this)
@@ -785,8 +802,16 @@ object SearchParserV2 {
             // Visit the nodes that are in the OPTIONAL.
             val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
             node.getRightArg.visit(rightArgVisitor)
+
+            // If the OPTIONAL has a condition, construct a FILTER to represent the condition.
+            val filterPattern = if (node.hasCondition) {
+                Some(FilterPattern(makeFilterExpression(node.getCondition)))
+            } else {
+                None
+            }
+
             positiveEntities ++= rightArgVisitor.positiveEntities
-            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
+            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns ++ filterPattern)))
         }
 
         override def meet(node: algebra.LangMatches): Unit = {

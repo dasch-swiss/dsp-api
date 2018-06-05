@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.SparqlSearchException
+@import org.knora.webapi.GravsearchException
 @import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
 
 @*
@@ -54,7 +54,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 @if(!countQuery) {
-SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw SparqlSearchException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+SELECT DISTINCT ?resource (GROUP_CONCAT(?valueObject; separator="@separator.getOrElse(throw GravsearchException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
 } else {
     SELECT (count(distinct ?resource) as ?count)
 }

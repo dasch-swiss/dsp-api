@@ -22,122 +22,137 @@ package org.knora.webapi.util.search.v2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
-import org.knora.webapi.{CoreSpec, SparqlSearchException}
+import org.knora.webapi.{CoreSpec, GravsearchException}
 
 /**
-  * Tests [[SearchParserV2]].
+  * Tests [[GravsearchParserV2]].
   */
-class SearchParserV2Spec extends CoreSpec() {
+class GravsearchParserV2Spec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "The SearchParserV2 object" should {
-        "parse a CONSTRUCT query for an extended search" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(Query)
+    "The GravsearchParserV2 object" should {
+        "parse a Gravsearch query" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(Query)
             parsed should ===(ParsedQuery)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
-        "reject a CONSTRUCT query with a BIND" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithBind)
-            }
+        "parse a Gravsearch query with a BIND" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithBind)
+            parsed should ===(ParsedQueryWithBind)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a Boolean operator" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryForAThingRelatingToAnotherThing)
+            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with FILTER NOT EXISTS" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithFilterNotExists)
+            parsed should ===(ParsedQueryWithFilterNotExists)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with MINUS" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMinus)
+            parsed should ===(ParsedQueryWithMinus)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with OFFSET" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithOffset)
+            parsed should ===(ParsedQueryWithOffset)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a regex function" in {
+            val parsed = GravsearchParserV2.parseQuery(queryWithFilterContainingRegex)
+            parsed should ===(ParsedQueryWithFilterContainingRegex)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "accept a custom 'match' function in a FILTER" in {
+            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMatchFunction)
+            parsed should ===(ParsedQueryWithMatchFunction)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query with a FILTER containing a lang function" in {
+            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterContainingLang)
+            parsed should ===(ParsedQueryWithLangFunction)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing a FILTER in an OPTIONAL" in {
+            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterInOptional)
+            parsed should ===(ParsedQueryWithFilterInOptional)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
         }
 
         "reject a SELECT query" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlSelect)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(SparqlSelect)
             }
         }
 
         "reject a DESCRIBE query" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlDescribe)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(SparqlDescribe)
             }
         }
 
         "reject an INSERT" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlInsert)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(SparqlInsert)
             }
         }
 
         "reject a DELETE" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(SparqlDelete)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(SparqlDelete)
             }
         }
 
         "reject an internal ontology IRI" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithInternalEntityIri)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(QueryWithInternalEntityIri)
             }
         }
 
         "reject left-nested UNIONs" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithLeftNestedUnion)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(QueryWithLeftNestedUnion)
             }
         }
 
         "reject right-nested UNIONs" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryStrWithRightNestedUnion)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(QueryStrWithRightNestedUnion)
             }
         }
 
         "reject a nested OPTIONAL" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryStrWithNestedOptional)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(QueryStrWithNestedOptional)
             }
         }
 
         "reject an unsupported FILTER" in {
-            assertThrows[SparqlSearchException] {
-                SearchParserV2.parseSearchQuery(QueryWithWrongFilter)
+            assertThrows[GravsearchException] {
+                GravsearchParserV2.parseQuery(QueryWithWrongFilter)
             }
-        }
-
-        "parse an extended search query with a FILTER containing a Boolean operator" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryForAThingRelatingToAnotherThing)
-            parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with FILTER NOT EXISTS" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithFilterNotExists)
-            parsed should ===(ParsedQueryWithFilterNotExists)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with MINUS" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMinus)
-            parsed should ===(ParsedQueryWithMinus)
-            val reparsed = SearchParserV2.parseSearchQuery(parsed.toSparql)
-            reparsed should ===(parsed)
-        }
-
-        "parse an extended search query with OFFSET" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithOffset)
-            parsed should ===(ParsedQueryWithOffset)
-        }
-
-        "parse an extended search query with a FILTER containing a regex function" in {
-            val parsed = SearchParserV2.parseSearchQuery(queryWithFilterContainingRegex)
-            parsed should ===(ParsedQueryWithFilterContainingRegex)
-        }
-
-        "accept a custom 'match' function in a FILTER" in {
-            val parsed: ConstructQuery = SearchParserV2.parseSearchQuery(QueryWithMatchFunction)
-            parsed should ===(ParsedQueryWithMatchFunction)
-        }
-
-        "parse an extended search query with a FILTER containing a lang function" in {
-            val parsed = SearchParserV2.parseSearchQuery(QueryWithFilterContainingLang)
-
-            parsed should ===(ParsedQueryWithLangFunction)
         }
     }
 
@@ -308,22 +323,22 @@ class SearchParserV2Spec extends CoreSpec() {
                 leftArg = QueryVariable("pubdate")
             ))
         ), positiveEntities = Set(
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc".toSmartIri),
             QueryVariable("page"),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri, None),
-            IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri),
+            IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
             QueryVariable("bookPubLoc"),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
             QueryVariable("bookLabel"),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri, None),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum".toSmartIri, None),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri, None),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri, None),
-            IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum".toSmartIri),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri),
+            IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
             QueryVariable("bookPublisher"),
-            IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+            IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
             QueryVariable("book"),
-            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pagenum".toSmartIri, None),
+            IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pagenum".toSmartIri),
             QueryVariable("pubdate"),
             QueryVariable("seqnum"),
             QueryVariable("bookType"),
@@ -389,11 +404,55 @@ class SearchParserV2Spec extends CoreSpec() {
           |    ?thing a ?thingType .
           |    ?thing rdfs:label ?thingLabel .
           |} WHERE {
+          |    BIND(<http://rdfh.ch/a-thing> AS ?thing)
+          |    ?thing a knora-api:Resource .
           |    ?thing a anything:Thing .
-          |    BIND(<http://rdfh.ch/a-thing> AS ?aThing)
-          |    ?thing anything:hasOtherThing ?aThing .
           |}
         """.stripMargin
+
+    val ParsedQueryWithBind: ConstructQuery = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                obj = QueryVariable(variableName = "thingType")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                obj = QueryVariable(variableName = "thingLabel")
+            )
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                BindPattern(
+                    variable = QueryVariable(variableName = "thing"),
+                    iriValue = IriRef("http://rdfh.ch/a-thing".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "thing"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
+                )
+            ),
+            positiveEntities = Set(
+                QueryVariable(variableName = "thing"),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                QueryVariable(variableName = "thingLabel"),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                QueryVariable(variableName = "thingType"),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
+            )
+        ),
+        orderBy = Nil,
+        offset = 0
+    )
 
     val QueryWithFilterNotExists: String =
         """
@@ -434,10 +493,10 @@ class SearchParserV2Spec extends CoreSpec() {
             positiveEntities = Set( // note that entities from `?thing anything:hasOtherThing ?aThing .` must not be not mentioned here (unless they are also present elsewhere)
                 QueryVariable("thingLabel"),
                 QueryVariable("thing"),
-                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
                 QueryVariable("thingType"),
-                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
             )
         ),
         constructClause = ConstructClause(statements = Vector(
@@ -495,10 +554,10 @@ class SearchParserV2Spec extends CoreSpec() {
             positiveEntities = Set( // note that entities from `?thing anything:hasOtherThing ?aThing .` must not be not mentioned here (unless they are also present elsewhere)
                 QueryVariable("thingLabel"),
                 QueryVariable("thing"),
-                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
                 QueryVariable("thingType"),
-                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
             )
         ),
         constructClause = ConstructClause(statements = Vector(
@@ -545,10 +604,10 @@ class SearchParserV2Spec extends CoreSpec() {
             positiveEntities = Set(
                 QueryVariable("thingLabel"),
                 QueryVariable("thing"),
-                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri, None),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
                 QueryVariable("thingType"),
-                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
             )
         ),
         constructClause = ConstructClause(statements = Vector(
@@ -837,10 +896,10 @@ class SearchParserV2Spec extends CoreSpec() {
             positiveEntities = Set(
                 QueryVariable("linkingProp"),
                 QueryVariable("resource"),
-                IriRef("http://rdfh.ch/a-thing".toSmartIri, None),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri, None),
-                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri, None)
+                IriRef("http://rdfh.ch/a-thing".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
             )
         ),
         constructClause = ConstructClause(statements = Vector(StatementPattern(
@@ -923,12 +982,12 @@ class SearchParserV2Spec extends CoreSpec() {
             statements = Vector(
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
                     obj = XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri)
                 ),
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
                     obj = QueryVariable("propVal0")
                 )
             )
@@ -937,41 +996,41 @@ class SearchParserV2Spec extends CoreSpec() {
             patterns = Vector(
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri, None), None),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri), None),
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,None),
-                    obj = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,None)
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri)
                 ),
                 StatementPattern(
                     subj = QueryVariable("mainRes"),
-                    pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,None),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
                     obj = QueryVariable("propVal0")
                 ),
                 StatementPattern(
-                    subj = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,None),
-                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri,None),
-                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None)
+                    subj = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri)
                 ),
                 StatementPattern(
                     subj = QueryVariable("propVal0"),
-                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
-                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri, None)
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri)
                 ),
                 FilterPattern(RegexFunction(QueryVariable("propVal0"), "Zeit", "i"))
             ),
             positiveEntities = Set(
 
-                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri,None),
-                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri,None),
-                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,None),
-                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,None),
-                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri,None),
-                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,None),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
+                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
 
                 QueryVariable("propVal0"),
-                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
                 QueryVariable("mainRes")
             )
         )
@@ -1042,38 +1101,20 @@ class SearchParserV2Spec extends CoreSpec() {
     val ParsedQueryWithLangFunction = ConstructQuery(
         constructClause = ConstructClause(statements = Vector(StatementPattern(
             subj = QueryVariable(variableName = "resource"),
-            pred = IriRef(
-                iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                propertyPathOperator = None
-            ),
-            obj = IriRef(
-                iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-                propertyPathOperator = None
-            ),
-            namedGraph = None
+            pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+            obj = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
         ))),
         whereClause = WhereClause(
             patterns = Vector(
                 StatementPattern(
                     subj = QueryVariable(variableName = "resource"),
-                    pred = IriRef(
-                        iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = IriRef(
-                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    namedGraph = None
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri)
                 ),
                 StatementPattern(
                     subj = QueryVariable(variableName = "resource"),
-                    pred = IriRef(
-                        iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
-                        propertyPathOperator = None
-                    ),
-                    obj = QueryVariable(variableName = "text"),
-                    namedGraph = None
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri),
+                    obj = QueryVariable(variableName = "text")
                 ),
                 FilterPattern(expression = CompareExpression(
                     leftArg = LangFunction(textValueVar = QueryVariable(variableName = "text")),
@@ -1085,22 +1126,184 @@ class SearchParserV2Spec extends CoreSpec() {
                 ))
             ),
             positiveEntities = Set(
-                IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri,
-                    propertyPathOperator = None
-                ),
-                IriRef(
-                    iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
-                    propertyPathOperator = None
-                ),
-                IriRef(
-                    iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    propertyPathOperator = None
-                ),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
                 QueryVariable(variableName = "text"),
                 QueryVariable(variableName = "resource")
             )
         )
     )
 
+    val QueryWithFilterInOptional: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |    CONSTRUCT {
+          |        ?letter knora-api:isMainResource true .
+          |
+          |        ?letter beol:creationDate ?date .
+          |
+          |        ?letter ?linkingProp1  ?person1 .
+          |
+          |        ?person1 beol:hasFamilyName ?name .
+          |
+          |    } WHERE {
+          |        ?letter a knora-api:Resource .
+          |        ?letter a beol:letter .
+          |
+          |        ?letter beol:creationDate ?date .
+          |
+          |        beol:creationDate knora-api:objectType knora-api:Date .
+          |        ?date a knora-api:Date .
+          |
+          |        ?letter ?linkingProp1 ?person1 .
+          |
+          |        ?person1 a knora-api:Resource .
+          |
+          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+          |
+          |      	OPTIONAL {
+          |        ?person1 beol:hasFamilyName ?name .
+          |
+          |        beol:hasFamilyName knora-api:objectType xsd:string .
+          |        ?name a xsd:string .
+          |
+          |        FILTER(?name = "Meier")
+          |    }
+          |
+          |    } ORDER BY ?date
+        """.stripMargin
+
+    val ParsedQueryWithFilterInOptional = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                subj = QueryVariable(variableName = "letter"),
+                pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                obj = XsdLiteral(
+                    value = "true",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                )
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "letter"),
+                pred = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri),
+                obj = QueryVariable(variableName = "date")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "letter"),
+                pred = QueryVariable(variableName = "linkingProp1"),
+                obj = QueryVariable(variableName = "person1")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "person1"),
+                pred = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
+                obj = QueryVariable(variableName = "name")
+            )
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "letter"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "letter"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "letter"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri),
+                    obj = QueryVariable(variableName = "date")
+                ),
+                StatementPattern(
+                    subj = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "date"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "letter"),
+                    pred = QueryVariable(variableName = "linkingProp1"),
+                    obj = QueryVariable(variableName = "person1")
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "person1"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "linkingProp1"),
+                    pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                ),
+                OptionalPattern(patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "person1"),
+                        pred = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
+                        obj = QueryVariable(variableName = "name")
+                    ),
+                    StatementPattern(
+                        subj = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
+                        pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                        obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "name"),
+                        pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                        obj = IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+                    ),
+                    FilterPattern(expression = CompareExpression(
+                        leftArg = QueryVariable(variableName = "name"),
+                        operator = CompareExpressionOperator.EQUALS,
+                        rightArg = XsdLiteral(
+                            value = "Meier",
+                            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                        )
+                    ))
+                )),
+                FilterPattern(expression = OrExpression(
+                    leftArg = CompareExpression(
+                        leftArg = QueryVariable(variableName = "linkingProp1"),
+                        operator = CompareExpressionOperator.EQUALS,
+                        rightArg = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri)
+                    ),
+                    rightArg = CompareExpression(
+                        leftArg = QueryVariable(variableName = "linkingProp1"),
+                        operator = CompareExpressionOperator.EQUALS,
+                        rightArg = IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient".toSmartIri)
+                    )
+                ))
+            ),
+            positiveEntities = Set(
+                QueryVariable(variableName = "name"),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                IriRef("http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+                QueryVariable(variableName = "person1"),
+                QueryVariable(variableName = "date"),
+                QueryVariable(variableName = "letter"),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+                QueryVariable(variableName = "linkingProp1"),
+                IriRef("http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter".toSmartIri)
+            )
+        ),
+        orderBy = Vector(OrderCriterion(
+            queryVariable = QueryVariable(variableName = "date"),
+            isAscending = true
+        ))
+    )
 }

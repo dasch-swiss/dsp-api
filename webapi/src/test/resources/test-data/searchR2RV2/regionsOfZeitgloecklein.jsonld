@@ -1,0 +1,116 @@
+{
+  "@graph" : [ {
+    "@id" : "http://rdfh.ch/2e0252679a35",
+    "@type" : "knora-api:Region",
+    "knora-api:isRegionOfValue" : {
+      "@id" : "http://rdfh.ch/2e0252679a35/values/498d07ec-dddb-4051-bfd1-62626f282fc5",
+      "@type" : "knora-api:LinkValue",
+      "knora-api:linkValueHasTarget" : {
+        "@id" : "http://rdfh.ch/3f89a693a501",
+        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+          "@id" : "http://rdfh.ch/3f89a693a501/values/133ea4ce-b9a5-4c66-a3ab-38be07ccd201",
+          "@type" : "knora-api:LinkValue",
+          "knora-api:linkValueHasTarget" : {
+            "@id" : "http://rdfh.ch/ff17e5ef9601",
+            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+              "@id" : "http://rdfh.ch/ff17e5ef9601/values/d9a522845006",
+              "@type" : "knora-api:TextValue",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+            },
+            "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          }
+        },
+        "rdfs:label" : "d8r"
+      }
+    },
+    "rdfs:label" : "DEMOX"
+  }, {
+    "@id" : "http://rdfh.ch/4e2223eb204c01",
+    "@type" : "knora-api:Region",
+    "knora-api:isRegionOfValue" : {
+      "@id" : "http://rdfh.ch/4e2223eb204c01/values/97188bdc-292a-48f0-9373-29e67afbbd81",
+      "@type" : "knora-api:LinkValue",
+      "knora-api:linkValueHasTarget" : {
+        "@id" : "http://rdfh.ch/6240ce899801",
+        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+          "@id" : "http://rdfh.ch/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a",
+          "@type" : "knora-api:LinkValue",
+          "knora-api:linkValueHasTarget" : {
+            "@id" : "http://rdfh.ch/ff17e5ef9601",
+            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+              "@id" : "http://rdfh.ch/ff17e5ef9601/values/d9a522845006",
+              "@type" : "knora-api:TextValue",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+            },
+            "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          }
+        },
+        "rdfs:label" : "a3v"
+      }
+    },
+    "rdfs:label" : "This is a saint"
+  }, {
+    "@id" : "http://rdfh.ch/c2807e831a4c01",
+    "@type" : "knora-api:Region",
+    "knora-api:isRegionOfValue" : {
+      "@id" : "http://rdfh.ch/c2807e831a4c01/values/39c732db-d191-44b9-b091-d764e6e0eff8",
+      "@type" : "knora-api:LinkValue",
+      "knora-api:linkValueHasTarget" : {
+        "@id" : "http://rdfh.ch/c568b7239a01",
+        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+          "@id" : "http://rdfh.ch/c568b7239a01/values/46951e64-8f06-47fb-a07a-c8b19c146447",
+          "@type" : "knora-api:LinkValue",
+          "knora-api:linkValueHasTarget" : {
+            "@id" : "http://rdfh.ch/ff17e5ef9601",
+            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+              "@id" : "http://rdfh.ch/ff17e5ef9601/values/d9a522845006",
+              "@type" : "knora-api:TextValue",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+            },
+            "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          }
+        },
+        "rdfs:label" : "a7r"
+      }
+    },
+    "rdfs:label" : "TEST"
+  }, {
+    "@id" : "http://rdfh.ch/c4160576204c01",
+    "@type" : "knora-api:Region",
+    "knora-api:isRegionOfValue" : {
+      "@id" : "http://rdfh.ch/c4160576204c01/values/8f499fc5-2884-4876-8887-4aa83504d937",
+      "@type" : "knora-api:LinkValue",
+      "knora-api:linkValueHasTarget" : {
+        "@id" : "http://rdfh.ch/6240ce899801",
+        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+          "@id" : "http://rdfh.ch/6240ce899801/values/e29da7bf-bfa5-4842-a4fc-e455c72dbb0a",
+          "@type" : "knora-api:LinkValue",
+          "knora-api:linkValueHasTarget" : {
+            "@id" : "http://rdfh.ch/ff17e5ef9601",
+            "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title" : {
+              "@id" : "http://rdfh.ch/ff17e5ef9601/values/d9a522845006",
+              "@type" : "knora-api:TextValue",
+              "knora-api:valueAsString" : "Zeitglöcklein des Lebens und Leidens Christi"
+            },
+            "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
+          }
+        },
+        "rdfs:label" : "a3v"
+      }
+    },
+    "rdfs:label" : "Image with angel and saint"
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+  }
+}

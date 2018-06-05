@@ -99,7 +99,7 @@ jobs:
         # install bundler
         - gem install bundler
         # install jekyll
-        - gem install jekyll -v 3.8.1
+        # - gem install jekyll -v 3.8.1
         # install typedoc
         - npm install --global typedoc
         # install jekyll dependencies

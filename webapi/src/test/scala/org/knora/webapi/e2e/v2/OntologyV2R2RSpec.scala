@@ -221,7 +221,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val metadata = responseJsonDoc.body
@@ -250,7 +250,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Put("/v2/ontologies/metadata", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val metadata = responseJsonDoc.body
@@ -327,7 +327,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -377,7 +377,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Put("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -427,7 +427,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Put("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -520,7 +520,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -585,7 +585,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -635,7 +635,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Put("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -682,7 +682,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Put("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -739,7 +739,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -798,7 +798,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -858,7 +858,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Post("/v2/ontologies/properties", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -917,7 +917,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
             val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
-            Put("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -982,7 +982,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
             )
 
-            Put("/v2/ontologies/cardinalities", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+            Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
@@ -1045,7 +1045,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v2/ontologies", HttpEntity(ContentTypes.`application/json`, createOntologyRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val metadata = responseJsonDoc.body
@@ -1085,7 +1085,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                    |}
             """.stripMargin
 
-            Post("/v2/ontologies/classes", HttpEntity(ContentTypes.`application/json`, createClassRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
+            Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequest)) ~> addCredentials(BasicHttpCredentials(imagesUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape

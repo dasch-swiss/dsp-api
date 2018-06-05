@@ -215,7 +215,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val turtleParser = new TurtleParser()
                 val handler = new ConstructResponseTurtleHandler
                 turtleParser.setRDFHandler(handler)
-                turtleParser.parse(new StringReader(turtleStr), "query-result.ttl")
+                turtleParser.parse(new StringReader(turtleStr), "")
                 handler.getConstructResponse
             }
 
