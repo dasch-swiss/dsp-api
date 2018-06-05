@@ -30,58 +30,19 @@ TODO: complete this file.
 
 ## Building and Running
 
-### Using Fuseki
+### Starting a Triplestore
 
-Start the provided Fuseki triplestore:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/triplestores/fuseki
-$ ./fuseki-server
-```
-
-Then in another terminal, load some test data into the triplestore:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
-$ ./fuseki-load-test-data.sh
-```
-
-Then go back to the webapi root directory and use SBT to start the API
-server:
-
-```
-$ cd KNORA_PROJECT_DIRECTORY/webapi
-$ sbt
-> compile
-> re-start
-```
-
-To shut down Knora:
-
-```
-> re-stop
-```
-
-### Using GraphDB
-
-The archive with the newest supported version of the GraphDB SE
-triplestore is provided under `triplestores/graphdb-se`. Please keep
-in mind that GraphDB-SE must be licensed separately by the user, and
-that no license file is provided in the repository. GraphDB SE will not run
-without a license file.
-
-Unzip `graphdb-se-x.x.x-dist.zip` to a place of your choosing and run
-the following, to start graphdb:
+Start a triplestore (GraphDB-Free or GraphDB-SE). Download distribution from [Ontotext](http://ontotext.com). Unzip distribution
+ to a place of your choosing and run the following:
 
 ```
 $ cd /to/unziped/location
 $ ./bin/graphdb -Dgraphdb.license.file=/path/to/GRAPHDB_SE.license
 ```
 
-After the GraphDB inside the docker container has started, you can find
-the GraphDB workbench here: <http://localhost:7200>
+Here we use GraphDB-SE which needs to be licensed separately.
 
-Then in another terminal, load some test data into the triplestore:
+Then in another terminal, initialize the data repository and load some test data:
 
 ```
 $ cd KNORA_PROJECT_DIRECTORY/webapi/scripts
@@ -95,7 +56,7 @@ server:
 $ cd KNORA_PROJECT_DIRECTORY/webapi
 $ sbt
 > compile
-> re-start
+> reStart
 ```
 
 To shut down Knora:
@@ -103,19 +64,10 @@ To shut down Knora:
 ```
 > re-stop
 ```
+
 ## Running the automated tests
 
-### Running Tests with Fuseki
-
-Make sure you've started Fuseki as shown above. Then at the SBT prompt:
-
-```
-> fuseki:test
-```
-
-### Running Tests with GraphDB
-
-Make sure GraphDB is running (as described earlier).
+Make sure you've started the triplestore as shown above.
 
 Then in another terminal, initialise the repository used for automated
 testing:
@@ -198,7 +150,7 @@ $ sbt
 ```
 ### `allowReloadOverHTTP` - Flag
 
-When the webapi.server is started with the `allowReloadOverHTTP` flag,
+When the webapi.server is started with the `allowReloadOverHTTP` flag (`reStart -r`),
 then the `v1/store/ResetTriplestoreContent` route is activated. This
 route accepts a `POST` request, with a JSON payload consisting of the
 following example content:
