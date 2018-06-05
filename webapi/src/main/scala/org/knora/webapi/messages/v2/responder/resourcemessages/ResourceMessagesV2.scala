@@ -64,9 +64,10 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: 
   *
   * @param resourceIri    the IRI of the resource to be returned in TEI/XML.
   * @param textProperty   the property representing the text (to be converted to the body of a TEI document).
+  * @param mappingIri     the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
   * @param requestingUser the user making the request.
   */
-case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM) extends ResourcesResponderRequestV2
+case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
   * Represents a Knora resource as TEI/XML.
@@ -105,7 +106,7 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: S
            |         </p>
            |     </publicationStmt>
            |     <sourceDesc>
-                    $teiHeaderInfos
+                    <p>Representation of text as TEI/XML</p>
                </sourceDesc>
            | </fileDesc>
            |</teiHeader>

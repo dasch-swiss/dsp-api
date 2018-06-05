@@ -30,14 +30,16 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
+import org.knora.webapi.messages.v2.responder.searchmessages.{GravsearchCountRequestV2, GravsearchRequestV2}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
+import org.knora.webapi.util.search.ConstructQuery
+import org.knora.webapi.util.search.v2.GravsearchParserV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
-
+import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
 
 import scala.concurrent.Future
 
@@ -46,7 +48,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     def receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, textProperty, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, requestingUser), log)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -142,22 +144,43 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     }
 
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         for {
 
             // get requested resource
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
-            //_ = println(MessageUtil.toSource(queryResultsSeparated))
+            // constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+
+            // gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+
+            // header
+
+            // get all the properties but the property representing the text for the body
+            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
+
+            headerInfos = queryResultsSeparated(resourceIri).copy(
+                valuePropertyAssertions = headerProps
+            )
+
+            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
+
+            // body
+
+            mappingToBeApplied = mappingIri match {
+                case Some(mapping: IRI) => mapping
+
+                case None => OntologyConstants.KnoraBase.TEIMapping
+            }
 
             // get TEI mapping
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = OntologyConstants.KnoraBase.TEIMapping, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+
+            // TODO: get XSLT from mapping
 
             // get value object representing the text value with standoff
             valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
-
-            // body
 
             // get the value object the represents the resource's text
             valueObject: ConstructResponseUtilV2.ValueRdfData = valueObjectOption match {
@@ -179,40 +202,17 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
             tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
 
-            teiXSLTFile: File = new File("src/main/resources/standoffToTEI.xsl")
+            // _ = println(tmpXml)
 
-            _ = if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/standoffToTEI.xsl'")
+            // TODO: get XSLT from mapping
+            teiXSLTFile: File = new File("src/main/resources/BEOLstandoffToTEI.xsl")
+
+            _ = if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/BEOLstandoffToTEI.xsl'")
 
             // apply XSL transformation to temporary XML to create the TEI/XML body
             xslt: String = FileUtils.readFileToString(teiXSLTFile, "UTF-8")
 
             teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
-
-            // header
-
-            // get all the properties but the property representing the text for the body
-            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
-
-            // collect Iris of referred resources
-            /*referredResourceIris = headerProps.values.flatten.foldLeft(Seq.empty[IRI]) {
-
-                (referredResIris: Seq[IRI], valObj: ConstructResponseUtilV2.ValueRdfData) =>
-
-                    if (valObj.valueObjectClass == OntologyConstants.KnoraBase.LinkValue && !valueObject.incomingLink) {
-                        val refResIRI: IRI = valObj.assertions(OntologyConstants.Rdf.Object)
-
-                        referredResIris :+ refResIRI
-                    } else {
-                        referredResIris
-                    }
-
-            }*/
-
-            headerInfos = queryResultsSeparated(resourceIri).copy(
-                valuePropertyAssertions = headerProps
-            )
-
-            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
 
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(

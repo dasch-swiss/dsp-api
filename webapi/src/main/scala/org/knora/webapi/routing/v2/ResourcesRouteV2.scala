@@ -38,6 +38,7 @@ import scala.language.postfixOps
   */
 object ResourcesRouteV2 extends Authenticator {
     private val Text_Property = "textProperty"
+    private val Mapping_Iri = "mappingIri"
 
     /**
       * Gets the Iri of the property that represents the text of the resource.
@@ -60,6 +61,24 @@ object ResourcesRouteV2 extends Authenticator {
                 externalResourceClassIri.toOntologySchema(InternalSchema)
 
             case None => throw BadRequestException(s"param $Text_Property not set")
+        }
+    }
+
+    /**
+      * Gets the Iri of the property that represents the text of the resource.
+      *
+      * @param params the GET parameters.
+      * @return the internal resource class, if any.
+      */
+    private def getMappingIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val mappingIriStr = params.get(Mapping_Iri)
+
+        mappingIriStr match {
+            case Some(mapping: String) =>
+                Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: '$mapping'")))
+
+            case None => None
         }
     }
 
@@ -132,7 +151,9 @@ object ResourcesRouteV2 extends Authenticator {
                     // the the property that represents the text
                     val textProperty: SmartIri = getTextPropertyFromParams(params)
 
-                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, requestingUser = requestingUser)
+                    val mappingIri = getMappingIriFromParams(params)
+
+                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, mappingIri = mappingIri, requestingUser = requestingUser)
 
                     RouteUtilV2.runTEIXMLRoute(
                         requestMessage,
