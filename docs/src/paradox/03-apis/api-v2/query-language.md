@@ -61,7 +61,7 @@ The recommended way to submit a Gravsearch query is via HTTP POST:
 HTTP POST to http://host/v2/searchextended
 ```
 
-This works the same as [query via POST directly](https://www.w3.org/TR/sparql11-protocol/#query-via-post-direct)
+This works like [query via POST directly](https://www.w3.org/TR/sparql11-protocol/#query-via-post-direct)
 in the [SPARQL 1.1 Protocol](https://www.w3.org/TR/sparql11-protocol/): the query
 is sent unencoded as the HTTP request message body, in the UTF-8 charset.
 
