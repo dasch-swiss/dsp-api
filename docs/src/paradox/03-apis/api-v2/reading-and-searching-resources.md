@@ -135,6 +135,16 @@ in `app/v2` in `application.conf`.
 
 For performance reasons, standoff markup is not queried for this route.
 
+To request the number of results rather than the results themselves, you can
+do a count query:
+
+```
+HTTP GET to http://host/v2/searchbylabel/count/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
+```
+
+The response to a count query request is an object with one predicate,
+`http://schema.org/numberOfItems`, with an integer value.
+
 ### Full-text Search
 
 Knora offers a full-text search that searches through all textual
@@ -159,53 +169,17 @@ in `app/v2` in `application.conf`.
 If the parameter `limitToStandoffClass` is provided, Knora will look for search terms
 that are marked up with the indicated standoff class.
 
-### Extended Search
-
-For more complex queries than a full-text search, Knora offers extended
-search possibilities, enabling clients to search for resources with
-arbitrary characteristics, as well as for a graph of resources that are
-interconnected in some particular way. To do this, the client submits a
-query in Gravsearch (Virtual Graph Search), which is based on SPARQL (see
-@ref:[Gravsearch: Virtual Graph Search](query-language.md)). Knora
-pages the results, filters them to ensure that permissions are
-respected, and returns them in a Knora API format (currently only
-JSON-LD).
-
-A Gravsearch query can be URL-encoded and sent in a GET request to the
-extended search route.
+To request the number of results rather than the results themselves, you can
+do a count query:
 
 ```
-HTTP GET to http://host/v2/searchextended/GravsearchQuery
-```
-
-In the future, POST requests will also be supported, to allow longer
-queries. See @ref:[Gravsearch: Virtual Graph Search](query-language.md) for detailed
-information about the query syntax and examples.
-
-### Count Queries
-
-For both full full-text and Gravsearch searches, a count query can be
-performed. The answer of a count query is the number of resources (a
-number) that matched the indicated search criteria without taking into
-consideration permissions. This means that the client may not be able to
-access any of the resources matching the search criteria because of
-insufficient permissions. Insufficient permissions are intended to
-prevent a user from accessing a resource or any of its values, or even
-knowing about its IRI, but not to suppress information about the
-existence of such a resource.
-
-In order to perform a count query, just append the segment `count`:
-
-```
-HTTP GET to http://host/v2/searchbylabel/count/searchValue[limitToResourceClass=resourceClassIRI][limitToProject=projectIRI][offset=Integer]
-
 HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI][limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
-
-HTTP GET to http://host/v2/searchextended/count/GravsearchQuery
 ```
-
-The first parameter has to be preceded by a question mark `?`, and any
-following parameter by an ampersand `&`.
 
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.
+
+### Gravsearch
+
+For more complex queries than a full-text search, Knora offers a query language
+called @ref:[Gravsearch: Virtual Graph Search](query-language.md)).

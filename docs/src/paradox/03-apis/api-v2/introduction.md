@@ -100,24 +100,21 @@ API server automatically converts back and forth between these internal
 and external representations. This approach encapsulates the internals
 and adds a layer of abstraction to them.
 
+IRIs representing ontologies and ontology entities are different in different
+schemas; see @ref:[Knora IRIs](knora-iris.md).
+
 Some API operations inherently require the client to accept responses in
-the complex schema, while others can return data in either schema. In
-the latter case, the complex schema is used by default in the response,
-unless the request specifically asks for the simple schema. For example,
-if an ontology is requested using an IRI indicating the simple schema,
-the ontology will be returned in the simple schema (see
-@ref:[Querying, Creating, and Updating Ontologies](ontology-information.md)). The
-client can also specify the desired schema by using an HTTP header or a
-URL parameter:
+the complex schema. For example, if an ontology is requested using an IRI
+indicating the simple schema, the ontology will be returned in the simple schema (see
+@ref:[Querying, Creating, and Updating Ontologies](ontology-information.md)).
+
+Other API operations can return data in either schema. In this case, the
+complex schema is used by default in the response, unless the request specifically
+asks for the simple schema. The client can specify the desired schema by using
+an HTTP header or a URL parameter:
 
   - the HTTP header `X-Knora-Accept-Schema`
   - the URL parameter `schema`
 
 Both the HTTP header and the URL parameter accept the values `simple` or
 `complex`.
-
-Although the Gravsearch query language
-(see @ref:[Gravsearch: Virtual Graph Search](query-language.md)) requires the simple
-schema to be used in the request, search results are returned in the
-complex schema by default, unless the client requests the simple schema
-by using the HTTP header or the URL parameter.
