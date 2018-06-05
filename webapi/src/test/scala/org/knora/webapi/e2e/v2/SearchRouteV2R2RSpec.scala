@@ -2550,7 +2550,5 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
-
-
     }
 }

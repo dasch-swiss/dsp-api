@@ -25,7 +25,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
@@ -33,8 +32,8 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
-import org.knora.webapi.util.search.v2._
 import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.v2._
 
 import scala.collection.mutable
 import scala.concurrent.Future

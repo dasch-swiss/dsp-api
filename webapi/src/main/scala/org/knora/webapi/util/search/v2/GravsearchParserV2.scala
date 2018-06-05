@@ -20,8 +20,8 @@
 package org.knora.webapi.util.search.v2
 
 import org.eclipse.rdf4j
-import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.parser.sparql._
+import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
@@ -398,7 +398,7 @@ object GravsearchParserV2 {
         }
 
         override def meet(node: algebra.Or): Unit = {
-            // Does nothing, because this is handled in meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(node: algebra.Not): Unit = {
@@ -422,7 +422,7 @@ object GravsearchParserV2 {
         }
 
         override def meet(node: algebra.Compare): Unit = {
-            // Do nothing, because this is handled by meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(node: algebra.CompareAll): Unit = {
@@ -553,7 +553,7 @@ object GravsearchParserV2 {
         }
 
         override def meet(node: algebra.And): Unit = {
-            // Does nothing, because this is handled in meet(node: Filter).
+            // Do nothing, because this is handled elsewhere.
         }
 
         override def meet(add: algebra.Add): Unit = {
@@ -596,6 +596,119 @@ object GravsearchParserV2 {
             unsupported(node)
         }
 
+        private def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
+            valueExpr match {
+                case compare: algebra.Compare =>
+                    val leftArg = makeFilterExpression(compare.getLeftArg)
+                    val rightArg = makeFilterExpression(compare.getRightArg)
+                    val operator = compare.getOperator.getSymbol
+
+                    CompareExpression(
+                        leftArg = leftArg,
+                        operator = CompareExpressionOperator.lookup(operator, throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")),
+                        rightArg = rightArg
+                    )
+
+                case and: algebra.And =>
+                    val leftArg = makeFilterExpression(and.getLeftArg)
+                    val rightArg = makeFilterExpression(and.getRightArg)
+
+                    AndExpression(
+                        leftArg = leftArg,
+                        rightArg = rightArg
+                    )
+
+                case or: algebra.Or =>
+                    val leftArg = makeFilterExpression(or.getLeftArg)
+                    val rightArg = makeFilterExpression(or.getRightArg)
+
+                    OrExpression(
+                        leftArg = leftArg,
+                        rightArg = rightArg
+                    )
+
+                case valueConstant: algebra.ValueConstant =>
+                    valueConstant.getValue match {
+                        case iri: rdf4j.model.IRI => makeIri(iri)
+
+                        case literal: rdf4j.model.Literal =>
+                            val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                            checkIriSchema(datatype)
+                            XsdLiteral(value = literal.stringValue, datatype = datatype)
+                        case other => throw GravsearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
+                    }
+
+                case sparqlVar: algebra.Var => makeEntity(sparqlVar)
+
+                case functionCall: algebra.FunctionCall =>
+                    val functionIri = IriRef(functionCall.getURI.toSmartIri)
+                    val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
+                        case entity: Entity => entity
+                        case other => throw GravsearchException(s"Unsupported argument in function: $other")
+                    }
+
+                    FunctionCallExpression(
+                        functionIri = functionIri,
+                        args = args
+                    )
+
+                case regex: algebra.Regex =>
+
+                    // first argument representing the text value to be checked
+                    val textValueArg: algebra.ValueExpr = regex.getArg
+
+                    val textValueVar: QueryVariable = textValueArg match {
+                        case objVar: algebra.Var =>
+                            makeEntity(objVar) match {
+                                case queryVar: QueryVariable => queryVar
+                                case _ => throw GravsearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
+                            }
+                        case other => throw GravsearchException(s"$other is not allowed in regex function as first argument, a variable is required")
+                    }
+
+                    // second argument representing the REGEX pattern to be used to perform the check
+                    val patternArg: algebra.ValueExpr = regex.getPatternArg
+
+                    val pattern: String = patternArg match {
+                        case valConstant: algebra.ValueConstant =>
+                            valConstant.getValue.stringValue()
+                        case other => throw GravsearchException(s"$other not allowed in regex function as the second argument, a string is expected")
+
+                    }
+
+                    // third argument representing the modifier to be used with when applying the REGEX pattern
+                    val modifierArg: algebra.ValueExpr = regex.getFlagsArg
+
+                    val modifier: String = modifierArg match {
+                        case valConstant: algebra.ValueConstant =>
+                            valConstant.getValue.stringValue()
+                        case other => throw GravsearchException(s"$other not allowed in regex function as the third argument, a string is expected")
+
+                    }
+
+                    RegexFunction(
+                        textValueVar = textValueVar,
+                        pattern = pattern,
+                        modifier = modifier
+                    )
+
+                case lang: algebra.Lang =>
+
+                    val textValueVar = lang.getArg match {
+                        case objVar: algebra.Var =>
+                            makeEntity(objVar) match {
+                                case queryVar: QueryVariable => queryVar
+                                case _ => throw GravsearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
+                            }
+                        case other => throw GravsearchException(s"$other is not allowed in lang function as an argument, a variable is required")
+                    }
+
+                    LangFunction(textValueVar)
+
+                case other => throw GravsearchException(s"Unsupported FILTER expression: ${other.getClass}")
+            }
+        }
+
         override def meet(node: algebra.Filter): Unit = {
             def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
                 not.getArg match {
@@ -607,120 +720,6 @@ object GravsearchParserV2 {
                     case _ => throw GravsearchException(s"Unsupported NOT expression: $not")
                 }
             }
-
-            def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
-                valueExpr match {
-                    case compare: algebra.Compare =>
-                        val leftArg = makeFilterExpression(compare.getLeftArg)
-                        val rightArg = makeFilterExpression(compare.getRightArg)
-                        val operator = compare.getOperator.getSymbol
-
-                        CompareExpression(
-                            leftArg = leftArg,
-                            operator = CompareExpressionOperator.lookup(operator, throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")),
-                            rightArg = rightArg
-                        )
-
-                    case and: algebra.And =>
-                        val leftArg = makeFilterExpression(and.getLeftArg)
-                        val rightArg = makeFilterExpression(and.getRightArg)
-
-                        AndExpression(
-                            leftArg = leftArg,
-                            rightArg = rightArg
-                        )
-
-                    case or: algebra.Or =>
-                        val leftArg = makeFilterExpression(or.getLeftArg)
-                        val rightArg = makeFilterExpression(or.getRightArg)
-
-                        OrExpression(
-                            leftArg = leftArg,
-                            rightArg = rightArg
-                        )
-
-                    case valueConstant: algebra.ValueConstant =>
-                        valueConstant.getValue match {
-                            case iri: rdf4j.model.IRI => makeIri(iri)
-
-                            case literal: rdf4j.model.Literal =>
-                                val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
-                                checkIriSchema(datatype)
-                                XsdLiteral(value = literal.stringValue, datatype = datatype)
-                            case other => throw GravsearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
-                        }
-
-                    case sparqlVar: algebra.Var => makeEntity(sparqlVar)
-
-                    case functionCall: algebra.FunctionCall =>
-                        val functionIri = IriRef(functionCall.getURI.toSmartIri)
-                        val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
-                            case entity: Entity => entity
-                            case other => throw GravsearchException(s"Unsupported argument in function: $other")
-                        }
-
-                        FunctionCallExpression(
-                            functionIri = functionIri,
-                            args = args
-                        )
-
-                    case regex: algebra.Regex =>
-
-                        // first argument representing the text value to be checked
-                        val textValueArg: algebra.ValueExpr = regex.getArg
-
-                        val textValueVar: QueryVariable = textValueArg match {
-                            case objVar: algebra.Var =>
-                                makeEntity(objVar) match {
-                                    case queryVar: QueryVariable => queryVar
-                                    case _ => throw GravsearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
-                                }
-                            case other => throw GravsearchException(s"$other is not allowed in regex function as first argument, a variable is required")
-                        }
-
-                        // second argument representing the REGEX pattern to be used to perform the check
-                        val patternArg: algebra.ValueExpr = regex.getPatternArg
-
-                        val pattern: String = patternArg match {
-                            case valConstant: algebra.ValueConstant =>
-                                valConstant.getValue.stringValue()
-                            case other => throw GravsearchException(s"$other not allowed in regex function as the second argument, a string is expected")
-
-                        }
-
-                        // third argument representing the modifier to be used with when applying the REGEX pattern
-                        val modifierArg: algebra.ValueExpr = regex.getFlagsArg
-
-                        val modifier: String = modifierArg match {
-                            case valConstant: algebra.ValueConstant =>
-                                valConstant.getValue.stringValue()
-                            case other => throw GravsearchException(s"$other not allowed in regex function as the third argument, a string is expected")
-
-                        }
-
-                        RegexFunction(
-                            textValueVar = textValueVar,
-                            pattern = pattern,
-                            modifier = modifier
-                        )
-
-                    case lang: algebra.Lang =>
-
-                        val textValueVar = lang.getArg match {
-                            case objVar: algebra.Var =>
-                                makeEntity(objVar) match {
-                                    case queryVar: QueryVariable => queryVar
-                                    case _ => throw GravsearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
-                                }
-                            case other => throw GravsearchException(s"$other is not allowed in lang function as an argument, a variable is required")
-                        }
-
-                        LangFunction(textValueVar)
-
-                    case other => throw GravsearchException(s"Unsupported FILTER expression: ${other.getClass}")
-                }
-            }
-
 
             // Visit the nodes that the filter applies to.
             node.getArg.visit(this)
@@ -803,8 +802,16 @@ object GravsearchParserV2 {
             // Visit the nodes that are in the OPTIONAL.
             val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
             node.getRightArg.visit(rightArgVisitor)
+
+            // If the OPTIONAL has a condition, construct a FILTER to represent the condition.
+            val filterPattern = if (node.hasCondition) {
+                Some(FilterPattern(makeFilterExpression(node.getCondition)))
+            } else {
+                None
+            }
+
             positiveEntities ++= rightArgVisitor.positiveEntities
-            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns)))
+            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns ++ filterPattern)))
         }
 
         override def meet(node: algebra.LangMatches): Unit = {
