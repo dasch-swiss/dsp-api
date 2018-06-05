@@ -28,9 +28,10 @@ trait WhereTransformer {
       * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
       *
       * @param statementPattern the statement to be transformed.
+      * @param inputOrderBy     the ORDER BY clause in the input query.
       * @return the result of the transformation.
       */
-    def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern]
+    def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern]
 
     /**
       * Transforms a [[FilterPattern]] in a WHERE clause into zero or more statement patterns.
@@ -142,11 +143,12 @@ trait ConstructToSelectTransformer extends WhereTransformer {
   */
 object QueryTraverser {
 
-    private def transformWherePatterns(patterns: Seq[QueryPattern], whereTransformer: WhereTransformer): Seq[QueryPattern] = {
+    private def transformWherePatterns(patterns: Seq[QueryPattern], inputOrderBy: Seq[OrderCriterion], whereTransformer: WhereTransformer): Seq[QueryPattern] = {
         patterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
 
             case filterPattern: FilterPattern =>
@@ -157,16 +159,17 @@ object QueryTraverser {
             case filterNotExistsPattern: FilterNotExistsPattern =>
                 val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
                     patterns = filterNotExistsPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(FilterNotExistsPattern(patterns = transformedPatterns))
 
-
             case minusPattern: MinusPattern =>
                 val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
                     patterns = minusPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(MinusPattern(patterns = transformedPatterns))
@@ -174,7 +177,8 @@ object QueryTraverser {
             case optionalPattern: OptionalPattern =>
                 val transformedPatterns = transformWherePatterns(
                     patterns = optionalPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(OptionalPattern(patterns = transformedPatterns))
@@ -183,7 +187,8 @@ object QueryTraverser {
                 val transformedBlocks = unionPattern.blocks.map {
                     blockPatterns =>
                         transformWherePatterns(patterns = blockPatterns,
-                            whereTransformer = whereTransformer
+                            whereTransformer = whereTransformer,
+                            inputOrderBy = inputOrderBy
                         )
                 }
 
@@ -191,6 +196,7 @@ object QueryTraverser {
 
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
+            case bindPattern: BindPattern => Seq(bindPattern)
         }
     }
 
@@ -209,6 +215,7 @@ object QueryTraverser {
 
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
+            inputOrderBy = inputQuery.orderBy,
             whereTransformer = transformer
         )
 
@@ -222,7 +229,6 @@ object QueryTraverser {
 
         SelectQuery(
             variables = transformer.getSelectVariables,
-            useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             groupBy = groupBy,
             orderBy = transformedOrderBy.orderBy,
@@ -236,6 +242,7 @@ object QueryTraverser {
             whereClause = WhereClause(
                 patterns = transformWherePatterns(
                     patterns = inputQuery.whereClause.patterns,
+                    inputOrderBy = inputQuery.orderBy,
                     whereTransformer = transformer
                 )
             )
@@ -253,6 +260,7 @@ object QueryTraverser {
 
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
+            inputOrderBy = inputQuery.orderBy,
             whereTransformer = transformer
         )
 

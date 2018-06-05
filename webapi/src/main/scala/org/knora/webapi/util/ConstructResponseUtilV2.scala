@@ -345,17 +345,35 @@ object ConstructResponseUtilV2 {
             // the main resources point to dependent resources and would be treated as incoming links of dependent resources
             // this would create circular dependencies
 
-            val incomingLinks = incomingLinksForResource(resourceIri).filterNot {
+            // resources that point to this resource
+            val referringResources: Map[IRI, ResourceWithValueRdfData] = incomingLinksForResource(resourceIri).filterNot {
                 case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
                     alreadyTraversed(incomingResIri) || flatResourcesWithValues(incomingResIri).isMainResource
-            }.flatMap {
-                case (incomingResIri: IRI, assertions: ResourceWithValueRdfData) =>
-                    assertions.valuePropertyAssertions
             }
 
-            if (incomingLinks.nonEmpty) {
+            // link value assertions that point to this resource
+            val incomingLinkAssertions: Map[IRI, Seq[ValueRdfData]] = referringResources.values.foldLeft(Map.empty[IRI, Seq[ValueRdfData]]) {
+                case (acc: Map[IRI, Seq[ValueRdfData]], assertions: ResourceWithValueRdfData) =>
+
+                    val values: Map[IRI, Seq[ValueRdfData]] = assertions.valuePropertyAssertions.flatMap {
+                        case (propIri: IRI, values: Seq[ValueRdfData]) =>
+
+                            // check if the property Iri already exists (there could be several instances of the same property)
+                            if (acc.get(propIri).nonEmpty) {
+                                // add values to property Iri (keeping the already existing values)
+                                acc + (propIri -> (acc(propIri) ++ values).sortBy(_.valueObjectIri))
+                            } else {
+                                // prop Iri does not exists yet, add it
+                                acc + (propIri -> values.sortBy(_.valueObjectIri))
+                            }
+                    }
+
+                    values
+            }
+
+            if (incomingLinkAssertions.nonEmpty) {
                 // create a virtual property representing an incoming link
-                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingLinks.values.toSeq.flatten.map {
+                val incomingProps: (IRI, Seq[ValueRdfData]) = OntologyConstants.KnoraBase.HasIncomingLink -> incomingLinkAssertions.values.toSeq.flatten.map {
                     (linkValue: ValueRdfData) =>
 
                         // get the source of the link value (it points to the resource that is currently processed)

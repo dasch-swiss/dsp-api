@@ -25,7 +25,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
-import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
@@ -33,8 +32,8 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
-import org.knora.webapi.util.search.v2._
 import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.v2._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -88,11 +87,11 @@ object SearchResponderV2Constants {
     }
 
     /**
-      * Constants for extended search.
+      * Constants used in the processing of Gravsearch queries.
       *
       * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
       */
-    object ExtendedSearchConstants {
+    object GravsearchConstants {
 
         // SPARQL variable representing the main resource and its properties
         val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
@@ -139,24 +138,24 @@ object SearchResponderV2Constants {
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     def receive = {
-        case FullTextSearchCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
-        case FulltextSearchGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
-        case ExtendedSearchCountGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
-        case ExtendedSearchGetRequestV2(query, requestingUser) => future2Message(sender(), extendedSearchV2(inputQuery = query, requestingUser = requestingUser), log)
-        case SearchResourceByLabelCountGetRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
-        case SearchResourceByLabelGetRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
+        case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
+        case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
+        case GravsearchCountRequestV2(query, requestingUser) => future2Message(sender(), gravsearchCountV2(inputQuery = query, requestingUser = requestingUser), log)
+        case GravsearchRequestV2(query, requestingUser) => future2Message(sender(), gravsearchV2(inputQuery = query, requestingUser = requestingUser), log)
+        case SearchResourceByLabelCountRequestV2(searchValue, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelCountV2(searchValue, limitToProject, limitToResourceClass, requestingUser), log)
+        case SearchResourceByLabelRequestV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser) => future2Message(sender(), searchResourcesByLabelV2(searchValue, offset, limitToProject, limitToResourceClass, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
       * A [[ConstructToConstructTransformer]] that preprocesses the input CONSTRUCT query by converting external IRIs to internal ones
-      * and disabling inference for individual statements as necessary.
+      * and enabling inference for individual statements as necessary.
       */
     class Preprocessor extends ConstructToConstructTransformer {
 
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = Seq(preprocessStatementPattern(statementPattern = statementPattern))
 
         def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(FilterPattern(preprocessFilterExpression(filterPattern.expression)))
 
@@ -181,7 +180,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Preprocesses an [[Entity]] by converting external IRIs to internal ones.
           *
-          * @param entity an entity provided by [[SearchParserV2]].
+          * @param entity an entity provided by [[GravsearchParserV2]].
           * @return the preprocessed entity.
           */
         private def preprocessEntity(entity: Entity): Entity = {
@@ -200,9 +199,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         }
 
         /**
-          * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and disabling inference if necessary.
+          * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and enabling inference if necessary.
           *
-          * @param statementPattern a statement provided by SearchParserV2.
+          * @param statementPattern a statement provided by GravsearchParserV2.
           * @return the preprocessed statement pattern.
           */
         private def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
@@ -220,15 +219,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * An abstract base class providing shared methods to query transformers for extended search.
+      * An abstract base class providing shared methods for [[WhereTransformer]] instances.
       */
-    abstract class AbstractExtendedSearchTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
+    abstract class AbstractSparqlTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
 
         // get method for public access
-        def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("Could not get main resource variable from transformer"))
+        def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw GravsearchException("Could not get main resource variable from transformer"))
 
         // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
         // in order to prevent duplicates
@@ -315,7 +314,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                             statementPattern.subj match {
                                 case queryVariable: QueryVariable => Some(queryVariable)
-                                case _ => throw SparqlSearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable")
+                                case _ => throw GravsearchException(s"The subject of ${OntologyConstants.KnoraApiV2Simple.IsMainResource} must be a variable")
                             }
 
                         case _ => None
@@ -370,24 +369,43 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
-        protected def convertStatementForPropertyType(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+            /**
+              * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
+              * is the main resource. Throws an exception otherwise.
+              *
+              * @param objectVar the variable that is the object of the statement.
+              */
+            def checkSubjectInOrderBy(objectVar: QueryVariable): Unit = {
+                statementPattern.subj match {
+                    case subjectVar: QueryVariable =>
+                        if (!mainResourceVariable.contains(subjectVar) && inputOrderBy.exists(criterion => criterion.queryVariable == objectVar)) {
+                            throw GravsearchException(s"Variable ${objectVar.toSparql} is used in ORDER BY, but does not represent a value of the main resource")
+                        }
+
+                    case _ => ()
+                }
+            }
 
             propertyTypeInfo.objectTypeIri.toString match {
-                case OntologyConstants.KnoraApiV2Simple.Resource => {
+                case OntologyConstants.KnoraApiV2Simple.Resource =>
                     // linking property
 
                     // make sure that the object is either an Iri or a variable (cannot be a literal)
                     statementPattern.obj match {
                         case _: IriRef => ()
-                        case _: QueryVariable => ()
-                        case other => throw SparqlSearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
+                        case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
+                        case other => throw GravsearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
                     }
 
                     // we are given a linking property
                     // a variable representing the corresponding link value has to be created
 
                     // create a variable representing the link value
-                    val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(statementPattern.obj, OntologyConstants.KnoraBase.LinkValue)
+                    val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                        base = statementPattern.obj,
+                        propertyIri = OntologyConstants.KnoraBase.LinkValue
+                    )
 
                     // add variable to collection representing value objects
                     valueObjectVariables += linkValueObjVar
@@ -398,12 +416,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // create a variable representing the link value property
                             // in case FILTER patterns are given restricting the linking property's possible Iris, the same variable will recreated when processing FILTER patterns
                             createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
+
                         case propIri: IriRef =>
                             // convert the given linking property Iri to the corresponding link value property Iri
                             // only matches the linking property's link value
                             IriRef(propIri.iri.fromLinkPropToLinkValueProp)
-                        case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot be used as a predicate")
-                        case other => throw SparqlSearchException(s"$other cannot be used as a predicate")
+
+                        case literal: XsdLiteral => throw GravsearchException(s"literal $literal cannot be used as a predicate")
+
+                        case other => throw GravsearchException(s"$other cannot be used as a predicate")
                     }
 
                     // create statements that represent the link value's properties for the given linking property
@@ -419,15 +440,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // linking property: just include the original statement relating the subject to the target of the link
                     statementPattern +: linkValueStatements
-                }
 
-                case _ => {
+                case _ =>
                     // value property
 
                     // make sure that the object is a query variable (literals are not supported yet)
                     statementPattern.obj match {
-                        case queryVar: QueryVariable => valueObjectVariables += queryVar // add variable to collection representing value objects
-                        case other => throw SparqlSearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
+                        case objectVar: QueryVariable =>
+                            checkSubjectInOrderBy(objectVar)
+                            valueObjectVariables += objectVar // add variable to collection representing value objects
+
+                        case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
                     }
 
                     // check that value object is not marked as deleted
@@ -437,24 +460,37 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
                     // include the original statement relating the subject to a value object
                     Seq(statementPattern, valueObjectIsNotDeleted)
-                }
             }
 
         }
 
-        protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
             // look at the statement's subject, predicate, and object and generate additional statements if needed based on the given type information.
             // transform the originally given statement if necessary when processing the predicate
 
             // check if there exists type information for the given statement's subject
-            val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.subj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
+            val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                entity = statementPattern.subj,
+                typeInspection = typeInspectionResult,
+                processedTypeInfo = processedTypeInformationKeysWhereClause,
+                conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+            )
 
             // check if there exists type information for the given statement's object
-            val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(statementPattern.obj, typeInspectionResult, processedTypeInformationKeysWhereClause, createAdditionalStatementsForNonPropertyType)
+            val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
+                entity = statementPattern.obj,
+                typeInspection = typeInspectionResult,
+                processedTypeInfo = processedTypeInformationKeysWhereClause,
+                conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
+            )
 
             // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
-            val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(statementPattern, typeInspectionResult, convertStatementForPropertyType)
+            val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
+                statementPattern = statementPattern,
+                typeInspection = typeInspectionResult,
+                conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
+            )
 
             additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
 
@@ -517,10 +553,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
                 }
 
-                conversionFuncForPropertyType(
-                    propTypeInfo,
-                    statementPattern
-                )
+                conversionFuncForPropertyType(propTypeInfo, statementPattern)
 
             } else {
                 // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
@@ -546,13 +579,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return variable representing the corresponding link value property.
           */
         protected def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
-            createUniqueVariableNameFromEntityAndProperty(linkingPropertyQueryVariable, OntologyConstants.KnoraBase.HasLinkToValue)
+            createUniqueVariableNameFromEntityAndProperty(
+                base = linkingPropertyQueryVariable,
+                propertyIri = OntologyConstants.KnoraBase.HasLinkToValue
+            )
         }
 
         /**
           * Represents a transformed Filter expression and additional statement patterns that possibly had to be created during transformation.
           *
-          * @param expression           the transformed Filter expression. In some cases, a given FILTER expression is replaced by additional statements.
+          * @param expression           the transformed FILTER expression. In some cases, a given FILTER expression is replaced by additional statements, but
+          *                             only if it is the top-level expression in the FILTER.
           * @param additionalStatements additionally created statement patterns.
           */
         protected case class TransformedFilterPattern(expression: Option[Expression], additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
@@ -560,17 +597,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles query variables that represent properties in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
+          * @param queryVar           the query variable to be handled.
           * @param comparisonOperator the comparison operator used in the filter pattern.
-          * @param iriRef the Iri the property query variable is restricted to.
-          * @param propInfo information about the query variable's type.
+          * @param iriRef             the Iri the property query variable is restricted to.
+          * @param propInfo           information about the query variable's type.
           * @return a [[TransformedFilterPattern]].
           */
         private def handlePropertyIriQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, iriRef: IriRef, propInfo: PropertyTypeInfo): TransformedFilterPattern = {
 
             // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
             if (comparisonOperator != CompareExpressionOperator.EQUALS)
-                throw SparqlSearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but ${comparisonOperator} given. For negations use 'FILTER NOT EXISTS' ")
+                throw GravsearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but $comparisonOperator given. For negations use 'FILTER NOT EXISTS' ")
 
             val userProvidedRestriction = CompareExpression(queryVar, comparisonOperator, iriRef)
 
@@ -604,11 +641,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * Handles query variables that represent literals in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter pattern.
-          * @param literalValueExpression the literal provided in the [[FilterPattern]] as an [[Expression]].
-          * @param xsdType valid xsd types of the literal.
-          * @param valueHasProperty the property of the value object pointing to the literal.
+          * @param queryVar                 the query variable to be handled.
+          * @param comparisonOperator       the comparison operator used in the filter pattern.
+          * @param literalValueExpression   the literal provided in the [[FilterPattern]] as an [[Expression]].
+          * @param xsdType                  valid xsd types of the literal.
+          * @param valueHasProperty         the property of the value object pointing to the literal.
           * @param validComparisonOperators a set of valid comparison operators, if to be restricted.
           * @return a [[TransformedFilterPattern]].
           */
@@ -618,15 +655,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val literal: XsdLiteral = literalValueExpression match {
                 case xsdLiteral: XsdLiteral if xsdType(xsdLiteral.datatype.toString) => xsdLiteral
 
-                case other => throw SparqlSearchException(s"right argument in CompareExpression was expected to be a literal of type $xsdType, but $other is given.")
+                case other => throw GravsearchException(s"right argument in CompareExpression was expected to be a literal of type $xsdType, but $other is given.")
             }
 
             // check if comparison operator is supported for given type
-            if(validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
-                throw SparqlSearchException(s"Filter expressions for a literal of type ${xsdType.mkString(", ")} supports the following operators: ${validComparisonOperators.mkString(", ")}, but $comparisonOperator given")
+            if (validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
+                throw GravsearchException(s"Filter expressions for a literal of type ${xsdType.mkString(", ")} supports the following operators: ${validComparisonOperators.mkString(", ")}, but $comparisonOperator given")
 
             // create a variable representing the literal attached to the value object
-            val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(queryVar, valueHasProperty)
+            val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                base = queryVar,
+                propertyIri = valueHasProperty
+            )
 
             // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
             valueVariablesCreatedInFilters.put(queryVar, valueObjectLiteralVar)
@@ -644,8 +684,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles query variables that represent a date in a [[FilterPattern]].
           *
-          * @param queryVar the query variable to be handled.
-          * @param comparisonOperator the comparison operator used in the filter pattern.
+          * @param queryVar            the query variable to be handled.
+          * @param comparisonOperator  the comparison operator used in the filter pattern.
           * @param dateValueExpression the date literal provided in the [[FilterPattern]] as an [[Expression]].
           * @return a [[TransformedFilterPattern]].
           */
@@ -655,7 +695,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val dateStringLiteral: XsdLiteral = dateValueExpression match {
                 case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
 
-                case other => throw SparqlSearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
+                case other => throw GravsearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
             }
 
             // validate Knora date string
@@ -664,13 +704,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
             // create a variable representing the period's start
-            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasStartJDN)
+            val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
             // sort dates by their period's start (in the prequery)
             valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
 
             // create a variable representing the period's end
-            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(queryVar, OntologyConstants.KnoraBase.ValueHasEndJDN)
+            val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
             // connects the value object with the periods start variable
             val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
@@ -753,7 +793,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
                     )
 
-                case other => throw SparqlSearchException(s"operator $other not supported in filter expressions for dates")
+                case other => throw GravsearchException(s"operator $other not supported in filter expressions for dates")
 
             }
 
@@ -762,9 +802,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles a [[FilterPattern]] containing a query variable.
           *
-          * @param queryVar the query variable.
+          * @param queryVar          the query variable.
           * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -776,7 +816,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for queryVar
-                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
 
                 // check if queryVar represents a property or a value
                 typeInfo match {
@@ -795,7 +835,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     propInfo = propInfo
                                 )
 
-                            case other => throw SparqlSearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
+                            case other => throw GravsearchException(s"right argument of CompareExpression is expected to be an Iri representing a property, but $other is given")
                         }
 
                     case nonPropInfo: NonPropertyTypeInfo =>
@@ -868,7 +908,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
 
             } else {
-                throw SparqlSearchException(s"type information about $queryVar is missing")
+                throw GravsearchException(s"type information about $queryVar is missing")
             }
         }
 
@@ -878,7 +918,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param langFunctionCall  the lang function call to be handled.
           * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -890,7 +930,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for lang.textValueVar
-                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
 
                 typeInfo match {
 
@@ -900,30 +940,36 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             case OntologyConstants.Xsd.String => () // xsd:string is expected
 
-                            case _ => throw SparqlSearchException(s"${langFunctionCall.textValueVar} is expected to be of type xsd:string")
+                            case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type xsd:string")
                         }
 
-                    case _ => throw SparqlSearchException(s"${langFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                    case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
                 }
 
             } else {
-                throw SparqlSearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
+                throw GravsearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
             }
 
-            // comparison operator is expected to be '='
-            if (compareExpression.operator != CompareExpressionOperator.EQUALS) throw SparqlSearchException(s"Comparison operator is expected to be '=' for the use with a 'lang' function call.")
+            // comparison operator is expected to be '=' or '!='
+            if (!Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS).contains(compareExpression.operator)) throw GravsearchException(s"Comparison operator is expected to be '=' or '!=' for use with a 'lang' function call.")
 
             val langLiteral: XsdLiteral = compareExpression.rightArg match {
                 case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri => strLiteral
 
-                case other => throw SparqlSearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
+                case other => throw GravsearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
             }
 
+            // create a variable representing the language of the text value
+            val textValHasLanguage: QueryVariable = createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasLanguage)
+
+            // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+            valueVariablesCreatedInFilters.put(langFunctionCall.textValueVar, textValHasLanguage)
+
             TransformedFilterPattern(
-                None,
+                Some(CompareExpression(textValHasLanguage, compareExpression.operator, langLiteral)),
                 Seq(
                     // connects the value object with the value language code
-                    StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri), langLiteral)
+                    StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri), textValHasLanguage)
                 )
             )
 
@@ -933,7 +979,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles the use of the SPARQL regex function in a [[FilterPattern]].
           *
           * @param regexFunctionCall the regex function call to be handled.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
         private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
@@ -947,7 +993,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for regexFunction.textValueVar
-                val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
 
                 typeInfo match {
 
@@ -957,18 +1003,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
 
-                            case _ => throw SparqlSearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
+                            case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
                         }
 
-                    case _ => throw SparqlSearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                    case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
                 }
 
             } else {
-                throw SparqlSearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
+                throw GravsearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
             }
 
             // create a variable representing the string literal
-            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(regexFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
             // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
             valueVariablesCreatedInFilters.put(regexFunctionCall.textValueVar, textValHasString)
@@ -988,10 +1034,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles a Gravsearch specific function call in a [[FilterPattern]].
           *
           * @param functionCallExpression the function call to be handled.
-          * @param typeInspection the type inspection results.
+          * @param typeInspection         the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult) = {
+        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             val functionName: IriRef = functionCallExpression.functionIri.toInternalEntityIri
 
@@ -999,10 +1045,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case SmartIri(OntologyConstants.KnoraBase.MatchFunctionIri) =>
 
+                    // The match function must be the top-level expression, otherwise boolean logic won't work properly.
+                    if (!isTopLevel) {
+                        throw GravsearchException(s"Function ${OntologyConstants.KnoraBase.MatchFunctionIri} must be the top-level expression in a FILTER")
+                    }
+
                     // two arguments are expected: the first is expected to be a variable representing a string value,
                     // the second is expected to be a string literal
 
-                    if (functionCallExpression.args.size != 2) throw SparqlSearchException(s"Two arguments are expected for ${functionCallExpression.functionIri}")
+                    if (functionCallExpression.args.size != 2) throw GravsearchException(s"Two arguments are expected for ${functionCallExpression.functionIri}")
 
                     // a QueryVariable expected to represent a text value
                     val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
@@ -1014,7 +1065,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
 
                         // get type information for regexFunction.textValueVar
-                        val typeInfo: SparqlEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                        val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
 
                         typeInfo match {
 
@@ -1024,18 +1075,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                     case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
 
-                                    case _ => throw SparqlSearchException(s"$textValueVar is expected to be of type xsd:string")
+                                    case _ => throw GravsearchException(s"$textValueVar is expected to be of type xsd:string")
                                 }
 
-                            case _ => throw SparqlSearchException(s"$textValueVar} is expected to be of type NonPropertyTypeInfo")
+                            case _ => throw GravsearchException(s"$textValueVar} is expected to be of type NonPropertyTypeInfo")
                         }
 
                     } else {
-                        throw SparqlSearchException(s"type information about $textValueVar is missing")
+                        throw GravsearchException(s"type information about $textValueVar is missing")
                     }
 
                     // create a variable representing the string literal
-                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(textValueVar, OntologyConstants.KnoraBase.ValueHasString)
+                    val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
                     // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
                     valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
@@ -1066,7 +1117,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection   the results of type inspection.
           * @return a [[TransformedFilterPattern]].
           */
-        protected def transformFilterPattern(filterExpression: Expression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        protected def transformFilterPattern(filterExpression: Expression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             filterExpression match {
 
@@ -1083,14 +1134,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             handleLangFunctionCall(langFunctionCall = lang, compareExpression = filterCompare, typeInspection = typeInspection)
 
-                        case other => throw SparqlSearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable or a 'lang' function call, but $other is given")
+                        case other => throw GravsearchException(s"Left argument of a Filter CompareExpression is expected to be a QueryVariable or a 'lang' function call, but $other is given")
                     }
 
 
                 case filterOr: OrExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterOr.leftArg, typeInspection)
-                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterOr.rightArg, typeInspection)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterOr.leftArg, typeInspection, isTopLevel = false)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterOr.rightArg, typeInspection, isTopLevel = false)
 
                     // recreate Or expression and include additional statements
                     TransformedFilterPattern(
@@ -1101,8 +1152,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case filterAnd: AndExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterAnd.leftArg, typeInspection)
-                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterAnd.rightArg, typeInspection)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterAnd.leftArg, typeInspection, isTopLevel = false)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterAnd.rightArg, typeInspection, isTopLevel = false)
 
                     // recreate And expression and include additional statements
                     TransformedFilterPattern(
@@ -1116,7 +1167,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case functionCall: FunctionCallExpression =>
 
-                    handleKnoraFunctionCall(functionCallExpression = functionCall, typeInspectionResult)
+                    handleKnoraFunctionCall(functionCallExpression = functionCall, typeInspectionResult, isTopLevel = isTopLevel)
 
                 case other => throw NotImplementedException(s"$other not supported as FilterExpression")
             }
@@ -1150,7 +1201,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
@@ -1161,7 +1212,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
         def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
             Seq(statementPattern)
         }
@@ -1176,7 +1227,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class GraphDBConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             transformKnoraExplicitToGraphDBExplicit(statementPattern)
         }
 
@@ -1189,7 +1240,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     private class NoInferenceConstructToConstructTransformer extends ConstructToConstructTransformer {
         def transformStatementInConstruct(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
-        def transformStatementInWhere(statementPattern: StatementPattern): Seq[StatementPattern] = {
+        def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[StatementPattern] = {
             // TODO: if OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph occurs, remove it and use property path syntax to emulate inference.
             Seq(statementPattern)
         }
@@ -1208,7 +1259,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             case QueryVariable(varName) => varName
             case IriRef(iriLiteral, _) => iriLiteral.toString
             case XsdLiteral(stringLiteral, _) => stringLiteral
-            case _ => throw SparqlSearchException(s"A unique variable could not be made for $entity")
+            case _ => throw GravsearchException(s"A unique variable could not be made for $entity")
         }
 
         entityStr.replaceAll("[:/.#-]", "").replaceAll("\\s", "") // TODO: check if this is complete and if it could lead to collision of variable names
@@ -1269,12 +1320,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
                     }
                     // append results from recursion and current value object
-                    ResourceIrisAndValueObjectIris(resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri, valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri) +: acc
+                    ResourceIrisAndValueObjectIris(
+                        resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri,
+                        valueObjectIris = resAndValObjIrisForDependentRes.valueObjectIris + assertion.valueObjectIri
+                    ) +: acc
                 } else {
                     // not a link value or no dependent resource given (in order to avoid infinite recursion)
                     // no dependent resource present
                     // append results for current value object
-                    ResourceIrisAndValueObjectIris(resourceIris = Set.empty[IRI], valueObjectIris = Set(assertion.valueObjectIri)) +: acc
+                    ResourceIrisAndValueObjectIris(
+                        resourceIris = Set.empty[IRI],
+                        valueObjectIris = Set(assertion.valueObjectIri)
+                    ) +: acc
                 }
         }
 
@@ -1310,7 +1367,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
     private def fulltextSearchCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ResourceCountV2] = {
@@ -1336,7 +1393,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
-                throw SparqlSearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+                throw GravsearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
             }
 
             count = countResponse.results.bindings.head.rowMap("count")
@@ -1351,7 +1408,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -1598,20 +1655,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
 
     /**
-      * Performs a count query for an extended search Sparql query provided by the user.
+      * Performs a count query for a Gravsearch query provided by the user.
       *
-      * @param inputQuery  Sparql construct query provided by the client.
+      * @param inputQuery     a Gravsearch query provided by the client.
       * @param requestingUser the the client making the request.
       * @return a [[ResourceCountV2]] representing the number of resources that have been found.
       */
-    private def extendedSearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
+    private def gravsearchCountV2(inputQuery: ConstructQuery, apiSchema: ApiV2Schema = ApiV2Simple, requestingUser: UserADM): Future[ResourceCountV2] = {
 
         if (apiSchema != ApiV2Simple) {
-            throw SparqlSearchException("Only api v2 simple is supported in v2 extended search count query")
+            throw GravsearchException("Only api v2 simple is supported in a Gravsearch count query")
         }
 
         // make sure that OFFSET is 0
-        if (inputQuery.offset != 0) throw SparqlSearchException(s"OFFSET is expected to be 0 for a count query, but ${inputQuery.offset} given")
+        if (inputQuery.offset != 0) throw GravsearchException(s"OFFSET is expected to be 0 for a count query, but ${inputQuery.offset} given")
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1620,7 +1677,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractExtendedSearchTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
@@ -1631,19 +1688,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
             }
 
-            def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
                 // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
                 // other information about the matching resources or values.
 
                 processStatementPatternFromWhereClause(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
 
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
-                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult)
+                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
                     case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
@@ -1658,7 +1716,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val mainResVar = mainResourceVariable match {
                     case Some(mainVar: QueryVariable) => mainVar
 
-                    case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
+                    case None => throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
                 }
 
                 // return count aggregation function for main variable
@@ -1730,7 +1788,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
-                throw SparqlSearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+                throw GravsearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
             }
 
             count: String = countResponse.results.bindings.head.rowMap("count")
@@ -1740,13 +1798,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * Performs an extended search using a Sparql query provided by the user.
+      * Performs a search using a Gravsearch query provided by the client.
       *
-      * @param inputQuery  Sparql construct query provided by the client.
+      * @param inputQuery     a Gravsearch query provided by the client.
       * @param requestingUser the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
-    private def extendedSearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+    private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
         /**
           * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched
@@ -1755,7 +1813,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractExtendedSearchTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -1777,14 +1835,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
               *
               * @param statementPattern the statement to be transformed.
+              * @param inputOrderBy     the ORDER BY clause in the input query.
               * @return the result of the transformation.
               */
-            override def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern] = {
+            override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
                 // Include any statements needed to meet the user's search criteria, but not statements that would be needed for permission checking or
                 // other information about the matching resources or values.
 
                 processStatementPatternFromWhereClause(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
             }
 
@@ -1796,7 +1856,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               */
             override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
 
-                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult)
+                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
                     case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
@@ -1836,7 +1896,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 mainResourceVariable match {
                     case Some(mainVar: QueryVariable) => Seq(mainVar) ++ dependentResourceGroupConcat ++ valueObjectGroupConcat
 
-                    case None => throw SparqlSearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
+                    case None => throw GravsearchException(s"No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")
                 }
 
             }
@@ -1865,14 +1925,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                 // What is the type of the literal value?
                                 val typeableEntity = TypeableVariable(criterion.queryVariable.variableName)
-                                val typeInfo: SparqlEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw SparqlSearchException(s"No type information found for ${criterion.queryVariable}"))
+                                val typeInfo: GravsearchEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw GravsearchException(s"No type information found for ${criterion.queryVariable}"))
 
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
                                 val propertyIri: SmartIri = typeInfo match {
                                     case nonPropertyTypeInfo: NonPropertyTypeInfo =>
-                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw SparqlSearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
+                                        literalTypesToValueTypeIris.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"Type $nonPropertyTypeInfo.typeIri is not supported in ORDER BY")).toSmartIri
 
-                                    case _: PropertyTypeInfo => throw SparqlSearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
+                                    case _: PropertyTypeInfo => throw GravsearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
                                 }
 
                                 // Generate the variable name.
@@ -1890,7 +1950,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // main resource variable as order by criterion
                 val orderByMainResVar: OrderCriterion = OrderCriterion(
-                    queryVariable = mainResourceVariable.getOrElse(throw SparqlSearchException("No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
+                    queryVariable = mainResourceVariable.getOrElse(throw GravsearchException("No ${OntologyConstants.KnoraBase.IsMainResource} found in CONSTRUCT query.")),
                     isAscending = true
                 )
 
@@ -1957,8 +2017,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             resource match {
                 case queryVar: QueryVariable => ()
                 case iri: IriRef => ()
-                case literal: XsdLiteral => throw SparqlSearchException(s"literal $literal cannot represent a resource")
-                case other => throw SparqlSearchException(s"$other cannot represent a resource")
+                case literal: XsdLiteral => throw GravsearchException(s"literal $literal cannot represent a resource")
+                case other => throw GravsearchException(s"$other cannot represent a resource")
             }
 
             // TODO: check in type information that resource represents a resource
@@ -1987,7 +2047,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case variable: QueryVariable => TypeableVariable(variable.variableName)
 
-                        case other => throw SparqlSearchException(s"Expected an Iri or a variable as the predicate of a statement, but $other given")
+                        case other => throw GravsearchException(s"Expected an Iri or a variable as the predicate of a statement, but $other given")
                     }
 
                     // if the given key exists in the type annotations map, add it to the collection
@@ -1997,7 +2057,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             case propType: PropertyTypeInfo => propType
 
                             case _: NonPropertyTypeInfo =>
-                                throw SparqlSearchException(s"PropertyTypeInfo was expected for predicate ${statementPattern.pred} in type annotations, but NonPropertyTypeInfo given.")
+                                throw GravsearchException(s"PropertyTypeInfo was expected for predicate ${statementPattern.pred} in type annotations, but NonPropertyTypeInfo given.")
 
                         }
 
@@ -2015,7 +2075,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             case _ =>
                                 statementPattern.obj match {
                                     case queryVar: QueryVariable => Set(QueryVariable(queryVar.variableName + variableConcatSuffix))
-                                    case other => throw SparqlSearchException(s"object of a statement involving a non linking property is expected to be a query variable, but $other given.")
+                                    case other => throw GravsearchException(s"object of a statement involving a non linking property is expected to be a query variable, but $other given.")
                                 }
 
                         }
@@ -2040,7 +2100,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
 
-            import SearchResponderV2Constants.ExtendedSearchConstants._
+            import SearchResponderV2Constants.GravsearchConstants._
 
             // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
             val wherePatternsForMainResource = Seq(
@@ -2319,7 +2379,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
                 // println("++++++++")
-                // println(triplestoreSpecificQuery.toSparql)
+                // println(triplestoreSpecificSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
@@ -2332,8 +2392,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
                         case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
-                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource, dependentResourceIrisFromTypeInspection
-                            val expectedDependenResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) ++ dependentResourceIrisFromTypeInspection
+                            // check for presence of dependent resources:  dependentResourceIrisPerMainResource
+                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri)
 
                             // check for presence of value objects: valueObjectIrisPerMainResource
                             val expectedValueObjects: Set[IRI] = valueObjectIrisPerMainResource(mainResIri).values.flatten.toSet
@@ -2345,7 +2405,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
 
                             // check if the client has sufficient permissions on all dependent resources present in the query path
-                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependenResources) == expectedDependenResources
+                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependentResources) == expectedDependentResources
 
                             // check if the client has sufficient permissions on all value objects Iris present in the query path
                             val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
@@ -2489,7 +2549,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param searchValue          the values to search for.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelCountV2(searchValue: String, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM) = {
@@ -2513,7 +2573,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // query response should contain one result with one row with the name "count"
             _ = if (countResponse.results.bindings.length != 1) {
-                throw SparqlSearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+                throw GravsearchException(s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
             }
 
             count = countResponse.results.bindings.head.rowMap("count")
@@ -2532,7 +2592,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param offset               the offset to be used for paging.
       * @param limitToProject       limit search to given project.
       * @param limitToResourceClass limit search to given resource class.
-      * @param requestingUser          the the client making the request.
+      * @param requestingUser       the the client making the request.
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def searchResourcesByLabelV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {

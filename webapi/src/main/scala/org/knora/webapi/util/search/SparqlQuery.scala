@@ -19,9 +19,25 @@
 
 package org.knora.webapi.util.search
 
+import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+
+/**
+  * Constants used in processing SPARQL queries.
+  */
+object SparqlQueryConstants {
+    /**
+      * The media type of SPARQL queries.
+      */
+    val `application/sparql-query`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
+        mainType = "application",
+        subType = "sparql-query",
+        charset = HttpCharsets.`UTF-8`,
+        fileExtensions = List("rq")
+    )
+}
 
 /**
   * Represents something that can generate SPARQL source code.
@@ -61,18 +77,18 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
     val outputVariable = QueryVariable(outputVariableName)
 
     def toSparql: String = {
-        s"(GROUP_CONCAT(${inputVariable.toSparql}; SEPARATOR='${separator}') AS ${outputVariable.toSparql})"
+        s"(GROUP_CONCAT(DISTINCT(${inputVariable.toSparql}); SEPARATOR='$separator') AS ${outputVariable.toSparql})"
     }
 }
 
 /**
   * Represents a COUNT statement that counts how many instances/rows are returned for [[inputVariable]].
   *
-  * @param inputVariable the variable to count.
-  * @param distinct indicates whether DISTINCT has to be used inside COUNT.
+  * @param inputVariable      the variable to count.
+  * @param distinct           indicates whether DISTINCT has to be used inside COUNT.
   * @param outputVariableName the name of the variable representing the result.
   */
-case class Count(inputVariable: QueryVariable, distinct: Boolean = true, outputVariableName: String) extends SelectQueryColumn {
+case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariableName: String) extends SelectQueryColumn {
 
     val outputVariable = QueryVariable(outputVariableName)
 
@@ -148,6 +164,18 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
             case None =>
                 triple + "\n"
         }
+    }
+}
+
+/**
+  * Represents a BIND command in a query.
+  *
+  * @param variable the variable in the BIND.
+  * @param iriValue the value of the variable, which must be a Knora data IRI.
+  */
+case class BindPattern(variable: QueryVariable, iriValue: IriRef) extends QueryPattern {
+    def toSparql: String = {
+        s"BIND(${iriValue.toSparql} AS ${variable.toSparql})\n"
     }
 }
 
@@ -266,8 +294,8 @@ case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expre
   * Represents a regex function in a query (in a FILTER).
   *
   * @param textValueVar the variable representing the text value to be checked against the provided pattern.
-  * @param pattern the REGEX pattern to be used.
-  * @param modifier the modifier to be used.
+  * @param pattern      the REGEX pattern to be used.
+  * @param modifier     the modifier to be used.
   */
 case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
     def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
@@ -286,46 +314,46 @@ case class LangFunction(textValueVar: QueryVariable) extends Expression {
   * Represents a function call in a filter.
   *
   * @param functionIri the IRI of the function.
-  * @param args the arguments passed to the function.
+  * @param args        the arguments passed to the function.
   */
 case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
     def toSparql: String = s"<${functionIri.iri.toString}>(${args.map(_.toSparql).mkString(", ")})"
 
     /**
       * Gets the argument at the given position as a [[QueryVariable]].
-      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[QueryVariable]].
+      * Throws a [[GravsearchException]] no argument exists at the given position or if it is not a [[QueryVariable]].
       *
       * @param pos the argument to be returned from [[args]].
       * @return a [[QueryVariable]].
       */
     def getArgAsQueryVar(pos: Int): QueryVariable = {
 
-        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+        if (args.size <= pos) throw GravsearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
 
         args(pos) match {
             case queryVar: QueryVariable => queryVar
 
-            case other => throw SparqlSearchException(s"$other is expected to be a QueryVariable")
+            case other => throw GravsearchException(s"$other is expected to be a QueryVariable")
         }
 
     }
 
     /**
       * Gets the argument at the given position as a [[XsdLiteral]] of the given datatype.
-      * Throws a [[SparqlSearchException]] no argument exists at the given position or if it is not a [[XsdLiteral]] of the requested datatype.
+      * Throws a [[GravsearchException]] no argument exists at the given position or if it is not a [[XsdLiteral]] of the requested datatype.
       *
-      * @param pos the argument to be returned from [[args]].
+      * @param pos         the argument to be returned from [[args]].
       * @param xsdDatatype the argeument's datatype.
       * @return an [[XsdLiteral]].
       */
     def getArgAsLiteral(pos: Int, xsdDatatype: SmartIri): XsdLiteral = {
 
-        if (args.size <= pos) throw SparqlSearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
+        if (args.size <= pos) throw GravsearchException(s"Not enough arguments given for call of $functionIri. ${args.size} are given, argument at position $pos is requested (0-based index)")
 
         args(pos) match {
             case literal: XsdLiteral if literal.datatype == xsdDatatype => literal
 
-            case other => throw SparqlSearchException(s"other is expected to be a literal of type ${xsdDatatype.toString}")
+            case other => throw GravsearchException(s"$other is expected to be a literal of type ${xsdDatatype.toString}")
 
         }
 
@@ -445,7 +473,20 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param orderBy         the variables that the results should be ordered by.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0) extends SparqlGenerator {
-    def toSparql: String = constructClause.toSparql + whereClause.toSparql
+    def toSparql: String = {
+        val stringBuilder = new StringBuilder
+        stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)
+
+        if (orderBy.nonEmpty) {
+            stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
+        }
+
+        if (offset > 0) {
+            stringBuilder.append("OFFSET ").append(offset)
+        }
+
+        stringBuilder.toString
+    }
 }
 
 /**
@@ -460,36 +501,33 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   */
 case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
     def toSparql: String = {
-        val selectWhereSparql = "SELECT " + {
-            if (useDistinct) {
-                "DISTINCT "
-            } else {
-                ""
-            }
-        } + variables.map(_.toSparql).mkString(" ") + "\n" + whereClause.toSparql + "\n"
+        val stringBuilder = new StringBuilder
 
-        val groupBySparql = if (groupBy.nonEmpty) {
-            "GROUP BY " + groupBy.map(_.toSparql).mkString(" ") + "\n"
-        } else {
-            ""
+        stringBuilder.append("SELECT ")
+
+        if (useDistinct) {
+            stringBuilder.append("DISTINCT ")
+
         }
 
-        val orderBySparql = if (orderBy.nonEmpty) {
-            "ORDER BY " + orderBy.map(_.toSparql).mkString(" ")
-        } else {
-            ""
+        stringBuilder.append(variables.map(_.toSparql).mkString(" ")).append("\n").append(whereClause.toSparql)
+
+        if (groupBy.nonEmpty) {
+            stringBuilder.append("GROUP BY ").append(groupBy.map(_.toSparql).mkString(" ")).append("\n")
         }
 
-        val offsetSparql = s"\nOFFSET $offset"
-
-        val limitSparql = if (limit.nonEmpty) {
-            s"\nLIMIT ${limit.get}"
-        } else {
-            ""
+        if (orderBy.nonEmpty) {
+            stringBuilder.append("ORDER BY ").append(orderBy.map(_.toSparql).mkString(" ")).append("\n")
         }
 
-        selectWhereSparql + groupBySparql + orderBySparql + offsetSparql + limitSparql
+        if (offset > 0) {
+            stringBuilder.append("OFFSET ").append(offset).append("\n")
+        }
 
+        if (limit.nonEmpty) {
+            stringBuilder.append(s"LIMIT ${limit.get}").append("\n")
+        }
 
+        stringBuilder.toString
     }
 }

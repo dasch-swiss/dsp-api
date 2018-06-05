@@ -22,16 +22,16 @@ package org.knora.webapi.util.search
 import org.knora.webapi.util.SmartIri
 
 /**
-  * Represents the type information that was found concerning a SPARQL entity.
+  * Represents the type information that was found concerning a Gravsearch entity.
   */
-sealed trait SparqlEntityTypeInfo
+sealed trait GravsearchEntityTypeInfo
 
 /**
   * Represents type information about a property.
   *
   * @param objectTypeIri an IRI representing the type of the objects of the property.
   */
-case class PropertyTypeInfo(objectTypeIri: SmartIri) extends SparqlEntityTypeInfo
+case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo
 
 /**
   * Represents type information about a SPARQL entity that's not a property, meaning that it is either a variable
@@ -39,7 +39,7 @@ case class PropertyTypeInfo(objectTypeIri: SmartIri) extends SparqlEntityTypeInf
   *
   * @param typeIri an IRI representing the entity's type.
   */
-case class NonPropertyTypeInfo(typeIri: SmartIri) extends SparqlEntityTypeInfo
+case class NonPropertyTypeInfo(typeIri: SmartIri) extends GravsearchEntityTypeInfo
 
 /**
   * Represents a SPARQL entity that we can get type information about.
@@ -47,7 +47,7 @@ case class NonPropertyTypeInfo(typeIri: SmartIri) extends SparqlEntityTypeInfo
 sealed trait TypeableEntity
 
 /**
-  * Represents a SPARQL variable.
+  * Represents a Gravsearch variable.
   *
   * @param variableName the name of the variable.
   */
@@ -65,4 +65,4 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity
   *
   * @param typedEntities a map of SPARQL entities to the types that were determined for them.
   */
-case class TypeInspectionResult(typedEntities: Map[TypeableEntity, SparqlEntityTypeInfo])
+case class TypeInspectionResult(typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo])

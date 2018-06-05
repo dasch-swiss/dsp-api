@@ -157,11 +157,11 @@ case class InvalidStandoffException(message: String) extends RequestRejectedExce
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that the SPARQL submitted to the API v2 search route was invalid.
+  * An exception indicating that the Gravsearch query submitted to the API v2 search route was invalid.
   *
   * @param message a description of the error.
   */
-case class SparqlSearchException(message: String) extends RequestRejectedException(message)
+case class GravsearchException(message: String) extends RequestRejectedException(message)
 
 /**
   * An exception indication that the JSON-LD submitted to the API v2 was invalid.
