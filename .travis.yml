@@ -99,11 +99,11 @@ jobs:
         # install bundler
         - gem install bundler
         # install jekyll
-        - gem install jekyll -v 3.8.1
+        # - gem install jekyll -v 3.8.1
         # install typedoc
         - npm install --global typedoc
         # install jekyll dependencies
-        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
+        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle exec install
         # compile and build all docs (paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
