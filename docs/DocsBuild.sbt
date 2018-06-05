@@ -71,7 +71,7 @@ buildPrequisites := {
     val graphvizfigures: Seq[String] = shell :+ "make graphvizfigures"
     val jsonformattest: Seq[String] = shell :+ "make jsonformattest"
     s.log.info("building typescript documentation and graphviz diagrams...")
-    if ((clean #&& jsonformat #&& jsonformattest #&& graphvizfigures !) == 0) {
+    if ((clean #&& jsonformattest #&& jsonformat #&& graphvizfigures !) == 0) {
         Thread.sleep(500)
         s.log.success("typescript documentation and graphviz diagrams built successfully")
     } else {
