@@ -2155,6 +2155,122 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "do a gravsearch query for a letter that links to a person with a specified name" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |        ?name a xsd:string .
+                  |
+                  |        FILTER(?name = "Meier")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a gravsearch query for a letter that links to another person with a specified name" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |        ?name a xsd:string .
+                  |
+                  |        FILTER(?name = "Muster")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
         "run a Gravserach query that searches for a person using foaf classes and properties" in {
 
             val gravsearchQuery =
