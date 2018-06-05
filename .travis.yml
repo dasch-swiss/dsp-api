@@ -103,7 +103,7 @@ jobs:
         # install typedoc
         - npm install --global typedoc
         # install jekyll dependencies
-        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle exec install
+        - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
     # Salsah browser tests
