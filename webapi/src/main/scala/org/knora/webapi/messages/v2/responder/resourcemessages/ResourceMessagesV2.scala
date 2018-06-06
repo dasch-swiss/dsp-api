@@ -73,12 +73,14 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, map
 /**
   * Represents a Knora resource as TEI/XML.
   *
-  * @param header the header of the TEI document.
+  * @param header the header of the TEI document, if given.
   * @param body   the body of the TEI document.
   */
-case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: SettingsImpl) {
+case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody, settings: SettingsImpl) {
 
     def toXML = {
+
+        // header
 
         val headerJSONLD = ReadResourcesSequenceV2(1, Vector(header.headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
@@ -92,6 +94,17 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: S
         rdfParser.parse(stringReader, "")
 
         val teiHeaderInfos = stringWriter.toString.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+
+        // body
+
+        if (body.bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
+
+        // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
+        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(body.bodyInfo.valueHasString, body.bodyInfo.standoff.get.standoff, body.TEIMapping)
+
+        // _ = println(tmpXml)
+
+        val teiXMLBody: String = XMLUtil.applyXSLTransformation(tmpXml, body.bodyXSLT)
 
 
         s"""<?xml version="1.0" encoding="UTF-8"?>
@@ -111,7 +124,7 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: S
                </sourceDesc>
            | </fileDesc>
            |</teiHeader>
-            $body
+            $teiXMLBody
            |</TEI>
         """.stripMargin
     }
@@ -122,8 +135,18 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: String, settings: S
   * Represents information tha is going to be contained in the header of a TEI/XML document.
   *
   * @param headerInfo the resource representing the header information.
+  * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
+  *
   */
-case class TEIHeader(headerInfo: ReadResourceV2)
+case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String])
+
+/**
+  * Represents the actual text that is going to be converted to the body of a TEI document.
+  *
+  * @param bodyInfo
+  * @param bodyXSLT
+  */
+case class TEIBody(bodyInfo: TextValueContentV2, TEIMapping: MappingXMLtoStandoff, bodyXSLT: String)
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.

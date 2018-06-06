@@ -323,7 +323,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
 
             // get XSLT from mapping
-            xslt: String <- teiMapping.mappingIri match {
+            bodyXslt: String <- teiMapping.mappingIri match {
                 case OntologyConstants.KnoraBase.TEIMapping =>
                     // standard standoff to TEI conversion
 
@@ -351,18 +351,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
-            // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-            tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyTextValue.valueHasString, bodyTextValue.standoff.get.standoff, teiMapping.mapping)
-
-            // _ = println(tmpXml)
-
-            teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
-
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
-                    headerInfo = headerResource
+                    headerInfo = headerResource,
+                    headerXSLT = None
                 ),
-                body = teiXMLBody,
+                body = TEIBody(
+                    bodyInfo = bodyTextValue,
+                    bodyXSLT = bodyXslt,
+                    TEIMapping = teiMapping.mapping
+                ),
                 settings = settings
             )
 
