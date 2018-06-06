@@ -62,12 +62,12 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: 
 /**
   * Requests a resource as TEI/XML. A successful response will be a [[ResourceTEIGetResponseV2]].
   *
-  * @param resourceIri    the IRI of the resource to be returned in TEI/XML.
-  * @param textProperty   the property representing the text (to be converted to the body of a TEI document).
-  * @param mappingIri     the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
+  * @param resourceIri           the IRI of the resource to be returned in TEI/XML.
+  * @param textProperty          the property representing the text (to be converted to the body of a TEI document).
+  * @param mappingIri            the IRI of the mapping to be used to convert from standoff to TEI/XML, if any. Otherwise the standard mapping is assumed.
   * @param gravsearchTemplateIri the gravsearch template to query the metadata for the TEI header, if provided.
-  * @param headerXSLTIri the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
-  * @param requestingUser the user making the request.
+  * @param headerXSLTIri         the IRI of the XSL transformation to convert the resource's metadata to the TEI header.
+  * @param requestingUser        the user making the request.
   */
 case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
@@ -101,18 +101,27 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], settings: SettingsImpl) {
 
     def toXML: String = {
-        val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
-        val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-        val stringReader = new StringReader(headerJSONLD.toCompactString)
-        val stringWriter = new StringWriter()
 
-        val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
+        val metadata = if (headerXSLT.nonEmpty) {
+            val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
-        rdfParser.setRDFHandler(rdfWriter)
-        rdfParser.parse(stringReader, "")
+            val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
+            val stringReader = new StringReader(headerJSONLD.toCompactString)
+            val stringWriter = new StringWriter()
 
-        val teiHeaderInfos = stringWriter.toString.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+            val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
+
+            rdfParser.setRDFHandler(rdfWriter)
+            rdfParser.parse(stringReader, "")
+
+            val teiHeaderInfos = stringWriter.toString //.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+
+            XMLUtil.applyXSLTransformation(teiHeaderInfos, headerXSLT.get)
+
+        } else {
+            ""
+        }
 
         s"""
            |<teiHeader>
@@ -126,12 +135,14 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
            |         </p>
            |     </publicationStmt>
            |     <sourceDesc>
-           |                    <p>Representation of text as TEI/XML</p>
-           |               </sourceDesc>
+           |        <p>Representation of the resource's text as TEI/XML</p>
+           |     </sourceDesc>
+           |     $metadata
            | </fileDesc>
            |</teiHeader>
          """.stripMargin
     }
+
 }
 
 /**
