@@ -365,14 +365,14 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
                     headerInfo = headerResource,
-                    headerXSLT = headerXSLT
+                    headerXSLT = headerXSLT,
+                    settings = settings
                 ),
                 body = TEIBody(
                     bodyInfo = bodyTextValue,
                     bodyXSLT = bodyXslt,
                     TEIMapping = teiMapping.mapping
-                ),
-                settings = settings
+                )
             )
 
 

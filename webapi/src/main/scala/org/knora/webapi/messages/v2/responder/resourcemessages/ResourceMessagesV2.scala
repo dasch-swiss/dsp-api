@@ -77,55 +77,14 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, map
   * @param header the header of the TEI document, if given.
   * @param body   the body of the TEI document.
   */
-case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody, settings: SettingsImpl) {
+case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 
     def toXML = {
 
-        // header
-
-        val headerJSONLD = ReadResourcesSequenceV2(1, Vector(header.headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
-
-        val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
-        val stringReader = new StringReader(headerJSONLD.toCompactString)
-        val stringWriter = new StringWriter()
-
-        val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
-
-        rdfParser.setRDFHandler(rdfWriter)
-        rdfParser.parse(stringReader, "")
-
-        val teiHeaderInfos = stringWriter.toString.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
-
-        // body
-
-        if (body.bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
-
-        // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(body.bodyInfo.valueHasString, body.bodyInfo.standoff.get.standoff, body.TEIMapping)
-
-        // _ = println(tmpXml)
-
-        val teiXMLBody: String = XMLUtil.applyXSLTransformation(tmpXml, body.bodyXSLT)
-
-
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-           | <teiHeader>
-           | <fileDesc>
-           |     <titleStmt>
-           |         <title>${header.headerInfo.label}</title>
-           |     </titleStmt>
-           |     <publicationStmt>
-           |         <p>
-           |             This is the TEI/XML representation of a resource identified by the Iri ${header.headerInfo.resourceIri}.
-           |         </p>
-           |     </publicationStmt>
-           |     <sourceDesc>
-                    <p>Representation of text as TEI/XML</p>
-               </sourceDesc>
-           | </fileDesc>
-           |</teiHeader>
-            $teiXMLBody
+                ${header.toXML}
+                ${body.toXML}
            |</TEI>
         """.stripMargin
     }
@@ -139,7 +98,41 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody, settings: 
   * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
   *
   */
-case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String])
+case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], settings: SettingsImpl) {
+
+    def toXML: String = {
+        val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
+
+        val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
+        val stringReader = new StringReader(headerJSONLD.toCompactString)
+        val stringWriter = new StringWriter()
+
+        val rdfWriter: RDFWriter = new RDFXMLPrettyWriter(stringWriter)
+
+        rdfParser.setRDFHandler(rdfWriter)
+        rdfParser.parse(stringReader, "")
+
+        val teiHeaderInfos = stringWriter.toString.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+
+        s"""
+           |<teiHeader>
+           | <fileDesc>
+           |     <titleStmt>
+           |         <title>${headerInfo.label}</title>
+           |     </titleStmt>
+           |     <publicationStmt>
+           |         <p>
+           |             This is the TEI/XML representation of a resource identified by the Iri ${headerInfo.resourceIri}.
+           |         </p>
+           |     </publicationStmt>
+           |     <sourceDesc>
+           |                    <p>Representation of text as TEI/XML</p>
+           |               </sourceDesc>
+           | </fileDesc>
+           |</teiHeader>
+         """.stripMargin
+    }
+}
 
 /**
   * Represents the actual text that is going to be converted to the body of a TEI document.
@@ -147,7 +140,20 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String])
   * @param bodyInfo
   * @param bodyXSLT
   */
-case class TEIBody(bodyInfo: TextValueContentV2, TEIMapping: MappingXMLtoStandoff, bodyXSLT: String)
+case class TEIBody(bodyInfo: TextValueContentV2, TEIMapping: MappingXMLtoStandoff, bodyXSLT: String) {
+
+    def toXML: String = {
+        if (bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
+
+        // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
+        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoff.get.standoff, TEIMapping)
+
+        // _ = println(tmpXml)
+
+        XMLUtil.applyXSLTransformation(tmpXml, bodyXSLT)
+    }
+
+}
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.

@@ -159,9 +159,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
 
                     // Compare the original XML with the regenerated XML.
-                    //val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body)).withTest(Input.fromString(expectedBody)).build()
+                    val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
 
-                    //xmlDiff.hasDifferences should be(false)
+                    xmlDiff.hasDifferences should be(false)
             }
 
         }
@@ -177,9 +177,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch">markup</ptr>.</p></body></text>""".stripMargin
 
                     // Compare the original XML with the regenerated XML.
-                    //val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.)).withTest(Input.fromString(expectedBody)).build()
+                    val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
 
-                    //xmlDiff.hasDifferences should be(false)
+                    xmlDiff.hasDifferences should be(false)
             }
 
         }
