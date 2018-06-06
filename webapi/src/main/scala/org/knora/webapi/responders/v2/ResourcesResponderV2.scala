@@ -19,36 +19,41 @@
 
 package org.knora.webapi.responders.v2
 
-import java.io.{File, StringReader, StringWriter}
+import java.io.File
 
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import org.apache.commons.io.FileUtils
-import org.eclipse.rdf4j.rio._
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
-import org.knora.webapi.messages.v2.responder.searchmessages.{GravsearchCountRequestV2, GravsearchRequestV2}
+import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ConstructQuery
 import org.knora.webapi.util.search.v2.GravsearchParserV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
+import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class ResourcesResponderV2 extends ResponderWithStandoffV2 {
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     def receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, requestingUser), log)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -144,7 +149,103 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     }
 
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    /**
+      * Obtains a Gravsearch template from Sipi.
+      *
+      * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
+      * @param requestingUser the user making the request.
+      * @return the Gravsearch template.
+      */
+    private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
+        val gravsearchUrlFuture = for {
+            gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+
+            gravsearchFileValue: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
+                case Some(resource: ReadResourceV2) if resource.resourceClass.toString == OntologyConstants.KnoraBase.TextRepresentation =>
+                    resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+                        case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
+                            case value: ReadValueV2 => value.valueContent match {
+                                case textRepr: TextFileValueContentV2 => textRepr
+                                case other => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} $gravsearchTemplateIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                            }
+                        }
+
+                        case None => throw InconsistentTriplestoreDataException(s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+                    }
+
+                case None => throw BadRequestException(s"Resource $gravsearchTemplateIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+            }
+
+            // check if `xsltFileValue` represents an XSL transformation
+            _ = if (!(gravsearchFileValue.internalMimeType == "text/plain" && gravsearchFileValue.originalFilename.endsWith(".txt"))) {
+                throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
+            }
+
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValue.internalFilename}"
+
+        } yield gravSearchUrl
+
+        val recoveredGravsearchUrlFuture = gravsearchUrlFuture.recover {
+            case notFound: NotFoundException => throw BadRequestException(s"XSL transformation $gravsearchTemplateIri not found: ${notFound.message}")
+        }
+
+        for {
+            gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
+
+            sipiResponseFuture: Future[HttpResponse] = for {
+
+                // ask Sipi to return the XSL transformation file
+                response: HttpResponse <- Http().singleRequest(
+                    HttpRequest(
+                        method = HttpMethods.GET,
+                        uri = gravsearchTemplateUrl
+                    )
+                )
+
+            } yield response
+
+            sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
+
+                case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
+                    // this problem is hardly the user's fault. Create a SipiException
+                    throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+
+
+                // TODO: what other exceptions have to be handled here?
+                // if Exception is used, also previous errors are caught here
+
+            }
+
+            sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
+
+            httpStatusCode: StatusCode = sipiResponseRecovered.status
+
+            messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
+
+            _ = if (httpStatusCode != StatusCodes.OK) {
+                throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
+            }
+
+            // get the XSL transformation
+            gravsearchTemplate: String = messageBody.data.decodeString("UTF-8")
+
+
+        } yield gravsearchTemplate
+
+    }
+
+    /**
+      * Returns a resource as TEI/XML.
+      * This makes only sense for resources that have a text value containing standoff that is to be converted to the TEI body.
+      *
+      * @param resourceIri the Iri of the resource to be converted to a TEI document (header and body).
+      * @param textProperty the Iri of the property to be converted to the body of the TEI document.
+      * @param mappingIri the Iri of the mapping to be used, if a custom mapping is provided.
+      * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header.
+      * @param requestingUser the user making the request.
+      * @return a [[ResourceTEIGetResponseV2]].
+      */
+    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
         for {
 
@@ -153,6 +254,22 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+
+            _ = if (gravsearchTemplateIri.nonEmpty) {
+
+                for {
+                    template <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
+                    gravsearchQuery = template.replace("$resourceIri", resourceIri)
+
+                    constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+
+                    gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+
+                    
+
+                } yield template
+
+            }
 
             // constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
 

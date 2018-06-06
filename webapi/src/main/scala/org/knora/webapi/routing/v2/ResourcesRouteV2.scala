@@ -39,6 +39,7 @@ import scala.language.postfixOps
 object ResourcesRouteV2 extends Authenticator {
     private val Text_Property = "textProperty"
     private val Mapping_Iri = "mappingIri"
+    private val GravsearchTemplate_Iri = "gravsearchTemplateIri"
 
     /**
       * Gets the Iri of the property that represents the text of the resource.
@@ -65,7 +66,7 @@ object ResourcesRouteV2 extends Authenticator {
     }
 
     /**
-      * Gets the Iri of the property that represents the text of the resource.
+      * Gets the Iri of the mapping to be used to convert standoff to XML.
       *
       * @param params the GET parameters.
       * @return the internal resource class, if any.
@@ -77,6 +78,24 @@ object ResourcesRouteV2 extends Authenticator {
         mappingIriStr match {
             case Some(mapping: String) =>
                 Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: '$mapping'")))
+
+            case None => None
+        }
+    }
+
+    /**
+      * Gets the Iri of Gravsearch template to be used to query for the resource's metadata.
+      *
+      * @param params the GET parameters.
+      * @return the internal resource class, if any.
+      */
+    private def getGravsearchTemplateIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val gravsearchTemplateIriStr = params.get(GravsearchTemplate_Iri)
+
+        gravsearchTemplateIriStr match {
+            case Some(gravsearch: String) =>
+                Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: '$gravsearch'")))
 
             case None => None
         }
@@ -151,9 +170,11 @@ object ResourcesRouteV2 extends Authenticator {
                     // the the property that represents the text
                     val textProperty: SmartIri = getTextPropertyFromParams(params)
 
-                    val mappingIri = getMappingIriFromParams(params)
+                    val mappingIri: Option[IRI] = getMappingIriFromParams(params)
 
-                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, mappingIri = mappingIri, requestingUser = requestingUser)
+                    val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
+
+                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, mappingIri = mappingIri, gravsearchTemplateIri = gravsearchTemplateIri, requestingUser = requestingUser)
 
                     RouteUtilV2.runTEIXMLRoute(
                         requestMessage,
