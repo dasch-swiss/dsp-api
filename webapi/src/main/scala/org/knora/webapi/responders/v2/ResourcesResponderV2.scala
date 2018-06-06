@@ -41,7 +41,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ConstructQuery
 import org.knora.webapi.util.search.v2.GravsearchParserV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ConstructResponseUtilV2, SmartIri}
+import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -247,6 +247,30 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       */
     private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
+        /**
+          * Extract the text value to be converted to TEI/XML.
+          *
+          * @param readResourceSeq the resource
+          * @return
+          */
+        def getTextValueFromReadResourceSeq(readResourceSeq: ReadResourcesSequenceV2): TextValueContentV2 = {
+
+            if (readResourceSeq.resources.size != 1) throw BadRequestException(s"Expected exactly one resource, but ${readResourceSeq.resources.size} given")
+
+            readResourceSeq.resources.head.values.get(textProperty) match {
+                case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
+                    // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
+                    valObjs.head.valueContent match {
+                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+                            textValWithStandoff
+
+                        case _ => throw BadRequestException(s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
+                    }
+
+                case None => throw BadRequestException(s"$textProperty is expected to occur once on $resourceIri")
+            }
+        }
+
         for {
 
             // get requested resource
@@ -255,25 +279,50 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
 
-            _ = if (gravsearchTemplateIri.nonEmpty) {
+            resource: ReadResourcesSequenceV2 <- if (gravsearchTemplateIri.nonEmpty) {
 
                 for {
                     template <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
+
+                    // insert actual resource Iri
                     gravsearchQuery = template.replace("$resourceIri", resourceIri)
 
+                    // do a request to the SearchResponder
                     constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
 
                     gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-                    
+                    _ = if (gravSearchResponse.resources.size != 1) throw BadRequestException(s"Gravsearch query for $resourceIri should return one result, but ${gravSearchResponse.resources.size} given.")
 
-                } yield template
+                } yield gravSearchResponse
 
+            } else {
+
+                for {
+                    // get requested resource
+                    resource <- getResources(Vector(resourceIri), requestingUser)
+
+                } yield resource
             }
 
-            // constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+            bodyTextValue = getTextValueFromReadResourceSeq(resource)
 
-            // gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
+            headerInfoValues: ReadResourcesSequenceV2 = resource.copy(
+                resources = Vector(resource.resources.head.copy(
+                    values = resource.resources.head.values - textProperty
+                ))
+            )
+
+            headerResourceSeq = ReadResourcesSequenceV2(
+                numberOfResources = 1,
+                resources = Vector(
+                    resource.resources.head.copy(
+                        values = resource.resources.head.values - textProperty
+                    )
+                )
+            )
+
+            // _ = println(headerResourceSeq)
 
             // get value object representing the text value with standoff
             valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
