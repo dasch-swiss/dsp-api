@@ -101,6 +101,20 @@ class GravsearchParserV2Spec extends CoreSpec() {
             reparsed should ===(parsed)
         }
 
+        "parse a Gravsearch query containing a nested OPTIONAL" in {
+            val parsed = GravsearchParserV2.parseQuery(QueryStrWithNestedOptional)
+            parsed should ===(ParsedQueryWithNestedOptional)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
+        "parse a Gravsearch query containing a UNION in an OPTIONAL" in {
+            val parsed = GravsearchParserV2.parseQuery(QueryStrWithUnionInOptional)
+            parsed should ===(ParsedQueryWithUnionInOptional)
+            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            reparsed should ===(parsed)
+        }
+
         "reject a SELECT query" in {
             assertThrows[GravsearchException] {
                 GravsearchParserV2.parseQuery(SparqlSelect)
@@ -140,12 +154,6 @@ class GravsearchParserV2Spec extends CoreSpec() {
         "reject right-nested UNIONs" in {
             assertThrows[GravsearchException] {
                 GravsearchParserV2.parseQuery(QueryStrWithRightNestedUnion)
-            }
-        }
-
-        "reject a nested OPTIONAL" in {
-            assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryStrWithNestedOptional)
             }
         }
 
@@ -626,6 +634,143 @@ class GravsearchParserV2Spec extends CoreSpec() {
         ))
     )
 
+    val QueryStrWithNestedOptional: String =
+        """
+          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book a ?bookType .
+          |    ?book rdfs:label ?bookLabel .
+          |    ?book knora-api:isMainResource "true"^^xsd:boolean .
+          |    ?book incunabula:title ?bookTitle .
+          |    ?page a ?pageType .
+          |    ?page rdfs:label ?pageLabel .
+          |    ?page incunabula:isPartOf ?book .
+          |} WHERE {
+          |    ?book a incunabula:book .
+          |    ?book rdfs:label ?bookLabel .
+          |
+          |    OPTIONAL {
+          |        ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+          |
+          |        OPTIONAL {
+          |            ?book incunabula:title ?bookTitle .
+          |        }
+          |    }
+          |
+          |    ?book incunabula:pubdate ?pubdate .
+          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |}
+        """.stripMargin
+
+    val ParsedQueryWithNestedOptional: ConstructQuery = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                subj = QueryVariable(variableName = "book"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                obj = QueryVariable(variableName = "bookType")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "book"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                obj = QueryVariable(variableName = "bookLabel")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "book"),
+                pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                obj = XsdLiteral(
+                    value = "true",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                )
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "book"),
+                pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
+                obj = QueryVariable(variableName = "bookTitle")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "page"),
+                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                obj = QueryVariable(variableName = "pageType")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "page"),
+                pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                obj = QueryVariable(variableName = "pageLabel")
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "page"),
+                pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri),
+                obj = QueryVariable(variableName = "book")
+            )
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                    obj = QueryVariable(variableName = "bookLabel")
+                ),
+                OptionalPattern(patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "book"),
+                        pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri),
+                        obj = XsdLiteral(
+                            value = "Lienhart Ysenhut",
+                            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                        )
+                    ),
+                    OptionalPattern(patterns = Vector(StatementPattern(
+                        subj = QueryVariable(variableName = "book"),
+                        pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
+                        obj = QueryVariable(variableName = "bookTitle")
+                    )))
+                )),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "book"),
+                    pred = IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri),
+                    obj = QueryVariable(variableName = "pubdate")
+                ),
+                FilterPattern(expression = CompareExpression(
+                    leftArg = QueryVariable(variableName = "pubdate"),
+                    operator = CompareExpressionOperator.LESS_THAN,
+                    rightArg = XsdLiteral(
+                        value = "GREGORIAN:1500",
+                        datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                    )
+                ))
+            ),
+            positiveEntities = Set(
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri),
+                QueryVariable(variableName = "bookType"),
+                IriRef("http://www.w3.org/2000/01/rdf-schema#label".toSmartIri),
+                QueryVariable(variableName = "page"),
+                QueryVariable(variableName = "book"),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri),
+                QueryVariable(variableName = "bookTitle"),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri),
+                QueryVariable(variableName = "bookLabel"),
+                IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#isPartOf".toSmartIri),
+                QueryVariable(variableName = "pubdate"),
+                QueryVariable(variableName = "pageType"),
+                QueryVariable(variableName = "pageLabel")
+            )
+        ),
+        orderBy = Nil
+    )
+
     val QueryWithWrongFilter: String =
         """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -818,38 +963,99 @@ class GravsearchParserV2Spec extends CoreSpec() {
           |}
         """.stripMargin
 
-    val QueryStrWithNestedOptional: String =
+    val QueryStrWithUnionInOptional: String =
         """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
+          |PREFIX test: <http://0.0.0.0:3333/ontology/0666/test/simple/v2#>
           |CONSTRUCT {
-          |    ?book a ?bookType .
-          |    ?book rdfs:label ?bookLabel .
-          |    ?book knora-api:isMainResource "true"^^xsd:boolean .
-          |    ?book incunabula:title ?bookTitle .
-          |    ?page a ?pageType .
-          |    ?page rdfs:label ?pageLabel .
-          |    ?page incunabula:isPartOf ?book .
+          |  ?Project knora-api:isMainResource true .
+          |  ?isInProject test:isInProject ?Project .
           |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book rdfs:label ?bookLabel .
+          |  ?Project a knora-api:Resource .
+          |  ?Project a test:Project .
           |
-          |    OPTIONAL {
-          |        ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
-          |
-          |        OPTIONAL {
-          |            ?book incunabula:title ?bookTitle .
-          |        }
-          |    }
-          |
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+          |  OPTIONAL {
+          |    ?isInProject test:isInProject ?Project .
+          |    test:isInProject knora-api:objectType knora-api:Resource .
+          |    ?isInProject a knora-api:Resource .
+          |    { ?isInProject a test:BibliographicNotice . } UNION { ?isInProject a test:Person . }
+          |  }
           |}
         """.stripMargin
+
+    val ParsedQueryWithUnionInOptional: ConstructQuery = ConstructQuery(
+        constructClause = ConstructClause(statements = Vector(
+            StatementPattern(
+                subj = QueryVariable(variableName = "Project"),
+                pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                obj = XsdLiteral(
+                    value = "true",
+                    datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                )
+            ),
+            StatementPattern(
+                subj = QueryVariable(variableName = "isInProject"),
+                pred = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#isInProject".toSmartIri),
+                obj = QueryVariable(variableName = "Project")
+            )
+        )),
+        whereClause = WhereClause(
+            patterns = Vector(
+                StatementPattern(
+                    subj = QueryVariable(variableName = "Project"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                ),
+                StatementPattern(
+                    subj = QueryVariable(variableName = "Project"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Project".toSmartIri)
+                ),
+                OptionalPattern(patterns = Vector(
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "isInProject"),
+                        pred = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#isInProject".toSmartIri),
+                        obj = QueryVariable(variableName = "Project")
+                    ),
+                    StatementPattern(
+                        subj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#isInProject".toSmartIri),
+                        pred = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                        obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                    ),
+                    StatementPattern(
+                        subj = QueryVariable(variableName = "isInProject"),
+                        pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                        obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+                    ),
+                    UnionPattern(blocks = Vector(
+                        Vector(StatementPattern(
+                            subj = QueryVariable(variableName = "isInProject"),
+                            pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                            obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#BibliographicNotice".toSmartIri)
+                        )),
+                        Vector(StatementPattern(
+                            subj = QueryVariable(variableName = "isInProject"),
+                            pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                            obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Person".toSmartIri)
+                        ))
+                    ))
+                ))
+            ),
+            positiveEntities = Set(
+                QueryVariable(variableName = "Project"),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#BibliographicNotice".toSmartIri),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#objectType".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#isInProject".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Project".toSmartIri),
+                QueryVariable(variableName = "isInProject"),
+                IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri),
+                IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Person".toSmartIri)
+            )
+        ),
+        orderBy = Nil
+    )
 
     val QueryForAThingRelatingToAnotherThing: String =
         """
@@ -952,7 +1158,7 @@ class GravsearchParserV2Spec extends CoreSpec() {
           |}
         """.stripMargin
 
-    val queryWithFilterContainingRegex =
+    val queryWithFilterContainingRegex: String =
         """
           |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
           |    CONSTRUCT {
