@@ -31,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
 import org.knora.webapi.messages.v2.responder.searchmessages.{GravsearchCountRequestV2, GravsearchRequestV2}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
@@ -151,33 +151,12 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get requested resource
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
 
+            // get the mappings
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
+
             // constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
 
             // gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-            // header
-
-            // get all the properties but the property representing the text for the body
-            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
-
-            headerInfos = queryResultsSeparated(resourceIri).copy(
-                valuePropertyAssertions = headerProps
-            )
-
-            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = Map.empty[IRI, MappingAndXSLTransformation])
-
-            // body
-
-            mappingToBeApplied = mappingIri match {
-                case Some(mapping: IRI) => mapping
-
-                case None => OntologyConstants.KnoraBase.TEIMapping
-            }
-
-            // get TEI mapping
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
-
-            // TODO: get XSLT from mapping
 
             // get value object representing the text value with standoff
             valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
@@ -196,6 +175,55 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 case None => throw BadRequestException(s"no value found for property ${textProperty.toString} for resource $resourceIri")
             }
 
+            // header
+
+            // get all the properties but the property representing the text for the body
+            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
+
+            headerInfos = queryResultsSeparated(resourceIri).copy(
+                valuePropertyAssertions = headerProps
+            )
+
+            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = mappingsAsMap)
+
+            // body
+
+            mappingToBeApplied = mappingIri match {
+                case Some(mapping: IRI) => mapping
+
+                case None => OntologyConstants.KnoraBase.TEIMapping
+            }
+
+            // get TEI mapping
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+
+            // get XSLT from mapping
+            xslt: String <- teiMapping.mappingIri match {
+                case OntologyConstants.KnoraBase.TEIMapping =>
+                    // standard standoff to TEI conversion
+
+                    // use standard XSLT (built-in)
+                    val teiXSLTFile: File = new File("src/main/resources/standoffToTEI.xsl")
+
+                    if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/standoffToTEI.xsl'")
+
+                    // return the file's content
+                    Future(FileUtils.readFileToString(teiXSLTFile, "UTF-8"))
+
+                case otherMapping => teiMapping.mapping.defaultXSLTransformation match {
+                    // custom standoff to TEI conversion
+
+                    case Some(xslTransformationIri) =>
+                        // get XSLT
+                        for {
+                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                        } yield xslTransformation.xslt
+
+
+                    case None => throw BadRequestException(s"Default XSL Transformation expected for mapping $otherMapping")
+                }
+            }
+
             // convert standoff assertions to standoff tags
             standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(teiMapping.standoffEntities, valueObject.standoff)
 
@@ -203,14 +231,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
 
             // _ = println(tmpXml)
-
-            // TODO: get XSLT from mapping
-            teiXSLTFile: File = new File("src/main/resources/BEOLstandoffToTEI.xsl")
-
-            _ = if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/BEOLstandoffToTEI.xsl'")
-
-            // apply XSL transformation to temporary XML to create the TEI/XML body
-            xslt: String = FileUtils.readFileToString(teiXSLTFile, "UTF-8")
 
             teiXMLBody = XMLUtil.applyXSLTransformation(tmpXml, xslt)
 

@@ -150,7 +150,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a resource of type thing with text with standoff as TEI/XML" in {
 
-            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, anythingUserProfile)
+            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, requestingUser = anythingUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceTEIGetResponseV2 =>
@@ -168,7 +168,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a resource of type Something with text with standoff as TEI/XML" in {
 
-            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, anythingUserProfile)
+            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, requestingUser = anythingUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceTEIGetResponseV2 =>
