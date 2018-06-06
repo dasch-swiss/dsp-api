@@ -53,7 +53,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     def receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, requestingUser), log)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -245,7 +245,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @param requestingUser        the user making the request.
       * @return a [[ResourceTEIGetResponseV2]].
       */
-    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+    private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
+
+        // consistency check
+        if (gravsearchTemplateIri.nonEmpty != headerXSLTIri.nonEmpty) throw BadRequestException(s"When a Gravsearch template is provided, also a header XSLT IRI has to be provided and vice versa.")
 
         /**
           * Extract the text value to be converted to TEI/XML.
@@ -311,6 +314,14 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 values = resource.resources.head.values - textProperty
             )
 
+            headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
+              for {
+                  xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+              } yield Some(xslTransformation.xslt)
+            } else {
+                Future(None)
+            }
+
             // body
 
             mappingToBeApplied = mappingIri match {
@@ -354,7 +365,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
                     headerInfo = headerResource,
-                    headerXSLT = None
+                    headerXSLT = headerXSLT
                 ),
                 body = TEIBody(
                     bodyInfo = bodyTextValue,

@@ -40,6 +40,7 @@ object ResourcesRouteV2 extends Authenticator {
     private val Text_Property = "textProperty"
     private val Mapping_Iri = "mappingIri"
     private val GravsearchTemplate_Iri = "gravsearchTemplateIri"
+    private val TEIHeader_XSLT_IRI = "teiHeaderXSLTIri"
 
     /**
       * Gets the Iri of the property that represents the text of the resource.
@@ -96,6 +97,24 @@ object ResourcesRouteV2 extends Authenticator {
         gravsearchTemplateIriStr match {
             case Some(gravsearch: String) =>
                 Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: '$gravsearch'")))
+
+            case None => None
+        }
+    }
+
+    /**
+      * Gets the Iri of the XSL transformation to be used to convert the TEI header's metadata.
+      *
+      * @param params the GET parameters.
+      * @return the internal resource class, if any.
+      */
+    private def getHeaderXSLTIriFromParams(params: Map[String, String]): Option[IRI] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val headerXSLTIriStr = params.get(TEIHeader_XSLT_IRI)
+
+        headerXSLTIriStr match {
+            case Some(xslt: String) =>
+                Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: '$xslt'")))
 
             case None => None
         }
@@ -174,7 +193,16 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val gravsearchTemplateIri: Option[IRI] = getGravsearchTemplateIriFromParams(params)
 
-                    val requestMessage = ResourceTEIGetRequestV2(resourceIri = resourceIri, textProperty = textProperty, mappingIri = mappingIri, gravsearchTemplateIri = gravsearchTemplateIri, requestingUser = requestingUser)
+                    val headerXSLTIri = getHeaderXSLTIriFromParams(params)
+
+                    val requestMessage = ResourceTEIGetRequestV2(
+                        resourceIri = resourceIri,
+                        textProperty = textProperty,
+                        mappingIri = mappingIri,
+                        gravsearchTemplateIri = gravsearchTemplateIri,
+                        headerXSLTIri = headerXSLTIri,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilV2.runTEIXMLRoute(
                         requestMessage,
