@@ -37,8 +37,7 @@ import scala.collection.JavaConverters._
   * - It must use no internal ontologies.
   * - The CONSTRUCT clause may contain only quad patterns.
   * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
-  * - BIND is not supported.
-  * - A UNION or OPTIONAL may not contain a nested UNION or OPTIONAL.
+  * - A UNION may not contain a nested UNION or OPTIONAL.
   */
 object GravsearchParserV2 {
     // This implementation uses the RDF4J SPARQL parser.
