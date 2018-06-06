@@ -153,7 +153,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Obtains a Gravsearch template from Sipi.
       *
       * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-      * @param requestingUser the user making the request.
+      * @param requestingUser        the user making the request.
       * @return the Gravsearch template.
       */
     private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
@@ -238,11 +238,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Returns a resource as TEI/XML.
       * This makes only sense for resources that have a text value containing standoff that is to be converted to the TEI body.
       *
-      * @param resourceIri the Iri of the resource to be converted to a TEI document (header and body).
-      * @param textProperty the Iri of the property to be converted to the body of the TEI document.
-      * @param mappingIri the Iri of the mapping to be used, if a custom mapping is provided.
+      * @param resourceIri           the Iri of the resource to be converted to a TEI document (header and body).
+      * @param textProperty          the Iri of the property to be converted to the body of the TEI document.
+      * @param mappingIri            the Iri of the mapping to be used, if a custom mapping is provided.
       * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header.
-      * @param requestingUser the user making the request.
+      * @param requestingUser        the user making the request.
       * @return a [[ResourceTEIGetResponseV2]].
       */
     private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
@@ -305,52 +305,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 } yield resource
             }
 
-            bodyTextValue = getTextValueFromReadResourceSeq(resource)
+            bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
 
-            headerInfoValues: ReadResourcesSequenceV2 = resource.copy(
-                resources = Vector(resource.resources.head.copy(
-                    values = resource.resources.head.values - textProperty
-                ))
+            headerResource = resource.resources.head.copy(
+                values = resource.resources.head.values - textProperty
             )
-
-            headerResourceSeq = ReadResourcesSequenceV2(
-                numberOfResources = 1,
-                resources = Vector(
-                    resource.resources.head.copy(
-                        values = resource.resources.head.values - textProperty
-                    )
-                )
-            )
-
-            // _ = println(headerResourceSeq)
-
-            // get value object representing the text value with standoff
-            valueObjectOption: Option[Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions.get(textProperty.toString)
-
-            // get the value object the represents the resource's text
-            valueObject: ConstructResponseUtilV2.ValueRdfData = valueObjectOption match {
-                case Some(valObjs: Seq[ConstructResponseUtilV2.ValueRdfData]) =>
-
-                    // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
-                    if (valObjs.size == 1 && valObjs.head.valueObjectClass == OntologyConstants.KnoraBase.TextValue && valObjs.head.standoff.nonEmpty) {
-                        valObjs.head
-                    } else {
-                        throw BadRequestException(s"$textProperty is expected to occur once for $resourceIri and to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
-                    }
-
-                case None => throw BadRequestException(s"no value found for property ${textProperty.toString} for resource $resourceIri")
-            }
-
-            // header
-
-            // get all the properties but the property representing the text for the body
-            headerProps: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = queryResultsSeparated(resourceIri).valuePropertyAssertions - textProperty.toString
-
-            headerInfos = queryResultsSeparated(resourceIri).copy(
-                valuePropertyAssertions = headerProps
-            )
-
-            headerResource: ReadResourceV2 = ConstructResponseUtilV2.createFullResourceResponse(resourceIri, headerInfos, mappings = mappingsAsMap)
 
             // body
 
@@ -390,11 +349,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 }
             }
 
-            // convert standoff assertions to standoff tags
-            standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(teiMapping.standoffEntities, valueObject.standoff)
+            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-            tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueObject.assertions(KnoraBase.ValueHasString), standoffTags, teiMapping.mapping)
+            tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyTextValue.valueHasString, bodyTextValue.standoff.get.standoff, teiMapping.mapping)
 
             // _ = println(tmpXml)
 
