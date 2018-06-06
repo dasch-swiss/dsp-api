@@ -154,8 +154,8 @@ client has permission to see, will be returned.
 The current version of Gravsearch accepts `CONSTRUCT` queries whose `WHERE`
 clauses use the following patterns, with the specified restrictions:
 
-  - `OPTIONAL`: cannot be nested in an `OPTIONAL` or `UNION`.
-  - `UNION`: cannot be nested in an `OPTIONAL` or `UNION`.
+  - `OPTIONAL`: cannot be nested in a `UNION`.
+  - `UNION`: cannot be nested in a `UNION`.
   - `FILTER`: may contain a complex expression using the Boolean
     operators AND and OR, as well as comparison operators. The left
     argument of a comparison operator must be a query variable.

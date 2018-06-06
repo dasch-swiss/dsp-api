@@ -811,7 +811,7 @@ object GravsearchParserV2 {
             }
 
             positiveEntities ++= rightArgVisitor.positiveEntities
-            wherePatterns.append(OptionalPattern(checkBlockPatterns(rightArgVisitor.getWherePatterns ++ filterPattern)))
+            wherePatterns.append(OptionalPattern(rightArgVisitor.getWherePatterns ++ filterPattern))
         }
 
         override def meet(node: algebra.LangMatches): Unit = {
