@@ -92,7 +92,7 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 }
 
 /**
-  * Represents information tha is going to be contained in the header of a TEI/XML document.
+  * Represents information that is going to be contained in the header of a TEI/XML document.
   *
   * @param headerInfo the resource representing the header information.
   * @param headerXSLT XSLT to be applied to the resource's metadata in RDF/XML.
@@ -102,8 +102,10 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
     def toXML: String = {
 
+        if (headerXSLT.nonEmpty) {
 
-        val metadata = if (headerXSLT.nonEmpty) {
+            // TOOD: convert all dates to Gregorian
+
             val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
@@ -115,32 +117,31 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
             rdfParser.setRDFHandler(rdfWriter)
             rdfParser.parse(stringReader, "")
 
-            val teiHeaderInfos = stringWriter.toString //.replace("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "") // dirty hack
+            val teiHeaderInfos = stringWriter.toString
 
             XMLUtil.applyXSLTransformation(teiHeaderInfos, headerXSLT.get)
 
+
         } else {
-            ""
+            s"""
+               |<teiHeader>
+               | <fileDesc>
+               |     <titleStmt>
+               |         <title>${headerInfo.label}</title>
+               |     </titleStmt>
+               |     <publicationStmt>
+               |         <p>
+               |             This is the TEI/XML representation of a resource identified by the Iri ${headerInfo.resourceIri}.
+               |         </p>
+               |     </publicationStmt>
+               |     <sourceDesc>
+               |        <p>Representation of the resource's text as TEI/XML</p>
+               |     </sourceDesc>
+               | </fileDesc>
+               |</teiHeader>
+         """.stripMargin
         }
 
-        s"""
-           |<teiHeader>
-           | <fileDesc>
-           |     <titleStmt>
-           |         <title>${headerInfo.label}</title>
-           |     </titleStmt>
-           |     <publicationStmt>
-           |         <p>
-           |             This is the TEI/XML representation of a resource identified by the Iri ${headerInfo.resourceIri}.
-           |         </p>
-           |     </publicationStmt>
-           |     <sourceDesc>
-           |        <p>Representation of the resource's text as TEI/XML</p>
-           |     </sourceDesc>
-           | </fileDesc>
-           | $metadata
-           |</teiHeader>
-         """.stripMargin
     }
 
 }
@@ -158,8 +159,6 @@ case class TEIBody(bodyInfo: TextValueContentV2, TEIMapping: MappingXMLtoStandof
 
         // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
         val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoff.get.standoff, TEIMapping)
-
-        // _ = println(tmpXml)
 
         XMLUtil.applyXSLTransformation(tmpXml, bodyXSLT)
     }

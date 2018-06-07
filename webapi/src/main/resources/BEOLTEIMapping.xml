@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="mappingXMLToStandoff.xsd">
-    <defaultXSLTransformation>http://rdfh.ch/0801/bvVPvF6CTiqupevtXVbVgA</defaultXSLTransformation>
+    <defaultXSLTransformation>http://rdfh.ch/0801/oDGdmxbgQx6wu3krMOwtIA</defaultXSLTransformation>
     <mappingElement>
         <tag>
             <name>text</name>
