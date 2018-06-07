@@ -2,21 +2,54 @@
 <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
                xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-               xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+               xmlns:rdfs1="http://www.w3.org/2000/01/rdf-schema#"
                xmlns:beol="http://0.0.0.0:3333/ontology/0801/beol/v2#"
                xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
-               exclude-result-prefixes="rdf beol knora-api xs rdfs" version="2.0">
+               exclude-result-prefixes="rdf beol knora-api xs rdfs1" version="2.0">
 
     <xsl:output method="xml" omit-xml-declaration="yes" encoding="utf-8" indent="yes"/>
 
-    <xsl:function name="knora-api:iaf" as="xs:string">
+    <!-- make IAF id a URL -->
+    <xsl:function name="knora-api:iaf" as="xs:anyURI">
         <xsl:param name="input" as="xs:string"/>
         <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
     </xsl:function>
 
+    <!-- make a standard date (Gergorian calendar assumed) -->
+    <xsl:function name="knora-api:dateformat" as="element()*">
+        <xsl:param name="input" as="element()*"/>
+
+        <xsl:choose>
+            <xsl:when test="$input/knora-api:dateValueHasStartYear/text() = $input/knora-api:dateValueHasEndYear/text() and $input/knora-api:dateValueHasStartMonth/text() = $input/knora-api:dateValueHasEndMonth/text() and $input/knora-api:dateValueHasStartDay/text() = $input/knora-api:dateValueHasEndDay/text()">
+                <!-- no period, day precision -->
+                <date>
+                    <xsl:attribute name="when">
+                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>
+                    </xsl:attribute>
+                </date>
+
+            </xsl:when>
+            <xsl:otherwise>
+                <!-- period -->
+                <date>
+                    <xsl:attribute name="notBefore">
+                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartDay/text(), '00')"/>
+                    </xsl:attribute>
+
+                    <xsl:attribute name="notAfter">
+                        <xsl:value-of select="format-number($input/knora-api:dateValueHasEndYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasEndMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasEndDay/text(), '00')"/>
+                    </xsl:attribute>
+                </date>
+
+            </xsl:otherwise>
+        </xsl:choose>
+
+
+    </xsl:function>
+
     <xsl:template match="rdf:RDF">
         <xsl:variable name="resourceIri" select="beol:letter/@rdf:about"/>
-        <xsl:variable name="label" select="beol:letter/rdfs:label/text()"/>
+        <xsl:variable name="label" select="beol:letter/rdfs1:label/text()"/>
 
 
         <teiHeader>
@@ -72,22 +105,14 @@
                     select="$authorGivenNameText"/>
             </persName>
 
-            <xsl:call-template name="creationDate"/>
+            <xsl:variable name="dateValue" select="//beol:creationDate/@rdf:resource"/>
+
+            <xsl:variable name="dateObj"
+                          select="//knora-api:DateValue[@rdf:about=$dateValue]"/>
+
+            <xsl:copy-of select="knora-api:dateformat($dateObj)"/>
 
         </correspAction>
-    </xsl:template>
-
-    <xsl:template name="creationDate">
-        <xsl:variable name="dateValue" select="//beol:creationDate/@rdf:resource"/>
-
-        <xsl:variable name="dateText"
-                      select="//knora-api:DateValue[@rdf:about=$dateValue]/knora-api:valueAsString/text()"/>
-
-        <date>
-            <xsl:attribute name="when">
-                <xsl:value-of select="$dateText"/>
-            </xsl:attribute>
-        </date>
     </xsl:template>
 
     <xsl:template match="beol:letter/beol:hasRecipientValue">
