@@ -23,23 +23,24 @@ import akka.actor.ActorSelection
 import org.knora.webapi._
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.TypeInspectionUtil.{IntermediateTypeInspectionResult, TypeAnnotationPropertiesV2}
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.{IntermediateTypeInspectionResult, TypeAnnotationPropertiesV2}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * A [[TypeInspector]] that relies on explicit type annotations in Gravsearch. There are two kinds of type annotations:
+  * A [[GravsearchTypeInspector]] that relies on explicit type annotations in Gravsearch. There are two kinds of type annotations:
   *
-  * 1. For every variable or IRI representing a resource or value, there must be a triple whose subject is the variable
+  * 1. For a variable or IRI representing a resource or value, a type annotation is a triple whose subject is the variable
   * or IRI, whose predicate is `rdf:type`, and whose object is `knora-api:Resource`, another `knora-api` type
   * such as `knora-api:date`, or an XSD type such as `xsd:integer`.
-  * 1. For every variable or IRI representing a property, there must be a triple whose subject is the variable or
+  * 1. For a variable or IRI representing a property, a type annotation is a triple whose subject is the variable or
   * property IRI, whose predicate is `knora-api:objectType`, and whose object is an IRI representing the type
   * of object that is required by the property.
   */
-class ExplicitTypeInspector(nextInspector: Option[TypeInspector],
-                            responderManager: ActorSelection)
-                           (implicit executionContext: ExecutionContext) extends TypeInspector(nextInspector = nextInspector, responderManager = responderManager) {
+class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
+                                      responderManager: ActorSelection)
+                                     (implicit executionContext: ExecutionContext) extends GravsearchTypeInspector(nextInspector = nextInspector, responderManager = responderManager) {
+
     /**
       * Represents an explicit type annotation.
       *
@@ -50,7 +51,7 @@ class ExplicitTypeInspector(nextInspector: Option[TypeInspector],
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: SmartIri)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
-                     whereClause: WhereClause): Future[IntermediateTypeInspectionResult] = {
+                              whereClause: WhereClause): Future[IntermediateTypeInspectionResult] = {
         val typedEntities = previousResult.typedEntities
         val untypedEntities = previousResult.untypedEntities
 
@@ -92,7 +93,7 @@ class ExplicitTypeInspector(nextInspector: Option[TypeInspector],
     private def getExplicitAnnotations(patterns: Seq[QueryPattern]): Seq[ExplicitAnnotationV2Simple] = {
         patterns.collect {
             case statementPattern: StatementPattern =>
-                if (TypeInspectionUtil.isAnnotationStatement(statementPattern)) {
+                if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
                     Seq(annotationStatementToExplicitAnnotationV2Simple(statementPattern))
                 } else {
                     Seq.empty[ExplicitAnnotationV2Simple]
@@ -119,7 +120,7 @@ class ExplicitTypeInspector(nextInspector: Option[TypeInspector],
       * @return an [[ExplicitAnnotationV2Simple]].
       */
     private def annotationStatementToExplicitAnnotationV2Simple(statementPattern: StatementPattern): ExplicitAnnotationV2Simple = {
-        val typeableEntity = TypeInspectionUtil.toTypeableEntity(statementPattern.subj)
+        val typeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(statementPattern.subj)
 
         val annotationPropIri = statementPattern.pred match {
             case IriRef(iri, _) => iri

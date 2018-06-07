@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 /**
   * Tests Gravsearch type inspection.
   */
-class TypeInspectorSpec extends CoreSpec()  with ImplicitSender {
+class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
     val searchParserV2Spec = new GravsearchParserSpec
 
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
@@ -61,7 +61,7 @@ class TypeInspectorSpec extends CoreSpec()  with ImplicitSender {
 
     "The type inspection runner" should {
         "remove the type annotations from a WHERE clause" in {
-            val typeInspectionRunner = new TypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val whereClauseWithoutAnnotations = typeInspectionRunner.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
@@ -71,9 +71,9 @@ class TypeInspectorSpec extends CoreSpec()  with ImplicitSender {
 
     "The explicit type inspector" should {
         "get type information from a simple query" in {
-            val typeInspectionRunner = new TypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
-            val typeInspectionResult: Future[TypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause)
+            val typeInspectionResult: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause)
 
             typeInspectionResult.map {
                 result => assert(result == SimpleTypeInspectionResult)
@@ -81,7 +81,7 @@ class TypeInspectorSpec extends CoreSpec()  with ImplicitSender {
         }
     }
 
-    val SimpleTypeInspectionResult = TypeInspectionResult(typedEntities = Map(
+    val SimpleTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),

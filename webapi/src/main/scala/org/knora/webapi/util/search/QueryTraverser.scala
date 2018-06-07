@@ -19,11 +19,11 @@
 
 package org.knora.webapi.util.search
 
-import org.knora.webapi.util.search.gravsearch.TypeInspectionResult
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionResult
 
 /**
   * A trait for classes that transform statements and filters in WHERE clauses. Such a class will probably need
-  * to refer to a [[TypeInspectionResult]].
+  * to refer to a [[GravsearchTypeInspectionResult]].
   */
 trait WhereTransformer {
     /**

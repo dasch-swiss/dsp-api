@@ -21,7 +21,7 @@ package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSelection
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.TypeInspectionUtil.IntermediateTypeInspectionResult
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,9 +32,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param nextInspector    the next type inspector in the pipeline.
   * @param responderManager the Knora API responder manager.
   */
-abstract class TypeInspector(protected val nextInspector: Option[TypeInspector],
-                             protected val responderManager: ActorSelection)
-                            (implicit protected val executionContext: ExecutionContext) {
+abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector],
+                                       protected val responderManager: ActorSelection)
+                                      (implicit protected val executionContext: ExecutionContext) {
     /**
       * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
       * in the query. Each implementation must end by calling `runNextInspector`.

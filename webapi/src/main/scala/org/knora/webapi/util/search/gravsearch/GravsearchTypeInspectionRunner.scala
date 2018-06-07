@@ -22,7 +22,7 @@ package org.knora.webapi.util.search.gravsearch
 import akka.actor.ActorSelection
 import org.knora.webapi.GravsearchException
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.TypeInspectionUtil.IntermediateTypeInspectionResult
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -32,12 +32,12 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param responderManager the Knora API responder manager.
   * @param inferTypes       if true, use type inference.
   */
-class TypeInspectionRunner(val responderManager: ActorSelection,
-                           inferTypes: Boolean = true)
-                          (implicit val executionContext: ExecutionContext) {
-    private val maybeInferringTypeInspector: Option[TypeInspector] = if (inferTypes) {
+class GravsearchTypeInspectionRunner(val responderManager: ActorSelection,
+                                     inferTypes: Boolean = true)
+                                    (implicit val executionContext: ExecutionContext) {
+    private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
         Some(
-            new InferringTypeInspector(
+            new InferringGravsearchTypeInspector(
                 nextInspector = None,
                 responderManager = responderManager
             )
@@ -46,7 +46,7 @@ class TypeInspectionRunner(val responderManager: ActorSelection,
         None
     }
 
-    private val typeInspectors = new ExplicitTypeInspector(
+    private val typeInspectors = new ExplicitGravsearchTypeInspector(
         nextInspector = maybeInferringTypeInspector,
         responderManager = responderManager
     )
@@ -58,9 +58,9 @@ class TypeInspectionRunner(val responderManager: ActorSelection,
       * @param whereClause the Gravsearch WHERE clause.
       * @return the result of the type inspection.
       */
-    def inspectTypes(whereClause: WhereClause): Future[TypeInspectionResult] = {
+    def inspectTypes(whereClause: WhereClause): Future[GravsearchTypeInspectionResult] = {
         for {
-            typeableEntities: collection.mutable.Set[TypeableEntity] <- Future(collection.mutable.Set(TypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause.patterns).toSeq: _*))
+            typeableEntities: collection.mutable.Set[TypeableEntity] <- Future(collection.mutable.Set(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause.patterns).toSeq: _*))
 
             initialResult = IntermediateTypeInspectionResult(
                 typedEntities = collection.mutable.Map.empty[TypeableEntity, GravsearchEntityTypeInfo],
@@ -75,7 +75,7 @@ class TypeInspectionRunner(val responderManager: ActorSelection,
             _ = if (lastResult.untypedEntities.nonEmpty) {
                 throw GravsearchException(s"The types of one or more entities could not be determined: ${lastResult.untypedEntities.mkString(", ")}")
             }
-        } yield TypeInspectionResult(lastResult.typedEntities.toMap)
+        } yield GravsearchTypeInspectionResult(lastResult.typedEntities.toMap)
     }
 
 
@@ -87,7 +87,7 @@ class TypeInspectionRunner(val responderManager: ActorSelection,
       */
     def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
         whereClause.copy(
-            patterns = TypeInspectionUtil.removeTypeAnnotationsFromPatterns(whereClause.patterns)
+            patterns = GravsearchTypeInspectionUtil.removeTypeAnnotationsFromPatterns(whereClause.patterns)
         )
     }
 

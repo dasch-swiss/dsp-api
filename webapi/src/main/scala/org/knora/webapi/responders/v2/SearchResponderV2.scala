@@ -137,6 +137,9 @@ object SearchResponderV2Constants {
 
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
+    // A Gravsearch type inspection runner.
+    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManager)
+
     def receive = {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
@@ -221,7 +224,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     /**
       * An abstract base class providing shared methods for [[WhereTransformer]] instances.
       */
-    abstract class AbstractSparqlTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
+    abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
@@ -506,7 +509,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param conversionFuncForNonPropertyType the function to use to create additional statements.
           * @return a sequence of [[QueryPattern]] representing the additional statements.
           */
-        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
 
             val typeInfoKey = toTypeableEntityKey(entity)
 
@@ -541,7 +544,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param conversionFuncForPropertyType the function to use for the conversion.
           * @return a sequence of [[QueryPattern]] representing the converted statement.
           */
-        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
             val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
 
             if (predTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains predTypeInfoKey.get)) {
@@ -807,7 +810,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make a key to look up information in type inspection results
             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(queryVar)
@@ -921,7 +924,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make a key to look up information about the lang functions argument (query var) in type inspection results
             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(langFunctionCall.textValueVar)
@@ -982,7 +985,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make sure that the query variable (first argument of regex function) represents a text value
 
@@ -1037,7 +1040,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection         the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             val functionName: IriRef = functionCallExpression.functionIri.toInternalEntityIri
 
@@ -1117,7 +1120,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection   the results of type inspection.
           * @return a [[TransformedFilterPattern]].
           */
-        protected def transformFilterPattern(filterExpression: Expression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        protected def transformFilterPattern(filterExpression: Expression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             filterExpression match {
 
@@ -1677,7 +1680,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
@@ -1746,9 +1749,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspectionRunner <- FastFuture.successful(new TypeInspectionRunner(responderManager = responderManager))
-            typeInspectionResult: TypeInspectionResult <- typeInspectionRunner.inspectTypes(inputQuery.whereClause)
-            whereClauseWithoutAnnotations: WhereClause = typeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            whereClauseWithoutAnnotations: WhereClause = gravsearchTypeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 
@@ -1813,7 +1815,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -2011,7 +2013,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param variableConcatSuffix the suffix appended to variable names in prequery results.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: TypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
 
             // make sure resource is a query variable or an Iri
             resource match {
@@ -2212,9 +2214,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspectionRunner <- FastFuture.successful(new TypeInspectionRunner(responderManager = responderManager))
-            typeInspectionResult: TypeInspectionResult <- typeInspectionRunner.inspectTypes(inputQuery.whereClause)
-            whereClauseWithoutAnnotations: WhereClause = typeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            whereClauseWithoutAnnotations: WhereClause = gravsearchTypeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 

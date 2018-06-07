@@ -6,7 +6,7 @@ import org.knora.webapi.util.search._
 /**
   * Utilities for Gravsearch type inspection.
   */
-object TypeInspectionUtil {
+object GravsearchTypeInspectionUtil {
 
     /**
       * Represents an intermediate result during type inspection.
@@ -175,7 +175,7 @@ object TypeInspectionUtil {
       */
     def isValidTypeInAnnotation(entity: Entity): Boolean = {
         entity match {
-            case IriRef(objIri, _) if TypeInspectionUtil.ApiV2SimpleTypeIris(objIri.toString) => true
+            case IriRef(objIri, _) if GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris(objIri.toString) => true
             case _ => false
         }
     }
