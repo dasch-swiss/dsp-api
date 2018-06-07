@@ -34,7 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param inferTypes     if true, use type inference.
   */
 class GravsearchTypeInspectionRunner(val system: ActorSystem,
-                                     inferTypes: Boolean = false)
+                                     inferTypes: Boolean = true)
                                     (implicit val executionContext: ExecutionContext) {
     // Construct the pipeline of type inspectors. If inference was requested, put the inferring
     // type inspector at the end of the pipeline.
@@ -84,7 +84,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
 
             // If there are still any entities whose types couldn't be determined, throw an exception.
             _ = if (lastResult.untypedEntities.nonEmpty) {
-                throw GravsearchException(s"The types of one or more entities could not be determined: ${initialResult.untypedEntities.mkString(", ")}")
+                throw GravsearchException(s"The types of one or more entities could not be determined: ${lastResult.untypedEntities.mkString(", ")}")
             }
         } yield GravsearchTypeInspectionResult(lastResult.typedEntities)
     }

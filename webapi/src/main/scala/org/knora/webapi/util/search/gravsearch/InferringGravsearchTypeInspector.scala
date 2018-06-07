@@ -21,16 +21,16 @@ package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSystem
 import akka.pattern._
-import org.knora.webapi.OntologyConstants
+import org.knora.webapi.{ApiV2Simple, OntologyConstants}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2}
-import org.knora.webapi.util.SmartIri
+import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2}
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
+import org.knora.webapi.util.IriConversions._
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.Breaks._
 
 /**
   * A Gravsearch type inspector that infers types, relying on information from the relevant ontologies.
@@ -38,6 +38,7 @@ import scala.util.control.Breaks._
 class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
                                        system: ActorSystem)
                                       (implicit executionContext: ExecutionContext) extends GravsearchTypeInspector(nextInspector = nextInspector, system = system) {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * Represents an inference rule.
@@ -58,12 +59,36 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                   usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo]
     }
 
+    /**
+      * Infers that if there's a statement that gives an entity's `rdf:type`, and the specified type is a Knora
+      * resource class, the entity's type is `knora-api:Resource`.
+      */
     private class RdfTypeRule extends InferenceRule {
         override def infer(untypedEntity: TypeableEntity,
                            previousIterationResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
-            None
+            // Has this entity been used as a subject?
+            usageIndex.subjects.get(untypedEntity) match {
+                case Some(statements) =>
+                    // Yes. If it's been used with the predicate rdf:type with an IRI object, collect those objects.
+                    val rdfTypes: Set[SmartIri] = statements.collect {
+                        case StatementPattern(_, IriRef(predIri, _), IriRef(objIri, _), _) if predIri.toString == OntologyConstants.Rdf.Type => objIri
+                    }
+
+                    // Get any information the ontology responder provided about the classes identified by those IRIs.
+                    val knoraClasses: Set[ReadClassInfoV2] = entityInfo.classInfoMap.filterKeys(rdfTypes).values.toSet
+
+                    // If any of them is a resource class, return the entity's type as knora-api:Resource.
+                    if (knoraClasses.exists(_.isResourceClass)) {
+                        println(s"Inferred that $untypedEntity is a knora-api:Resource")
+                        Some(NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
+                    } else {
+                        None
+                    }
+
+                case None => None
+            }
         }
     }
 
@@ -99,24 +124,41 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
                               requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
+        // println(s"Inferring inspector got previous result: $previousResult")
+
         for {
             // Make an index of entity usage in the query.
             usageIndex <- Future(makeUsageIndex(whereClause))
 
             // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
-            entityInfo: EntityInfoGetResponseV2 <- (
-                responderManager ? EntityInfoGetRequestV2(
-                    classIris = usageIndex.knoraClasses,
-                    propertyIris = usageIndex.knoraProperties,
-                    requestingUser = requestingUser)
-                ).mapTo[EntityInfoGetResponseV2]
+
+            entityInfoRequest = EntityInfoGetRequestV2(
+                classIris = usageIndex.knoraClasses,
+                propertyIris = usageIndex.knoraProperties,
+                requestingUser = requestingUser)
+
+            entityInfo: EntityInfoGetResponseV2 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV2]
+
+            // The ontology responder may return the requested information in the internal schema. Convert it
+            // to the API v2 simple schema.
+
+            entityInfoSimple = EntityInfoGetResponseV2(
+                classInfoMap = entityInfo.classInfoMap.map {
+                    case (classIri, readClassInfo) => classIri.toOntologySchema(ApiV2Simple) -> readClassInfo.toOntologySchema(ApiV2Simple)
+                },
+                propertyInfoMap = entityInfo.propertyInfoMap.map {
+                    case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(ApiV2Simple) -> readPropertyInfo.toOntologySchema(ApiV2Simple)
+                }
+            )
 
             // Iterate over the inference rules until no new type information can be inferred.
             intermediateResult = doIterations(
                 previousResult = previousResult,
-                entityInfo = entityInfo,
+                entityInfo = entityInfoSimple,
                 usageIndex = usageIndex
             )
+
+            // _ = println(s"Intermediate result from inferring inspector: $intermediateResult")
 
             // Pass the intermediate result to the next type inspector in the pipeline.
             lastResult <- runNextInspector(
@@ -139,9 +181,14 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                              entityInfo: EntityInfoGetResponseV2,
                              usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
         var iterationResult = previousResult
+        var iterate = true
+        var iterationIndex = 0
 
-        while (true) {
+        while (iterate) {
             // Run an interation of type inference and get its result.
+
+            println(s"******** Inference iteration $iterationIndex")
+
             val newTypesFound: Map[TypeableEntity, GravsearchEntityTypeInfo] = doIteration(
                 previousIterationResult = iterationResult,
                 entityInfo = entityInfo,
@@ -149,13 +196,18 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             )
 
             // If no new type information was found, stop.
-            if (newTypesFound.isEmpty) break
+            if (newTypesFound.isEmpty) {
+                println("No new information, stopping iterations")
+                iterate = false
+            } else {
+                // Otherwise, do another iteration based on the results of the previous one.
+                iterationResult = IntermediateTypeInspectionResult(
+                    typedEntities = previousResult.typedEntities ++ newTypesFound,
+                    untypedEntities = previousResult.untypedEntities -- newTypesFound.keySet
+                )
 
-            // Otherwise, do another iteration based on the results of the previous one.
-            iterationResult = IntermediateTypeInspectionResult(
-                typedEntities = previousResult.typedEntities ++ newTypesFound,
-                untypedEntities = previousResult.untypedEntities -- newTypesFound.keySet
-            )
+                iterationIndex += 1
+            }
         }
 
         iterationResult
