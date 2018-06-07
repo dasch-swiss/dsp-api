@@ -1,31 +1,83 @@
-package org.knora.webapi.util.search.v2
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
+package org.knora.webapi.util.search.gravsearch
 
-import org.knora.webapi.CoreSpec
+import akka.actor.{ActorSelection, Props}
+import akka.testkit.ImplicitSender
+import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, RESPONDER_MANAGER_ACTOR_PATH, ResponderManager}
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
+import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker}
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
-  * Tests [[TypeInspector]].
+  * Tests Gravsearch type inspection.
   */
-class TypeInspectorSpec extends CoreSpec() {
-    val searchParserV2Spec = new GravsearchParserV2Spec
+class TypeInspectorSpec extends CoreSpec()  with ImplicitSender {
+    val searchParserV2Spec = new GravsearchParserSpec
+
+    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    private val responderManagerSelection: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+
+    private implicit val ec: ExecutionContextExecutor = system.dispatcher
+
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "TypeInspector" should {
-        "get type information from a simple query" in {
-            val parsedQuery = GravsearchParserV2.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
-            val typeInspector = new ExplicitTypeInspectorV2()
-            val typeInspectionResult = typeInspector.inspectTypes(parsedQuery.whereClause)
-            typeInspectionResult should ===(SimpleTypeInspectionResult)
+    private val rdfDataObjects = List()
+
+    "Load test data" in {
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+        expectMsgType[SuccessResponseV2](10.seconds)
+    }
+
+    "The type inspection runner" should {
+        "remove the type annotations from a WHERE clause" in {
+            val typeInspectionRunner = new TypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val whereClauseWithoutAnnotations = typeInspectionRunner.removeTypeAnnotations(parsedQuery.whereClause)
+            whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
         }
 
-        "remove the type annotations from a WHERE clause" in {
-            val parsedQuery = GravsearchParserV2.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
-            val typeInspector = new ExplicitTypeInspectorV2()
-            val whereClauseWithoutAnnotations = typeInspector.removeTypeAnnotations(parsedQuery.whereClause)
-            whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
+    }
+
+    "The explicit type inspector" should {
+        "get type information from a simple query" in {
+            val typeInspectionRunner = new TypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
+            val typeInspectionResult: Future[TypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause)
+
+            typeInspectionResult.map {
+                result => assert(result == SimpleTypeInspectionResult)
+            }
         }
     }
 

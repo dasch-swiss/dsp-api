@@ -27,7 +27,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.search.v2.GravsearchParserV2
+import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
@@ -228,7 +228,7 @@ object SearchRouteV2 extends Authenticator {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
                         val requestingUser = getUserADM(requestContext)
-                        val constructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+                        val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
                         val requestMessage = GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                         RouteUtilV2.runRdfRoute(
@@ -247,7 +247,7 @@ object SearchRouteV2 extends Authenticator {
 
                 requestContext => {
                     val requestingUser = getUserADM(requestContext)
-                    val constructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+                    val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
                     val requestMessage = GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRoute(
@@ -265,7 +265,7 @@ object SearchRouteV2 extends Authenticator {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
                         val requestingUser = getUserADM(requestContext)
-                        val constructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+                        val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
                         val requestMessage = GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                         RouteUtilV2.runRdfRoute(
@@ -284,7 +284,7 @@ object SearchRouteV2 extends Authenticator {
 
                 requestContext => {
                     val requestingUser = getUserADM(requestContext)
-                    val constructQuery = GravsearchParserV2.parseQuery(sparql)
+                    val constructQuery = GravsearchParser.parseQuery(sparql)
                     val requestMessage = GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRoute(

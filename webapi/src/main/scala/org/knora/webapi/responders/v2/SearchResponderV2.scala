@@ -33,7 +33,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.v2._
+import org.knora.webapi.util.search.gravsearch._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -180,7 +180,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Preprocesses an [[Entity]] by converting external IRIs to internal ones.
           *
-          * @param entity an entity provided by [[GravsearchParserV2]].
+          * @param entity an entity provided by [[GravsearchParser]].
           * @return the preprocessed entity.
           */
         private def preprocessEntity(entity: Entity): Entity = {
@@ -201,7 +201,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and enabling inference if necessary.
           *
-          * @param statementPattern a statement provided by GravsearchParserV2.
+          * @param statementPattern a statement provided by GravsearchParser.
           * @return the preprocessed statement pattern.
           */
         private def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
@@ -1746,9 +1746,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
-            whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
-            typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
+            typeInspectionRunner <- FastFuture.successful(new TypeInspectionRunner(responderManager = responderManager))
+            typeInspectionResult: TypeInspectionResult <- typeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            whereClauseWithoutAnnotations: WhereClause = typeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 
@@ -2212,9 +2212,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
-            whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
-            typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
+            typeInspectionRunner <- FastFuture.successful(new TypeInspectionRunner(responderManager = responderManager))
+            typeInspectionResult: TypeInspectionResult <- typeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            whereClauseWithoutAnnotations: WhereClause = typeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 

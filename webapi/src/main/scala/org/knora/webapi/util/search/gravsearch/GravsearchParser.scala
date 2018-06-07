@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.v2
+package org.knora.webapi.util.search.gravsearch
 
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.query.parser.sparql._
@@ -38,8 +38,9 @@ import scala.collection.JavaConverters._
   * - The CONSTRUCT clause may contain only quad patterns.
   * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
   * - A UNION may not contain a nested UNION or OPTIONAL.
+  * - The value assigned in a BIND must be a Knora data IRI.
   */
-object GravsearchParserV2 {
+object GravsearchParser {
     // This implementation uses the RDF4J SPARQL parser.
     private val sparqlParserFactory = new SPARQLParserFactory()
     private val sparqlParser: QueryParser = sparqlParserFactory.getParser

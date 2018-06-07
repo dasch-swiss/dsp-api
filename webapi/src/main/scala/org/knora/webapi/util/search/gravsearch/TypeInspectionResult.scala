@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search
+package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.util.SmartIri
 
@@ -63,6 +63,6 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity
 /**
   * Represents the result of type inspection.
   *
-  * @param typedEntities a map of SPARQL entities to the types that were determined for them.
+  * @param typedEntities   a map of Gravsearch entities to the types that were determined for them.
   */
 case class TypeInspectionResult(typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo])

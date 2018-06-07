@@ -19,12 +19,14 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
+import akka.util.Timeout
 import org.knora.webapi.Settings
 import org.knora.webapi.app._
 import org.knora.webapi.store._
 import org.knora.webapi.util.StringFormatter
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.language.postfixOps
 
 /**
@@ -34,7 +36,7 @@ trait Responder extends Actor with ActorLogging {
     /**
       * The responder's Akka actor system.
       */
-    protected implicit val system = context.system
+    protected implicit val system: ActorSystem = context.system
 
     /**
       * The application settings.
@@ -44,30 +46,30 @@ trait Responder extends Actor with ActorLogging {
     /**
       * A string formatter.
       */
-    protected implicit val stringFormatter = StringFormatter.getGeneralInstance
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
       * The application's default timeout for `ask` messages.
       */
-    protected implicit val timeout = settings.defaultRestoreTimeout
+    protected implicit val timeout: Timeout = settings.defaultRestoreTimeout
 
     /**
       * The Akka actor system's execution context for futures.
       */
-    protected implicit val executionContext = system.dispatcher
+    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     /**
       * A reference to the application state actor.
       */
-    protected val applicationStateActor = context.actorSelection(APPLICATION_STATE_ACTOR_PATH)
+    protected val applicationStateActor: ActorSelection = context.actorSelection(APPLICATION_STATE_ACTOR_PATH)
 
     /**
       * A reference to the Knora API responder manager.
       */
-    protected val responderManager = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    protected val responderManager: ActorSelection = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
     /**
       * A reference to the store manager.
       */
-    protected val storeManager = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
 }
