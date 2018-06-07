@@ -31,7 +31,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.
-  * Type inspectors are run in a pipeline.
+  * Type inspectors are run in a pipeline. Each inspector tries to determine the types of all the typeable
+  * entities in the WHERE clause of a Gravsearch query. If an inspector cannot produce a complete result,
+  * it runs the next inspector in the pipeline.
   *
   * @param nextInspector the next type inspector in the pipeline.
   * @param system        the Akka actor system.
@@ -50,30 +52,41 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
       * @param previousResult the result of previous type inspection.
       * @param whereClause        the Gravsearch WHERE clause.
       * @param requestingUser     the requesting user.
+      * @return the result returned by the pipeline.
       */
     def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                      whereClause: WhereClause,
                      requestingUser: UserADM): Future[IntermediateTypeInspectionResult]
 
     /**
-      * Runs the next type inspector, if any, in a pipeline of type inspectors.
+      * If necessary, runs the next type inspector in the pipeline.
       *
       * @param intermediateResult the intermediate result produced by this type inspector.
       * @param whereClause        the Gravsearch WHERE clause.
-      * @return the result returned by the next type inspector.
+      * @return the result returned by the pipeline.
       */
     protected def runNextInspector(intermediateResult: IntermediateTypeInspectionResult,
                                    whereClause: WhereClause,
                                    requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
-        nextInspector match {
-            case Some(next) =>
-                next.inspectTypes(
-                    previousResult = intermediateResult,
-                    whereClause = whereClause,
-                    requestingUser = requestingUser
-                )
+        // Did this inspector determine all the necessary types?
+        if (intermediateResult.untypedEntities.isEmpty) {
+            // Yes. Return its result as the result of the pipeline.
+            Future(intermediateResult)
+        } else {
+            // No. Is there another inspector in the pipeline?
+            nextInspector match {
+                case Some(next) =>
+                    // Yes. Run that inspector.
+                    next.inspectTypes(
+                        previousResult = intermediateResult,
+                        whereClause = whereClause,
+                        requestingUser = requestingUser
+                    )
 
-            case None => Future(intermediateResult)
+                case None =>
+                    // No. Return the incomplete result.
+                    Future(intermediateResult)
+            }
         }
     }
 }

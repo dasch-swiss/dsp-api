@@ -41,35 +41,79 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
-      * Represents an inference rule.
+      * Represents an inference rule in a pipeline. Each rule in the pipeline tries to determine type information
+      * about a typeable entity. If it cannot do so, it calls the next rule in the pipeline.
+      *
+      * @param nextRule the next rule in the pipeline.
       */
-    private trait InferenceRule {
+    private abstract class InferenceRule(protected val nextRule: Option[InferenceRule]) {
         /**
-          * Attempts to determine the type of a single entity.
+          * Attempts to determine the type of a single entity. Each implementation must end by calling
+          * `runNextRule`.
           *
           * @param untypedEntity           the entity whose type needs to be determined.
           * @param previousIterationResult the result of the previous iteration of type inference.
           * @param entityInfo              information about Knora ontology entities mentioned in the Gravsearch query.
           * @param usageIndex              an index of entity usage in the query.
-          * @return type information about the entity, or `None` if this rule could not determine the entity's type.
+          * @return type information about the entity, or `None` if the type could not be determined.
           */
         def infer(untypedEntity: TypeableEntity,
                   previousIterationResult: IntermediateTypeInspectionResult,
                   entityInfo: EntityInfoGetResponseV2,
                   usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo]
+
+        /**
+          * Runs the next rule in the pipeline.
+          *
+          * @param untypedEntity           the entity whose type needs to be determined.
+          * @param inferredType            the type inferred by the previous rule, if any.
+          * @param previousIterationResult the result of the previous iteration of type inference.
+          * @param entityInfo              information about Knora ontology entities mentioned in the Gravsearch query.
+          * @param usageIndex              an index of entity usage in the query.
+          * @return type information about the entity, or `None` if the type could not be determined.
+          */
+        protected def runNextRule(untypedEntity: TypeableEntity,
+                                  inferredType: Option[GravsearchEntityTypeInfo],
+                                  previousIterationResult: IntermediateTypeInspectionResult,
+                                  entityInfo: EntityInfoGetResponseV2,
+                                  usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+            // Did this rule determine the type?
+            inferredType match {
+                case Some(inferred) =>
+                    // Yes. Return it as the result of the pipeline.
+                    Some(inferred)
+
+                case None =>
+                    // No. Is there another rule in the pipeline?
+                    nextRule match {
+                        case Some(rule) =>
+                            // Yes. Run that rule.
+                            rule.infer(
+                                untypedEntity = untypedEntity,
+                                previousIterationResult = previousIterationResult,
+                                entityInfo = entityInfo,
+                                usageIndex = usageIndex
+                            )
+
+                        case None =>
+                            // No. The type could not be determined.
+                            None
+                    }
+            }
+        }
     }
 
     /**
-      * Infers that if there's a statement that gives an entity's `rdf:type`, and the specified type is a Knora
-      * resource class, the entity's type is `knora-api:Resource`.
+      * Infers an entity's type if there is an `rdf:type` statement about it and and the specified type is a Knora
+      * class.
       */
-    private class RdfTypeRule extends InferenceRule {
+    private class RdfTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(untypedEntity: TypeableEntity,
                            previousIterationResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
             // Has this entity been used as a subject?
-            usageIndex.subjects.get(untypedEntity) match {
+            val inferredType = usageIndex.subjects.get(untypedEntity) match {
                 case Some(statements) =>
                     // Yes. If it's been used with the predicate rdf:type with an IRI object, collect those objects.
                     val rdfTypes: Set[SmartIri] = statements.collect {
@@ -84,16 +128,25 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         println(s"Inferred that $untypedEntity is a knora-api:Resource")
                         Some(NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
                     } else {
+                        // TODO: Handle value classes and standoff classes.
                         None
                     }
 
                 case None => None
             }
+
+            runNextRule(
+                untypedEntity = untypedEntity,
+                inferredType = inferredType,
+                previousIterationResult = previousIterationResult,
+                entityInfo = entityInfo,
+                usageIndex = usageIndex
+            )
         }
     }
 
     // The sequence of all inference rules.
-    private val inferenceRules = Seq(new RdfTypeRule)
+    private val rulePipeline = new RdfTypeRule(None)
 
     /**
       * An index of entity usage in a Gravsearch query.
@@ -210,7 +263,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         var iterationIndex = 0
 
         while (iterate) {
-            // Run an interation of type inference and get its result.
+            // Run an iteration of type inference and get its result.
 
             println(s"******** Inference iteration $iterationIndex")
 
@@ -252,21 +305,19 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         // Start the iteration with an empty map of new type information.
         val newTypesFound: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo] = mutable.Map.empty
 
-        // For each untyped entity, run all the inference rules to try to determine the entity's type.
+        // Run the inference rule pipeline for each entity that is still untyped.
         for (untypedEntity <- previousIterationResult.untypedEntities) {
-            for (inferenceRule <- inferenceRules) {
-                val inferenceRuleResult: Option[GravsearchEntityTypeInfo] = inferenceRule.infer(
-                    untypedEntity = untypedEntity,
-                    previousIterationResult = previousIterationResult,
-                    entityInfo = entityInfo,
-                    usageIndex = usageIndex
-                )
+            val inferenceRuleResult: Option[GravsearchEntityTypeInfo] = rulePipeline.infer(
+                untypedEntity = untypedEntity,
+                previousIterationResult = previousIterationResult,
+                entityInfo = entityInfo,
+                usageIndex = usageIndex
+            )
 
-                // If a rule found type information, add it to the results of the iteration.
-                inferenceRuleResult match {
-                    case Some(result) => newTypesFound.put(untypedEntity, result)
-                    case None => ()
-                }
+            // If the rule pipeline found type information about the entity, add it to the results of the iteration.
+            inferenceRuleResult match {
+                case Some(result) => newTypesFound.put(untypedEntity, result)
+                case None => ()
             }
         }
 
