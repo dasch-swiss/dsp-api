@@ -44,6 +44,8 @@ object GravsearchTypeInspectionUtil {
 
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
+        // TODO: support OntologyConstants.KnoraApiV2WithValueObjects.ObjectType as well.
+
         val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
         val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simple.ObjectType)
 

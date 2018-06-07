@@ -21,9 +21,9 @@ package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSystem
 import akka.pattern._
-import org.knora.webapi.{ApiV2Simple, OntologyConstants}
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
@@ -139,22 +139,47 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             entityInfo: EntityInfoGetResponseV2 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV2]
 
-            // The ontology responder may return the requested information in the internal schema. Convert it
-            // to the API v2 simple schema.
+            // The ontology responder may return the requested information in the internal schema. Convert each entity
+            // definition back to the input schema.
 
-            entityInfoSimple = EntityInfoGetResponseV2(
-                classInfoMap = entityInfo.classInfoMap.map {
-                    case (classIri, readClassInfo) => classIri.toOntologySchema(ApiV2Simple) -> readClassInfo.toOntologySchema(ApiV2Simple)
-                },
-                propertyInfoMap = entityInfo.propertyInfoMap.map {
-                    case (propertyIri, readPropertyInfo) => propertyIri.toOntologySchema(ApiV2Simple) -> readPropertyInfo.toOntologySchema(ApiV2Simple)
-                }
+            entityInfoInInputSchemas = EntityInfoGetResponseV2(
+                classInfoMap = usageIndex.knoraClasses.flatMap {
+                    inputClassIri =>
+                        val inputSchema = inputClassIri.getOntologySchema.get match {
+                            case apiV2Schema: ApiV2Schema => apiV2Schema
+                            case _ => throw GravsearchException(s"Invalid schema in IRI $inputClassIri")
+                        }
+
+                        val maybeReadClassInfo: Option[ReadClassInfoV2] = entityInfo.classInfoMap.get(inputClassIri).orElse {
+                            entityInfo.classInfoMap.get(inputClassIri.toOntologySchema(InternalSchema))
+                        }
+
+                        maybeReadClassInfo.map {
+                            readClassInfo => inputClassIri -> readClassInfo.toOntologySchema(inputSchema)
+                        }
+                }.toMap,
+                propertyInfoMap = usageIndex.knoraProperties.flatMap {
+                    inputPropertyIri =>
+                        val inputSchema = inputPropertyIri.getOntologySchema.get match {
+                            case apiV2Schema: ApiV2Schema => apiV2Schema
+                            case _ => throw GravsearchException(s"Invalid schema in IRI $inputPropertyIri")
+                        }
+
+
+                        val maybeReadPropertyInfo: Option[ReadPropertyInfoV2] = entityInfo.propertyInfoMap.get(inputPropertyIri).orElse {
+                            entityInfo.propertyInfoMap.get(inputPropertyIri.toOntologySchema(InternalSchema))
+                        }
+
+                        maybeReadPropertyInfo.map {
+                            readPropertyInfo => inputPropertyIri -> readPropertyInfo.toOntologySchema(inputSchema)
+                        }
+                }.toMap
             )
 
             // Iterate over the inference rules until no new type information can be inferred.
             intermediateResult = doIterations(
                 previousResult = previousResult,
-                entityInfo = entityInfoSimple,
+                entityInfo = entityInfoInInputSchemas,
                 usageIndex = usageIndex
             )
 
