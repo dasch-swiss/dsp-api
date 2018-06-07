@@ -174,7 +174,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case response: ResourceTEIGetResponseV2 =>
 
                     val expectedBody =
-                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch">markup</ptr>.</p></body></text>""".stripMargin
+                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch"/>markup.</p></body></text>""".stripMargin
 
                     // Compare the original XML with the regenerated XML.
                     val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
