@@ -41,7 +41,7 @@ trait Responder extends Actor with ActorLogging {
     /**
       * The application settings.
       */
-    protected val settings = Settings(context.system)
+    protected val settings = Settings(system)
 
     /**
       * A string formatter.

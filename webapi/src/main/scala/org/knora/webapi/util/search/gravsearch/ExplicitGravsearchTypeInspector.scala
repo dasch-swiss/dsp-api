@@ -19,8 +19,9 @@
 
 package org.knora.webapi.util.search.gravsearch
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorSelection, ActorSystem}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.{IntermediateTypeInspectionResult, TypeAnnotationPropertiesV2}
@@ -38,8 +39,8 @@ import scala.concurrent.{ExecutionContext, Future}
   * of object that is required by the property.
   */
 class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
-                                      responderManager: ActorSelection)
-                                     (implicit executionContext: ExecutionContext) extends GravsearchTypeInspector(nextInspector = nextInspector, responderManager = responderManager) {
+                                      system: ActorSystem)
+                                     (implicit executionContext: ExecutionContext) extends GravsearchTypeInspector(nextInspector = nextInspector, system = system) {
 
     /**
       * Represents an explicit type annotation.
@@ -51,12 +52,14 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
     private case class ExplicitAnnotationV2Simple(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationPropertiesV2.Value, typeIri: SmartIri)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
-                              whereClause: WhereClause): Future[IntermediateTypeInspectionResult] = {
-        val typedEntities = previousResult.typedEntities
-        val untypedEntities = previousResult.untypedEntities
+                              whereClause: WhereClause,
+                              requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
+        // Convert the intermediate result to mutable collections for convenience.
+        val typedEntities = previousResult.typedEntitiesToMutableMap
+        val untypedEntities = previousResult.untypedEntitiesToMutableSet
 
-        // Get all the explicit type annotations.
         for {
+            // Get all the explicit type annotations.
             explicitAnnotations: Seq[ExplicitAnnotationV2Simple] <- Future(getExplicitAnnotations(whereClause.patterns))
 
             // Collect the information in the type annotations.
@@ -73,15 +76,16 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
                 }
             }
 
-            intermediateResult = IntermediateTypeInspectionResult(typedEntities = typedEntities, untypedEntities = untypedEntities)
+            // Construct an intermediate result from the type information that was found.
+            intermediateResult = IntermediateTypeInspectionResult(mutableTypedEntities = typedEntities, mutableUntypedEntities = untypedEntities)
 
-            // Run the next type inspector.
-
-            result <- runNextInspector(
+            // Pass the intermediate result to the next type inspector in the pipeline.
+            lastResult <- runNextInspector(
                 intermediateResult = intermediateResult,
-                whereClause = whereClause
+                whereClause = whereClause,
+                requestingUser = requestingUser
             )
-        } yield result
+        } yield lastResult
     }
 
     /**

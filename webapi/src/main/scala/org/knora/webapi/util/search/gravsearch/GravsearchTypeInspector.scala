@@ -19,7 +19,11 @@
 
 package org.knora.webapi.util.search.gravsearch
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorSelection, ActorSystem}
+import akka.util.Timeout
+import org.knora.webapi.Settings
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
 
@@ -29,21 +33,27 @@ import scala.concurrent.{ExecutionContext, Future}
   * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.
   * Type inspectors are run in a pipeline.
   *
-  * @param nextInspector    the next type inspector in the pipeline.
-  * @param responderManager the Knora API responder manager.
+  * @param nextInspector the next type inspector in the pipeline.
+  * @param system        the Akka actor system.
   */
 abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector],
-                                       protected val responderManager: ActorSelection)
+                                       protected val system: ActorSystem)
                                       (implicit protected val executionContext: ExecutionContext) {
+    protected val settings = Settings(system)
+    protected val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    protected implicit val timeout: Timeout = settings.defaultRestoreTimeout
+
     /**
       * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
       * in the query. Each implementation must end by calling `runNextInspector`.
       *
-      * @param whereClause the Gravsearch WHERE clause.
-      * @return the result of the type inspection.
+      * @param previousResult the result of previous type inspection.
+      * @param whereClause        the Gravsearch WHERE clause.
+      * @param requestingUser     the requesting user.
       */
     def inspectTypes(previousResult: IntermediateTypeInspectionResult,
-                     whereClause: WhereClause): Future[IntermediateTypeInspectionResult]
+                     whereClause: WhereClause,
+                     requestingUser: UserADM): Future[IntermediateTypeInspectionResult]
 
     /**
       * Runs the next type inspector, if any, in a pipeline of type inspectors.
@@ -53,12 +63,14 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
       * @return the result returned by the next type inspector.
       */
     protected def runNextInspector(intermediateResult: IntermediateTypeInspectionResult,
-                                   whereClause: WhereClause): Future[IntermediateTypeInspectionResult] = {
+                                   whereClause: WhereClause,
+                                   requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
         nextInspector match {
             case Some(next) =>
                 next.inspectTypes(
                     previousResult = intermediateResult,
-                    whereClause = whereClause
+                    whereClause = whereClause,
+                    requestingUser = requestingUser
                 )
 
             case None => Future(intermediateResult)

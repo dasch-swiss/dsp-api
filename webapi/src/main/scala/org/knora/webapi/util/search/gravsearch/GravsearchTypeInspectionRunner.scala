@@ -19,8 +19,9 @@
 
 package org.knora.webapi.util.search.gravsearch
 
-import akka.actor.ActorSelection
+import akka.actor.ActorSystem
 import org.knora.webapi.GravsearchException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
 
@@ -29,17 +30,20 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Runs Gravsearch type inspection using one or more type inspector implementations.
   *
-  * @param responderManager the Knora API responder manager.
-  * @param inferTypes       if true, use type inference.
+  * @param system         the Akka actor system.
+  * @param inferTypes     if true, use type inference.
   */
-class GravsearchTypeInspectionRunner(val responderManager: ActorSelection,
-                                     inferTypes: Boolean = true)
+class GravsearchTypeInspectionRunner(val system: ActorSystem,
+                                     inferTypes: Boolean = false)
                                     (implicit val executionContext: ExecutionContext) {
+    // Construct the pipeline of type inspectors. If inference was requested, put the inferring
+    // type inspector at the end of the pipeline.
+
     private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
         Some(
             new InferringGravsearchTypeInspector(
                 nextInspector = None,
-                responderManager = responderManager
+                system = system
             )
         )
     } else {
@@ -48,7 +52,7 @@ class GravsearchTypeInspectionRunner(val responderManager: ActorSelection,
 
     private val typeInspectors = new ExplicitGravsearchTypeInspector(
         nextInspector = maybeInferringTypeInspector,
-        responderManager = responderManager
+        system = system
     )
 
     /**
@@ -56,26 +60,33 @@ class GravsearchTypeInspectionRunner(val responderManager: ActorSelection,
       * in the query.
       *
       * @param whereClause the Gravsearch WHERE clause.
+      * @param requestingUser the requesting user.
       * @return the result of the type inspection.
       */
-    def inspectTypes(whereClause: WhereClause): Future[GravsearchTypeInspectionResult] = {
+    def inspectTypes(whereClause: WhereClause,
+                     requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
         for {
-            typeableEntities: collection.mutable.Set[TypeableEntity] <- Future(collection.mutable.Set(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause.patterns).toSeq: _*))
+            // Get the set of typeable entities in the Gravsearch query.
+            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause.patterns))
 
+            // In the initial intermediate result, none of the entities have types yet.
             initialResult = IntermediateTypeInspectionResult(
-                typedEntities = collection.mutable.Map.empty[TypeableEntity, GravsearchEntityTypeInfo],
+                typedEntities = Map.empty[TypeableEntity, GravsearchEntityTypeInfo],
                 untypedEntities = typeableEntities
             )
 
+            // Run the pipeline and get its result.
             lastResult <- typeInspectors.inspectTypes(
                 previousResult = initialResult,
-                whereClause = whereClause
+                whereClause = whereClause,
+                requestingUser = requestingUser
             )
 
+            // If there are still any entities whose types couldn't be determined, throw an exception.
             _ = if (lastResult.untypedEntities.nonEmpty) {
-                throw GravsearchException(s"The types of one or more entities could not be determined: ${lastResult.untypedEntities.mkString(", ")}")
+                throw GravsearchException(s"The types of one or more entities could not be determined: ${initialResult.untypedEntities.mkString(", ")}")
             }
-        } yield GravsearchTypeInspectionResult(lastResult.typedEntities.toMap)
+        } yield GravsearchTypeInspectionResult(lastResult.typedEntities)
     }
 
 

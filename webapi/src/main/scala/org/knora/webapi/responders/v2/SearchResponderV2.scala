@@ -138,7 +138,7 @@ object SearchResponderV2Constants {
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     // A Gravsearch type inspection runner.
-    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManager)
+    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(system = system)
 
     def receive = {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
@@ -1749,7 +1749,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
             whereClauseWithoutAnnotations: WhereClause = gravsearchTypeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
@@ -2214,7 +2214,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
             whereClauseWithoutAnnotations: WhereClause = gravsearchTypeInspectionRunner.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.

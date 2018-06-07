@@ -29,7 +29,7 @@ import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
-import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker}
+import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -42,8 +42,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
 
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    private val responderManagerSelection: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
     private implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -61,7 +60,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
 
     "The type inspection runner" should {
         "remove the type annotations from a WHERE clause" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
             val whereClauseWithoutAnnotations = typeInspectionRunner.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
@@ -71,9 +70,9 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
 
     "The explicit type inspector" should {
         "get type information from a simple query" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderManager = responderManagerSelection, inferTypes = false)
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
-            val typeInspectionResult: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause)
+            val typeInspectionResult: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
 
             typeInspectionResult.map {
                 result => assert(result == SimpleTypeInspectionResult)

@@ -2,6 +2,7 @@ package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 import org.knora.webapi.util.search._
+import scala.collection.mutable
 
 /**
   * Utilities for Gravsearch type inspection.
@@ -14,8 +15,26 @@ object GravsearchTypeInspectionUtil {
       * @param typedEntities   a map of Gravsearch entities to the types that were determined for them.
       * @param untypedEntities a set of Gravsearch entities for which types could not be determined.
       */
-    case class IntermediateTypeInspectionResult(typedEntities: collection.mutable.Map[TypeableEntity, GravsearchEntityTypeInfo],
-                                                untypedEntities: collection.mutable.Set[TypeableEntity])
+    case class IntermediateTypeInspectionResult(typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo],
+                                                untypedEntities: Set[TypeableEntity]) {
+        def typedEntitiesToMutableMap: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo] = {
+            mutable.Map(typedEntities.toSeq: _*)
+        }
+
+        def untypedEntitiesToMutableSet: mutable.Set[TypeableEntity] = {
+            mutable.Set(untypedEntities.toSeq: _*)
+        }
+    }
+
+    object IntermediateTypeInspectionResult {
+        def apply(mutableTypedEntities: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo],
+                  mutableUntypedEntities: mutable.Set[TypeableEntity]): IntermediateTypeInspectionResult = {
+            new IntermediateTypeInspectionResult(
+                typedEntities = mutableTypedEntities.toMap,
+                untypedEntities = Set(mutableUntypedEntities.toSeq: _*)
+            )
+        }
+    }
 
 
     /**
@@ -65,7 +84,7 @@ object GravsearchTypeInspectionUtil {
             case statementPattern: StatementPattern =>
                 // Don't look for a type annotation of an IRI that's the object of rdf:type.
                 statementPattern.pred match {
-                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred))
+                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => toTypeableEntities(Seq(statementPattern.subj))
                     case _ => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
                 }
 
@@ -89,10 +108,23 @@ object GravsearchTypeInspectionUtil {
       * @return a [[TypeableEntity]].
       */
     def toTypeableEntity(entity: Entity): TypeableEntity = {
+        maybeTypeableEntity(entity) match {
+            case Some(typeableEntity) => typeableEntity
+            case None => throw AssertionException(s"Entity cannot be typed: $entity")
+        }
+    }
+
+    /**
+      * Given a Gravsearch entity, converts it to a [[TypeableEntity]] if possible.
+      *
+      * @param entity the entity to be converted.
+      * @return a [[TypeableEntity]], or `None` if the entity does not need type information.
+      */
+    def maybeTypeableEntity(entity: Entity): Option[TypeableEntity] = {
         entity match {
-            case QueryVariable(variableName) => TypeableVariable(variableName)
-            case IriRef(iri, _) => TypeableIri(iri)
-            case _ => throw AssertionException(s"Entity cannot be typed: $entity")
+            case QueryVariable(variableName) => Some(TypeableVariable(variableName))
+            case IriRef(iri, _) if !ApiV2SimpleNonTypeableIris.contains(iri.toString) => Some(TypeableIri(iri))
+            case _ => None
         }
     }
 
@@ -104,10 +136,7 @@ object GravsearchTypeInspectionUtil {
       * @return a sequence of typeable entities.
       */
     def toTypeableEntities(entities: Seq[Entity]): Set[TypeableEntity] = {
-        entities.collect {
-            case QueryVariable(variableName) => TypeableVariable(variableName)
-            case IriRef(iri, _) if !ApiV2SimpleNonTypeableIris(iri.toString) => TypeableIri(iri)
-        }.toSet
+        entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
     }
 
     /**
@@ -175,7 +204,7 @@ object GravsearchTypeInspectionUtil {
       */
     def isValidTypeInAnnotation(entity: Entity): Boolean = {
         entity match {
-            case IriRef(objIri, _) if GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris(objIri.toString) => true
+            case IriRef(objIri, _) if ApiV2SimpleTypeIris(objIri.toString) => true
             case _ => false
         }
     }
