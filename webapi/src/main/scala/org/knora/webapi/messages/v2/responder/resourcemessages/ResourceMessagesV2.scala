@@ -137,8 +137,8 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
            |     <sourceDesc>
            |        <p>Representation of the resource's text as TEI/XML</p>
            |     </sourceDesc>
-           |     $metadata
            | </fileDesc>
+           | $metadata
            |</teiHeader>
          """.stripMargin
     }
