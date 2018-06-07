@@ -157,6 +157,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @return the Gravsearch template.
       */
     private def getGravsearchTemplate(gravsearchTemplateIri: IRI, requestingUser: UserADM) = {
+
         val gravsearchUrlFuture = for {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
@@ -229,7 +230,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the XSL transformation
             gravsearchTemplate: String = messageBody.data.decodeString("UTF-8")
 
-
         } yield gravsearchTemplate
 
     }
@@ -239,22 +239,20 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * This makes only sense for resources that have a text value containing standoff that is to be converted to the TEI body.
       *
       * @param resourceIri           the Iri of the resource to be converted to a TEI document (header and body).
-      * @param textProperty          the Iri of the property to be converted to the body of the TEI document.
-      * @param mappingIri            the Iri of the mapping to be used, if a custom mapping is provided.
-      * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header.
+      * @param textProperty          the Iri of the property (text value with standoff) to be converted to the body of the TEI document.
+      * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
+      * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
+      * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
       * @param requestingUser        the user making the request.
       * @return a [[ResourceTEIGetResponseV2]].
       */
     private def getResourceAsTEI(resourceIri: IRI, textProperty: SmartIri, mappingIri: Option[IRI], gravsearchTemplateIri: Option[IRI], headerXSLTIri: Option[String], requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
-        // consistency check
-        if (gravsearchTemplateIri.nonEmpty != headerXSLTIri.nonEmpty) throw BadRequestException(s"When a Gravsearch template is provided, also a header XSLT IRI has to be provided and vice versa.")
-
         /**
           * Extract the text value to be converted to TEI/XML.
           *
-          * @param readResourceSeq the resource
-          * @return
+          * @param readResourceSeq the resource which is expected to hold the text value.
+          * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
           */
         def getTextValueFromReadResourceSeq(readResourceSeq: ReadResourcesSequenceV2): TextValueContentV2 = {
 
@@ -276,30 +274,35 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
         for {
 
-            // get requested resource
-            queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = Seq(resourceIri), preview = false, requestingUser = requestingUser)
-
-            // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
-
+            // get the requested resource
             resource: ReadResourcesSequenceV2 <- if (gravsearchTemplateIri.nonEmpty) {
 
+                // check that there is an XSLT to create the TEI header
+                if (headerXSLTIri.isEmpty) throw BadRequestException(s"When a Gravsearch template Iri is provided, also a header XSLT Iri has to be provided.")
+
                 for {
+                    // get the template
                     template <- getGravsearchTemplate(gravsearchTemplateIri.get, requestingUser)
 
-                    // insert actual resource Iri
+                    // insert actual resource Iri, replacing the placeholder
                     gravsearchQuery = template.replace("$resourceIri", resourceIri)
 
-                    // do a request to the SearchResponder
+                    // parse the Gravsearch query
                     constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
 
+                    // do a request to the SearchResponder
                     gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
+                    // exactly one resource is expected
                     _ = if (gravSearchResponse.resources.size != 1) throw BadRequestException(s"Gravsearch query for $resourceIri should return one result, but ${gravSearchResponse.resources.size} given.")
 
                 } yield gravSearchResponse
 
             } else {
+                // no Gravsearch template is provided
+
+                // check that there is no XSLT for the header since there is no Gravsearch template
+                if (headerXSLTIri.nonEmpty) throw BadRequestException(s"When no Gravsearch template Iri is provided, no header XSLT Iri is expected to be provided either.")
 
                 for {
                     // get requested resource
@@ -308,12 +311,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 } yield resource
             }
 
+            // get the value object representing the text value that is to be mapped to the body of the TEI document
             bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
 
+            // the ext value is expected to have standoff markup
+            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+
+            // get all the metadata but the text property for the TEI header
             headerResource = resource.resources.head.copy(
                 values = resource.resources.head.values - textProperty
             )
 
+            // get the XSL transformation for the TEI header
             headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
               for {
                   xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
@@ -322,18 +331,21 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 Future(None)
             }
 
-            // body
-
+            // get the Iri of the mapping to convert standoff markup to TEI/XML
             mappingToBeApplied = mappingIri match {
-                case Some(mapping: IRI) => mapping
+                case Some(mapping: IRI) =>
+                    // a custom mapping is provided
+                    mapping
 
-                case None => OntologyConstants.KnoraBase.TEIMapping
+                case None =>
+                    // no mapping is provided, assume the standard case (standard standoff entites only)
+                    OntologyConstants.KnoraBase.TEIMapping
             }
 
-            // get TEI mapping
+            // get mapping to convert standoff markup to TEI/XML
             teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
 
-            // get XSLT from mapping
+            // get XSLT from mapping for the TEI body
             bodyXslt: String <- teiMapping.mappingIri match {
                 case OntologyConstants.KnoraBase.TEIMapping =>
                     // standard standoff to TEI conversion
@@ -350,7 +362,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     // custom standoff to TEI conversion
 
                     case Some(xslTransformationIri) =>
-                        // get XSLT
+                        // get XSLT for the TEI body.
                         for {
                             xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
                         } yield xslTransformation.xslt
@@ -359,8 +371,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     case None => throw BadRequestException(s"Default XSL Transformation expected for mapping $otherMapping")
                 }
             }
-
-            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             tei = ResourceTEIGetResponseV2(
                 header = TEIHeader(
@@ -375,11 +385,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 )
             )
 
-
         } yield tei
 
-
     }
-
 }
 
