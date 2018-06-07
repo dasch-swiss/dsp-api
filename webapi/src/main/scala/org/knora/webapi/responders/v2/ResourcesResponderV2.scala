@@ -30,6 +30,7 @@ import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
@@ -319,7 +320,27 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // get all the metadata but the text property for the TEI header
             headerResource = resource.resources.head.copy(
-                values = resource.resources.head.values - textProperty
+                values = (resource.resources.head.values - textProperty).map {
+                    case (propIri: SmartIri, valueObjs: Seq[ReadValueV2]) =>
+
+                        propIri -> valueObjs.map {
+
+                            // convert all dates to Gregorian calendar dates (standardization)
+                            // TODO: for dependent resources, this would have to be done recursively
+                            valueObj: ReadValueV2 => valueObj.valueContent match {
+                                case dateContent: DateValueContentV2 =>
+                                    valueObj.copy(
+                                        valueContent = dateContent.copy(
+                                            // act as if this was a Gregorian date
+                                            valueHasCalendar = KnoraCalendarV1.GREGORIAN
+                                        )
+                                    )
+
+                                case _ => valueObj
+                            }
+                        }
+
+                }
             )
 
             // get the XSL transformation for the TEI header
