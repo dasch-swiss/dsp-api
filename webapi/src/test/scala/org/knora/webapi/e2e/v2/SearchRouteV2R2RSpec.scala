@@ -79,7 +79,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol")
+        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
     )
 
     "Load test data" in {
@@ -2102,7 +2105,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "do a gravsearch query for link objects that link to an incunabula book" in {
+        "do a Gravsearch query for link objects that link to an incunabula book" in {
 
             val gravsearchQuery =
                 """
@@ -2148,7 +2151,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "do a gravsearch query for a letter that links to a specific person via two possible properties" in {
+        "do a Gravsearch query for a letter that links to a specific person via two possible properties" in {
 
             val gravsearchQuery =
                 """
@@ -2198,7 +2201,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a gravsearch query for a letter that links to a person with a specified name" in {
+        "do a Gravsearch query for a letter that links to a person with a specified name" in {
 
             val gravsearchQuery =
                 """
@@ -2256,7 +2259,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a gravsearch query for a letter that links to a person with a specified name (optional)" in {
+        "do a Gravsearch query for a letter that links to a person with a specified name (optional)" in {
 
             val gravsearchQuery =
                 """
@@ -2315,7 +2318,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a gravsearch query for a letter that links to another person with a specified name" in {
+        "do a Gravsearch query for a letter that links to another person with a specified name" in {
 
             val gravsearchQuery =
                 """
@@ -2598,7 +2601,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "do a gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
+        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
 
             val gravsearchQuery =
                 """
@@ -2648,6 +2651,38 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query containing a UNION nested in an OPTIONAL" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?Project knora-api:isMainResource true .
+                  |  ?isInProject gravsearchtest1:isInProject ?Project .
+                  |} WHERE {
+                  |  ?Project a knora-api:Resource .
+                  |  ?Project a gravsearchtest1:Project .
+                  |
+                  |  OPTIONAL {
+                  |    ?isInProject gravsearchtest1:isInProject ?Project .
+                  |    gravsearchtest1:isInProject knora-api:objectType knora-api:Resource .
+                  |    ?isInProject a knora-api:Resource .
+                  |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
+                  |  }
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }

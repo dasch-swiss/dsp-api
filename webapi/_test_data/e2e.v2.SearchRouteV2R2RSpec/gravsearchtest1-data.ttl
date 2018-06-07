@@ -1,0 +1,222 @@
+@prefix : <http://www.knora.org/ontology/knora-base#> .
+@prefix standoff: <http://www.knora.org/ontology/standoff#> .
+@prefix gravsearchtest1: <http://www.knora.org/ontology/0666/gravsearchtest1#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix fn: <http://www.w3.org/2005/xpath-functions#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix lumieres-lausanne: <http://www.knora.org/ontology/0113/lumieres-lausanne#> .
+@prefix something: <http://www.knora.org/ontology/0001/something> .
+@prefix anything: <http://www.knora.org/ontology/0001/anything#> .
+@prefix geo-ont: <http://www.geonames.org/ontology#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix geo-pos: <http://www.w3.org/2003/01/geo/wgs84_pos#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix sesame: <http://www.openrdf.org/schema/sesame#> .
+@prefix luc: <http://www.ontotext.com/owlim/lucene#> .
+@prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> a gravsearchtest1:Project .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> a gravsearchtest1:Project .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> a gravsearchtest1:Project .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> a gravsearchtest1:Person .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> a :LinkValue .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> a gravsearchtest1:Person .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> a :LinkValue .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> a gravsearchtest1:BibliographicNotice .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> a :LinkValue .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> a gravsearchtest1:Relation .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> a :LinkValue .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> rdfs:label "Project1" .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> rdfs:label "Project2" .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> rdfs:label "Project3" .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> rdfs:label "Person1" .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> rdfs:label "Person3" .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> rdfs:label "Biblio1" .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> rdfs:label "Relation1" .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :isDeleted "false"^^xsd:boolean .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> rdf:subject <http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> rdf:subject <http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> rdf:subject <http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> rdf:subject <http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> rdf:predicate gravsearchtest1:isInProject .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> rdf:predicate gravsearchtest1:isInProject .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> rdf:predicate gravsearchtest1:isInProject .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> rdf:predicate gravsearchtest1:isInProject .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> rdf:object <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> rdf:object <http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> rdf:object <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> rdf:object <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :attachedToProject <http://rdfh.ch/projects/0666> .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :creationDate "2018-06-06T12:08:56.619Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :creationDate "2018-06-06T12:08:56.759Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :creationDate "2018-06-06T12:08:56.890Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :creationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :creationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :creationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :creationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueCreationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueCreationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueCreationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueCreationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTimeStamp .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueHasOrder "0"^^xsd:integer .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueHasOrder "0"^^xsd:integer .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueHasOrder "0"^^xsd:integer .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueHasOrder "0"^^xsd:integer .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueHasRefCount "1"^^xsd:integer .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueHasRefCount "1"^^xsd:integer .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueHasRefCount "1"^^xsd:integer .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueHasRefCount "1"^^xsd:integer .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueHasString "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w" .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :valueHasString "http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q" .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :valueHasString "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w" .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :valueHasString "http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w" .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :hasPermissions "CR knora-base:ProjectAdmin|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser" .
+
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> :attachedToUser <http://rdfh.ch/users/0666-test-user1> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> gravsearchtest1:isInProjectValue <http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> gravsearchtest1:isInProjectValue <http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> gravsearchtest1:isInProjectValue <http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg/values/m1bols-_R3OZQTe20pqBGw> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> gravsearchtest1:isInProjectValue <http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ/values/yK5vML4_Sc6QcTPrdfD1kQ> .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> gravsearchtest1:isInProject <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
+
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> gravsearchtest1:isInProject <http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> .
+
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> gravsearchtest1:isInProject <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> gravsearchtest1:isInProject <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> .
