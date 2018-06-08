@@ -82,37 +82,54 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     }
 
     "The inferring type inspector" should {
-        "infer 'rdf:type knora-api:Resource' from 'rdf:type beol:letter' and 'rdf:type beol:person'" in {
+        "infer that an entity is a knora-api:Resource if there is an rdf:type statement about it and and the specified type is a Knora resource class" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithoutRdfTypeResource)
+            val parsedQuery = GravsearchParser.parseQuery(QueryRdfTypeRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == SimpleInferenceResult)
+            assert(result == TypeInferenceResult1)
         }
 
-        "infer 'knora-api:objectType knora-api:Resource' for beol:hasAuthor" in {
+        "infer a property's knora-api:objectType if the property's IRI is used as a predicate" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithoutResourceObjectType)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyIriObjectTypeRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == SimpleInferenceResult)
+            assert(result == TypeInferenceResult1)
         }
 
-        "infer 'rdf:type knora-api:Resource' for the object of beol:hasAuthor" in {
+        "infer an entity's type if the entity is used as the object of a statement and the predicate's knora-api:objectType is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithoutTypeOfPropertyObject)
+            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfObjectFromPropertyRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == SimpleInferenceResult)
+            assert(result == TypeInferenceResult1)
         }
 
-        "infer the type of a property variable from a FILTER" in {
+        "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryWithInferenceFromFilter)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromObjectRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            println(MessageUtil.toSource(result))
+            assert(result == TypeInferenceResult1)
         }
+
+        "infer an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and the predicate's knora-api:subjectType is known" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryTypeOfSubjectFromPropertyRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult1)
+        }
+
+        "infer the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromFilterRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult2)
+        }
+
     }
 
     val SimpleTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
@@ -165,62 +182,126 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         ))
     ))
 
-    val QueryWithoutRdfTypeResource: String =
+    val QueryRdfTypeRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
           |
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
+          |    ?letter beol:creationDate ?date .
+          |    beol:creationDate knora-api:objectType knora-api:Date .
+          |    ?date a knora-api:Date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    beol:hasFamilyName knora-api:objectType xsd:string .
+          |    ?name a xsd:string .
           |
-          |    # Scheuchzer, Johann Jacob 1672-1733
-          |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a beol:person .
-          |
-          |    beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |}
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |} ORDER BY ?date
         """.stripMargin
 
-    val SimpleInferenceResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
-        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
-        TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
-    ))
-
-    val QueryWithoutResourceObjectType: String =
+    val QueryPropertyIriObjectTypeRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
           |
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
+          |    ?letter beol:creationDate ?date .
+          |    ?date a knora-api:Date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?name a xsd:string .
           |
-          |    # Scheuchzer, Johann Jacob 1672-1733
-          |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a beol:person .
-          |}
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |} ORDER BY ?date
         """.stripMargin
 
-    val QueryWithoutTypeOfPropertyObject: String =
+    val QueryTypeOfObjectFromPropertyRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
           |
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |
-          |    # Scheuchzer, Johann Jacob 1672-1733
-          |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
-          |}
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |} ORDER BY ?date
         """.stripMargin
 
-    val QueryWithInferenceFromFilter: String =
+    val QueryPropertyVarTypeFromObjectRule: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |} ORDER BY ?date
+        """.stripMargin
+
+    val QueryTypeOfSubjectFromPropertyRule: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |} WHERE {
+          |    ?letter beol:creationDate ?date .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |
+          |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+          |
+          |
+          |} ORDER BY ?date
+        """.stripMargin
+
+    val QueryPropertyVarTypeFromFilterRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -238,4 +319,22 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |
           |} ORDER BY ?date
         """.stripMargin
+
+    val TypeInferenceResult1 = GravsearchTypeInspectionResult(typedEntities = Map(
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "name") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+    ))
+
+    val TypeInferenceResult2 = GravsearchTypeInspectionResult(typedEntities = Map(
+        TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+    ))
 }
