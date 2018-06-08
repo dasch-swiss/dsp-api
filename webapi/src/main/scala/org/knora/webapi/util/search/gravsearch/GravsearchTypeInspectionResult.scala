@@ -32,7 +32,9 @@ sealed trait GravsearchEntityTypeInfo
   *
   * @param objectTypeIri an IRI representing the type of the objects of the property.
   */
-case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo
+case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTypeInfo {
+    override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
+}
 
 /**
   * Represents type information about a SPARQL entity that's not a property, meaning that it is either a variable
@@ -40,7 +42,9 @@ case class PropertyTypeInfo(objectTypeIri: SmartIri) extends GravsearchEntityTyp
   *
   * @param typeIri an IRI representing the entity's type.
   */
-case class NonPropertyTypeInfo(typeIri: SmartIri) extends GravsearchEntityTypeInfo
+case class NonPropertyTypeInfo(typeIri: SmartIri) extends GravsearchEntityTypeInfo {
+    override def toString: String = s"rdf:type ${IriRef(typeIri).toSparql}"
+}
 
 /**
   * Represents a SPARQL entity that we can get type information about.

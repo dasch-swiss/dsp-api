@@ -27,7 +27,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesReq
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.{MessageUtil, StringFormatter}
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
 import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
 
@@ -37,7 +37,7 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 /**
   * Tests Gravsearch type inspection.
   */
-class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
+class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     private val searchParserV2Spec = new GravsearchParserSpec
 
@@ -93,6 +93,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
         "infer 'knora-api:objectType knora-api:Resource' for beol:hasAuthor" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryWithoutResourceObjectType)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == SimpleInferenceResult)
+        }
+
+        "infer 'rdf:type knora-api:Resource' for the object of beol:hasAuthor" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithoutTypeOfPropertyObject)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result == SimpleInferenceResult)
@@ -186,6 +194,21 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
           |    # Scheuchzer, Johann Jacob 1672-1733
           |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
           |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a beol:person .
+          |}
+        """.stripMargin
+
+    val QueryWithoutTypeOfPropertyObject: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |
+          |    # Scheuchzer, Johann Jacob 1672-1733
+          |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
           |}
         """.stripMargin
 }
