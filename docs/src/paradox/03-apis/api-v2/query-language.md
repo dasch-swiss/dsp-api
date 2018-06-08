@@ -159,6 +159,7 @@ clauses use the following patterns, with the specified restrictions:
   - `FILTER`: may contain a complex expression using the Boolean
     operators AND and OR, as well as comparison operators. The left
     argument of a comparison operator must be a query variable.
+    A Knora ontology entity IRI used in a `FILTER` must be a property IRI.
   - `FILTER NOT EXISTS`
   - `OFFSET`: the `OFFSET` is needed for paging. It does not actually
     refer to the number of triples to be returned, but to the
@@ -219,51 +220,30 @@ FILTER(lang(?text) = "fr")
 The [SPARQL `regex` function](https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#func-regex)
 is also supported.
 
-#### Required Type Annotations
+#### Type Inference
 
-Resources, properties, and values must be accompanied by explicit type
-annotation statements. (In a future version, this type information could be
-inferred rather than explicitly given in the query.)
+Gravsearch needs to be able to determine the types of the entities that
+query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
+infer these from the ontologies used. In cases where it cannot, type annotations
+must be added to the query.
 
-There are two type annotation properties:
+In particular, Gravsearch needs to be able to determine:
 
-  - `knora-api:objectType`: indicates the type of value or resource
-    that a property points to.
-  - `rdf:type`: indicates the type of a resource or value.
+- The `knora-api:objectType` of each Knora resource property used in the query:
+  `knora-api:Resource` if it is a link property, otherwise the specific
+  type that the property points to.
+- The type of each entity that isn't a property: `knora-api:Resource`
+  if it is a Knora resource, or its specific type otherwise.
 
-#### Resource Classes
+This information can given explicitly by adding statements using the predicates
+`knora-api:objectType` (for properties) and `rdf:type` (for other entities).
 
-Each variable representing a resource must be annotated with
-`rdf:type knora-api:Resource`. To restrict the types of resources, additional
-statements can be made using `rdfs:type`.
-
-#### Property Types
-
-A property may point either to a value or to a resource. In the first
-case, it is called a value property, in the second case a linking
-property. The type annotation property `knora-api:objectType` indicates
-the type of value or resource the property points to.
-
-##### Value Property Types
-
-Supported value property types:
-
-  - `xsd:string`
-  - `xsd:integer`
-  - `xsd:decimal`
-  - `xsd:boolean`
-  - `knora-api:Date`
-  - `knora-api:StillImageFile`
-  - `knora-api:Geom`
-
-##### Linking Property Types
-
-A linking property must be annotated with `knora-api:objectType knora-api:Resource`.
+To restrict the types of resources, additional statements can be made
+using `rdf:type`.
 
 #### Value Types
 
-Value types are used to indicate the type of a value (`rdf:type`).
-Gravsearch supports the following types of value instances:
+Gravsearch supports the following value types:
 
 - `xsd:string`
 - `xsd:integer`
@@ -331,23 +311,13 @@ CONSTRUCT {
    ?component knora-api:seqnum ?seqnum . # return the sequence number in the response
    ?component knora-api:hasStillImageFileValue ?file . # return the StillImageFile in the response
 } WHERE {
-   ?component a knora-api:Resource . # explicit type annotation for the component searched for, required
-   ?component a knora-api:StillImageRepresentation . # additional restriction of the type of component, optional
-
-   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to compound resource via this property
-   knora-api:isPartOf knora-api:objectType knora-api:Resource . # type annotation for linking property, required
-   <http://rdfh.ch/c5058f3a> a knora-api:Resource . # type annotation for compound resource, required
-
-   ?component knora-api:seqnum ?seqnum . # component must have a sequence number, no further restrictions given
-   knora-api:seqnum knora-api:objectType xsd:integer . # type annotation for the value property, required
-   ?seqnum a xsd:integer . # type annotation for the sequence number, required
-
-   ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile, no further restrictions given
-   knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile . # type annotation for the value property, required
-   ?file a knora-api:StillImageFile . # type annotation for the StillImageFile, required
+   ?component a knora-api:StillImageRepresentation . # restriction of the type of component
+   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to a compound resource via this property
+   ?component knora-api:seqnum ?seqnum . # component must have a sequence number
+   ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile
 }
 ORDER BY ASC(?seqnum) # order by sequence number, ascending
-OFFSET 0 #get first page of results
+OFFSET 0 # get first page of results
 ```
 
 The `incunabula:book` with the IRI `http://rdfh.ch/c5058f3a` has
