@@ -20,14 +20,15 @@
 package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSystem
+import akka.event.{LogSource, LoggingAdapter}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
-import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +39,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
                                        system: ActorSystem)
                                       (implicit executionContext: ExecutionContext) extends GravsearchTypeInspector(nextInspector = nextInspector, system = system) {
+
+    import InferringGravsearchTypeInspector._
+
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    private val log: LoggingAdapter = akka.event.Logging(system, this)
 
     /**
       * Represents an inference rule in a pipeline. Each rule in the pipeline tries to determine type information
@@ -104,8 +110,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-      * Infers an entity's type if there is an `rdf:type` statement about it and and the specified type is a Knora
-      * class.
+      * Infers that an entity is a `knora-api:Resource` if there is an `rdf:type` statement about it and and the
+      * specified type is a Knora resource class.
       */
     private class RdfTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(untypedEntity: TypeableEntity,
@@ -113,7 +119,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
             // Has this entity been used as a subject?
-            val inferredType = usageIndex.subjects.get(untypedEntity) match {
+            val inferredType: Option[NonPropertyTypeInfo] = usageIndex.subjects.get(untypedEntity) match {
                 case Some(statements) =>
                     // Yes. If it's been used with the predicate rdf:type with an IRI object, collect those objects.
                     val rdfTypes: Set[SmartIri] = statements.collect {
@@ -123,16 +129,79 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // Get any information the ontology responder provided about the classes identified by those IRIs.
                     val knoraClasses: Set[ReadClassInfoV2] = entityInfo.classInfoMap.filterKeys(rdfTypes).values.toSet
 
-                    // If any of them is a resource class, return the entity's type as knora-api:Resource.
+                    // Is any of them a resource class?
                     if (knoraClasses.exists(_.isResourceClass)) {
-                        println(s"Inferred that $untypedEntity is a knora-api:Resource")
+                        // Yes. Return the entity's type as knora-api:Resource.
+                        log.debug("RdfTypeRule: {} rdf:type knora-api:Resource .", untypedEntity)
                         Some(NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
                     } else {
-                        // TODO: Handle value classes and standoff classes.
+                        // This entity isn't a resource, so this rule isn't relevant.
                         None
                     }
 
-                case None => None
+                case None =>
+                    // This entity hasn't been used as a subject, so this rule isn't relevant.
+                    None
+            }
+
+            runNextRule(
+                untypedEntity = untypedEntity,
+                inferredType = inferredType,
+                previousIterationResult = previousIterationResult,
+                entityInfo = entityInfo,
+                usageIndex = usageIndex
+            )
+        }
+    }
+
+    /**
+      * Infers a property's `knora-api:objectType` if the property's IRI is used as a predicate.
+      */
+    private class PropertyIriObjectTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+        override def infer(untypedEntity: TypeableEntity,
+                           previousIterationResult: IntermediateTypeInspectionResult,
+                           entityInfo: EntityInfoGetResponseV2,
+                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+            // Is this entity an IRI?
+            val inferredType = untypedEntity match {
+                case TypeableIri(iri) =>
+                    // Yes. Has it been used as a predicate?
+                    usageIndex.predicates.get(untypedEntity) match {
+                        case Some(_) =>
+                            // Yes. Has the ontology responder provided information about it?
+                            entityInfo.propertyInfoMap.get(iri) match {
+                                case Some(readPropertyInfo) =>
+                                    // Yes. Is this a link property?
+                                    if (readPropertyInfo.isLinkProp) {
+                                        // Yes. Return its object type as knora-api:Resource.
+                                        log.debug("PropertyIriObjectTypeRule: {} knora-api:objectType knora-api:Resource .", untypedEntity)
+                                        Some(PropertyTypeInfo(objectTypeIri = OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
+                                    } else {
+                                        // It's not a link property. If the ontology responder provided its object type, use that type.
+                                        val maybeObjectType: Option[SmartIri] = readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
+                                            orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+
+                                        maybeObjectType.map {
+                                            objectType =>
+                                                log.debug("PropertyIriObjectTypeRule: {} knora-api:objectType {} .", untypedEntity, objectType)
+                                                PropertyTypeInfo(objectType)
+                                        }
+                                    }
+
+                                case None =>
+                                    // The ontology responder hasn't provided information about this property. This should have caused
+                                    // an error earlier from the ontology responder.
+                                    throw AssertionException(s"No information found about property $iri")
+                            }
+
+                        case None =>
+                            // The IRI hasn't been used as a predicate, so this rule isn't relevant.
+                            None
+                    }
+
+                case _ =>
+                    // This entity isn't an IRI, so this rule isn't relevant.
+                    None
             }
 
             runNextRule(
@@ -146,7 +215,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     // The sequence of all inference rules.
-    private val rulePipeline = new RdfTypeRule(None)
+    private val rulePipeline = new RdfTypeRule(Some(new PropertyIriObjectTypeRule(None)))
 
     /**
       * An index of entity usage in a Gravsearch query.
@@ -177,7 +246,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
                               requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
-        // println(s"Inferring inspector got previous result: $previousResult")
+        log.debug("========== Starting type inference ==========")
 
         for {
             // Make an index of entity usage in the query.
@@ -265,7 +334,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         while (iterate) {
             // Run an iteration of type inference and get its result.
 
-            println(s"******** Inference iteration $iterationIndex")
+            log.debug(s"**** Inference iteration $iterationIndex")
 
             val newTypesFound: Map[TypeableEntity, GravsearchEntityTypeInfo] = doIteration(
                 previousIterationResult = iterationResult,
@@ -275,7 +344,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             // If no new type information was found, stop.
             if (newTypesFound.isEmpty) {
-                println("No new information, stopping iterations")
+                log.debug("No new information, stopping iterations")
                 iterate = false
             } else {
                 // Otherwise, do another iteration based on the results of the previous one.
@@ -428,4 +497,13 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 }.toSet
         }
     }
+}
+
+object InferringGravsearchTypeInspector {
+    /**
+      * Provides the string representation of the [[InferringGravsearchTypeInspector]] class in log messages.
+      *
+      * See [[https://doc.akka.io/docs/akka/current/logging.html#translating-log-source-to-string-and-class]].
+      */
+    implicit val logSource: LogSource[AnyRef] = (o: AnyRef) => o.getClass.getName
 }

@@ -30,15 +30,13 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * Runs Gravsearch type inspection using one or more type inspector implementations.
   *
-  * @param system         the Akka actor system.
-  * @param inferTypes     if true, use type inference.
+  * @param system     the Akka actor system.
+  * @param inferTypes if true, use type inference.
   */
 class GravsearchTypeInspectionRunner(val system: ActorSystem,
                                      inferTypes: Boolean = true)
                                     (implicit val executionContext: ExecutionContext) {
-    // Construct the pipeline of type inspectors. If inference was requested, put the inferring
-    // type inspector at the end of the pipeline.
-
+    // If inference was requested, construct an inferring type inspector.
     private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
         Some(
             new InferringGravsearchTypeInspector(
@@ -50,7 +48,8 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
         None
     }
 
-    private val typeInspectors = new ExplicitGravsearchTypeInspector(
+    // The pipeline of type inspectors.
+    private val typeInspectionPipeline = new ExplicitGravsearchTypeInspector(
         nextInspector = maybeInferringTypeInspector,
         system = system
     )
@@ -59,7 +58,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
       * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found
       * in the query.
       *
-      * @param whereClause the Gravsearch WHERE clause.
+      * @param whereClause    the Gravsearch WHERE clause.
       * @param requestingUser the requesting user.
       * @return the result of the type inspection.
       */
@@ -76,7 +75,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
             )
 
             // Run the pipeline and get its result.
-            lastResult <- typeInspectors.inspectTypes(
+            lastResult <- typeInspectionPipeline.inspectTypes(
                 previousResult = initialResult,
                 whereClause = whereClause,
                 requestingUser = requestingUser

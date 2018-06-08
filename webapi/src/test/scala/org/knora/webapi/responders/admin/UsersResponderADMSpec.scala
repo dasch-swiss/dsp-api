@@ -75,8 +75,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
     private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
 
-    val log = akka.event.Logging(system, this.getClass())
-
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())

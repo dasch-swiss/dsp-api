@@ -50,8 +50,8 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
       * in the query. Each implementation must end by calling `runNextInspector`.
       *
       * @param previousResult the result of previous type inspection.
-      * @param whereClause        the Gravsearch WHERE clause.
-      * @param requestingUser     the requesting user.
+      * @param whereClause    the Gravsearch WHERE clause.
+      * @param requestingUser the requesting user.
       * @return the result returned by the pipeline.
       */
     def inspectTypes(previousResult: IntermediateTypeInspectionResult,

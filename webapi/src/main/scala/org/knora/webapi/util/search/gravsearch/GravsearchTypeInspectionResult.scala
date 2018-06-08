@@ -20,6 +20,7 @@
 package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.search.{IriRef, QueryVariable}
 
 /**
   * Represents the type information that was found concerning a Gravsearch entity.
@@ -51,18 +52,22 @@ sealed trait TypeableEntity
   *
   * @param variableName the name of the variable.
   */
-case class TypeableVariable(variableName: String) extends TypeableEntity
+case class TypeableVariable(variableName: String) extends TypeableEntity {
+    override def toString: String = QueryVariable(variableName).toSparql
+}
 
 /**
   * Represents an IRI that we need type information about.
   *
   * @param iri the IRI.
   */
-case class TypeableIri(iri: SmartIri) extends TypeableEntity
+case class TypeableIri(iri: SmartIri) extends TypeableEntity {
+    override def toString: String = IriRef(iri).toSparql
+}
 
 /**
   * Represents the result of type inspection.
   *
-  * @param typedEntities   a map of Gravsearch entities to the types that were determined for them.
+  * @param typedEntities a map of Gravsearch entities to the types that were determined for them.
   */
 case class GravsearchTypeInspectionResult(typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo])

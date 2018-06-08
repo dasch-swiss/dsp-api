@@ -39,7 +39,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
             val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc, log = logger)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc, log = log)
 
             // Convert the text with standoff back to XML.
             val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
@@ -64,7 +64,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
             )
 
             // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix, log = logger)
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix, log = log)
 
             // Convert the text with standoff back to XML.
             val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
@@ -105,8 +105,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -174,8 +174,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                 """.stripMargin
 
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -237,7 +237,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
             // Convert the markup in the transcription to standoff and back again to check that it's correct.
 
-            val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1, log = logger)
+            val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1, log = log)
 
             val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(diplo1TextWithStandoff)
 
@@ -251,7 +251,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |<paragraph id="1">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
                 """.stripMargin
 
-            val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1, log = logger)
+            val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1, log = log)
 
             // Find the differences between the version 1 of the transcription and version 1 of the editorial text,
             // so they can be linked together.
@@ -288,7 +288,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
             // The editor now rebases the editorial text against the revised transcription, by making new diffs.
             // Find the differences between the version 2 of the transcription and version 1 of the editorial text.
 
-            val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2, log = logger)
+            val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2, log = log)
             val blueTag = diplo2TextWithStandoff.standoff.find(_.uuid == blueID).getOrElse("<blue> tag not in standoff")
 
             val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
@@ -330,7 +330,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |<paragraph id="1">Ich habe die Bahn genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
-            val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2, log = logger)
+            val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2, log = log)
 
             // We now rebase the revised editorial text against the revised transcription, so they can be linked
             // together.
@@ -388,8 +388,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                 |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -446,8 +446,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                    |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = logger)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = logger)
+            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
             val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
                 baseText = diploTextWithStandoff.text,
@@ -491,7 +491,7 @@ class XMLToStandoffUtilSpec extends CoreSpec {
             // after every paragraph, information separator two should be inserted
             val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML,
                 tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None)),
-                log = logger)
+                log = log)
 
             // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
             assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)

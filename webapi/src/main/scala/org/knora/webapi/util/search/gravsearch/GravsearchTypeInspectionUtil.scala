@@ -1,7 +1,8 @@
 package org.knora.webapi.util.search.gravsearch
 
-import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 import org.knora.webapi.util.search._
+import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
+
 import scala.collection.mutable
 
 /**

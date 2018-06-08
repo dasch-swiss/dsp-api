@@ -21,7 +21,9 @@ package org.knora.webapi
 
 import java.io.StringReader
 
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
@@ -40,12 +42,10 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     def actorRefFactory = system
 
     val settings = Settings(system)
-    val logger = akka.event.Logging(system, this.getClass)
+    implicit val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
     StringFormatter.initForTest()
 
-    implicit val log = logger
-
-    implicit val knoraExceptionHandler = KnoraExceptionHandler(settings, log)
+    implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings, log)
 
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)

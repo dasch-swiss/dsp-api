@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util.search.gravsearch
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.ActorSystem
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.SmartIri

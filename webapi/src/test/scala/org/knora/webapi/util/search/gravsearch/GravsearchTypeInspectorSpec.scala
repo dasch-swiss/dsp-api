@@ -38,7 +38,8 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
   * Tests Gravsearch type inspection.
   */
 class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
-    val searchParserV2Spec = new GravsearchParserSpec
+
+    private val searchParserV2Spec = new GravsearchParserSpec
 
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
@@ -86,7 +87,15 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
             val parsedQuery = GravsearchParser.parseQuery(QueryWithoutRdfTypeResource)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
-            assert(result == QueryWithoutRdfTypeResourceResult)
+            assert(result == SimpleInferenceResult)
+        }
+
+        "infer 'knora-api:objectType knora-api:Resource' for beol:hasAuthor" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithoutResourceObjectType)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == SimpleInferenceResult)
         }
     }
 
@@ -158,9 +167,25 @@ class GravsearchTypeInspectorSpec extends CoreSpec()  with ImplicitSender {
           |}
         """.stripMargin
 
-    val QueryWithoutRdfTypeResourceResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
+    val SimpleInferenceResult: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
+
+    val QueryWithoutResourceObjectType: String =
+        """
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |
+          |    # Scheuchzer, Johann Jacob 1672-1733
+          |    ?letter beol:hasAuthor <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> .
+          |    <http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA> a beol:person .
+          |}
+        """.stripMargin
 }
