@@ -34,8 +34,7 @@ env:
 
 before_cache:
     - sudo chown -R travis:travis $HOME/.ivy2
-    - sudo chown -R travis:travis $TRAVIS_BUILD_DIR/target
-
+    
 cache:
   directories:
     - $HOME/.ivy2
