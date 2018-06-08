@@ -32,10 +32,13 @@ env:
     - TAG=${TRAVIS_BRANCH//\//-}
     - GRAPHDB_VERSION="8.5.0-se"
 
+before_cache:
+    - sudo chown -R travis:travis $HOME/.ivy2
+    - sudo chown -R travis:travis $TRAVIS_BUILD_DIR/target
+
 cache:
   directories:
     - $HOME/.ivy2
-
 
 before_install:
   - openssl aes-256-cbc -K $encrypted_6254b38dc8d5_key -iv $encrypted_6254b38dc8d5_iv -in $TRAVIS_BUILD_DIR/private/graphdb.license.enc -out $TRAVIS_BUILD_DIR/private/graphdb.license -d
