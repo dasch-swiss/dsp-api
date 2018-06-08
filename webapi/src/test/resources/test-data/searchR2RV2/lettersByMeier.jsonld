@@ -1,0 +1,39 @@
+{
+  "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA",
+  "@type" : "beol:letter",
+  "beol:creationDate" : {
+    "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ",
+    "@type" : "knora-api:DateValue",
+    "knora-api:dateValueHasCalendar" : "GREGORIAN",
+    "knora-api:dateValueHasEndDay" : 4,
+    "knora-api:dateValueHasEndEra" : "CE",
+    "knora-api:dateValueHasEndMonth" : 6,
+    "knora-api:dateValueHasEndYear" : 2018,
+    "knora-api:dateValueHasStartDay" : 4,
+    "knora-api:dateValueHasStartEra" : "CE",
+    "knora-api:dateValueHasStartMonth" : 6,
+    "knora-api:dateValueHasStartYear" : 2018,
+    "knora-api:valueAsString" : "GREGORIAN:2018-06-04 CE"
+  },
+  "beol:hasAuthorValue" : {
+    "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g",
+    "@type" : "knora-api:LinkValue",
+    "knora-api:linkValueHasTarget" : {
+      "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
+      "@type" : "beol:person",
+      "beol:hasFamilyName" : {
+        "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q",
+        "@type" : "knora-api:TextValue",
+        "knora-api:valueAsString" : "Meier"
+      },
+      "rdfs:label" : "Testperson2"
+    }
+  },
+  "rdfs:label" : "Testbrief1",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#"
+  }
+}

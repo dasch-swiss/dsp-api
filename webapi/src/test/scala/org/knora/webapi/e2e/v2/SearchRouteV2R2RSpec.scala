@@ -2866,5 +2866,78 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
+
+        "do a Gravsearch query that finds all the books that have a page with seqnum 100, inferring types" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |  ?book knora-api:isMainResource true ;
+                  |    incunabula:title ?title .
+                  |
+                  |  ?page incunabula:partOf ?book ;
+                  |    incunabula:seqnum ?seqnum .
+                  |
+                  |} WHERE {
+                  |
+                  |  ?page incunabula:partOf ?book ;
+                  |    incunabula:seqnum ?seqnum .
+                  |
+                  |  FILTER(?seqnum = 100)
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/booksWithPage100.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date, inferring types" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |  ?letter knora-api:isMainResource true ;
+                  |    beol:creationDate ?date ;
+                  |    beol:hasAuthor ?author .
+                  |
+                  |  ?author beol:hasFamilyName ?name .
+                  |
+                  |} WHERE {
+                  |
+                  |  ?letter beol:hasAuthor ?author ;
+                  |    beol:creationDate ?date .
+                  |
+                  |  ?author beol:hasFamilyName ?name .
+                  |
+                  |  FILTER(?name = "Meier")
+                  |
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/lettersByMeier.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
     }
 }
