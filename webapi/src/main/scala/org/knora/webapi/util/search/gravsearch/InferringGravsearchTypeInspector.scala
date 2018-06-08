@@ -167,40 +167,28 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
             // Is this entity an IRI?
-            val maybeInferredType = untypedEntity match {
+            val maybeInferredType: Option[PropertyTypeInfo] = untypedEntity match {
                 case TypeableIri(iri) =>
                     // Yes. Has it been used as a predicate?
                     usageIndex.predicates.get(untypedEntity) match {
                         case Some(_) =>
                             // Yes. Has the ontology responder provided information about it?
                             entityInfo.propertyInfoMap.get(iri) match {
-                                case Some(readPropertyInfo) =>
-                                    // Yes. Is this a link property?
-                                    if (readPropertyInfo.isLinkProp) {
-                                        // Yes. Infer knora-api:objectType knora-api:Resource.
-                                        val inferredType = PropertyTypeInfo(objectTypeIri = OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
-                                        log.debug("PropertyIriObjectTypeRule: {} {} .", untypedEntity, inferredType)
-                                        Some(inferredType)
-                                    } else {
-                                        // It's not a link property. Has the ontology responder provided its knora-api:objectType?
-                                        val maybeObjectType: Option[SmartIri] = readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
-                                            orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+                                case Some(readPropertyInfo: ReadPropertyInfoV2) =>
+                                    // Yes. Try to infer its knora-api:objectType from the provided information.
+                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
+                                        case Some(objectTypeIri: SmartIri) =>
+                                            val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
+                                            log.debug("PropertyIriObjectTypeRule: {} {} .", untypedEntity, inferredType)
+                                            Some(inferredType)
 
-                                        maybeObjectType match {
-                                            case Some(objectType) =>
-                                                // Yes. Use that type.
-                                                val inferredType = PropertyTypeInfo(objectType)
-                                                log.debug("PropertyIriObjectTypeRule: {} {} .", untypedEntity, inferredType)
-                                                Some(inferredType)
-
-                                            case None =>
-                                                // The ontology responder hasn't provided its knora-api:objectType.
-                                                None
-                                        }
+                                        case None =>
+                                            // Its knora-api:objectType couldn't be inferred.
+                                            None
                                     }
 
                                 case None =>
-                                    // The ontology responder hasn't provided information about this property. This should have caused
+                                    // The ontology responder hasn't provided a definition of this property. This should have caused
                                     // an error earlier from the ontology responder.
                                     throw AssertionException(s"No information found about property $iri")
                             }
@@ -242,7 +230,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         statement =>
                             // Is the predicate typeable?
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
-                                case Some(typeablePred) =>
+                                case Some(typeablePred: TypeableEntity) =>
                                     // Yes. Do we have its type?
                                     previousIterationResult.typedEntities.get(typeablePred) match {
                                         case Some(propertyTypeInfo: PropertyTypeInfo) =>
@@ -304,31 +292,23 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             // Is the predicate a Knora IRI?
                             statement.pred match {
                                 case IriRef(predIri, _) if predIri.isKnoraEntityIri =>
-                                    // Yes. Has the ontology responder provided information about it?
+                                    // Yes. Has the ontology responder provided a property definition for it?
                                     entityInfo.propertyInfoMap.get(predIri) match {
-                                        case Some(readPropertyInfo) =>
-                                            // Yes. Is it a resource property?
-                                            if (readPropertyInfo.isResourceProp) {
-                                                // Yes. Infer that its subject is a knora-api:Resource.
-                                                Some(NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri))
-                                            } else {
-                                                // No. Do we have its knora-api:subjectType?
-                                                val maybeSubjectType: Option[SmartIri] = readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
-                                                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri))
+                                        case Some(readPropertyInfo: ReadPropertyInfoV2) =>
+                                            // Yes. Can we infer the property's knora-api:subjectType from that definition?
+                                            InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo) match {
+                                                case Some(subjectTypeIri: SmartIri) =>
+                                                    // Yes. Use that type.
+                                                    Some(NonPropertyTypeInfo(subjectTypeIri))
 
-                                                maybeSubjectType match {
-                                                    case Some(subjectType) =>
-                                                        // Yes. Use that type.
-                                                        Some(NonPropertyTypeInfo(subjectType))
-
-                                                    case None =>
-                                                        // The ontology responder hasn't provided the property's knora-api:subjectType.
-                                                        None
-                                                }
+                                                case None =>
+                                                    // No. This rule can't infer the entity's type.
+                                                    None
                                             }
 
+
                                         case None =>
-                                            // The ontology responder hasn't provided information about this property. This should have caused
+                                            // The ontology responder hasn't provided a definition of this property. This should have caused
                                             // an error earlier from the ontology responder.
                                             throw AssertionException(s"No information found about property $predIri")
                                     }
@@ -383,7 +363,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 statement =>
                                     // Is the object typeable?
                                     GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.obj) match {
-                                        case Some(typeableObj) =>
+                                        case Some(typeableObj: TypeableEntity) =>
                                             // Yes. Do we have its type?
                                             previousIterationResult.typedEntities.get(typeableObj) match {
                                                 case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
@@ -431,12 +411,130 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         }
     }
 
+    /**
+      * Infers the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER.
+      */
+    private class PropertyVarTypeFromFilterRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+        override def infer(untypedEntity: TypeableEntity,
+                           previousIterationResult: IntermediateTypeInspectionResult,
+                           entityInfo: EntityInfoGetResponseV2,
+                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+            // Is this entity a variable?
+            val maybeInferredType: Option[PropertyTypeInfo] = untypedEntity match {
+                case untypedVariable: TypeableVariable =>
+                    // Yes. Has it been used as a predicate?
+                    usageIndex.predicates.get(untypedVariable) match {
+                        case Some(_) =>
+                            // Yes. Has it been compared with one or more IRIs in a FILTER?
+                            usageIndex.compareExpressionVariables.get(untypedVariable) match {
+                                case Some(iris: Set[SmartIri]) =>
+                                    // Yes. Interpret those as property IRIs.
+                                    val typesFromFilters: Set[PropertyTypeInfo] = iris.flatMap {
+                                        propertyIri: SmartIri =>
+                                            // Has the ontology responder provided a definition of this property?
+                                            entityInfo.propertyInfoMap.get(propertyIri) match {
+                                                case Some(readPropertyInfo: ReadPropertyInfoV2) =>
+                                                    // Yes. Can we determine the property's knora-api:objectType from that definition?
+                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
+                                                        case Some(objectTypeIri: SmartIri) =>
+                                                            // Yes. Use that type.
+                                                            Some(PropertyTypeInfo(objectTypeIri = objectTypeIri))
+
+                                                        case None =>
+                                                            // No knora-api:objectType could be determined for the property IRI.
+                                                            None
+                                                    }
+
+                                                case None =>
+                                                    // The ontology responder hasn't provided a definition of this property. This should have caused
+                                                    // an error earlier from the ontology responder.
+                                                    throw AssertionException(s"No information found about property $propertyIri")
+                                            }
+                                    }
+
+                                    if (typesFromFilters.isEmpty) {
+                                        None
+                                    } else if (typesFromFilters.size == 1) {
+                                        val inferredType = typesFromFilters.head
+                                        log.debug("PropertyVarTypeFromFilterRule: {} {} .", untypedVariable, inferredType)
+                                        Some(inferredType)
+                                    } else {
+                                        throw GravsearchException(s"Incompatible values were inferred for the knora-api:objectType of $untypedVariable: ${typesFromFilters.map(typeFromObj => IriRef(typeFromObj.objectTypeIri).toSparql).mkString(", ")}")
+                                    }
+
+                                case None =>
+                                    // The variable hasn't been compared with an IRI in a FILTER, so this rule isn't relevant.
+                                    None
+                            }
+
+                        case None =>
+                            // The variable hasn't been used as a predicate, so this rule isn't relevant.
+                            None
+                    }
+
+                case _ =>
+                    // The entity isn't a variable, so this rule isn't relevant.
+                    None
+            }
+
+            runNextRule(
+                untypedEntity = untypedEntity,
+                maybeInferredType = maybeInferredType,
+                previousIterationResult = previousIterationResult,
+                entityInfo = entityInfo,
+                usageIndex = usageIndex
+            )
+        }
+    }
+
+    /**
+      * Utility functions for type inference rules.
+      */
+    private object InferenceRuleUtil {
+        /**
+          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred knora-api:subjectType of the property, if any.
+          *
+          * @param readPropertyInfo the property definition.
+          * @return the IRI of the inferred knora-api:subjectType of the property, or `None` if it could not inferred.
+          */
+        def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
+            // Is this a resource property?
+            if (readPropertyInfo.isResourceProp) {
+                // Yes. Infer knora-api:subjectType knora-api:Resource.
+                Some(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+            } else {
+                // It's not a resource property. Use the knora-api:subjectType that the ontology responder provided, if any.
+                readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri))
+            }
+        }
+
+        /**
+          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred knora-api:objectType of the property, if any.
+          *
+          * @param readPropertyInfo the property definition.
+          * @return the IRI of the inferred knora-api:objectType of the property, or `None` if it could not inferred.
+          */
+        def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
+            // Is this a link property?
+            if (readPropertyInfo.isLinkProp) {
+                // Yes. Infer knora-api:objectType knora-api:Resource.
+                Some(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+            } else {
+                // It's not a link property. Use the knora-api:objectType that the ontology responder provided, if any.
+                readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+            }
+        }
+    }
+
     // The inference rule pipeline.
     private val rulePipeline = new RdfTypeRule(
         Some(new PropertyIriObjectTypeRule(
             Some(new TypeOfObjectFromPropertyRule(
                 Some(new TypeOfSubjectFromPropertyRule(
-                    Some(new PropertyVarTypeFromObjectRule(None)))))))))
+                    Some(new PropertyVarTypeFromObjectRule(
+                        Some(new PropertyVarTypeFromFilterRule(None)))))))))))
 
     /**
       * An index of entity usage in a Gravsearch query.
@@ -446,14 +544,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * @param subjects                   a map of all statement subjects to the statements they occur in.
       * @param predicates                 map of all statement predicates to the statements they occur in.
       * @param objects                    a map of all statement objects to the statements they occur in.
-      * @param compareExpressionVariables a map of query variables to IRIs that they are compared to in FILTER expressions.
+      * @param compareExpressionVariables a map of query variables to Knora entity IRIs (which must be property IRIs)
+      *                                   that they are compared to in FILTER expressions.
       */
     private case class UsageIndex(knoraClasses: Set[SmartIri],
                                   knoraProperties: Set[SmartIri],
                                   subjects: Map[TypeableEntity, Set[StatementPattern]],
                                   predicates: Map[TypeableEntity, Set[StatementPattern]],
                                   objects: Map[TypeableEntity, Set[StatementPattern]],
-                                  compareExpressionVariables: Map[QueryVariable, Set[IriRef]])
+                                  compareExpressionVariables: Map[TypeableVariable, Set[SmartIri]])
 
     /**
       * A [[WhereTransformer]] that returns statements and filters unchanged.
@@ -647,7 +746,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         val subjectEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
         val predicateEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
         val objectEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
-        val compareExpressionVariablesBuffer: mutable.ArrayBuffer[(QueryVariable, IriRef)] = mutable.ArrayBuffer.empty[(QueryVariable, IriRef)]
+        val compareExpressionVariablesBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)] = mutable.ArrayBuffer.empty[(TypeableVariable, SmartIri)]
 
         // Iterate over the sequence of patterns, indexing their contents.
         for (pattern <- flattenedPatterns) {
@@ -680,11 +779,16 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         case _ => ()
                     }
 
-                case filter: FilterPattern => () // TODO
+                case filter: FilterPattern =>
+                    // Collect the variables and Knora property IRIs that are compared using EQUALS in the filter expression.
+                    collectIriCompareExpressions(filter.expression, compareExpressionVariablesBuffer)
 
                 case _ => ()
             }
         }
+
+        // Add the Knora property IRIs collected from filters to the set of Knora property IRIs in the query.
+        knoraProperties ++= compareExpressionVariablesBuffer.map(_._2)
 
         // Construct the index from the contents of the association lists.
         UsageIndex(
@@ -695,6 +799,38 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             objects = associationListToMap(objectEntitiesBuffer),
             compareExpressionVariables = associationListToMap(compareExpressionVariablesBuffer)
         )
+    }
+
+    /**
+      * Given a filter expression, collects the variables and Knora entity IRIs (which must be property IRIs) that are
+      * compared using the EQUALS operator.
+      *
+      * @param filterExpression the filter expression.
+      * @param buffer a buffer in which to collect the results.
+      */
+    private def collectIriCompareExpressions(filterExpression: Expression, buffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)]): Unit  = {
+        filterExpression match {
+            case compareExpr: CompareExpression =>
+                compareExpr match {
+                    case CompareExpression(queryVariable: QueryVariable, operator: CompareExpressionOperator.Value, iriRef: IriRef)
+                        if operator == CompareExpressionOperator.EQUALS && iriRef.iri.isKnoraEntityIri =>
+                        buffer.append(TypeableVariable(queryVariable.variableName) -> iriRef.iri)
+
+                    case _ =>
+                        collectIriCompareExpressions(compareExpr.leftArg, buffer)
+                        collectIriCompareExpressions(compareExpr.rightArg, buffer)
+                }
+
+            case andExpr: AndExpression =>
+                collectIriCompareExpressions(andExpr.leftArg, buffer)
+                collectIriCompareExpressions(andExpr.rightArg, buffer)
+
+            case orExpr: OrExpression =>
+                collectIriCompareExpressions(orExpr.leftArg, buffer)
+                collectIriCompareExpressions(orExpr.rightArg, buffer)
+
+            case _ => ()
+        }
     }
 
     /**
@@ -733,7 +869,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
 object InferringGravsearchTypeInspector {
     /**
-      * Provides the string representation of the [[InferringGravsearchTypeInspector]] class in log messages.
+      * Provides the string representation of the companion class in log messages.
       *
       * See [[https://doc.akka.io/docs/akka/current/logging.html#translating-log-source-to-string-and-class]].
       */

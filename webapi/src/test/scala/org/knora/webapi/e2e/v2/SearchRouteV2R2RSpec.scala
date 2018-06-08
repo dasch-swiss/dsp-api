@@ -2833,5 +2833,38 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
+
+        "do a Gravsearch query in which the knora-api:objectType of a property variable is inferred from a FILTER" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |} WHERE {
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithoutName.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
     }
 }
