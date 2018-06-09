@@ -2939,5 +2939,39 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
         }
+
+        "do a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens', inferring the type of dcterms:title" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true ;
+                  |        dcterms:title ?title .
+                  |
+                  |} WHERE {
+                  |
+                  |    ?book rdf:type incunabula:book ;
+                  |        dcterms:title ?title .
+                  |
+                  |    ?title a xsd:string .
+                  |
+                  |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
     }
 }

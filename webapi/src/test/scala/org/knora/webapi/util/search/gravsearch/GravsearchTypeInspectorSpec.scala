@@ -108,7 +108,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
         "infer the knora-api:objectType of a property variable if it's used with an object whose type is known" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
-            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyVarTypeFromObjectRule)
+            val parsedQuery = GravsearchParser.parseQuery(QueryPropertyTypeFromObjectRule)
             val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
             val result = Await.result(resultFuture, timeout)
             assert(result == TypeInferenceResult1)
@@ -257,7 +257,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |} ORDER BY ?date
         """.stripMargin
 
-    val QueryPropertyVarTypeFromObjectRule: String =
+    val QueryPropertyTypeFromObjectRule: String =
         """
           |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
           |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>

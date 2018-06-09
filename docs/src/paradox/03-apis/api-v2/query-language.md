@@ -224,22 +224,63 @@ is also supported.
 
 Gravsearch needs to be able to determine the types of the entities that
 query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
-infer these from the ontologies used. In cases where it cannot, type annotations
-must be added to the query.
+infer these from the ontologies used. In cases where it cannot, types
+must be specified in the query.
 
 In particular, Gravsearch needs to be able to determine:
 
-- The `knora-api:objectType` of each Knora resource property used in the query:
-  `knora-api:Resource` if it is a link property, otherwise the specific
-  type that the property points to.
-- The type of each entity that isn't a property: `knora-api:Resource`
-  if it is a Knora resource, or its specific type otherwise.
+- The expected type of the object of each property used.
+- The type of each entity that isn't a property.
 
-This information can given explicitly by adding statements using the predicates
-`knora-api:objectType` (for properties) and `rdf:type` (for other entities).
+At minimum, for each type, if it's a resource class, Gravsearch needs to
+identify it as `knora-api:Resource`; if it's a value type, Gravsearch needs to
+know the specific type.
 
-To restrict the types of resources, additional statements can be made
-using `rdf:type`.
+When this information cannot be inferred, it can be given by adding statements
+containing the predicate `rdf:type` to describe the entities that are not
+properties. For example, consider this query that uses a non-Knora property:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+    ?book dcterms:title ?title .
+}
+```
+
+This produces the error message:
+
+```
+The types of one or more entities could not be determined: ?book, <http://purl.org/dc/terms/title>, ?title
+```
+
+To solve this problem, it is sufficient to specify the types of `?book` and
+`?title`; the expected object type of `dcterms:title` can then be inferred:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+
+    ?book rdf:type incunabula:book ;
+        dcterms:title ?title .
+
+    ?title rdf:type xsd:string .
+
+}
+```
 
 #### Value Types
 
