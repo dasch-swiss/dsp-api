@@ -20,22 +20,20 @@
 package org.knora.webapi.e2e.v1
 
 import java.io.File
-
-import scala.xml._
-import scala.io.Source
 import java.net.URLEncoder
 
-import scala.xml._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
-import org.knora.webapi._
 import spray.json._
 
-import scala.collection.immutable
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.io.Source
+import scala.xml._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 
@@ -73,6 +71,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLGravsearchTemplate = "_test_data/test_route/texts/beol/gravsearch.txt"
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
+    private val letterIri = new MutableTestIri
+
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.
@@ -552,20 +552,52 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // send mapping xml to route
             val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            val response: JsValue = getResponseJson(knoraPostRequest)
-
-            println(response)
+            val mappingResponse: JsValue = getResponseJson(knoraPostRequest)
 
             // create a letter via bulk import
 
-
             val bulkXML = Source.fromFile(pathToBEOLBulkXML).getLines.mkString
 
-            val knoraPostRequest2 = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(username, password))
+            val bulkRequest = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            val response2: JsValue = getResponseJson(knoraPostRequest2)
+            val response2: JsObject = getResponseJson(bulkRequest)
 
-            println(response2)
+            val letterIriOption: Option[JsValue] = response2.fields.get("createdResources") match {
+                case (Some(createdResources: JsArray)) =>
+                    createdResources.elements.find {
+                        case createdRes: JsValue =>
+
+                            createdRes match {
+                                case res: JsObject =>
+                                    res.fields.get("clientResourceID") match {
+                                        case Some(JsString(id)) if id == "testletter" => true
+
+                                        case other => false
+                                    }
+                                case other => false
+                            }
+
+                    }
+
+                case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            }
+
+            if (letterIriOption.nonEmpty) {
+                letterIriOption.get match {
+                    case res: JsObject =>
+                        res.fields.get("resourceIri") match {
+                            case Some(JsString(resIri)) =>
+                                // set letter's Iri
+                                letterIri.set(resIri)
+
+                            case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
+                        }
+
+                    case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
+                }
+            } else {
+                throw InvalidApiJsonException("expected client IRI for letter could not be found")
+            }
 
         }
 
@@ -597,16 +629,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+            val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            checkResponseOK(knoraPostRequest)
-
-            // println(knoraPostRequest)
-
-            val responseJson: JsObject = getResponseJson(knoraPostRequest)
+            val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
 
             // get the Iri of the XSL transformation
-            val resId: String = responseJson.fields.get("res_id") match {
+            val resId: String = bodyXSLTJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
                 case other => throw InvalidApiJsonException("member 'res_id' was expected")
             }
@@ -642,11 +670,11 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // send mapping xml to route
-            val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+            val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            checkResponseOK(knoraPostRequest2)
+            val mappingJSON = getResponseJson(mappingRequest)
 
-            // println(knoraPostRequest2)
+            println(mappingJSON)
 
             // create an XSL transformation
             val gravsearchTemplateParams = JsObject(
@@ -674,11 +702,16 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest3: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(username, password))
+            val gravsearchTemplateRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            checkResponseOK(knoraPostRequest3)
+            val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
-            // println(knoraPostRequest3)
+            val gravsearchTemplateIri: IRI = gravsearchTemplateJSON.fields.get("res_id") match {
+
+                case Some(JsString(gravsearchIri)) => gravsearchIri
+
+                case _ => throw InvalidApiJsonException("expected IRI for Gravsearch template")
+            }
 
             // create an XSL transformation
             val headerParams = JsObject(
@@ -706,12 +739,32 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest4: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(username, password))
+            val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            checkResponseOK(knoraPostRequest4)
+            val headerXSLTJson = getResponseJson(headerXSLTRequest)
 
-            // println(knoraPostRequest4)
+            val headerXSLTIri: IRI = headerXSLTJson.fields.get("res_id") match {
 
+                case Some(JsString(gravsearchIri)) => gravsearchIri
+
+                case _ => throw InvalidApiJsonException("expected IRI for header XSLT template")
+            }
+
+            // get tei TEI/XML representation of a beol:letter
+
+            val letterTEIRequest: HttpRequest = Get(baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
+                "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
+                "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI", "UTF-8") +
+                "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri, "UTF-8") +
+                "&teiHeaderXSLTIri=" + URLEncoder.encode(headerXSLTIri, "UTF-8")
+            )
+
+            val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
+
+            val letterResponseBodyFuture: Future[String] = letterTEIResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+            val letterResponseBodyStr = Await.result(letterResponseBodyFuture, 5.seconds)
+
+            println(letterResponseBodyStr)
 
         }
 
