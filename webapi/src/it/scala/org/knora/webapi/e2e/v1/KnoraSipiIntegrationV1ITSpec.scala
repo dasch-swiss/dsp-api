@@ -21,6 +21,7 @@ package org.knora.webapi.e2e.v1
 
 import java.io.File
 
+import scala.xml._
 import scala.io.Source
 import java.net.URLEncoder
 
@@ -30,7 +31,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
-import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException, NotFoundException}
+import org.knora.webapi._
 import spray.json._
 
 import scala.collection.immutable
@@ -70,7 +71,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLStandoffTEIMapping = "_test_data/test_route/texts/beol/BEOLTEIMapping.xml"
     private val pathToBEOLHeaderXSLTransformation = "_test_data/test_route/texts/beol/header.xsl"
     private val pathToBEOLGravsearchTemplate = "_test_data/test_route/texts/beol/gravsearch.txt"
-
+    private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
+    private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.
@@ -101,6 +103,10 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
         // apply transformer
         val transformed: Node = transformer(mappingXML)
+
+        val xsltEle: NodeSeq = transformed \ "defaultXSLTransformation"
+
+        if (xsltEle.size != 1 || xsltEle.head.text != xsltIri) throw AssertionException("XSLT Iri was not updated as expected")
 
         transformed.toString
     }
@@ -472,8 +478,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             // Send the JSON in a POST request to the Knora API server.
             val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            checkResponseOK(knoraPostRequest)
-
             val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
             // get the Iri of the XSL transformation
@@ -516,6 +520,52 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
 
             checkResponseOK(knoraPostRequest2)
+
+        }
+
+        "create a sample BEOL letter" in {
+
+            val mapping = Source.fromFile(pathToBEOLLetterMapping).getLines.mkString
+
+            val paramsForMapping =
+                s"""
+                   |{
+                   |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+                   |  "label": "mapping for BEOL letter",
+                   |  "mappingName": "BEOLMapping"
+                   |}
+             """.stripMargin
+
+            // create a mapping referring to the XSL transformation
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, paramsForMapping)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, mapping),
+                    Map("filename" -> "mapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            val response: JsValue = getResponseJson(knoraPostRequest)
+
+            println(response)
+
+            // create a letter via bulk import
+
+
+            val bulkXML = Source.fromFile(pathToBEOLBulkXML).getLines.mkString
+
+            val knoraPostRequest2 = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            val response2: JsValue = getResponseJson(knoraPostRequest2)
+
+            println(response2)
 
         }
 
@@ -661,7 +711,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             checkResponseOK(knoraPostRequest4)
 
             // println(knoraPostRequest4)
-
 
 
         }

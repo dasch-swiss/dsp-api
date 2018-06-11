@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/knoraXmlImport/v1#"
+    xmlns="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    vc:minVersion="1.0" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning">
+    <!-- Resource types -->
+
+    <xs:complexType name="resourceType">
+        <xs:attribute name="id" use="required" type="xs:NCName"/>
+    </xs:complexType>
+
+    <xs:element name="file">
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="emptyType">
+                    <xs:attribute name="path" use="required" type="xs:string"/>
+                    <xs:attribute name="mimetype" use="required" type="xs:string"/>
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="label" type="nonEmptyType"/>
+
+    <xs:complexType name="Resource_linkValueType">
+        <xs:sequence>
+            <xs:element name="Resource" type="linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="resources">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any minOccurs="1" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- Value types -->
+
+    <xs:simpleType name="emptyType">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="nonEmptyType">
+        <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="richtextValueType" mixed="true">
+        <xs:sequence>
+            <xs:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+        </xs:sequence>
+        <xs:attribute name="knoraType" use="required" fixed="richtext_value"/>
+        <xs:attribute name="lang" use="optional" type="xs:string"/>
+        <xs:attribute name="mapping_id" use="optional" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="intValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:integer">
+                <xs:attribute name="knoraType" use="required" fixed="int_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="decimalValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:decimal">
+                <xs:attribute name="knoraType" use="required" fixed="decimal_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="booleanValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:boolean">
+                <xs:attribute name="knoraType" use="required" fixed="boolean_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:simpleType name="dateType">
+        <xs:restriction base="xs:string">
+            <xs:pattern
+                value="(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?"
+            />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="dateValueType">
+        <xs:simpleContent>
+            <xs:extension base="dateType">
+                <xs:attribute name="knoraType" use="required" fixed="date_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="linkValueType">
+        <xs:simpleContent>
+            <xs:extension base="emptyType">
+                <xs:attribute name="knoraType" use="required" fixed="link_value"/>
+                <xs:attribute name="target" use="required" type="xs:string"/>
+                <xs:attribute name="linkType" use="required">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="ref"/>
+                            <xs:enumeration value="iri"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="uriValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:anyURI">
+                <xs:attribute name="knoraType" use="required" fixed="uri_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:simpleType name="colorType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="#([0-9a-fA-F]{3}){1,2}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="colorValueType">
+        <xs:simpleContent>
+            <xs:extension base="colorType">
+                <xs:attribute name="knoraType" use="required" fixed="color_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <!-- TODO: Make this type specify a geometry in XML instead of in JSON (issue 169). -->
+    <xs:complexType name="geomValueType">
+        <xs:attribute name="knoraType" use="required" fixed="geom_value"/>
+    </xs:complexType>
+
+    <xs:complexType name="hlistValueType">
+        <xs:simpleContent>
+            <xs:extension base="xs:anyURI">
+                <xs:attribute name="knoraType" use="required" fixed="hlist_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:simpleType name="intervalType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\d+(\.\d+)?,\d+(\.\d+)?"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="intervalValueType">
+        <xs:simpleContent>
+            <xs:extension base="intervalType">
+                <xs:attribute name="knoraType" use="required" fixed="interval_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:simpleType name="geonameType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\d{1,8}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="geonameValueType">
+        <xs:simpleContent>
+            <xs:extension base="geonameType">
+                <xs:attribute name="knoraType" use="required" fixed="geoname_value"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+</xs:schema>

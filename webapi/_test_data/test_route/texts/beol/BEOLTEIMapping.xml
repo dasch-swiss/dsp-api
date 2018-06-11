@@ -1,5 +1,5 @@
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../mappingXMLToStandoff.xsd">
-    <defaultXSLTransformation>http://rdfh.ch/0801/OZQH0RynSJKT2-4m3j6u-w</defaultXSLTransformation>
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../src/main/resources/mappingXMLToStandoff.xsd">
+    <defaultXSLTransformation>toBeDefined</defaultXSLTransformation>
     <mappingElement>
         <tag>
             <name>text</name>
