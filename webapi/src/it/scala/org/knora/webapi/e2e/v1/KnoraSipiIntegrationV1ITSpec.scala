@@ -66,6 +66,45 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
+    private val pathToBEOLBodyXSLTransformation = "_test_data/test_route/texts/beol/standoffToTEI.xsl"
+    private val pathToBEOLStandoffTEIMapping = "_test_data/test_route/texts/beol/BEOLTEIMapping.xml"
+    private val pathToBEOLHeaderXSLTransformation = "_test_data/test_route/texts/beol/header.xsl"
+    private val pathToBEOLGravsearchTemplate = "_test_data/test_route/texts/beol/gravsearch.txt"
+
+
+    /**
+      * Adds the IRI of a XSL transformation to the given mapping.
+      *
+      * @param mapping the mapping to be updated.
+      * @param xsltIri the Iri of the XSLT to be added.
+      * @return the updated mapping.
+      */
+    private def addXSLTIriToMapping(mapping: String, xsltIri: String): String = {
+
+        val mappingXML: Elem = XML.loadString(mapping)
+
+        // add the XSL transformation's Iri to the mapping XML (replacing the string 'toBeDefined')
+        val rule = new RewriteRule() {
+            override def transform(node: Node): Node = {
+
+                node match {
+                    case e: Elem if e.label == "defaultXSLTransformation" => e.copy(child = e.child collect {
+                        case Text(_) => Text(xsltIri)
+                    })
+                    case other => other
+                }
+
+            }
+        }
+
+        val transformer = new RuleTransformer(rule)
+
+        // apply transformer
+        val transformed: Node = transformer(mappingXML)
+
+        transformed.toString
+    }
+
     // creates tmp directory if not found
     createTmpFileDir()
 
@@ -438,7 +477,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
             // get the Iri of the XSL transformation
-            val resId = responseJson.fields.get("res_id") match {
+            val resId: String = responseJson.fields.get("res_id") match {
                 case Some(JsString(resid: String)) => resid
                 case other => throw InvalidApiJsonException("member 'res_id' was expected")
             }
@@ -447,28 +486,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             // add a mapping referring to the XSLT as the default XSL transformation
 
-            val mappingFile = Source.fromFile(mappingWithXSLT).getLines.mkString
+            val mapping = Source.fromFile(mappingWithXSLT).getLines.mkString
 
-            val mappingXML: Elem = XML.loadString(mappingFile)
-
-            // add the XSL transformation's Iri to the mapping XML (replacing the string 'toBeDefined')
-            val rule = new RewriteRule() {
-                override def transform(node: Node): Node = {
-
-                    node match {
-                        case e: Elem if e.label == "defaultXSLTransformation" => e.copy(child = e.child collect {
-                            case Text(data) => Text(resId)
-                        })
-                        case other => other
-                    }
-
-                }
-            }
-
-            val transformer = new RuleTransformer(rule)
-
-            // apply transformer
-            val trans: Node = transformer(mappingXML)
+            val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
             val paramsCreateLetterMappingFromXML =
                 s"""
@@ -487,7 +507,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 ),
                 Multipart.FormData.BodyPart(
                     "xml",
-                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, trans.toString),
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, updatedMapping),
                     Map("filename" -> "mapping.xml")
                 )
             )
@@ -496,6 +516,153 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
 
             checkResponseOK(knoraPostRequest2)
+
+        }
+
+        "create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data" in {
+
+            // create an XSL transformation
+            val standoffXSLTParams = JsObject(
+                Map(
+                    "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
+                    "label" -> JsString("XSLT"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
+                    "properties" -> JsObject()
+                )
+            )
+
+            val XSLTransformationFile = new File(pathToBEOLBodyXSLTransformation)
+
+            // A multipart/form-data request containing the image and the JSON.
+            val formData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, standoffXSLTParams.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), XSLTransformationFile.toPath),
+                    Map("filename" -> XSLTransformationFile.getName)
+                )
+            )
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest: HttpRequest = Post(baseApiUrl + "/v1/resources", formData) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest)
+
+            // println(knoraPostRequest)
+
+            val responseJson: JsObject = getResponseJson(knoraPostRequest)
+
+            // get the Iri of the XSL transformation
+            val resId: String = responseJson.fields.get("res_id") match {
+                case Some(JsString(resid: String)) => resid
+                case other => throw InvalidApiJsonException("member 'res_id' was expected")
+            }
+
+            val mappingWithXSLT = new File(pathToBEOLStandoffTEIMapping)
+
+            // add a mapping referring to the XSLT as the default XSL transformation
+
+            val mapping = Source.fromFile(mappingWithXSLT).getLines.mkString
+
+            val updatedMapping = addXSLTIriToMapping(mapping, resId)
+
+            val paramsCreateLetterMappingFromXML =
+                s"""
+                   |{
+                   |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+                   |  "label": "mapping for BEOL to TEI",
+                   |  "mappingName": "BEOLToTEI"
+                   |}
+             """.stripMargin
+
+            // create a mapping referring to the XSL transformation
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, paramsCreateLetterMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, updatedMapping),
+                    Map("filename" -> "mapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest2)
+
+            // println(knoraPostRequest2)
+
+            // create an XSL transformation
+            val gravsearchTemplateParams = JsObject(
+                Map(
+                    "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#TextRepresentation"),
+                    "label" -> JsString("BEOL Gravsearch template"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
+                    "properties" -> JsObject()
+                )
+            )
+
+            val gravsearchTemplateFile = new File(pathToBEOLGravsearchTemplate)
+
+            // A multipart/form-data request containing the image and the JSON.
+            val formDataGravsearch = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, gravsearchTemplateParams.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`text/plain`.toContentType(HttpCharsets.`UTF-8`), gravsearchTemplateFile.toPath),
+                    Map("filename" -> gravsearchTemplateFile.getName)
+                )
+            )
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest3: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataGravsearch) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest3)
+
+            // println(knoraPostRequest3)
+
+            // create an XSL transformation
+            val headerParams = JsObject(
+                Map(
+                    "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
+                    "label" -> JsString("BEOL header XSLT"),
+                    "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
+                    "properties" -> JsObject()
+                )
+            )
+
+            val headerXSLTFile = new File(pathToBEOLHeaderXSLTransformation)
+
+            // A multipart/form-data request containing the image and the JSON.
+            val formDataHeader = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, headerParams.compactPrint)
+                ),
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), headerXSLTFile.toPath),
+                    Map("filename" -> headerXSLTFile.getName)
+                )
+            )
+
+            // Send the JSON in a POST request to the Knora API server.
+            val knoraPostRequest4: HttpRequest = Post(baseApiUrl + "/v1/resources", formDataHeader) ~> addCredentials(BasicHttpCredentials(username, password))
+
+            checkResponseOK(knoraPostRequest4)
+
+            // println(knoraPostRequest4)
+
+
 
         }
 

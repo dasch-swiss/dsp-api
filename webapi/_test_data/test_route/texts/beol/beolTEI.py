@@ -16,7 +16,7 @@ try:
     }
 
     # the name of the file to be submitted
-    filename = "../../../../src/main/resources/beol/BEOLstandoffToTEI.xsl"
+    filename = "BEOLstandoffToTEI.xsl"
 
     # a tuple containing the file's name, its binaries and its mimetype
     file = {'file': (filename, open(filename, 'r'), "text/xml; charset=utf-8")} # use name "file"
@@ -36,7 +36,7 @@ try:
 
     # update res_id in mapping
 
-    tree = ET.parse("../../../../src/main/resources/beol/BEOLTEIMapping.xml")
+    tree = ET.parse("BEOLTEIMapping.xml")
     root = tree.getroot()
 
     defaultXSLT = root.findall("./defaultXSLTransformation")
@@ -48,7 +48,7 @@ try:
     defaultXSLT[0].text = XSLT_id
 
     # update id of default XSLT
-    tree.write("../../../../src/main/resources/beol/BEOLTEIMapping.xml")
+    tree.write("BEOLTEIMapping.xml")
 
     # create mapping referring to the XSL transformation
 
@@ -60,7 +60,7 @@ try:
 
     mappingRequest = requests.post("http://localhost:3333/v2/mapping",
                                    data={"json": json.dumps(mappingParams)},
-                                   files={"xml": ("BEOLTEImapping.xml", open("../../../../src/main/resources/beol/BEOLTEImapping.xml"))},
+                                   files={"xml": ("BEOLTEImapping.xml", open("BEOLTEImapping.xml"))},
                                    auth=("t.schweizer@unibas.ch", "test"),
                                    proxies={'http': 'http://localhost:3333'})
 
@@ -78,7 +78,7 @@ try:
     }
 
     # the name of the file to be submitted
-    filename = "../../../../src/main/resources/beol/gravsearch.txt"
+    filename = "gravsearch.txt"
 
     # a tuple containing the file's name, its binaries and its mimetype
     file = {'file': (filename, open(filename, 'r'), "text/plain; charset=utf-8")} # use name "file"
@@ -100,7 +100,7 @@ try:
     }
 
     # the name of the file to be submitted
-    filename = "../../../../src/main/resources/beol/BEOLHeaderXSLT.xsl"
+    filename = "BEOLHeaderXSLT.xsl"
 
     # a tuple containing the file's name, its binaries and its mimetype
     file = {'file': (filename, open(filename, 'r'), "text/xml; charset=utf-8")} # use name "file"
