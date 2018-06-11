@@ -1,7 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="mappingXMLToStandoff.xsd">
-    <defaultXSLTransformation>http://rdfh.ch/0801/5Nl4JiRCSYmmUb87XEtGkQ</defaultXSLTransformation>
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../mappingXMLToStandoff.xsd">
+    <defaultXSLTransformation>http://rdfh.ch/0801/fOrtIDccQcewcCTI_veB1Q</defaultXSLTransformation>
     <mappingElement>
         <tag>
             <name>text</name>
@@ -69,7 +67,7 @@
         </standoffClass>
     </mappingElement>
 
-    <!-- knora-base standoff tags should not be used directly (use standoff ontology tags instead) -->
+    
     <mappingElement>
         <tag>
             <name>ptr</name>
