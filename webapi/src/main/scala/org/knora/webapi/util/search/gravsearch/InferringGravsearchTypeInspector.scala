@@ -635,6 +635,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     /**
       * Runs all the inference rules repeatedly until no new type information can be found.
       *
+      * @param iterationNumber    the current iteration number.
       * @param intermediateResult the current intermediate result.
       * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
       * @param usageIndex         an index of entity usage in the query.
@@ -687,7 +688,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         // Flatten the statements and filters in the WHERE clause into a sequence.
         val flattenedPatterns: Seq[QueryPattern] = GravsearchTypeInspectionUtil.flattenPatterns(whereClause)
 
-        // Make mutable association lists to collect the index in.
+        // Make mutable sets and association lists to collect the index in.
         val knoraClasses: mutable.Set[SmartIri] = mutable.Set.empty
         val knoraProperties: mutable.Set[SmartIri] = mutable.Set.empty
         val subjectEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
@@ -753,12 +754,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     /**
       * Given a filter expression, collects:
       *
-      * - The variables and Knora entity IRIs (which must be property IRIs) that are
-      * compared using the EQUALS operator.
+      * - The variables and Knora property IRIs that are compared using the EQUALS operator.
       * - The variables that are compared with XSD literals, and the types of those literals.
       *
       * @param filterExpression the filter expression.
-      * @param entityIriBuffer  a buffer in which to collect the results.
+      * @param entityIriBuffer  a buffer for variables and Knora property IRIs that are compared using the EQUALS operator.
+      * @param xsdTypeBuffer    a buffer for variables that are compared with XSD literals, and the types of those literals.
       */
     private def collectFromFilter(filterExpression: Expression,
                                   entityIriBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)],

@@ -32,10 +32,9 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.
   * Type inspectors are run in a pipeline. Each inspector tries to determine the types of all the typeable
-  * entities in the WHERE clause of a Gravsearch query. If an inspector cannot produce a complete result,
-  * it runs the next inspector in the pipeline.
+  * entities in the WHERE clause of a Gravsearch query, then runs the next inspector in the pipeline.
   *
-  * @param nextInspector the next type inspector in the pipeline.
+  * @param nextInspector the next type inspector in the pipeline, or `None` if this is the last one.
   * @param system        the Akka actor system.
   */
 abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector],
@@ -59,7 +58,7 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
                      requestingUser: UserADM): Future[IntermediateTypeInspectionResult]
 
     /**
-      * If necessary, runs the next type inspector in the pipeline.
+      * Runs the next type inspector in the pipeline.
       *
       * @param intermediateResult the intermediate result produced by this type inspector.
       * @param whereClause        the Gravsearch WHERE clause.

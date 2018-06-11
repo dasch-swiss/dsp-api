@@ -12,7 +12,7 @@ object GravsearchTypeInspectionUtil {
       * Represents an intermediate result during type inspection.
       *
       * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
-      *                 has more that one type, this means that it has been used with inconsistent types.
+      *                 has more than one type, this means that it has been used with inconsistent types.
       */
     case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]]) {
         /**
@@ -193,6 +193,9 @@ object GravsearchTypeInspectionUtil {
         entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
     }
 
+    /**
+      * A [[WhereTransformer]] for removing explicit type annotations from a Gravsearch WHERE clause.
+      */
     private class AnnotationRemovingWhereTransformer extends WhereTransformer {
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
             if (!isAnnotationStatement(statementPattern)) {
