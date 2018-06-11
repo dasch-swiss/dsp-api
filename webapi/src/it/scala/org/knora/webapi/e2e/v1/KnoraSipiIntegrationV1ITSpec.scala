@@ -27,7 +27,9 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
+import org.knora.webapi.util.{FileUtil, MutableTestIri, TestingUtilities}
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 import spray.json._
 
 import scala.concurrent.{Await, Future}
@@ -72,7 +74,8 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val pathToBEOLLetterMapping = "_test_data/test_route/texts/beol/testLetter/beolMapping.xml"
     private val pathToBEOLBulkXML = "_test_data/test_route/texts/beol/testLetter/bulk.xml"
     private val letterIri = new MutableTestIri
-
+    private val authorIri = new MutableTestIri
+    private val recipientIri = new MutableTestIri
 
     /**
       * Adds the IRI of a XSL transformation to the given mapping.
@@ -109,6 +112,51 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         if (xsltEle.size != 1 || xsltEle.head.text != xsltIri) throw AssertionException("XSLT Iri was not updated as expected")
 
         transformed.toString
+    }
+
+    /**
+      * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
+      *
+      * @param bulkResponse the response from the bulk import route.
+      * @param clientID the client id to look for.
+      * @return the Knora IRI of the resource.
+      */
+    private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
+        val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
+            case (Some(createdResources: JsArray)) =>
+                createdResources.elements.find {
+                    case createdRes: JsValue =>
+
+                        createdRes match {
+                            case res: JsObject =>
+                                res.fields.get("clientResourceID") match {
+                                    case Some(JsString(id)) if id == clientID => true
+
+                                    case other => false
+                                }
+                            case other => false
+                        }
+
+                }
+
+            case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+        }
+
+        if (resIriOption.nonEmpty) {
+            resIriOption.get match {
+                case res: JsObject =>
+                    res.fields.get("resourceIri") match {
+                        case Some(JsString(resIri)) =>
+                            resIri
+
+                        case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
+                    }
+
+                case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
+            }
+        } else {
+            throw InvalidApiJsonException("expected client IRI for letter could not be found")
+        }
     }
 
     // creates tmp directory if not found
@@ -560,44 +608,9 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             val bulkRequest = Post(baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"), HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)) ~> addCredentials(BasicHttpCredentials(username, password))
 
-            val response2: JsObject = getResponseJson(bulkRequest)
+            val bulkResponse: JsObject = getResponseJson(bulkRequest)
 
-            val letterIriOption: Option[JsValue] = response2.fields.get("createdResources") match {
-                case (Some(createdResources: JsArray)) =>
-                    createdResources.elements.find {
-                        case createdRes: JsValue =>
-
-                            createdRes match {
-                                case res: JsObject =>
-                                    res.fields.get("clientResourceID") match {
-                                        case Some(JsString(id)) if id == "testletter" => true
-
-                                        case other => false
-                                    }
-                                case other => false
-                            }
-
-                    }
-
-                case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
-            }
-
-            if (letterIriOption.nonEmpty) {
-                letterIriOption.get match {
-                    case res: JsObject =>
-                        res.fields.get("resourceIri") match {
-                            case Some(JsString(resIri)) =>
-                                // set letter's Iri
-                                letterIri.set(resIri)
-
-                            case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
-                        }
-
-                    case _ => throw InvalidApiJsonException("expected client IRI for letter could not be found")
-                }
-            } else {
-                throw InvalidApiJsonException("expected client IRI for letter could not be found")
-            }
+            letterIri.set(getResourceIriFromBulkResponse(bulkResponse, "testletter"))
 
         }
 
@@ -673,8 +686,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(username, password))
 
             val mappingJSON = getResponseJson(mappingRequest)
-
-            println(mappingJSON)
 
             // create an XSL transformation
             val gravsearchTemplateParams = JsObject(
@@ -762,9 +773,46 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
 
             val letterResponseBodyFuture: Future[String] = letterTEIResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-            val letterResponseBodyStr = Await.result(letterResponseBodyFuture, 5.seconds)
+            val letterResponseBodyXML = Await.result(letterResponseBodyFuture, 5.seconds)
 
-            println(letterResponseBodyStr)
+            val xmlExpected =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                  |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+                  |                <teiHeader>
+                  |   <fileDesc>
+                  |      <titleStmt>
+                  |         <title>Testletter</title>
+                  |      </titleStmt>
+                  |      <publicationStmt>
+                  |         <p> This is the TEI/XML representation of the resource identified by the Iri
+                  |                        ${letterIri.get}. </p>
+                  |      </publicationStmt>
+                  |      <sourceDesc>
+                  |         <p>Representation of the resource's text as TEI/XML</p>
+                  |      </sourceDesc>
+                  |   </fileDesc>
+                  |   <profileDesc>
+                  |      <correspDesc ref="${letterIri.get}">
+                  |         <correspAction type="sent">
+                  |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
+                  |            <date when="1703-06-06"/>
+                  |         </correspAction>
+                  |         <correspAction type="received">
+                  |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
+                  |         </correspAction>
+                  |      </correspDesc>
+                  |   </profileDesc>
+                  |</teiHeader>
+                  |
+                  |                <text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
+                  |</TEI>
+                  |
+                """.stripMargin
+
+
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()
+
+            xmlDiff.hasDifferences should be(false)
 
         }
 
