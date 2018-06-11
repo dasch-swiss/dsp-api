@@ -30,6 +30,7 @@ import org.knora.webapi.util.search._
 import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -51,7 +52,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
     /**
       * Represents an inference rule in a pipeline. Each rule in the pipeline tries to determine type information
-      * about a typeable entity. If it cannot do so, it calls the next rule in the pipeline.
+      * about a typeable entity, then calls the next rule in the pipeline.
       *
       * @param nextRule the next rule in the pipeline.
       */
@@ -60,98 +61,113 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           * Attempts to determine the type of a single entity. Each implementation must end by calling
           * `runNextRule`.
           *
-          * @param untypedEntity           the entity whose type needs to be determined.
-          * @param previousIterationResult the result of the previous iteration of type inference.
-          * @param entityInfo              information about Knora ontology entities mentioned in the Gravsearch query.
-          * @param usageIndex              an index of entity usage in the query.
-          * @return type information about the entity, or `None` if the type could not be determined.
+          * @param entityToType       the entity whose type needs to be determined.
+          * @param intermediateResult the current intermediate type inference result.
+          * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
+          * @param usageIndex         an index of entity usage in the query.
+          * @return the types that the rule inferred for the entity, or an empty set if no type could be determined.
           */
-        def infer(untypedEntity: TypeableEntity,
-                  previousIterationResult: IntermediateTypeInspectionResult,
+        def infer(entityToType: TypeableEntity,
+                  intermediateResult: IntermediateTypeInspectionResult,
                   entityInfo: EntityInfoGetResponseV2,
-                  usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo]
+                  usageIndex: UsageIndex): IntermediateTypeInspectionResult
 
         /**
           * Runs the next rule in the pipeline.
           *
-          * @param untypedEntity           the entity whose type needs to be determined.
-          * @param maybeInferredType       the type inferred by the previous rule, if any.
-          * @param previousIterationResult the result of the previous iteration of type inference.
-          * @param entityInfo              information about Knora ontology entities mentioned in the Gravsearch query.
-          * @param usageIndex              an index of entity usage in the query.
-          * @return type information about the entity, or `None` if the type could not be determined.
+          * @param entityToType       the entity whose type needs to be determined.
+          * @param intermediateResult this rule's intermediate result.
+          * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
+          * @param usageIndex         an index of entity usage in the query.
+          * @return the types that the rule inferred for the entity, or an empty set if no type could be determined.
           */
-        protected def runNextRule(untypedEntity: TypeableEntity,
-                                  maybeInferredType: Option[GravsearchEntityTypeInfo],
-                                  previousIterationResult: IntermediateTypeInspectionResult,
+        protected def runNextRule(entityToType: TypeableEntity,
+                                  intermediateResult: IntermediateTypeInspectionResult,
                                   entityInfo: EntityInfoGetResponseV2,
-                                  usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
-            // Did this rule determine the type?
-            maybeInferredType match {
-                case Some(inferred) =>
-                    // Yes. Return it as the result of the pipeline.
-                    Some(inferred)
+                                  usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
+            // Is there another rule in the pipeline?
+            nextRule match {
+                case Some(rule) =>
+                    // Yes. Run that rule.
+                    rule.infer(
+                        entityToType = entityToType,
+                        intermediateResult = intermediateResult,
+                        entityInfo = entityInfo,
+                        usageIndex = usageIndex
+                    )
 
                 case None =>
-                    // No. Is there another rule in the pipeline?
-                    nextRule match {
-                        case Some(rule) =>
-                            // Yes. Run that rule.
-                            rule.infer(
-                                untypedEntity = untypedEntity,
-                                previousIterationResult = previousIterationResult,
-                                entityInfo = entityInfo,
-                                usageIndex = usageIndex
-                            )
-
-                        case None =>
-                            // No. The type could not be determined.
-                            None
-                    }
+                    // No. Return the result we have.
+                    intermediateResult
             }
         }
     }
 
     /**
-      * Infers that an entity is a `knora-api:Resource` if there is an `rdf:type` statement about it and and the
-      * specified type is a Knora resource class.
+      * Infers the type of an entity if there is an `rdf:type` statement about it.
       */
     private class RdfTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Has this entity been used as a subject?
-            val maybeInferredType: Option[NonPropertyTypeInfo] = usageIndex.subjects.get(untypedEntity) match {
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.subjects.get(entityToType) match {
                 case Some(statements) =>
                     // Yes. If it's been used with the predicate rdf:type with an IRI object, collect those objects.
                     val rdfTypes: Set[SmartIri] = statements.collect {
                         case StatementPattern(_, IriRef(predIri, _), IriRef(objIri, _), _) if predIri.toString == OntologyConstants.Rdf.Type => objIri
                     }
 
-                    // Get any information the ontology responder provided about the classes identified by those IRIs.
-                    val knoraClasses: Set[ReadClassInfoV2] = entityInfo.classInfoMap.filterKeys(rdfTypes).values.toSet
+                    rdfTypes.flatMap {
+                        rdfType =>
+                            // Is this type a Knora entity?
+                            if (rdfType.isKnoraEntityIri) {
+                                // Yes. Has the ontology responder provided a class definition for it?
+                                entityInfo.classInfoMap.get(rdfType) match {
+                                    case Some(classDef) =>
+                                        // Yes. Is it a resource class?
+                                        if (classDef.isResourceClass) {
+                                            // Yes. Infer rdf:type knora-api:Resource.
+                                            val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+                                            log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
+                                            Some(inferredType)
+                                        } else {
+                                            // It's not a resource class. Is it valid in a type inspection result?
+                                            if (GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(rdfType.toString)) {
+                                                // Yes. Return it.
+                                                val inferredType = NonPropertyTypeInfo(rdfType)
+                                                log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
+                                                Some(inferredType)
+                                            } else {
+                                                // No.
+                                                None
+                                            }
+                                        }
 
-                    // Is any of them a resource class?
-                    if (knoraClasses.exists(_.isResourceClass)) {
-                        // Yes. Return the entity's type as knora-api:Resource.
-                        val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
-                        log.debug("RdfTypeRule: {} {} .", untypedEntity, inferredType)
-                        Some(inferredType)
-                    } else {
-                        // This entity isn't a resource, so this rule isn't relevant.
-                        None
+                                    case None =>
+                                        // The ontology responder hasn't provided any information about this class.
+                                        // This should have caused an error earlier from the ontology responder.
+                                        throw AssertionException(s"No information found about class ${IriRef(rdfType).toString}")
+                                }
+                            } else if (GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(rdfType.toString)) {
+                                // This isn't a Knora entity. If it's valid in a type inspection result, return it.
+                                val inferredType = NonPropertyTypeInfo(rdfType)
+                                log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
+                                Some(inferredType)
+                            } else {
+                                None
+                            }
                     }
 
                 case None =>
                     // This entity hasn't been used as a subject, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -162,15 +178,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * Infers a Knora property's `knora-api:objectType` if the property's IRI is used as a predicate.
       */
     private class PropertyIriObjectTypeRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Is this entity an IRI?
-            val maybeInferredType: Option[PropertyTypeInfo] = untypedEntity match {
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = entityToType match {
                 case TypeableIri(iri) =>
                     // Yes. Has it been used as a predicate?
-                    usageIndex.predicates.get(untypedEntity) match {
+                    usageIndex.predicates.get(entityToType) match {
                         case Some(_) =>
                             // Yes. Is it a Knora property?
                             if (iri.isKnoraEntityIri) {
@@ -181,12 +197,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
                                             case Some(objectTypeIri: SmartIri) =>
                                                 val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
-                                                log.debug("PropertyIriObjectTypeRule: {} {} .", untypedEntity, inferredType)
-                                                Some(inferredType)
+                                                log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
+                                                Set(inferredType)
 
                                             case None =>
                                                 // Its knora-api:objectType couldn't be inferred.
-                                                None
+                                                Set.empty[GravsearchEntityTypeInfo]
                                         }
 
                                     case None =>
@@ -196,23 +212,22 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 }
                             } else {
                                 // It's not a Knora property.
-                                None
+                                Set.empty[GravsearchEntityTypeInfo]
                             }
 
                         case None =>
                             // The IRI hasn't been used as a predicate, so this rule isn't relevant.
-                            None
+                            Set.empty[GravsearchEntityTypeInfo]
                     }
 
                 case _ =>
                     // This entity isn't an IRI, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -224,55 +239,52 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * knora-api:objectType is known.
       */
     private class TypeOfObjectFromPropertyRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Has this entity been used as the object of one or more statements?
-            val maybeInferredType: Option[NonPropertyTypeInfo] = usageIndex.objects.get(untypedEntity) match {
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.objects.get(entityToType) match {
                 case Some(statements) =>
                     // Yes. Try to infer type information from the predicate of each of those statements.
-                    val typesFromPredicates: Set[NonPropertyTypeInfo] = statements.flatMap {
+                    statements.flatMap {
                         statement =>
                             // Is the predicate typeable?
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.pred) match {
                                 case Some(typeablePred: TypeableEntity) =>
-                                    // Yes. Do we have its type?
-                                    previousIterationResult.typedEntities.get(typeablePred) match {
-                                        case Some(propertyTypeInfo: PropertyTypeInfo) =>
-                                            // Yes. Use its knora-api:objectType.
-                                            Some(NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri))
+                                    // Yes. Do we have its types?
+                                    intermediateResult.entities.get(typeablePred) match {
+                                        case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
+                                            // Yes. Use the knora-api:objectType of each PropertyTypeInfo.
+                                            entityTypes.flatMap {
+                                                case propertyTypeInfo: PropertyTypeInfo =>
+                                                    val inferredType: GravsearchEntityTypeInfo = NonPropertyTypeInfo(propertyTypeInfo.objectTypeIri)
+                                                    log.debug("TypeOfObjectFromPropertyRule: {} {} .", entityToType, inferredType)
+                                                    Some(inferredType)
 
-                                        case _ =>
+                                                case _ =>
+                                                    None
+                                            }
+
+                                        case other =>
                                             // We don't have the predicate's type.
-                                            None
+                                            Set.empty[GravsearchEntityTypeInfo]
                                     }
 
                                 case None =>
                                     // The predicate isn't typeable.
-                                    None
+                                    Set.empty[GravsearchEntityTypeInfo]
                             }
-                    }
-
-                    if (typesFromPredicates.isEmpty) {
-                        None
-                    } else if (typesFromPredicates.size == 1) {
-                        val inferredType = typesFromPredicates.head
-                        log.debug("TypeOfObjectFromPropertyRule: {} {} .", untypedEntity, inferredType)
-                        Some(inferredType)
-                    } else {
-                        throw GravsearchException(s"Incompatible types were inferred for $untypedEntity: ${typesFromPredicates.map(typeFromPred => IriRef(typeFromPred.typeIri).toSparql).mkString(", ")}")
                     }
 
                 case None =>
                     // This entity hasn't been used as a statement object, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -285,15 +297,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * the predicate's knora-api:subjectType is known.
       */
     private class TypeOfSubjectFromPropertyRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Has this entity been used as the subject of one or more statements?
-            val maybeInferredType: Option[NonPropertyTypeInfo] = usageIndex.subjects.get(untypedEntity) match {
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.subjects.get(entityToType) match {
                 case Some(statements) =>
                     // Yes. Try to infer type information from the predicate of each of those statements.
-                    val typesFromPredicates: Set[NonPropertyTypeInfo] = statements.flatMap {
+                    statements.flatMap {
                         statement =>
                             // Is the predicate a Knora IRI?
                             statement.pred match {
@@ -305,7 +317,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo) match {
                                                 case Some(subjectTypeIri: SmartIri) =>
                                                     // Yes. Use that type.
-                                                    Some(NonPropertyTypeInfo(subjectTypeIri))
+                                                    val inferredType = NonPropertyTypeInfo(subjectTypeIri)
+                                                    log.debug("TypeOfSubjectFromPropertyRule: {} {} .", entityToType, inferredType)
+                                                    Some(inferredType)
 
                                                 case None =>
                                                     // No. This rule can't infer the entity's type.
@@ -325,25 +339,14 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             }
                     }
 
-                    if (typesFromPredicates.isEmpty) {
-                        None
-                    } else if (typesFromPredicates.size == 1) {
-                        val inferredType = typesFromPredicates.head
-                        log.debug("TypeOfSubjectFromPropertyRule: {} {} .", untypedEntity, inferredType)
-                        Some(inferredType)
-                    } else {
-                        throw GravsearchException(s"Incompatible types were inferred for $untypedEntity: ${typesFromPredicates.map(typeFromPred => IriRef(typeFromPred.typeIri).toSparql).mkString(", ")}")
-                    }
-
                 case None =>
                     // This entity hasn't been used as a subject, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -354,55 +357,52 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * Infers the knora-api:objectType of a property variable or IRI if it's used with an object whose type is known.
       */
     private class PropertyTypeFromObjectRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Has this entity been used as a predicate?
-            val maybeInferredType: Option[PropertyTypeInfo] = usageIndex.predicates.get(untypedEntity) match {
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.predicates.get(entityToType) match {
                 case Some(statements) =>
                     // Yes. Try to infer its knora-api:objectType from the object of each of those statements.
-                    val typesFromObjects: Set[PropertyTypeInfo] = statements.flatMap {
+                    statements.flatMap {
                         statement =>
                             // Is the object typeable?
                             GravsearchTypeInspectionUtil.maybeTypeableEntity(statement.obj) match {
                                 case Some(typeableObj: TypeableEntity) =>
-                                    // Yes. Do we have its type?
-                                    previousIterationResult.typedEntities.get(typeableObj) match {
-                                        case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
-                                            // Yes. Use its type.
-                                            Some(PropertyTypeInfo(nonPropertyTypeInfo.typeIri))
+                                    // Yes. Do we have its types?
+                                    intermediateResult.entities.get(typeableObj) match {
+                                        case Some(entityTypes: Set[GravsearchEntityTypeInfo]) =>
+                                            // Yes. Use those types.
+                                            entityTypes.flatMap {
+                                                case nonPropertyTypeInfo: NonPropertyTypeInfo =>
+                                                    val inferredType: GravsearchEntityTypeInfo = PropertyTypeInfo(nonPropertyTypeInfo.typeIri)
+                                                    log.debug("PropertyTypeFromObjectRule: {} {} .", entityToType, inferredType)
+                                                    Some(inferredType)
+
+                                                case _ =>
+                                                    None
+                                            }
 
                                         case _ =>
                                             // We don't have the object's type.
-                                            None
+                                            Set.empty[GravsearchEntityTypeInfo]
                                     }
 
                                 case None =>
                                     // The object isn't typeable.
-                                    None
+                                    Set.empty[GravsearchEntityTypeInfo]
                             }
-                    }
-
-                    if (typesFromObjects.isEmpty) {
-                        None
-                    } else if (typesFromObjects.size == 1) {
-                        val inferredType = typesFromObjects.head
-                        log.debug("PropertyTypeFromObjectRule: {} {} .", untypedEntity, inferredType)
-                        Some(inferredType)
-                    } else {
-                        throw GravsearchException(s"Incompatible values were inferred for the knora-api:objectType of $untypedEntity: ${typesFromObjects.map(typeFromObj => IriRef(typeFromObj.objectTypeIri).toSparql).mkString(", ")}")
                     }
 
                 case None =>
                     // This entity hasn't been used as a predicate, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -410,24 +410,24 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-      * Infers the knora-api:objectType of a property variable if it's compared to a known property IRI in a FILTER.
+      * Infers the types of variables from their use in FILTER expressions.
       */
-    private class PropertyVarTypeFromFilterRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
-        override def infer(untypedEntity: TypeableEntity,
-                           previousIterationResult: IntermediateTypeInspectionResult,
+    private class VarTypeFromFilterRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+        override def infer(entityToType: TypeableEntity,
+                           intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
-                           usageIndex: UsageIndex): Option[GravsearchEntityTypeInfo] = {
+                           usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
             // Is this entity a variable?
-            val maybeInferredType: Option[PropertyTypeInfo] = untypedEntity match {
-                case untypedVariable: TypeableVariable =>
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = entityToType match {
+                case variableToType: TypeableVariable =>
                     // Yes. Has it been used as a predicate?
-                    usageIndex.predicates.get(untypedVariable) match {
+                    usageIndex.predicates.get(variableToType) match {
                         case Some(_) =>
                             // Yes. Has it been compared with one or more Knora property IRIs in a FILTER?
-                            usageIndex.compareExpressionVariables.get(untypedVariable) match {
-                                case Some(iris: Set[SmartIri]) =>
+                            usageIndex.knoraPropertyVariables.get(variableToType) match {
+                                case Some(propertyIris: Set[SmartIri]) =>
                                     // Yes.
-                                    val typesFromFilters: Set[PropertyTypeInfo] = iris.flatMap {
+                                    propertyIris.flatMap {
                                         propertyIri: SmartIri =>
                                             // Has the ontology responder provided a definition of this property?
                                             entityInfo.propertyInfoMap.get(propertyIri) match {
@@ -436,7 +436,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                                     InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
                                                         case Some(objectTypeIri: SmartIri) =>
                                                             // Yes. Use that type.
-                                                            Some(PropertyTypeInfo(objectTypeIri = objectTypeIri))
+                                                            val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
+                                                            log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
+                                                            Some(inferredType)
 
                                                         case None =>
                                                             // No knora-api:objectType could be determined for the property IRI.
@@ -450,35 +452,36 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             }
                                     }
 
-                                    if (typesFromFilters.isEmpty) {
-                                        None
-                                    } else if (typesFromFilters.size == 1) {
-                                        val inferredType = typesFromFilters.head
-                                        log.debug("PropertyVarTypeFromFilterRule: {} {} .", untypedVariable, inferredType)
-                                        Some(inferredType)
-                                    } else {
-                                        throw GravsearchException(s"Incompatible values were inferred for the knora-api:objectType of $untypedVariable: ${typesFromFilters.map(typeFromObj => IriRef(typeFromObj.objectTypeIri).toSparql).mkString(", ")}")
-                                    }
-
                                 case None =>
                                     // The variable hasn't been compared with an IRI in a FILTER, so this rule isn't relevant.
-                                    None
+                                    Set.empty[GravsearchEntityTypeInfo]
                             }
 
                         case None =>
-                            // The variable hasn't been used as a predicate, so this rule isn't relevant.
-                            None
+                            // The variable hasn't been used as a predicate. Do we have one or more XSD literal types for it from a FILTER?
+                            usageIndex.xsdLiteralVariables.get(variableToType) match {
+                                case Some(xsdLiteralTypes: Set[SmartIri]) =>
+                                    // Yes. If any of them are valid in type inspection results, return them.
+                                    xsdLiteralTypes.collect {
+                                        case xsdLiteralType if GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(xsdLiteralType.toString) =>
+                                            val inferredType = NonPropertyTypeInfo(xsdLiteralType)
+                                            log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
+                                            inferredType
+                                    }
+
+                                case None =>
+                                    Set.empty[GravsearchEntityTypeInfo]
+                            }
                     }
 
                 case _ =>
                     // The entity isn't a variable, so this rule isn't relevant.
-                    None
+                    Set.empty[GravsearchEntityTypeInfo]
             }
 
             runNextRule(
-                untypedEntity = untypedEntity,
-                maybeInferredType = maybeInferredType,
-                previousIterationResult = previousIterationResult,
+                entityToType = entityToType,
+                intermediateResult = intermediateResult.addTypes(entityToType, inferredTypes),
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
@@ -532,34 +535,28 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             Some(new TypeOfObjectFromPropertyRule(
                 Some(new TypeOfSubjectFromPropertyRule(
                     Some(new PropertyTypeFromObjectRule(
-                        Some(new PropertyVarTypeFromFilterRule(None)))))))))))
+                        Some(new VarTypeFromFilterRule(None)))))))))))
 
     /**
       * An index of entity usage in a Gravsearch query.
       *
-      * @param knoraClasses               the Knora class IRIs that are used in the query.
-      * @param knoraProperties            the Knora property IRIs that are used in the query.
-      * @param subjects                   a map of all statement subjects to the statements they occur in.
-      * @param predicates                 map of all statement predicates to the statements they occur in.
-      * @param objects                    a map of all statement objects to the statements they occur in.
-      * @param compareExpressionVariables a map of query variables to Knora entity IRIs (which must be property IRIs)
-      *                                   that they are compared to in FILTER expressions.
+      * @param knoraClasses           the Knora class IRIs that are used in the query.
+      * @param knoraProperties        the Knora property IRIs that are used in the query.
+      * @param subjects               a map of all statement subjects to the statements they occur in.
+      * @param predicates             map of all statement predicates to the statements they occur in.
+      * @param objects                a map of all statement objects to the statements they occur in.
+      * @param knoraPropertyVariables a map of query variables to Knora property IRIs that they are compared to in
+      *                               FILTER expressions.
+      * @param xsdLiteralVariables    a map of query variables to XSD literal types that they are compared to in
+      *                               FILTER expressions.
       */
     private case class UsageIndex(knoraClasses: Set[SmartIri],
                                   knoraProperties: Set[SmartIri],
                                   subjects: Map[TypeableEntity, Set[StatementPattern]],
                                   predicates: Map[TypeableEntity, Set[StatementPattern]],
                                   objects: Map[TypeableEntity, Set[StatementPattern]],
-                                  compareExpressionVariables: Map[TypeableVariable, Set[SmartIri]])
-
-    /**
-      * A [[WhereTransformer]] that returns statements and filters unchanged.
-      */
-    private class NoOpWhereTransformer extends WhereTransformer {
-        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = Seq(statementPattern)
-
-        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-    }
+                                  knoraPropertyVariables: Map[TypeableVariable, Set[SmartIri]],
+                                  xsdLiteralVariables: Map[TypeableVariable, Set[SmartIri]])
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
@@ -618,7 +615,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             // Iterate over the inference rules until no new type information can be inferred.
             intermediateResult = doIterations(
-                previousInspectionResult = previousResult,
+                iterationNumber = 1,
+                intermediateResult = previousResult,
                 entityInfo = entityInfoInInputSchemas,
                 usageIndex = usageIndex
             )
@@ -637,90 +635,46 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     /**
       * Runs all the inference rules repeatedly until no new type information can be found.
       *
-      * @param previousInspectionResult the result of the previous type inspection.
-      * @param entityInfo               information about Knora ontology entities mentioned in the Gravsearch query.
-      * @param usageIndex               an index of entity usage in the query.
+      * @param intermediateResult the current intermediate result.
+      * @param entityInfo         information about Knora ontology entities mentioned in the Gravsearch query.
+      * @param usageIndex         an index of entity usage in the query.
       * @return a new intermediate result.
       */
-    private def doIterations(previousInspectionResult: IntermediateTypeInspectionResult,
+    @tailrec
+    private def doIterations(iterationNumber: Int,
+                             intermediateResult: IntermediateTypeInspectionResult,
                              entityInfo: EntityInfoGetResponseV2,
                              usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
-        var iterationResult = previousInspectionResult
-        var iterate = true
-        var iterationNumber = 1
+        if (iterationNumber > MAX_ITERATIONS) {
+            throw GravsearchException(s"Too many type inference iterations")
+        }
 
-        while (iterate) {
-            if (iterationNumber > MAX_ITERATIONS) {
-                throw GravsearchException(s"Too many type inference iterations")
-            }
+        // Run an iteration of type inference and get its result.
 
-            // Run an iteration of type inference and get its result.
+        log.debug(s"****** Inference iteration $iterationNumber (untyped ${intermediateResult.untypedEntities.size}, inconsistent ${intermediateResult.entitiesWithInconsistentTypes.size})")
 
-            log.debug(s"****** Inference iteration $iterationNumber (${iterationResult.untypedEntities.size} untyped entities remaining)")
-
-            val newTypesFound: Map[TypeableEntity, GravsearchEntityTypeInfo] = doIteration(
-                previousIterationResult = iterationResult,
-                entityInfo = entityInfo,
-                usageIndex = usageIndex
-            )
-
-            // If no new type information was found, stop.
-            if (newTypesFound.isEmpty) {
-                log.debug("No new information, stopping iterations")
-                iterate = false
-            } else {
-                // Otherwise, add the new information to the results of the previous iterations.
-                iterationResult = IntermediateTypeInspectionResult(
-                    typedEntities = iterationResult.typedEntities ++ newTypesFound,
-                    untypedEntities = iterationResult.untypedEntities -- newTypesFound.keySet
+        val iterationResult: IntermediateTypeInspectionResult = intermediateResult.entities.keySet.foldLeft(intermediateResult) {
+            case (acc, entityToType) =>
+                rulePipeline.infer(
+                    entityToType = entityToType,
+                    intermediateResult = acc,
+                    entityInfo = entityInfo,
+                    usageIndex = usageIndex
                 )
-
-                // If there are no untyped entities left, stop.
-                if (iterationResult.untypedEntities.isEmpty) {
-                    log.debug("Type inference complete")
-                    iterate = false
-                } else {
-                    // Otherwise, do another iteration.
-                    iterationNumber += 1
-                }
-            }
         }
 
-        iterationResult
-    }
-
-    /**
-      * Runs all the type inference rules for each untyped entity.
-      *
-      * @param previousIterationResult the result of the previous iteration of type inference.
-      * @param entityInfo              information about Knora ontology entities mentioned in the Gravsearch query.
-      * @param usageIndex              an index of entity usage in the query.
-      * @return the new type information that was found in this iteration, or empty map if none was found.
-      */
-    private def doIteration(previousIterationResult: IntermediateTypeInspectionResult,
-                            entityInfo: EntityInfoGetResponseV2,
-                            usageIndex: UsageIndex): Map[TypeableEntity, GravsearchEntityTypeInfo] = {
-        // Start the iteration with an empty map of new type information.
-        val newTypesFound: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo] = mutable.Map.empty
-
-        // Run the inference rule pipeline for each entity that is still untyped.
-        for (untypedEntity <- previousIterationResult.untypedEntities) {
-            val inferenceRuleResult: Option[GravsearchEntityTypeInfo] = rulePipeline.infer(
-                untypedEntity = untypedEntity,
-                previousIterationResult = previousIterationResult,
+        // If no new type information was found, stop.
+        if (iterationResult == intermediateResult) {
+            log.debug("No new information, stopping iterations")
+            intermediateResult
+        } else {
+            doIterations(
+                iterationNumber = iterationNumber + 1,
+                intermediateResult = iterationResult,
                 entityInfo = entityInfo,
                 usageIndex = usageIndex
             )
-
-            // If the rule pipeline found type information about the entity, add it to the results of the iteration.
-            inferenceRuleResult match {
-                case Some(result) => newTypesFound.put(untypedEntity, result)
-                case None => ()
-            }
         }
-
-        // Return the results of the iteration.
-        newTypesFound.toMap
     }
 
     /**
@@ -731,12 +685,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       */
     private def makeUsageIndex(whereClause: WhereClause): UsageIndex = {
         // Flatten the statements and filters in the WHERE clause into a sequence.
-        val flattenedPatterns: Seq[QueryPattern] = QueryTraverser.transformWherePatterns(
-            patterns = whereClause.patterns,
-            inputOrderBy = Seq.empty[OrderCriterion],
-            whereTransformer = new NoOpWhereTransformer,
-            rebuildStructure = false
-        )
+        val flattenedPatterns: Seq[QueryPattern] = GravsearchTypeInspectionUtil.flattenPatterns(whereClause)
 
         // Make mutable association lists to collect the index in.
         val knoraClasses: mutable.Set[SmartIri] = mutable.Set.empty
@@ -744,7 +693,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         val subjectEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
         val predicateEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
         val objectEntitiesBuffer: mutable.ArrayBuffer[(TypeableEntity, StatementPattern)] = mutable.ArrayBuffer.empty[(TypeableEntity, StatementPattern)]
-        val compareExpressionVariablesBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)] = mutable.ArrayBuffer.empty[(TypeableVariable, SmartIri)]
+        val knoraEntitiesFromFiltersBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)] = mutable.ArrayBuffer.empty[(TypeableVariable, SmartIri)]
+        val xsdTypesFromFiltersBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)] = mutable.ArrayBuffer.empty[(TypeableVariable, SmartIri)]
 
         // Iterate over the sequence of patterns, indexing their contents.
         for (pattern <- flattenedPatterns) {
@@ -778,15 +728,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     }
 
                 case filter: FilterPattern =>
-                    // Collect the variables and Knora property IRIs that are compared using EQUALS in the filter expression.
-                    collectIriCompareExpressions(filter.expression, compareExpressionVariablesBuffer)
+                    // Collect type information from FILTER expressions.
+                    collectFromFilter(filter.expression, knoraEntitiesFromFiltersBuffer, xsdTypesFromFiltersBuffer)
 
                 case _ => ()
             }
         }
 
         // Add the Knora property IRIs collected from filters to the set of Knora property IRIs in the query.
-        knoraProperties ++= compareExpressionVariablesBuffer.map(_._2)
+        knoraProperties ++= knoraEntitiesFromFiltersBuffer.map(_._2)
 
         // Construct the index from the contents of the association lists.
         UsageIndex(
@@ -795,37 +745,47 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             subjects = associationListToMap(subjectEntitiesBuffer),
             predicates = associationListToMap(predicateEntitiesBuffer),
             objects = associationListToMap(objectEntitiesBuffer),
-            compareExpressionVariables = associationListToMap(compareExpressionVariablesBuffer)
+            knoraPropertyVariables = associationListToMap(knoraEntitiesFromFiltersBuffer),
+            xsdLiteralVariables = associationListToMap(xsdTypesFromFiltersBuffer)
         )
     }
 
     /**
-      * Given a filter expression, collects the variables and Knora entity IRIs (which must be property IRIs) that are
+      * Given a filter expression, collects:
+      *
+      * - The variables and Knora entity IRIs (which must be property IRIs) that are
       * compared using the EQUALS operator.
+      * - The variables that are compared with XSD literals, and the types of those literals.
       *
       * @param filterExpression the filter expression.
-      * @param buffer           a buffer in which to collect the results.
+      * @param entityIriBuffer  a buffer in which to collect the results.
       */
-    private def collectIriCompareExpressions(filterExpression: Expression, buffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)]): Unit = {
+    private def collectFromFilter(filterExpression: Expression,
+                                  entityIriBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)],
+                                  xsdTypeBuffer: mutable.ArrayBuffer[(TypeableVariable, SmartIri)]): Unit = {
         filterExpression match {
             case compareExpr: CompareExpression =>
                 compareExpr match {
-                    case CompareExpression(queryVariable: QueryVariable, operator: CompareExpressionOperator.Value, iriRef: IriRef)
-                        if operator == CompareExpressionOperator.EQUALS && iriRef.iri.isKnoraEntityIri =>
-                        buffer.append(TypeableVariable(queryVariable.variableName) -> iriRef.iri)
+                    case CompareExpression(queryVariable: QueryVariable, operator: CompareExpressionOperator.Value, iriRef: IriRef) =>
+                        if (operator == CompareExpressionOperator.EQUALS && iriRef.iri.isKnoraEntityIri) {
+                            entityIriBuffer.append(TypeableVariable(queryVariable.variableName) -> iriRef.iri)
+                        }
+
+                    case CompareExpression(queryVariable: QueryVariable, _, xsdLiteral: XsdLiteral) =>
+                        xsdTypeBuffer.append(TypeableVariable(queryVariable.variableName) -> xsdLiteral.datatype)
 
                     case _ =>
-                        collectIriCompareExpressions(compareExpr.leftArg, buffer)
-                        collectIriCompareExpressions(compareExpr.rightArg, buffer)
+                        collectFromFilter(compareExpr.leftArg, entityIriBuffer, xsdTypeBuffer)
+                        collectFromFilter(compareExpr.rightArg, entityIriBuffer, xsdTypeBuffer)
                 }
 
             case andExpr: AndExpression =>
-                collectIriCompareExpressions(andExpr.leftArg, buffer)
-                collectIriCompareExpressions(andExpr.rightArg, buffer)
+                collectFromFilter(andExpr.leftArg, entityIriBuffer, xsdTypeBuffer)
+                collectFromFilter(andExpr.rightArg, entityIriBuffer, xsdTypeBuffer)
 
             case orExpr: OrExpression =>
-                collectIriCompareExpressions(orExpr.leftArg, buffer)
-                collectIriCompareExpressions(orExpr.rightArg, buffer)
+                collectFromFilter(orExpr.leftArg, entityIriBuffer, xsdTypeBuffer)
+                collectFromFilter(orExpr.rightArg, entityIriBuffer, xsdTypeBuffer)
 
             case _ => ()
         }

@@ -54,30 +54,21 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
                               requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
-        // Convert the intermediate result to mutable collections for convenience.
-        val typedEntities = previousResult.typedEntitiesToMutableMap
-        val untypedEntities = previousResult.untypedEntitiesToMutableSet
-
         for {
             // Get all the explicit type annotations.
-            explicitAnnotations: Seq[ExplicitAnnotationV2Simple] <- Future(getExplicitAnnotations(whereClause.patterns))
+            explicitAnnotations: Seq[ExplicitAnnotationV2Simple] <- Future(getExplicitAnnotations(GravsearchTypeInspectionUtil.flattenPatterns(whereClause)))
 
             // Collect the information in the type annotations.
 
-            _ = for (explicitAnnotation: ExplicitAnnotationV2Simple <- explicitAnnotations) {
-                explicitAnnotation.annotationProp match {
+            intermediateResult = explicitAnnotations.foldLeft(previousResult) {
+                case (acc, explicitAnnotation) => explicitAnnotation.annotationProp match {
                     case TypeAnnotationPropertiesV2.RDF_TYPE =>
-                        untypedEntities.remove(explicitAnnotation.typeableEntity)
-                        typedEntities.put(explicitAnnotation.typeableEntity, NonPropertyTypeInfo(explicitAnnotation.typeIri))
+                        acc.addTypes(explicitAnnotation.typeableEntity, Set(NonPropertyTypeInfo(explicitAnnotation.typeIri)))
 
                     case TypeAnnotationPropertiesV2.OBJECT_TYPE =>
-                        untypedEntities.remove(explicitAnnotation.typeableEntity)
-                        typedEntities.put(explicitAnnotation.typeableEntity, PropertyTypeInfo(explicitAnnotation.typeIri))
+                        acc.addTypes(explicitAnnotation.typeableEntity, Set(PropertyTypeInfo(explicitAnnotation.typeIri)))
                 }
             }
-
-            // Construct an intermediate result from the type information that was found.
-            intermediateResult = IntermediateTypeInspectionResult(mutableTypedEntities = typedEntities, mutableUntypedEntities = untypedEntities)
 
             // Pass the intermediate result to the next type inspector in the pipeline.
             lastResult <- runNextInspector(
@@ -89,7 +80,7 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
     }
 
     /**
-      * Given a sequence of query patterns, gets all the explicit type annotations.
+      * Given a flattened sequence of query patterns, gets all the explicit type annotations.
       *
       * @param patterns the query patterns.
       * @return the type annotations found in the query patterns.
@@ -101,17 +92,6 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
                     Seq(annotationStatementToExplicitAnnotationV2Simple(statementPattern))
                 } else {
                     Seq.empty[ExplicitAnnotationV2Simple]
-                }
-
-            case optionalPattern: OptionalPattern => getExplicitAnnotations(optionalPattern.patterns)
-
-            case filterNotExistsPattern: FilterNotExistsPattern => getExplicitAnnotations(filterNotExistsPattern.patterns)
-
-            case minusPattern: MinusPattern => getExplicitAnnotations(minusPattern.patterns)
-
-            case unionPattern: UnionPattern =>
-                unionPattern.blocks.flatMap {
-                    patterns: Seq[QueryPattern] => getExplicitAnnotations(patterns)
                 }
         }.flatten
     }

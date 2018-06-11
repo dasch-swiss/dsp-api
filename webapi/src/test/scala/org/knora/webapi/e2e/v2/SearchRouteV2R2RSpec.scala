@@ -721,7 +721,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
                   |    } WHERE {
                   |
                   |        ?book a incunabula:book .
@@ -732,7 +732,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?title a xsd:string .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |    }
@@ -776,7 +776,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate = "JULIAN:1497-03-01")
+                  |        FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -822,7 +822,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate != "JULIAN:1497-03-01")
+                  |        FILTER(?pubdate != "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -870,7 +870,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |         FILTER(?pubdate < "JULIAN:1497-03-01" || ?pubdate > "JULIAN:1497-03-01")
+                  |         FILTER(?pubdate < "JULIAN:1497-03-01"^^knora-api:Date || ?pubdate > "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -917,7 +917,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate < "JULIAN:1497")
+                  |        FILTER(?pubdate < "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -964,7 +964,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate >= "JULIAN:1497")
+                  |        FILTER(?pubdate >= "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -1011,7 +1011,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate > "JULIAN:1497")
+                  |        FILTER(?pubdate > "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -1058,7 +1058,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate <= "JULIAN:1497")
+                  |        FILTER(?pubdate <= "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -1106,7 +1106,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate > "JULIAN:1486" && ?pubdate < "JULIAN:1491")
+                  |        FILTER(?pubdate > "JULIAN:1486"^^knora-api:Date && ?pubdate < "JULIAN:1491"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
@@ -1440,7 +1440,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?decimal a xsd:decimal .
                   |
-                  |     FILTER(?decimal > 2)
+                  |     FILTER(?decimal > "2"^^xsd:decimal)
                   |}
                   |
                 """.stripMargin
@@ -1481,7 +1481,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?decimal a xsd:decimal .
                   |
-                  |     FILTER(?decimal < 3)
+                  |     FILTER(?decimal < "3"^^xsd:decimal)
                   |}
                   |
                 """.stripMargin
@@ -2333,7 +2333,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "run a Gravserach query that searches for a person using foaf classes and properties" in {
+        "run a Gravsearch query that searches for a person using foaf classes and properties" in {
 
             val gravsearchQuery =
                 """

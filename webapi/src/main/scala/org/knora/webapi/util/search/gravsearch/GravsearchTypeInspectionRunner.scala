@@ -66,13 +66,10 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
                      requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
         for {
             // Get the set of typeable entities in the Gravsearch query.
-            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause.patterns))
+            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(GravsearchTypeInspectionUtil.flattenPatterns(whereClause)))
 
             // In the initial intermediate result, none of the entities have types yet.
-            initialResult = IntermediateTypeInspectionResult(
-                typedEntities = Map.empty[TypeableEntity, GravsearchEntityTypeInfo],
-                untypedEntities = typeableEntities
-            )
+            initialResult = IntermediateTypeInspectionResult(typeableEntities)
 
             // Run the pipeline and get its result.
             lastResult <- typeInspectionPipeline.inspectTypes(
@@ -81,24 +78,27 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
                 requestingUser = requestingUser
             )
 
-            // If there are still any entities whose types couldn't be determined, throw an exception.
-            _ = if (lastResult.untypedEntities.nonEmpty) {
-                throw GravsearchException(s"The types of one or more entities could not be determined: ${lastResult.untypedEntities.mkString(", ")}")
+            // Are any entities still untyped?
+            untypedEntities = lastResult.untypedEntities
+
+            _ = if (untypedEntities.nonEmpty) {
+                //  Yes. Return an error.
+                throw GravsearchException(s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}")
+            } else {
+                // No. Are there any entities with multiple types?
+                val inconsistentEntities = lastResult.entitiesWithInconsistentTypes
+
+                if (inconsistentEntities.nonEmpty) {
+                    // Yes. Return an error.
+
+                    val inconsistentStr = inconsistentEntities.map {
+                        case (entity, entityTypes) =>
+                            s"$entity ${entityTypes.mkString(" ; ")} ."
+                    }.mkString(" ")
+
+                    throw GravsearchException(s"One or more entities have inconsistent types: $inconsistentStr")
+                }
             }
-        } yield GravsearchTypeInspectionResult(lastResult.typedEntities)
+        } yield lastResult.toFinalResult
     }
-
-
-    /**
-      * Removes type annotations from a Gravsearch WHERE clause.
-      *
-      * @param whereClause the WHERE clause to be filtered.
-      * @return the same WHERE clause, minus any type annotations.
-      */
-    def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
-        whereClause.copy(
-            patterns = GravsearchTypeInspectionUtil.removeTypeAnnotationsFromPatterns(whereClause.patterns)
-        )
-    }
-
 }

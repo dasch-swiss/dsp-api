@@ -61,14 +61,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         expectMsgType[SuccessResponseV2](10.seconds)
     }
 
-    "The type inspection runner" should {
+    "The type inspection utility" should {
         "remove the type annotations from a WHERE clause" in {
-            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)
-            val whereClauseWithoutAnnotations = typeInspectionRunner.removeTypeAnnotations(parsedQuery.whereClause)
+            val whereClauseWithoutAnnotations = GravsearchTypeInspectionUtil.removeTypeAnnotations(parsedQuery.whereClause)
             whereClauseWithoutAnnotations should ===(whereClauseWithoutAnnotations)
         }
-
     }
 
     "The explicit type inspector" should {
@@ -130,6 +128,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(result == TypeInferenceResult2)
         }
 
+        "infer the knora-api:objectType of a non-property variable if it's compared to an XSD literal in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryNonPropertyVarTypeFromFilterRule)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult4)
+        }
+
         "reject a query with a non-Knora property whose type cannot be inferred" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
@@ -147,9 +153,26 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(result == TypeInferenceResult3)
         }
 
+        "reject a query with inconsistent types inferred from statements" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes1)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            assertThrows[GravsearchException] {
+                Await.result(resultFuture, timeout)
+            }
+        }
+
+        "reject a query with inconsistent types inferred from a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryWithInconsistentTypes2)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            assertThrows[GravsearchException] {
+                Await.result(resultFuture, timeout)
+            }
+        }
     }
 
-    val SimpleTypeInspectionResult = GravsearchTypeInspectionResult(typedEntities = Map(
+    val SimpleTypeInspectionResult = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableIri(iri = "http://rdfh.ch/beol/oU8fMNDJQ9SGblfBl5JamA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
@@ -337,6 +360,24 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |} ORDER BY ?date
         """.stripMargin
 
+    val QueryNonPropertyVarTypeFromFilterRule: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |    ?book a incunabula:book ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |
+          |  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
+          |}
+        """.stripMargin
+
     val QueryNonKnoraTypeWithoutAnnotation: String =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -372,7 +413,39 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
-    val TypeInferenceResult1 = GravsearchTypeInspectionResult(typedEntities = Map(
+    val QueryWithInconsistentTypes1: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true .
+          |
+          |} WHERE {
+          |    ?book rdf:type incunabula:book .
+          |    ?page incunabula:title ?book .
+          |}
+        """.stripMargin
+
+    val QueryWithInconsistentTypes2: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |    ?book knora-api:isMainResource true ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |} WHERE {
+          |    ?book a incunabula:book ;
+          |        incunabula:title ?title ;
+          |        incunabula:pubdate ?pubdate .
+          |
+          |  FILTER(?pubdate = "JULIAN:1497-03-01") .
+          |}
+        """.stripMargin
+
+    val TypeInferenceResult1 = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
@@ -382,7 +455,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val TypeInferenceResult2 = GravsearchTypeInspectionResult(typedEntities = Map(
+    val TypeInferenceResult2 = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "date") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
         TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
@@ -390,9 +463,17 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
     ))
 
-    val TypeInferenceResult3 = GravsearchTypeInspectionResult(typedEntities = Map(
+    val TypeInferenceResult3 = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableIri(iri = "http://purl.org/dc/terms/title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+    ))
+
+    val TypeInferenceResult4 = GravsearchTypeInspectionResult(entities = Map(
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableVariable(variableName = "book") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "pubdate") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri),
+        TypeableVariable(variableName = "title") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
     ))
 }

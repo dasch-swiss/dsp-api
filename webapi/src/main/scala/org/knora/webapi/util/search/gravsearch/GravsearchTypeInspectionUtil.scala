@@ -3,8 +3,6 @@ package org.knora.webapi.util.search.gravsearch
 import org.knora.webapi.util.search._
 import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 
-import scala.collection.mutable
-
 /**
   * Utilities for Gravsearch type inspection.
   */
@@ -13,27 +11,67 @@ object GravsearchTypeInspectionUtil {
     /**
       * Represents an intermediate result during type inspection.
       *
-      * @param typedEntities   a map of Gravsearch entities to the types that were determined for them.
-      * @param untypedEntities a set of Gravsearch entities for which types could not be determined.
+      * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
+      *                 has more that one type, this means that it has been used with inconsistent types.
       */
-    case class IntermediateTypeInspectionResult(typedEntities: Map[TypeableEntity, GravsearchEntityTypeInfo],
-                                                untypedEntities: Set[TypeableEntity]) {
-        def typedEntitiesToMutableMap: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo] = {
-            mutable.Map(typedEntities.toSeq: _*)
+    case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]]) {
+        /**
+          * Adds types for an entity.
+          *
+          * @param entity      the entity for which types have been found.
+          * @param entityTypes the types to be added.
+          * @return a new [[IntermediateTypeInspectionResult]] containing the additional type information.
+          */
+        def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo]): IntermediateTypeInspectionResult = {
+            val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
+            IntermediateTypeInspectionResult(entities = entities + (entity -> newTypes))
         }
 
-        def untypedEntitiesToMutableSet: mutable.Set[TypeableEntity] = {
-            mutable.Set(untypedEntities.toSeq: _*)
+        /**
+          * Returns the entities for which types have not been found.
+          */
+        def untypedEntities: Set[TypeableEntity] = {
+            entities.collect {
+                case (entity, entityTypes) if entityTypes.isEmpty => entity
+            }.toSet
+        }
+
+        /**
+          * Returns the entities that have been used with inconsistent types.
+          */
+        def entitiesWithInconsistentTypes: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = {
+            entities.filter {
+                case (_, entityTypes) => entityTypes.size > 1
+            }
+        }
+
+        /**
+          * Converts this [[IntermediateTypeInspectionResult]] to a [[GravsearchTypeInspectionResult]]. Before calling
+          * this method, ensure that `entitiesWithInconsistentTypes` returns an empty map.
+          */
+        def toFinalResult: GravsearchTypeInspectionResult = {
+            GravsearchTypeInspectionResult(
+                entities = entities.map {
+                    case (entity, entityTypes) =>
+                        if (entityTypes.size == 1) {
+                            entity -> entityTypes.head
+                        } else {
+                            throw AssertionException(s"Cannot generate final type inspection result because of inconsistent types")
+                        }
+                }
+            )
         }
     }
 
     object IntermediateTypeInspectionResult {
-        def apply(mutableTypedEntities: mutable.Map[TypeableEntity, GravsearchEntityTypeInfo],
-                  mutableUntypedEntities: mutable.Set[TypeableEntity]): IntermediateTypeInspectionResult = {
-            new IntermediateTypeInspectionResult(
-                typedEntities = mutableTypedEntities.toMap,
-                untypedEntities = Set(mutableUntypedEntities.toSeq: _*)
-            )
+        /**
+          * Constructs an [[IntermediateTypeInspectionResult]] for the given set of typeable entities, with no
+          * types specified.
+          *
+          * @param entities the set of typeable entities found in the WHERE clause of a Gravsearch query.
+          */
+        def apply(entities: Set[TypeableEntity]): IntermediateTypeInspectionResult = {
+            new IntermediateTypeInspectionResult(entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap)
         }
     }
 
@@ -54,7 +92,7 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * The IRIs of types that are recognised in explicit type annotations.
+      * The IRIs of non-property types that Gravsearch type inspectors return.
       */
     val ApiV2SimpleTypeIris: Set[IRI] = Set(
         OntologyConstants.Xsd.Boolean,
@@ -77,7 +115,7 @@ object GravsearchTypeInspectionUtil {
     val ApiV2SimpleNonTypeableIris: Set[IRI] = ApiV2SimpleTypeIris ++ TypeAnnotationPropertiesV2.valueMap.keySet
 
     /**
-      * Given a sequence of query patterns, extracts all the entities (variable names or IRIs) that need type information.
+      * Given a flattened sequence of query patterns, extracts all the entities (variable names or IRIs) that need type information.
       *
       * @param patterns the patterns to be searched.
       * @return a set of typeable entities.
@@ -90,18 +128,31 @@ object GravsearchTypeInspectionUtil {
                     case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => toTypeableEntities(Seq(statementPattern.subj))
                     case _ => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
                 }
-
-            case optionalPattern: OptionalPattern => getTypableEntitiesFromPatterns(optionalPattern.patterns)
-
-            case filterNotExistsPattern: FilterNotExistsPattern => getTypableEntitiesFromPatterns(filterNotExistsPattern.patterns)
-
-            case minusPattern: MinusPattern => getTypableEntitiesFromPatterns(minusPattern.patterns)
-
-            case unionPattern: UnionPattern =>
-                unionPattern.blocks.flatMap {
-                    patterns: Seq[QueryPattern] => getTypableEntitiesFromPatterns(patterns)
-                }.toSet
         }.flatten.toSet
+    }
+
+    /**
+      * A [[WhereTransformer]] that returns statements and filters unchanged.
+      */
+    private class NoOpWhereTransformer extends WhereTransformer {
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = Seq(statementPattern)
+
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
+    }
+
+    /**
+      * Flattens all the patterns in a Gravsearch WHERE clause into a single sequence.
+      *
+      * @param whereClause the WHERE clause.
+      * @return a flat sequence of query patterns.
+      */
+    def flattenPatterns(whereClause: WhereClause): Seq[QueryPattern] = {
+        QueryTraverser.transformWherePatterns(
+            patterns = whereClause.patterns,
+            inputOrderBy = Seq.empty[OrderCriterion],
+            whereTransformer = new NoOpWhereTransformer,
+            rebuildStructure = false
+        )
     }
 
     /**
@@ -142,35 +193,33 @@ object GravsearchTypeInspectionUtil {
         entities.flatMap(entity => maybeTypeableEntity(entity)).toSet
     }
 
-    /**
-      * Removes explicit type annotations from a sequence of query patterns.
-      *
-      * @param patterns the patterns to be filtered.
-      * @return the same patterns, minus any type annotations.
-      */
-    def removeTypeAnnotationsFromPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-        patterns.collect {
-            case statementPattern: StatementPattern if !isAnnotationStatement(statementPattern) => statementPattern
-
-            case optionalPattern: OptionalPattern => OptionalPattern(removeTypeAnnotationsFromPatterns(optionalPattern.patterns))
-
-            case filterNotExistsPattern: FilterNotExistsPattern => FilterNotExistsPattern(removeTypeAnnotationsFromPatterns(filterNotExistsPattern.patterns))
-
-            case minusPattern: MinusPattern => MinusPattern(removeTypeAnnotationsFromPatterns(minusPattern.patterns))
-
-            case unionPattern: UnionPattern =>
-                val blocksWithoutAnnotations = unionPattern.blocks.map {
-                    patterns: Seq[QueryPattern] => removeTypeAnnotationsFromPatterns(patterns)
-                }
-
-                UnionPattern(blocksWithoutAnnotations)
-
-            case filterPattern: FilterPattern => filterPattern
-
-            case bindPattern: BindPattern => bindPattern
+    private class AnnotationRemovingWhereTransformer extends WhereTransformer {
+        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
+            if (!isAnnotationStatement(statementPattern)) {
+                Seq(statementPattern)
+            } else {
+                Seq.empty[QueryPattern]
+            }
         }
+
+        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
     }
 
+    /**
+      * Removes explicit type annotations from a Gravsearch WHERE clause.
+      *
+      * @param whereClause the WHERE clause.
+      * @return the same WHERE clause, minus any type annotations.
+      */
+    def removeTypeAnnotations(whereClause: WhereClause): WhereClause = {
+        whereClause.copy(
+            patterns = QueryTraverser.transformWherePatterns(
+                patterns = whereClause.patterns,
+                inputOrderBy = Seq.empty[OrderCriterion],
+                whereTransformer = new AnnotationRemovingWhereTransformer
+            )
+        )
+    }
 
     /**
       * Determines whether a statement pattern represents an explicit type annotation.

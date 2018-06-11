@@ -68,25 +68,19 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
     protected def runNextInspector(intermediateResult: IntermediateTypeInspectionResult,
                                    whereClause: WhereClause,
                                    requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
-        // Did this inspector determine all the necessary types?
-        if (intermediateResult.untypedEntities.isEmpty) {
-            // Yes. Return its result as the result of the pipeline.
-            Future(intermediateResult)
-        } else {
-            // No. Is there another inspector in the pipeline?
-            nextInspector match {
-                case Some(next) =>
-                    // Yes. Run that inspector.
-                    next.inspectTypes(
-                        previousResult = intermediateResult,
-                        whereClause = whereClause,
-                        requestingUser = requestingUser
-                    )
+        // Is there another inspector in the pipeline?
+        nextInspector match {
+            case Some(next) =>
+                // Yes. Run that inspector.
+                next.inspectTypes(
+                    previousResult = intermediateResult,
+                    whereClause = whereClause,
+                    requestingUser = requestingUser
+                )
 
-                case None =>
-                    // No. Return the incomplete result.
-                    Future(intermediateResult)
-            }
+            case None =>
+                // There are no more inspectors. Return the result we have.
+                Future(intermediateResult)
         }
     }
 }

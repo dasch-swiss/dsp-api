@@ -224,21 +224,12 @@ is also supported.
 
 Gravsearch needs to be able to determine the types of the entities that
 query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
-infer these from the ontologies used. In cases where it cannot, types
-must be specified in the query.
+infer these from context and from the ontologies used.
 
-In particular, Gravsearch needs to be able to determine:
-
-- The expected type of the object of each property used.
-- The type of each entity that isn't a property.
-
-At minimum, for each type, if it's a resource class, Gravsearch needs to
-identify it as `knora-api:Resource`; if it's a value type, Gravsearch needs to
-know the specific type.
-
-When this information cannot be inferred, it can be given by adding statements
-containing the predicate `rdf:type` to describe the entities that are not
-properties. For example, consider this query that uses a non-Knora property:
+When this information cannot be inferred, Gravsearch will return an error message
+indicating the entities for which it could not determine types. The missing
+information can be given by adding statements to the query, using the predicate
+`rdf:type`. For example, consider this query that uses a non-Knora property:
 
 ```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -257,11 +248,13 @@ CONSTRUCT {
 This produces the error message:
 
 ```
-The types of one or more entities could not be determined: ?book, <http://purl.org/dc/terms/title>, ?title
+The types of one or more entities could not be determined:
+  ?book, <http://purl.org/dc/terms/title>, ?title
 ```
 
 To solve this problem, it is sufficient to specify the types of `?book` and
-`?title`; the expected object type of `dcterms:title` can then be inferred:
+`?title`; the type of the expected object of `dcterms:title` can then be inferred
+from the type of `?title`.
 
 ```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -279,6 +272,56 @@ CONSTRUCT {
 
     ?title rdf:type xsd:string .
 
+}
+```
+
+Gravsearch will also reject a query if an entity is used with inconsistent types.
+For example:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01") .
+}
+```
+
+This returns the error message:
+
+```
+One or more entities have inconsistent types:
+
+<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate>
+  knora-api:objectType <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+
+?pubdate rdf:type <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  rdf:type <http://www.w3.org/2001/XMLSchema#string> .
+```
+
+This is because the `incunabula` ontology says that the object of `incunabula:pubdate` must be a `knora-api:Date`,
+but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
+type of the literal in the `FILTER`:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
 }
 ```
 
