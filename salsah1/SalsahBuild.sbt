@@ -1,7 +1,7 @@
 import sbt._
 import NativePackagerHelper._
 
-lazy val salsah = (project in file(".")).
+lazy val salsah1 = (project in file(".")).
         configs(
             HeadlessTest
         ).
