@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v2
 
-import java.io.{File, IOException, StringReader}
+import java.io._
 import java.util.UUID
 
 import akka.actor.Status
@@ -193,11 +193,9 @@ class StandoffResponderV2 extends Responder {
                 factory <- Future(SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI))
 
                 // get the schema the mapping has to be validated against
-                schemaFile: File = new File("src/main/resources/mappingXMLToStandoff.xsd")
+                schemaFile: String = FileUtil.readTextResource("mappingXMLToStandoff.xsd")
 
-                _ = if (!schemaFile.canRead) throw NotFoundException("Cannot find schema file: 'src/main/resources/mappingXMLToStandoff.xsd'")
-
-                schemaSource: StreamSource = new StreamSource(schemaFile)
+                schemaSource: StreamSource = new StreamSource(new StringReader(schemaFile))
 
                 // create a schema instance
                 schemaInstance: Schema = factory.newSchema(schemaSource)
@@ -363,7 +361,8 @@ class StandoffResponderV2 extends Responder {
 
                 case ioException: IOException => throw NotFoundException(s"The schema could not be found")
 
-                case unknown: Exception => throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
+                case unknown: Exception =>
+                    throw BadRequestException(s"the provided mapping could not be handled correctly: ${unknown.getMessage}")
 
             }
 
