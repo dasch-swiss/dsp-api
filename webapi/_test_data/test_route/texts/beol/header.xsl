@@ -15,7 +15,7 @@
         <xsl:value-of select="replace($input, '\(DE-588\)', 'http://d-nb.info/gnd/')"/>
     </xsl:function>
 
-    <!-- make a standard date (Gergorian calendar assumed) -->
+    <!-- make a standard date (Gregorian calendar assumed) -->
     <xsl:function name="knora-api:dateformat" as="element()*">
         <xsl:param name="input" as="element()*"/>
 
