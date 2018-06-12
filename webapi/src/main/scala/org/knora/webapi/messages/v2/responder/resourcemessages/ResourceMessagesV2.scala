@@ -867,8 +867,8 @@ sealed trait ResourceV2 {
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,
                           resourceClass: SmartIri,
-                          values: Map[SmartIri, Seq[ReadValueV2]]) extends ResourceV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
+                          values: Map[SmartIri, Seq[ReadValueV2]]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
         copy(
             resourceClass = resourceClass.toOntologySchema(targetSchema),
             values = values.map {
@@ -933,22 +933,26 @@ case class CreateResource(label: String, resourceClass: SmartIri, values: Map[Sm
   * @param numberOfResources the amount of resources returned.
   * @param resources         a sequence of resources.
   */
-case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 {
+case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadResourceV2]) extends KnoraResponseV2 with KnoraReadV2[ReadResourcesSequenceV2] {
 
-    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourcesSequenceV2 = {
+        copy(
+            resources = resources.map(_.toOntologySchema(targetSchema))
+        )
+    }
+
+    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Generate JSON-LD for the resources.
 
-        val resourcesInTargetSchema = resources.map(_.toOntologySchema(targetSchema))
-
-        val resourcesJsonObjects: Seq[JsonLDObject] = resourcesInTargetSchema.map {
+        val resourcesJsonObjects: Seq[JsonLDObject] = resources.map {
             resource: ReadResourceV2 => resource.toJsonLD(targetSchema = targetSchema, settings = settings)
         }
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
-        val projectSpecificOntologiesUsed: Set[SmartIri] = resourcesInTargetSchema.flatMap {
+        val projectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
             resource =>
                 val resourceOntology = resource.resourceClass.getOntologyFromEntity
 
@@ -982,5 +986,10 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         ))
 
         JsonLDDocument(body = body, context = context)
+
+    }
+
+    def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 }

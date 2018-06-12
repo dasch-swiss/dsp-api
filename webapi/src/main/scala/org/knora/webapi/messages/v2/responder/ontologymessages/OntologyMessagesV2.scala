@@ -845,7 +845,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
                           isWholeOntology: Boolean = false,
-                          userLang: Option[String] = None) extends KnoraResponseV2 {
+                          userLang: Option[String] = None) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyV2] {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -854,7 +854,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
       * @param targetSchema the target schema.
       * @return the converted [[ReadOntologyV2]].
       */
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
         // If we're converting to the API v2 simple schema, filter out link value properties.
         val propertiesConsideringLinkValueProps = targetSchema match {
             case ApiV2Simple =>
@@ -1241,9 +1241,9 @@ object InputOntologyV2 {
   *
   * @param ontologies the metadata to be returned.
   */
-case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyMetadataV2] {
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.
 
         val ontologiesAvailableInTargetSchema = ontologies.filterNot {
@@ -1835,7 +1835,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            knoraResourceProperties: Set[SmartIri] = Set.empty[SmartIri],
                            linkProperties: Set[SmartIri] = Set.empty[SmartIri],
                            linkValueProperties: Set[SmartIri] = Set.empty[SmartIri],
-                           fileValueProperties: Set[SmartIri] = Set.empty[SmartIri]) extends ReadEntityInfoV2 {
+                           fileValueProperties: Set[SmartIri] = Set.empty[SmartIri]) extends ReadEntityInfoV2 with KnoraReadV2[ReadClassInfoV2] {
     /**
       * All the class's cardinalities, both direct and indirect.
       */
@@ -1848,7 +1848,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         case (propertyIri, _) => knoraResourceProperties.contains(propertyIri)
     }
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
         val linkValuePropsForSchema = if (targetSchema == ApiV2Simple) {
@@ -2074,8 +2074,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
                               isLinkProp: Boolean = false,
                               isLinkValueProp: Boolean = false,
                               isFileValueProp: Boolean = false,
-                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
+                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 with KnoraReadV2[ReadPropertyInfoV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
         entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
     )
 
@@ -2174,8 +2174,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   *
   * @param entityInfoContent an [[IndividualInfoContentV2]] representing information about the named individual.
   */
-case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) extends ReadEntityInfoV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadIndividualInfoV2 = copy(
+case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) extends ReadEntityInfoV2 with KnoraReadV2[ReadIndividualInfoV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadIndividualInfoV2 = copy(
         entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
     )
 

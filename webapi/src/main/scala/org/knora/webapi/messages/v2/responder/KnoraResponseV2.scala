@@ -70,3 +70,13 @@ trait KnoraContentV2[C <: KnoraContentV2[C]] {
     this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
+
+/**
+  * A trait for read wrappers that can convert themselves to external schemas.
+  *
+  * @tparam C the type of the content class that extends this trait.
+  */
+trait KnoraReadV2[C <: KnoraReadV2[C]] {
+    this: C =>
+    def toOntologySchema(targetSchema: ApiV2Schema): C
+}

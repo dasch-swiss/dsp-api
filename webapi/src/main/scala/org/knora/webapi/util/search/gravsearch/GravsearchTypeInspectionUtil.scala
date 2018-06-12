@@ -1,3 +1,22 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.util.search._
@@ -9,77 +28,9 @@ import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyC
 object GravsearchTypeInspectionUtil {
 
     /**
-      * Represents an intermediate result during type inspection.
-      *
-      * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
-      *                 has more than one type, this means that it has been used with inconsistent types.
-      */
-    case class IntermediateTypeInspectionResult(entities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]]) {
-        /**
-          * Adds types for an entity.
-          *
-          * @param entity      the entity for which types have been found.
-          * @param entityTypes the types to be added.
-          * @return a new [[IntermediateTypeInspectionResult]] containing the additional type information.
-          */
-        def addTypes(entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo]): IntermediateTypeInspectionResult = {
-            val newTypes = entities.getOrElse(entity, Set.empty[GravsearchEntityTypeInfo]) ++ entityTypes
-            IntermediateTypeInspectionResult(entities = entities + (entity -> newTypes))
-        }
-
-        /**
-          * Returns the entities for which types have not been found.
-          */
-        def untypedEntities: Set[TypeableEntity] = {
-            entities.collect {
-                case (entity, entityTypes) if entityTypes.isEmpty => entity
-            }.toSet
-        }
-
-        /**
-          * Returns the entities that have been used with inconsistent types.
-          */
-        def entitiesWithInconsistentTypes: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = {
-            entities.filter {
-                case (_, entityTypes) => entityTypes.size > 1
-            }
-        }
-
-        /**
-          * Converts this [[IntermediateTypeInspectionResult]] to a [[GravsearchTypeInspectionResult]]. Before calling
-          * this method, ensure that `entitiesWithInconsistentTypes` returns an empty map.
-          */
-        def toFinalResult: GravsearchTypeInspectionResult = {
-            GravsearchTypeInspectionResult(
-                entities = entities.map {
-                    case (entity, entityTypes) =>
-                        if (entityTypes.size == 1) {
-                            entity -> entityTypes.head
-                        } else {
-                            throw AssertionException(s"Cannot generate final type inspection result because of inconsistent types")
-                        }
-                }
-            )
-        }
-    }
-
-    object IntermediateTypeInspectionResult {
-        /**
-          * Constructs an [[IntermediateTypeInspectionResult]] for the given set of typeable entities, with no
-          * types specified.
-          *
-          * @param entities the set of typeable entities found in the WHERE clause of a Gravsearch query.
-          */
-        def apply(entities: Set[TypeableEntity]): IntermediateTypeInspectionResult = {
-            new IntermediateTypeInspectionResult(entities = entities.map(entity => entity -> Set.empty[GravsearchEntityTypeInfo]).toMap)
-        }
-    }
-
-
-    /**
       * An enumeration of the properties that are used in type annotations.
       */
-    object TypeAnnotationPropertiesV2 extends Enumeration {
+    object TypeAnnotationProperties extends Enumeration {
 
         import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
 
@@ -112,35 +63,7 @@ object GravsearchTypeInspectionUtil {
     /**
       * IRIs that do not need to be annotated to specify their types.
       */
-    val ApiV2SimpleNonTypeableIris: Set[IRI] = ApiV2SimpleTypeIris ++ TypeAnnotationPropertiesV2.valueMap.keySet
-
-    /**
-      * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
-      */
-    private class TypeableEntityCollectingWhereVisitor extends WhereVisitor[Set[TypeableEntity]] {
-        override def visitStatementInWhere(statementPattern: StatementPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
-            statementPattern.pred match {
-                case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => acc ++ toTypeableEntities(Seq(statementPattern.subj))
-                case _ => acc ++ toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
-            }
-        }
-
-        override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = acc
-    }
-
-    /**
-      * Given a Gravsearch WHERE clause, extracts all the entities (variable names or IRIs) that need type information.
-      *
-      * @param whereClause the WHERE clause.
-      * @return a set of typeable entities.
-      */
-    def getTypableEntitiesFromPatterns(whereClause: WhereClause): Set[TypeableEntity] = {
-        QueryTraverser.visitWherePatterns(
-            patterns = whereClause.patterns,
-            whereVisitor = new TypeableEntityCollectingWhereVisitor,
-            initialAcc = Set.empty[TypeableEntity]
-        )
-    }
+    val ApiV2SimpleNonTypeableIris: Set[IRI] = ApiV2SimpleTypeIris ++ TypeAnnotationProperties.valueMap.keySet
 
     /**
       * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
@@ -181,7 +104,7 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * A [[WhereTransformer]] for removing explicit type annotations from a Gravsearch WHERE clause.
+      * A [[WhereTransformer]] for removing Gravsearch type annotations from a WHERE clause.
       */
     private class AnnotationRemovingWhereTransformer extends WhereTransformer {
         override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
@@ -196,7 +119,7 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * Removes explicit type annotations from a Gravsearch WHERE clause.
+      * Removes Gravsearch type annotations from a WHERE clause.
       *
       * @param whereClause the WHERE clause.
       * @return the same WHERE clause, minus any type annotations.
@@ -212,19 +135,37 @@ object GravsearchTypeInspectionUtil {
     }
 
     /**
-      * Determines whether a statement pattern represents an explicit type annotation.
+      * Determines whether a statement pattern represents a Gravsearch type annotation.
       *
       * @param statementPattern the statement pattern.
       * @return `true` if the statement pattern represents a type annotation.
       */
     def isAnnotationStatement(statementPattern: StatementPattern): Boolean = {
+        /**
+          * Returns `true` if an entity is an IRI representing a type that is valid for use in a type annotation.
+          *
+          * @param entity the entity to be checked.
+          */
+        def isValidTypeInAnnotation(entity: Entity): Boolean = {
+            entity match {
+                case IriRef(objIri, _) if ApiV2SimpleTypeIris(objIri.toString) => true
+                case _ => false
+            }
+        }
+
         statementPattern.pred match {
             case IriRef(predIri, _) =>
-                TypeAnnotationPropertiesV2.valueMap.get(predIri.toString) match {
-                    case Some(TypeAnnotationPropertiesV2.RDF_TYPE) =>
+                TypeAnnotationProperties.valueMap.get(predIri.toString) match {
+                    case Some(TypeAnnotationProperties.RDF_TYPE) =>
+                        // The statement's predicate is rdf:type. Check whether its object is valid in a type
+                        // annotation. If not, that's not an error, because the object could be specifying
+                        // a subclass of knora-api:Resource, in which case this isn't a type annotation.
                         isValidTypeInAnnotation(statementPattern.obj)
 
-                    case Some(TypeAnnotationPropertiesV2.OBJECT_TYPE) =>
+                    case Some(TypeAnnotationProperties.OBJECT_TYPE) =>
+                        // The statement's predicate is knora-api:objectType. Check whether its object is valid
+                        // in a type annotation. If not, that's an error, because knora-api:objectType isn't used
+                        // for anything other than type annotations in Gravsearch queries.
                         if (!isValidTypeInAnnotation(statementPattern.obj)) {
                             throw GravsearchException(s"Object of ${statementPattern.pred} is not a valid type: ${statementPattern.obj}")
                         }
@@ -234,19 +175,6 @@ object GravsearchTypeInspectionUtil {
                     case _ => false
                 }
 
-            case _ => false
-        }
-    }
-
-    /**
-      * Determines whether an entity represents the IRI of a type that can be used in a type annotation.
-      *
-      * @param entity the entity to be checked.
-      * @return `true` if the entity is an IRI and if it represents a type that can be used in a type annotation.
-      */
-    def isValidTypeInAnnotation(entity: Entity): Boolean = {
-        entity match {
-            case IriRef(objIri, _) if ApiV2SimpleTypeIris(objIri.toString) => true
             case _ => false
         }
     }

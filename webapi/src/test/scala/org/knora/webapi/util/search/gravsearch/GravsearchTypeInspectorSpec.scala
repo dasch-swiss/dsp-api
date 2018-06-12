@@ -32,7 +32,7 @@ import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, Future}
 
 /**
   * Tests Gravsearch type inspection.
@@ -44,8 +44,6 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
-
-    private implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -69,7 +67,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         }
     }
 
-    "The explicit type inspector" should {
+    "The annotation-reading type inspector" should {
         "get type information from a simple query" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = false)
             val parsedQuery = GravsearchParser.parseQuery(searchParserV2Spec.QueryWithExplicitTypeAnnotations)

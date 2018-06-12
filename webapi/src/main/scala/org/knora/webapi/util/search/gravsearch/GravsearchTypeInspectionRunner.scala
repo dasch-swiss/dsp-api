@@ -20,12 +20,11 @@
 package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSystem
-import org.knora.webapi.GravsearchException
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.IntermediateTypeInspectionResult
+import org.knora.webapi.{GravsearchException, OntologyConstants}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Runs Gravsearch type inspection using one or more type inspector implementations.
@@ -34,8 +33,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param inferTypes if true, use type inference.
   */
 class GravsearchTypeInspectionRunner(val system: ActorSystem,
-                                     inferTypes: Boolean = true)
-                                    (implicit val executionContext: ExecutionContext) {
+                                     inferTypes: Boolean = true) {
+    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
     // If inference was requested, construct an inferring type inspector.
     private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
         Some(
@@ -49,7 +49,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
     }
 
     // The pipeline of type inspectors.
-    private val typeInspectionPipeline = new ExplicitGravsearchTypeInspector(
+    private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
         nextInspector = maybeInferringTypeInspector,
         system = system
     )
@@ -66,32 +66,38 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
                      requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
         for {
             // Get the set of typeable entities in the Gravsearch query.
-            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause))
+            typeableEntities: Set[TypeableEntity] <- Future {
+                QueryTraverser.visitWherePatterns(
+                    patterns = whereClause.patterns,
+                    whereVisitor = new TypeableEntityCollectingWhereVisitor,
+                    initialAcc = Set.empty[TypeableEntity]
+                )
+            }
 
             // In the initial intermediate result, none of the entities have types yet.
-            initialResult = IntermediateTypeInspectionResult(typeableEntities)
+            initialResult: IntermediateTypeInspectionResult = IntermediateTypeInspectionResult(typeableEntities)
 
             // Run the pipeline and get its result.
-            lastResult <- typeInspectionPipeline.inspectTypes(
+            lastResult: IntermediateTypeInspectionResult <- typeInspectionPipeline.inspectTypes(
                 previousResult = initialResult,
                 whereClause = whereClause,
                 requestingUser = requestingUser
             )
 
             // Are any entities still untyped?
-            untypedEntities = lastResult.untypedEntities
+            untypedEntities: Set[TypeableEntity] = lastResult.untypedEntities
 
             _ = if (untypedEntities.nonEmpty) {
                 //  Yes. Return an error.
                 throw GravsearchException(s"Types could not be determined for one or more entities: ${untypedEntities.mkString(", ")}")
             } else {
                 // No. Are there any entities with multiple types?
-                val inconsistentEntities = lastResult.entitiesWithInconsistentTypes
+                val inconsistentEntities: Map[TypeableEntity, Set[GravsearchEntityTypeInfo]] = lastResult.entitiesWithInconsistentTypes
 
                 if (inconsistentEntities.nonEmpty) {
                     // Yes. Return an error.
 
-                    val inconsistentStr = inconsistentEntities.map {
+                    val inconsistentStr: String = inconsistentEntities.map {
                         case (entity, entityTypes) =>
                             s"$entity ${entityTypes.mkString(" ; ")} ."
                     }.mkString(" ")
@@ -101,4 +107,25 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
             }
         } yield lastResult.toFinalResult
     }
+
+
+    /**
+      * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
+      */
+    private class TypeableEntityCollectingWhereVisitor extends WhereVisitor[Set[TypeableEntity]] {
+        override def visitStatementInWhere(statementPattern: StatementPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
+            statementPattern.pred match {
+                case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type =>
+                    // If the predicate is rdf:type, only the subject can be typeable.
+                    acc ++ GravsearchTypeInspectionUtil.toTypeableEntities(Seq(statementPattern.subj))
+
+                case _ =>
+                    // Otherwise, the subject, the predicate, and the object could all be typeable.
+                    acc ++ GravsearchTypeInspectionUtil.toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
+            }
+        }
+
+        override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = acc
+    }
+
 }
