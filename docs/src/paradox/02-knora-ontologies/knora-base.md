@@ -66,7 +66,7 @@ property name):
 :   A hexadecimal code that uniquely identifies the project. These
     codes are assigned to projects by the [DaSCH](http://dasch.swiss/).
 
-`projectDescription` (0-1)
+`projectDescription` (1-n)
 
 :   A description of the project.
 

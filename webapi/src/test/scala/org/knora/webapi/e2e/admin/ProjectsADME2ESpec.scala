@@ -216,6 +216,28 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                 response.status should be (StatusCodes.BadRequest)
             }
 
+            "return 'BadRequest' if 'project description' during creation is missing" in {
+                val params =
+                    s"""
+                       |{
+                       |    "shortcode"; "1114",
+                       |    "shortname"; "newproject5",
+                       |    "longname": "project longname",
+                       |    "description": [],
+                       |    "keywords": ["keywords"],
+                       |    "logo": "/fu/bar/baz.jpg",
+                       |    "status": true,
+                       |    "selfjoin": false
+                       |}
+                """.stripMargin
+
+
+                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // log.debug(s"response: {}", response)
+                response.status should be (StatusCodes.BadRequest)
+            }
+
             "UPDATE a project" in {
 
                 val params =
