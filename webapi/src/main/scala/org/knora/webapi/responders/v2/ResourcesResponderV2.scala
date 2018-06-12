@@ -267,6 +267,52 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
+        /**
+          * Given a resource's values, convert the date values to Gregorian.
+          *
+          * @param values the values to be processed.
+          * @return the resource's values with date values converted to Gregorian.
+          */
+        def convertDateToGregorian(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, Seq[ReadValueV2]] = {
+            values.map {
+                case (propIri: SmartIri, valueObjs: Seq[ReadValueV2]) =>
+
+                    propIri -> valueObjs.map {
+
+                        // convert all dates to Gregorian calendar dates (standardization)
+                        valueObj: ReadValueV2 =>
+                            valueObj.valueContent match {
+                                case dateContent: DateValueContentV2 =>
+                                    // date value
+
+                                    valueObj.copy(
+                                        valueContent = dateContent.copy(
+                                            // act as if this was a Gregorian date
+                                            valueHasCalendar = KnoraCalendarV1.GREGORIAN
+                                        )
+                                    )
+
+                                case linkContent: LinkValueContentV2 if linkContent.nestedResource.nonEmpty =>
+                                    // recursively process the values of the nested resource
+
+                                    valueObj.copy(
+                                        valueContent = linkContent.copy(
+                                            nestedResource = Some(
+                                                linkContent.nestedResource.get.copy(
+                                                    // recursive call
+                                                    values = convertDateToGregorian(linkContent.nestedResource.get.values)
+                                                )
+                                            )
+                                        )
+                                    )
+
+                                case _ => valueObj
+                            }
+                    }
+
+            }
+        }
+
         for {
 
             // get the requested resource
@@ -314,34 +360,14 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // get all the metadata but the text property for the TEI header
             headerResource = resource.resources.head.copy(
-                values = (resource.resources.head.values - textProperty).map {
-                    case (propIri: SmartIri, valueObjs: Seq[ReadValueV2]) =>
-
-                        propIri -> valueObjs.map {
-
-                            // convert all dates to Gregorian calendar dates (standardization)
-                            // TODO: for dependent resources, this would have to be done recursively
-                            valueObj: ReadValueV2 => valueObj.valueContent match {
-                                case dateContent: DateValueContentV2 =>
-                                    valueObj.copy(
-                                        valueContent = dateContent.copy(
-                                            // act as if this was a Gregorian date
-                                            valueHasCalendar = KnoraCalendarV1.GREGORIAN
-                                        )
-                                    )
-
-                                case _ => valueObj
-                            }
-                        }
-
-                }
+                values = convertDateToGregorian(resource.resources.head.values - textProperty)
             )
 
             // get the XSL transformation for the TEI header
             headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
-              for {
-                  xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
-              } yield Some(xslTransformation.xslt)
+                for {
+                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                } yield Some(xslTransformation.xslt)
             } else {
                 Future(None)
             }

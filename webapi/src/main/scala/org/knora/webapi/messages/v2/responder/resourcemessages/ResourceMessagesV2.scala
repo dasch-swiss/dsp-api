@@ -104,8 +104,6 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 
         if (headerXSLT.nonEmpty) {
 
-            // TOOD: convert all dates to Gregorian
-
             val headerJSONLD = ReadResourcesSequenceV2(1, Vector(headerInfo)).toJsonLDDocument(ApiV2WithValueObjects, settings)
 
             val rdfParser: RDFParser = Rio.createParser(RDFFormat.JSONLD)
