@@ -324,6 +324,35 @@ FILTER (?seqnum <= 10)
 The first page starts with sequence number 1, so with this `FILTER` only
 the first ten pages are returned.
 
+### Traversing Multiple Links
+
+Here we are looking for regions of pages that are part of books that have a
+particular title:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+  ?region knora-api:isMainResource true ;
+    knora-api:isRegionOf ?page .
+
+  ?page incunabula:partOf ?book .
+
+  ?book incunabula:title ?title .
+} WHERE {
+  ?region a knora-api:Region ;
+    knora-api:isRegionOf ?page .
+
+  ?page a incunabula:page ;
+    incunabula:partOf ?book .
+
+  ?book incunabula:title ?title .
+
+  FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+}
+```
+
 ### Requesting a Graph Starting with a Known Resource
 
 Here the IRI of the main resource is already known, and we want specific information
