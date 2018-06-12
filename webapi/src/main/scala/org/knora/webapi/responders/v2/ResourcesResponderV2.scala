@@ -19,14 +19,10 @@
 
 package org.knora.webapi.responders.v2
 
-import java.io.File
-
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
-import org.apache.commons.io.FileUtils
-import org.knora.webapi.OntologyConstants.KnoraBase
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
@@ -35,14 +31,12 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequ
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
-import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ConstructQuery
 import org.knora.webapi.util.search.v2.GravsearchParserV2
-import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ConstructResponseUtilV2, MessageUtil, SmartIri}
+import org.knora.webapi.util.{ConstructResponseUtilV2, FileUtil, SmartIri}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -372,12 +366,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     // standard standoff to TEI conversion
 
                     // use standard XSLT (built-in)
-                    val teiXSLTFile: File = new File("src/main/resources/standoffToTEI.xsl")
-
-                    if (!teiXSLTFile.canRead) throw NotFoundException("Cannot find XSL transformation for TEI: 'src/main/resources/standoffToTEI.xsl'")
+                    val teiXSLTFile: String = FileUtil.readTextResource("standoffToTEI.xsl")
 
                     // return the file's content
-                    Future(FileUtils.readFileToString(teiXSLTFile, "UTF-8"))
+                    Future(teiXSLTFile)
 
                 case otherMapping => teiMapping.mapping.defaultXSLTransformation match {
                     // custom standoff to TEI conversion
