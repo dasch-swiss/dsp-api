@@ -90,7 +90,7 @@ TEI body:
 - XSL transformation to turn the XML into a valid TEI body (referred to by the mapping).
 
 The mapping has to refer to a `defaultXSLTransformation` that transforms the XML that was created from standoff markup (see @ref:[XML To Standoff Mapping in API v1](../api-v1/xml-to-standoff-mapping.md)). This step is necessary because the mapping assumes a one to one relation between standoff classes and properties and XML elements and attributes.
-For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. TEI expresses this as `<hi rend="italic">...</hi>`. In the mapping, the `standoff:StandoffItalicTag` may be mapped to a a temporary XML element that is goint to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
+For example, we may want to convert a `standoff:StandoffItalicTag` into TEI/XML. TEI expresses this as `<hi rend="italic">...</hi>`. In the mapping, the `standoff:StandoffItalicTag` may be mapped to a a temporary XML element that is going to be converted to `<hi rend="italic">...</hi>` in a further step by the XSLT. 
 
 For sample data, see `webapi/_test_data/test_route/texts/beol/BEOLTEIMapping.xml` (mapping) and `webapi/_test_data/test_route/texts/beol/standoffToTEI.xsl`. The standoff entities are defined in `beol-onto.ttl`.
 
@@ -100,7 +100,7 @@ TEI header:
 - XSL transformation to turn that RDF/XML into a valid TEI header (URL parameter `teiHeaderXSLTIri`)
 
 The Gravserarch template is expected to be of type `knora-base:TextRepresentation` and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
-The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) and more properties that are going to be mapped to the TEI header. The Gravserach template is a simple text file with the files extension `.txt`.
+The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) and more properties that are going to be mapped to the TEI header. The Gravsearch template is a simple text file with the files extension `.txt`.
 
 A Gravsearch template may look like this (see `webapi/_test_data/test_route/texts/beol/gravsearch.txt`):
 
@@ -191,14 +191,14 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     }
 ```
 
-Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iro of the resource the request is performed for.
+Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iri of the resource the request is performed for.
 The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by <https://correspsearch.net>.
 
 To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (@ref:[Introduction](introduction.md)).
 
 The Gravsearch query's result may look like this (`RDF/XML`):
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -267,7 +267,7 @@ The Gravsearch query's result may look like this (`RDF/XML`):
 
 In order to convert the metadata (not the actual standoff markup), a `knora-base:knora-base:XSLTransformation` has to be provided. For our example, it looks like this (see `webapi/_test_data/test_route/texts/beol/header.xsl`):
 
-```
+```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -428,3 +428,6 @@ HTTP GET request to http://host/v2/tei/resourceIri&textProperty=textPropertyIri&
 ```
 
 See `webapi/src/it/scala/org/knora/webapi/e2e/v1/KnoraSipiIntegrationV1ITSpec.scala` for a complete test case involving the sample data ("create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data").
+
+When you provide a custom conversion, it is up to you to ensure the validity of the TEI document. You can use this service to validate: <http://teibyexample.org/xquery/TBEvalidator.xq>.
+Problems and bugs caused by XSL transformations are out of scope of the responsibility of the Knora software.
