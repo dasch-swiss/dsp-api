@@ -421,6 +421,8 @@ In order to convert the metadata (not the actual standoff markup), a `knora-base
 </xsl:transform>
 ```
 
+You can use the functions `knora-api:iaf` and `knora-api:dateformat` in your own XSLT in case you want to support `correspSearch`.
+
 The complete request looks like this:
 
 ```
