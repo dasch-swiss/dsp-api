@@ -76,7 +76,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
-    "The ProjectsResponderADM " when {
+    "The ProjectsResponderADM" when {
 
         "used to query for project information" should {
 
