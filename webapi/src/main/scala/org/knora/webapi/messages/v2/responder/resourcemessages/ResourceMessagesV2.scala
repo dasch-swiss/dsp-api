@@ -70,13 +70,13 @@ sealed trait IOValueV2
   * @param valueIri     the IRI of the value.
   * @param valueContent the content of the value.
   */
-case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2 {
+case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
     /**
       * Converts this value to the specified ontology schema.
       *
       * @param targetSchema the target schema.
       */
-    def toOntologySchema(targetSchema: OntologySchema): ReadValueV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadValueV2 = {
         copy(valueContent = valueContent.toOntologySchema(targetSchema))
     }
 
