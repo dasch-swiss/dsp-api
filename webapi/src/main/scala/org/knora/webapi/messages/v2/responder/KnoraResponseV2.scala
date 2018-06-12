@@ -74,7 +74,7 @@ trait KnoraContentV2[C <: KnoraContentV2[C]] {
 /**
   * A trait for read wrappers that can convert themselves to external schemas.
   *
-  * @tparam C the type of the content class that extends this trait.
+  * @tparam C the type of the read wrapper that extends this trait.
   */
 trait KnoraReadV2[C <: KnoraReadV2[C]] {
     this: C =>
