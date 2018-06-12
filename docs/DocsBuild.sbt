@@ -3,7 +3,7 @@ import scala.sys.process._
 // Define `Configuration` instances representing our different documentation trees
 val ParadoxSite = config("paradox")
 
-lazy val root = (project in file(".")).
+lazy val docs = (project in file(".")).
     configs(
         ParadoxSite
     ).

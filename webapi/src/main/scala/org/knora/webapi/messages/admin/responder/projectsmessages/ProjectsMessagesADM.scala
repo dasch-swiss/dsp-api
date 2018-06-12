@@ -28,7 +28,7 @@ import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponse
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.responders.admin.ProjectsResponderADM
-import org.knora.webapi.{BadRequestException, IRI}
+import org.knora.webapi.{BadRequestException, IRI, OntologyConstraintException}
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,10 +38,10 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
   * Represents an API request payload that asks the Knora API server to create a new project.
   *
   * @param shortname   the shortname of the project to be created (unique).
-  * @param shortcode   the shortcode of the project to be creates (unique, optional)
+  * @param shortcode   the shortcode of the project to be creates (unique)
   * @param longname    the longname of the project to be created.
   * @param description the description of the project to be created.
-  * @param keywords    the keywords of the project to be created.
+  * @param keywords    the keywords of the project to be created (optional).
   * @param logo        the logo of the project to be created.
   * @param status      the status of the project to be created (active = true, inactive = false).
   * @param selfjoin    the status of self-join of the project to be created.
@@ -55,6 +55,10 @@ case class CreateProjectApiRequestADM(shortname: String,
                                       status: Boolean,
                                       selfjoin: Boolean) extends ProjectsADMJsonProtocol {
     def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
+
+    if (description.isEmpty) {
+        throw BadRequestException("Project description needs to be supplied.")
+    }
 }
 
 /**
@@ -88,9 +92,6 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
 
     // something needs to be sent, i.e. everything 'None' is not allowed
     if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
-
-    // change basic project information case
-    if (parametersCount > 8) throw BadRequestException("To many parameters sent for changing basic project information.")
 
     def toJsValue: JsValue = changeProjectApiRequestADMFormat.write(this)
 }
@@ -351,6 +352,10 @@ case class ProjectADM(id: IRI,
                       ontologies: Seq[IRI],
                       status: Boolean,
                       selfjoin: Boolean) extends Ordered[ProjectADM] {
+
+    if (description.isEmpty) {
+        throw OntologyConstraintException("Project description is a required property.")
+    }
 
     /**
       * Allows to sort collections of ProjectADM. Sorting is done by the id.
