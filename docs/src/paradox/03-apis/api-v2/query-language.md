@@ -282,7 +282,7 @@ different types of compound resources defined in different ontologies).
 Note that in a Gravsearch query, the prefix `knora-api` refers to the
 Knora API v2 simple schema.
 
-```sparql
+```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -329,7 +329,7 @@ the first ten pages are returned.
 Here we are looking for regions of pages that are part of books that have a
 particular title:
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -359,7 +359,7 @@ Here the IRI of the main resource is already known, and we want specific informa
 about it, as well as about related resources. In this case, the IRI of the main
 resource must be assigned to a variable using `BIND`:
 
-```sparql
+```
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -403,7 +403,7 @@ or the subject's specific type (if it is a value).
 
 For example, consider this query that uses a non-Knora property:
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -428,7 +428,7 @@ To solve this problem, it is enough to specify the types of `?book` and
 `?title`; the type of the expected object of `dcterms:title` can then be inferred
 from the type of `?title`.
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -450,7 +450,7 @@ CONSTRUCT {
 It would also be possible to annotate the property itself, using the predicate `knora-api:objectType`;
 then the type of `?title` would be inferred:
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -471,7 +471,7 @@ CONSTRUCT {
 
 Here is another example, using a non-Knora class:
 
-```sparql
+```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
@@ -492,7 +492,7 @@ Types could not be determined for one or more entities: ?person
 
 The solution is to specify that `?person` is a `knora-api:Resource`:
 
-```sparql
+```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
@@ -511,7 +511,7 @@ CONSTRUCT {
 Gravsearch will also reject a query if an entity is used with inconsistent types.
 For example:
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
@@ -543,7 +543,7 @@ This is because the `incunabula` ontology says that the object of `incunabula:pu
 but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
 type of the literal in the `FILTER`:
 
-```sparql
+```
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
