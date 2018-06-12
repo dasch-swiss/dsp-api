@@ -234,7 +234,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
     /**
       * Infers an entity's type if the entity is used as the object of a statement and the predicate's
-      * knora-api:objectType is known.
+      * `knora-api:objectType` is known.
       */
     private class TypeOfObjectFromPropertyRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
@@ -292,7 +292,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
     /**
       * Infers an entity's type if the entity is used as the subject of a statement, the predicate is an IRI, and
-      * the predicate's knora-api:subjectType is known.
+      * the predicate's `knora-api:subjectType` is known.
       */
     private class TypeOfSubjectFromPropertyRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
@@ -352,7 +352,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-      * Infers the knora-api:objectType of a property variable or IRI if it's used with an object whose type is known.
+      * Infers the `knora-api:objectType` of a property variable or IRI if it's used with an object whose type is known.
       */
     private class PropertyTypeFromObjectRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
@@ -491,10 +491,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       */
     private object InferenceRuleUtil {
         /**
-          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred knora-api:subjectType of the property, if any.
+          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred `knora-api:subjectType` of the property, if any.
           *
           * @param readPropertyInfo the property definition.
-          * @return the IRI of the inferred knora-api:subjectType of the property, or `None` if it could not inferred.
+          * @return the IRI of the inferred `knora-api:subjectType` of the property, or `None` if it could not inferred.
           */
         def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
             // Is this a resource property?
@@ -509,10 +509,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         }
 
         /**
-          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred knora-api:objectType of the property, if any.
+          * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred `knora-api:objectType` of the property, if any.
           *
           * @param readPropertyInfo the property definition.
-          * @return the IRI of the inferred knora-api:objectType of the property, or `None` if it could not inferred.
+          * @return the IRI of the inferred `knora-api:objectType` of the property, or `None` if it could not inferred.
           */
         def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
             // Is this a link property?
@@ -613,12 +613,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           * Given a map of Knora class or property definitions, converts each one to the schema in which it was requested.
           *
           * @param inputEntityIris the IRIs of the entities that were requested.
-          * @param entityMap a map of entity IRIs to entity definitions as returned by the ontology responder.
+          * @param entityMap       a map of entity IRIs to entity definitions as returned by the ontology responder.
           * @tparam C the entity definition type, which can be [[ReadClassInfoV2]] or [[ReadPropertyInfoV2]].
           * @return a map of entity IRIs to entity definitions, with each IRI and definition represented in the
           *         schema in which it was requested.
           */
-        def toInputSchema[C <: KnoraReadV2[C]](inputEntityIris: Set[SmartIri], entityMap: Map[SmartIri, C]):  Map[SmartIri, C] = {
+        def toInputSchema[C <: KnoraReadV2[C]](inputEntityIris: Set[SmartIri], entityMap: Map[SmartIri, C]): Map[SmartIri, C] = {
             inputEntityIris.flatMap {
                 inputEntityIri =>
                     val inputSchema = inputEntityIri.getOntologySchema.get match {
@@ -665,7 +665,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         log.debug(s"****** Inference iteration $iterationNumber (untyped ${intermediateResult.untypedEntities.size}, inconsistent ${intermediateResult.entitiesWithInconsistentTypes.size})")
 
         val iterationResult: IntermediateTypeInspectionResult = intermediateResult.entities.keySet.foldLeft(intermediateResult) {
-            case (acc, entityToType) =>
+            case (acc: IntermediateTypeInspectionResult, entityToType: TypeableEntity) =>
                 rulePipeline.infer(
                     entityToType = entityToType,
                     intermediateResult = acc,
@@ -703,22 +703,22 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             // Index the statement by subject.
             val subjectIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
                 statementEntity = statementPattern.subj,
-                statement = statementPattern,
-                statementAcc = acc.subjectIndex
+                statementPattern = statementPattern,
+                statementIndex = acc.subjectIndex
             )
 
             // Index the statement by predicate.
             val predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
                 statementEntity = statementPattern.pred,
-                statement = statementPattern,
-                statementAcc = acc.predicateIndex
+                statementPattern = statementPattern,
+                statementIndex = acc.predicateIndex
             )
 
             // Index the statement by object.
             val objectIndex: Map[TypeableEntity, Set[StatementPattern]] = addIndexEntry(
                 statementEntity = statementPattern.obj,
-                statement = statementPattern,
-                statementAcc = acc.objectIndex
+                statementPattern = statementPattern,
+                statementIndex = acc.objectIndex
             )
 
             // If the statement's predicate is rdf:type, and its object is a Knora entity, add it to the
@@ -753,23 +753,23 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         }
 
         /**
-          * Given a statement and an entity in the statement, checks whether the entity is typeable, and makes an index
+          * Given a statement pattern and an entity contained in it, checks whether the entity is typeable, and makes an index
           * entry if so.
           *
-          * @param statementEntity the entity (subject, predicate, or object).
-          * @param statement       the statement.
-          * @param statementAcc    an accumulator for a statement index.
+          * @param statementEntity  the entity (subject, predicate, or object).
+          * @param statementPattern the statement pattern.
+          * @param statementIndex   an accumulator for a statement index.
           * @return an updated accumulator.
           */
         private def addIndexEntry(statementEntity: Entity,
-                                  statement: StatementPattern,
-                                  statementAcc: Map[TypeableEntity, Set[StatementPattern]]): Map[TypeableEntity, Set[StatementPattern]] = {
+                                  statementPattern: StatementPattern,
+                                  statementIndex: Map[TypeableEntity, Set[StatementPattern]]): Map[TypeableEntity, Set[StatementPattern]] = {
             GravsearchTypeInspectionUtil.maybeTypeableEntity(statementEntity) match {
                 case Some(typeableEntity) =>
-                    val currentPatterns = statementAcc.getOrElse(typeableEntity, Set.empty[StatementPattern])
-                    statementAcc + (typeableEntity -> (currentPatterns + statement))
+                    val currentPatterns = statementIndex.getOrElse(typeableEntity, Set.empty[StatementPattern])
+                    statementIndex + (typeableEntity -> (currentPatterns + statementPattern))
 
-                case None => statementAcc
+                case None => statementIndex
             }
         }
 

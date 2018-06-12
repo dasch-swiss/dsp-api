@@ -242,7 +242,7 @@ object QueryTraverser {
       *
       * @param patterns     the input query patterns.
       * @param whereVisitor a [[WhereVisitor]].
-      * @param initialAcc   the visitor's initial accumululator.
+      * @param initialAcc   the visitor's initial accumulator.
       * @tparam Acc the type of the accumulator.
       * @return the accumulator.
       */
