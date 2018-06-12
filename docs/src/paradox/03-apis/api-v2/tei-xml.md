@@ -29,7 +29,7 @@ Other of the resource's property may be mapped to the TEI header.
 
 ## Standard Standoff to TEI Conversion
 
-Knora offers a built-in conversion form standard standoff entities (defined in `standoff-onto`) tags to TEI.
+Knora offers a built-in conversion form standard standoff entities (defined in the `standoff` ontology) tags to TEI.
 
 In order to obtain a resource as a TEI document, the following request has to be performed. 
 Please note that the URL parameters have to be URL-encoded.
@@ -99,7 +99,7 @@ TEI header:
 - Gravsearch template to query the resources metadata, results are serialized to RDF/XML (URL parameter `gravsearchTemplateIri`)
 - XSL transformation to turn that RDF/XML into a valid TEI header (URL parameter `teiHeaderXSLTIri`)
 
-The Gravserarch template is expected to be of type `knora-base:TextRepresentation` and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
+The Gravsearch template is expected to be of type `knora-base:TextRepresentation` and to contain a placeholder `$resourceIri` that is to be replaced by the actual resource Iri.
 The Gravsearch template is expected to contain a query involving the text property (URL parameter `textProperty`) and more properties that are going to be mapped to the TEI header. The Gravsearch template is a simple text file with the files extension `.txt`.
 
 A Gravsearch template may look like this (see `webapi/_test_data/test_route/texts/beol/gravsearch.txt`):
@@ -192,9 +192,9 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 ```
 
 Note the placeholder `BIND(<$resourceIri> as ?letter)` that is going to be replaced by the Iri of the resource the request is performed for.
-The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by <https://correspsearch.net>.
+The query asks for information about the letter's text `beol:hasText` and information about its author and recipient. This information is converted to the TEI header in the format required by [correspSearch](https://correspsearch.net).
 
-To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (@ref:[Introduction](introduction.md)).
+To write the XSLT, do the Gravsearch query and request the data as RDF/XML using content negotiation (see @ref:[Introduction](introduction.md)).
 
 The Gravsearch query's result may look like this (`RDF/XML`):
 
@@ -429,5 +429,5 @@ HTTP GET request to http://host/v2/tei/resourceIri&textProperty=textPropertyIri&
 
 See `webapi/src/it/scala/org/knora/webapi/e2e/v1/KnoraSipiIntegrationV1ITSpec.scala` for a complete test case involving the sample data ("create a mapping for standoff conversion to TEI referring to an XSLT and also create a Gravsearch template and an XSLT for transforming TEI header data").
 
-When you provide a custom conversion, it is up to you to ensure the validity of the TEI document. You can use this service to validate: <http://teibyexample.org/xquery/TBEvalidator.xq>.
+When you provide a custom conversion, it is up to you to ensure the validity of the TEI document. You can use this service to validate: [TEI by example validator](http://teibyexample.org/xquery/TBEvalidator.xq).
 Problems and bugs caused by XSL transformations are out of scope of the responsibility of the Knora software.
