@@ -220,111 +220,6 @@ FILTER(lang(?text) = "fr")
 The [SPARQL `regex` function](https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#func-regex)
 is also supported.
 
-#### Type Inference
-
-Gravsearch needs to be able to determine the types of the entities that
-query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
-infer these from context and from the ontologies used.
-
-When this information cannot be inferred, Gravsearch will return an error message
-indicating the entities for which it could not determine types. The missing
-information can be given by adding statements to the query, using the predicate
-`rdf:type`. For example, consider this query that uses a non-Knora property:
-
-```sparql
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-
-CONSTRUCT {
-    ?book knora-api:isMainResource true ;
-        dcterms:title ?title .
-
-} WHERE {
-    ?book dcterms:title ?title .
-}
-```
-
-This produces the error message:
-
-```
-The types of one or more entities could not be determined:
-  ?book, <http://purl.org/dc/terms/title>, ?title
-```
-
-To solve this problem, it is sufficient to specify the types of `?book` and
-`?title`; the type of the expected object of `dcterms:title` can then be inferred
-from the type of `?title`.
-
-```sparql
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-PREFIX dcterms: <http://purl.org/dc/terms/>
-
-CONSTRUCT {
-    ?book knora-api:isMainResource true ;
-        dcterms:title ?title .
-
-} WHERE {
-
-    ?book rdf:type incunabula:book ;
-        dcterms:title ?title .
-
-    ?title rdf:type xsd:string .
-
-}
-```
-
-Gravsearch will also reject a query if an entity is used with inconsistent types.
-For example:
-
-```sparql
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-
-CONSTRUCT {
-    ?book knora-api:isMainResource true ;
-        incunabula:pubdate ?pubdate .
-} WHERE {
-    ?book a incunabula:book ;
-        incunabula:pubdate ?pubdate .
-
-  FILTER(?pubdate = "JULIAN:1497-03-01") .
-}
-```
-
-This returns the error message:
-
-```
-One or more entities have inconsistent types:
-
-<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate>
-  knora-api:objectType <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
-  knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
-
-?pubdate rdf:type <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
-  rdf:type <http://www.w3.org/2001/XMLSchema#string> .
-```
-
-This is because the `incunabula` ontology says that the object of `incunabula:pubdate` must be a `knora-api:Date`,
-but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
-type of the literal in the `FILTER`:
-
-```sparql
-PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-
-CONSTRUCT {
-    ?book knora-api:isMainResource true ;
-        incunabula:pubdate ?pubdate .
-} WHERE {
-    ?book a incunabula:book ;
-        incunabula:pubdate ?pubdate .
-
-  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
-}
-```
-
 #### Value Types
 
 Gravsearch supports the following value types:
@@ -387,7 +282,7 @@ different types of compound resources defined in different ontologies).
 Note that in a Gravsearch query, the prefix `knora-api` refers to the
 Knora API v2 simple schema.
 
-```
+```sparql
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
 
 CONSTRUCT {
@@ -428,3 +323,208 @@ FILTER (?seqnum <= 10)
 
 The first page starts with sequence number 1, so with this `FILTER` only
 the first ten pages are returned.
+
+### Requesting a Graph Starting with a Known Resource
+
+Here the IRI of the main resource is already known, and we want specific information
+about it, as well as about related resources. In this case, the IRI of the main
+resource must be assigned to a variable using `BIND`:
+
+```sparql
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true ;
+    beol:creationDate ?date ;
+    ?linkingProp1 ?person1 .
+
+  ?person1 beol:hasFamilyName ?familyName .
+} WHERE {
+  BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+
+  ?letter a beol:letter ;
+    beol:creationDate ?date ;
+    ?linkingProp1 ?person1 .
+
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+
+  ?person1 beol:hasFamilyName ?familyName .
+} ORDER BY ?date
+```
+
+## Type Inference
+
+Gravsearch needs to be able to determine the types of the entities that
+query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
+infer these from context and from the ontologies used. In particular, it needs to
+know:
+
+* The type of the subject and object of each statement.
+* The type that is expected as the object of each predicate.
+
+### Type Annotations
+
+When one or more types cannot be inferred, Gravsearch will return an error message
+indicating the entities for which it could not determine types. The missing
+information must then be given by adding type annotations to the query. This can always done by
+adding statements with the predicate `rdf:type`. The subject must be a resource or value,
+and the object must either be `knora-api:Resource` (if the subject is a resource)
+or the subject's specific type (if it is a value).
+
+For example, consider this query that uses a non-Knora property:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+    ?book dcterms:title ?title .
+}
+```
+
+This produces the error message:
+
+```
+The types of one or more entities could not be determined:
+  ?book, <http://purl.org/dc/terms/title>, ?title
+```
+
+To solve this problem, it is enough to specify the types of `?book` and
+`?title`; the type of the expected object of `dcterms:title` can then be inferred
+from the type of `?title`.
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+
+    ?book rdf:type incunabula:book ;
+        dcterms:title ?title .
+
+    ?title rdf:type xsd:string .
+
+}
+```
+
+It would also be possible to annotate the property itself, using the predicate `knora-api:objectType`;
+then the type of `?title` would be inferred:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+
+    ?book rdf:type incunabula:book ;
+        dcterms:title ?title .
+
+    dcterms:title knora-api:objectType xsd:string .
+
+}
+```
+
+Here is another example, using a non-Knora class:
+
+```sparql
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+CONSTRUCT {
+    ?person knora-api:isMainResource true .
+} WHERE {
+    ?person a foaf:Person .
+    ?person foaf:familyName ?familyName .
+    FILTER(?familyName = "Meier")
+}
+```
+
+This produces the error message:
+
+```
+Types could not be determined for one or more entities: ?person
+```
+
+The solution is to specify that `?person` is a `knora-api:Resource`:
+
+```sparql
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+CONSTRUCT {
+    ?person knora-api:isMainResource true .
+} WHERE {
+    ?person a foaf:Person .
+    ?person a knora-api:Resource .
+    ?person foaf:familyName ?familyName .
+    FILTER(?familyName = "Meier")
+}
+```
+
+### Inconsistent Types
+
+Gravsearch will also reject a query if an entity is used with inconsistent types.
+For example:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01") .
+}
+```
+
+This returns the error message:
+
+```
+One or more entities have inconsistent types:
+
+<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate>
+  knora-api:objectType <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+
+?pubdate rdf:type <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  rdf:type <http://www.w3.org/2001/XMLSchema#string> .
+```
+
+This is because the `incunabula` ontology says that the object of `incunabula:pubdate` must be a `knora-api:Date`,
+but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
+type of the literal in the `FILTER`:
+
+```sparql
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
+}
+```
