@@ -639,7 +639,7 @@ class ProjectsResponderADM extends Responder {
             shortname = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortname, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortname defined.")).head.asInstanceOf[StringLiteralV2].value,
             shortcode = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectShortcode, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no shortcode defined.")).head.asInstanceOf[StringLiteralV2].value,
             longname = propsMap.get(OntologyConstants.KnoraBase.ProjectLongname).map(_.head.asInstanceOf[StringLiteralV2].value),
-            description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2]),
+            description = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectDescription, throw InconsistentTriplestoreDataException(s"Project: $projectIri has no description defined.")).map(_.asInstanceOf[StringLiteralV2]),
             keywords = propsMap.getOrElse(OntologyConstants.KnoraBase.ProjectKeyword, Seq.empty[String]).map(_.asInstanceOf[StringLiteralV2].value).sorted,
             logo = propsMap.get(OntologyConstants.KnoraBase.ProjectLogo).map(_.head.asInstanceOf[StringLiteralV2].value),
             ontologies = ontologies,
