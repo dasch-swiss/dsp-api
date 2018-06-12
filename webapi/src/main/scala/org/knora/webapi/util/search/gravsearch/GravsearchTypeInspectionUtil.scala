@@ -115,43 +115,30 @@ object GravsearchTypeInspectionUtil {
     val ApiV2SimpleNonTypeableIris: Set[IRI] = ApiV2SimpleTypeIris ++ TypeAnnotationPropertiesV2.valueMap.keySet
 
     /**
-      * Given a flattened sequence of query patterns, extracts all the entities (variable names or IRIs) that need type information.
-      *
-      * @param patterns the patterns to be searched.
-      * @return a set of typeable entities.
+      * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
       */
-    def getTypableEntitiesFromPatterns(patterns: Seq[QueryPattern]): Set[TypeableEntity] = {
-        patterns.collect {
-            case statementPattern: StatementPattern =>
-                // Don't look for a type annotation of an IRI that's the object of rdf:type.
-                statementPattern.pred match {
-                    case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => toTypeableEntities(Seq(statementPattern.subj))
-                    case _ => toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
-                }
-        }.flatten.toSet
+    private class TypeableEntityCollectingWhereVisitor extends WhereVisitor[Set[TypeableEntity]] {
+        override def visitStatementInWhere(statementPattern: StatementPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
+            statementPattern.pred match {
+                case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type => acc ++ toTypeableEntities(Seq(statementPattern.subj))
+                case _ => acc ++ toTypeableEntities(Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj))
+            }
+        }
+
+        override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = acc
     }
 
     /**
-      * A [[WhereTransformer]] that returns statements and filters unchanged.
-      */
-    private class NoOpWhereTransformer extends WhereTransformer {
-        override def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = Seq(statementPattern)
-
-        override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
-    }
-
-    /**
-      * Flattens all the patterns in a Gravsearch WHERE clause into a single sequence.
+      * Given a Gravsearch WHERE clause, extracts all the entities (variable names or IRIs) that need type information.
       *
       * @param whereClause the WHERE clause.
-      * @return a flat sequence of query patterns.
+      * @return a set of typeable entities.
       */
-    def flattenPatterns(whereClause: WhereClause): Seq[QueryPattern] = {
-        QueryTraverser.transformWherePatterns(
+    def getTypableEntitiesFromPatterns(whereClause: WhereClause): Set[TypeableEntity] = {
+        QueryTraverser.visitWherePatterns(
             patterns = whereClause.patterns,
-            inputOrderBy = Seq.empty[OrderCriterion],
-            whereTransformer = new NoOpWhereTransformer,
-            rebuildStructure = false
+            whereVisitor = new TypeableEntityCollectingWhereVisitor,
+            initialAcc = Set.empty[TypeableEntity]
         )
     }
 

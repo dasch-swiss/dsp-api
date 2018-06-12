@@ -56,7 +56,7 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
                               requestingUser: UserADM): Future[IntermediateTypeInspectionResult] = {
         for {
             // Get all the explicit type annotations.
-            explicitAnnotations: Seq[ExplicitAnnotationV2Simple] <- Future(getExplicitAnnotations(GravsearchTypeInspectionUtil.flattenPatterns(whereClause)))
+            explicitAnnotations: Seq[ExplicitAnnotationV2Simple] <- Future(getExplicitAnnotations(whereClause))
 
             // Collect the information in the type annotations.
 
@@ -80,20 +80,34 @@ class ExplicitGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspec
     }
 
     /**
-      * Given a flattened sequence of query patterns, gets all the explicit type annotations.
+      * A [[WhereVisitor]] that collects type annotations.
+      */
+    private class AnnotationCollectingWhereVisitor extends WhereVisitor[Vector[ExplicitAnnotationV2Simple]] {
+        override def visitStatementInWhere(statementPattern: StatementPattern,
+                                           acc: Vector[ExplicitAnnotationV2Simple]): Vector[ExplicitAnnotationV2Simple] = {
+            if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
+                acc :+ annotationStatementToExplicitAnnotationV2Simple(statementPattern)
+            } else {
+                acc
+            }
+        }
+
+        override def visitFilter(filterPattern: FilterPattern,
+                                 acc: Vector[ExplicitAnnotationV2Simple]): Vector[ExplicitAnnotationV2Simple] = acc
+    }
+
+    /**
+      * Given a WHERE clause, gets all the explicit type annotations.
       *
-      * @param patterns the query patterns.
+      * @param whereClause the WHERE clause.
       * @return the type annotations found in the query patterns.
       */
-    private def getExplicitAnnotations(patterns: Seq[QueryPattern]): Seq[ExplicitAnnotationV2Simple] = {
-        patterns.collect {
-            case statementPattern: StatementPattern =>
-                if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
-                    Seq(annotationStatementToExplicitAnnotationV2Simple(statementPattern))
-                } else {
-                    Seq.empty[ExplicitAnnotationV2Simple]
-                }
-        }.flatten
+    private def getExplicitAnnotations(whereClause: WhereClause): Seq[ExplicitAnnotationV2Simple] = {
+        QueryTraverser.visitWherePatterns(
+            patterns = whereClause.patterns,
+            whereVisitor = new AnnotationCollectingWhereVisitor,
+            initialAcc = Vector.empty[ExplicitAnnotationV2Simple]
+        )
     }
 
     /**

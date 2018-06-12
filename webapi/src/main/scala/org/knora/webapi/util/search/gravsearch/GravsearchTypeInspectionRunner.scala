@@ -66,7 +66,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
                      requestingUser: UserADM): Future[GravsearchTypeInspectionResult] = {
         for {
             // Get the set of typeable entities in the Gravsearch query.
-            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(GravsearchTypeInspectionUtil.flattenPatterns(whereClause)))
+            typeableEntities: Set[TypeableEntity] <- Future(GravsearchTypeInspectionUtil.getTypableEntitiesFromPatterns(whereClause))
 
             // In the initial intermediate result, none of the entities have types yet.
             initialResult = IntermediateTypeInspectionResult(typeableEntities)
