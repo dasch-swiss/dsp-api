@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.SmartIri
 
 import scala.concurrent.Future
 

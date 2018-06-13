@@ -83,19 +83,24 @@ is explained in @ref:[Knora IRIs](knora-iris.md).
 
 ## API Schema
 
-Knora API v2 offers the query and response format in a complex schema
-and a simple one. The main difference is that the complex schema exposes
-the complexity of value objects, while the simple version does not. A
-client that needs to edit values must use the complex schema in order to
-obtain the IRI of each value. A client that reads but does not update
-data can use the simplified schema. The simple schema is mainly intended
-to facilitate interoperability with other RDF-based systems in the
+Knora API v2 uses RDF data structures that are simpler than the ones
+actually stored in the triplestore, and more suitable for the development
+of client software. Thus we refer to the *internal* schema of data
+as it is stored in the triplestore, and to *external* schemas which
+are used to represent that data in API v2.
+
+Knora API v2 offers a complex schema and a simple one. The main difference
+is that the complex schema exposes the complexity of value objects, while
+the simple version does not. A client that needs to edit values must use the
+complex schema in order to obtain the IRI of each value. A client that reads
+but does not update data can use the simplified schema. The simple schema is
+mainly intended to facilitate interoperability with other RDF-based systems in the
 context of Linked Open Data. It is therefore designed to use the
 simplest possible datatypes and to require minimal knowledge of Knora.
 
 In either case, the client deals only with data whose structure and
-semantics are defined by Knora API ontologies, which are distinct from
-the ontologies that are used to store date in the triplestore. The Knora
+semantics are defined by external Knora API ontologies, which are distinct from
+the internal ontologies that are used to store date in the triplestore. The Knora
 API server automatically converts back and forth between these internal
 and external representations. This approach encapsulates the internals
 and adds a layer of abstraction to them.

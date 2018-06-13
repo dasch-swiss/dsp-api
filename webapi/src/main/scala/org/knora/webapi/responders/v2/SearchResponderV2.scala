@@ -33,7 +33,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.v2._
+import org.knora.webapi.util.search.gravsearch._
 
 import scala.collection.mutable
 import scala.concurrent.Future
@@ -137,6 +137,9 @@ object SearchResponderV2Constants {
 
 class SearchResponderV2 extends ResponderWithStandoffV2 {
 
+    // A Gravsearch type inspection runner.
+    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(system = system)
+
     def receive = {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
@@ -180,7 +183,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Preprocesses an [[Entity]] by converting external IRIs to internal ones.
           *
-          * @param entity an entity provided by [[GravsearchParserV2]].
+          * @param entity an entity provided by [[GravsearchParser]].
           * @return the preprocessed entity.
           */
         private def preprocessEntity(entity: Entity): Entity = {
@@ -201,7 +204,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Preprocesses a [[StatementPattern]] by converting external IRIs to internal ones and enabling inference if necessary.
           *
-          * @param statementPattern a statement provided by GravsearchParserV2.
+          * @param statementPattern a statement provided by GravsearchParser.
           * @return the preprocessed statement pattern.
           */
         private def preprocessStatementPattern(statementPattern: StatementPattern): StatementPattern = {
@@ -221,7 +224,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     /**
       * An abstract base class providing shared methods for [[WhereTransformer]] instances.
       */
-    abstract class AbstractSparqlTransformer(typeInspectionResult: TypeInspectionResult) extends WhereTransformer {
+    abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
@@ -506,14 +509,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param conversionFuncForNonPropertyType the function to use to create additional statements.
           * @return a sequence of [[QueryPattern]] representing the additional statements.
           */
-        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: TypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
 
             val typeInfoKey = toTypeableEntityKey(entity)
 
             // make sure that type info has not been processed yet
-            if (typeInfoKey.nonEmpty && (typeInspection.typedEntities -- processedTypeInfo contains typeInfoKey.get)) {
+            if (typeInfoKey.nonEmpty && (typeInspection.entities -- processedTypeInfo contains typeInfoKey.get)) {
 
-                val nonPropTypeInfo: NonPropertyTypeInfo = typeInspection.typedEntities(typeInfoKey.get) match {
+                val nonPropTypeInfo: NonPropertyTypeInfo = typeInspection.entities(typeInfoKey.get) match {
                     case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
 
                     case _ => throw AssertionException(s"NonPropertyTypeInfo expected for ${typeInfoKey.get}")
@@ -541,13 +544,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param conversionFuncForPropertyType the function to use for the conversion.
           * @return a sequence of [[QueryPattern]] representing the converted statement.
           */
-        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: TypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
             val predTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(statementPattern.pred)
 
-            if (predTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains predTypeInfoKey.get)) {
+            if (predTypeInfoKey.nonEmpty && (typeInspection.entities contains predTypeInfoKey.get)) {
                 // process type information for the predicate into additional statements
 
-                val propTypeInfo = typeInspection.typedEntities(predTypeInfoKey.get) match {
+                val propTypeInfo = typeInspection.entities(predTypeInfoKey.get) match {
                     case propInfo: PropertyTypeInfo => propInfo
 
                     case _ => throw AssertionException(s"PropertyTypeInfo expected for ${predTypeInfoKey.get}")
@@ -693,7 +696,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // make sure that the right argument is a string literal (dates are represented as knora date strings in knora-api simple)
             val dateStringLiteral: XsdLiteral = dateValueExpression match {
-                case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.Xsd.String => dateStrLiteral
+                case dateStrLiteral: XsdLiteral if dateStrLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.Date => dateStrLiteral
 
                 case other => throw GravsearchException(s"right argument in CompareExpression for date property was expected to be a string literal representing a date, but $other is given.")
             }
@@ -807,16 +810,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make a key to look up information in type inspection results
             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(queryVar)
 
             // get information about the queryVar's type
-            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for queryVar
-                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
 
                 // check if queryVar represents a property or a value
                 typeInfo match {
@@ -921,16 +924,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make a key to look up information about the lang functions argument (query var) in type inspection results
             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(langFunctionCall.textValueVar)
 
             // get information about the queryVar's type
-            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for lang.textValueVar
-                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
 
                 typeInfo match {
 
@@ -982,7 +985,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection    the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: TypeInspectionResult): TransformedFilterPattern = {
+        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // make sure that the query variable (first argument of regex function) represents a text value
 
@@ -990,10 +993,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(regexFunctionCall.textValueVar)
 
             // get information about the queryVar's type
-            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
 
                 // get type information for regexFunction.textValueVar
-                val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
 
                 typeInfo match {
 
@@ -1037,7 +1040,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection         the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             val functionName: IriRef = functionCallExpression.functionIri.toInternalEntityIri
 
@@ -1062,10 +1065,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(textValueVar)
 
                     // get information about the queryVar's type
-                    if (queryVarTypeInfoKey.nonEmpty && (typeInspection.typedEntities contains queryVarTypeInfoKey.get)) {
+                    if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
 
                         // get type information for regexFunction.textValueVar
-                        val typeInfo: GravsearchEntityTypeInfo = typeInspection.typedEntities(queryVarTypeInfoKey.get)
+                        val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
 
                         typeInfo match {
 
@@ -1117,7 +1120,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param typeInspection   the results of type inspection.
           * @return a [[TransformedFilterPattern]].
           */
-        protected def transformFilterPattern(filterExpression: Expression, typeInspection: TypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        protected def transformFilterPattern(filterExpression: Expression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             filterExpression match {
 
@@ -1677,7 +1680,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
@@ -1746,9 +1749,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
-            whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
-            typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
+            whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 
@@ -1813,7 +1815,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: TypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult) extends AbstractSparqlTransformer(typeInspectionResult) with ConstructToSelectTransformer {
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -1876,7 +1878,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // Return the main resource variable and the generated variable that we're using for ordering.
 
                 val dependentResourceGroupConcat: Set[GroupConcat] = dependentResourceVariables.map {
-                    (dependentResVar: QueryVariable) =>
+                    dependentResVar: QueryVariable =>
                         GroupConcat(inputVariable = dependentResVar,
                             separator = groupConcatSeparator,
                             outputVariableName = dependentResVar.variableName + groupConcatVariableAppendix)
@@ -1885,7 +1887,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 dependentResourceVariablesGroupConcat = dependentResourceGroupConcat.map(_.outputVariable)
 
                 val valueObjectGroupConcat = valueObjectVariables.map {
-                    (valueObjVar: QueryVariable) =>
+                    valueObjVar: QueryVariable =>
                         GroupConcat(inputVariable = valueObjVar,
                             separator = groupConcatSeparator,
                             outputVariableName = valueObjVar.variableName + groupConcatVariableAppendix)
@@ -1925,7 +1927,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                 // What is the type of the literal value?
                                 val typeableEntity = TypeableVariable(criterion.queryVariable.variableName)
-                                val typeInfo: GravsearchEntityTypeInfo = typeInspectionResult.typedEntities.getOrElse(typeableEntity, throw GravsearchException(s"No type information found for ${criterion.queryVariable}"))
+                                val typeInfo: GravsearchEntityTypeInfo = typeInspectionResult.entities.getOrElse(typeableEntity, throw GravsearchException(s"No type information found for ${criterion.queryVariable}"))
 
                                 // Get the corresponding knora-base:valueHas* property so we can generate an appropriate variable name.
                                 val propertyIri: SmartIri = typeInfo match {
@@ -2011,7 +2013,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param variableConcatSuffix the suffix appended to variable names in prequery results.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: TypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
 
             // make sure resource is a query variable or an Iri
             resource match {
@@ -2025,8 +2027,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // get statements with the main resource as a subject
             val statementsWithResourceAsSubject: Seq[StatementPattern] = constructClause.statements.filter {
-                (statementPattern: StatementPattern) =>
-                    statementPattern.subj == resource
+                statementPattern: StatementPattern => statementPattern.subj == resource
             }
 
             statementsWithResourceAsSubject.foldLeft(Set.empty[QueryVariable]) {
@@ -2051,9 +2052,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // if the given key exists in the type annotations map, add it to the collection
-                    if (typeInspection.typedEntities.contains(typeableEntity)) {
+                    if (typeInspection.entities.contains(typeableEntity)) {
 
-                        val propTypeInfo: PropertyTypeInfo = typeInspection.typedEntities(typeableEntity) match {
+                        val propTypeInfo: PropertyTypeInfo = typeInspection.entities(typeableEntity) match {
                             case propType: PropertyTypeInfo => propType
 
                             case _: NonPropertyTypeInfo =>
@@ -2212,9 +2213,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
-            typeInspector <- FastFuture.successful(new ExplicitTypeInspectorV2())
-            whereClauseWithoutAnnotations: WhereClause = typeInspector.removeTypeAnnotations(inputQuery.whereClause)
-            typeInspectionResult: TypeInspectionResult = typeInspector.inspectTypes(inputQuery.whereClause)
+            typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
+            whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Preprocess the query to convert API IRIs to internal IRIs and to set inference per statement.
 
@@ -2252,7 +2252,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            //  _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
@@ -2300,13 +2300,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
 
                 // collect all variables representing resources
-                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.typedEntities.collect {
+                val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
                     case (queryVar: TypeableVariable, nonPropTypeInfo: NonPropertyTypeInfo) if nonPropTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Simple.Resource => QueryVariable(queryVar.variableName)
                 }.toSet
 
                 // the user may have defined Iris of dependent resources in the input query (type annotations)
                 // only add them if they are mentioned in a positive context (not negated like in a FILTER NOT EXISTS or MINUS)
-                val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.typedEntities.collect {
+                val dependentResourceIrisFromTypeInspection: Set[IRI] = typeInspectionResult.entities.collect {
                     case (iri: TypeableIri, _: NonPropertyTypeInfo) if whereClauseWithoutAnnotations.positiveEntities.contains(IriRef(iri.iri)) =>
                         iri.iri.toString
                 }.toSet
@@ -2324,7 +2324,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
 
                         val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
-                            (valueObjVarConcat: QueryVariable) =>
+                            valueObjVarConcat: QueryVariable =>
 
                                 // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
                                 val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
@@ -2439,7 +2439,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectIrisPerMainResource(resIri)
 
                             val valObjIrisRequestedForRes: Set[IRI] = allValueObjectVariables.flatMap {
-                                (requestedQueryVar: QueryVariable) =>
+                                requestedQueryVar: QueryVariable =>
                                     valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object Iris collection for resource $resIri"))
                             }
 
@@ -2465,14 +2465,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                         // filter values for the current resource
                                         val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
-                                            (valueObj: ConstructResponseUtilV2.ValueRdfData) =>
+                                            valueObj: ConstructResponseUtilV2.ValueRdfData =>
                                                 // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
                                                 valueObjIrisRequestedForRes(valueObj.valueObjectIri)
                                         }
 
                                         // if there are link values including a target resource, apply filter to their values too
                                         val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
-                                            (valObj: ConstructResponseUtilV2.ValueRdfData) =>
+                                            valObj: ConstructResponseUtilV2.ValueRdfData =>
                                                 if (valObj.nestedResource.nonEmpty) {
 
                                                     val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get

@@ -340,7 +340,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                 }
         }
 
-        val objectType = propertyInfoContent.requireIriPredicate(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
+        val objectType = propertyInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
 
         if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
             throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
@@ -845,7 +845,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
                           properties: Map[SmartIri, ReadPropertyInfoV2] = Map.empty[SmartIri, ReadPropertyInfoV2],
                           individuals: Map[SmartIri, ReadIndividualInfoV2] = Map.empty[SmartIri, ReadIndividualInfoV2],
                           isWholeOntology: Boolean = false,
-                          userLang: Option[String] = None) extends KnoraResponseV2 {
+                          userLang: Option[String] = None) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyV2] {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     /**
@@ -854,7 +854,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
       * @param targetSchema the target schema.
       * @return the converted [[ReadOntologyV2]].
       */
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
         // If we're converting to the API v2 simple schema, filter out link value properties.
         val propertiesConsideringLinkValueProps = targetSchema match {
             case ApiV2Simple =>
@@ -1241,9 +1241,9 @@ object InputOntologyV2 {
   *
   * @param ontologies the metadata to be returned.
   */
-case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 {
+case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2]) extends KnoraResponseV2 with KnoraReadV2[ReadOntologyMetadataV2] {
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
         // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.
 
         val ontologiesAvailableInTargetSchema = ontologies.filterNot {
@@ -1321,6 +1321,24 @@ case class PredicateInfoV2(predicateIri: SmartIri,
             case Seq(SmartIriLiteralV2(iri)) => iri
             case _ => errorFun
         }
+    }
+
+    /**
+      * Requires this predicate to have at least one IRI, and returns those objects.
+      *
+      * @param errorFun a function that throws an error. It will be called if the predicate has no objects,
+      *                 or has non-IRI objects.
+      * @return the predicate's IRI objects.
+      */
+    def requireIriObjects(errorFun: => Nothing): Set[SmartIri] = {
+        if (objects.isEmpty) {
+            errorFun
+        }
+
+        objects.map {
+            case SmartIriLiteralV2(iri) => iri
+            case _ => errorFun
+        }.toSet
     }
 
     /**
@@ -1498,8 +1516,20 @@ sealed trait EntityInfoContentV2 {
       * @param errorFun     a function that will be called if the predicate is absent or if its object is not an IRI.
       * @return a [[SmartIri]] representing the predicate's object.
       */
-    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
+    def requireIriObject(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
         predicates.getOrElse(predicateIri, errorFun).requireIriObject(errorFun)
+    }
+
+    /**
+      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that it at least one IRI object, and
+      * returns those objects as a set of [[SmartIri]] instances.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @param errorFun     a function that will be called if the predicate is absent or if its objects are not IRIs.
+      * @return a set of [[SmartIri]] instances representing the predicate's objects.
+      */
+    def requireIriObjects(predicateIri: SmartIri, errorFun: => Nothing): Set[SmartIri] = {
+        predicates.getOrElse(predicateIri, errorFun).requireIriObjects(errorFun)
     }
 
     /**
@@ -1835,7 +1865,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            knoraResourceProperties: Set[SmartIri] = Set.empty[SmartIri],
                            linkProperties: Set[SmartIri] = Set.empty[SmartIri],
                            linkValueProperties: Set[SmartIri] = Set.empty[SmartIri],
-                           fileValueProperties: Set[SmartIri] = Set.empty[SmartIri]) extends ReadEntityInfoV2 {
+                           fileValueProperties: Set[SmartIri] = Set.empty[SmartIri]) extends ReadEntityInfoV2 with KnoraReadV2[ReadClassInfoV2] {
     /**
       * All the class's cardinalities, both direct and indirect.
       */
@@ -1848,7 +1878,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         case (propertyIri, _) => knoraResourceProperties.contains(propertyIri)
     }
 
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
         val linkValuePropsForSchema = if (targetSchema == ApiV2Simple) {
@@ -2074,8 +2104,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
                               isLinkProp: Boolean = false,
                               isLinkValueProp: Boolean = false,
                               isFileValueProp: Boolean = false,
-                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
+                              isStandoffInternalReferenceProperty: Boolean = false) extends ReadEntityInfoV2 with KnoraReadV2[ReadPropertyInfoV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadPropertyInfoV2 = copy(
         entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
     )
 
@@ -2174,8 +2204,8 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
   *
   * @param entityInfoContent an [[IndividualInfoContentV2]] representing information about the named individual.
   */
-case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) extends ReadEntityInfoV2 {
-    def toOntologySchema(targetSchema: ApiV2Schema): ReadIndividualInfoV2 = copy(
+case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) extends ReadEntityInfoV2 with KnoraReadV2[ReadIndividualInfoV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): ReadIndividualInfoV2 = copy(
         entityInfoContent = entityInfoContent.toOntologySchema(targetSchema)
     )
 
@@ -2286,7 +2316,15 @@ case class ClassInfoContentV2(classIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type"))
+        val classTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is missing or invalid")).filter {
+            classType => OntologyConstants.ClassTypes.contains(classType.toString)
+        }
+
+        if (classTypeSet.size == 1) {
+            classTypeSet.head
+        } else {
+            throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is invalid")
+        }
     }
 
     /**
@@ -2515,7 +2553,15 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
+        val propertyTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is missing or invalid")).filter {
+            classType => OntologyConstants.PropertyTypes.contains(classType.toString)
+        }
+
+        if (propertyTypeSet.size == 1) {
+            propertyTypeSet.head
+        } else {
+            throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is invalid")
+        }
     }
 
     /**

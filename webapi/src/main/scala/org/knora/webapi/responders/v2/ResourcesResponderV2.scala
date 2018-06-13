@@ -35,7 +35,7 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.ConstructQuery
-import org.knora.webapi.util.search.v2.GravsearchParserV2
+import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{ConstructResponseUtilV2, FileUtil, SmartIri}
 
 import scala.concurrent.Future
@@ -329,7 +329,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     gravsearchQuery = template.replace("$resourceIri", resourceIri)
 
                     // parse the Gravsearch query
-                    constructQuery: ConstructQuery = GravsearchParserV2.parseQuery(gravsearchQuery)
+                    constructQuery: ConstructQuery = GravsearchParser.parseQuery(gravsearchQuery)
 
                     // do a request to the SearchResponder
                     gravSearchResponse: ReadResourcesSequenceV2 <- (responderManager ? GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
