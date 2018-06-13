@@ -30,5 +30,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [Gravsearch: Virtual Graph Search](query-language.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
+- [TEI/XML](tei-xml.md)
 
 @@@

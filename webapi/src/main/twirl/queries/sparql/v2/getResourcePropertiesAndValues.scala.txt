@@ -31,7 +31,7 @@
  *@
 @(triplestore: String,
   resourceIris: Seq[IRI],
-  preview: Boolean = false)
+  preview: Boolean)
 
 @if(triplestore.startsWith("graphdb")) {
     @{

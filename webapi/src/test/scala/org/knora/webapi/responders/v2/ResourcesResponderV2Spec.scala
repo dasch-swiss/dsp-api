@@ -30,11 +30,17 @@ import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManag
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
+import org.knora.webapi.util.IriConversions._
+import org.xmlunit.builder.{DiffBuilder, Input}
+import org.xmlunit.diff.Diff
 
 import scala.concurrent.duration._
+import scala.io.{Codec, Source}
 
 object ResourcesResponderV2Spec {
-    private val userProfile = SharedTestDataADM.incunabulaProjectAdminUser
+    private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
+
+    private val anythingUserProfile = SharedTestDataADM.anythingUser2
 }
 
 /**
@@ -71,7 +77,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = response)
@@ -79,9 +85,20 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
+
+            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein, received = response)
+            }
+
+        }
+
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = response)
@@ -91,7 +108,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
@@ -99,9 +116,20 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+
+            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise, received = response)
+            }
+
+        }
+
         "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder, received = response)
@@ -111,11 +139,47 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), userProfile)
+            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
+            }
+
+        }
+
+        "return a resource of type thing with text with standoff as TEI/XML" in {
+
+            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ResourceTEIGetResponseV2 =>
+
+                    val expectedBody =
+                        """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
+
+                    // Compare the original XML with the regenerated XML.
+                    val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+
+                    xmlDiff.hasDifferences should be(false)
+            }
+
+        }
+
+        "return a resource of type Something with text with standoff as TEI/XML" in {
+
+            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ResourceTEIGetResponseV2 =>
+
+                    val expectedBody =
+                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch"/>markup.</p></body></text>""".stripMargin
+
+                    // Compare the original XML with the regenerated XML.
+                    val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+
+                    xmlDiff.hasDifferences should be(false)
             }
 
         }

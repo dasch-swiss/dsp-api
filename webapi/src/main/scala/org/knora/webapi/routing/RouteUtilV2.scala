@@ -29,10 +29,11 @@ import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio._
 import org.eclipse.rdf4j.rio.helpers.BasicWriterSettings
-import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.resourcemessages.ResourceTEIGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.jsonld.JsonLDDocument
+import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception.catching
@@ -136,7 +137,7 @@ object RouteUtilV2 {
             responseMediaType: MediaType.NonBinary = chooseRdfMediaTypeForResponse(requestContext)
 
             // Format the response message as an HTTP response.
-            formattedResponse = formatResponse(
+            formattedResponse: HttpResponse = formatResponse(
                 knoraResponse = knoraResponse,
                 responseMediaType = responseMediaType,
                 responseSchema = responseSchema,
@@ -145,6 +146,52 @@ object RouteUtilV2 {
 
             // The request was successful
         } yield formattedResponse
+
+        requestContext.complete(httpResponse)
+    }
+
+    /**
+      * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
+      *
+      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+      * @param requestContext   the akka-http [[RequestContext]].
+      * @param settings         the application's settings.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param responseSchema   the API schema that should be used in the response.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a [[Future]] containing a [[RouteResult]].
+      */
+    def runTEIXMLRoute(requestMessage: KnoraRequestV2,
+                       requestContext: RequestContext,
+                       settings: SettingsImpl,
+                       responderManager: ActorSelection,
+                       log: LoggingAdapter,
+                       responseSchema: ApiV2Schema)
+                      (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+
+        val contentType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+
+        val httpResponse: Future[HttpResponse] = for {
+
+            teiResponse <- (responderManager ? requestMessage).map {
+                case replyMessage: ResourceTEIGetResponseV2 => replyMessage
+
+                case other =>
+                    // The responder returned an unexpected message type (not an exception). This isn't the client's
+                    // fault, so log it and return an error message to the client.
+                    throw UnexpectedMessageException(s"Responder sent a reply of type ${other.getClass.getCanonicalName}")
+            }
+
+
+        } yield HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                contentType,
+                teiResponse.toXML
+            )
+        )
 
         requestContext.complete(httpResponse)
     }

@@ -183,3 +183,7 @@ The response to a count query request is an object with one predicate,
 
 For more complex queries than a full-text search, Knora offers a query language
 called @ref:[Gravsearch: Virtual Graph Search](query-language.md)).
+
+### Support of TEI/XML
+
+To convert standoff markup to TEI/XML, see @ref:[TEI/XML](tei-xml.md).

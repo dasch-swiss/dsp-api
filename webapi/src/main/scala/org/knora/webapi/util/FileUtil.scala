@@ -25,7 +25,7 @@ import java.nio.file.{Files, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import akka.event.LoggingAdapter
-import org.knora.webapi.{FileWriteException, SettingsImpl}
+import org.knora.webapi.{FileWriteException, NotFoundException, SettingsImpl}
 import resource._
 
 import scala.io.{BufferedSource, Codec, Source}
@@ -51,6 +51,8 @@ object FileUtil {
       * @return the contents of the file.
       */
     def readTextFile(file: File): String = {
+        // TODO: provide apt error handling
+
         val source = Source.fromFile(file)(Codec.UTF8)
 
         try {
@@ -67,12 +69,26 @@ object FileUtil {
       * @return the contents of the file.
       */
     def readTextResource(filename: String): String = {
-        val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
+        // https://alvinalexander.com/scala/scala-exception-handling-try-catch-finally#toc_0
+
+        var sourceOption = None: Option[BufferedSource]
 
         try {
+            val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
+
+            if (source.nonEmpty) {
+                sourceOption = Some(source)
+            }
+
             source.mkString
+        } catch {
+            case ex: Exception =>
+                throw NotFoundException(s"The requested file could not be read: $filename")
         } finally {
-            source.close()
+            if (sourceOption.nonEmpty) {
+                sourceOption.get.close
+            }
+
         }
     }
 

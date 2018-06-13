@@ -1,0 +1,114 @@
+{
+  "@graph" : [ {
+    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Sierra"
+  }, {
+    "@id" : "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Delta"
+  }, {
+    "@id" : "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Hotel"
+  }, {
+    "@id" : "http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "excluded Bravo"
+  }, {
+    "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Victor"
+  }, {
+    "@id" : "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Juliet"
+  }, {
+    "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+    "@type" : "anything:Thing",
+    "anything:hasBoolean" : {
+      "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ",
+      "@type" : "knora-api:BooleanValue",
+      "knora-api:booleanValueAsBoolean" : true
+    },
+    "rdfs:label" : "testding"
+  }, {
+    "@id" : "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Papa"
+  }, {
+    "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Uniform"
+  }, {
+    "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Foxtrot"
+  }, {
+    "@id" : "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Whiskey"
+  }, {
+    "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Tango"
+  }, {
+    "@id" : "http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "November"
+  }, {
+    "@id" : "http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "excluded Alpha"
+  }, {
+    "@id" : "http://rdfh.ch/0001/a-blue-thing",
+    "@type" : "anything:BlueThing",
+    "rdfs:label" : "A blue thing"
+  }, {
+    "@id" : "http://rdfh.ch/0001/a-thing",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "A thing"
+  }, {
+    "@id" : "http://rdfh.ch/0001/a-thing-with-text-values",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen"
+  }, {
+    "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "ein verdammtes Ding mit einer Sprache"
+  }, {
+    "@id" : "http://rdfh.ch/0001/another-thing",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Another thing"
+  }, {
+    "@id" : "http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Oscar"
+  }, {
+    "@id" : "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Mike"
+  }, {
+    "@id" : "http://rdfh.ch/0001/contained-thing-1",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "A contained thing that only project members can see"
+  }, {
+    "@id" : "http://rdfh.ch/0001/contained-thing-2",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Another contained thing that only project members can see"
+  }, {
+    "@id" : "http://rdfh.ch/0001/containing-thing",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "A containing thing"
+  }, {
+    "@id" : "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+    "@type" : "anything:Thing",
+    "rdfs:label" : "Quebec"
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
