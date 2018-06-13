@@ -170,7 +170,7 @@ clauses use the following patterns, with the specified restrictions:
     unordered set of triples. However, a Gravsearch query returns an
     ordered list of resources, which can be ordered by the values of
     specified properties.
-  - `BIND`: The value assigned must be a Knora data IRI.
+  - `BIND`: The value assigned must be a Knora resource IRI.
 
 #### Resources
 
@@ -262,7 +262,7 @@ one variable representing a resource must be marked in this way.
 In this section, we provide some sample queries of different complexity
 to illustrate the usage of Gravsearch.
 
-### Getting all the Components of a Compound resource
+### Getting All the Components of a Compound Resource
 
 In order to get all the components of a compound resource, the following
 Gravsearch query can be sent to the API.

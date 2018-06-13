@@ -21,7 +21,25 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@toc { depth=2 }
 
+## Triplestores
+
+### Which triplestores can be used with Knora?
+
+Knora is tested with [Ontotext GraphDB SE](http://graphdb.ontotext.com/).
+Our goal is to support several triplestores, including open-source options.
+Integration with [Apache Jena Fuseki](https://jena.apache.org/documentation/fuseki2/)
+has been partly implemented, but is not currently supported.
+
 ## Knora Ontologies
+
+### Can a project use classes or properties defined in another project's ontology?
+
+No, and Knora API v2 will forbid this. Each project must be free to change its
+own ontologies, but this is not possible if they have been used in ontologies or
+data created by other projects.
+
+Instead, there will be a process for standardising ontologies that can be shared
+by multiple projects (issue @github[#523](#523)).
 
 ### Why doesn't Knora use `rdfs:domain` and `rdfs:range` for consistency checking?
 
