@@ -44,10 +44,9 @@ In the beginning, Unil will use the IDs `0100` to `07FF`, and Unibas
 
 ### Internal Ontology IRIs
 
-Starting with Knora API v2, Knora makes a distinction between internal
-and external ontologies. Internal ontologies are used in the
-triplestore, while external ontologies are used in the API. For each
-internal ontology, there is a corresponding external ontology. Some
+Knora makes a distinction between internal and external ontologies. Internal
+ontologies are used in the triplestore, while external ontologies are used in
+API v2. For each internal ontology, there is a corresponding external ontology. Some
 internal ontologies are built into Knora, while others are
 project-specific. Knora automatically generates external
 ontologies based on project-specific internal ontologies.
