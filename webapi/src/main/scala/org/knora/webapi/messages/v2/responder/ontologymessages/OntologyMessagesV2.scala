@@ -340,7 +340,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                 }
         }
 
-        val objectType = propertyInfoContent.requireIriPredicate(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
+        val objectType = propertyInfoContent.requireIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri, throw BadRequestException(s"Missing knora-api:objectType"))
 
         if (!(objectType.isKnoraApiV2EntityIri && objectType.getOntologySchema.contains(ApiV2WithValueObjects))) {
             throw BadRequestException(s"Invalid knora-api:objectType: $objectType")
@@ -1324,6 +1324,24 @@ case class PredicateInfoV2(predicateIri: SmartIri,
     }
 
     /**
+      * Requires this predicate to have at least one IRI, and returns those objects.
+      *
+      * @param errorFun a function that throws an error. It will be called if the predicate has no objects,
+      *                 or has non-IRI objects.
+      * @return the predicate's IRI objects.
+      */
+    def requireIriObjects(errorFun: => Nothing): Set[SmartIri] = {
+        if (objects.isEmpty) {
+            errorFun
+        }
+
+        objects.map {
+            case SmartIriLiteralV2(iri) => iri
+            case _ => errorFun
+        }.toSet
+    }
+
+    /**
       * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
       * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
       * read back from the triplestore (in which predicate objects are not escaped).
@@ -1498,8 +1516,20 @@ sealed trait EntityInfoContentV2 {
       * @param errorFun     a function that will be called if the predicate is absent or if its object is not an IRI.
       * @return a [[SmartIri]] representing the predicate's object.
       */
-    def requireIriPredicate(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
+    def requireIriObject(predicateIri: SmartIri, errorFun: => Nothing): SmartIri = {
         predicates.getOrElse(predicateIri, errorFun).requireIriObject(errorFun)
+    }
+
+    /**
+      * Checks that a predicate is present in this [[EntityInfoContentV2]] and that it at least one IRI object, and
+      * returns those objects as a set of [[SmartIri]] instances.
+      *
+      * @param predicateIri the IRI of the predicate.
+      * @param errorFun     a function that will be called if the predicate is absent or if its objects are not IRIs.
+      * @return a set of [[SmartIri]] instances representing the predicate's objects.
+      */
+    def requireIriObjects(predicateIri: SmartIri, errorFun: => Nothing): Set[SmartIri] = {
+        predicates.getOrElse(predicateIri, errorFun).requireIriObjects(errorFun)
     }
 
     /**
@@ -2286,7 +2316,15 @@ case class ClassInfoContentV2(classIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Class $classIri has no rdf:type"))
+        val classTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is missing or invalid")).filter {
+            classType => OntologyConstants.ClassTypes.contains(classType.toString)
+        }
+
+        if (classTypeSet.size == 1) {
+            classTypeSet.head
+        } else {
+            throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is invalid")
+        }
     }
 
     /**
@@ -2515,7 +2553,15 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdf:type"))
+        val propertyTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is missing or invalid")).filter {
+            classType => OntologyConstants.PropertyTypes.contains(classType.toString)
+        }
+
+        if (propertyTypeSet.size == 1) {
+            propertyTypeSet.head
+        } else {
+            throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is invalid")
+        }
     }
 
     /**
