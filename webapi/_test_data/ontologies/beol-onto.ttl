@@ -2127,3 +2127,37 @@
             rdfs:subClassOf knora-base:StandoffTag ;
 
             rdfs:comment "represents a caption tag"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffCenterTag
+:StandoffCenterTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that is to be centered"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffExpansionTag
+:StandoffExpansionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an abbreviation in a text that can be expanded"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffAbbreviationMarkerTag
+:StandoffAbbreviationMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an abbreviation marker in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffExpansionMarkerTag
+:StandoffExpansionMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "identifies an expansion marker in a text"@en .
+
+
