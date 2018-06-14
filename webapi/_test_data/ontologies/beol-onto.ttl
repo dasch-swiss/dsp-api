@@ -1285,6 +1285,45 @@
                    rdfs:comment """Der Brief ist publiziert"""@de ,
                               """Letter is published"""@en .
 
+### ###########################################
+### beol:transcriptionOf
+
+    :transcriptionOf rdf:type owl:ObjectProperty ;
+
+           rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+           rdfs:comment "Transkription von"@de ,
+                        "Transcription of"@en ;
+
+           rdfs:label  "Transkription von"@de ,
+                       "Transcription of"@en ;
+
+           knora-base:subjectClassConstraint :transcription ;
+
+           knora-base:objectClassConstraint knora-base:Resource ;
+
+           salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### beol:transcriptionOfValue
+
+:transcriptionOfValue rdf:type owl:ObjectProperty ;
+
+                knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                knora-base:subjectClassConstraint :transcription ;
+
+                rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                rdfs:comment "Transkription von"@de ,
+                             "Transcription of"@en ;
+
+                rdfs:label  "Transkription von"@de ,
+                            "Transcription of"@en .
+
+
+
 ##########################################################
 #
 # RESOURCES
@@ -1701,6 +1740,37 @@
     rdfs:label "schriftliche Quelle"@de ,
                 "Written source"@en .
 
+### ###########################################
+### beol:transcription
+
+:transcription rdf:type owl:Class ;
+
+               rdfs:subClassOf knora-base:Resource ,
+
+               [
+                 rdf:type owl:Restriction ;
+                 owl:onProperty :hasText ;
+                 owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                 salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+               ],
+               [
+                rdf:type owl:Restriction ;
+                owl:onProperty :transcriptionOf ;
+                owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+               ],
+               [
+                rdf:type owl:Restriction ;
+                owl:onProperty :transcriptionOfValue ;
+                owl:cardinality "1"^^xsd:nonNegativeInteger ;
+                salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+               ];
+
+               rdfs:comment "Transkription"@de ,
+                            "Transcription"@en ;
+
+               rdfs:label "Transkription"@de ,
+                          "Transcription"@en ; .
 
 ### ###########################################
 ### beol:person
