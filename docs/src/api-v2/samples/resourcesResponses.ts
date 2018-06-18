@@ -3,106 +3,95 @@ import ApiV2WithValueObjects = ResourcesResponse.ApiV2WithValueObjects;
 import ApiV2Simple = ResourcesResponse.ApiV2Simple
 
 // http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
-const Zeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": {
-        "@id": "http://rdfh.ch/c5058f3a",
-        "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation": [
-            {
-                "@id": "http://rdfh.ch/c5058f3a/values/184e99ca01",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Schramm Bd. XXI, S. 27"
-            },
-            {
-                "@id": "http://rdfh.ch/c5058f3a/values/db77ec0302",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GW 4168"
-            },
-            {
-                "@id": "http://rdfh.ch/c5058f3a/values/9ea13f3d02",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                "http://api.knora.org/ontology/knora-api/v2#valueAsString": "ISTC ib00512000"
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasAuthor": {
-            "@id": "http://rdfh.ch/c5058f3a/values/8653a672",
+const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
+    "@id": "http://rdfh.ch/c5058f3a",
+    "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation": [
+        {
+            "@id": "http://rdfh.ch/c5058f3a/values/184e99ca01",
             "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Berthold, der Bruder"
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Schramm Bd. XXI, S. 27"
         },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#location": {
-            "@id": "http://rdfh.ch/c5058f3a/values/92faf25701",
+        {
+            "@id": "http://rdfh.ch/c5058f3a/values/db77ec0302",
             "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167"
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GW 4168"
         },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc": {
-            "@id": "http://rdfh.ch/c5058f3a/values/5524469101",
+        {
+            "@id": "http://rdfh.ch/c5058f3a/values/9ea13f3d02",
             "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Dimension: 8°"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate": {
-            "@id": "http://rdfh.ch/c5058f3a/values/cfd09f1e01",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": "JULIAN",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": "CE",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 1492,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 1492,
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "JULIAN:1492 CE"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher": {
-            "@id": "http://rdfh.ch/c5058f3a/values/497df9ab",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Johann Amerbach"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc": {
-            "@id": "http://rdfh.ch/c5058f3a/values/0ca74ce5",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Basel"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title": {
-            "@id": "http://rdfh.ch/c5058f3a/values/c3295339",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Zeitglöcklein des Lebens und Leidens Christi"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#url": {
-            "@id": "http://rdfh.ch/c5058f3a/values/10e00c7acc2704",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
-        },
-        "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
+            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "ISTC ib00512000"
+        }
+    ],
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#location": {
+        "@id": "http://rdfh.ch/c5058f3a/values/92faf25701",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167"
     },
-    "http://schema.org/numberOfItems": 1
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc": {
+        "@id": "http://rdfh.ch/c5058f3a/values/5524469101",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Dimension: 8°"
+    },
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate": {
+        "@id": "http://rdfh.ch/c5058f3a/values/cfd09f1e01",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": "JULIAN",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": "CE",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 1492,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 1492,
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "JULIAN:1492 CE"
+    },
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher": {
+        "@id": "http://rdfh.ch/c5058f3a/values/497df9ab",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Johann Amerbach"
+    },
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc": {
+        "@id": "http://rdfh.ch/c5058f3a/values/0ca74ce5",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Basel"
+    },
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title": {
+        "@id": "http://rdfh.ch/c5058f3a/values/c3295339",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Zeitglöcklein des Lebens und Leidens Christi"
+    },
+    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#url": {
+        "@id": "http://rdfh.ch/c5058f3a/values/10e00c7acc2704",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
 };
 
+
 // http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?schema=simple
-const ZeitgloeckleinSimple: ApiV2Simple.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": {
-        "@id": "http://rdfh.ch/c5058f3a",
-        "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#citation": [
-            "Schramm Bd. XXI, S. 27",
-            "GW 4168",
-            "ISTC ib00512000"
-        ],
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#hasAuthor": "Berthold, der Bruder",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#location": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#physical_desc": "Dimension: 8°",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate": "JULIAN:1492 CE",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher": "Johann Amerbach",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc": "Basel",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title": "Zeitglöcklein des Lebens und Leidens Christi",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#url": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1",
-        "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
+const ZeitgloeckleinSimple: ApiV2Simple.Resource = {
+    "@id": "http://rdfh.ch/c5058f3a",
+    "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#citation": [
+        "Schramm Bd. XXI, S. 27",
+        "GW 4168",
+        "ISTC ib00512000"
+    ],
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#location": "Universitäts- und Stadtbibliothek Köln, Sign: AD+S167",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#physical_desc": "Dimension: 8°",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate": {
+        "@type": "http://api.knora.org/ontology/knora-api/simple/v2#Date",
+        "@value": "JULIAN:1492 CE"
     },
-    "http://schema.org/numberOfItems": 1
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publisher": "Johann Amerbach",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#publoc": "Basel",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title": "Zeitglöcklein des Lebens und Leidens Christi",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#url": "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1",
+    "http://www.w3.org/2000/01/rdf-schema#label": "Zeitglöcklein des Lebens und Leidens Christi"
 };
 
 // http://localhost:3333/v2/search/Narr
 let fulltextSearchForNarr: ApiV2WithValueObjects.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": [
+    "@graph": [
         {
             "@id": "http://rdfh.ch/00505cf0a803",
             "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -172,16 +161,6 @@ let fulltextSearchForNarr: ApiV2WithValueObjects.ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher hält einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und Jüngling steht der Name „.VLI.“; über den beiden schwebt eine Banderole mit der Aufschrift „vly . von . stouffen .  . frisch . vnd vngschaffen“; zwischen den Füssen des Jünglings ist die Jahreszahl „.1.4.9.4.“ zu lesen.\n11.6 x 8.5 cm."
             },
             "http://www.w3.org/2000/01/rdf-schema#label": "b6r"
-        },
-        {
-            "@id": "http://rdfh.ch/0801/beol/4BhkDasRSLaB-ujyKWplaw",
-            "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
-            "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText": {
-                "@id": "http://rdfh.ch/0801/beol/4BhkDasRSLaB-ujyKWplaw/values/5_qMgwspTsmJYdmanJXe_g",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                "http://api.knora.org/ontology/knora-api/v2#textValueAsHtml": "<div>\n   <div id=\"transcription\">\n      \n      <p>\n         <a class=\"facsimile salsah-link\" href=\"http://rdfh.ch/0801/beol/ofF53oirSzm9mFm2WjZQ0Q\"></a> Bâle ce 28. Mars 1730. \n      </p>\n      \n      <p>Monsieur et treshonoré Ami</p>\n      \n      <p>J'ai toujours differé de Vous repondre dans l'esperance de pouvoir Vous mander l'issue\n         de l'affaire du Diac. W. mais selon le train qu'elle prend, elle pourra bien trotter\n         encore quelque temps avant qu'on en vienne à la sentence finale. Mrs. les Theologiens\n         ont livré au Conseil une deduction de leurs griefs tres vigoureuse et longue, contenant\n         environ 300 pages in folio; la Lecture a couté au Magistrat cinq seances, chacune\n         de 4 heures. Non obstant les plus foudroyantes accusations dont W. est chargé, il\n         ne laisse pas de trouver encore des Patrons dans le Conseil, qui voudroient bien le\n         sauver s'ils pouvoient, mais il n'y a pas moyen, quoique le Pere de l'accusé et l'accusé\n         lui meme ayent eu assés de temps d'user de toutes leurs ruses et artifices (dont ils\n         sont capables) pour gagner la pluralité des suffrages, ce qu'on a pu remarquer en\n         ce que la lecture de la seconde partie ayant été faite il y eût une si grande emotion\n         dans les Esprits des Conseillers Auditeurs, à cause des crimes inoüis dont cette partie\n         étoit remplie à la charge de W. que peu s'en falloit qu'on n'on n'envoyat sur le champ\n         4 fuseliers pour le saisir et trainer en prison; mais on fut bien surpris de voir\n         qu'à la troisieme lecture et les suivantes, ce feu fut extremement rallenti quoi qu'on\n         y eut entendu des imputations pour le moins aussi importantes que celles qui furent\n         lües par la seconde lecture; il y en eut meme, à ce que j'apprends, qui opinerent\n         pour la suppression des deux dernieres parties sans en faire la lecture; <a class=\"facsimile salsah-link\" href=\"http://rdfh.ch/0801/beol/u6hoabVIReOnDn3jCkWf4A\"></a> d'où Vous voyés que les W. Pere et fils ont bien sçû mettre à profit le delai qu'ils\n         avoient d'une session à l'autre; Cependant les plus zelés pour la cause de Dieu ont\n         prévalu, malgrés les infatigables pratiques qu'on a mises en oeuvre, ensorte qu'à\n         la derniere des 5 Sessions il fut decreté, que dans le Conseil des treize on questionneroit\n         sur touts les articles d'accusations le D. W. et cela en presence de Msrs. les Theologiens\n         ses Accusateurs; Ce qui fut executé jeudi passé à la maison de Ville; l'examen dura\n         depuis 2 heures jusqu'à 8 heures du soir; j'ai appris que W. se defendit miserablement,\n         ne faisant autre chose que nier les faits les plus averés par temoins irreprochables,\n         suivant en cela le dogme 15 qu'il a enseigné à ses Disciples. Ainsi le rapport des\n         treise étant fait au Magistrat samedi aprés, et voyant qu'il n'y avoit pas moyen de\n         ramener le Delinquent à la reconnoissance de ses Crimes, ni à la repentance spontanée,\n         il fut conclû que les Theologiens dresseroient des interrogatoires sur les quels on\n         ecouteroit chacun des Temoins sous un sermant corporel; Ce qui demandera encore du\n         temps, d'autant plus que quelques uns des Temoins demeurent ailleurs, qu'il faudra\n         ou citer s'ils ne sont pas loins, ou leur faire faire leurs depositions sous sermant\n         devant le Magistrat du lieu où ils se trouvent. Quelques uns croyent que le D. W.\n         quand il verra le serieux, il se resoudra plutot à chanter le <em>peccavi</em> qu'à se voir convaincu par les Temoins; il le fera peutetre déja demain par une Requete\n         qu'il presentera peutetre au Conseil. Voici en attendant la sentence definitive, la\n         quintessence des Heresies, telles que Mrs. les Theolog. l'ont tirée eux memes de leur\n         long Memoire. Je Vous suis bien obligé de la communication de la Lettre du Ministere\n         de Schafouse au Notre, je l'avois déja luë auparavant; elle contient bien plus de\n         vigueur et de bon sens que celle de chés Vous et celle de Berne. Je suis avec toute\n         la sincerité de mon ame Monsieur Votre tres humble et tr. ob. serviteur J. Bernoulli\n         \n      </p>\n      \n      <p>\n         <a class=\"facsimile salsah-link\" href=\"http://rdfh.ch/0801/beol/nI6vp40wTy6Qvmjya85CFA\"></a> P. S. Je viens d'apprendre que les partisans de W. courent en effet de maison en\n         maison chés les Conseillers, pour demander grace en faveur de l'accusé promettant,\n         qu'il reconnoitra ses crimes et les confessera; c'est sans doute pour prevenir la\n         conviction juridique par les Temoins jurés, ce qui le ruineroit entierement. Mais\n         voilà une repentance par force, qui ne le reconciliera pas avec Dieu, qu'il a si horriblement\n         offensé. \n      </p>\n      \n      <p>\n         <a class=\"facsimile salsah-link\" href=\"http://rdfh.ch/0801/beol/tl7VCSivQ-qToHWNSK4dqQ\"></a> Recapitulation\n      </p>\n      \n      <p>H. Diaconus W. ist folgend. Irrthumer überwiesen, welche er den Leüthen beyzubringen\n         getrachtet hat: \n      </p>\n      \n      <p>1. Das hohe Geheimnuß der Dreyeinigkeit vernichtet er. </p>\n      \n      <p>2. hat er auf allerhand weiß zu verstehen geben, Christus seye nicht der wahre Gott\n         und eines wesens mit dem Vatter, und deßwegen alle örter H. Schrifft, so davon handlen,\n         verdrähet, derowegen möge Christus auch nicht inn allen fählen angebetten werden.\n         \n      </p>\n      \n      <p>3. Christus habe nicht für unsere Sünden genuggethan sondern den Menschen nur gute\n         Lehren und Exempel gegeben. \n      </p>\n      \n      <p>4. Der H. Geyst seye nicht der wahre Gott, sondern etwas mehr als ein Mensch, deßwegen\n         könne man nicht gewiß seyn, daß er müsse angebetten werden. \n      </p>\n      \n      <p>5. Die H. Schrifft seye nicht in allen Stucken das ohnfehlbare wort Gottes, nachdem\n         die Heyl. Scribenten nicht inn allen dingen von Gott inspirirt, oder unfehlbar gewesen.\n      </p>\n      \n      <p>6. Die Verfasser haben geredt nach den Vorurtheylen und irrigen meynungen der Menschen.</p>\n      \n      <p>7. Christus selbst habe sich gerichtet nach d. Superstition und Aberglauben der Juden.</p>\n      \n      <p>8. Die H. Schrifft seye aus vielen Ursachen gantz undeütlich. </p>\n      \n      <p>9. Hat Er alle so gar die außtrucklichste wort u. örter d. H. Schrifft von dem Satan,\n         welche Er in seinen Collegiis berühret, von anderen dingen erkläret, und den teüffel\n         fast gäntzlich darauß gemustert.\n      </p>\n      \n      <p>\n         <a class=\"facsimile salsah-link\" href=\"http://rdfh.ch/0801/beol/ID8r3mKXQ3ORZK6b2MNP8g\"></a> 10. Es seyen keine vom teüffel besessene gewesen, deren die H. Evangelisten meldung\n         thun, sondern man müsse dieses nur von Kranckheiten verstehen.\n      </p>\n      \n      <p>11. In dem H. Christo haben sich böse gelüst u. gedancken befunden. </p>\n      \n      <p>12. Die bösen gelüst seyen keine Sünd, so lang sie nicht ins werck außbrechen, sondern\n         nur eitele gedancken.\n      </p>\n      \n      <p>13. Man könne inn denen unterschiedlichen Religionen, Papistisch, griechisch etc.\n         seelig werden.\n      </p>\n      \n      <p>14. Um gelds willen od. auß boßheit die Religion änderen seye keine Sünd, sondern\n         eine blosse narrheit.\n      </p>\n      \n      <p>15. In dem nothfall und um sein Leben zu Salviren seye es wohl erlaubt List, betrug\n         und ränck zu gebrauchen, dieweilen auch d. Apostel Paulus dergleichen gebraucht habe,\n         ja man dörffe die allergrösten Missethaten vor d. hohen Obrigkeit selbst ablaügnen,\n         u. seye d. ein narr, der sie bekenne, ehe er sonst überwiesen seye. \n      </p>\n      \n      <p>16. Man müsse das Christenthum den Leüthen nicht schwer sondern leicht machen, ihnen\n         daher nicht vorstellen, d. sie dadurch inn noth und Trübsal gerathen können. \n      </p>\n      \n      <p>17. Die Seelen d. Menschen schlaffen nach dem Todt und seyen unempfindlich biß an\n         jüngsten tag.\n      </p>\n      \n      <p>18. Die Peyn d. verdammten in d. Höll werde nicht ewig währen. </p>\n      \n      <p>Neben diesen gehegten Irrthümmern hatte er vor ein gefährliches griechisches testament\n         außzugeben u. von deßen beschaffenheit U. G. H. biß auff dreymahl falschen bericht\n         abgestattet, deren bericht keiner mit dem noch endlich gelüfferten Muster Diac. XII\n         ersten Cap. Matth. überein kommt.\n         \n      </p>\n      \n   </div>\n   <div id=\"references\">\n      <ol></ol>\n   </div>\n</div>"
-            },
-            "http://www.w3.org/2000/01/rdf-schema#label": "1730-03-28_Bernoulli_Johann_I-Scheuchzer_Johann_Jakob"
         },
         {
             "@id": "http://rdfh.ch/0b8940a6c903",
@@ -352,15 +331,23 @@ let fulltextSearchForNarr: ApiV2WithValueObjects.ResourcesSequence = {
                 "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, überreicht einem bärtigen Alten ein Geschenk, kratzt sich dabei aber unschlüssig am Kopf.\n11.6 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"128\"."
             },
             "http://www.w3.org/2000/01/rdf-schema#label": "q8r"
+        },
+        {
+            "@id": "http://rdfh.ch/23cc8975d603",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/v2#description": {
+                "@id": "http://rdfh.ch/23cc8975d603/values/a63dbb7e6026",
+                "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+                "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Beginn Kapitel 60.\nHolzschnitt zu Kap. 60: Von Selbstgefälligkeit.\nEin alter Narr steht am Ofen und rührt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.\n11.7 x 8.5 cm."
+            },
+            "http://www.w3.org/2000/01/rdf-schema#label": "i4r"
         }
-    ],
-    "http://schema.org/numberOfItems": 25
+    ]
 };
 
 // http://localhost:3333/v2/search/Narr?schema=simple
 const fulltextSearchForNarrSimple: ApiV2Simple.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": [
+    "@graph": [
         {
             "@id": "http://rdfh.ch/00505cf0a803",
             "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
@@ -402,12 +389,6 @@ const fulltextSearchForNarrSimple: ApiV2Simple.ResourcesSequence = {
             "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
             "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher hält einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und Jüngling steht der Name „.VLI.“; über den beiden schwebt eine Banderole mit der Aufschrift „vly . von . stouffen .  . frisch . vnd vngschaffen“; zwischen den Füssen des Jünglings ist die Jahreszahl „.1.4.9.4.“ zu lesen.\n11.6 x 8.5 cm.",
             "http://www.w3.org/2000/01/rdf-schema#label": "b6r"
-        },
-        {
-            "@id": "http://rdfh.ch/0801/beol/4BhkDasRSLaB-ujyKWplaw",
-            "@type": "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter",
-            "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasText": "\n      \n          Bâle ce 28. Mars 1730. \u001e\n      Monsieur et treshonoré Ami\u001e\n      J'ai toujours differé de Vous repondre dans l'esperance de pouvoir Vous mander l'issue de l'affaire du Diac. W. mais selon le train qu'elle prend, elle pourra bien trotter encore quelque temps avant qu'on en vienne à la sentence finale. Mrs. les Theologiens ont livré au Conseil une deduction de leurs griefs tres vigoureuse et longue, contenant environ 300 pages in folio; la Lecture a couté au Magistrat cinq seances, chacune de 4 heures. Non obstant les plus foudroyantes accusations dont W. est chargé, il ne laisse pas de trouver encore des Patrons dans le Conseil, qui voudroient bien le sauver s'ils pouvoient, mais il n'y a pas moyen, quoique le Pere de l'accusé et l'accusé lui meme ayent eu assés de temps d'user de toutes leurs ruses et artifices (dont ils sont capables) pour gagner la pluralité des suffrages, ce qu'on a pu remarquer en ce que la lecture de la seconde partie ayant été faite il y eût une si grande emotion dans les Esprits des Conseillers Auditeurs, à cause des crimes inoüis dont cette partie étoit remplie à la charge de W. que peu s'en falloit qu'on n'on n'envoyat sur le champ 4 fuseliers pour le saisir et trainer en prison; mais on fut bien surpris de voir qu'à la troisieme lecture et les suivantes, ce feu fut extremement rallenti quoi qu'on y eut entendu des imputations pour le moins aussi importantes que celles qui furent lües par la seconde lecture; il y en eut meme, à ce que j'apprends, qui opinerent pour la suppression des deux dernieres parties sans en faire la lecture;  d'où Vous voyés que les W. Pere et fils ont bien sçû mettre à profit le delai qu'ils avoient d'une session à l'autre; Cependant les plus zelés pour la cause de Dieu ont prévalu, malgrés les infatigables pratiques qu'on a mises en oeuvre, ensorte qu'à la derniere des 5 Sessions il fut decreté, que dans le Conseil des treize on questionneroit sur touts les articles d'accusations le D. W. et cela en presence de Msrs. les Theologiens ses Accusateurs; Ce qui fut executé jeudi passé à la maison de Ville; l'examen dura depuis 2 heures jusqu'à 8 heures du soir; j'ai appris que W. se defendit miserablement, ne faisant autre chose que nier les faits les plus averés par temoins irreprochables, suivant en cela le dogme 15 qu'il a enseigné à ses Disciples. Ainsi le rapport des treise étant fait au Magistrat samedi aprés, et voyant qu'il n'y avoit pas moyen de ramener le Delinquent à la reconnoissance de ses Crimes, ni à la repentance spontanée, il fut conclû que les Theologiens dresseroient des interrogatoires sur les quels on ecouteroit chacun des Temoins sous un sermant corporel; Ce qui demandera encore du temps, d'autant plus que quelques uns des Temoins demeurent ailleurs, qu'il faudra ou citer s'ils ne sont pas loins, ou leur faire faire leurs depositions sous sermant devant le Magistrat du lieu où ils se trouvent. Quelques uns croyent que le D. W. quand il verra le serieux, il se resoudra plutot à chanter le peccavi qu'à se voir convaincu par les Temoins; il le fera peutetre déja demain par une Requete qu'il presentera peutetre au Conseil. Voici en attendant la sentence definitive, la quintessence des Heresies, telles que Mrs. les Theolog. l'ont tirée eux memes de leur long Memoire. Je Vous suis bien obligé de la communication de la Lettre du Ministere de Schafouse au Notre, je l'avois déja luë auparavant; elle contient bien plus de vigueur et de bon sens que celle de chés Vous et celle de Berne. Je suis avec toute la sincerité de mon ame Monsieur Votre tres humble et tr. ob. serviteur J. Bernoulli \u001e\n      \n          P. S. Je viens d'apprendre que les partisans de W. courent en effet de maison en maison chés les Conseillers, pour demander grace en faveur de l'accusé promettant, qu'il reconnoitra ses crimes et les confessera; c'est sans doute pour prevenir la conviction juridique par les Temoins jurés, ce qui le ruineroit entierement. Mais voilà une repentance par force, qui ne le reconciliera pas avec Dieu, qu'il a si horriblement offensé. \u001e\n      \n          Recapitulation\u001e\n      H. Diaconus W. ist folgend. Irrthumer überwiesen, welche er den Leüthen beyzubringen getrachtet hat: \u001e\n      1. Das hohe Geheimnuß der Dreyeinigkeit vernichtet er. \u001e\n      2. hat er auf allerhand weiß zu verstehen geben, Christus seye nicht der wahre Gott und eines wesens mit dem Vatter, und deßwegen alle örter H. Schrifft, so davon handlen, verdrähet, derowegen möge Christus auch nicht inn allen fählen angebetten werden. \u001e\n      3. Christus habe nicht für unsere Sünden genuggethan sondern den Menschen nur gute Lehren und Exempel gegeben. \u001e\n      4. Der H. Geyst seye nicht der wahre Gott, sondern etwas mehr als ein Mensch, deßwegen könne man nicht gewiß seyn, daß er müsse angebetten werden. \u001e\n      5. Die H. Schrifft seye nicht in allen Stucken das ohnfehlbare wort Gottes, nachdem die Heyl. Scribenten nicht inn allen dingen von Gott inspirirt, oder unfehlbar gewesen.\u001e\n      6. Die Verfasser haben geredt nach den Vorurtheylen und irrigen meynungen der Menschen.\u001e\n      7. Christus selbst habe sich gerichtet nach d. Superstition und Aberglauben der Juden.\u001e\n      8. Die H. Schrifft seye aus vielen Ursachen gantz undeütlich. \u001e\n      9. Hat Er alle so gar die außtrucklichste wort u. örter d. H. Schrifft von dem Satan, welche Er in seinen Collegiis berühret, von anderen dingen erkläret, und den teüffel fast gäntzlich darauß gemustert.\u001e\n      \n          10. Es seyen keine vom teüffel besessene gewesen, deren die H. Evangelisten meldung thun, sondern man müsse dieses nur von Kranckheiten verstehen.\u001e\n      11. In dem H. Christo haben sich böse gelüst u. gedancken befunden. \u001e\n      12. Die bösen gelüst seyen keine Sünd, so lang sie nicht ins werck außbrechen, sondern nur eitele gedancken.\u001e\n      13. Man könne inn denen unterschiedlichen Religionen, Papistisch, griechisch etc. seelig werden.\u001e\n      14. Um gelds willen od. auß boßheit die Religion änderen seye keine Sünd, sondern eine blosse narrheit.\u001e\n      15. In dem nothfall und um sein Leben zu Salviren seye es wohl erlaubt List, betrug und ränck zu gebrauchen, dieweilen auch d. Apostel Paulus dergleichen gebraucht habe, ja man dörffe die allergrösten Missethaten vor d. hohen Obrigkeit selbst ablaügnen, u. seye d. ein narr, der sie bekenne, ehe er sonst überwiesen seye. \u001e\n      16. Man müsse das Christenthum den Leüthen nicht schwer sondern leicht machen, ihnen daher nicht vorstellen, d. sie dadurch inn noth und Trübsal gerathen können. \u001e\n      17. Die Seelen d. Menschen schlaffen nach dem Todt und seyen unempfindlich biß an jüngsten tag.\u001e\n      18. Die Peyn d. verdammten in d. Höll werde nicht ewig währen. \u001e\n      Neben diesen gehegten Irrthümmern hatte er vor ein gefährliches griechisches testament außzugeben u. von deßen beschaffenheit U. G. H. biß auff dreymahl falschen bericht abgestattet, deren bericht keiner mit dem noch endlich gelüfferten Muster Diac. XII ersten Cap. Matth. überein kommt.\n\u001e\n   ",
-            "http://www.w3.org/2000/01/rdf-schema#label": "1730-03-28_Bernoulli_Johann_I-Scheuchzer_Johann_Jakob"
         },
         {
             "@id": "http://rdfh.ch/0b8940a6c903",
@@ -510,15 +491,19 @@ const fulltextSearchForNarrSimple: ApiV2Simple.ResourcesSequence = {
             "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
             "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, überreicht einem bärtigen Alten ein Geschenk, kratzt sich dabei aber unschlüssig am Kopf.\n11.6 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"128\".",
             "http://www.w3.org/2000/01/rdf-schema#label": "q8r"
+        },
+        {
+            "@id": "http://rdfh.ch/23cc8975d603",
+            "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+            "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Beginn Kapitel 60.\nHolzschnitt zu Kap. 60: Von Selbstgefälligkeit.\nEin alter Narr steht am Ofen und rührt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.\n11.7 x 8.5 cm.",
+            "http://www.w3.org/2000/01/rdf-schema#label": "i4r"
         }
-    ],
-    "http://schema.org/numberOfItems": 25
+    ]
 };
 
 // http://localhost:3333/v2/searchextended/%20%20%20PREFIX%20knora-api%3A%20%3Chttp%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-api%2Fsimple%2Fv2%23%3E%0A%0A%20%20%20CONSTRUCT%20%7B%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisMainResource%20true%20.%20%23%20marking%20of%20the%20component%20searched%20for%20as%20the%20main%20resource%2C%20mandatory%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3Aseqnum%20%3Fseqnum%20.%20%23%20return%20the%20sequence%20number%20in%20the%20response%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AhasStillImageFileValue%20%3Ffile%20.%20%23%20return%20the%20StillImageFile%20in%20the%20response%0A%20%20%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisPartOf%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20.%0A%20%20%20%7D%20WHERE%20%7B%0A%20%20%20%20%20%20%3Fcomponent%20a%20knora-api%3AResource%20.%20%23%20explicit%20type%20annotation%20for%20the%20component%20searched%20for%2C%20mandatory%0A%20%20%20%20%20%20%3Fcomponent%20a%20knora-api%3AStillImageRepresentation%20.%20%23%20additional%20restriction%20of%20the%20type%20of%20component%2C%20optional%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AisPartOf%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20.%20%23%20component%20relates%20to%20compound%20resource%20via%20this%20property%0A%20%20%20%20%20%20knora-api%3AisPartOf%20knora-api%3AobjectType%20knora-api%3AResource%20.%20%23%20type%20annotation%20for%20linking%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Chttp%3A%2F%2Frdfh.ch%2Fc5058f3a%3E%20a%20knora-api%3AResource%20.%20%23%20type%20annotation%20for%20compound%20resource%2C%20mandatory%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3Aseqnum%20%3Fseqnum%20.%20%23%20component%20must%20have%20a%20sequence%20number%2C%20no%20further%20restrictions%20given%0A%20%20%20%20%20%20knora-api%3Aseqnum%20knora-api%3AobjectType%20xsd%3Ainteger%20.%20%23%20type%20annotation%20for%20the%20value%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Fseqnum%20a%20xsd%3Ainteger%20.%20%23%20type%20annotation%20for%20the%20sequence%20number%2C%20mandatory%0A%0A%20%20%20%20%20%20%3Fcomponent%20knora-api%3AhasStillImageFileValue%20%3Ffile%20.%20%23%20component%20must%20have%20a%20StillImageFile%2C%20no%20further%20restrictions%20given%0A%20%20%20%20%20%20knora-api%3AhasStillImageFileValue%20knora-api%3AobjectType%20knora-api%3AFile%20.%20%23%20type%20annotation%20for%20the%20value%20property%2C%20mandatory%0A%20%20%20%20%20%20%3Ffile%20a%20knora-api%3AFile%20.%20%23%20type%20annotation%20for%20the%20StillImageFile%2C%20mandatory%0A%20%20%20%7D%0A%20%20%20ORDER%20BY%20ASC(%3Fseqnum)%20%23%20order%20by%20sequence%20number%2C%20ascending%0A%20%20%20OFFSET%200%20%23get%20first%20page%20of%20results
 let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": [
+    "@graph": [
         {
             "@id": "http://rdfh.ch/8a0b1e75",
             "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
@@ -994,424 +979,154 @@ let pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             },
             "http://www.w3.org/2000/01/rdf-schema#label": "b5r"
         }
-    ],
-    "http://schema.org/numberOfItems": 25
+    ]
 };
 
-// Euler letter L176-O
-const EulerLetter: ApiV2WithValueObjects.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": {
-        "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w",
-        "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#creationDate": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/w3ZlkuU2T0-0DMrvW8HLJA",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": "GREGORIAN",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": 3,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": "CE",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": 1,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 1756,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": 3,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": 1,
-            "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 1756,
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GREGORIAN:1756-01-03 CE"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasAuthorValue": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/-dzjDkhPRzy-9q0v7QtI7w",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                "@id": "http://rdfh.ch/biblio/QNWEqmjxQ9W-_hTwKlKP-Q",
-                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                "http://www.w3.org/2000/01/rdf-schema#label": "Leonhard Euler"
-            }
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasRecipientValue": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/gkdrd8ZXQhucrNLXIf2-qw",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                "@id": "http://rdfh.ch/biblio/Yv2elBDtSMqoJeKRcxsW8A",
-                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                "http://www.w3.org/2000/01/rdf-schema#label": "Christian Goldbach"
-            }
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasSubject": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/JpGklfqZSxuu7VI1zIyucw",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/other_quadratic_forms"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Other quadratic forms"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/SiEBL-EASQSNeFBprbjY3A",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/berlin_academy"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Berlin Academy"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/H4IZDQ1eS2WBrMhZRX-vkA",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/other_professional_tasks"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Other professional tasks"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/MdjXlOTNRfqYKEWNIh6kfg",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/errands"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Errands"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/rfao0tqnQTiYyLdlJrNF6w",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/book_trade_orders"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Book trade, orders"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/_fCIiKjzRYqjXkEhykto5A",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
-                    "@id": "http://rdfh.ch/lists/0801/johann_albrecht_euler"
-                },
-                "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Johann Albrecht Euler"
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/GJQB9IHYTl2RhG4g4ru0YA",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#textValueAsHtml": "<div>\n   <div id=\"transcription\">\n      \n      <p>Hochwohlgebohrner Herr</p>\n      \n      <p>Hochgeehrtester Herr <em>Etats</em> Rath\n      </p>\n      \n      <p>Bey dem Antritt dieses neuen Jahrs lege ich zuvorderst meinen herzlichsten Wunsch\n         für das beständige Wohlseyn Eur. Hochwohlgeb. ab, und empfehle mich dabey gehorsamst\n         sammt den meinigen zu Dero fortdaurenden Wohlgewogenheit<span class=\"math\">\\(\\,.\\,\\)</span> Zugleich statte ich auch Eur. Hochwohlgeb. meine verpflichtetste Danksagung ab für\n         den gütigen Antheil welchen Dieselben an unserem Zustand zu nehmen belieben und habe\n         das Vergnügen Eur. Hochwohlgeb. zu berichten, daß&nbsp;S[ein]<span class=\"math\">\\(\\,{}^{\\text{e}}\\,\\)</span> Königl[iche] <em>Majestät<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg\"></a></em> bey dem Anfang dieses Jahrs Dero Pathen unsern ältesten Sohn mit einer jährlichen\n         Besoldung von <a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA\"></a><span class=\"math\">\\(\\,200\\,\\)</span> Rthl. begnadiget.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw\"><sup>1</sup></a></p>\n      \n      <p>Ich habe nun schon eine geraume Zeit so viel andere Geschäfte gehabt daß&nbsp;ich an <em>numeri</em>sche <em>Theoremata</em>, dergleichen ich Eur. Hochwohlgeb. das letste mal vorzulegen die Ehre gehabt, nicht\n         habe denken können. Die <em>Partes Matheseos applicatae</em> nehmen mir die meiste Zeit weg, wo es immer mehr zu untersuchen gibt, je mehr man\n         damit umgeht.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg\"><sup>2</sup></a></p>\n      \n      <p>Weil nun mein Kopf mit so viel anderen Sachen angefüllet ist, so mag das wohl die\n         Ursache seyn, daß&nbsp;ich mich in das von Eur. Hochwohlgeb. <em>communicir</em>te und nach der Hand verbesserte <em>Theorema</em> nicht finden kan. Vielleicht haben Eur. Hochwohlgeb. vergessen noch eine wesentliche\n         <em>Condition</em> hinzuzusetzen.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw\"><sup>3</sup></a></p>\n      \n      <p>Das <em>Theorema</em> war: <em>Si sit</em><span class=\"math\">\\(\\,aa+bb=P^{2}+eQ^{2}\\,\\)</span><em>erit etiam</em></p>\n      \n      <p>\n         <span class=\"math\">\\(\\,a^{2}+\\left(\\left(2e+1\\right)b-eP-eQ\\right)^{2}=M^{2}+eN^{2}\\text{;}\\,\\)</span>\n         \n      </p>\n      \n      <p>weil ich den Grund desselben nicht einsehen konnte, so habe ich die Richtigkeit desselben\n         durch <em>Exempel</em> erforschen wollen.\n      </p>\n      \n      <p>I. Da <span class=\"math\">\\(\\,1^{2}+4^{2}=17=3^{2}+2\\cdot 2^{2}\\,\\)</span>, so ist <span class=\"math\">\\(\\,a=1\\,\\)</span>, <span class=\"math\">\\(\\,b=4\\,\\)</span>, <span class=\"math\">\\(\\,P=3\\,\\)</span>, <span class=\"math\">\\(\\,Q=2\\,\\)</span> und <span class=\"math\">\\(\\,e=2\\,\\)</span>, allso müste seyn\n      </p>\n      \n      <p>\n         <span class=\"math\">\\(\\,1^{2}+\\left(5\\cdot 4-2\\cdot 3-2\\cdot 2\\right)^{2}=1^{2}+10^{2}=101=M^{2}+2N^{2}\\,\\)</span>\n         \n      </p>\n      \n      <p>welches unmöglich ist.</p>\n      \n      <p>II. Da <span class=\"math\">\\(\\,9^{2}+4^{2}=97=7^{2}+3\\cdot 4^{2}\\,\\)</span>, so ist <span class=\"math\">\\(\\,a=9\\,\\)</span>; <span class=\"math\">\\(\\,b=4\\,\\)</span>; <span class=\"math\">\\(\\,P=7\\,\\)</span>; <span class=\"math\">\\(\\,Q=4\\,\\)</span> und <span class=\"math\">\\(\\,e=3\\,\\)</span>, allso müsste seyn\n      </p>\n      \n      <p>\n         <span class=\"math\">\\(\\,9^{2}+\\left(7\\cdot 4-3\\cdot 7-3\\cdot 4\\right)^{2}=9^{2}+5^{2}=106=M^{2}+3N^{2}\\,\\)</span>\n         \n      </p>\n      \n      <p>welches ebenfalls unmöglich ist.</p>\n      \n      <p>Da ich nun nicht einmal ein <em>Exempel</em> finden kan, welches einträfe, so schliesse ich daraus, daß&nbsp;eine gewisse Bedingung\n         in den Zahlen <span class=\"math\">\\(\\,a\\,\\)</span>, <span class=\"math\">\\(\\,b\\,\\)</span>, <span class=\"math\">\\(\\,P\\,\\)</span> und <span class=\"math\">\\(\\,Q\\,\\)</span> müsse weggelassen seyn, welche ich aber nicht ausfündig machen kan.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g\"><sup>4</sup></a></p>\n      \n      <p>Ich habe dem H. <em>Spener<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w\"></a></em> zu wissen gethan, daß&nbsp;Eur. Hochwohlgeb. die Rechnung für die überschickten Bücher\n         verlangen; bekomme ich dieselbe vor Schliessung dieses Briefs, wie ich ihm habe sagen\n         lassen, so werde ich sie beylegen.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw\"><sup>5</sup></a></p>\n      \n      <p>Sonsten da er nicht alle verlangte Bücher gehabt, so werde ich inskünftige dergleichen\n         <em>Commission</em>en dem <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span>Neaulme<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg\"></a></em>, welcher weit <em>activer</em> ist und alles schaffen kan, auftragen. Wegen des Werks: <em>La Clef du Cabinet des Princes<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA\"></a><a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw\"></a></em> füge hier die Antwort des <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span>de Bourdeaux<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA\"></a></em> bey.<a class=\"salsah-link\" href=\"http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w\"><sup>6</sup></a></p>\n      \n      <p>Sollte dasselbe vor der Ankunft einer <em>Resolution</em> von Eur. Hochwohlgeb. schon verkauft worden seyn, so hat sich <em>M.<span class=\"math\">\\(\\,{}^{\\text{r}}\\,\\)</span></em><em>Neaulme<a class=\"salsah-link\" href=\"http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg\"></a></em> anheischig gemacht, dasselbe auch zu liefern.\n      </p>\n      \n      <p>Ich habe die Ehre mit der schuldigsten Hochachtung zu verharren</p>\n      \n      <p>Eur. Hochwohlgebohrnen</p>\n      \n      <p>gehorsamster Diener</p>\n      \n      <p>\n         <em>L. Euler</em>\n         \n      </p>\n      \n      <p><em>Berlin</em> den 3<span class=\"math\">\\(\\,{}^{\\text{ten}}\\,\\)</span><em>Januarii</em></p>\n      \n      <p>1756.</p>\n      \n      <p>\n         <sub>Berlin, January 3rd, 1756</sub>\n         \n      </p>\n      \n      <p>\n         <sub>Original, 1 fol. – RGADA, f. 181, n. 1413, č. V, fol. 123rv</sub>\n         \n      </p>\n      \n      <p>\n         <sub>Published: <em>Correspondance</em> (1843), t. I, p. 636–637; <em>Euler-Goldbach</em> (1965), p. 385–386</sub>\n         \n      </p>\n      \n   </div>\n   <div id=\"references\">\n      <ol></ol>\n   </div>\n</div>"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasLanguage": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/ilKXhfZnS9uAYDNQzi6m8Q",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "German"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasNumber": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/hS_gqlOtQsCqA-gqrgIHCQ",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "176"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasOriginalValue": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/veu6BVjbTcKFPAEmcYRjXQ",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                "@id": "http://rdfh.ch/0801/beol/1PUuT3mcRGmeunDS3ZNyOA",
-                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#manuscript",
-                "http://www.w3.org/2000/01/rdf-schema#label": "L176 Original Manuscript"
-            }
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasRepertoriumNumber": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/na-JeCAxSXyYjpx0Cn-qrA",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "890"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterHasTranslationValue": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/_iqsIP5NSLiBE8hPnDwAKw",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-            "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                "@id": "http://rdfh.ch/0801/beol/yBr2EjBMTkeCeVmGPfjCtw",
-                "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
-                "http://www.w3.org/2000/01/rdf-schema#label": "L176-T"
-            }
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterIsPublishedValue": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/gOwn9vzMT-2XHkgZe42fTA",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/79Rz6MaAQESBalJeWl2TVA",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#publishedLetter",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176-O published in Fuß edition"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/5-CVslP4R9KY1_d3d83qMw",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/pFN8MlXBSYaB7oZRxUpV0Q",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#publishedLetter",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176-O published in Yushkevich-Winter edition"
-                }
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#letterIsReplyToValue": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/iW0aQbZ2Qaeigqr5RN-Hlg",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/_iz5PE4rT8KNfbmfW8DxrQ",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L174-O"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/utSZPRdcSjC78DHtGBVZ3Q",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/f5a92GjJRriC1GTY_NzfvQ",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#letter",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L175-O"
-                }
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#location": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/xpStwEfxSdGH14StZ_KWHQ",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": "Berlin"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/v2#title": {
-            "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/rqHQuCoeRAmfUElMDuEfFg",
-            "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
-            "http://api.knora.org/ontology/knora-api/v2#valueAsString": " Euler to Goldbach, January 3rd, 1756"
-        },
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/fsxYuF6BSl6opUqcetx4Zg",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-2"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/aMwl67I7RGa5Dvk-lczTdQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Claude Jordan"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/1F3yY5ywSfS8n8U6RYE12w",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Johann Carl (the Elder) Spener"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/NIpFHSbKSe-BDC8RUmuhqg",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-6"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/wu7kCf2CR-e2aAvT8Q1DhQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-1"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/YQRbSoBGR_-QrpHB_o0ReQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Jean Neaulme"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/mEhOhC8STn6t816gMUMLUQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-5"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/IG_gpA_vQBW-8hBbP1y0LQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Friedrich II."
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/veG9DY7pR46P62Ylvm7Nzw",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Johann Albrecht Euler"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/udl1maFWTUu1MLcla4bm1g",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-4"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/uwc5JnP4R36elNlokOTX7A",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#person",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "Etienne de Bourdeaux"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/dyhBkbFrQBSRevFJGMUfwQ",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw",
-                    "@type": "http://0.0.0.0:3333/ontology/0802/biblio/v2#Book",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "jordanclbhae"
-                }
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w/values/6ry3IMMKRNq9x29EiAhYTw",
-                "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-                "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
-                    "@id": "http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw",
-                    "@type": "http://0.0.0.0:3333/ontology/0801/beol/v2#endnote",
-                    "http://www.w3.org/2000/01/rdf-schema#label": "L176 note-3"
-                }
-            }
-        ],
-        "http://www.w3.org/2000/01/rdf-schema#label": "L176-O"
+// http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0001%2FH6gBWUuJSuuO-CilHV8kQw
+const Thing: ApiV2WithValueObjects.Resource = {
+    "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+    "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#BooleanValue",
+        "http://api.knora.org/ontology/knora-api/v2#booleanValueAsBoolean": true
     },
-    "http://schema.org/numberOfItems": 1
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#ColorValue",
+        "http://api.knora.org/ontology/knora-api/v2#colorValueAsColor": "#ff3333"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#DateValue",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar": "GREGORIAN",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay": 13,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra": "CE",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth": 5,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear": 2018,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay": 13,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra": "CE",
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth": 5,
+        "http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear": 2018,
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "GREGORIAN:2018-05-13 CE"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#DecimalValue",
+        "http://api.knora.org/ontology/knora-api/v2#decimalValueAsDecimal": "1.5"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#IntValue",
+        "http://api.knora.org/ontology/knora-api/v2#intValueAsInt": 1
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#IntervalValue",
+        "http://api.knora.org/ontology/knora-api/v2#intervalValueHasEnd": "216000",
+        "http://api.knora.org/ontology/knora-api/v2#intervalValueHasStart": "0"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+            "@id": "http://rdfh.ch/lists/0001/treeList01"
+        },
+        "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Tree list node 01"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/j8VQjbD0RsyxpyuvfFJCDA",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#ListValue",
+        "http://api.knora.org/ontology/knora-api/v2#listValueAsListNode": {
+            "@id": "http://rdfh.ch/lists/0001/otherTreeList01"
+        },
+        "http://api.knora.org/ontology/knora-api/v2#listValueAsListNodeLabel": "Other Tree list node 01"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uvRVxzL1RD-t9VIQ1TpfUw",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+        "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget": {
+            "@id": "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+            "@type": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+            "http://www.w3.org/2000/01/rdf-schema#label": "Sierra"
+        }
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text><p>test with <strong>markup</strong></p></text>",
+        "http://api.knora.org/ontology/knora-api/v2#textValueHasMapping": "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#TextValue",
+        "http://api.knora.org/ontology/knora-api/v2#valueAsString": "test"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri": {
+        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg",
+        "@type": "http://api.knora.org/ontology/knora-api/v2#UriValue",
+        "http://api.knora.org/ontology/knora-api/v2#uriValueAsUri": "http://www.google.ch"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#label": "testding"
 };
 
-const EulerLetterSimple: ApiV2Simple.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": {
-        "@id": "http://rdfh.ch/0801/beol/-0tI3HXgSSOeDtkf-SA00w",
-        "@type": "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letter",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate": "GREGORIAN:1756-01-03 CE",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasAuthor": {
-            "@id": "http://rdfh.ch/biblio/QNWEqmjxQ9W-_hTwKlKP-Q"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasRecipient": {
-            "@id": "http://rdfh.ch/biblio/Yv2elBDtSMqoJeKRcxsW8A"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasSubject": [
-            "Other quadratic forms",
-            "Berlin Academy",
-            "Other professional tasks",
-            "Errands",
-            "Book trade, orders",
-            "Johann Albrecht Euler"
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasText": "\n        Hochwohlgebohrner Herr\u001e\n        Hochgeehrtester Herr Etats Rath\u001e\n        Bey dem Antritt dieses neuen Jahrs lege ich zuvorderst meinen herzlichsten Wunsch für das beständige Wohlseyn Eur. Hochwohlgeb. ab, und empfehle mich dabey gehorsamst sammt den meinigen zu Dero fortdaurenden Wohlgewogenheit\\,.\\, Zugleich statte ich auch Eur. Hochwohlgeb. meine verpflichtetste Danksagung ab für den gütigen Antheil welchen Dieselben an unserem Zustand zu nehmen belieben und habe das Vergnügen Eur. Hochwohlgeb. zu berichten, daß S[ein]\\,{}^{\\text{e}}\\, Königl[iche] Majestät bey dem Anfang dieses Jahrs Dero Pathen unsern ältesten Sohn mit einer jährlichen Besoldung von \\,200\\, Rthl. begnadiget.1\u001e\n        Ich habe nun schon eine geraume Zeit so viel andere Geschäfte gehabt daß ich an numerische Theoremata, dergleichen ich Eur. Hochwohlgeb. das letste mal vorzulegen die Ehre gehabt, nicht habe denken können. Die Partes Matheseos applicatae nehmen mir die meiste Zeit weg, wo es immer mehr zu untersuchen gibt, je mehr man damit umgeht.2\u001e\n        Weil nun mein Kopf mit so viel anderen Sachen angefüllet ist, so mag das wohl die Ursache seyn, daß ich mich in das von Eur. Hochwohlgeb. communicirte und nach der Hand verbesserte Theorema nicht finden kan. Vielleicht haben Eur. Hochwohlgeb. vergessen noch eine wesentliche Condition hinzuzusetzen.3\u001e\n        Das Theorema war: Si sit\\,aa+bb=P^{2}+eQ^{2}\\,erit etiam\u001e\n        \n          \\,a^{2}+\\left(\\left(2e+1\\right)b-eP-eQ\\right)^{2}=M^{2}+eN^{2}\\text{;}\\,\n        \u001e\n        weil ich den Grund desselben nicht einsehen konnte, so habe ich die Richtigkeit desselben durch Exempel erforschen wollen.\u001e\n        I. Da \\,1^{2}+4^{2}=17=3^{2}+2\\cdot 2^{2}\\,, so ist \\,a=1\\,, \\,b=4\\,, \\,P=3\\,, \\,Q=2\\, und \\,e=2\\,, allso müste seyn\u001e\n        \n          \\,1^{2}+\\left(5\\cdot 4-2\\cdot 3-2\\cdot 2\\right)^{2}=1^{2}+10^{2}=101=M^{2}+2N^{2}\\,\n        \u001e\n        welches unmöglich ist.\u001e\n        II. Da \\,9^{2}+4^{2}=97=7^{2}+3\\cdot 4^{2}\\,, so ist \\,a=9\\,; \\,b=4\\,; \\,P=7\\,; \\,Q=4\\, und \\,e=3\\,, allso müsste seyn\u001e\n        \n          \\,9^{2}+\\left(7\\cdot 4-3\\cdot 7-3\\cdot 4\\right)^{2}=9^{2}+5^{2}=106=M^{2}+3N^{2}\\,\n        \u001e\n        welches ebenfalls unmöglich ist.\u001e\n        Da ich nun nicht einmal ein Exempel finden kan, welches einträfe, so schliesse ich daraus, daß eine gewisse Bedingung in den Zahlen \\,a\\,, \\,b\\,, \\,P\\, und \\,Q\\, müsse weggelassen seyn, welche ich aber nicht ausfündig machen kan.4\u001e\n        Ich habe dem H. Spener zu wissen gethan, daß Eur. Hochwohlgeb. die Rechnung für die überschickten Bücher verlangen; bekomme ich dieselbe vor Schliessung dieses Briefs, wie ich ihm habe sagen lassen, so werde ich sie beylegen.5\u001e\n        Sonsten da er nicht alle verlangte Bücher gehabt, so werde ich inskünftige dergleichen Commissionen dem M.\\,{}^{\\text{r}}\\,Neaulme, welcher weit activer ist und alles schaffen kan, auftragen. Wegen des Werks: La Clef du Cabinet des Princes füge hier die Antwort des M.\\,{}^{\\text{r}}\\,de Bourdeaux bey.6\u001e\n        Sollte dasselbe vor der Ankunft einer Resolution von Eur. Hochwohlgeb. schon verkauft worden seyn, so hat sich M.\\,{}^{\\text{r}}\\,Neaulme anheischig gemacht, dasselbe auch zu liefern.\u001e\n        Ich habe die Ehre mit der schuldigsten Hochachtung zu verharren\u001e\n        Eur. Hochwohlgebohrnen\u001e\n        gehorsamster Diener\u001e\n        \n          L. Euler\n        \u001e\n        Berlin den 3\\,{}^{\\text{ten}}\\,Januarii\u001e\n        1756.\u001e\n        \n          Berlin, January 3rd, 1756\n        \u001e\n        \n          Original, 1 fol. – RGADA, f. 181, n. 1413, č. V, fol. 123rv\n        \u001e\n        \n          Published: Correspondance (1843), t. I, p. 636–637; Euler-Goldbach (1965), p. 385–386\n        \u001e\n      ",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasLanguage": "German",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasNumber": "176",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasOriginal": {
-            "@id": "http://rdfh.ch/0801/beol/1PUuT3mcRGmeunDS3ZNyOA"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasRepertoriumNumber": "890",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterHasTranslation": {
-            "@id": "http://rdfh.ch/0801/beol/yBr2EjBMTkeCeVmGPfjCtw"
-        },
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterIsPublished": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/79Rz6MaAQESBalJeWl2TVA"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/pFN8MlXBSYaB7oZRxUpV0Q"
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#letterIsReplyTo": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/_iz5PE4rT8KNfbmfW8DxrQ"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/f5a92GjJRriC1GTY_NzfvQ"
-            }
-        ],
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#location": "Berlin",
-        "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#title": " Euler to Goldbach, January 3rd, 1756",
-        "http://api.knora.org/ontology/knora-api/simple/v2#hasStandoffLinkTo": [
-            {
-                "@id": "http://rdfh.ch/0801/beol/KvfXRPkXTziMYMVYSz9tBg"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/Z_-TT-8_QNSRv-O7dKCW0w"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/nRO3f9ENSsqTH8S0Z1uO9w"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/spy5H95GTV2RElphXFPbbw"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/FsJNrctNTMuwJPCX-7OTVg"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/08Y_rCK5QM-gvchjtixomw"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/DhgjcrRhRfunaSt77-bUxg"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/bP1CO3j3TCOUHYdQqKw9pA"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/kZeMXLrQTQONISqizXtf5g"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/vR3fWAXxRqShBZvWKVA9tA"
-            },
-            {
-                "@id": "http://rdfh.ch/biblio/sAImr-uGRBGpsdBdoI6XCw"
-            },
-            {
-                "@id": "http://rdfh.ch/0801/beol/FJCOlKBdRtW8caqnN4A3Vw"
-            }
-        ],
-        "http://www.w3.org/2000/01/rdf-schema#label": "L176-O"
+// http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0001%2FH6gBWUuJSuuO-CilHV8kQw?schema=simple
+const ThingSimple: ApiV2Simple.Resource = {
+    "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+    "@type": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing",
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasBoolean": true,
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasColor": {
+        "@type": "http://api.knora.org/ontology/knora-api/simple/v2#Color",
+        "@value": "#ff3333"
     },
-    "http://schema.org/numberOfItems": 1
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDate": {
+        "@type": "http://api.knora.org/ontology/knora-api/simple/v2#Date",
+        "@value": "GREGORIAN:2018-05-13 CE"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasDecimal": {
+        "@type": "http://www.w3.org/2001/XMLSchema#decimal",
+        "@value": "1.5"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasInteger": 1,
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasInterval": {
+        "@type": "http://api.knora.org/ontology/knora-api/simple/v2#Interval",
+        "@value": "0 - 216000"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasListItem": "Tree list node 01",
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherListItem": "Other Tree list node 01",
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing": {
+        "@id": "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+    },
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasRichtext": "test with markup\u001e",
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasText": "test",
+    "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasUri": {
+        "@type": "http://www.w3.org/2001/XMLSchema#anyURI",
+        "@value": "http://www.google.ch"
+    },
+    "http://www.w3.org/2000/01/rdf-schema#label": "testding"
 };
 
 // http://0.0.0.0:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?schema=simple
-const PageOfZeitgloecklein: ApiV2Simple.ResourcesSequence = {
-    "@type": "http://schema.org/ItemList",
-    "http://schema.org/itemListElement": {
-        "@id": "http://rdfh.ch/8a0b1e75",
-        "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBordüre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\".",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#origname": "ad+s167_druck1=0001.tif",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page_comment": "Schramm, Bd. 21, Abb. 601.",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pagenum": "a1r, Titelblatt",
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf": {
-            "@id": "http://rdfh.ch/c5058f3a"
-        },
-        "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum": 1,
-        "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile": [
-            "http://localhost:1024/knora/incunabula_0000000002.jpg/full/95,128/0/default.jpg",
-            "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg"
-        ],
-        "http://www.w3.org/2000/01/rdf-schema#label": "a1r, Titelblatt"
+const PageOfZeitgloecklein: ApiV2Simple.Resource = {
+    "@id": "http://rdfh.ch/8a0b1e75",
+    "@type": "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#description": "Titel: \"Das andechtig zitglo(e)gglyn | des lebens vnd lide(n)s christi nach | den xxiiij stunden vßgeteilt.\"\nHolzschnitt: Schlaguhr mit Zifferblatt für 24 Stunden, auf deren oberem Rand zu beiden Seiten einer Glocke die Verkündigungsszene mit Maria (links) und dem Engel (rechts) zu sehen ist.\nBordüre: Ranken mit Fabelwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun.\nBeschriftung oben Mitte (Graphitstift) \"B 1\".",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#origname": "ad+s167_druck1=0001.tif",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page_comment": "Schramm, Bd. 21, Abb. 601.",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pagenum": "a1r, Titelblatt",
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf": {
+        "@id": "http://rdfh.ch/c5058f3a"
     },
-    "http://schema.org/numberOfItems": 1
+    "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#seqnum": 1,
+    "http://api.knora.org/ontology/knora-api/simple/v2#hasStillImageFile": [
+        {
+            "@type": "http://api.knora.org/ontology/knora-api/simple/v2#File",
+            "@value": "http://localhost:1024/knora/incunabula_0000000002.jpg/full/95,128/0/default.jpg"
+        },
+        {
+            "@type": "http://api.knora.org/ontology/knora-api/simple/v2#File",
+            "@value": "http://localhost:1024/knora/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg"
+        }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": "a1r, Titelblatt"
 };
-

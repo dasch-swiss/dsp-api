@@ -456,7 +456,7 @@ object ResourcesRouteV1 extends Authenticator {
               * @return the prefix label that Knora uses to refer to the ontology.
               */
             def getNamespacePrefixLabel(internalEntityIri: IRI): String = {
-                val prefixLabel = internalEntityIri.toSmartIri.getPrefixLabel
+                val prefixLabel = internalEntityIri.toSmartIri.getLongPrefixLabel
 
                 // If the schema generation template asks for the prefix label of something in knora-base, return
                 // the prefix label of the Knora XML import v1 namespace instead.
@@ -519,9 +519,7 @@ object ResourcesRouteV1 extends Authenticator {
                 )
 
                 // Read the standard Knora XML import v1 schema from a file.
-                knoraXmlImportSchemaXml: String = FileUtil.readTextFile(
-                    new File("src/main/resources/" + OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd")
-                )
+                knoraXmlImportSchemaXml: String = FileUtil.readTextResource(OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel + ".xsd")
 
                 // Construct an XmlImportSchemaV1 for the standard Knora XML import v1 schema.
                 knoraXmlImportSchema: XmlImportSchemaV1 = XmlImportSchemaV1(
@@ -1211,7 +1209,7 @@ object ResourcesRouteV1 extends Authenticator {
                     throw BadRequestException(s"Invalid internal project-specific ontology IRI: $internalOntologyIri")
                 }
 
-                val internalOntologyPrefixLabel: String = internalOntologySmartIri.getPrefixLabel
+                val internalOntologyPrefixLabel: String = internalOntologySmartIri.getLongPrefixLabel
 
                 // Respond with a Content-Disposition header specifying the filename of the generated Zip file.
                 respondWithHeader(`Content-Disposition`(ContentDispositionTypes.attachment, Map("filename" -> (internalOntologyPrefixLabel + "-xml-schemas.zip")))) {

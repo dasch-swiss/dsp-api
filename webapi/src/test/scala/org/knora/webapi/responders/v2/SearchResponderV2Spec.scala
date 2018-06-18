@@ -68,7 +68,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Narr'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anonymousUser)
+            actorUnderTest ! FulltextSearchRequestV2(searchValue = "Narr", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anonymousUser)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -82,7 +82,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a fulltext search for 'Dinge'" in {
 
-            actorUnderTest ! FulltextSearchGetRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anythingUser1)
+            actorUnderTest ! FulltextSearchRequestV2(searchValue = "Dinge", offset = 0, limitToProject = None, limitToResourceClass = None, limitToStandoffClass = None, SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -95,7 +95,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         "perform an extended search for books that have the title 'Zeitglöcklein des Lebens'" in {
 
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            actorUnderTest ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -107,7 +107,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
 
-            actorUnderTest ! ExtendedSearchGetRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
+            actorUnderTest ! GravsearchRequestV2(searchResponderV2SpecFullData.constructQueryForBooksWithoutTitleZeitgloecklein, SharedTestDataADM.anonymousUser)
 
             // extended search sort by resource Iri by default if no order criterion is indicated
             expectMsgPF(timeout) {
@@ -120,7 +120,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "perform a search by label for incunabula:book that contain 'Narrenschiff'" in {
 
-            actorUnderTest ! SearchResourceByLabelGetRequestV2(
+            actorUnderTest ! SearchResourceByLabelRequestV2(
                 searchValue = "Narrenschiff",
                 offset = 0,
                 limitToProject = None,

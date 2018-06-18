@@ -6,9 +6,9 @@
  1. Remove the `(not released yet)` text in the title of the release notes.
  1. Create a new page with the next version number including the `(not released yet)` text and add page to TOC.
  1. Update links in the new page to point to correct release tag and milestone.
- 1. On Github - Move any open issues from current release milestone to the next release milestone.
- 1. On Github - Close current milestone.
  1. On Github - Create new milestone
+ 1. On Github - Move any open issues from current release milestone to the next release milestone and so on.
+ 1. On Github - Close current milestone.
  1. Run `GenerateContributorsFile`, passing it a GitHub API token (`runMain org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ]`), to generate `Contributors.md`, then commit that file.
  1. Push and merge PR to `develop`.
  1. Travis CI will start a [CI build](https://travis-ci.org/dhlab-basel/Knora/builds) for the new tag and publish

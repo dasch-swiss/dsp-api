@@ -76,7 +76,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
-    "The ProjectsResponderADM " when {
+    "The ProjectsResponderADM" when {
 
         "used to query for project information" should {
 
@@ -172,7 +172,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = "1111",
+                        shortcode = "111c", // lower case
                         longname = Some("project longname"),
                         description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
@@ -186,7 +186,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
                 received.project.shortname should be("newproject")
-                received.project.shortcode should be("1111")
+                received.project.shortcode should be("111C") // upper case
                 received.project.longname should contain("project longname")
                 received.project.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
@@ -223,7 +223,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject",
-                        shortcode = "1113",
+                        shortcode = "111C",
                         longname = Some("project longname"),
                         description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
@@ -241,7 +241,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 actorUnderTest ! ProjectCreateRequestADM(
                     CreateProjectApiRequestADM(
                         shortname = "newproject3",
-                        shortcode = "1111",
+                        shortcode = "111C",
                         longname = Some("project longname"),
                         description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
                         keywords = Seq("keywords"),
@@ -252,7 +252,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     SharedTestDataADM.rootUser,
                     UUID.randomUUID()
                 )
-                expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '1111' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '111C' already exists")))
             }
 
             "return 'BadRequestException' if project 'shortname' during creation is missing" in {
@@ -310,7 +310,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                 )
                 val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
                 received.project.shortname should be("newproject")
-                received.project.shortcode should be("1111")
+                received.project.shortcode should be("111C")
                 received.project.longname should be (Some("updated project longname"))
                 received.project.description should be (Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""", language = Some("en"))))
                 received.project.keywords.sorted should be (Seq("updated", "keywords").sorted)

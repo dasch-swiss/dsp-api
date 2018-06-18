@@ -145,85 +145,6 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
-    private val HasOntologies: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasOntologies,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "has ontologies"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Points to information about one or more ontologies"
-                )
-            )
-        )
-    )
-
-    private val HasClasses: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasClasses,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "has classes"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Points to information about one or more classes"
-                )
-            )
-        ),
-        objectType = Some(OntologyConstants.Owl.Class)
-    )
-
-    private val HasProperties: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasProperties,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "has properties"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Points to information about one or more properties"
-                )
-            )
-        ),
-        objectType = Some(OntologyConstants.Rdf.Property)
-    )
-
-    private val HasIndividuals: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIndividuals,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "has individuals"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Points to information about one or more OWL named individuals"
-                )
-            )
-        ),
-        objectType = Some(OntologyConstants.Owl.NamedIndividual)
-    )
-
     private val OntologyName: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1391,10 +1312,6 @@ object KnoraApiV2WithValueObjects {
           * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2WithValueObjects]] schema, to obtain `knora-api`.
           */
         val KnoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
-            HasOntologies,
-            HasClasses,
-            HasProperties,
-            HasIndividuals,
             Result,
             IsEditable,
             IsLinkProperty,

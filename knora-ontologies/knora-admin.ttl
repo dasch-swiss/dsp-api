@@ -604,7 +604,7 @@
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectDescription ;
-                                owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                owl:minCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectKeyword ;

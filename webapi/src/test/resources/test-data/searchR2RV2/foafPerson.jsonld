@@ -1,0 +1,21 @@
+{
+  "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
+  "@type" : "beol:person",
+  "beol:hasFamilyName" : {
+    "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q",
+    "@type" : "knora-api:TextValue",
+    "knora-api:valueAsString" : "Meier"
+  },
+  "beol:hasGivenName" : {
+    "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw",
+    "@type" : "knora-api:TextValue",
+    "knora-api:valueAsString" : "Fritz"
+  },
+  "rdfs:label" : "Testperson2",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#"
+  }
+}

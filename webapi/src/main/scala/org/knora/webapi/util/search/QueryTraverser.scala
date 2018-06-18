@@ -19,18 +19,46 @@
 
 package org.knora.webapi.util.search
 
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionResult
+
+/**
+  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
+  *
+  * @tparam Acc the type of the accumulator.
+  */
+trait WhereVisitor[Acc] {
+    /**
+      * Visits a statement in a WHERE clause.
+      *
+      * @param statementPattern the pattern to be visited.
+      * @param acc              the accumulator.
+      * @return the accumulator.
+      */
+    def visitStatementInWhere(statementPattern: StatementPattern, acc: Acc): Acc
+
+    /**
+      * Visits a FILTER in a WHERE clause.
+      *
+      * @param filterPattern the pattern to be visited.
+      * @param acc           the accumulator.
+      * @return the accumulator.
+      */
+    def visitFilter(filterPattern: FilterPattern, acc: Acc): Acc
+}
+
 /**
   * A trait for classes that transform statements and filters in WHERE clauses. Such a class will probably need
-  * to refer to a [[TypeInspectionResult]].
+  * to refer to a [[GravsearchTypeInspectionResult]].
   */
 trait WhereTransformer {
     /**
       * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
       *
       * @param statementPattern the statement to be transformed.
+      * @param inputOrderBy     the ORDER BY clause in the input query.
       * @return the result of the transformation.
       */
-    def transformStatementInWhere(statementPattern: StatementPattern): Seq[QueryPattern]
+    def transformStatementInWhere(statementPattern: StatementPattern, inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern]
 
     /**
       * Transforms a [[FilterPattern]] in a WHERE clause into zero or more statement patterns.
@@ -142,11 +170,22 @@ trait ConstructToSelectTransformer extends WhereTransformer {
   */
 object QueryTraverser {
 
-    private def transformWherePatterns(patterns: Seq[QueryPattern], whereTransformer: WhereTransformer): Seq[QueryPattern] = {
+    /**
+      * Traverses a WHERE clause, delegating transformation tasks to a [[WhereTransformer]], and returns the transformed query patterns.
+      *
+      * @param patterns         the input query patterns.
+      * @param inputOrderBy     the ORDER BY expression in the input query.
+      * @param whereTransformer a [[WhereTransformer]].
+      * @return the transformed query patterns.
+      */
+    def transformWherePatterns(patterns: Seq[QueryPattern],
+                               inputOrderBy: Seq[OrderCriterion],
+                               whereTransformer: WhereTransformer): Seq[QueryPattern] = {
         patterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
-                    statementPattern = statementPattern
+                    statementPattern = statementPattern,
+                    inputOrderBy = inputOrderBy
                 )
 
             case filterPattern: FilterPattern =>
@@ -157,16 +196,17 @@ object QueryTraverser {
             case filterNotExistsPattern: FilterNotExistsPattern =>
                 val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
                     patterns = filterNotExistsPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(FilterNotExistsPattern(patterns = transformedPatterns))
 
-
             case minusPattern: MinusPattern =>
                 val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(
                     patterns = minusPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(MinusPattern(patterns = transformedPatterns))
@@ -174,16 +214,18 @@ object QueryTraverser {
             case optionalPattern: OptionalPattern =>
                 val transformedPatterns = transformWherePatterns(
                     patterns = optionalPattern.patterns,
-                    whereTransformer = whereTransformer
+                    whereTransformer = whereTransformer,
+                    inputOrderBy = inputOrderBy
                 )
 
                 Seq(OptionalPattern(patterns = transformedPatterns))
 
             case unionPattern: UnionPattern =>
-                val transformedBlocks = unionPattern.blocks.map {
+                val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map {
                     blockPatterns =>
                         transformWherePatterns(patterns = blockPatterns,
-                            whereTransformer = whereTransformer
+                            whereTransformer = whereTransformer,
+                            inputOrderBy = inputOrderBy
                         )
                 }
 
@@ -191,6 +233,61 @@ object QueryTraverser {
 
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
+            case bindPattern: BindPattern => Seq(bindPattern)
+        }
+    }
+
+    /**
+      * Traverses a WHERE clause, delegating transformation tasks to a [[WhereVisitor]].
+      *
+      * @param patterns     the input query patterns.
+      * @param whereVisitor a [[WhereVisitor]].
+      * @param initialAcc   the visitor's initial accumulator.
+      * @tparam Acc the type of the accumulator.
+      * @return the accumulator.
+      */
+    def visitWherePatterns[Acc](patterns: Seq[QueryPattern],
+                                whereVisitor: WhereVisitor[Acc],
+                                initialAcc: Acc): Acc = {
+        patterns.foldLeft(initialAcc) {
+            case (acc, statementPattern: StatementPattern) =>
+                whereVisitor.visitStatementInWhere(statementPattern, acc)
+
+            case (acc, filterPattern: FilterPattern) =>
+                whereVisitor.visitFilter(filterPattern, acc)
+
+            case (acc, filterNotExistsPattern: FilterNotExistsPattern) =>
+                visitWherePatterns(
+                    patterns = filterNotExistsPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, minusPattern: MinusPattern) =>
+                visitWherePatterns(
+                    patterns = minusPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, optionalPattern: OptionalPattern) =>
+                visitWherePatterns(
+                    patterns = optionalPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, unionPattern: UnionPattern) =>
+                unionPattern.blocks.foldLeft(acc) {
+                    case (unionAcc, blockPatterns: Seq[QueryPattern]) =>
+                        visitWherePatterns(
+                            patterns = blockPatterns,
+                            whereVisitor = whereVisitor,
+                            initialAcc = unionAcc
+                        )
+                }
+
+            case (acc, _) => acc
         }
     }
 
@@ -209,6 +306,7 @@ object QueryTraverser {
 
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
+            inputOrderBy = inputQuery.orderBy,
             whereTransformer = transformer
         )
 
@@ -222,7 +320,6 @@ object QueryTraverser {
 
         SelectQuery(
             variables = transformer.getSelectVariables,
-            useDistinct = true,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
             groupBy = groupBy,
             orderBy = transformedOrderBy.orderBy,
@@ -236,6 +333,7 @@ object QueryTraverser {
             whereClause = WhereClause(
                 patterns = transformWherePatterns(
                     patterns = inputQuery.whereClause.patterns,
+                    inputOrderBy = inputQuery.orderBy,
                     whereTransformer = transformer
                 )
             )
@@ -253,6 +351,7 @@ object QueryTraverser {
 
         val transformedWherePatterns = transformWherePatterns(
             patterns = inputQuery.whereClause.patterns,
+            inputOrderBy = inputQuery.orderBy,
             whereTransformer = transformer
         )
 

@@ -1,7 +1,7 @@
 import sbt._
 import NativePackagerHelper._
 
-lazy val salsah = (project in file(".")).
+lazy val salsah1 = (project in file(".")).
         configs(
             HeadlessTest
         ).
@@ -46,7 +46,7 @@ lazy val salsah = (project in file(".")).
 lazy val salsahCommonSettings = Seq(
     organization := "org.knora",
     name := "salsah",
-    version := "1.4.0",
+    version := "1.5.0",
     scalaVersion := "2.12.4"
 )
 
@@ -75,8 +75,8 @@ lazy val javaHeadlessTestOptions = Seq(
     "-Dconfig.resource=headless-testing.conf"
 ) ++ javaTestOptions
 
-lazy val akkaVersion = "2.5.9"
-lazy val akkaHttpVersion = "10.0.11"
+lazy val akkaVersion = "2.5.11"
+lazy val akkaHttpVersion = "10.1.0"
 
 lazy val salsahLibs = Seq(
     // akka

@@ -19,11 +19,12 @@
 
 package org.knora.webapi.messages.v2.responder.searchmessages
 
-import org.knora.webapi.IRI
+import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.util.SmartIri
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
 import org.knora.webapi.util.search.ConstructQuery
 
 /**
@@ -35,56 +36,56 @@ sealed trait SearchResponderRequestV2 extends KnoraRequestV2 {
 }
 
 /**
-  * Requests the amount of results (resources count) of a given fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests the amount of results (resources count) of a given fulltext search. A successful response will be a [[ResourceCountV2]].
   *
-  * @param searchValue the values to search for.
-  * @param limitToProject limit search to given project.
+  * @param searchValue          the values to search for.
+  * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
-  * @param requestingUser the user making the request.
+  * @param requestingUser       the user making the request.
   */
-case class FullTextSearchCountGetRequestV2(searchValue: String,
-                                           limitToProject: Option[IRI],
-                                           limitToResourceClass: Option[SmartIri],
-                                           limitToStandoffClass: Option[SmartIri],
-                                           requestingUser: UserADM) extends SearchResponderRequestV2
+case class FullTextSearchCountRequestV2(searchValue: String,
+                                        limitToProject: Option[IRI],
+                                        limitToResourceClass: Option[SmartIri],
+                                        limitToStandoffClass: Option[SmartIri],
+                                        requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   * Requests a fulltext search. A successful response will be a [[ReadResourcesSequenceV2]].
   *
-  * @param searchValue the values to search for.
-  * @param offset the offset to be used for paging.
-  * @param limitToProject limit search to given project.
+  * @param searchValue          the values to search for.
+  * @param offset               the offset to be used for paging.
+  * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
-  * @param requestingUser the user making the request.
+  * @param requestingUser       the user making the request.
   */
-case class FulltextSearchGetRequestV2(searchValue: String,
-                                      offset: Int,
-                                      limitToProject: Option[IRI],
-                                      limitToResourceClass: Option[SmartIri],
-                                      limitToStandoffClass: Option[SmartIri],
-                                      requestingUser: UserADM) extends SearchResponderRequestV2
+case class FulltextSearchRequestV2(searchValue: String,
+                                   offset: Int,
+                                   limitToProject: Option[IRI],
+                                   limitToResourceClass: Option[SmartIri],
+                                   limitToStandoffClass: Option[SmartIri],
+                                   requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
   *
-  * Requests the amount of results (resources count) of a given extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests the amount of results (resources count) of a given Gravsearch query. A successful response will be a [[ResourceCountV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
   * @param requestingUser the user making the request.
   */
 
-case class ExtendedSearchCountGetRequestV2(constructQuery: ConstructQuery,
-                                      requestingUser: UserADM) extends SearchResponderRequestV2
+case class GravsearchCountRequestV2(constructQuery: ConstructQuery,
+                                    requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
   *
-  * Requests an extended search. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Performs a Gravsearch query. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param constructQuery a Sparql construct query provided by the client.
-  * @param requestingUser    the user making the request.
+  * @param requestingUser the user making the request.
   */
-case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
-                                      requestingUser: UserADM) extends SearchResponderRequestV2
+case class GravsearchRequestV2(constructQuery: ConstructQuery,
+                               requestingUser: UserADM) extends SearchResponderRequestV2
 
 
 /**
@@ -93,24 +94,40 @@ case class ExtendedSearchGetRequestV2(constructQuery: ConstructQuery,
   * @param searchValue          the values to search for.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
-  * @param requestingUser          the user making the request.
+  * @param requestingUser       the user making the request.
   */
-case class SearchResourceByLabelCountGetRequestV2(searchValue: String,
+case class SearchResourceByLabelCountRequestV2(searchValue: String,
+                                               limitToProject: Option[IRI],
+                                               limitToResourceClass: Option[SmartIri],
+                                               requestingUser: UserADM) extends SearchResponderRequestV2
+
+/**
+  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
+  *
+  * @param searchValue          the values to search for.
+  * @param offset               the offset to be used for paging.
+  * @param limitToProject       limit search to given project.
+  * @param limitToResourceClass limit search to given resource class.
+  * @param requestingUser       the user making the request.
+  */
+case class SearchResourceByLabelRequestV2(searchValue: String,
+                                          offset: Int,
                                           limitToProject: Option[IRI],
                                           limitToResourceClass: Option[SmartIri],
                                           requestingUser: UserADM) extends SearchResponderRequestV2
 
 /**
-  * Requests a search of resources by their label. A successful response will be a [[ReadResourcesSequenceV2]].
-  *
-  * @param searchValue the values to search for.
-  * @param offset the offset to be used for paging.
-  * @param limitToProject limit search to given project.
-  * @param limitToResourceClass limit search to given resource class.
-  * @param requestingUser the user making the request.
+  * Represents the number of resources found by a search query.
   */
-case class SearchResourceByLabelGetRequestV2(searchValue: String,
-                                             offset: Int,
-                                             limitToProject: Option[IRI],
-                                             limitToResourceClass: Option[SmartIri],
-                                             requestingUser: UserADM) extends SearchResponderRequestV2
+case class ResourceCountV2(numberOfResources: Int) extends KnoraResponseV2 {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        JsonLDDocument(
+            body = JsonLDObject(Map(
+                OntologyConstants.SchemaOrg.NumberOfItems -> JsonLDInt(numberOfResources)
+            )),
+            context = JsonLDObject(Map(
+                "schema" -> JsonLDString(OntologyConstants.SchemaOrg.SchemaOrgPrefixExpansion)
+            ))
+        )
+    }
+}

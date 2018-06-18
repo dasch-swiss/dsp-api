@@ -49,7 +49,6 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
 
     private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
-    private implicit val log: LoggingAdapter = akka.event.Logging(system, this.getClass())
 
     private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)

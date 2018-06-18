@@ -3,7 +3,7 @@ import scala.sys.process._
 // Define `Configuration` instances representing our different documentation trees
 val ParadoxSite = config("paradox")
 
-lazy val root = (project in file(".")).
+lazy val docs = (project in file(".")).
     configs(
         ParadoxSite
     ).
@@ -16,7 +16,7 @@ lazy val root = (project in file(".")).
     ).
     settings(
         // Set version string
-        version in ParadoxSite := "v1.4.0",
+        version in ParadoxSite := "v1.5.0",
 
         // Ghpages settings
         ghpagesNoJekyll := true,
@@ -69,8 +69,9 @@ buildPrequisites := {
     val clean: Seq[String] = shell :+ "make clean"
     val jsonformat: Seq[String] = shell :+ "make jsonformat"
     val graphvizfigures: Seq[String] = shell :+ "make graphvizfigures"
+    val jsonformattest: Seq[String] = shell :+ "make jsonformattest"
     s.log.info("building typescript documentation and graphviz diagrams...")
-    if ((clean #&& jsonformat #&& graphvizfigures !) == 0) {
+    if ((clean #&& jsonformattest #&& jsonformat #&& graphvizfigures !) == 0) {
         Thread.sleep(500)
         s.log.success("typescript documentation and graphviz diagrams built successfully")
     } else {

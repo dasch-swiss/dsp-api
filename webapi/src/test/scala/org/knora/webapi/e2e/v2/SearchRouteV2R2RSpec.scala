@@ -24,6 +24,7 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
@@ -37,6 +38,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.SearchRouteV2
 import org.knora.webapi.store._
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.search.SparqlQueryConstants
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -68,13 +70,19 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val anythingUser = SharedTestDataADM.anythingUser1
     private val anythingUserEmail = anythingUser.email
 
+    private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
+    private val incunabulaUserEmail = incunabulaUser.email
+
     private val password = "test"
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-
+        RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-admin.ttl", name = "http://www.knora.org/data/admin"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
+        RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
     )
 
     "Load test data" in {
@@ -102,7 +110,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 210)
+                checkCountResponse(responseAs[String], 210)
 
             }
         }
@@ -137,13 +145,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
 
             }
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
-            val sparqlSimplified =
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Queries without type inference
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -167,8 +178,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -180,8 +190,46 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |        dcterms:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -205,8 +253,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -218,23 +265,24 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a count query for an extended search for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX dcterms: <http://purl.org/dc/terms/>
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book incunabula:title ?title .
+                  |        ?book dcterms:title ?title .
                   |
                   |    } WHERE {
                   |
                   |        ?book a incunabula:book .
                   |        ?book a knora-api:Resource .
                   |
-                  |        ?book incunabula:title ?title .
-                  |        incunabula:title knora-api:objectType xsd:string .
+                  |        ?book dcterms:title ?title .
+                  |        dcterms:title knora-api:objectType xsd:string .
                   |
                   |        ?title a xsd:string .
                   |
@@ -243,19 +291,55 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 2)
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
         }
 
-        "perform an extended search for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
-            val sparqlSimplified =
+        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |        ?title a xsd:string .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -277,8 +361,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -290,8 +373,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -315,8 +398,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -328,8 +410,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a count query for an extended search for books that do not have the title 'Zeitglöcklein des Lebens'" in {
-            val sparqlSimplified =
+        "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens'" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -353,8 +435,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/count/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -363,15 +444,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
                 // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
 
-                checkCountSearchQuery(responseAs[String], 18)
+                checkCountResponse(responseAs[String], 18)
 
             }
 
         }
 
-        "perform an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -401,8 +482,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -415,9 +495,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform a count query for an extended search for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
+        "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -447,21 +527,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
 
             }
 
         }
 
-        "perform an extended search for the page of a book whose seqnum equals 10, returning only the seqnum" in {
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -489,8 +568,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -504,9 +582,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform an extended search for the pages of a book whose seqnum is lower than or equals 10" in {
+        "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -536,8 +614,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?seqnum
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -549,9 +626,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform an extended search for the pages of a book and return them ordered by their seqnum" in {
+        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -579,8 +656,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } ORDER BY ?seqnum
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -592,9 +668,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "perform an extended search for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
+        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -623,8 +699,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    OFFSET 1
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -637,8 +712,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar)" ignore { // literals are not supported
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -649,7 +724,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
                   |    } WHERE {
                   |
                   |        ?book a incunabula:book .
@@ -660,25 +735,24 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?title a xsd:string .
                   |
-                  |        ?book incunabula:pubdate "JULIAN:1497-03-01" .
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
         }
 
-        "perform an extended search for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -705,13 +779,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate = "JULIAN:1497-03-01")
+                  |        FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -724,8 +797,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
 
-        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -752,13 +825,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate != "JULIAN:1497-03-01")
+                  |        FILTER(?pubdate != "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -767,14 +839,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
 
             }
 
         }
 
-        "perform an extended search for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -801,13 +873,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |         FILTER(?pubdate < "JULIAN:1497-03-01" || ?pubdate > "JULIAN:1497-03-01")
+                  |         FILTER(?pubdate < "JULIAN:1497-03-01"^^knora-api:Date || ?pubdate > "JULIAN:1497-03-01"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -816,14 +887,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 17)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
 
             }
 
         }
 
-        "perform an extended search for books that have been published before 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar)" in {
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -849,13 +920,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate < "JULIAN:1497")
+                  |        FILTER(?pubdate < "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -864,14 +934,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
-                checkCountSearchQuery(responseAs[String], 15)
+                checkSearchResponseNumberOfResults(responseAs[String], 15)
 
             }
 
         }
 
-        "perform an extended search for books that have been published 1497 or later (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar)" in {
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -897,13 +967,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate >= "JULIAN:1497")
+                  |        FILTER(?pubdate >= "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -912,14 +981,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 4)
+                checkSearchResponseNumberOfResults(responseAs[String], 4)
 
             }
 
         }
 
-        "perform an extended search for books that have been published after 1497 (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar)" in {
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -945,13 +1014,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate > "JULIAN:1497")
+                  |        FILTER(?pubdate > "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -960,14 +1028,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
         }
 
-        "perform an extended search for books that have been published 1497 or before (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar)" in {
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -993,13 +1061,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        incunabula:pubdate knora-api:objectType knora-api:Date .
                   |
                   |        ?pubdate a knora-api:Date .
-                  |        FILTER(?pubdate <= "JULIAN:1497")
+                  |        FILTER(?pubdate <= "JULIAN:1497"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1008,14 +1075,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
-                checkCountSearchQuery(responseAs[String], 18)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
 
             }
 
         }
 
-        "perform an extended search for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
-            val sparqlSimplified =
+        "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar)" in {
+            val gravsearchQuery =
                 """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1042,13 +1109,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?pubdate a knora-api:Date .
                   |
-                  |        FILTER(?pubdate > "JULIAN:1486" && ?pubdate < "JULIAN:1491")
+                  |        FILTER(?pubdate > "JULIAN:1486"^^knora-api:Date && ?pubdate < "JULIAN:1491"^^knora-api:Date)
                   |
                   |    } ORDER BY ?pubdate
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1056,14 +1122,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 5)
+                checkSearchResponseNumberOfResults(responseAs[String], 5)
 
             }
 
         }
 
         "get the regions belonging to a page" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1107,8 +1173,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1116,14 +1181,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
         }
 
         "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
             PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
             PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -1168,8 +1233,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             } OFFSET 0
             """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1182,49 +1246,48 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get a book a page points to and only include the page's partOf link in the results (none of the other properties)" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
-            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-            PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |} WHERE {
+                  |
+                  |    ?book a knora-api:Resource .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |    ?title a xsd:string .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    knora-api:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |    ?seqnum a xsd:integer .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+                  |
+                  |    ?file a knora-api:File .
+                  |
+                  |} OFFSET 0
+                """.stripMargin
 
-            CONSTRUCT {
-
-                ?book knora-api:isMainResource true .
-
-                ?book incunabula:title ?title .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
-
-            } WHERE {
-
-                ?book a knora-api:Resource .
-
-                ?book incunabula:title ?title .
-
-                incunabula:title knora-api:objectType xsd:string .
-
-                ?title a xsd:string .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
-                knora-api:isPartOf knora-api:objectType knora-api:Resource .
-
-                <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
-                knora-api:seqnum knora-api:objectType xsd:integer .
-
-                ?seqnum a xsd:integer .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
-                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
-
-                ?file a knora-api:File .
-
-            } OFFSET 0
-            """.stripMargin
-
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1237,7 +1300,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf" in {
-            var sparqlSimplified =
+            var gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |
@@ -1271,8 +1334,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |} OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1285,7 +1347,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         }
 
         "search for an anything:Thing that has a decimal value of 2.1" ignore { // literals are not supported
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1295,32 +1357,31 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing a anything:Thing .
                   |
-                  |     ?thing anything:hasDecimal 2.1
+                  |     ?thing anything:hasDecimal "2.1"^^xsd:decimal .
                   |} WHERE {
                   |
                   |     ?thing a anything:Thing .
                   |     ?thing a knora-api:Resource .
                   |
-                  |     ?thing anything:hasDecimal 2.1 .
+                  |     ?thing anything:hasDecimal "2.1"^^xsd:decimal .
                   |     anything:hasDecimal knora-api:objectType xsd:decimal .
                   |
                   |}
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
         }
 
         "search for an anything:Thing that has a decimal value of 2.1 2" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1341,13 +1402,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?decimal a xsd:decimal .
                   |
-                  |     FILTER(?decimal = 2.1)
+                  |     FILTER(?decimal = "2.1"^^xsd:decimal)
                   |}
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1355,14 +1415,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
         }
 
         "search for an anything:Thing that has a decimal value bigger than 2.0" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1383,13 +1443,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?decimal a xsd:decimal .
                   |
-                  |     FILTER(?decimal > 2)
+                  |     FILTER(?decimal > "2"^^xsd:decimal)
                   |}
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1397,14 +1456,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
         }
 
         "search for an anything:Thing that has a decimal value smaller than 3.0" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1425,13 +1484,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?decimal a xsd:decimal .
                   |
-                  |     FILTER(?decimal < 3)
+                  |     FILTER(?decimal < "3"^^xsd:decimal)
                   |}
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1439,14 +1497,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
         }
 
         "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1469,19 +1527,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
 
             }
 
         }
 
         "search for an anything:Thing that has a Boolean value that is true 2" in {
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1508,8 +1565,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1517,15 +1573,58 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
-
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
             }
 
         }
 
         "search for an anything:Thing that may have a Boolean value that is true" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |         anything:hasBoolean knora-api:objectType xsd:boolean .
+                  |
+                  |         ?boolean a xsd:boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     }
+                  |} OFFSET 0
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset0.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the second page of results
+                checkSearchResponseNumberOfResults(responseAs[String], 25)
+            }
+
+        }
+
+        "search for an anything:Thing that may have a Boolean value that is true using an increased offset" in {
             // set OFFSET to 1 to get "Testding for extended search"
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1554,24 +1653,22 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
-                
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptional.jsonld"))
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"))
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkCountSearchQuery(responseAs[String], 14)
+                checkSearchResponseNumberOfResults(responseAs[String], 16)
             }
 
         }
 
         "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both)" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -1602,15 +1699,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         ?decimal a xsd:decimal .
                   |
-                  |         FILTER(?decimal = 2.1)
+                  |         FILTER(?decimal = "2.1"^^xsd:decimal)
                   |     }
                   |
                   |} OFFSET 0
                   |
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1618,7 +1714,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1626,7 +1722,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeit' using the regex function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1651,8 +1747,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1660,7 +1755,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1668,7 +1763,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeitglöcklein' using the match function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1692,8 +1787,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1701,7 +1795,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1710,7 +1804,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    CONSTRUCT {
@@ -1734,8 +1828,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     }
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1743,7 +1836,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1752,7 +1845,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for 'Zeitglöcklein des Lebens' using dcterms:title" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |    PREFIX dcterms: <http://purl.org/dc/terms/>
@@ -1776,8 +1869,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1785,7 +1877,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
 
             }
 
@@ -1793,7 +1885,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a anything:Thing with a list value" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1815,8 +1907,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    } OFFSET 0
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -1824,7 +1915,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 2)
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
 
             }
 
@@ -1832,7 +1923,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "search for a text using the lang function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1858,21 +1949,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
         }
 
         "search for a specific text using the lang function" in {
 
-            val sparqlSimplified =
+            val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
                   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1894,21 +1984,18 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?text a xsd:string .
                   |
-                  |     FILTER(lang(?text) = "fr")
-                  |
-                  |     FILTER(?text = "Bonjour")
+                  |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
                   |}
                 """.stripMargin
 
-            // TODO: find a better way to submit spaces as %20
-            Get("/v2/searchextended/" + URLEncoder.encode(sparqlSimplified, "UTF-8").replace("+", "%20")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
         }
 
@@ -1942,7 +2029,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
 
             }
 
@@ -1968,7 +2055,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkCountResponse(responseAs[String], 1)
             }
 
         }
@@ -1993,7 +2080,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                checkCountSearchQuery(responseAs[String], 1)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
             }
 
         }
@@ -2015,12 +2102,2953 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                     </text>
                 */
 
-                checkCountSearchQuery(responseAs[String], 0)
+                checkSearchResponseNumberOfResults(responseAs[String], 0)
 
             }
 
         }
 
+        "do a Gravsearch query for link objects that link to an incunabula book" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?linkObj knora-api:isMainResource true .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |
+                  |} WHERE {
+                  |     ?linkObj a knora-api:Resource .
+                  |     ?linkObj a knora-api:LinkObj .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |     knora-api:hasLinkTo knora-api:objectType knora-api:Resource .
+                  |
+                  |     ?book a knora-api:Resource .
+                  |     ?book a incunabula:book .
+                  |
+                  |     ?book incunabula:title ?title .
+                  |
+                  |     incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |     ?title a xsd:string .
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
+
+            }
+
+
+        }
+
+        "do a Gravsearch query for a letter that links to a specific person via two possible properties" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithAuthor.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to a person with a specified name" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |        ?name a xsd:string .
+                  |
+                  |        FILTER(?name = "Meier")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to a person with a specified name (optional)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        OPTIONAL {
+                  |             ?person1 beol:hasFamilyName ?name .
+                  |
+                  |             beol:hasFamilyName knora-api:objectType xsd:string .
+                  |             ?name a xsd:string .
+                  |
+                  |             FILTER(?name = "Meier")
+                  |        }
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to another person with a specified name" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |        ?name a xsd:string .
+                  |
+                  |        FILTER(?name = "Muster")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "run a Gravsearch query that searches for a person using foaf classes and properties" in {
+
+            val gravsearchQuery =
+                """
+                  |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |      PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |      PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+                  |
+                  |      CONSTRUCT {
+                  |          ?person knora-api:isMainResource true .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |
+                  |      } WHERE {
+                  |          ?person a knora-api:Resource .
+                  |          ?person a foaf:Person .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |          foaf:familyName knora-api:objectType xsd:string .
+                  |
+                  |          ?familyName a xsd:string .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |          foaf:givenName knora-api:objectType xsd:string .
+                  |
+                  |          ?givenName a xsd:string .
+                  |
+                  |          FILTER(?familyName = "Meier")
+                  |
+                  |      }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/foafPerson.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "run a Gravsearch query that searches for a single resource specified by its IRI" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true ;
+                  |         a anything:Thing ;
+                  |         anything:hasText ?text ;
+                  |         anything:hasInteger ?integer .
+                  |
+                  |} WHERE {
+                  |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+                  |
+                  |     ?thing a knora-api:Resource .
+                  |     ?thing a anything:Thing .
+                  |     ?thing anything:hasText ?text .
+                  |     anything:hasText knora-api:objectType xsd:string .
+                  |     ?text a xsd:string .
+                  |     ?thing anything:hasInteger ?integer .
+                  |     anything:hasInteger knora-api:objectType xsd:integer .
+                  |     ?integer a xsd:integer.
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+
+        "do a Gravsearch query for a letter and get information about the persons associated with it" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |
+                  |
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        ?letter a knora-api:Resource .
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        beol:creationDate knora-api:objectType knora-api:Date .
+                  |        ?date a knora-api:Date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 a knora-api:Resource .
+                  |
+                  |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |        beol:hasFamilyName knora-api:objectType xsd:string .
+                  |
+                  |        ?familyName a xsd:string .
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page knora-api:isPartOf ?book ;
+                  |            incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/b6b5ff1eb703> AS ?book)
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |        ?title a xsd:string .
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf ?book .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page knora-api:isPartOf ?book ;
+                  |            incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/b6b5ff1eb703> AS ?book)
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |        incunabula:title knora-api:objectType xsd:string .
+                  |        ?title a xsd:string .
+                  |
+                  |        ?page a incunabula:page .
+                  |        ?page a knora-api:Resource .
+                  |
+                  |        ?page knora-api:isPartOf ?book .
+                  |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |        incunabula:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |        ?seqnum a xsd:integer .
+                  |
+                  |    } ORDER BY ?seqnum
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.BAD_REQUEST, response.toString)
+
+            }
+        }
+
+        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi'" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?region knora-api:isMainResource true .
+                  |
+                  |    ?region knora-api:isRegionOf ?page .
+                  |
+                  |    ?page knora-api:isPartOf ?book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |} WHERE {
+                  |    ?region a knora-api:Resource .
+                  |	?region a knora-api:Region .
+                  |
+                  |	?region knora-api:isRegionOf ?page .
+                  |
+                  |    knora-api:isRegionOf knora-api:objectType knora-api:Resource .
+                  |
+                  |    ?page a knora-api:Resource .
+                  |    ?page a incunabula:page .
+                  |
+                  |    ?page knora-api:isPartOf ?book .
+                  |
+                  |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |    ?book a knora-api:Resource .
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |    ?title a xsd:string .
+                  |
+                  |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query containing a UNION nested in an OPTIONAL" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?Project knora-api:isMainResource true .
+                  |  ?isInProject gravsearchtest1:isInProject ?Project .
+                  |} WHERE {
+                  |  ?Project a knora-api:Resource .
+                  |  ?Project a gravsearchtest1:Project .
+                  |
+                  |  OPTIONAL {
+                  |    ?isInProject gravsearchtest1:isInProject ?Project .
+                  |    gravsearchtest1:isInProject knora-api:objectType knora-api:Resource .
+                  |    ?isInProject a knora-api:Resource .
+                  |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
+                  |  }
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Queries with type inference
+
+        "do a Gravsearch query in which 'rdf:type knora-api:Resource' is inferred from a more specific rdf:type (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:creationDate ?date .
+                  |    beol:creationDate knora-api:objectType knora-api:Date .
+                  |    ?date a knora-api:Date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    beol:hasFamilyName knora-api:objectType xsd:string .
+                  |    ?name a xsd:string .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query in which the object types of property IRIs are inferred (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?date a knora-api:Date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?name a xsd:string .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query in which the types of property objects are inferred from the knora-api:objectType of each property (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?linkingProp1 knora-api:objectType knora-api:Resource .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query in which a property's knora-api:objectType is inferred from its object (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |} WHERE {
+                  |    ?letter a beol:letter .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query in which the types of property subjects are inferred from the knora-api:subjectType of each property (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |} WHERE {
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query in which the knora-api:objectType of a property variable is inferred from a FILTER (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |    ?letter knora-api:isMainResource true .
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |} WHERE {
+                  |    ?letter beol:creationDate ?date .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |
+                  |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithoutName.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query that finds all the books that have a page with seqnum 100, inferring types (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |  ?book knora-api:isMainResource true ;
+                  |    incunabula:title ?title .
+                  |
+                  |  ?page incunabula:partOf ?book ;
+                  |    incunabula:seqnum ?seqnum .
+                  |
+                  |} WHERE {
+                  |
+                  |  ?page incunabula:partOf ?book ;
+                  |    incunabula:seqnum ?seqnum .
+                  |
+                  |  FILTER(?seqnum = 100)
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/booksWithPage100.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query that finds all the letters sent by someone called Meier, ordered by date, inferring types (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |  ?letter knora-api:isMainResource true ;
+                  |    beol:creationDate ?date ;
+                  |    beol:hasAuthor ?author .
+                  |
+                  |  ?author beol:hasFamilyName ?name .
+                  |
+                  |} WHERE {
+                  |
+                  |  ?letter beol:hasAuthor ?author ;
+                  |    beol:creationDate ?date .
+                  |
+                  |  ?author beol:hasFamilyName ?name .
+                  |
+                  |  FILTER(?name = "Meier")
+                  |
+                  |} ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/lettersByMeier.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the complex schema) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the dcterms:title 'Zeitglöcklein des Lebens' returning the title in the answer (in the simple schema) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)).addHeader(new SchemaHeader(RouteUtilV2.SIMPLE_SCHEMA_NAME)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchWithTitleInAnswerSimple.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch count query for books that have the title 'Zeitglöcklein des Lebens' returning the title in the answer (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkCountResponse(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have the title 'Zeitglöcklein des Lebens' not returning the title in the answer (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ZeitgloeckleinExtendedSearchNoTitleInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/NotZeitgloeckleinExtendedSearch.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch count query for books that do not have the title 'Zeitglöcklein des Lebens' (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        FILTER(?title != "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended/count", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // 19 - 2 = 18 :-)
+                // there is a total of 19 incunabula books of which two have the title "Zeitglöcklein des Lebens und Leidens Christi" (see test above)
+                // however, there are 18 books that have a title that is not "Zeitglöcklein des Lebens und Leidens Christi"
+                // this is because there is a book that has two titles, one "Zeitglöcklein des Lebens und Leidens Christi" and the other in Latin "Horologium devotionis circa vitam Christi"
+
+                checkCountResponse(responseAs[String], 18)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10WithSeqnumAndLinkValueInAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+
+            }
+
+        }
+
+        "perform a Gravsearch count query for the page of a book whose seqnum equals 10, returning the seqnum  and the link value (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+
+            }
+
+        }
+
+        "perform a Gravsearch query for the page of a book whose seqnum equals 10, returning only the seqnum (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum = 10)
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PageWithSeqnum10OnlySeqnuminAnswer.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+
+            }
+
+        }
+
+
+        "perform a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10 (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |    } ORDER BY ?seqnum
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/pagesOfLatinNarrenschiffWithSeqnumLowerEquals10.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |    } ORDER BY ?seqnum
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?page knora-api:isMainResource true .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/b6b5ff1eb703> .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |    } ORDER BY ?seqnum
+                  |    OFFSET 1
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnumNextOffset.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (with type inference)" ignore { // literals are not supported
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published on the first of March 1497 (Julian Calendar) (2) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedOnDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+
+        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate != "JULIAN:1497-03-01"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have not been published on the first of March 1497 (Julian Calendar) 2 (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate < "JULIAN:1497-03-01"^^knora-api:Date || ?pubdate > "JULIAN:1497-03-01"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksNotPublishedOnDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 2 (number of results from query above)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published before 1497 (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate < "JULIAN:1497"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 4 (number of results from query below)
+                checkSearchResponseNumberOfResults(responseAs[String], 15)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published 1497 or later (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate >= "JULIAN:1497"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterOrOnDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 15 (number of results from query above)
+                checkSearchResponseNumberOfResults(responseAs[String], 4)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published after 1497 (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate > "JULIAN:1497"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedAfterDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 18 (number of results from query above)
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published 1497 or before (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate <= "JULIAN:1497"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBeforeOrOnDate.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the negation of the query condition above, hence the size of the result set must be 19 (total of incunabula:book) minus 1 (number of results from query above)
+                checkSearchResponseNumberOfResults(responseAs[String], 18)
+
+            }
+
+        }
+
+        "perform a Gravsearch query for books that have been published after 1486 and before 1491 (Julian Calendar) (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |    } WHERE {
+                  |
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?book incunabula:pubdate ?pubdate .
+                  |
+                  |        FILTER(?pubdate > "JULIAN:1486"^^knora-api:Date && ?pubdate < "JULIAN:1491"^^knora-api:Date)
+                  |
+                  |    } ORDER BY ?pubdate
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksPublishedBetweenDates.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 5)
+
+            }
+
+        }
+
+        "get the regions belonging to a page (with type inference)" in {
+            val gravsearchQuery =
+                """    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?region knora-api:isMainResource true .
+                  |
+                  |        ?region a knora-api:Region .
+                  |
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
+                  |
+                  |        ?region knora-api:hasGeometry ?geom .
+                  |
+                  |        ?region knora-api:hasComment ?comment .
+                  |
+                  |        ?region knora-api:hasColor ?color .
+                  |    } WHERE {
+                  |
+                  |        ?region a knora-api:Region .
+                  |
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
+                  |
+                  |        ?region knora-api:hasGeometry ?geom .
+                  |
+                  |        ?region knora-api:hasComment ?comment .
+                  |
+                  |        ?region knora-api:hasColor ?color .
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/RegionsForPage.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "get a book a page points to and include the page in the results (all properties present in WHERE clause) (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |
+                  |} WHERE {
+                  |
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |
+                  |} OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesWithAllRequestedProps.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get a book a page points to and only include the page's partOf link in the results (none of the other properties) (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |} WHERE {
+                  |
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |
+                  |} OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/bookWithIncomingPagesOnlyLink.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "get incoming links pointing to an incunbaula:book, excluding isPartOf and isRegionOf (with type inference)" in {
+            var gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |     ?incomingRes knora-api:isMainResource true .
+                  |
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/8be1b7cf7103> .
+                  |
+                  |} WHERE {
+                  |
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/8be1b7cf7103> .
+                  |
+                  |     <http://rdfh.ch/8be1b7cf7103> a incunabula:book .
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes knora-api:isRegionOf <http://rdfh.ch/8be1b7cf7103> .
+                  |     }
+                  |
+                  |     FILTER NOT EXISTS {
+                  |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/8be1b7cf7103> .
+                  |     }
+                  |
+                  |} OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/IncomingLinksForBook.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value of 2.1 (with type inference)" ignore { // literals are not supported
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal"2.1"^^xsd:decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal "2.1"^^xsd:decimal .
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value of 2.1 2 (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |
+                  |     FILTER(?decimal = "2.1"^^xsd:decimal)
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingEqualsDecimal.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value bigger than 2.0 (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |
+                  |     FILTER(?decimal > "2"^^xsd:decimal)
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingBiggerThanDecimal.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a decimal value smaller than 3.0 (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |
+                  |     FILTER(?decimal < "3"^^xsd:decimal)
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingSmallerThanDecimal.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a Boolean value that is true (with type inference)" ignore { // literals are not supported
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean true
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean true .
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "search for an anything:Thing that has a Boolean value that is true 2 (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |
+                  |     FILTER(?boolean = true)
+                  |
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBoolean.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+            }
+
+        }
+
+        "search for an anything:Thing that may have a Boolean value that is true (with type inference)" in {
+            // set OFFSET to 1 to get "Testding for extended search"
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     OPTIONAL {
+                  |
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     }
+                  |} OFFSET 1
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOptionalOffset1.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                // this is the second page of results
+                checkSearchResponseNumberOfResults(responseAs[String], 16)
+            }
+
+        }
+
+        "search for an anything:Thing that either has a Boolean value that is true or a decimal value that equals 2.1 (or both) (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasBoolean ?boolean .
+                  |
+                  |     ?thing anything:hasDecimal ?decimal .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     {
+                  |         ?thing anything:hasBoolean ?boolean .
+                  |
+                  |         FILTER(?boolean = true)
+                  |     } UNION {
+                  |         ?thing anything:hasDecimal ?decimal .
+                  |
+                  |         FILTER(?decimal = "2.1"^^xsd:decimal)
+                  |     }
+                  |
+                  |} OFFSET 0
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithBooleanOrDecimal.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a book whose title contains 'Zeit' using the regex function (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a incunabula:book .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |        FILTER regex(?propVal0, "Zeit", "i")
+                  |
+                  |     }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeit.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a book whose title contains 'Zeitglöcklein' using the match function (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a incunabula:book .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein")
+                  |
+                  |     }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+
+        }
+
+        "search for a book whose title contains 'Zeitglöcklein' and 'Lebens' using the match function (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |    PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |
+                  |        ?mainRes knora-api:isMainResource true .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |     } WHERE {
+                  |
+                  |        ?mainRes a incunabula:book .
+                  |
+                  |        ?mainRes incunabula:title ?propVal0 .
+                  |
+                  |        FILTER knora-api:match(?propVal0, "Zeitglöcklein Lebens")
+                  |
+                  |     }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+
+        }
+
+        "search for 'Zeitglöcklein des Lebens' using dcterms:title (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |    PREFIX dcterms: <http://purl.org/dc/terms/>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |    } WHERE {
+                  |        ?book a knora-api:Resource .
+                  |
+                  |        ?book dcterms:title ?title .
+                  |
+                  |        FILTER(?title = 'Zeitglöcklein des Lebens und Leidens Christi')
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/BooksWithTitleContainingZeitgloecklein.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 2)
+
+            }
+
+        }
+
+        "search for a anything:Thing with a list value (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?thing knora-api:isMainResource true .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } WHERE {
+                  |        ?thing a anything:Thing .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } OFFSET 0
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithListValue.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
+
+            }
+
+        }
+
+        "search for a text using the lang function (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     FILTER(lang(?text) = "fr")
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+            }
+        }
+
+        "search for a specific text using the lang function (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |     ?thing a anything:Thing .
+                  |
+                  |     ?thing anything:hasText ?text .
+                  |
+                  |     FILTER(lang(?text) = "fr" && ?text = "Bonjour")
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LanguageFulltextSearch.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+            }
+        }
+
+        "do a Gravsearch query for link objects that link to an incunabula book (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?linkObj knora-api:isMainResource true .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |
+                  |} WHERE {
+                  |     ?linkObj a knora-api:LinkObj .
+                  |
+                  |     ?linkObj knora-api:hasLinkTo ?book .
+                  |
+                  |     ?book a incunabula:book .
+                  |
+                  |     ?book incunabula:title ?title .
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/LinkObjectsToBooks.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 3)
+
+            }
+
+
+        }
+
+        "do a Gravsearch query for a letter that links to a specific person via two possible properties (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |
+                  |    } WHERE {
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithAuthor.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to a person with a specified name (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        FILTER(?name = "Meier")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to a person with a specified name (optional) (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        OPTIONAL {
+                  |             ?person1 beol:hasFamilyName ?name .
+                  |
+                  |             FILTER(?name = "Meier")
+                  |        }
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithNameOptional.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "do a Gravsearch query for a letter that links to another person with a specified name (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1  ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |    } WHERE {
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?name .
+                  |
+                  |        FILTER(?name = "Muster")
+                  |
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithPersonWithName2.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+        }
+
+        "run a Gravsearch query that searches for a person using foaf classes and propertie (with type inference)" in {
+
+            val gravsearchQuery =
+                """
+                  |      PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |      PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |      PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+                  |
+                  |      CONSTRUCT {
+                  |          ?person knora-api:isMainResource true .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |
+                  |      } WHERE {
+                  |          ?person a knora-api:Resource .
+                  |          ?person a foaf:Person .
+                  |
+                  |          ?person foaf:familyName ?familyName .
+                  |
+                  |          ?familyName a xsd:string .
+                  |
+                  |          ?person foaf:givenName ?givenName .
+                  |
+                  |          ?givenName a xsd:string .
+                  |
+                  |          FILTER(?familyName = "Meier")
+                  |
+                  |      }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/foafPerson.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
+        "run a Gravsearch query that searches for a single resource specified by its IRI (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true ;
+                  |         a anything:Thing ;
+                  |         anything:hasText ?text ;
+                  |         anything:hasInteger ?integer .
+                  |
+                  |} WHERE {
+                  |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing anything:hasText ?text .
+                  |     ?thing anything:hasInteger ?integer .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingByIriWithRequestedValues.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+
+        "do a Gravsearch query for a letter and get information about the persons associated with it (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?letter knora-api:isMainResource true .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |
+                  |
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        ?letter a beol:letter .
+                  |
+                  |        ?letter beol:creationDate ?date .
+                  |
+                  |        # testperson2
+                  |        ?letter ?linkingProp1 ?person1 .
+                  |
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |
+                  |        ?person1 beol:hasFamilyName ?familyName .
+                  |
+                  |    } ORDER BY ?date
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithAuthorWithInformation.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query for the pages of a book whose seqnum is lower than or equals 10, with the book as the main resource (with type inference)" in {
+
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page knora-api:isPartOf ?book ;
+                  |            incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/b6b5ff1eb703> AS ?book)
+                  |        ?book a incunabula:book .
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf ?book .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/incomingPagesForBook.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "reject a Gravsearch query containing a statement whose subject is not the main resource and whose object is used in ORDER BY (with type inference)" in {
+            val gravsearchQuery =
+                """PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?book knora-api:isMainResource true .
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page knora-api:isPartOf ?book ;
+                  |            incunabula:seqnum ?seqnum .
+                  |    } WHERE {
+                  |        BIND(<http://rdfh.ch/b6b5ff1eb703> AS ?book)
+                  |
+                  |        ?book incunabula:title ?title .
+                  |
+                  |        ?page a incunabula:page .
+                  |
+                  |        ?page knora-api:isPartOf ?book .
+                  |
+                  |        ?page incunabula:seqnum ?seqnum .
+                  |
+                  |        FILTER(?seqnum <= 10)
+                  |
+                  |    } ORDER BY ?seqnum
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.BAD_REQUEST, response.toString)
+
+            }
+        }
+
+        "do a Gravsearch query for regions that belong to pages that are part of a book with the title 'Zeitglöcklein des Lebens und Leidens Christi (with type inference)'" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?region knora-api:isMainResource true .
+                  |
+                  |    ?region knora-api:isRegionOf ?page .
+                  |
+                  |    ?page knora-api:isPartOf ?book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |} WHERE {
+                  |	   ?region a knora-api:Region .
+                  |
+                  |	   ?region knora-api:isRegionOf ?page .
+                  |
+                  |    ?page a incunabula:page .
+                  |
+                  |    ?page knora-api:isPartOf ?book .
+                  |
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/regionsOfZeitgloecklein.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "do a Gravsearch query containing a UNION nested in an OPTIONAL (with type inference)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX gravsearchtest1: <http://0.0.0.0:3333/ontology/0666/gravsearchtest1/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |  ?Project knora-api:isMainResource true .
+                  |  ?isInProject gravsearchtest1:isInProject ?Project .
+                  |} WHERE {
+                  |  ?Project a gravsearchtest1:Project .
+                  |
+                  |  OPTIONAL {
+                  |    ?isInProject gravsearchtest1:isInProject ?Project .
+                  |    { ?isInProject a gravsearchtest1:BibliographicNotice . } UNION { ?isInProject a gravsearchtest1:Person . }
+                  |  }
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ProjectsWithOptionalPersonOrBiblio.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
 
     }
 }

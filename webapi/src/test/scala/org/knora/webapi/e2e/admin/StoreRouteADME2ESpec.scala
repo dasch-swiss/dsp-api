@@ -19,7 +19,9 @@
 
 package org.knora.webapi.e2e.admin
 
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
@@ -42,6 +44,7 @@ object StoreRouteADME2ESpec {
   * This spec tests the 'v1/store' route.
   */
 class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 
 	/**
       * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.

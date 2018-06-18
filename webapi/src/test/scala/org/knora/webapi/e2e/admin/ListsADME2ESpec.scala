@@ -206,11 +206,11 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 val listInfo = receivedList.listinfo
                 listInfo.projectIri should be (IMAGES_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = listInfo.labels
+                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
                 labels.size should be (1)
                 labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
-                val comments = receivedList.listinfo.comments
+                val comments = receivedList.listinfo.comments.stringLiterals
                 comments.isEmpty should be (true)
 
                 val children = receivedList.children
@@ -309,10 +309,10 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
                 receivedListInfo.projectIri should be (IMAGES_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = receivedListInfo.labels
+                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
                 labels.size should be (2)
 
-                val comments = receivedListInfo.comments
+                val comments = receivedListInfo.comments.stringLiterals
                 comments.size should be (2)
             }
 
