@@ -15,22 +15,29 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi.messages.app.appmessages.AppState.AppState
+import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import org.knora.webapi.{Settings, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 /**
-  * A route used for faking the image server.
+  * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
+  *
+  * If the current state of the application is anything other then [[AppState.Running]], then return [[ServiceUnavailable]].
+  * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
+  * in 'application.conf'.
   */
-object RejectingRoute {
+class RejectingRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter, applicationStateActor: ActorRef) {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -47,10 +54,19 @@ object RejectingRoute {
                             None
                         }
                     }
-                    if (reject.flatten.nonEmpty) {
-                        requestContext.complete(NotFound, "The requested path is deactivated.")
-                    } else {
-                        requestContext.reject()
+
+                    // get the current application state
+                    val appState: AppState = Await.result(applicationStateActor ? GetAppState, timeout.duration).asInstanceOf[AppState]
+
+                    // only if application state is 'Running' then go on and apply filter
+                    if (appState == AppState.Running) {
+                        if (reject.flatten.nonEmpty) {
+                            requestContext.complete(NotFound, "The requested path is deactivated.")
+                        } else {
+                            requestContext.reject()
+                        }
+                    } else { // if any state other then 'Running', then return ServiceUnavailable
+                        requestContext.complete(ServiceUnavailable, s"Application not available at the moment (state = $appState). Please try again later.")
                     }
                 }
         }

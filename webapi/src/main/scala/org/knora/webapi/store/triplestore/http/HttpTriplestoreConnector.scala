@@ -37,7 +37,7 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.ActorUtil.{future2Message, _}
 import org.knora.webapi.util.SparqlResultProtocol._
 import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
@@ -116,7 +116,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckConnection => checkTriplestore()
+        case CheckConnection() => future2Message(sender(), checkTriplestore(), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -446,14 +446,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     }
 
-    private def checkTriplestore() {
-        val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
+    /**
+      * Checks connection to the triplestore.
+      */
+    private def checkTriplestore(): Future[CheckConnectionACK] = {
+        try {
 
-        val responseStrFuture = getTriplestoreHttpResponse(sparql = sparql, isUpdate = false)
+            val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
-        responseStrFuture.onComplete {
-            case Success(responseStr) => log.info(s"Connection OK: ${responseStr.length}")
-            case Failure(t) => log.error("Failed to connect to triplestore: " + t.getMessage)
+            val responseStrFuture = getTriplestoreHttpResponse(sparql = sparql, isUpdate = false)
+
+            Await.result(responseStrFuture, 1.second)
+
+            Future.successful(CheckConnectionACK())
+
+        } catch {
+            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute insert into triplestore", e, log))
         }
     }
 

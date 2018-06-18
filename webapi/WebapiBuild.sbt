@@ -3,6 +3,7 @@ import NativePackagerHelper._
 import sbt.io.IO
 import sbtassembly.MergeStrategy
 import sbtassembly.MergeStrategy._
+import sbt.librarymanagement.Resolver
 
 connectInput in run := true
 
@@ -69,6 +70,9 @@ lazy val webapi = (project in file(".")).
             ) ++ baseAssemblySettings
         ): _*).
         settings(
+            resolvers ++= Seq(
+                Resolver.bintrayRepo("everpeace", "maven")
+            ),
             libraryDependencies ++= webApiLibs,
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
             logLevel := Level.Info,
@@ -171,6 +175,7 @@ lazy val webApiLibs = Seq(
     library.gatlingHighcharts,
     library.gatlingTestFramework,
     library.gwtServlet,
+    library.healthchecksCore,
     library.jacksonScala,
     library.jsonldJava,
     library.jodd,
@@ -256,6 +261,7 @@ lazy val library =
         val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
         val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.1"
         val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.8.13"
+        val healthchecksCore       = "com.github.everpeace"         %% "healthchecks-core"        % "0.3.0"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",

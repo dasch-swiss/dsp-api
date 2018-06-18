@@ -44,7 +44,6 @@ class TriplestoreManager extends Actor with ActorLogging {
 
     implicit val timeout = settings.defaultRestoreTimeout
 
-    var httpBased: Boolean = _
     var storeActorRef: ActorRef = _
     var initialized: Boolean = false
 
@@ -69,30 +68,15 @@ class TriplestoreManager extends Actor with ActorLogging {
         log.debug("TriplestoreManagerActor: start with preStart")
 
         storeActorRef = settings.triplestoreType match {
-            case HTTP_GRAPH_DB_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case HTTP_FUSEKI_TS_TYPE => httpBased = true; makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case EMBEDDED_JENA_TDB_TS_TYPE => httpBased = false; makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
+            case HTTP_GRAPH_DB_TS_TYPE => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HTTP_FUSEKI_TS_TYPE => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case EMBEDDED_JENA_TDB_TS_TYPE => makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
 
         // Checking the connection to the triple store on startup
-        storeActorRef ! CheckConnection
-
-        //println(rdfDataObjectList.length)
-        val reloadDataOnStart = settings.tripleStoreConfig.getBoolean("reload-on-start")
-
-        // data reload. this is only needed for HTTP-based triplestores because of the actor pool, so that only one actor
-        // initiates the reloading of data.
-        // println(s"reloadDataOnStart: $reloadDataOnStart, httpBased: $httpBased")
-        if (reloadDataOnStart && httpBased) {
-            log.debug("initiating data reload")
-            val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.asScala.map {
-                config => RdfDataObjectFactory(config)
-            }
-            val resultFuture = storeActorRef ? ResetTriplestoreContent(rdfDataObjectList)
-            val result = Await.result(resultFuture, timeout.duration).asInstanceOf[ResetTriplestoreContentACK]
-        }
+        val resultFuture = storeActorRef ? CheckConnection()
+        val result = Await.result(resultFuture, timeout.duration).asInstanceOf[CheckConnectionACK]
         initialized = true
         log.debug("TriplestoreManagerActor: finished with preStart")
     }

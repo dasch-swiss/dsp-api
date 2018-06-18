@@ -46,7 +46,8 @@ class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: Log
         classOf[PermissionsRouteADM],
         classOf[ProjectsRouteADM],
         classOf[StoreRouteADM],
-        classOf[UsersRouteADM]
+        classOf[UsersRouteADM],
+        classOf[HealthRoute]
     )
 
     override val schemes: List[Scheme] = if (settings.externalKnoraApiProtocol == "http") {

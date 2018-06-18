@@ -39,7 +39,12 @@ case class HelloTriplestore(txt: String) extends TriplestoreRequest
 /**
   * Simple message for checking the connection to the triplestore.
   */
-case object CheckConnection extends TriplestoreRequest
+case class CheckConnection() extends TriplestoreRequest
+
+/**
+  * Simple message for acknowledging connection check
+  */
+case class CheckConnectionACK()
 
 /**
   * Represents a SPARQL SELECT query to be sent to the triplestore. A successful response will be a [[SparqlSelectResponse]].
