@@ -32,7 +32,7 @@ and install it in this directory.
 
 Then, launch the services as described above; the triple store with the
 test data, the Knora server with `reStart -r` (`allowReloadOverHTTP`-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``), Sipi
-with the test configuration (`--config=config/sipi.knora-test-docker-config.lua`) and SALSAH 1 where you can run the tests in
+with the test configuration (`--config=config/sipi.knora-docker-test-config.lua`) and SALSAH 1 where you can run the tests in
 the same SBT session:
 
 ```
