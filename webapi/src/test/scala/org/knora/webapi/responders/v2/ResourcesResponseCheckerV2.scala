@@ -31,7 +31,7 @@ object ResourcesResponseCheckerV2 {
       * @param expected the expected response.
       */
     def compareReadResourcesSequenceV2Response(expected: ReadResourcesSequenceV2, received: ReadResourcesSequenceV2): Unit = {
-        assert(expected.numberOfResources == received.numberOfResources, "number of resources are not equal")
+        assert(expected.numberOfResources == received.numberOfResources, "number of resources is not equal")
         assert(expected.resources.size == received.resources.size, "number of resources are not equal")
 
         // compare the resources one by one: resources have to returned in the correct order
@@ -63,7 +63,6 @@ object ResourcesResponseCheckerV2 {
 
                                 assert(expectedVal == receivedVal, s"value objects does not match: $expectedVal != $receivedVal")
                         }
-
 
 
                 }

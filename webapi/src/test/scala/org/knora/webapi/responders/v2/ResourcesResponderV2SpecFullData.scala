@@ -120,6 +120,13 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceIri = "http://rdfh.ch/c5058f3a"
     )
 
+    val expectedReadResourceV2ForZeitgloeckleinPreview = ReadResourceV2(
+        resourceIri = "http://rdfh.ch/c5058f3a",
+        label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        values = Map()
+    )
+
     val expectedReadResourceV2ForReiseInsHeiligeland = ReadResourceV2(
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
@@ -362,8 +369,20 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceIri = "http://rdfh.ch/2a6221216701"
     )
 
+    val expectedReadResourceV2ForReiseInsHeiligelandPreview = ReadResourceV2(
+        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        label = "Reise ins Heilige Land",
+        resourceIri = "http://rdfh.ch/2a6221216701",
+        values = Map()
+    )
+
     val expectedFullResourceResponseForZeitgloecklein = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein),
+        numberOfResources = 1
+    )
+
+    val expectedPreviewResourceResponseForZeitgloecklein = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview),
         numberOfResources = 1
     )
 
@@ -374,6 +393,11 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
 
     val expectedFullResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
         resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland),
+        numberOfResources = 2
+    )
+
+    val expectedPreviewResourceResponseForZeitgloeckleinAndReise = ReadResourcesSequenceV2(
+        resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview, expectedReadResourceV2ForReiseInsHeiligelandPreview),
         numberOfResources = 2
     )
 

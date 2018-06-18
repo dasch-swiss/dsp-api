@@ -18,7 +18,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 Knora Documentation
-=======
+===================
 
 @@toc { depth=2 }
 
@@ -32,5 +32,6 @@ Knora Documentation
 * [Knora Internals](05-internals/index.md)
 * [Salsah](06-salsah/index.md)
 * [Sipi](07-sipi/index.md)
+* [Frequently Asked Questions](faq.md)
 
 @@@

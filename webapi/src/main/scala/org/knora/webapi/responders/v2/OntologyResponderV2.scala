@@ -1515,7 +1515,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class's rdf:type is owl:Class.
 
-                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+                rdfType: SmartIri = internalClassDef.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
 
                 _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
@@ -1800,7 +1800,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class's rdf:type is owl:Class.
 
-                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+                rdfType: SmartIri = internalClassDef.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
 
                 _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
@@ -1976,7 +1976,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class's rdf:type is owl:Class.
 
-                rdfType: SmartIri = internalClassDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+                rdfType: SmartIri = internalClassDef.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
 
                 _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
@@ -2415,7 +2415,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the property's rdf:type is owl:ObjectProperty.
 
-                rdfType: SmartIri = internalPropertyDef.requireIriPredicate(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
+                rdfType: SmartIri = internalPropertyDef.requireIriObject(OntologyConstants.Rdf.Type.toSmartIri, throw BadRequestException(s"No rdf:type specified"))
 
                 _ = if (rdfType != OntologyConstants.Owl.ObjectProperty.toSmartIri) {
                     throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
@@ -2516,7 +2516,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the object class constraint designates an appropriate class that exists.
 
-                objectClassConstraint: SmartIri = internalPropertyDef.requireIriPredicate(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:objectType specified"))
+                objectClassConstraint: SmartIri = internalPropertyDef.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw BadRequestException(s"No knora-api:objectType specified"))
 
                 // If this is a value property, ensure its object class constraint is not LinkValue or a file value class.
                 _ = if (!isLinkProp) {

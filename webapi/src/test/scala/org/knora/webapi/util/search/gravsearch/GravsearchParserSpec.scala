@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.v2
+package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
@@ -25,141 +25,141 @@ import org.knora.webapi.util.search._
 import org.knora.webapi.{CoreSpec, GravsearchException}
 
 /**
-  * Tests [[GravsearchParserV2]].
+  * Tests [[GravsearchParser]].
   */
-class GravsearchParserV2Spec extends CoreSpec() {
+class GravsearchParserSpec extends CoreSpec() {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "The GravsearchParserV2 object" should {
+    "The GravsearchParser object" should {
         "parse a Gravsearch query" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(Query)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(Query)
             parsed should ===(ParsedQuery)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with a BIND" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithBind)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithBind)
             parsed should ===(ParsedQueryWithBind)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with a FILTER containing a Boolean operator" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryForAThingRelatingToAnotherThing)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryForAThingRelatingToAnotherThing)
             parsed should ===(ParsedQueryForAThingRelatingToAnotherThing)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with FILTER NOT EXISTS" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithFilterNotExists)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithFilterNotExists)
             parsed should ===(ParsedQueryWithFilterNotExists)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with MINUS" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMinus)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMinus)
             parsed should ===(ParsedQueryWithMinus)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with OFFSET" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithOffset)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithOffset)
             parsed should ===(ParsedQueryWithOffset)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with a FILTER containing a regex function" in {
-            val parsed = GravsearchParserV2.parseQuery(queryWithFilterContainingRegex)
+            val parsed = GravsearchParser.parseQuery(queryWithFilterContainingRegex)
             parsed should ===(ParsedQueryWithFilterContainingRegex)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "accept a custom 'match' function in a FILTER" in {
-            val parsed: ConstructQuery = GravsearchParserV2.parseQuery(QueryWithMatchFunction)
+            val parsed: ConstructQuery = GravsearchParser.parseQuery(QueryWithMatchFunction)
             parsed should ===(ParsedQueryWithMatchFunction)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query with a FILTER containing a lang function" in {
-            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterContainingLang)
+            val parsed = GravsearchParser.parseQuery(QueryWithFilterContainingLang)
             parsed should ===(ParsedQueryWithLangFunction)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query containing a FILTER in an OPTIONAL" in {
-            val parsed = GravsearchParserV2.parseQuery(QueryWithFilterInOptional)
+            val parsed = GravsearchParser.parseQuery(QueryWithFilterInOptional)
             parsed should ===(ParsedQueryWithFilterInOptional)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query containing a nested OPTIONAL" in {
-            val parsed = GravsearchParserV2.parseQuery(QueryStrWithNestedOptional)
+            val parsed = GravsearchParser.parseQuery(QueryStrWithNestedOptional)
             parsed should ===(ParsedQueryWithNestedOptional)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "parse a Gravsearch query containing a UNION in an OPTIONAL" in {
-            val parsed = GravsearchParserV2.parseQuery(QueryStrWithUnionInOptional)
+            val parsed = GravsearchParser.parseQuery(QueryStrWithUnionInOptional)
             parsed should ===(ParsedQueryWithUnionInOptional)
-            val reparsed = GravsearchParserV2.parseQuery(parsed.toSparql)
+            val reparsed = GravsearchParser.parseQuery(parsed.toSparql)
             reparsed should ===(parsed)
         }
 
         "reject a SELECT query" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(SparqlSelect)
+                GravsearchParser.parseQuery(SparqlSelect)
             }
         }
 
         "reject a DESCRIBE query" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(SparqlDescribe)
+                GravsearchParser.parseQuery(SparqlDescribe)
             }
         }
 
         "reject an INSERT" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(SparqlInsert)
+                GravsearchParser.parseQuery(SparqlInsert)
             }
         }
 
         "reject a DELETE" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(SparqlDelete)
+                GravsearchParser.parseQuery(SparqlDelete)
             }
         }
 
         "reject an internal ontology IRI" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryWithInternalEntityIri)
+                GravsearchParser.parseQuery(QueryWithInternalEntityIri)
             }
         }
 
         "reject left-nested UNIONs" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryWithLeftNestedUnion)
+                GravsearchParser.parseQuery(QueryWithLeftNestedUnion)
             }
         }
 
         "reject right-nested UNIONs" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryStrWithRightNestedUnion)
+                GravsearchParser.parseQuery(QueryStrWithRightNestedUnion)
             }
         }
 
         "reject an unsupported FILTER" in {
             assertThrows[GravsearchException] {
-                GravsearchParserV2.parseQuery(QueryWithWrongFilter)
+                GravsearchParser.parseQuery(QueryWithWrongFilter)
             }
         }
     }

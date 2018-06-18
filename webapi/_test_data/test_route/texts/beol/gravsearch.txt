@@ -1,0 +1,84 @@
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+    CONSTRUCT {
+        ?letter knora-api:isMainResource true .
+
+        ?letter beol:creationDate ?date .
+
+        ?letter beol:hasText ?text .
+
+        ?letter beol:hasAuthor ?person1 .
+
+        ?person1 beol:hasFamilyName ?name1 .
+
+        ?person1 beol:hasGivenName ?givenName1 .
+
+        ?person1 beol:hasIAFIdentifier ?iaf1 .
+
+        ?letter beol:hasRecipient ?person2 .
+
+        ?person2 beol:hasFamilyName ?name2 .
+
+        ?person2 beol:hasGivenName ?givenName2 .
+
+        ?person2 beol:hasIAFIdentifier ?iaf2 .
+
+
+    } WHERE {
+        BIND(<$resourceIri> as ?letter)
+        ?letter a knora-api:Resource .
+        ?letter a beol:letter .
+
+        ?letter beol:creationDate ?date .
+
+        beol:creationDate knora-api:objectType knora-api:Date .
+        ?date a knora-api:Date .
+
+        ?letter beol:hasText ?text .
+
+        beol:hasText knora-api:objectType xsd:string .
+
+        ?text a xsd:string .
+
+        ?letter beol:hasAuthor ?person1 .
+
+        ?person1 beol:hasFamilyName ?name1 .
+
+        ?person1 beol:hasGivenName ?givenName1 .
+
+        ?person1 beol:hasIAFIdentifier ?iaf1 .
+
+        ?name1 a xsd:string .
+
+        ?givenName1 a xsd:string .
+
+        ?iaf1 a xsd:string .
+
+        ?person2 beol:hasFamilyName ?name2 .
+
+        ?person2 beol:hasGivenName ?givenName2 .
+
+        ?person2 beol:hasIAFIdentifier ?iaf2 .
+
+        ?name2 a xsd:string .
+
+        ?givenName2 a xsd:string .
+
+        ?iaf2 a xsd:string .
+
+        beol:hasGivenName knora-api:objectType xsd:string .
+        beol:hasFamilyName knora-api:objectType xsd:string .
+        beol:hasIAFIdentifier knora-api:objectType xsd:string .
+
+      	beol:hasAuthor knora-api:objectType knora-api:Resource .
+
+        ?letter beol:hasRecipient ?person2 .
+
+      	beol:hasRecipient knora-api:objectType knora-api:Resource .
+
+        ?person1 a knora-api:Resource .
+        ?person2 a knora-api:Resource .
+
+    }

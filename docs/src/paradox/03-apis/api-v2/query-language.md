@@ -159,6 +159,7 @@ clauses use the following patterns, with the specified restrictions:
   - `FILTER`: may contain a complex expression using the Boolean
     operators AND and OR, as well as comparison operators. The left
     argument of a comparison operator must be a query variable.
+    A Knora ontology entity IRI used in a `FILTER` must be a property IRI.
   - `FILTER NOT EXISTS`
   - `OFFSET`: the `OFFSET` is needed for paging. It does not actually
     refer to the number of triples to be returned, but to the
@@ -169,7 +170,7 @@ clauses use the following patterns, with the specified restrictions:
     unordered set of triples. However, a Gravsearch query returns an
     ordered list of resources, which can be ordered by the values of
     specified properties.
-  - `BIND`: The value assigned must be a Knora data IRI.
+  - `BIND`: The value assigned must be a Knora resource IRI.
 
 #### Resources
 
@@ -219,51 +220,9 @@ FILTER(lang(?text) = "fr")
 The [SPARQL `regex` function](https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#func-regex)
 is also supported.
 
-#### Required Type Annotations
-
-Resources, properties, and values must be accompanied by explicit type
-annotation statements. (In a future version, this type information could be
-inferred rather than explicitly given in the query.)
-
-There are two type annotation properties:
-
-  - `knora-api:objectType`: indicates the type of value or resource
-    that a property points to.
-  - `rdf:type`: indicates the type of a resource or value.
-
-#### Resource Classes
-
-Each variable representing a resource must be annotated with
-`rdf:type knora-api:Resource`. To restrict the types of resources, additional
-statements can be made using `rdfs:type`.
-
-#### Property Types
-
-A property may point either to a value or to a resource. In the first
-case, it is called a value property, in the second case a linking
-property. The type annotation property `knora-api:objectType` indicates
-the type of value or resource the property points to.
-
-##### Value Property Types
-
-Supported value property types:
-
-  - `xsd:string`
-  - `xsd:integer`
-  - `xsd:decimal`
-  - `xsd:boolean`
-  - `knora-api:Date`
-  - `knora-api:StillImageFile`
-  - `knora-api:Geom`
-
-##### Linking Property Types
-
-A linking property must be annotated with `knora-api:objectType knora-api:Resource`.
-
 #### Value Types
 
-Value types are used to indicate the type of a value (`rdf:type`).
-Gravsearch supports the following types of value instances:
+Gravsearch supports the following value types:
 
 - `xsd:string`
 - `xsd:integer`
@@ -303,7 +262,7 @@ one variable representing a resource must be marked in this way.
 In this section, we provide some sample queries of different complexity
 to illustrate the usage of Gravsearch.
 
-### Getting all the Components of a Compound resource
+### Getting All the Components of a Compound Resource
 
 In order to get all the components of a compound resource, the following
 Gravsearch query can be sent to the API.
@@ -331,23 +290,13 @@ CONSTRUCT {
    ?component knora-api:seqnum ?seqnum . # return the sequence number in the response
    ?component knora-api:hasStillImageFileValue ?file . # return the StillImageFile in the response
 } WHERE {
-   ?component a knora-api:Resource . # explicit type annotation for the component searched for, required
-   ?component a knora-api:StillImageRepresentation . # additional restriction of the type of component, optional
-
-   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to compound resource via this property
-   knora-api:isPartOf knora-api:objectType knora-api:Resource . # type annotation for linking property, required
-   <http://rdfh.ch/c5058f3a> a knora-api:Resource . # type annotation for compound resource, required
-
-   ?component knora-api:seqnum ?seqnum . # component must have a sequence number, no further restrictions given
-   knora-api:seqnum knora-api:objectType xsd:integer . # type annotation for the value property, required
-   ?seqnum a xsd:integer . # type annotation for the sequence number, required
-
-   ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile, no further restrictions given
-   knora-api:hasStillImageFileValue knora-api:objectType knora-api:StillImageFile . # type annotation for the value property, required
-   ?file a knora-api:StillImageFile . # type annotation for the StillImageFile, required
+   ?component a knora-api:StillImageRepresentation . # restriction of the type of component
+   ?component knora-api:isPartOf <http://rdfh.ch/c5058f3a> . # component relates to a compound resource via this property
+   ?component knora-api:seqnum ?seqnum . # component must have a sequence number
+   ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile
 }
 ORDER BY ASC(?seqnum) # order by sequence number, ascending
-OFFSET 0 #get first page of results
+OFFSET 0 # get first page of results
 ```
 
 The `incunabula:book` with the IRI `http://rdfh.ch/c5058f3a` has
@@ -374,3 +323,237 @@ FILTER (?seqnum <= 10)
 
 The first page starts with sequence number 1, so with this `FILTER` only
 the first ten pages are returned.
+
+### Traversing Multiple Links
+
+Here we are looking for regions of pages that are part of books that have a
+particular title:
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+  ?region knora-api:isMainResource true ;
+    knora-api:isRegionOf ?page .
+
+  ?page incunabula:partOf ?book .
+
+  ?book incunabula:title ?title .
+} WHERE {
+  ?region a knora-api:Region ;
+    knora-api:isRegionOf ?page .
+
+  ?page a incunabula:page ;
+    incunabula:partOf ?book .
+
+  ?book incunabula:title ?title .
+
+  FILTER(?title = "Zeitglöcklein des Lebens und Leidens Christi")
+}
+```
+
+### Requesting a Graph Starting with a Known Resource
+
+Here the IRI of the main resource is already known, and we want specific information
+about it, as well as about related resources. In this case, the IRI of the main
+resource must be assigned to a variable using `BIND`:
+
+```
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true ;
+    beol:creationDate ?date ;
+    ?linkingProp1 ?person1 .
+
+  ?person1 beol:hasFamilyName ?familyName .
+} WHERE {
+  BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+
+  ?letter a beol:letter ;
+    beol:creationDate ?date ;
+    ?linkingProp1 ?person1 .
+
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+
+  ?person1 beol:hasFamilyName ?familyName .
+} ORDER BY ?date
+```
+
+## Type Inference
+
+Gravsearch needs to be able to determine the types of the entities that
+query variables and IRIs refer to in the `WHERE` clause. In most cases, it can
+infer these from context and from the ontologies used. In particular, it needs to
+know:
+
+* The type of the subject and object of each statement.
+* The type that is expected as the object of each predicate.
+
+### Type Annotations
+
+When one or more types cannot be inferred, Gravsearch will return an error message
+indicating the entities for which it could not determine types. The missing
+information must then be given by adding type annotations to the query. This can always done by
+adding statements with the predicate `rdf:type`. The subject must be a resource or value,
+and the object must either be `knora-api:Resource` (if the subject is a resource)
+or the subject's specific type (if it is a value).
+
+For example, consider this query that uses a non-Knora property:
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+    ?book dcterms:title ?title .
+}
+```
+
+This produces the error message:
+
+```
+The types of one or more entities could not be determined:
+  ?book, <http://purl.org/dc/terms/title>, ?title
+```
+
+To solve this problem, it is enough to specify the types of `?book` and
+`?title`; the type of the expected object of `dcterms:title` can then be inferred
+from the type of `?title`.
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+
+    ?book rdf:type incunabula:book ;
+        dcterms:title ?title .
+
+    ?title rdf:type xsd:string .
+
+}
+```
+
+It would also be possible to annotate the property itself, using the predicate `knora-api:objectType`;
+then the type of `?title` would be inferred:
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        dcterms:title ?title .
+
+} WHERE {
+
+    ?book rdf:type incunabula:book ;
+        dcterms:title ?title .
+
+    dcterms:title knora-api:objectType xsd:string .
+
+}
+```
+
+Here is another example, using a non-Knora class:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+CONSTRUCT {
+    ?person knora-api:isMainResource true .
+} WHERE {
+    ?person a foaf:Person .
+    ?person foaf:familyName ?familyName .
+    FILTER(?familyName = "Meier")
+}
+```
+
+This produces the error message:
+
+```
+Types could not be determined for one or more entities: ?person
+```
+
+The solution is to specify that `?person` is a `knora-api:Resource`:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+CONSTRUCT {
+    ?person knora-api:isMainResource true .
+} WHERE {
+    ?person a foaf:Person .
+    ?person a knora-api:Resource .
+    ?person foaf:familyName ?familyName .
+    FILTER(?familyName = "Meier")
+}
+```
+
+### Inconsistent Types
+
+Gravsearch will also reject a query if an entity is used with inconsistent types.
+For example:
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01") .
+}
+```
+
+This returns the error message:
+
+```
+One or more entities have inconsistent types:
+
+<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#pubdate>
+  knora-api:objectType <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+
+?pubdate rdf:type <http://api.knora.org/ontology/knora-api/simple/v2#Date> ;
+  rdf:type <http://www.w3.org/2001/XMLSchema#string> .
+```
+
+This is because the `incunabula` ontology says that the object of `incunabula:pubdate` must be a `knora-api:Date`,
+but the `FILTER` expression compares `?pubdate` with an `xsd:string`. The solution is to specify the
+type of the literal in the `FILTER`:
+
+```
+PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?book knora-api:isMainResource true ;
+        incunabula:pubdate ?pubdate .
+} WHERE {
+    ?book a incunabula:book ;
+        incunabula:pubdate ?pubdate .
+
+  FILTER(?pubdate = "JULIAN:1497-03-01"^^knora-api:Date) .
+}
+```

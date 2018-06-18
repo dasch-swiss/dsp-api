@@ -24,7 +24,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Querying Ontology Information
 
 Before reading this document, you should have a basic understanding of
-Knora API v2 external ontology schemas (see @ref:[Knora IRIs](knora-iris.md)).
+Knora API v2 external ontology schemas (see @ref:[API Schema](introduction.md#api-schema)).
 
 Each request returns a single RDF graph, which can be represented in
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
@@ -133,7 +133,17 @@ HTTP GET to http://host/v2/ontologies/allentities/ONTOLOGY_IRI
 ```
 
 The ontology IRI must be URL-encoded, and may be in either the complex
-or the simple schema. The response will be in the same schema.
+or the simple schema. The response will be in the same schema. For
+example, if the server is running on `0.0.0.0:3333`, you can request
+the `knora-api` ontology in the complex schema as follows:
+
+```
+HTTP GET to http://0.0.0.0:3333/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-api%2Fv2
+```
+
+By default, this returns the ontology in JSON-LD; to request Turtle
+or RDF/XML, add an HTTP `Accept` header
+(see @ref:[Response Formats](introduction.md#response-formats)).
 
 If the client dereferences a project-specific ontology IRI as a URL, the
 Knora API server running on the hostname in the IRI will serve the
@@ -148,6 +158,21 @@ Knora API server running at `api.knora.org` that can serve the ontology.
 The [DaSCH](http://dasch.swiss/) intends to run such as server. For
 testing, you can configure your local `/etc/hosts` file to resolve
 `api.knora.org` as `localhost`.
+
+#### Differences Between Internal and External Ontologies
+
+The external ontologies used by Knora API v2 are different to the internal
+ontologies that are actually stored in the triplestore (see
+@ref:[API Schema](introduction.md#api-schema)). In general, the external
+ontologies use simpler data structures, but they also provide additional
+information to make it easier for clients to use them. This is illustrated
+in the examples in the next sections.
+
+The internal predicates `knora-base:subjectClassConstraint` and
+`knora-base:objectClassConstraint` (see
+@ref:[Constraints on the Types of Property Subjects and Objects](../../02-knora-ontologies/knora-base.md#constraints-on-the-types-of-property-subjects-and-objects))
+are represented as `knora-api:subjectType` and `knora-api:objectType` in
+external ontologies.
 
 #### JSON-LD Representation of an Ontology in the Simple Schema
 

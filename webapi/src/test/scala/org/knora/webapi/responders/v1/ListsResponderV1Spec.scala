@@ -55,8 +55,6 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val log = akka.event.Logging(system, this.getClass())
-
     // The default timeout for receiving reply messages from actors.
     implicit val timeout = 5.seconds
 

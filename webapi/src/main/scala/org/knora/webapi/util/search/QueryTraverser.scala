@@ -19,9 +19,36 @@
 
 package org.knora.webapi.util.search
 
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionResult
+
+/**
+  * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
+  *
+  * @tparam Acc the type of the accumulator.
+  */
+trait WhereVisitor[Acc] {
+    /**
+      * Visits a statement in a WHERE clause.
+      *
+      * @param statementPattern the pattern to be visited.
+      * @param acc              the accumulator.
+      * @return the accumulator.
+      */
+    def visitStatementInWhere(statementPattern: StatementPattern, acc: Acc): Acc
+
+    /**
+      * Visits a FILTER in a WHERE clause.
+      *
+      * @param filterPattern the pattern to be visited.
+      * @param acc           the accumulator.
+      * @return the accumulator.
+      */
+    def visitFilter(filterPattern: FilterPattern, acc: Acc): Acc
+}
+
 /**
   * A trait for classes that transform statements and filters in WHERE clauses. Such a class will probably need
-  * to refer to a [[TypeInspectionResult]].
+  * to refer to a [[GravsearchTypeInspectionResult]].
   */
 trait WhereTransformer {
     /**
@@ -143,7 +170,17 @@ trait ConstructToSelectTransformer extends WhereTransformer {
   */
 object QueryTraverser {
 
-    private def transformWherePatterns(patterns: Seq[QueryPattern], inputOrderBy: Seq[OrderCriterion], whereTransformer: WhereTransformer): Seq[QueryPattern] = {
+    /**
+      * Traverses a WHERE clause, delegating transformation tasks to a [[WhereTransformer]], and returns the transformed query patterns.
+      *
+      * @param patterns         the input query patterns.
+      * @param inputOrderBy     the ORDER BY expression in the input query.
+      * @param whereTransformer a [[WhereTransformer]].
+      * @return the transformed query patterns.
+      */
+    def transformWherePatterns(patterns: Seq[QueryPattern],
+                               inputOrderBy: Seq[OrderCriterion],
+                               whereTransformer: WhereTransformer): Seq[QueryPattern] = {
         patterns.flatMap {
             case statementPattern: StatementPattern =>
                 whereTransformer.transformStatementInWhere(
@@ -184,7 +221,7 @@ object QueryTraverser {
                 Seq(OptionalPattern(patterns = transformedPatterns))
 
             case unionPattern: UnionPattern =>
-                val transformedBlocks = unionPattern.blocks.map {
+                val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map {
                     blockPatterns =>
                         transformWherePatterns(patterns = blockPatterns,
                             whereTransformer = whereTransformer,
@@ -197,6 +234,60 @@ object QueryTraverser {
             case valuesPattern: ValuesPattern => Seq(valuesPattern)
 
             case bindPattern: BindPattern => Seq(bindPattern)
+        }
+    }
+
+    /**
+      * Traverses a WHERE clause, delegating transformation tasks to a [[WhereVisitor]].
+      *
+      * @param patterns     the input query patterns.
+      * @param whereVisitor a [[WhereVisitor]].
+      * @param initialAcc   the visitor's initial accumulator.
+      * @tparam Acc the type of the accumulator.
+      * @return the accumulator.
+      */
+    def visitWherePatterns[Acc](patterns: Seq[QueryPattern],
+                                whereVisitor: WhereVisitor[Acc],
+                                initialAcc: Acc): Acc = {
+        patterns.foldLeft(initialAcc) {
+            case (acc, statementPattern: StatementPattern) =>
+                whereVisitor.visitStatementInWhere(statementPattern, acc)
+
+            case (acc, filterPattern: FilterPattern) =>
+                whereVisitor.visitFilter(filterPattern, acc)
+
+            case (acc, filterNotExistsPattern: FilterNotExistsPattern) =>
+                visitWherePatterns(
+                    patterns = filterNotExistsPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, minusPattern: MinusPattern) =>
+                visitWherePatterns(
+                    patterns = minusPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, optionalPattern: OptionalPattern) =>
+                visitWherePatterns(
+                    patterns = optionalPattern.patterns,
+                    whereVisitor = whereVisitor,
+                    initialAcc = acc
+                )
+
+            case (acc, unionPattern: UnionPattern) =>
+                unionPattern.blocks.foldLeft(acc) {
+                    case (unionAcc, blockPatterns: Seq[QueryPattern]) =>
+                        visitWherePatterns(
+                            patterns = blockPatterns,
+                            whereVisitor = whereVisitor,
+                            initialAcc = unionAcc
+                        )
+                }
+
+            case (acc, _) => acc
         }
     }
 
