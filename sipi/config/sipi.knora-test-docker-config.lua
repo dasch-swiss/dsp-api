@@ -61,19 +61,9 @@ sipi = {
     prefix_as_path = true,
 
     --
-    -- In order not to accumulate to many files into one diretory (which slows down file
-    -- access considerabely), the images are stored in recursive subdirectories 'A'-'Z'.
-    -- If subdir_levels is equal 0, no subdirectories are used. The maximum is 6.
-    -- The recommandeation is that on average there should not me more than a few
-    -- thousand files in a unix directory (your mileage may vay depending on the
-    -- file system used).
-    --
-    subdir_levels = 0,
-
-    --
     -- Lua script which is executed on initialization of the Lua interpreter
     --
-    initscript = '/sipi/config/sipi.init-knora-test.lua',
+    initscript = '/sipi/config/sipi.init-knora.lua',
 
     --
     -- path to the caching directory
@@ -212,6 +202,21 @@ routes = {
         method = 'POST',
         route = '/Knora_logout',
         script = 'Knora_logout.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_mediatype',
+        script = 'test_mediatype.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     }
 
 }
