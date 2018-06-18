@@ -67,10 +67,11 @@ information about sharing the session id.
 If you just want to test Sipi with Knora without serving the actual
 files (e.g. when executing browser tests), you can simply start Sipi
 like this:
+
 ```
-$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-docker-config.lua
+$ export DOCKERHOST=LOCAL_IP_ADDRESS
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop /sipi/local/bin/sipi --config=/sipi/config/sipi.knora-docker-test-config.lua
 ```
-`./local/bin/sipi
---config=config/sipi.knora-test-config.lua`. Then always the same test
-file will be served which is included in Sipi. In test mode, Sipi will
+
+Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
 not aks Knora about the user's permission on the requested file.
