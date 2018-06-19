@@ -163,7 +163,7 @@ object GravsearchParser {
 
             if (smartIri.isKnoraEntityIri) {
                 smartIri.getOntologySchema match {
-                    case Some(ApiV2Simple) => ()
+                    case Some(_: ApiV2Schema) => ()
                     case _ => throw GravsearchException(s"Ontology schema not allowed in Gravsearch query: $smartIri")
                 }
             }

@@ -24,7 +24,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.TypeAnnotationProperties
+import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.{TypeAnnotationProperties, TypeAnnotationProperty}
 
 import scala.concurrent.Future
 
@@ -48,7 +48,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
       * @param annotationProp the annotation property.
       * @param typeIri        the type IRI that was given in the annotation.
       */
-    private case class GravsearchTypeAnnotation(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationProperties.Value, typeIri: SmartIri)
+    private case class GravsearchTypeAnnotation(typeableEntity: TypeableEntity, annotationProp: TypeAnnotationProperty, typeIri: SmartIri)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
@@ -67,10 +67,10 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
             intermediateResult: IntermediateTypeInspectionResult = typeAnnotations.foldLeft(previousResult) {
                 case (acc: IntermediateTypeInspectionResult, typeAnnotation: GravsearchTypeAnnotation) =>
                     typeAnnotation.annotationProp match {
-                        case TypeAnnotationProperties.RDF_TYPE =>
+                        case TypeAnnotationProperties.RdfType =>
                             acc.addTypes(typeAnnotation.typeableEntity, Set(NonPropertyTypeInfo(typeAnnotation.typeIri)))
 
-                        case TypeAnnotationProperties.OBJECT_TYPE =>
+                        case TypeAnnotationProperties.ObjectType =>
                             acc.addTypes(typeAnnotation.typeableEntity, Set(PropertyTypeInfo(typeAnnotation.typeIri)))
                     }
             }
@@ -116,7 +116,8 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
             case other => throw AssertionException(s"Not a type annotation predicate: $other")
         }
 
-        val annotationProp: TypeAnnotationProperties.Value = TypeAnnotationProperties.valueMap.getOrElse(annotationPropIri.toString, throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
+        val annotationProp: TypeAnnotationProperty =
+            TypeAnnotationProperties.fromIri(annotationPropIri).getOrElse(throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
 
         val typeIri: SmartIri = statementPattern.obj match {
             case IriRef(iri, _) => iri

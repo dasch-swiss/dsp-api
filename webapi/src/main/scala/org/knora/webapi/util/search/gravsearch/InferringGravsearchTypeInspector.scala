@@ -132,7 +132,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             Some(inferredType)
                                         } else {
                                             // It's not a resource class. Is it valid in a type inspection result?
-                                            if (GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(rdfType.toString)) {
+                                            if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
                                                 // Yes. Return it.
                                                 val inferredType = NonPropertyTypeInfo(rdfType)
                                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
@@ -148,7 +148,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         // This should have caused an error earlier from the ontology responder.
                                         throw AssertionException(s"No information found about class ${IriRef(rdfType).toString}")
                                 }
-                            } else if (GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(rdfType.toString)) {
+                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
                                 // This isn't a Knora entity. If it's valid in a type inspection result, return it.
                                 val inferredType = NonPropertyTypeInfo(rdfType)
                                 log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
@@ -461,7 +461,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 case Some(xsdLiteralTypes: Set[SmartIri]) =>
                                     // Yes. If any of them are valid in type inspection results, return them.
                                     xsdLiteralTypes.collect {
-                                        case xsdLiteralType if GravsearchTypeInspectionUtil.ApiV2SimpleTypeIris.contains(xsdLiteralType.toString) =>
+                                        case xsdLiteralType if GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(xsdLiteralType.toString) =>
                                             val inferredType = NonPropertyTypeInfo(xsdLiteralType)
                                             log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
                                             inferredType
