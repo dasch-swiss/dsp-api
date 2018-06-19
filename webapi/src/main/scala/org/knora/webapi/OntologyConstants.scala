@@ -175,10 +175,6 @@ object OntologyConstants {
         val XSLTransformation: IRI = KnoraBasePrefixExpansion + "XSLTransformation"
         val MappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
 
-        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
-        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
-        val MatchFunctionIri: IRI = KnoraBasePrefixExpansion + "match"
-
         val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"
         val ObjectDatatypeConstraint: IRI = KnoraBasePrefixExpansion + "objectDatatypeConstraint"
@@ -313,6 +309,9 @@ object OntologyConstants {
         val ListNodePosition: IRI = KnoraBasePrefixExpansion + "listNodePosition"
 
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
+
+        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
+        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
 
         /* Resource creator */
         val AttachedToUser: IRI = KnoraBasePrefixExpansion + "attachedToUser"
@@ -770,6 +769,9 @@ object OntologyConstants {
 
         val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
 
+        val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
+        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
+
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -804,6 +806,8 @@ object OntologyConstants {
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
+        val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 

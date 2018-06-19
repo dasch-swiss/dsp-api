@@ -165,6 +165,24 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
                 triple + "\n"
         }
     }
+
+    /**
+      * Returns a copy of this statement pattern whose named graph is [[OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph]].
+      */
+    def toExplicit: StatementPattern = StatementPattern.makeExplicit(
+        subj = subj,
+        pred = pred,
+        obj = obj
+    )
+
+    /**
+      * Returns a copy of this statement pattern that doesn't specify a named graph.
+      */
+    def toInferred: StatementPattern = StatementPattern.makeInferred(
+        subj = subj,
+        pred = pred,
+        obj = obj
+    )
 }
 
 /**
@@ -472,7 +490,7 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param whereClause     the WHERE clause.
   * @param orderBy         the variables that the results should be ordered by.
   */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0) extends SparqlGenerator {
+case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, usesApiV2ComplexSchema: Boolean = false) extends SparqlGenerator {
     def toSparql: String = {
         val stringBuilder = new StringBuilder
         stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)
