@@ -24,14 +24,13 @@ import akka.event.LoggingReceive
 import akka.pattern._
 import akka.routing.FromConfig
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckConnection, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK, _}
+import org.knora.webapi.messages.store.triplestoremessages.{CheckConnection, CheckRepositoryResponse, _}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.Await
 
 /**
@@ -82,7 +81,7 @@ class TriplestoreManager extends Actor with ActorLogging {
     }
 
     def receive = LoggingReceive {
-        case Initialized() => sender ! InitializedResponse(this.initialized)
+        case CheckRepositoryRequest() => sender ! CheckRepositoryResponse(this.initialized)
         case msg ⇒ storeActorRef forward msg
     }
 }

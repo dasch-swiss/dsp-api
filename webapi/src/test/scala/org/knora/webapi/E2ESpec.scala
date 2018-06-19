@@ -66,9 +66,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
-    implicit protected val ec: ExecutionContextExecutor = system.dispatcher
-    implicit protected val materializer = ActorMaterializer()
-
     def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)

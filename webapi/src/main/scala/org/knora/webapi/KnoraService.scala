@@ -31,12 +31,11 @@ import kamon.Kamon
 import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
-import org.knora.webapi.Main.applicationStateActor
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
@@ -167,14 +166,14 @@ trait KnoraService {
       */
     def checkActorSystem(): Unit = {
 
-        val applicationStateActorResult = Await.result(applicationStateActor ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        val applicationStateActorResult = Await.result(applicationStateActor ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
         log.info(s"ApplicationStateActor ready: $applicationStateActorResult")
 
         // TODO: Check if ResponderManager is ready
         log.info(s"ResponderManager ready: - ")
 
         // TODO: Check if Sipi is also ready/accessible
-        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
         log.info(s"StoreManager ready: $storeManagerResult")
         log.info(s"ActorSystem ${system.name} started")
     }
@@ -214,8 +213,8 @@ trait KnoraService {
 
         state match {
             case AppState.Stopped => {} // nothing to do
-            case AppState.StartingUp => checkDB() // check DB
-            case AppState.DBReady => createCaches() // create caches
+            case AppState.StartingUp => checkRepository() // check DB
+            case AppState.RepositoryReady => createCaches() // create caches
             case AppState.CachesReady => loadOntologies() // load ontologies
             case AppState.OntologiesReady => {
 
@@ -227,14 +226,15 @@ trait KnoraService {
     }
 
     /**
-      * Checks if DB is running
+      * Checks if repository is running and initialized
       */
-    private def checkDB(): Unit = {
-        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
-        if (storeManagerResult.initFinished) {
-            applicationStateActor ! SetAppState(AppState.DBReady)
+    private def checkRepository(): Unit = {
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
+        if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
+            applicationStateActor ! SetAppState(AppState.RepositoryReady)
         } else {
-            applicationStateActor ! SetAppState(AppState.WaitingForDB)
+            applicationStateActor ! SetAppState(AppState.WaitingForRepository)
+            log.info(s"${storeManagerResult.repositoryStatus}: ${storeManagerResult.msg}")
         }
     }
 

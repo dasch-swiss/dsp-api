@@ -206,8 +206,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     s"The Triplestore ($tsType) Actor " when {
         "started " should {
             "only start answering after initialization has finished " in {
-                storeManager ! Initialized()
-                expectMsg(InitializedResponse(true))
+                storeManager ! CheckRepositoryRequest()
+                expectMsg(CheckRepositoryResponse(true))
             }
         }
 

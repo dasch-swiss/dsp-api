@@ -122,7 +122,7 @@ class JenaTDBActor extends Actor with ActorLogging {
         case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
         case DropAllTriplestoreContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
-        case Initialized() => future2Message(sender(), Future.successful(InitializedResponse(this.initialized)), log)
+        case CheckRepositoryRequest() => future2Message(sender(), Future.successful(CheckRepositoryResponse(this.initialized)), log)
         case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }

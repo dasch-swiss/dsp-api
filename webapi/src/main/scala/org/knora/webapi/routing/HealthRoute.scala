@@ -48,13 +48,13 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
         val state: AppState = Await.result(applicationStateActor ? GetAppState, 1.seconds).asInstanceOf[AppState]
         state match {
             case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
-            case AppState.WaitingForDB => unhealthy("Waiting for DB. Please retry later.")
-            case AppState.DBReady => unhealthy("DB ready. Please retry later.")
+            case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
+            case AppState.RepositoryReady => unhealthy("Repository ready. Please retry later.")
             case AppState.CreatingCaches => unhealthy("Creating caches. Please retry later.")
             case AppState.CachesReady => unhealthy("Caches ready. Please retry later.")
             case AppState.LoadingOntologies => unhealthy("Loading ontologies. Please retry later.")
             case AppState.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
-            case AppState.MaintainanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
+            case AppState.MaintenanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
             case AppState.Running => healthy
         }
     }

@@ -22,6 +22,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 import java.time.Instant
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi.messages.store.triplestoremessages.RepositoryStatus.RepositoryStatus
 import org.knora.webapi.util.{ErrorHandlingMap, SmartIri}
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologySchema, TriplestoreResponseException}
 import spray.json.{DefaultJsonProtocol, DeserializationException, JsObject, JsString, JsValue, JsonFormat, NullOptions, RootJsonFormat, _}
@@ -213,20 +214,32 @@ case class InitTriplestore(rdfDataObject: RdfDataObject) extends TriplestoreRequ
 case class InitTriplestoreACK()
 
 /**
-  * Ask triplestore if it has finished initialization
+  * Ask triplestore if it the repository is ready
   */
-case class Initialized() extends TriplestoreRequest
+case class CheckRepositoryRequest() extends TriplestoreRequest
 
 /**
   * Response indicating whether the triplestore has finished initialization and is ready for processing messages
   *
-  * @param initFinished indicates if actor initialization has finished
+  * @param repositoryStatus the state of the repository.
+  * @param msg further description.
   */
-case class InitializedResponse(initFinished: Boolean)
+case class CheckRepositoryResponse(repositoryStatus: RepositoryStatus, msg: String)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
+
+/**
+  * Repository status
+  * - ServiceUnavailable: GraphDB is not responding to HTTP requests.
+  * - NotInitialized: GraphDB is responding to HTTP requests but the repository defined in 'application.conf' is missing.
+  * - ServiceAvailable: Everything is OK.
+  */
+object RepositoryStatus extends Enumeration {
+    type RepositoryStatus = Value
+    val ServiceUnavailable, NotInitialized, ServiceAvailable = Value
+}
 
 /**
   * Contains the path to the 'ttl' file and the name of the named graph it should be loaded in.

@@ -3,7 +3,7 @@ package org.knora.webapi.app
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse}
 import org.knora.webapi.{Settings, SettingsImpl}
 
 class ApplicationStateActor extends Actor with ActorLogging {
@@ -20,7 +20,7 @@ class ApplicationStateActor extends Actor with ActorLogging {
     private var printConfigState = false
 
     def receive: PartialFunction[Any, Unit] = {
-        case Initialized() => sender ! InitializedResponse(true)
+        case CheckRepositoryRequest() => sender ! CheckRepositoryResponse(true)
         case SetLoadDemoDataState(value) => {
             log.debug("ApplicationStateActor - SetLoadDemoDataState - value: {}", value)
             loadDemoDataState = value

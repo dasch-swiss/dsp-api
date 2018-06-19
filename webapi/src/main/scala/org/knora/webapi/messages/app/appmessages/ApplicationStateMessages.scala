@@ -25,8 +25,11 @@ case class GetPrintConfigState() extends ApplicationStateRequest
 case class SetAppState(value: AppState) extends ApplicationStateRequest
 case class GetAppState() extends ApplicationStateRequest
 
+/**
+  * Application States at Startup
+  */
 object AppState extends Enumeration {
     type AppState = Value
-    val Stopped, StartingUp, WaitingForDB, DBReady, CreatingCaches, CachesReady, LoadingOntologies, OntologiesReady, MaintainanceMode, Running = Value
+    val Stopped, StartingUp, WaitingForRepository, RepositoryReady, CreatingCaches, CachesReady, LoadingOntologies, OntologiesReady, MaintenanceMode, Running = Value
 }
 

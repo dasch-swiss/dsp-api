@@ -24,8 +24,10 @@ import java.io.StringReader
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
@@ -37,7 +39,7 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
-import org.knora.webapi.util.ActorUtil.{future2Message, _}
+import org.knora.webapi.util.ActorUtil.future2Message
 import org.knora.webapi.util.SparqlResultProtocol._
 import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
@@ -116,7 +118,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
         case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckConnection() => future2Message(sender(), checkTriplestore(), log)
+        case CheckRepositoryRequest() => future2Message(sender(), checkRepository(), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -449,8 +451,39 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Checks connection to the triplestore.
       */
-    private def checkTriplestore(): Future[CheckConnectionACK] = {
+    private def checkRepository(): Future[CheckRepositoryResponse] = {
         try {
+
+            // call endpoint returning all repositories
+            // check if the repository defined in 'application.conf' is present
+
+            val getRepositoriesUrl: String = triplestoreType match {
+                case HTTP_GRAPH_DB_TS_TYPE => s"http://${settings.triplestoreHost}:${settings.triplestorePort}/rest/repositories"
+                case _ => throw UnsuportedTriplestoreException("checkRepository only supports GraphDB.")
+            }
+
+            val getRepositoriesRequest: HttpRequest = HttpRequest(method = HttpMethods.GET, uri = getRepositoriesUrl)
+
+            Http().singleRequest(HttpRequest(uri = "http://akka.io"))
+
+            val responseFuture: Future[HttpResponse] = Http().singleRequest(getRepositoriesUrl)
+
+            val response = Await.result(responseFuture, 500.milliseconds).
+
+            import DefaultJsonProtocol._
+            import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+
+            val jsonFuture: Future[JsObject] = response match {
+                case HttpResponse(StatusCodes.OK, _, entity, _) =>
+                    Unmarshal(entity).to[JsObject]
+                case other =>
+                    throw new Exception(other.toString())
+            }
+
+            Await.result(jsonFuture, 500.milliseconds)
+
+
+
 
             val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
 
@@ -458,7 +491,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             Await.result(responseStrFuture, 1.second)
 
-            Future.successful(CheckConnectionACK())
+            Future.successful(CheckRepositoryResponse())
 
         } catch {
             case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute insert into triplestore", e, log))
