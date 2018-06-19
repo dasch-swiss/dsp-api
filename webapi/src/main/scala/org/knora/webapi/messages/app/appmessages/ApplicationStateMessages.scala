@@ -27,6 +27,6 @@ case class GetAppState() extends ApplicationStateRequest
 
 object AppState extends Enumeration {
     type AppState = Value
-    val StartingUp, WaitingForDB, DBReady, LoadingOntologies, OntologiesReady, MaintainanceMode, Running = Value
+    val Stopped, StartingUp, WaitingForDB, DBReady, CreatingCaches, CachesReady, LoadingOntologies, OntologiesReady, MaintainanceMode, Running = Value
 }
 

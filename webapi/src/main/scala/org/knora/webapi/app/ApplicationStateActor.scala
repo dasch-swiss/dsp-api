@@ -11,7 +11,7 @@ class ApplicationStateActor extends Actor with ActorLogging {
     // the prometheus, zipkin, jaeger, and printConfig flags can be set via application.conf and via command line parameter
     val settings: SettingsImpl = Settings(context.system)
 
-    private var appState: AppState = AppState.StartingUp
+    private var appState: AppState = AppState.Stopped
     private var loadDemoDataState = false
     private var allowReloadOverHTTPState = false
     private var prometheusReporterState = false

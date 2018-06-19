@@ -92,6 +92,10 @@ trait KnoraService {
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
     /**
       * The actor used for storing the application application wide variables in a thread safe maner.
       */
@@ -116,6 +120,12 @@ trait KnoraService {
       * A user representing the Knora API server, used for initialisation on startup.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
+
+    /**
+      * The scheduler running at startup up, making sure that the application
+      * starts-up in a ordered manner.
+      */
+    private val startupScheduler: Cancellable = system.scheduler.schedule(0.milli, 500.millis)(startupChecks())
 
     /**
       * All routes composed together and CORS activated.
@@ -174,10 +184,6 @@ trait KnoraService {
       */
     def startService(): Unit = {
 
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-
         printConfig()
 
         startReporters()
@@ -186,77 +192,76 @@ trait KnoraService {
 
         printWelcomeMsg()
 
-        // check DB
-        val checkDBScheduler: Cancellable = system.scheduler.schedule(0.milliseconds, 500.milliseconds)(checkDB(checkDBScheduler))
-
-        CacheUtil.createCaches(settings.caches)
-
-        // load ontologies
-        val loadOntologiesScheduler: Cancellable = system.scheduler.schedule(0.milliseconds, 500.milliseconds)(checkDB(loadOntologiesScheduler))
-
-        // set state to Running if OntologiesReady, thus allowing access to the API
-        val setRunningStateScheduler: Cancellable = system.scheduler.schedule(0.milliseconds, 500.milliseconds)(setRunningState(setRunningStateScheduler))
+        // kick of startup tasks
+        applicationStateActor ! SetAppState(AppState.StartingUp)
     }
 
+    /**
+      * Stops Knora.
+      */
+    def stopService(): Unit = {
+        system.terminate()
+        CacheUtil.removeAllCaches()
+        //Kamon.shutdown()
+    }
 
     /**
-      * Checks if DB is running and if so, sets state and cancels scheduler
+      * Executes startup tasks in the correct order and state.
       */
-    def checkDB(checkDBScheduler: Cancellable): Unit = {
+    private def startupChecks(): Unit = {
 
         val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
-        if (state == AppState.WaitingForDB) {
-            // check if DB is running now and if so, then set DBReady state
-            val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
-            if (storeManagerResult.initFinished) {
-                applicationStateActor ! SetAppState(AppState.DBReady)
+        state match {
+            case AppState.Stopped => {} // nothing to do
+            case AppState.StartingUp => checkDB() // check DB
+            case AppState.DBReady => createCaches() // create caches
+            case AppState.CachesReady => loadOntologies() // load ontologies
+            case AppState.OntologiesReady => {
+
+                // everything is up and running so set state to Running and kill scheduler
+                applicationStateActor ! SetAppState(AppState.Running)
+                startupScheduler.cancel()
             }
-        } else if (state == AppState.DBReady) {
-            checkDBScheduler.cancel()
-        } else {
-            // need to keep looping
         }
     }
 
     /**
-      * Loads ontologies if DB is ready sets state
+      * Checks if DB is running
       */
-    def loadOntologies(loadOntologiesScheduler: Cancellable): Unit = {
-        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
-
-        if (state == AppState.DBReady) {
-            // load ontologies and set OntologiesReady state
-            applicationStateActor ! SetAppState(AppState.LoadingOntologies)
-            val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
-            Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
-            applicationStateActor ! SetAppState(AppState.OntologiesReady)
-        } else if (state == AppState.OntologiesReady) {
-            loadOntologiesScheduler.cancel()
+    private def checkDB(): Unit = {
+        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
+        if (storeManagerResult.initFinished) {
+            applicationStateActor ! SetAppState(AppState.DBReady)
         } else {
-            // need to keep looping
+            applicationStateActor ! SetAppState(AppState.WaitingForDB)
         }
     }
 
     /**
-      * Sets app state to Running if OntologiesReady.
+      * Creates caches
       */
-    def setRunningState(setRunningStateScheduler: Cancellable): Unit = {
-        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
+    private def createCaches(): Unit = {
+        applicationStateActor ! SetAppState(AppState.CreatingCaches)
+        CacheUtil.createCaches(settings.caches)
+        applicationStateActor ! SetAppState(AppState.CachesReady)
+    }
 
-        if (state == AppState.OntologiesReady) {
-            applicationStateActor ! SetAppState(AppState.Running)
-        } else if (state == AppState.Running) {
-            setRunningStateScheduler.cancel()
-        } else {
-            // need to keep looping
-        }
+    /**
+      * Loads ontologies
+      */
+    private def loadOntologies(): Unit = {
+        // load ontologies and set OntologiesReady state
+        applicationStateActor ! SetAppState(AppState.LoadingOntologies)
+        val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
+        applicationStateActor ! SetAppState(AppState.OntologiesReady)
     }
 
     /**
       * Prints the welcome message
       */
-    def printWelcomeMsg(): Unit = {
+    private def printWelcomeMsg(): Unit = {
         println("")
         println("----------------------------------------------------------------")
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
@@ -273,7 +278,7 @@ trait KnoraService {
     /**
       * Prints the configuration if the print config flag is set.
       */
-    def printConfig(): Unit = {
+    private def printConfig(): Unit = {
 
         val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
         if (printConfig) {
@@ -301,7 +306,7 @@ trait KnoraService {
       * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and
       * the application which we will use to look at the collected data.
       */
-    def startReporters(): Unit = {
+    private def startReporters(): Unit = {
 
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {
@@ -319,12 +324,5 @@ trait KnoraService {
         }
     }
 
-    /**
-      * Stops Knora.
-      */
-    def stopService(): Unit = {
-        system.terminate()
-        CacheUtil.removeAllCaches()
-        //Kamon.shutdown()
-    }
+
 }
