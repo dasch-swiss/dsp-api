@@ -1,0 +1,196 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix human: <http://www.knora.org/ontology/human#>.
+@prefix infocar: <http://www.knora.org/ontology/information-carrier#>.
+@prefix publish: <http://www.knora.org/ontology/publishing#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix concept: <http://www.knora.org/ontology/concept#>.
+
+<http://www.knora.org/ontology/concept>
+	a owl:Ontology;
+	dct:title "An ontology about concept"@en;
+	dct:description """Formal description of concept, its general subclasses, related classes and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+concept:Concept
+	a owl:Class;
+	rdfs:label "concept"@en, "Konzept"@de;
+	rdfs:comment """Abstract idea created by a person."""@en;
+	rdfs:subClassOf human:Creation, frbroo:F6_Concept. # rdfs:subClassOf cidoc:E28_Conceptual_Object
+
+concept:SymbolicConcept
+	a owl:Class;
+	rdfs:label "symbolic concept"@en, "symbolisches Konzept"@de;
+	rdfs:comment """Concept represented by one or more symbols."""@en;
+	rdfs:subClassOf concept:Concept, cidoc:E90_Symbolic_Object, [
+		a owl:Restriction; owl:onProperty concept:isPartOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty concept:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+concept:PropositionalConcept
+	a owl:Class;
+	rdfs:label "propositional concept"@en, "propositionales Konzept"@de;
+	rdfs:comment """."""@en; #*
+	skos:note """Different from a linguisitc proposition."""@en;
+	rdfs:subClassOf concept:Concept, cidoc:E89_Propositional_Object.
+
+concept:ThoughtBody #* OR belief system OR school of thought OR theory
+	a owl:Class;
+	rdfs:label "body of thought"@en, "Gedankengut"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf concept:PropositionalConcept.
+
+concept:Work
+	a owl:Class;
+	rdfs:label "work"@en, "Werk"@de;
+	rdfs:comment """Intellectual product as concept."""@en; 
+	rdfs:subClassOf concept:PropositionalConcept, frbroo:F1_Work, [
+		a owl:Restriction; owl:onProperty concept:isExpressedIn; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty concept:isExpressedInValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+concept:IndividualWork
+	a owl:Class;
+	rdfs:label "individual work"@en, "individuelles Werk"@de;
+	rdfs:comment """Work as a complete whole realised in one self-contained expression."""@en;
+	rdfs:subClassOf concept:Work, frbroo:F14_Individual_Work.
+
+concept:Information
+	a owl:Class;
+	rdfs:label "information"@en, "Information"@de;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf concept:PropositionalConcept, concept:SymbolicConcept, cidoc:E73_Information_Object.
+
+concept:Procedure
+	a owl:Class;
+	rdfs:label "procedure"@en, "Vorgehen"@de;
+	rdfs:comment """Plan to perform an action in one or more steps, in a certain manner to obtain a certain output under certain circumstances."""@en;
+	rdfs:subClassOf concept:Information, cidoc:E29_Design_or_Procedure.
+
+concept:ThoughtMethod #* part/SC of philosophy ?
+	a owl:Class;
+	rdfs:label "thought method"@en, "Methode des Denkens"@de;
+	rdfs:comment """Analysis of facts to form a judgment."""@en;
+	rdfs:subClassOf concept:Information, cidoc:E29_Design_or_Procedure.
+
+#concept:CriticalThoughtMethod
+#	a owl:Class;
+#	rdfs:label "critical thought method"@en, "Methode des kritischen Denkens"@de;
+#	rdfs:comment """Objective analysis of facts to form a judgment."""@en;
+#	rdfs:subClassOf concept:ThoughtMethod.
+
+concept:Expression
+	a owl:Class;
+	rdfs:label "expression"@en, "Expression"@de;
+	rdfs:comment """Identifiable immaterial realisation of an individual work, e.g. a text, story, poem, play, musical, song, joke, choreographic notation, movement pattern, sound pattern, image, multimedia object, or any combination of them, having an objectively recognisable structure."""@en;
+	rdfs:subClassOf concept:Information, frbroo:F22_Self-Contained_Expression, [ # rdfs:subClassOf frbroo:F2_Expression
+		a owl:Restriction; owl:onProperty infocar:isOnCarrier; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isOnCarrierValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty concept:isPartOfCycle; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty concept:isPartOfCycleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPublishingState; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPublishingStateValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasLastPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasLastPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasLastAuthorizedPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasLastAuthorizedPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasUnauthorizedPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasUnauthorizedPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasUnauthorizedRepublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasUnauthorizedRepublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:isPublishedOnline; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:isPublishedOnlineValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty publish:hasMonoAuthorPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty publish:hasMonoAuthorPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPolyAuthorPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPolyAuthorPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty publish:hasPublicationNumber; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# to do: concept:PolyAuthorExpression
+
+concept:Cycle
+	a owl:Class;
+	rdfs:label "cycle"@en, "Zyklus"@de;
+	rdfs:comment """Set of expressions belonging together, usually created around a certain theme, and intended to be experienced in a certain sequence."""@en;
+	rdfs:subClassOf knora-base:Resource. #* to do
+
+concept:Fiction
+	a owl:Class;
+	rdfs:label "fiction"@en, "Fiktion"@de;
+	rdfs:comment """Expression having content derived from imagination."""@en;
+	rdfs:subClassOf concept:Expression.
+
+concept:NonFiction
+	a owl:Class;
+	rdfs:label "non-fiction"@en, "sachliche Expression"@de;
+	rdfs:comment """Expression having content based on fact."""@en;
+	rdfs:subClassOf concept:Expression.
+
+# concept:Religion rdfs:subClassOf
+
+#
+# PROPERTIES
+#
+
+concept:isPartOf
+	a owl:ObjectProperty;
+	rdfs:label "is part of"@en, "ist Teil von"@de;
+	rdfs:comment "Relating a symbolic concept to another one it is part of."@en;
+	rdfs:subPropertyOf cidoc:P106i_forms_part_of, knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint concept:SymbolicConcept;
+	knora-base:objectClassConstraint concept:SymbolicConcept.
+
+concept:isPartOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is part of - statement"@en, "ist Teil von - Festlegung"@de;
+	rdfs:comment "Relating something to a reification statement of the relation between that something and something else it is part of."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint concept:SymbolicConcept;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+concept:isExpressedIn
+	a owl:ObjectProperty;
+	rdfs:label "is expressed in"@en, "ist ausgedruckt in"@de;
+	rdfs:comment "Relating a work to an expression thereof."@en;
+	rdfs:subPropertyOf frbroo:R9_is_realised_in, knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint concept:Work;
+	knora-base:objectClassConstraint concept:Expression.
+
+concept:isExpressedInValue
+	a owl:ObjectProperty;
+	rdfs:label "is expressed in - statement"@en, "ist ausgedruckt in - Festlegung"@de;
+	rdfs:comment "Relating a work to a reification statement of the relation between the work and an expression thereof."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint concept:Work;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+# frbroo:R3_is_realised_in: more general: frbroo:F1_Work - frbroo:F22_Self-Contained_Expression
+
+concept:isPartOfCycle
+	a owl:ObjectProperty;
+	rdfs:label "is part of cycle"@en, "ist Teil eines Zyklus"@de;
+	rdfs:comment """Relating an expression to a cycle it is part of."""@en;
+	rdfs:subPropertyOf concept:isPartOf;
+	knora-base:subjectClassConstraint concept:Expression;
+	knora-base:objectClassConstraint concept:Cycle.
+
+concept:isPartOfCycleValue
+	a owl:ObjectProperty;
+	rdfs:label "is part of cycle - statement"@en, "ist Teil eines Zyklus - Festlegung"@de;
+	rdfs:comment """Relating an expression to a reification statement of the relation between the expression and a cycle it is part of."""@en;
+	rdfs:subPropertyOf concept:isPartOfValue;
+	knora-base:subjectClassConstraint concept:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.

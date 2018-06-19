@@ -1,0 +1,194 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix event: <http://www.knora.org/ontology/event#>.
+@prefix physical: <http://www.knora.org/ontology/physical-resource#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+@prefix agent: <http://www.knora.org/ontology/agent#>.
+
+<http://www.knora.org/ontology/agent>
+	a owl:Ontology;
+	dct:title "An ontology about agent"@en;
+	dct:description """Formal description of an agent, general subclasses, related classes and properties."""@en;
+	dct:creator "Hans Cools, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en.
+
+#
+# CLASSES
+#
+
+agent:Agent
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "agent"@en, "Agent"@de;
+	rdfs:comment """Something that performs an action."""@en; # not a criterion: intention, purpose
+	rdfs:subClassOf foaf:Agent, knora-base:Resource, [
+		a owl:Restriction; owl:onProperty agent:actsIn; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty agent:actsInValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty agent:hasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty agent:hasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty agent:isMemberOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty agent:isMemberOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+agent:Group
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "group of agents"@en;
+	rdfs:comment """Group of agents."""@en;
+	rdfs:subClassOf agent:Agent, foaf:Group.
+
+agent:Organisation
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "organisation"@en;
+	rdfs:comment """Organized group of agents."""@en;
+	rdfs:subClassOf agent:Group, foaf:Organisation; #* subClassOf Group!
+	owl:disjointWith foaf:Person.
+
+agent:Role
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "agent's role"@en;
+	rdfs:comment """Specific function of an agent."""@en;
+	rdfs:subClassOf knora-base:Resource; #*
+	owl:disjointWith foaf:Agent.
+
+agent:GroupRole
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "group role"@en;
+	rdfs:comment """Role of a group."""@en;
+	rdfs:subClassOf agent:Role. #, [a owl:Restriction; owl:onProperty agent:rolePlayedBy; owl:allValuesFrom agent:Group].
+
+agent:OrganisationRole
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "organisation role"@en;
+	rdfs:comment """Role of an Organisation."""@en;
+	rdfs:subClassOf agent:GroupRole. #, [a owl:Restriction; owl:onProperty agent:rolePlayedBy; owl:allValuesFrom agent:Organisation].
+
+agent:User
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "user"@en;
+	rdfs:comment """Role of taking something into service or applying for a purpose."""@en;
+	skos:note """Does not need to be a person."""@en;
+	rdfs:subClassOf agent:Role.
+
+agent:UserCredential
+	a owl:Class;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "user credential"@en;
+	rdfs:comment """Convincible information as input to get user access, e.g. to a digital multiuser computer system."""@en;
+	rdfs:subClassOf event:Input, knora-base:Resource.
+
+#
+# PROPERTIES
+#
+
+agent:hasAgent
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "has agent"@en, "hat Agent"@de;
+	rdfs:comment """Relating an action to an agent acting in it."""@en;
+	rdfs:domain event:Action;
+	rdfs:range agent:Agent;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint event:Action;
+	knora-base:objectClassConstraint agent:Agent.
+
+agent:hasAgentValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "has agent - statement"@en, "hat Agent - Festlegung"@de;
+	rdfs:comment """Relating an action to a reification statement of the relation between the action and an agent acting in it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint event:Action;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+agent:actsIn
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "acts in"@en, "agiert in"@de;
+	rdfs:comment """Relating an agent to an action the agent is acting in."""@en;
+	rdfs:domain agent:Agent;
+	rdfs:range event:Action;
+	owl:inverseOf agent:hasAgent;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint event:Action.
+
+agent:actsInValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "acts in - statement"@en, "agiert in - Festlegung"@de;
+	rdfs:comment """Relating an agent to a reification statement of the relation between the agent and an action the agent is acting in."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+agent:hasRole
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "has role"@en, "hat Rolle"@de;
+	rdfs:comment """Relating an agent to a role it,s/he has."""@en;
+	rdfs:domain agent:Agent;
+	rdfs:range agent:Role;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint agent:Role.
+
+agent:hasRoleValue
+	a owl:ObjectProperty;
+	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+	rdfs:label "has role - statement"@en, "hat Rolle - Festlegung"@de;
+	rdfs:comment """Relating an agent to a reification statement of the relation between the agent and a role it,s/he has."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+agent:isMemberOf
+	a owl:ObjectProperty;
+	rdfs:label "is member of"@en, "ist Mitglied"@de;
+	rdfs:comment """Relating an agent to a group the agent is a member of."""@en;
+	rdfs:domain agent:Agent;
+	rdfs:range agent:Group;
+	rdfs:subPropertyOf physical:isPartOf; #*
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint agent:Group.
+
+agent:isMemberOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is member of - statement"@en, "ist Mitglied - Festlegung"@de;
+	rdfs:comment """Relating an agent to a reification statement of the relation between the agent and a group the agent is a member of."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint agent:Agent;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+# agent:actsBefore
+#	a owl:ObjectProperty;
+#	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+#	rdfs:label "acts before"@en, "agiert vor"@de;
+#	rdfs:comment """Relating an agent to another one acting later."""@en;
+#	owl:PropertyChainAxiom (agent:actsIn time:before agent:hasAgent);
+#	rdfs:domain agent:Agent;
+#	rdfs:range agent:Agent.
+
+#agent:hasPlayedRole
+#	a owl:ObjectProperty;
+#	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+#	rdfs:comment """Relating an action to a role played by an agent acting in it."""@en;
+#	rdfs:domain event:Action;
+#	rdfs:range agent:Role;
+#	owl:PropertyChainAxiom (agent:hasAgent agent:hassRole).
+
+#agent:rolePlayedIn
+#	a owl:ObjectProperty;
+#	rdfs:isDefinedBy <http://www.knora.org/ontology/agent#>;
+#	rdfs:comment """Relating a role played by an agent to an action the agent is acting in."""@en;
+#	owl:PropertyChainAxiom (agent:rolePlayedBy agent:actsIn).

@@ -1,0 +1,910 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+
+
+##########################################################
+#
+# SYSTEM USER
+#
+##########################################################
+
+
+<http://data.knora.org/users/root> rdf:type knora-base:User ;
+
+                                   knora-base:email "root@example.com"^^xsd:string ;
+
+                                   knora-base:givenName "System"^^xsd:string ;
+
+                                   knora-base:familyName "Administrator"^^xsd:string ;
+
+                                   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                   knora-base:phone "123456"^^xsd:string ;
+
+                                   knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                   knora-base:status "true"^^xsd:boolean ;
+
+                                   knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
+
+
+<http://data.knora.org/users/superuser> rdf:type knora-base:User ;
+
+                                        knora-base:email "super.user@example.com"^^xsd:string ;
+
+                                        knora-base:givenName "Super"^^xsd:string ;
+
+                                        knora-base:familyName "User"^^xsd:string ;
+
+                                        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                        knora-base:phone "123456"^^xsd:string ;
+
+                                        knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                        knora-base:status "true"^^xsd:boolean ;
+
+                                        knora-base:isInSystemAdminGroup "true"^^xsd:boolean .
+
+
+<http://data.knora.org/users/normaluser> rdf:type knora-base:User ;
+
+                                         knora-base:email "normal.user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "Normal"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:phone "123456"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+<http://data.knora.org/users/inactiveuser> rdf:type knora-base:User ;
+
+                                           knora-base:email "inactive.user@example.com"^^xsd:string ;
+
+                                           knora-base:givenName "Inactive"^^xsd:string ;
+
+                                           knora-base:familyName "User"^^xsd:string ;
+
+                                           knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                           knora-base:phone "123456"^^xsd:string ;
+
+                                           knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                           knora-base:status "false"^^xsd:boolean ;
+
+                                           knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+##########################################################
+#
+# IMAGES DEMO PROJECT / USERS / GROUPS
+#
+##########################################################
+
+
+<http://data.knora.org/projects/images> rdf:type knora-base:knoraProject ;
+
+                                        knora-base:projectShortname "images"^^xsd:string ;
+
+                                        knora-base:projectLongname "Image Collection Demo"^^xsd:string ;
+
+                                        knora-base:projectDescription "A demo project of a collection of images"^^xsd:string ;
+
+                                        knora-base:projectKeywords "images, collection"^^xsd:string ;
+
+                                        knora-base:projectOntologyGraph "http://www.knora.org/ontology/images"^^xsd:string ;
+
+                                        knora-base:projectDataGraph "http://www.knora.org/data/images"^^xsd:string ;
+
+                                        knora-base:status "true"^^xsd:boolean ;
+
+                                        knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+## Project Admin
+<http://data.knora.org/users/c266a56709> rdf:type knora-base:User ;
+
+                                         knora-base:email "user01.user1@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User01"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+
+                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/images> .
+
+
+## Project Member
+<http://data.knora.org/users/97cec4000f> rdf:type knora-base:User ;
+
+                                         knora-base:email "user02.user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User02"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+## Images Reviewer
+<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+
+                                         knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User03"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+## Images Reviewer
+<http://data.knora.org/users/images-reviewer-user> rdf:type knora-base:User ;
+
+                                         knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
+
+                                         knora-base:givenName "User03"^^xsd:string ;
+
+                                         knora-base:familyName "User"^^xsd:string ;
+
+                                         knora-base:password "$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/images> ;
+
+                                         knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+
+<http://data.knora.org/groups/images-reviewer> rdf:type knora-base:UserGroup ;
+
+                                               knora-base:groupName "Image reviewer"^^xsd:string ;
+
+                                               knora-base:groupDescription "A group for image reviewers."^^xsd:string ;
+
+                                               knora-base:belongsToProject <http://data.knora.org/projects/images> ;
+
+                                               knora-base:status "true"^^xsd:boolean ;
+
+                                               knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://data.knora.org/institutions/dhlab-basel> rdf:type knora-base:Institution ;
+                                                 knora-base:institutionName "Digital Humanities Lab, Basel" .
+
+
+##########################################################
+#
+# INCUNABULA PROJECT / USERS / GROUPS
+#
+##########################################################
+
+### ###########################################
+### <http://data.knora.org/projects/77275339>
+
+<http://data.knora.org/projects/77275339> rdf:type knora-base:knoraProject ;
+
+                                          knora-base:projectShortname "incunabula"^^xsd:string ;
+
+                                          knora-base:projectLongname "Bilderfolgen Basler Frühdrucke"^^xsd:string ;
+
+                                          knora-base:projectDescription """<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.
+</p>
+<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).
+</p>
+<p>
+Das Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.
+</p>
+Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.
+</p>"""^^xsd:string ;
+
+                                          knora-base:projectKeywords """Basler Frühdrucke, Inkunabel, Narrenschiff, Wiegendrucke, Sebastian Brant, Bilderfolgen, early print, incunabula, ship of fools, Kunsthistorischs Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Basel, Contectualisation of images"""^^xsd:string ;
+
+                                          knora-base:projectOntologyGraph "http://www.knora.org/ontology/incunabula"^^xsd:string ;
+
+                                          knora-base:projectDataGraph "http://www.knora.org/data/incunabula"^^xsd:string ;
+
+                                          knora-base:projectLogo "incunabula_logo.png"^^xsd:string ;
+
+                                          knora-base:status "true"^^xsd:boolean ;
+
+                                          knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+
+## Project Admin
+<http://data.knora.org/users/b83acc5f05> rdf:type knora-base:User ;
+
+                                         knora-base:givenName "User"^^xsd:string ;
+
+                                         knora-base:familyName "Test"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:email "user.test@example.com"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+
+                                         knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> .
+
+
+## Project Creator and Member
+<http://data.knora.org/users/91e19f1e01> rdf:type knora-base:User ;
+
+                                         knora-base:familyName "Admin-alt"^^xsd:string ;
+
+                                         knora-base:givenName "Administrator-alt"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:email "root-alt@example.com"^^xsd:string ;
+
+                                         knora-base:phone "123456"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+## Project Member
+<http://data.knora.org/users/incunabulaMemberUser> rdf:type knora-base:User ;
+
+                                         knora-base:familyName "User2"^^xsd:string ;
+
+                                         knora-base:givenName "Test"^^xsd:string ;
+
+                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                         knora-base:email "test.user2@test.ch"^^xsd:string ;
+
+                                         knora-base:phone "123456"^^xsd:string ;
+
+                                         knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                         knora-base:status "true"^^xsd:boolean ;
+
+                                         knora-base:isInProject <http://data.knora.org/projects/77275339> ;
+
+                                         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+
+###################################
+# MULTI-PROJECT / GROUPS USER     #
+###################################
+
+<http://data.knora.org/users/multiuser> rdf:type knora-base:User ;
+
+                                        knora-base:userid "multiuser"^^xsd:string ;
+
+                                        knora-base:givenName "Multi"^^xsd:string ;
+
+                                        knora-base:familyName "User"^^xsd:string ;
+
+                                        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+
+                                        knora-base:email "multi.user@example.com"^^xsd:string ;
+
+                                        knora-base:phone "123456"^^xsd:string ;
+
+                                        knora-base:preferredLanguage "de"^^xsd:string ;
+
+                                        knora-base:status "true"^^xsd:boolean ;
+
+                                        knora-base:isInProject <http://data.knora.org/projects/77275339> ,
+                                                               <http://data.knora.org/projects/images> ,
+                                                               <http://data.knora.org/projects/anything> ;
+
+                                        knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+
+                                        knora-base:isInProjectAdminGroup <http://data.knora.org/projects/77275339> ,
+                                                                         <http://data.knora.org/projects/images> ,
+                                                                         <http://data.knora.org/projects/anything> ;
+
+                                        knora-base:isInGroup <http://data.knora.org/groups/images-reviewer> .
+
+
+
+
+###################################
+# ANYTHING PROJECT                #
+###################################
+
+<http://data.knora.org/projects/anything> a knora-base:knoraProject ;
+  knora-base:projectShortname "anything"^^xsd:string ;
+  knora-base:projectLongname "Anything Project"^^xsd:string ;
+  knora-base:projectDescription "Anything Project"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/anything"^^xsd:string ;
+  knora-base:projectDataGraph "http://www.knora.org/data/anything"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+<http://data.knora.org/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
+  knora-base:userid "anything-user"^^xsd:string ;
+  knora-base:givenName "Anything"^^xsd:string ;
+  knora-base:familyName "User01"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "anything.user01@example.org"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/anything> .
+
+<http://data.knora.org/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
+  knora-base:userid "anything-user-2" ;
+  knora-base:givenName "Anything" ;
+  knora-base:familyName "User02" ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU=" ;
+  knora-base:email "anything.user02@example.org" ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/anything> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+###################################
+# DOKUBIB                         #
+###################################
+
+<http://data.knora.org/projects/b83b99ca01> a knora-base:knoraProject ;
+  knora-base:projectShortname "dokubib"^^xsd:string ;
+  knora-base:projectLongname "Dokubib"^^xsd:string ;
+  knora-base:projectDescription "Dokubib"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/dokubib"^^xsd:string ;
+  knora-base:projectDataGraph "http://www.knora.org/data/dokubib"^^xsd:string ;
+  knora-base:status "false"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+###################################
+# BEOL                            #
+###################################
+
+<http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> a knora-base:knoraProject ;
+  knora-base:projectShortname "beol"^^xsd:string ;
+  knora-base:projectLongname "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectDescription "Bernoulli-Euler Online"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/beol"^^xsd:string ;
+  knora-base:projectDataGraph "http://www.knora.org/data/beol"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://data.knora.org/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
+  knora-base:userid "beol"^^xsd:string ;
+  knora-base:familyName "BEOL"^^xsd:string ;
+  knora-base:givenName "BEOL"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "t.schweizer@unibas.ch"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+
+###################################
+# BIBLIO                          #
+###################################
+
+<http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
+  knora-base:projectShortname "biblio"^^xsd:string ;
+  knora-base:projectLongname "Bibliography"^^xsd:string ;
+  knora-base:projectDescription "Bibliography"^^xsd:string ;
+  knora-base:projectOntologyGraph "http://www.knora.org/ontology/biblio"^^xsd:string ;
+  knora-base:projectDataGraph "http://www.knora.org/data/biblio"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+<http://data.knora.org/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
+  knora-base:userid "biblio"^^xsd:string ;
+  knora-base:familyName "biblio"^^xsd:string ;
+  knora-base:givenName "biblio"^^xsd:string ;
+  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
+  knora-base:email "biblio@example.com"^^xsd:string ;
+  knora-base:preferredLanguage "de"^^xsd:string ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:isInProject <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
+  knora-base:isInProjectAdminGroup <http://data.knora.org/projects/DczxPs-sR6aZN91qV92ZmQ> .
+
+
+#
+# Digital Repertory of Commentaries on Peter Lombard’s Sentences
+#
+
+<http://data.knora.org/projects/drcs> a knora-base:knoraProject;
+	knora-base:projectShortname "drcs"^^xsd:string;
+	knora-base:projectLongname "Digital Repertory of Commentaries on Peter Lombard’s Sentences"^^xsd:string;
+	knora-base:projectDescription "Formal description of specific concepts in the scientific study of Petrus Lombardus as in the Digital Repertory of Commentaries on Peter Lombard’s Sentences (DRCS)"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/drcs"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/drcs"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string ;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/drcs>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Text
+#
+
+<http://data.knora.org/projects/text> a knora-base:knoraProject;
+	knora-base:projectShortname "text"^^xsd:string;
+	knora-base:projectLongname "An ontology about text"^^xsd:string;
+	knora-base:projectDescription "Formal description of text in broadest sense, its general subclasses, related classes, and properties"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/text"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/text"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/text>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Human
+#
+
+<http://data.knora.org/projects/human> a knora-base:knoraProject;
+	knora-base:projectShortname "human"^^xsd:string;
+	knora-base:projectLongname "An ontology about human"^^xsd:string;
+	knora-base:projectDescription "Formal description of a human, general subclasses, related classes and properties"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/human"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/human"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/human>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Image
+#
+
+<http://data.knora.org/projects/image> a knora-base:knoraProject;
+	knora-base:projectShortname "image"^^xsd:string;
+	knora-base:projectLongname "An ontology about image"^^xsd:string;
+	knora-base:projectDescription "Formal description of image as a visual resource in the broadest sense, its general subclasses, related classes, and properties"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/image"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/image"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/image>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Concept
+#
+
+<http://data.knora.org/projects/concept> a knora-base:knoraProject;
+	knora-base:projectShortname "concept"^^xsd:string;
+	knora-base:projectLongname "An ontology about concept"^^xsd:string;
+	knora-base:projectDescription "Formal description of concept, its general subclasses, e.g. information, related classes and properties"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/concept"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/concept"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/concept>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Publishing
+#
+
+<http://data.knora.org/projects/publishing> a knora-base:knoraProject;
+	knora-base:projectShortname "publishing"^^xsd:string;
+	knora-base:projectLongname "An ontology about publishing"^^xsd:string;
+	knora-base:projectDescription "Formal description of publishing, its general subclasses, related classes and properties"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/publishing"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/publishing"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/publishing>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Scholasticism
+#
+
+<http://data.knora.org/projects/scholasticism> a knora-base:knoraProject;
+	knora-base:projectShortname "scholasticism"^^xsd:string;
+	knora-base:projectLongname "An ontology about Scholasticism"^^xsd:string;
+	knora-base:projectDescription "Formal description of elements in Scholasticism as the method of critical thought dominating teaching by academics or scholastics (schoolmen) of universities in Europe from about 1100 to 1700"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/scholasticism"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/scholasticism"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/scholasticism>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Kuno Raeber Lyric
+#
+
+<http://data.knora.org/projects/kuno-raeber> a knora-base:knoraProject;
+	knora-base:projectShortname "kuno-raeber"^^xsd:string;
+	knora-base:projectLongname "An ontology about the lyric of Kuno Raeber"^^xsd:string;
+	knora-base:projectDescription "Formal description of elements in the historical-critical online publication of the lyric work of the Swiss author Kuno Raeber"^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/kuno-raeber"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/kuno-raeber"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/kuno-raeber>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+<http://data.knora.org/users/walterMorgenthaler> a knora-base:User;
+	knora-base:userid "walterMorgenthaler"^^xsd:string;
+	knora-base:familyName "Morgenthaler"^^xsd:string;
+	knora-base:givenName "Walter"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "info@wmorgenthaler.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/kuno-raeber>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Event
+#
+
+<http://data.knora.org/projects/event> a knora-base:knoraProject;
+	knora-base:projectShortname "event"^^xsd:string;
+	knora-base:projectLongname "An ontology about event"^^xsd:string;
+	knora-base:projectDescription "Formal description of event, general subclasses such as action, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/event"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/event"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/event>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Kuno Raeber GUI
+#
+
+<http://data.knora.org/projects/kuno-raeber-gui> a knora-base:knoraProject;
+	knora-base:projectShortname "kuno-raeber-gui"^^xsd:string;
+	knora-base:projectLongname "An ontology about the kuno raeber gui"^^xsd:string;
+	knora-base:projectDescription "An ontology about the Kuno Raeber site gui."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/kuno-raeber-gui"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/kuno-raeber-gui"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/kuno-raeber-gui>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Agent
+#
+
+<http://data.knora.org/projects/agent> a knora-base:knoraProject;
+	knora-base:projectShortname "agent"^^xsd:string;
+	knora-base:projectLongname "An ontology about agent"^^xsd:string;
+	knora-base:projectDescription "Formal description of an agent, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/agent"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/agent"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/agent>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Language
+#
+
+<http://data.knora.org/projects/language> a knora-base:knoraProject;
+	knora-base:projectShortname "language"^^xsd:string;
+	knora-base:projectLongname "An ontology about language"^^xsd:string;
+	knora-base:projectDescription "Formal description of language, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/language"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/language"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/language>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Information Carrier
+#
+
+<http://data.knora.org/projects/information-carrier> a knora-base:knoraProject;
+	knora-base:projectShortname "information carrier"^^xsd:string;
+	knora-base:projectLongname "An ontology about information carrier"^^xsd:string;
+	knora-base:projectDescription "Formal description of information carrier, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/information-carrier"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/information-carrier"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/information-carrier>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Physical Resource
+#
+
+<http://data.knora.org/projects/physical-resource> a knora-base:knoraProject;
+	knora-base:projectShortname "physical resource"^^xsd:string;
+	knora-base:projectLongname "An ontology about physical resource"^^xsd:string;
+	knora-base:projectDescription "Formal description of physical resource, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/physical-resource"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/physical-resource"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/physical-resource>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Organisation
+#
+
+<http://data.knora.org/projects/organisation> a knora-base:knoraProject;
+	knora-base:projectShortname "organisation"^^xsd:string;
+	knora-base:projectLongname "An ontology about human organisation"^^xsd:string;
+	knora-base:projectDescription "Formal description of an organisation involving humans, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/organisation"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/organisation"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/organisation>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Literature
+#
+
+<http://data.knora.org/projects/literature> a knora-base:knoraProject;
+	knora-base:projectShortname "literature"^^xsd:string;
+	knora-base:projectLongname "An ontology about literature"^^xsd:string;
+	knora-base:projectDescription "Formal description of literature, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/literature"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/literature"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/literature>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Teaching
+#
+
+<http://data.knora.org/projects/teaching> a knora-base:knoraProject;
+	knora-base:projectShortname "teaching"^^xsd:string;
+	knora-base:projectLongname "An ontology about teaching"^^xsd:string;
+	knora-base:projectDescription "Formal description of teaching, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/teaching"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/teaching"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/teaching>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
+
+#
+# Political Geography
+#
+
+<http://data.knora.org/projects/political-geography> a knora-base:knoraProject;
+	knora-base:projectShortname "political geography"^^xsd:string;
+	knora-base:projectLongname "An ontology about political geography"^^xsd:string;
+	knora-base:projectDescription "Formal description of political geography, general subclasses, related classes and properties."^^xsd:string;
+	knora-base:projectOntologyGraph "http://www.knora.org/ontology/political-geography"^^xsd:string;
+	knora-base:projectDataGraph "http://www.knora.org/data/political-geography"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:hasSelfJoinEnabled "false"^^xsd:boolean.
+
+<http://data.knora.org/users/hansCools> a knora-base:User;
+	knora-base:userid "hansCools"^^xsd:string;
+	knora-base:familyName "Cools"^^xsd:string;
+	knora-base:givenName "Hans"^^xsd:string;
+	knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string;
+	knora-base:email "hans.cools@unibas.ch"^^xsd:string;
+	knora-base:preferredLanguage "de"^^xsd:string;
+	knora-base:status "true"^^xsd:boolean;
+	knora-base:isInProject <http://data.knora.org/projects/political-geography>;
+	knora-base:isInSystemAdminGroup "false"^^xsd:boolean.
