@@ -49,7 +49,7 @@ object KnoraSipiIntegrationV1ITSpec {
 
 /**
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-config.lua`.
+  * `sipi.knora-docker-it-config.lua`.
   */
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
 
