@@ -685,6 +685,28 @@ object OntologyConstants {
         val TextFileValue: IRI = KnoraApiV2PrefixExpansion + "TextFileValue"
         val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
 
+        val ValueClasses = Set(
+            TextValue,
+            IntValue,
+            DecimalValue,
+            BooleanValue,
+            DateValue,
+            GeomValue,
+            IntervalValue,
+            LinkValue,
+            ListValue,
+            UriValue,
+            GeonameValue,
+            FileValue,
+            ColorValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            AudioFileValue,
+            DDDFileValue,
+            TextFileValue,
+            DocumentFileValue
+        )
+
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
@@ -903,7 +925,16 @@ object OntologyConstants {
         (InternalSchema, ApiV2WithValueObjects) -> Map(
             KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
             KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
-            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType
+            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType,
+            KnoraBase.ValueHasUri -> KnoraApiV2WithValueObjects.UriValueAsUri,
+            KnoraBase.ValueHasInteger -> KnoraApiV2WithValueObjects.IntValueAsInt,
+            KnoraBase.ValueHasBoolean -> KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
+            KnoraBase.ValueHasString -> KnoraApiV2WithValueObjects.ValueAsString,
+            KnoraBase.ValueHasLanguage -> KnoraApiV2WithValueObjects.TextValueHasLanguage,
+            KnoraBase.ValueHasListNode -> KnoraApiV2WithValueObjects.ListValueAsListNode,
+            KnoraBase.ValueHasGeonameCode -> KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
+            KnoraBase.ValueHasColor -> KnoraApiV2WithValueObjects.ColorValueAsColor
+
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -928,7 +959,15 @@ object OntologyConstants {
         ),
         (ApiV2WithValueObjects, InternalSchema) -> Map(
             KnoraApiV2WithValueObjects.SubjectType -> KnoraBase.SubjectClassConstraint,
-            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint
+            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint,
+            KnoraApiV2WithValueObjects.UriValueAsUri -> KnoraBase.ValueHasUri,
+            KnoraApiV2WithValueObjects.IntValueAsInt -> KnoraBase.ValueHasInteger,
+            KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
+            KnoraApiV2WithValueObjects.ValueAsString -> KnoraBase.ValueHasString,
+            KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
+            KnoraApiV2WithValueObjects.ListValueAsListNode -> KnoraBase.ValueHasListNode,
+            KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
+            KnoraApiV2WithValueObjects.ColorValueAsColor -> KnoraBase.ValueHasColor
         )
     )
 
