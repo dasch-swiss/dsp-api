@@ -22,26 +22,23 @@ package org.knora.webapi.routing
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.util.Timeout
-import com.github.everpeace.healthchecks.HealthCheck
-import com.github.everpeace.healthchecks.route.HealthCheckRoutes
-import io.circe.generic.JsonCodec
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
-import spray.json.{JsNumber, JsObject, JsString}
+import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
 
-@JsonCodec case class HealthCheckResult(name: String,
-                                        severity: String,
-                                        status: String,
-                                        messages: String)
+case class HealthCheckResult(name: String,
+                             severity: String,
+                             status: Boolean,
+                             message: String)
 
 /**
   * Provides the '/health' endpoint serving the health status.
@@ -51,9 +48,21 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-    implicit private val timeout: Timeout = Timeout(100.milliseconds)
+    implicit private val timeout: Timeout = Timeout(1.second)
 
-    val healthcheck = {
+    def knoraApiPath: Route = {
+        path("health") {
+            get {
+                requestContext => {
+                    requestContext.complete {
+                        createResponse(healthcheck)
+                    }
+                }
+            }
+        }
+    }
+
+    private def healthcheck: HealthCheckResult = {
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState, 1.seconds).asInstanceOf[AppState]
         state match {
@@ -65,41 +74,44 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
             case AppState.LoadingOntologies => unhealthy("Loading ontologies. Please retry later.")
             case AppState.OntologiesReady => unhealthy("Ontologies ready. Please retry later.")
             case AppState.MaintenanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
-            case AppState.Running => healthy
+            case AppState.Running => healthy()
         }
-    }
-
-    def knoraApiPath: Route = {
-        HealthCheckRoutes.health(appState)
     }
 
     private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
 
     private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
-    private def toResultJson(check: HealthCheck, result: HealthCheckResult) =
-        HealthCheckRoutes.HealthCheckResultJson(
-            check.name,
-            check.severity.toString,
-            status(result.isValid),
-            result match {
-                case Valid(_)        => List()
-                case Invalid(errors) => errors.toList
-            }
-        )
-
-    private def createResponse(): HttpResponse = {
+    private def createResponse(result: HealthCheckResult): HttpResponse = {
         HttpResponse(
-            status = StatusCodes.OK,
+            status = statusCode(result.status),
             entity = HttpEntity(
                 ContentTypes.`application/json`,
                 JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("credentials are OK"),
-                    "sid" -> JsString(sessionToken),
-                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                    "name" -> JsString(result.name),
+                    "severity" -> JsString(result.severity),
+                    "status" -> JsString(status(result.status)),
+                    "message" -> JsString(result.message)
                 ).compactPrint
             )
+        )
+    }
+
+    private def unhealthy(str: String) = {
+        HealthCheckResult(
+            name = "AppState",
+            severity = "non fatal",
+            status = false,
+            message = str
+        )
+    }
+
+    private def healthy() = {
+        HealthCheckResult(
+            name = "AppState",
+            severity = "non fatal",
+            status = true,
+            message = "Application is heathy"
         )
     }
 
