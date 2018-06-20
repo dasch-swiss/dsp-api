@@ -125,6 +125,10 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
             s"<$iri>"
         }
     }
+
+    def toOntologySchema(targetSchema: OntologySchema): IriRef = {
+        copy(iri = iri.toOntologySchema(targetSchema))
+    }
 }
 
 /**
@@ -166,23 +170,20 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
         }
     }
 
-    /**
-      * Returns a copy of this statement pattern whose named graph is [[OntologyConstants.NamedGraphs.KnoraExplicitNamedGraph]].
-      */
-    def toExplicit: StatementPattern = StatementPattern.makeExplicit(
-        subj = subj,
-        pred = pred,
-        obj = obj
-    )
+    def toOntologySchema(targetSchema: OntologySchema): StatementPattern = {
+        copy(
+            subj = entityToOntologySchema(subj, targetSchema),
+            pred = entityToOntologySchema(pred, targetSchema),
+            obj = entityToOntologySchema(obj, targetSchema)
+        )
+    }
 
-    /**
-      * Returns a copy of this statement pattern that doesn't specify a named graph.
-      */
-    def toInferred: StatementPattern = StatementPattern.makeInferred(
-        subj = subj,
-        pred = pred,
-        obj = obj
-    )
+    private def entityToOntologySchema(entity: Entity, targetSchema: OntologySchema): Entity = {
+        entity match {
+            case iriRef: IriRef => iriRef.toOntologySchema(InternalSchema)
+            case other => other
+        }
+    }
 }
 
 /**

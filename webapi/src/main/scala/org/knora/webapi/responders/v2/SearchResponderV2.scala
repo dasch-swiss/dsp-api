@@ -363,7 +363,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     )
 
                     // linking property: just include the original statement relating the subject to the target of the link
-                    statementPattern +: linkValueStatements
+                    statementPattern.toOntologySchema(InternalSchema) +: linkValueStatements
 
                 case _ =>
                     // value property
@@ -383,7 +383,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // the query variable stands for a value object
                     // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
                     // include the original statement relating the subject to a value object
-                    Seq(statementPattern, valueObjectIsNotDeleted)
+                    Seq(statementPattern.toOntologySchema(InternalSchema), valueObjectIsNotDeleted)
             }
 
         }
@@ -441,7 +441,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case nonPropInfo: NonPropertyTypeInfo => nonPropInfo
 
                     case other =>
-                        println(typeInspection.entities)
                         throw AssertionException(s"NonPropertyTypeInfo expected for ${typeInfoKey.get}, got $other")
                 }
 
@@ -482,8 +481,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 conversionFuncForPropertyType(propTypeInfo, statementPattern)
 
             } else {
-                // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type)
-                Seq(statementPattern)
+                // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type), converted to the internal schema.
+                Seq(statementPattern.toOntologySchema(InternalSchema))
             }
         }
 
@@ -552,7 +551,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         private def handlePropertyIriQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, iriRef: IriRef, propInfo: PropertyTypeInfo): TransformedFilterPattern = {
 
-            val internalIriRef = IriRef(iriRef.iri.toOntologySchema(InternalSchema))
+            val internalIriRef = iriRef.toOntologySchema(InternalSchema)
 
             // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
             if (comparisonOperator != CompareExpressionOperator.EQUALS)
@@ -2037,17 +2036,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // create a key for the type annotations map
                     val typeableEntity: TypeableEntity = statementPattern.pred match {
-                        case iriRef: IriRef =>
-                            val externalIri = if (iriRef.iri.isKnoraInternalEntityIri) {
-                                iriRef.iri.toOntologySchema(ApiV2Simple)
-                            } else {
-                                iriRef.iri
-                            }
-
-                            TypeableIri(externalIri)
-
+                        case iriRef: IriRef => TypeableIri(iriRef.iri.toOntologySchema(ApiV2Simple))
                         case variable: QueryVariable => TypeableVariable(variable.variableName)
-
                         case other => throw GravsearchException(s"Expected an IRI or a variable as the predicate of a statement, but $other given")
                     }
 
@@ -2249,7 +2239,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            //  _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
