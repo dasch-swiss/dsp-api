@@ -22,11 +22,10 @@ package org.knora.webapi.store.triplestore.http
 import java.io.StringReader
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
-import akka.http.javadsl.model.headers.Authorization
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.client.RequestBuilding
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.Accept
+import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
@@ -71,7 +70,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val http = Http(context.system)
 
     // Use HTTP basic authentication.
-    private val authorization = Authorization.basic(settings.triplestoreUsername, settings.triplestorePassword)
+    private val authorizationHeader = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
+
 
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
@@ -454,39 +454,61 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private def checkRepository(): Future[CheckRepositoryResponse] = {
         try {
 
+            log.info("checkRepository entered")
+
             // call endpoint returning all repositories
 
-            val getRepositoriesUrl: String = triplestoreType match {
-                case HTTP_GRAPH_DB_TS_TYPE => s"http://${settings.triplestoreHost}:${settings.triplestorePort}/rest/repositories"
+            val scheme = if (settings.triplestoreUseHttps) {
+                "https"
+            } else {
+                "http"
+            }
+
+            val headers = List(
+                authorizationHeader,
+                Accept(MediaTypes.`application/json`)
+            )
+
+            val getRepositoriesUri: Uri = triplestoreType match {
+                case HTTP_GRAPH_DB_TS_TYPE => {
+                    Uri(
+                        scheme = scheme,
+                        authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
+                        path = Uri.Path("/rest/repositories")
+                    )
+                }
                 case _ => throw UnsuportedTriplestoreException("checkRepository only supports GraphDB.")
             }
 
-            val getRepositoriesRequest: HttpRequest = HttpRequest(method = HttpMethods.GET, uri = getRepositoriesUrl)
+            val getRepositoriesRequest: HttpRequest = HttpRequest(
+                method = HttpMethods.GET,
+                uri = getRepositoriesUri,
+                headers = headers
+            )
 
-            val responseFuture: Future[HttpResponse] = Http().singleRequest(getRepositoriesRequest)
+            val jsonFuture = for {
+                response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
+                _ = log.info("checkRepository - response: {}", response)
 
-            val response = Await.result(responseFuture, 500.milliseconds)
+                json: JsArray <- response match {
+                    case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
+                    case other => throw new Exception(other.toString())
+                }
+                _ = log.info("checkRepository - json: {}", json.prettyPrint)
 
-            import DefaultJsonProtocol._
-            import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+            } yield json
 
-            val jsonFuture: Future[JsObject] = response match {
-                case HttpResponse(StatusCodes.OK, _, entity, _) =>
-                    Unmarshal(entity).to[JsObject]
-                case other =>
-                    throw new Exception(other.toString())
-            }
-
-            val json: JsObject = Await.result(jsonFuture, 500.milliseconds)
+            val json: JsArray = Await.result(jsonFuture, 500.milliseconds)
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
-
-            log.debug("checkRepository - json: {}", json.prettyPrint)
 
             FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
 
         } catch {
-            case e: Exception => FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
+            case e: Exception => {
+                println("checkRepository - exception", e)
+                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
+            }
         }
     }
 
@@ -503,7 +525,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
 
             val entity = HttpEntity(mimeTypeApplicationSparqlUpdate, sparql)
-            val headers = List(authorization)
+            val headers = List(authorizationHeader)
 
             HttpRequest(
                 method = HttpMethods.POST,
@@ -534,7 +556,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 Accept(MediaRange(mimeTypeApplicationSparqlResultsJson))
             }
 
-            val headers = List(authorization, acceptContentType)
+            val headers = List(authorizationHeader, acceptContentType)
 
             HttpRequest(
                 method = HttpMethods.POST,

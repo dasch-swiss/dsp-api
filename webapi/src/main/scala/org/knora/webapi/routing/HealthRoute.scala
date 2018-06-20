@@ -21,17 +21,27 @@ package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.util.Timeout
-import com.github.everpeace.healthchecks._
-import com.github.everpeace.healthchecks.route._
+import com.github.everpeace.healthchecks.HealthCheck
+import com.github.everpeace.healthchecks.route.HealthCheckRoutes
+import io.circe.generic.JsonCodec
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
+import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
+import spray.json.{JsNumber, JsObject, JsString}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor}
+
+
+@JsonCodec case class HealthCheckResult(name: String,
+                                        severity: String,
+                                        status: String,
+                                        messages: String)
 
 /**
   * Provides the '/health' endpoint serving the health status.
@@ -43,7 +53,7 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
 
     implicit private val timeout: Timeout = Timeout(100.milliseconds)
 
-    val appState = healthCheck("appState") {
+    val healthcheck = {
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState, 1.seconds).asInstanceOf[AppState]
         state match {
@@ -61,6 +71,36 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
 
     def knoraApiPath: Route = {
         HealthCheckRoutes.health(appState)
+    }
+
+    private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
+
+    private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
+
+    private def toResultJson(check: HealthCheck, result: HealthCheckResult) =
+        HealthCheckRoutes.HealthCheckResultJson(
+            check.name,
+            check.severity.toString,
+            status(result.isValid),
+            result match {
+                case Valid(_)        => List()
+                case Invalid(errors) => errors.toList
+            }
+        )
+
+    private def createResponse(): HttpResponse = {
+        HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`application/json`,
+                JsObject(
+                    "status" -> JsNumber(0),
+                    "message" -> JsString("credentials are OK"),
+                    "sid" -> JsString(sessionToken),
+                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                ).compactPrint
+            )
+        )
     }
 
 }

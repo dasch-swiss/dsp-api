@@ -71,7 +71,7 @@ lazy val webapi = (project in file(".")).
         ): _*).
         settings(
             resolvers ++= Seq(
-                Resolver.bintrayRepo("everpeace", "maven")
+                Resolver.bintrayRepo("hseeberger", "maven")
             ),
             libraryDependencies ++= webApiLibs,
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
@@ -261,7 +261,6 @@ lazy val library =
         val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
         val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.1"
         val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.8.13"
-        val healthchecksCore       = "com.github.everpeace"         %% "healthchecks-core"        % "0.3.0"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -285,7 +284,7 @@ lazy val library =
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
         // provides akka jackson (json) support
-        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.20.1"
+        val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.21.0"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
 
         val jsonldJava             = "com.github.jsonld-java"        % "jsonld-java"              % "0.12.0"
