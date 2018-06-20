@@ -363,7 +363,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     )
 
                     // linking property: just include the original statement relating the subject to the target of the link
-                    statementPattern.toOntologySchema(InternalSchema) +: linkValueStatements
+                    statementPatternToInternalSchema(statementPattern) +: linkValueStatements
 
                 case _ =>
                     // value property
@@ -383,7 +383,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // the query variable stands for a value object
                     // if there is a filter statement, the literal of the value object has to be checked: e.g., valueHasInteger etc.
                     // include the original statement relating the subject to a value object
-                    Seq(statementPattern.toOntologySchema(InternalSchema), valueObjectIsNotDeleted)
+                    Seq(statementPatternToInternalSchema(statementPattern), valueObjectIsNotDeleted)
             }
 
         }
@@ -482,7 +482,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             } else {
                 // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type), converted to the internal schema.
-                Seq(statementPattern.toOntologySchema(InternalSchema))
+                Seq(statementPatternToInternalSchema(statementPattern))
             }
         }
 
@@ -517,6 +517,34 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
             OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar
         )
+
+        /**
+          * Converts a statement pattern to the internal schema, replacing Knora API v2 complex schema predicates
+          * with the corresponding internal ones, and throwing an exception if a predicate is used that isn't
+          * allowed in Gravsearch.
+          *
+          * @param statementPattern the statement pattern to be converted.
+          * @return the converted statement pattern.
+          */
+        protected def statementPatternToInternalSchema(statementPattern: StatementPattern): StatementPattern = {
+            val correspondingPred: Entity = statementPattern.pred match {
+                case iriRef: IriRef =>
+                    val predIriStr = iriRef.iri.toString
+
+                    if (forbiddenComplexPreds.contains(predIriStr)) {
+                        throw GravsearchException(s"Predicate $predIriStr cannot be used in a Gravsearch query")
+                    }
+
+                    complexPredsToInternalPreds.get(predIriStr) match {
+                        case Some(correspondingInternalPredIri) => iriRef.copy(iri = correspondingInternalPredIri.toSmartIri)
+                        case None => iriRef
+                    }
+
+                case otherEntity => otherEntity
+            }
+
+            statementPattern.copy(pred = correspondingPred).toOntologySchema(InternalSchema)
+        }
 
         /**
           * Given a variable representing a linking property, creates a variable representing the corresponding link value property.
@@ -2239,7 +2267,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 

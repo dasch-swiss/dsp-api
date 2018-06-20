@@ -140,12 +140,14 @@ object GravsearchParser {
                     )
             }
 
+            val usesApiV2ComplexSchema = allIris.exists(_.getOntologySchema.contains(ApiV2WithValueObjects))
+
             ConstructQuery(
                 constructClause = ConstructClause(statements = constructStatements),
-                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet),
+                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet, usesApiV2ComplexSchema = usesApiV2ComplexSchema),
                 orderBy = orderBy,
                 offset = offset,
-                usesApiV2ComplexSchema = allIris.exists(_.getOntologySchema.contains(ApiV2WithValueObjects))
+                usesApiV2ComplexSchema = usesApiV2ComplexSchema
             )
         }
 

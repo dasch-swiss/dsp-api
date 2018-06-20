@@ -127,7 +127,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                         // Yes. Is it a resource class?
                                         if (classDef.isResourceClass) {
                                             // Yes. Infer rdf:type knora-api:Resource.
-                                            val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+                                            val inferredType = NonPropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(usageIndex.usesApiV2ComplexSchema))
                                             log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                             Some(inferredType)
                                         } else {
@@ -192,7 +192,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 entityInfo.propertyInfoMap.get(iri) match {
                                     case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                         // Yes. Try to infer its knora-api:objectType from the provided information.
-                                        InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
+                                        InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, usageIndex.usesApiV2ComplexSchema) match {
                                             case Some(objectTypeIri: SmartIri) =>
                                                 val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
                                                 log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
@@ -312,7 +312,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     entityInfo.propertyInfoMap.get(predIri) match {
                                         case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                             // Yes. Can we infer the property's knora-api:subjectType from that definition?
-                                            InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo) match {
+                                            InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo, usageIndex.usesApiV2ComplexSchema) match {
                                                 case Some(subjectTypeIri: SmartIri) =>
                                                     // Yes. Use that type.
                                                     val inferredType = NonPropertyTypeInfo(subjectTypeIri)
@@ -431,7 +431,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             entityInfo.propertyInfoMap.get(propertyIri) match {
                                                 case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                                     // Yes. Can we determine the property's knora-api:objectType from that definition?
-                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo) match {
+                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, usageIndex.usesApiV2ComplexSchema) match {
                                                         case Some(objectTypeIri: SmartIri) =>
                                                             // Yes. Use that type.
                                                             val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
@@ -490,17 +490,25 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * Utility functions for type inference rules.
       */
     private object InferenceRuleUtil {
+        def getResourceTypeIriForSchema(usesApiV2ComplexSchema: Boolean): SmartIri = {
+            if (usesApiV2ComplexSchema) {
+                OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri
+            } else {
+                OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri
+            }
+        }
+
         /**
           * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred `knora-api:subjectType` of the property, if any.
           *
           * @param readPropertyInfo the property definition.
           * @return the IRI of the inferred `knora-api:subjectType` of the property, or `None` if it could not inferred.
           */
-        def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
+        def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2, usesApiV2ComplexSchema: Boolean): Option[SmartIri] = {
             // Is this a resource property?
             if (readPropertyInfo.isResourceProp) {
                 // Yes. Infer knora-api:subjectType knora-api:Resource.
-                Some(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+                Some(getResourceTypeIriForSchema(usesApiV2ComplexSchema))
             } else {
                 // It's not a resource property. Use the knora-api:subjectType that the ontology responder provided, if any.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
@@ -514,11 +522,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           * @param readPropertyInfo the property definition.
           * @return the IRI of the inferred `knora-api:objectType` of the property, or `None` if it could not inferred.
           */
-        def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2): Option[SmartIri] = {
+        def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2, usesApiV2ComplexSchema: Boolean): Option[SmartIri] = {
             // Is this a link property?
             if (readPropertyInfo.isLinkProp) {
                 // Yes. Infer knora-api:objectType knora-api:Resource.
-                Some(OntologyConstants.KnoraApiV2Simple.Resource.toSmartIri)
+                Some(getResourceTypeIriForSchema(usesApiV2ComplexSchema))
             } else {
                 // It's not a link property. Use the knora-api:objectType that the ontology responder provided, if any.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
@@ -554,7 +562,8 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                   predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   objectIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   knoraPropertyVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
-                                  xsdLiteralVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]])
+                                  xsdLiteralVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
+                                  usesApiV2ComplexSchema: Boolean)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
                               whereClause: WhereClause,
@@ -844,7 +853,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         val usageIndex: UsageIndex = QueryTraverser.visitWherePatterns(
             patterns = whereClause.patterns,
             whereVisitor = new UsageIndexCollectingWhereVisitor,
-            initialAcc = UsageIndex()
+            initialAcc = UsageIndex(usesApiV2ComplexSchema = whereClause.usesApiV2ComplexSchema)
         )
 
         // Add the Knora property IRIs found in filters to the set of Knora property IRIs.
