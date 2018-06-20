@@ -21,17 +21,13 @@ package org.knora.webapi.store.triplestore
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
-import akka.pattern._
 import akka.routing.FromConfig
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckConnection, CheckRepositoryResponse, _}
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, Settings, UnsuportedTriplestoreException}
-
-import scala.concurrent.Await
 
 /**
   * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured triple stores (embedded or remote).
@@ -44,7 +40,6 @@ class TriplestoreManager extends Actor with ActorLogging {
     implicit val timeout = settings.defaultRestoreTimeout
 
     var storeActorRef: ActorRef = _
-    var initialized: Boolean = false
 
     // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)
     FakeTriplestore.init(settings.fakeTriplestoreDataDir)
@@ -73,15 +68,10 @@ class TriplestoreManager extends Actor with ActorLogging {
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }
 
-        // Checking the connection to the triple store on startup
-        val resultFuture = storeActorRef ? CheckConnection()
-        val result = Await.result(resultFuture, timeout.duration).asInstanceOf[CheckConnectionACK]
-        initialized = true
         log.debug("TriplestoreManagerActor: finished with preStart")
     }
 
     def receive = LoggingReceive {
-        case CheckRepositoryRequest() => sender ! CheckRepositoryResponse(this.initialized)
         case msg ⇒ storeActorRef forward msg
     }
 }

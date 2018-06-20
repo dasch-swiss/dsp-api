@@ -455,7 +455,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         try {
 
             // call endpoint returning all repositories
-            // check if the repository defined in 'application.conf' is present
 
             val getRepositoriesUrl: String = triplestoreType match {
                 case HTTP_GRAPH_DB_TS_TYPE => s"http://${settings.triplestoreHost}:${settings.triplestorePort}/rest/repositories"
@@ -464,11 +463,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             val getRepositoriesRequest: HttpRequest = HttpRequest(method = HttpMethods.GET, uri = getRepositoriesUrl)
 
-            Http().singleRequest(HttpRequest(uri = "http://akka.io"))
+            val responseFuture: Future[HttpResponse] = Http().singleRequest(getRepositoriesRequest)
 
-            val responseFuture: Future[HttpResponse] = Http().singleRequest(getRepositoriesUrl)
-
-            val response = Await.result(responseFuture, 500.milliseconds).
+            val response = Await.result(responseFuture, 500.milliseconds)
 
             import DefaultJsonProtocol._
             import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -480,21 +477,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                     throw new Exception(other.toString())
             }
 
-            Await.result(jsonFuture, 500.milliseconds)
+            val json: JsObject = Await.result(jsonFuture, 500.milliseconds)
 
+            // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
+            log.debug("checkRepository - json: {}", json.prettyPrint)
 
-
-            val sparql = "SELECT ?s ?p ?o WHERE { ?s ?p ?o  } LIMIT 10"
-
-            val responseStrFuture = getTriplestoreHttpResponse(sparql = sparql, isUpdate = false)
-
-            Await.result(responseStrFuture, 1.second)
-
-            Future.successful(CheckRepositoryResponse())
+            FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
 
         } catch {
-            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute insert into triplestore", e, log))
+            case e: Exception => FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
         }
     }
 

@@ -28,9 +28,6 @@ import org.knora.webapi.messages.app.appmessages._
   */
 object Main extends App with LiveCore with KnoraService {
 
-    /* Check and wait until all actors are running */
-    checkActorSystem()
-
     val arglist = args.toList
 
     // loads demo data
@@ -62,10 +59,6 @@ object Main extends App with LiveCore with KnoraService {
               |    or  org.knora.webapi.Main -help
               |
               | Options:
-              |
-              |     loadDemoData,
-              |     --loadDemoData,
-              |     -d                          Loads the demo data.
               |
               |     allowReloadOverHTTP,
               |     --allow-reload-over-http,

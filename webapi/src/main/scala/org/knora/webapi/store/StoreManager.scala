@@ -21,12 +21,9 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.pattern._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, TriplestoreRequest}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.store.triplestore.TriplestoreManager
 import org.knora.webapi.{ActorMaker, LiveActorMaker, Settings, UnexpectedMessageException}
-
-import scala.concurrent.Await
 
 /**
   * This actor receives messages for different stores, and forwards them to corresponding store manager. At the moment only triple stores are implemented,
@@ -47,8 +44,6 @@ class StoreManager extends Actor with ActorLogging {
     override def preStart = {
         log.debug("StoreManager: start with preStart")
         triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker), TRIPLESTORE_MANAGER_ACTOR_NAME)
-        val resultFuture = triplestoreManager ? CheckRepositoryRequest()
-        val result = Await.result(resultFuture, timeout.duration).asInstanceOf[CheckRepositoryResponse]
         log.debug("StoreManager: finished with preStart")
     }
 

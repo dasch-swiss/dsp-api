@@ -162,23 +162,6 @@ trait KnoraService {
     )
 
     /**
-      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
-      */
-    def checkActorSystem(): Unit = {
-
-        val applicationStateActorResult = Await.result(applicationStateActor ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
-        log.info(s"ApplicationStateActor ready: $applicationStateActorResult")
-
-        // TODO: Check if ResponderManager is ready
-        log.info(s"ResponderManager ready: - ")
-
-        // TODO: Check if Sipi is also ready/accessible
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
-        log.info(s"StoreManager ready: $storeManagerResult")
-        log.info(s"ActorSystem ${system.name} started")
-    }
-
-    /**
       * Starts the Knora API server.
       */
     def startService(): Unit = {
@@ -209,11 +192,12 @@ trait KnoraService {
       */
     private def startupChecks(): Unit = {
 
-        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
+        val state = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
 
         state match {
             case AppState.Stopped => {} // nothing to do
             case AppState.StartingUp => checkRepository() // check DB
+            case AppState.WaitingForRepository => checkRepository() // check DB again
             case AppState.RepositoryReady => createCaches() // create caches
             case AppState.CachesReady => loadOntologies() // load ontologies
             case AppState.OntologiesReady => {
@@ -222,6 +206,7 @@ trait KnoraService {
                 applicationStateActor ! SetAppState(AppState.Running)
                 startupScheduler.cancel()
             }
+            case value => throw UnsupportedValueException(s"The value: $value is not supported.")
         }
     }
 
@@ -229,7 +214,7 @@ trait KnoraService {
       * Checks if repository is running and initialized
       */
     private def checkRepository(): Unit = {
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 5.seconds).asInstanceOf[CheckRepositoryResponse]
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 2.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
             applicationStateActor ! SetAppState(AppState.RepositoryReady)
         } else {
