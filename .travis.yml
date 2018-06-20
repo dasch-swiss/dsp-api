@@ -84,7 +84,7 @@ jobs:
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the sipi container (with production config)
-        - docker run -d --add-host webapihost:$DOCKERHOST -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 $SIPI_REPO:develop
+        - cd $TRAVIS_BUILD_DIR/sipi/ && docker run -d --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-it-config.lua
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test
     # testing docs generation

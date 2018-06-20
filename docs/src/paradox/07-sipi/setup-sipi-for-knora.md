@@ -23,16 +23,23 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 In order to serve files to the client application like the Salsah GUI,
 Sipi must be set up and running. Sipi can be downloaded from its own
-GitHub repository: <https://github.com/dhlab-basel/Sipi>. Please follow
-the instructions given in the README to compile it on your system.
+GitHub repository: <https://github.com/dhlab-basel/Sipi> (which requires
+building from source), or the published [docker image](https://hub.docker.com/r/dhlabbasel/sipi/).
+can be used. To start Sipi, run the following command from inside the `sipi/`
+folder:
 
-Once it is compiled, you can run Sipi with the following option:
-`./local/bin/sipi --config=config/sipi.knora-config.lua` (or
-`./local/bin/sipi --config=sipi.knora-test-config.lua` for using sipi
-for testing). Please see `sipi.knora-config.lua` for the settings like
-URL, port number etc. These settings need to be set accordingly in
-Knora's `application.conf`. If you use the default settings both in Sipi
-and Knora, there is no need to change these settings.
+```
+$ export DOCKERHOST=LOCAL_IP_ADDRESS
+$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-config.lua
+```
+
+where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora`.
+
+`--config=/sipi/config/sipi.knora-docker-config.lua` (or `--config=/sipi/config/sipi.knora-docker-it-config.lua` for
+using sipi for integration testing). Please see `sipi.knora-docker-config.lua` for the settings like URL, port number
+etc. These settings need to be set accordingly in Knora's `application.conf`. If you use the default settings both in
+Sipi and Knora, there is no need to change these settings.
 
 Whenever a file is requested from Sipi (e.g. a browser trying to
 dereference an image link served by Knora), a preflight function is
@@ -60,7 +67,13 @@ information about sharing the session id.
 
 If you just want to test Sipi with Knora without serving the actual
 files (e.g. when executing browser tests), you can simply start Sipi
-like this: `./local/bin/sipi
---config=config/sipi.knora-test-config.lua`. Then always the same test
-file will be served which is included in Sipi. In test mode, Sipi will
+like this:
+
+```
+$ export DOCKERHOST=LOCAL_IP_ADDRESS
+$ docker image rm --force dhlabbasel/sipi:develop // deletes cached image and needs only to be used when newer image is available on dockerhub
+$ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-test-config.lua
+```
+
+Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
 not aks Knora about the user's permission on the requested file.
