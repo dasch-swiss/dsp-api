@@ -510,9 +510,21 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 // Yes. Infer knora-api:subjectType knora-api:Resource.
                 Some(getResourceTypeIriForSchema(usesApiV2ComplexSchema))
             } else {
-                // It's not a resource property. Use the knora-api:subjectType that the ontology responder provided, if any.
+                // It's not a resource property. Use the knora-api:subjectType that the ontology responder provided, if any, as long
+                // as it's not an abstract Value class.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.SubjectType.toSmartIri).
-                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri))
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri)) match {
+                    case Some(subjectType: SmartIri) =>
+                        val subjectTypeStr = subjectType.toString
+
+                        if (subjectTypeStr == OntologyConstants.KnoraBase.Value || subjectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value) {
+                            None
+                        } else {
+                            Some(subjectType)
+                        }
+
+                    case None => None
+                }
             }
         }
 
@@ -528,9 +540,21 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 // Yes. Infer knora-api:objectType knora-api:Resource.
                 Some(getResourceTypeIriForSchema(usesApiV2ComplexSchema))
             } else {
-                // It's not a link property. Use the knora-api:objectType that the ontology responder provided, if any.
+                // It's not a link property. Use the knora-api:objectType that the ontology responder provided, if any, as long
+                // as it's not an abstract Value class.
                 readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2Simple.ObjectType.toSmartIri).
-                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri))
+                    orElse(readPropertyInfo.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri)) match {
+                    case Some(objectType: SmartIri) =>
+                        val objectTypeStr = objectType.toString
+
+                        if (objectTypeStr == OntologyConstants.KnoraBase.Value || objectTypeStr == OntologyConstants.KnoraApiV2WithValueObjects.Value) {
+                            None
+                        } else {
+                            Some(objectType)
+                        }
+
+                    case None => None
+                }
             }
         }
     }

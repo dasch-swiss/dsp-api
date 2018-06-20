@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.util.SmartIri
+
 /**
   * Contains string constants for IRIs from ontologies used by the application.
   */
@@ -610,6 +612,15 @@ object OntologyConstants {
         val KnoraApiOntologyLabel: String = "knora-api"
 
         val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
+
+        /**
+          * Returns `true` if the specified IRI is `knora-api:Resource` in Knora API v2, in the simple
+          * or complex schema.
+          */
+        def isKnoraApiV2Resource(iri: SmartIri): Boolean = {
+            val iriStr = iri.toString
+            iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource
+        }
     }
 
     object KnoraApiV2WithValueObjects {
@@ -793,7 +804,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
         val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
-
+        val ToSimpleDateFunctionIri: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -962,6 +973,7 @@ object OntologyConstants {
             KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint,
             KnoraApiV2WithValueObjects.UriValueAsUri -> KnoraBase.ValueHasUri,
             KnoraApiV2WithValueObjects.IntValueAsInt -> KnoraBase.ValueHasInteger,
+            KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> KnoraBase.ValueHasDecimal,
             KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
             KnoraApiV2WithValueObjects.ValueAsString -> KnoraBase.ValueHasString,
             KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
