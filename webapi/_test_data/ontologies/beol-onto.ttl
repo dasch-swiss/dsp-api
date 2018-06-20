@@ -2230,4 +2230,42 @@
 
             rdfs:comment "identifies an expansion marker in a text"@en .
 
+### http://www.knora.org/ontology/0801/beol#StandoffCorrectionTag
+:StandoffCorrectionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an editorial corrrection in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffOriginalMarkerTag
+:StandoffOriginalMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an original reading in a  text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffInterventionMarkerTag
+:StandoffInterventionMarkerTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents an editorial intervention in a text"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffAdditionTag
+:StandoffAdditionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that was added"@en .
+
+
+### http://www.knora.org/ontology/0801/beol#StandoffDeletionTag
+:StandoffDeletionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents text that was deleted"@en .
 
