@@ -349,33 +349,45 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
 
             } else {
-                // value property
+                // Is the subject a resource?
+                typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+                    case Some(NonPropertyTypeInfo(typeIri: SmartIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri) =>
+                        // Yes. Make sure that the object of the property is a variable.
+                        val objectVar: QueryVariable = statementPattern.obj match {
+                            case queryVar: QueryVariable =>
+                                checkSubjectInOrderBy(queryVar)
+                                queryVar
 
-                // Make sure that the object of the property is a variable.
-                val objectVar: QueryVariable = statementPattern.obj match {
-                    case queryVar: QueryVariable =>
-                        checkSubjectInOrderBy(queryVar)
-                        queryVar
+                            case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
+                        }
 
-                    case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
-                }
+                        // Does the variable refer to a Knora value object? We assume it does if the query just uses the
+                        // simple schema. If the query uses the complex schema, check whether the property's object type is
+                        // a Knora API v2 value class.
 
-                // Does the variable refer to a Knora value object? We assume it does if the query just uses the
-                // simple schema. If the query uses the complex schema, check whether the property's object type is
-                // a Knora API v2 value class.
+                        val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
 
-                val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
+                        if (objectVarIsValueObject) {
+                            // The variable refers to a value object. Add it to the collection representing value objects.
+                            valueObjectVariables += objectVar
 
-                if (objectVarIsValueObject) {
-                    // The variable refers to a value object. Add it to the collection representing value objects.
-                    valueObjectVariables += objectVar
+                            // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
+                            val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
+                        } else {
+                            // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                        }
 
-                    // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
-                    val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
-                } else {
-                    // The variable doesn't refer to a value object. Just convert it to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    case _ =>
+                        // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?
+                        if (querySchema == ApiV2WithValueObjects) {
+                            // Yes. Just convert the statement pattern to the internal schema.
+                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                        } else {
+                            // No. The query is invalid.
+                            throw GravsearchException(s"Invalid statement pattern: ${statementPattern.toSparql}")
+                        }
                 }
             }
         }
@@ -2670,6 +2682,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     // A set of knora-api complex value predicates that aren't allowed in Gravsearch. // TODO: complete this.
     private val forbiddenApiV2ComplexPreds: Set[IRI] = Set(
+        OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser,
+        OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
+        OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
+        OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
+        OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+        OntologyConstants.KnoraApiV2WithValueObjects.Result,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsEditable,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsLinkValueProperty,
+        OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
+        OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
+        OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName,
+        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
@@ -2682,9 +2707,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
         OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
         OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget,
+        OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel,
         OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
         OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
-        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel
+        OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl
     )
 }

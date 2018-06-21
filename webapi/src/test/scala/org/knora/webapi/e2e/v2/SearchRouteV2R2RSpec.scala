@@ -7028,5 +7028,33 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for a list value that refers to a particular list node (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |    CONSTRUCT {
+                  |        ?thing knora-api:isMainResource true .
+                  |
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |    } WHERE {
+                  |        ?thing anything:hasListItem ?listItem .
+                  |
+                  |        ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/0001/treeList02> .
+                  |
+                  |    }
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingReferringToSpecificListNode.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
     }
 }

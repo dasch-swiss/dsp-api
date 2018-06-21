@@ -27,10 +27,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
@@ -896,14 +896,90 @@ class OntologyResponderV2 extends Responder {
     /**
       * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
       *
-      * @param classIris    the IRIs of the resource entities to be queried.
-      * @param propertyIris the IRIs of the property entities to be queried.
-      * @param requestingUser  the user making the request.
+      * @param classIris      the IRIs of the resource entities to be queried.
+      * @param propertyIris   the IRIs of the property entities to be queried.
+      * @param requestingUser the user making the request.
       * @return an [[EntityInfoGetResponseV2]].
       */
     private def getEntityInfoResponseV2(classIris: Set[SmartIri] = Set.empty[SmartIri], propertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[EntityInfoGetResponseV2] = {
         for {
             cacheData <- getCacheData
+
+            // See if any of the requested entities are not Knora entities.
+
+            nonKnoraEntities = (classIris ++ propertyIris).filter(!_.isKnoraEntityIri)
+
+            _ = if (nonKnoraEntities.nonEmpty) {
+                throw BadRequestException(s"Some requested entities are not Knora entities: ${nonKnoraEntities.mkString(", ")}")
+            }
+
+            // See if any of the requested entities are unavailable in the requested schema.
+
+            classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) {
+                case (acc, classIri) =>
+                    // Is this class IRI hard-coded in the requested schema?
+                    if (KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.contains(classIri) || KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.contains(classIri)) {
+                        // Yes, so it's available.
+                        acc
+                    } else {
+                        // No. Is it among the classes removed from knora-base to create the requested schema?
+                        classIri.getOntologySchema.get match {
+                            case apiV2Schema: ApiV2Schema =>
+                                    val internalClassIri = classIri.toOntologySchema(InternalSchema)
+
+                                    val knoraBaseClassesToRemove = apiV2Schema match {
+                                        case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove
+                                        case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove
+                                    }
+
+                                    if (knoraBaseClassesToRemove.contains(internalClassIri)) {
+                                        // Yes. Include it in the set of unavailable classes.
+                                        acc + classIri
+                                    } else {
+                                        // No. It's available.
+                                        acc
+                                    }
+
+                            case InternalSchema => acc
+                        }
+                    }
+            }
+
+            propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
+                case (acc, propertyIri) =>
+                    // Is this property IRI hard-coded in the requested schema?
+                    if (KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.contains(propertyIri) || KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.contains(propertyIri)) {
+                        // Yes, so it's available.
+                        acc
+                    } else {
+                        // No. Is it among the properties removed from knora-base to create the requested schema?
+                        propertyIri.getOntologySchema.get match {
+                            case apiV2Schema: ApiV2Schema =>
+                                val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+
+                                val knoraBasePropertiesToRemove = apiV2Schema match {
+                                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
+                                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
+                                }
+
+                                if (knoraBasePropertiesToRemove.contains(internalPropertyIri)) {
+                                    // Yes. Include it in the set of unavailable properties.
+                                    acc + propertyIri
+                                } else {
+                                    // No. It's available.
+                                    acc
+                                }
+
+                            case InternalSchema => acc
+                        }
+                    }
+            }
+
+            entitiesUnavailableInSchema = classesUnavailableInSchema ++ propertiesUnavailableInSchema
+
+            _ = if (entitiesUnavailableInSchema.nonEmpty) {
+                throw NotFoundException(s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}")
+            }
 
             // See if any of the requested entities are hard-coded for knora-api.
 
@@ -960,12 +1036,10 @@ class OntologyResponderV2 extends Responder {
             missingClasses = classIris -- allExternalClassIrisAvailable
             missingProperties = propertyIris -- allExternalPropertyIrisAvailable
 
-            _ = if (missingClasses.nonEmpty) {
-                throw NotFoundException(s"Some requested classes were not found: ${missingClasses.mkString(", ")}")
-            }
+            missingEntities = missingClasses ++ missingProperties
 
-            _ = if (missingProperties.nonEmpty) {
-                throw NotFoundException(s"Some requested properties were not found: ${missingProperties.mkString(", ")}")
+            _ = if (missingEntities.nonEmpty) {
+                throw NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}")
             }
 
             response = EntityInfoGetResponseV2(
@@ -980,7 +1054,7 @@ class OntologyResponderV2 extends Responder {
       *
       * @param standoffClassIris    the IRIs of the resource entities to be queried.
       * @param standoffPropertyIris the IRIs of the property entities to be queried.
-      * @param requestingUser          the user making the request.
+      * @param requestingUser       the user making the request.
       * @return a [[StandoffEntityInfoGetResponseV2]].
       */
     private def getStandoffEntityInfoResponseV2(standoffClassIris: Set[SmartIri] = Set.empty[SmartIri], standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
@@ -1112,7 +1186,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets the [[OntologyKnoraEntitiesIriInfoV2]] for an ontology.
       *
-      * @param ontologyIri the IRI of the ontology to query
+      * @param ontologyIri    the IRI of the ontology to query
       * @param requestingUser the user making the request.
       * @return an [[OntologyKnoraEntitiesIriInfoV2]].
       */
@@ -1138,7 +1212,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets the metadata describing the ontologies that belong to selected projects, or to all projects.
       *
-      * @param projectIris the IRIs of the projects selected, or an empty set if all projects are selected.
+      * @param projectIris    the IRIs of the projects selected, or an empty set if all projects are selected.
       * @param requestingUser the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
@@ -1164,8 +1238,8 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests the entities defined in the given ontology.
       *
-      * @param ontologyIri the IRI (internal or external) of the ontology to be queried.
-      * @param requestingUser  the user making the request.
+      * @param ontologyIri    the IRI (internal or external) of the ontology to be queried.
+      * @param requestingUser the user making the request.
       * @return a [[ReadOntologyV2]].
       */
     private def getOntologyEntitiesV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
@@ -1188,7 +1262,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests information about OWL classes in a single ontology.
       *
-      * @param classIris   the IRIs (internal or external) of the classes to query for.
+      * @param classIris      the IRIs (internal or external) of the classes to query for.
       * @param requestingUser the user making the request.
       * @return a [[ReadOntologyV2]].
       */
@@ -1223,8 +1297,8 @@ class OntologyResponderV2 extends Responder {
     /**
       * Requests information about properties in a single ontology.
       *
-      * @param propertyIris the IRIs (internal or external) of the properties to query for.
-      * @param requestingUser  the user making the request.
+      * @param propertyIris   the IRIs (internal or external) of the properties to query for.
+      * @param requestingUser the user making the request.
       * @return a [[ReadOntologyV2]].
       */
     private def getPropertyDefinitionsFromOntologyV2(propertyIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
@@ -2959,7 +3033,7 @@ class OntologyResponderV2 extends Responder {
       *
       * @param externalOntologyIri the external IRI of the ontology.
       * @param externalEntityIri   the external IRI of the entity.
-      * @param requestingUser         the user making the request.
+      * @param requestingUser      the user making the request.
       */
     private def checkOntologyAndEntityIrisForUpdate(externalOntologyIri: SmartIri,
                                                     externalEntityIri: SmartIri,
@@ -3389,7 +3463,7 @@ class OntologyResponderV2 extends Responder {
       * Checks whether the user has permission to update an ontology.
       *
       * @param internalOntologyIri the internal IRI of the ontology.
-      * @param requestingUser         the user making the request.
+      * @param requestingUser      the user making the request.
       * @return the project IRI.
       */
     private def checkPermissionsForOntologyUpdate(internalOntologyIri: SmartIri, requestingUser: UserADM): Future[SmartIri] = {
