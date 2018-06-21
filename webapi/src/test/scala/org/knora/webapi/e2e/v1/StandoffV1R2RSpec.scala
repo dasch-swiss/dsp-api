@@ -951,7 +951,7 @@ class StandoffV1R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
 
                 thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
-                
+
             }
 
         }
@@ -1190,6 +1190,104 @@ class StandoffV1R2RSpec extends R2RSpec {
 
 
             }
+
+        }
+
+        "create a mapping containing an element with a class that separates words" in {
+
+            val mapping = """<?xml version="1.0" encoding="UTF-8"?>
+                <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
+                    <mappingElement>
+                        <tag><name>text</name>
+                            <class>noClass</class>
+                            <namespace>noNamespace</namespace>
+                            <separatesWords>false</separatesWords></tag>
+                        <standoffClass>
+                            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+                            <attributes>
+                                <attribute>
+                                    <attributeName>documentType</attributeName>
+                                    <namespace>noNamespace</namespace>
+                                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+                                </attribute>
+                            </attributes>
+                        </standoffClass>
+                    </mappingElement>
+
+                    <mappingElement>
+                        <tag>
+                            <name>div</name>
+                            <class>paragraph</class>
+                            <namespace>noNamespace</namespace>
+                            <separatesWords>true</separatesWords>
+                        </tag>
+                        <standoffClass>
+                            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+                        </standoffClass>
+                    </mappingElement>
+                </mapping>""".stripMargin
+
+            val params =
+                s"""
+                   |{
+                   |  "project_id": "$ANYTHING_PROJECT_IRI",
+                   |  "label": "mapping for elements separating words",
+                   |  "mappingName": "MappingSeparatingWords"
+                   |}
+             """.stripMargin
+
+
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, params)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity(ContentTypes.`text/xml(UTF-8)`, mapping),
+                    Map("filename" -> "mapping.xml")
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.OK)
+
+            }
+
+        }
+
+        "create a TextValue from a XML using an element with a class that separates words" in {
+
+            val xmlToSend =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                <text documentType="html">
+                    <div class="paragraph">
+                        This an element that has a class and it separates words.
+                    </div>
+                </text>""".stripMargin
+
+            val newValueParams =
+                s"""
+                    {
+                      "project_id": "http://rdfh.ch/projects/0001",
+                      "res_id": "http://rdfh.ch/0001/a-thing",
+                      "prop": "http://www.knora.org/ontology/0001/anything#hasText",
+                      "richtext_value": {
+                            "xml": ${JsString(xmlToSend)},
+                            "mapping_id": "$ANYTHING_PROJECT_IRI/mappings/MappingSeparatingWords"
+                      }
+                    }""".stripMargin
+
+            // create standoff from XML
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK, "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+
+            }
+
 
         }
 
