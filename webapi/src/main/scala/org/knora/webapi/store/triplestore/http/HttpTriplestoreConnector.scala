@@ -454,7 +454,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private def checkRepository(): Future[CheckRepositoryResponse] = {
         try {
 
-            log.info("checkRepository entered")
+            log.debug("checkRepository entered")
 
             // call endpoint returning all repositories
 
@@ -488,19 +488,19 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             val jsonFuture = for {
                 response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
-                _ = log.info("checkRepository - response: {}", response)
+                // _ = log.info("checkRepository - response: {}", response)
 
                 json: JsArray <- response match {
                     case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
                     case other => throw new Exception(other.toString())
                 }
-                _ = log.info("checkRepository - json: {}", json.prettyPrint)
+                // _ = log.info("checkRepository - json: {}", json.prettyPrint)
 
             } yield json
 
             val json: JsArray = Await.result(jsonFuture, 500.milliseconds)
 
-            // parse json and check if the repository defined in 'application.conf' is present and correctly defined
+            // ToDo: parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
             FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
 

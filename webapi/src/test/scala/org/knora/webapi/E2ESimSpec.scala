@@ -76,7 +76,6 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     before {
         /* Set the startup flags and start the Knora Server */
         log.info(s"executing before setup started")
-        checkActorSystem()
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 

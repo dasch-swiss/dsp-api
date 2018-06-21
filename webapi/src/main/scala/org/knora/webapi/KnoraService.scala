@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import akka.actor._
+import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -47,7 +48,9 @@ import org.knora.webapi.store._
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext}
+import scala.language.postfixOps
+import scala.languageFeature.postfixOps
 
 /**
   * Knora Core abstraction.
@@ -91,12 +94,14 @@ trait KnoraService {
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
+    import scala.language.postfixOps
+
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     /**
-      * The actor used for storing the application application wide variables in a thread safe maner.
+      * The actor used for storing the application application wide variables in a thread safe manner.
       */
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
 
@@ -124,7 +129,7 @@ trait KnoraService {
       * The scheduler running at startup up, making sure that the application
       * starts-up in a ordered manner.
       */
-    private val startupScheduler: Cancellable = system.scheduler.schedule(0.milli, 500.millis)(startupChecks())
+    private val startupScheduler: Cancellable = system.scheduler.schedule(0 second, 1 second)(startupChecks())
 
     /**
       * All routes composed together and CORS activated.
@@ -166,16 +171,20 @@ trait KnoraService {
       */
     def startService(): Unit = {
 
-        printConfig()
-
         startReporters()
 
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
 
-        printWelcomeMsg()
-
         // kick of startup tasks
         applicationStateActor ! SetAppState(AppState.StartingUp)
+
+        // implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        // implicit val executor: ExecutionContext = blockingDispatcher
+        waitForRunningState()
+
+        printWelcomeMsg()
+
+        printConfig()
     }
 
     /**
@@ -192,11 +201,17 @@ trait KnoraService {
       */
     private def startupChecks(): Unit = {
 
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
         val state = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
 
         state match {
             case AppState.Stopped => {} // nothing to do
-            case AppState.StartingUp => checkRepository() // check DB
+            case AppState.StartingUp => {
+                log.info(s"KnoraService - Startup State: {}", AppState.StartingUp)
+                checkRepository()
+            }
             case AppState.WaitingForRepository => checkRepository() // check DB again
             case AppState.RepositoryReady => createCaches() // create caches
             case AppState.CachesReady => loadOntologies() // load ontologies
@@ -205,6 +220,7 @@ trait KnoraService {
                 // everything is up and running so set state to Running and kill scheduler
                 applicationStateActor ! SetAppState(AppState.Running)
                 startupScheduler.cancel()
+                log.info(s"KnoraService - Startup State: {}", AppState.Running)
             }
             case value => throw UnsupportedValueException(s"The value: $value is not supported.")
         }
@@ -214,12 +230,22 @@ trait KnoraService {
       * Checks if repository is running and initialized
       */
     private def checkRepository(): Unit = {
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 2.seconds).asInstanceOf[CheckRepositoryResponse]
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
             applicationStateActor ! SetAppState(AppState.RepositoryReady)
+            log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)
+        } else if (storeManagerResult.repositoryStatus == RepositoryStatus.NotInitialized) {
+            log.info(s"KnoraService - checkRepository - status: {}: {}", storeManagerResult.repositoryStatus, storeManagerResult.msg)
+            log.info("Please create repository. Will exit now.")
+            stopService()
         } else {
             applicationStateActor ! SetAppState(AppState.WaitingForRepository)
-            log.info(s"${storeManagerResult.repositoryStatus}: ${storeManagerResult.msg}")
+            log.info(s"KnoraService - Startup State: {}", AppState.WaitingForRepository)
+
         }
     }
 
@@ -230,23 +256,34 @@ trait KnoraService {
         applicationStateActor ! SetAppState(AppState.CreatingCaches)
         CacheUtil.createCaches(settings.caches)
         applicationStateActor ! SetAppState(AppState.CachesReady)
+        log.info(s"KnoraService - Startup State: {}", AppState.CachesReady)
     }
 
     /**
       * Loads ontologies
       */
     private def loadOntologies(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
         // load ontologies and set OntologiesReady state
         applicationStateActor ! SetAppState(AppState.LoadingOntologies)
         val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
+
         Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
         applicationStateActor ! SetAppState(AppState.OntologiesReady)
+        log.info(s"KnoraService - Startup State: {}", AppState.OntologiesReady)
     }
 
     /**
       * Prints the welcome message
       */
     private def printWelcomeMsg(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
         println("")
         println("----------------------------------------------------------------")
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
@@ -264,6 +301,9 @@ trait KnoraService {
       * Prints the configuration if the print config flag is set.
       */
     private def printConfig(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
 
         val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
         if (printConfig) {
@@ -293,6 +333,9 @@ trait KnoraService {
       */
     private def startReporters(): Unit = {
 
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {
             Kamon.addReporter(new PrometheusReporter()) // metrics
@@ -309,5 +352,29 @@ trait KnoraService {
         }
     }
 
+    /**
+      * Checks if application state is 'Running' and only then returns.
+      */
+    private def waitForRunningState(): Unit = {
 
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        log.debug("KnoraService - waitForRunningState - waitForRunningState called")
+
+        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
+
+        log.debug("KnoraService - waitForRunningState - AppState requested")
+
+        state match {
+            case value if value == AppState.Running => {
+                log.debug("KnoraService - waitForRunningState - received AppState: {}", value)
+            }
+            case value =>
+                log.debug("KnoraService - waitForRunningState - received AppState: {}", value)
+                // wait a bit and then check again
+                Thread.sleep(500)
+                waitForRunningState()
+        }
+    }
 }

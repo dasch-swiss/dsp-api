@@ -20,6 +20,7 @@
 package org.knora.webapi.routing
 
 import akka.actor.{ActorRef, ActorSystem}
+import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
@@ -32,7 +33,7 @@ import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext}
 
 
 case class HealthCheckResult(name: String,
@@ -41,30 +42,20 @@ case class HealthCheckResult(name: String,
                              message: String)
 
 /**
-  * Provides the '/health' endpoint serving the health status.
+  * Provides health check logic
   */
-class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter, applicationStateActor: ActorRef) {
+trait HealthCheck {
+    this: HealthRoute =>
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit private val timeout: Timeout = Timeout(1.seconds)
 
-    implicit private val timeout: Timeout = Timeout(1.second)
+    protected def healthcheck(): HealthCheckResult = {
 
-    def knoraApiPath: Route = {
-        path("health") {
-            get {
-                requestContext => {
-                    requestContext.complete {
-                        createResponse(healthcheck)
-                    }
-                }
-            }
-        }
-    }
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
 
-    private def healthcheck: HealthCheckResult = {
+        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
-        val state: AppState = Await.result(applicationStateActor ? GetAppState, 1.seconds).asInstanceOf[AppState]
         state match {
             case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
             case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
@@ -78,11 +69,8 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
         }
     }
 
-    private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
+    protected def createResponse(result: HealthCheckResult): HttpResponse = {
 
-    private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
-
-    private def createResponse(result: HealthCheckResult): HttpResponse = {
         HttpResponse(
             status = statusCode(result.status),
             entity = HttpEntity(
@@ -96,6 +84,10 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
             )
         )
     }
+
+    private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
+
+    private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
     private def unhealthy(str: String) = {
         HealthCheckResult(
@@ -114,5 +106,30 @@ class HealthRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdap
             message = "Application is heathy"
         )
     }
+}
 
+/**
+  * Provides the '/health' endpoint serving the health status.
+  */
+class HealthRoute(_system: ActorSystem, settings: SettingsImpl, _log: LoggingAdapter, _applicationStateActor: ActorRef) extends HealthCheck{
+
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContext = system.dispatcher
+
+
+
+    val applicationStateActor: ActorRef = _applicationStateActor
+    val log = _log
+
+    def knoraApiPath: Route = {
+        path("health") {
+            get {
+                requestContext => {
+                    requestContext.complete {
+                        createResponse(healthcheck())
+                    }
+                }
+            }
+        }
+    }
 }

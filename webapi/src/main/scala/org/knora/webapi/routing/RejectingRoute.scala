@@ -26,7 +26,7 @@ import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import org.knora.webapi.{Settings, SettingsImpl}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContext
 
 /**
   * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
@@ -40,7 +40,7 @@ class RejectingRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
     def knoraApiPath(): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContext = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
 
         path(Remaining) { wholepath =>
@@ -55,19 +55,28 @@ class RejectingRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
                         }
                     }
 
-                    // get the current application state
-                    val appState: AppState = Await.result(applicationStateActor ? GetAppState, timeout.duration).asInstanceOf[AppState]
+                    val result = for {
+                        // get the current application state
+                        appState: AppState <- (applicationStateActor ? GetAppState).mapTo[AppState]
 
-                    // only if application state is 'Running' then go on and apply filter
-                    if (appState == AppState.Running) {
-                        if (reject.flatten.nonEmpty) {
-                            requestContext.complete(NotFound, "The requested path is deactivated.")
-                        } else {
-                            requestContext.reject()
+                        // only if application state is 'Running' then go on and apply filter
+                        result = if (appState == AppState.Running) {
+                            if (reject.flatten.nonEmpty) {
+                                // route not allowed. will complete request.
+                                val msg = s"Request to $wholepath not allowed as per configuration for routes to reject."
+                                log.info(msg)
+                                requestContext.complete(NotFound, "The requested path is deactivated.")
+                            } else {
+                                // route is allowed. by rejecting, I'm letting it through so that some other route can match
+                                requestContext.reject()
+                            }
+                        } else { // if any state other then 'Running', then return ServiceUnavailable
+                            val msg = s"Request to $wholepath rejected. Application not available at the moment (state = $appState). Please try again later."
+                            log.info(msg)
+                            requestContext.complete(ServiceUnavailable, msg)
                         }
-                    } else { // if any state other then 'Running', then return ServiceUnavailable
-                        requestContext.complete(ServiceUnavailable, s"Application not available at the moment (state = $appState). Please try again later.")
-                    }
+                    } yield result
+                    result.flatten
                 }
         }
     }

@@ -175,7 +175,6 @@ lazy val webApiLibs = Seq(
     library.gatlingHighcharts,
     library.gatlingTestFramework,
     library.gwtServlet,
-    library.healthchecksCore,
     library.jacksonScala,
     library.jsonldJava,
     library.jodd,

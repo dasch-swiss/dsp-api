@@ -24,15 +24,16 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
-import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.language.postfixOps
 import scala.languageFeature.postfixOps
+
 
 object E2ESpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -74,10 +75,8 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
-        checkActorSystem()
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
-
         startService()
     }
 
