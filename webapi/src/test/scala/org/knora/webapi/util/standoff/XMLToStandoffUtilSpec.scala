@@ -498,6 +498,35 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
 
         }
+
+        "convert an XML document containing elements with classes to a TextWithStandoff and check that information separator two has been inserted in the string" in {
+
+            val testXML =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |   <text>
+                  |      <text documentType="html">
+                  |                    <div class="paragraph">
+                  |                        This an element that has a class and it separates words.
+                  |                    </div>
+                  |                </text>
+                  |   </text>
+                  |
+                """.stripMargin
+
+
+            val standoffUtil = new XMLToStandoffUtil()
+
+            // after every <div class="paragraph">, information separator two should be inserted
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(testXML,
+                tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "div", maybeClassname = Some("paragraph"))),
+                log = log)
+
+            // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
+            assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 1)
+
+
+        }
+
     }
 }
 
