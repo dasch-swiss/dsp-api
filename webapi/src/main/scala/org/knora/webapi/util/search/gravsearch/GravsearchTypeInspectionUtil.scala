@@ -85,13 +85,14 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Simple.Color,
         OntologyConstants.KnoraApiV2Simple.File,
         OntologyConstants.KnoraApiV2WithValueObjects.Resource,
-        OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag,
         OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
         OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
         OntologyConstants.KnoraApiV2WithValueObjects.IntValue,
         OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
         OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListNode,
         OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
         OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
         OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
@@ -197,7 +198,8 @@ object GravsearchTypeInspectionUtil {
                     case Some(TypeAnnotationProperties.RdfType) =>
                         // The statement's predicate is rdf:type. Check whether its object is valid in a type
                         // annotation. If not, that's not an error, because the object could be specifying
-                        // a subclass of knora-api:Resource, in which case this isn't a type annotation.
+                        // a subclass of knora-api:Resource, knora-api:FileValue, etc., in which case this isn't a
+                        // type annotation.
                         isValidTypeInAnnotation(statementPattern.obj)
 
                     case Some(TypeAnnotationProperties.ObjectType) =>
