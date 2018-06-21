@@ -1,7 +1,7 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSystem
-import org.knora.webapi.{OntologyConstants, Settings}
+import org.knora.webapi.{ApiV2Simple, OntologyConstants, Settings}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
@@ -1041,8 +1041,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
                 QueryVariable("book"),
                 QueryVariable("title")
-            )
-        )
+            ),
+            querySchema = Some(ApiV2Simple)
+        ),
+        querySchema = Some(ApiV2Simple)
     )
 
     val booksWithTitleZeitgloeckleinResponse = ReadResourcesSequenceV2(
@@ -1104,7 +1106,9 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri, None),
                 QueryVariable("book"),
                 QueryVariable("title")
-            )
-        )
+            ),
+            querySchema = Some(ApiV2Simple)
+        ),
+        querySchema = Some(ApiV2Simple)
     )
 }

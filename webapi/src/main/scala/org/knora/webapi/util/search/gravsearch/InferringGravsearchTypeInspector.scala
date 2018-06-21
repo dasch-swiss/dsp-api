@@ -456,11 +456,11 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             }
 
                         case None =>
-                            // The variable hasn't been used as a predicate. Do we have one or more XSD literal types for it from a FILTER?
-                            usageIndex.xsdLiteralVariablesInFilters.get(variableToType) match {
-                                case Some(xsdLiteralTypes: Set[SmartIri]) =>
-                                    // Yes. If any of them are valid in type inspection results, return them.
-                                    xsdLiteralTypes.collect {
+                            // The variable hasn't been used as a predicate. Do we have one or more types for it from a FILTER?
+                            usageIndex.typedVariablesInFilters.get(variableToType) match {
+                                case Some(typesFromFilters: Set[SmartIri]) =>
+                                    // Yes. If any of them are valid in type inspection results, return them. // TODO: return them all?
+                                    typesFromFilters.collect {
                                         case xsdLiteralType if GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(xsdLiteralType.toString) =>
                                             val inferredType = NonPropertyTypeInfo(xsdLiteralType)
                                             log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
@@ -585,8 +585,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * @param objectIndex                     a map of all statement objects to the statements they occur in.
       * @param knoraPropertyVariablesInFilters a map of query variables to Knora property IRIs that they are compared to in
       *                                        FILTER expressions.
-      * @param xsdLiteralVariablesInFilters    a map of query variables to XSD literal types that they are compared to in
-      *                                        FILTER expressions.
+      * @param typedVariablesInFilters         a map of query variables to types found for them in FILTER expressions.
       */
     private case class UsageIndex(knoraClassIris: Set[SmartIri] = Set.empty[SmartIri],
                                   knoraPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -594,7 +593,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                   predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   objectIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   knoraPropertyVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
-                                  xsdLiteralVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
+                                  typedVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
                                   querySchema: ApiV2Schema)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
@@ -856,10 +855,30 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         case CompareExpression(queryVariable: QueryVariable, _, xsdLiteral: XsdLiteral) =>
                             // A variable is compared to an XSD literal. Index the variable and the literal's type.
                             val typeableVariable = TypeableVariable(queryVariable.variableName)
-                            val currentXsdTypes: Set[SmartIri] = acc.xsdLiteralVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
+                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
 
                             acc.copy(
-                                xsdLiteralVariablesInFilters = acc.xsdLiteralVariablesInFilters + (typeableVariable -> (currentXsdTypes + xsdLiteral.datatype))
+                                typedVariablesInFilters = acc.typedVariablesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
+                            )
+
+                        case CompareExpression(functionCall: FunctionCallExpression, _, _) =>
+                            // A variable is used in a function. Index the variable and the type of the function's argument.
+
+                            val typeableVariable = TypeableVariable(functionCall.getArgAsQueryVar(0).variableName)
+                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
+
+                            val variableType = functionCall.functionIri.iri.toString match {
+                                case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunctionIri =>
+                                    // The knora-api:toSimpleDate function takes a DateValue argument.
+                                    OntologyConstants.KnoraApiV2WithValueObjects.DateValue.toSmartIri
+
+                                case _ =>
+                                    // All other supported functions take string arguments.
+                                    OntologyConstants.Xsd.String.toSmartIri
+                            }
+
+                            acc.copy(
+                                typedVariablesInFilters = acc.typedVariablesInFilters + (typeableVariable -> (currentVarTypesFromFilters + variableType))
                             )
 
                         case _ =>
@@ -891,7 +910,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         val usageIndex: UsageIndex = QueryTraverser.visitWherePatterns(
             patterns = whereClause.patterns,
             whereVisitor = new UsageIndexCollectingWhereVisitor,
-            initialAcc = UsageIndex(querySchema = whereClause.querySchema.get)
+            initialAcc = UsageIndex(querySchema = whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")))
         )
 
         // Add the Knora property IRIs found in filters to the set of Knora property IRIs.

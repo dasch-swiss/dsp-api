@@ -882,31 +882,25 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 throw GravsearchException(s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema")
             }
 
-            // make a key to look up information about the lang functions argument (query var) in type inspection results
-            val queryVarTypeInfoKey: Option[TypeableEntity] = GravsearchTypeInspectionUtil.maybeTypeableEntity(langFunctionCall.textValueVar)
+            // make sure that the query variable represents a text value
+            typeInspection.getTypeOfEntity(langFunctionCall.textValueVar) match {
+                case Some(typeInfo) =>
+                    typeInfo match {
 
-            // get information about the queryVar's type
-            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
+                        case nonPropInfo: NonPropertyTypeInfo =>
 
-                // get type information for lang.textValueVar
-                val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
+                            nonPropInfo.typeIri.toString match {
 
-                typeInfo match {
+                                case OntologyConstants.Xsd.String => () // xsd:string is expected
 
-                    case nonPropInfo: NonPropertyTypeInfo =>
+                                case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type xsd:string")
+                            }
 
-                        nonPropInfo.typeIri.toString match {
+                        case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                    }
 
-                            case OntologyConstants.Xsd.String => () // xsd:string is expected
-
-                            case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type xsd:string")
-                        }
-
-                    case _ => throw GravsearchException(s"${langFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
-                }
-
-            } else {
-                throw GravsearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
+                case None =>
+                    throw GravsearchException(s"type information about ${langFunctionCall.textValueVar} is missing")
             }
 
             // comparison operator is expected to be '=' or '!='
@@ -950,32 +944,24 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // If the query uses only the simple schema, transform the function call.
 
                 // make sure that the query variable (first argument of regex function) represents a text value
+                typeInspection.getTypeOfEntity(regexFunctionCall.textValueVar) match {
+                    case Some(typeInfo) =>
+                        typeInfo match {
 
-                // make a key to look up information in type inspection results
-                val queryVarTypeInfoKey: Option[TypeableEntity] = GravsearchTypeInspectionUtil.maybeTypeableEntity(regexFunctionCall.textValueVar)
+                            case nonPropInfo: NonPropertyTypeInfo =>
 
-                // get information about the queryVar's type
-                if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
+                                nonPropInfo.typeIri.toString match {
 
-                    // get type information for regexFunction.textValueVar
-                    val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
+                                    case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
 
-                    typeInfo match {
+                                    case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
+                                }
 
-                        case nonPropInfo: NonPropertyTypeInfo =>
+                            case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                        }
 
-                            nonPropInfo.typeIri.toString match {
-
-                                case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
-
-                                case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
-                            }
-
-                        case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
-                    }
-
-                } else {
-                    throw GravsearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
+                    case None =>
+                        throw GravsearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
                 }
 
                 // create a variable representing the string literal
@@ -1762,7 +1748,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
                 typeInspectionResult = typeInspectionResult,
-                querySchema = inputQuery.querySchema.get
+                querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
 
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -2209,7 +2195,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
                 typeInspectionResult = typeInspectionResult,
-                querySchema = inputQuery.querySchema.get
+                querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
 
 

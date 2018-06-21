@@ -58,7 +58,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
             typeAnnotations: Seq[GravsearchTypeAnnotation] <- Future {
                 QueryTraverser.visitWherePatterns(
                     patterns = whereClause.patterns,
-                    whereVisitor = new AnnotationCollectingWhereVisitor(whereClause.querySchema.get),
+                    whereVisitor = new AnnotationCollectingWhereVisitor(whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))),
                     initialAcc = Vector.empty[GravsearchTypeAnnotation]
                 )
             }
