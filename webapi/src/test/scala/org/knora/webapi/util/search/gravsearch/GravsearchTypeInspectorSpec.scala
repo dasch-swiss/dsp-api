@@ -134,6 +134,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(result == TypeInferenceResult4)
         }
 
+        "infer the types in a query that requires 6 iterations" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == PathologicalTypeInferenceResult)
+        }
+
         "reject a query with a non-Knora property whose type cannot be inferred" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(QueryNonKnoraTypeWithoutAnnotation)
@@ -442,6 +450,99 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |  FILTER(?pubdate = "JULIAN:1497-03-01") .
           |}
         """.stripMargin
+
+    val PathologicalQuery: String =
+        """
+          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+          |
+          |CONSTRUCT {
+          |  ?linkObj knora-api:isMainResource true .
+          |
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/8d3d8f94ab06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/1749ad09ac06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/52431ecfab06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/dc4e3c44ac06> .
+          |
+          |  <http://rdfh.ch/8d3d8f94ab06> ?linkProp2 ?page1 .
+          |  <http://rdfh.ch/1749ad09ac06> ?linkProp2 ?page2 .
+          |  <http://rdfh.ch/52431ecfab06> ?linkProp2 ?page3 .
+          |  <http://rdfh.ch/dc4e3c44ac06> ?linkProp2 ?page4 .
+          |
+          |  ?page1 ?partOfProp ?book1 .
+          |  ?page2 ?partOfProp ?book2 .
+          |  ?page3 ?partOfProp ?book3 .
+          |  ?page4 ?partOfProp ?book4 .
+          |
+          |  ?book1 ?titleProp1 ?title1 .
+          |  ?book2 ?titleProp2 ?title2 .
+          |  ?book3 ?titleProp3 ?title3 .
+          |  ?book4 ?titleProp4 ?title4 .
+          |} WHERE {
+          |  BIND(<http://rdfh.ch/a154cb7eac06> AS ?linkObj)
+          |  ?linkObj knora-api:hasLinkTo <http://rdfh.ch/8d3d8f94ab06> .
+          |
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/8d3d8f94ab06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/1749ad09ac06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/52431ecfab06> .
+          |  ?linkObj ?linkProp1 <http://rdfh.ch/dc4e3c44ac06> .
+          |
+          |  <http://rdfh.ch/8d3d8f94ab06> knora-api:isRegionOf ?page1 .
+          |
+          |  <http://rdfh.ch/8d3d8f94ab06> ?linkProp2 ?page1 .
+          |  <http://rdfh.ch/1749ad09ac06> ?linkProp2 ?page2 .
+          |  <http://rdfh.ch/52431ecfab06> ?linkProp2 ?page3 .
+          |  <http://rdfh.ch/dc4e3c44ac06> ?linkProp2 ?page4 .
+          |
+          |  ?page1 incunabula:partOf ?book1 .
+          |
+          |  ?page1 ?partOfProp ?book1 .
+          |  ?page2 ?partOfProp ?book2 .
+          |  ?page3 ?partOfProp ?book3 .
+          |  ?page4 ?partOfProp ?book4 .
+          |
+          |  ?book1 ?titleProp1 ?title1 .
+          |  ?book1 ?titleProp2 ?title1 .
+          |  ?book2 ?titleProp2 ?title2 .
+          |  ?book2 ?titleProp3 ?title2 .
+          |  ?book3 ?titleProp3 ?title3 .
+          |  ?book3 ?titleProp4 ?title3 .
+          |  ?book4 ?titleProp4 ?title4 .
+          |
+          |  FILTER(?title4 = "[Das] Narrenschiff (lat.)" || ?title4 = "Stultifera navis (...)")
+          |}
+        """.stripMargin
+
+    val PathologicalTypeInferenceResult = GravsearchTypeInspectionResult(entities = Map(
+        TypeableVariable(variableName = "book4") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "titleProp1") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "page1") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "book1") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "titleProp2") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "page3") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/1749ad09ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkObj") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "title2") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/52431ecfab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "title3") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/dc4e3c44ac06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "page2") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "page4") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "titleProp4") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/8d3d8f94ab06".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "title1") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "titleProp3") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "linkProp2") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "partOfProp") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "title4") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
+        TypeableVariable(variableName = "book3") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "linkProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
+        TypeableVariable(variableName = "book2") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
+    ))
+
 
     val TypeInferenceResult1 = GravsearchTypeInspectionResult(entities = Map(
         TypeableVariable(variableName = "linkingProp1") -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),

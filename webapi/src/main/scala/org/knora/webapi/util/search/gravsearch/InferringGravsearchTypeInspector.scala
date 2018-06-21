@@ -561,13 +561,19 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
         }
     }
 
-    // The inference rule pipeline.
-    private val rulePipeline = new RdfTypeRule(
+    // The inference rule pipeline for the first iteration. Includes rules that cannot return additional
+    // information if they are run more than once.
+    private val firstIterationRulePipeline = new RdfTypeRule(
         Some(new PropertyIriObjectTypeRule(
-            Some(new TypeOfObjectFromPropertyRule(
-                Some(new TypeOfSubjectFromPropertyRule(
-                    Some(new PropertyTypeFromObjectRule(
-                        Some(new VarTypeFromFilterRule(None)))))))))))
+            Some(new TypeOfSubjectFromPropertyRule(
+                Some(new VarTypeFromFilterRule(
+                    Some(new TypeOfObjectFromPropertyRule(
+                        Some(new PropertyTypeFromObjectRule(None)))))))))))
+
+    // The inference rule pipeline for subsequent iterations. Excludes rules that cannot return additional
+    // if they are run more than once.
+    private val subsequentIterationRulePipeline = new TypeOfObjectFromPropertyRule(
+        Some(new PropertyTypeFromObjectRule(None)))
 
     /**
       * An index of entity usage in a Gravsearch query.
@@ -701,7 +707,13 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
         val iterationResult: IntermediateTypeInspectionResult = intermediateResult.entities.keySet.foldLeft(intermediateResult) {
             case (acc: IntermediateTypeInspectionResult, entityToType: TypeableEntity) =>
-                rulePipeline.infer(
+                val pipeline: InferenceRule = if (iterationNumber == 1) {
+                    firstIterationRulePipeline
+                } else {
+                    subsequentIterationRulePipeline
+                }
+
+                pipeline.infer(
                     entityToType = entityToType,
                     intermediateResult = acc,
                     entityInfo = entityInfo,
