@@ -147,7 +147,7 @@ object GravsearchParser {
             }
 
             ConstructQuery(
-                constructClause = ConstructClause(statements = constructStatements),
+                constructClause = ConstructClause(statements = constructStatements, querySchema = Some(querySchema)),
                 whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet, querySchema = Some(querySchema)),
                 orderBy = orderBy,
                 offset = offset,

@@ -1019,9 +1019,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     // Dear Ben: I am aware of the fact that this code is not formatted properly and I know that this deeply disturbs you. But please leave it like this since otherwise I cannot possibly read and understand this query.
     val constructQueryForBooksWithTitleZeitgloecklein = ConstructQuery(
         constructClause = ConstructClause(
-            Vector(
+            statements = Vector(
                 StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),
-                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None))
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None)),
+            querySchema = Some(ApiV2Simple)
         ),
         whereClause = WhereClause(
             patterns = Vector(
@@ -1084,9 +1085,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     // Dear Ben: please see my comment above
     val constructQueryForBooksWithoutTitleZeitgloecklein = ConstructQuery(
         constructClause = ConstructClause(
-            Vector(
+            statements = Vector(
                 StatementPattern(QueryVariable("book"), IriRef("http://api.knora.org/ontology/knora-api/simple/v2#isMainResource".toSmartIri, None), XsdLiteral("true", "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri), None),
-                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None))
+                StatementPattern(QueryVariable("book"), IriRef("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri, None), QueryVariable("title"), None)),
+            querySchema = Some(ApiV2Simple)
         ),
         whereClause = WhereClause(
             patterns = Vector(

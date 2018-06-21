@@ -455,16 +455,20 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
 /**
   * Represents a CONSTRUCT clause in a query.
   *
-  * @param statements the statements in the CONSTRUCT clause.
+  * @param statements  the statements in the CONSTRUCT clause.
+  * @param querySchema if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
-case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGenerator {
+case class ConstructClause(statements: Seq[StatementPattern], querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     def toSparql: String = "CONSTRUCT {\n" + statements.map(_.toSparql).mkString + "} "
 }
 
 /**
   * Represents a WHERE clause in a query.
   *
-  * @param patterns the patterns in the WHERE clause.
+  * @param patterns         the patterns in the WHERE clause.
+  * @param positiveEntities if this is a Gravsearch query, contains the entities that are used in positive contexts
+  *                         in the WHERE clause, i.e. not in MINUS or FILTER NOT EXISTS.
+  * @param querySchema      if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
 case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity], querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
@@ -490,6 +494,8 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param constructClause the CONSTRUCT clause.
   * @param whereClause     the WHERE clause.
   * @param orderBy         the variables that the results should be ordered by.
+  * @param offset          if this is a Gravsearch query, represents the OFFSET specified in the query.
+  * @param querySchema     if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     def toSparql: String = {

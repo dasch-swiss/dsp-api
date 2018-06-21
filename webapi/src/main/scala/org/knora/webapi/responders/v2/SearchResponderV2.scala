@@ -346,7 +346,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 )
 
                 // linking property: just include the original statement relating the subject to the target of the link
-                statementPatternToInternalSchema(statementPattern) +: linkValueStatements
+                statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
 
             } else {
                 // value property
@@ -372,10 +372,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
                     val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                    Seq(statementPatternToInternalSchema(statementPattern), valueObjectIsNotDeleted)
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
                 } else {
                     // The variable doesn't refer to a value object. Just convert it to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern))
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
                 }
             }
         }
@@ -388,7 +388,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // check if there exists type information for the given statement's subject
             val additionalStatementsForSubj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
                 entity = statementPattern.subj,
-                typeInspection = typeInspectionResult,
+                typeInspectionResult = typeInspectionResult,
                 processedTypeInfo = processedTypeInformationKeysWhereClause,
                 conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
             )
@@ -396,7 +396,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // check if there exists type information for the given statement's object
             val additionalStatementsForObj: Seq[QueryPattern] = checkForNonPropertyTypeInfoForEntity(
                 entity = statementPattern.obj,
-                typeInspection = typeInspectionResult,
+                typeInspectionResult = typeInspectionResult,
                 processedTypeInfo = processedTypeInformationKeysWhereClause,
                 conversionFuncForNonPropertyType = createAdditionalStatementsForNonPropertyType
             )
@@ -404,7 +404,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // Add additional statements based on the whole input statement, e.g. to deal with the value object or the link value, and transform the original statement.
             val additionalStatementsForWholeStatement: Seq[QueryPattern] = checkForPropertyTypeInfoForStatement(
                 statementPattern = statementPattern,
-                typeInspection = typeInspectionResult,
+                typeInspectionResult = typeInspectionResult,
                 conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
             )
 
@@ -417,13 +417,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * for a non property type (e.g., a resource).
           *
           * @param entity                           the entity to be taken into consideration (a statement's subject or object).
-          * @param typeInspection                   type information.
+          * @param typeInspectionResult             type information.
           * @param processedTypeInfo                the keys of type information that have already been looked at.
           * @param conversionFuncForNonPropertyType the function to use to create additional statements.
           * @return a sequence of [[QueryPattern]] representing the additional statements.
           */
-        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspection: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
-            val typesNotYetProcessed = typeInspection.copy(entities = typeInspection.entities -- processedTypeInfo)
+        protected def checkForNonPropertyTypeInfoForEntity(entity: Entity, typeInspectionResult: GravsearchTypeInspectionResult, processedTypeInfo: mutable.Set[TypeableEntity], conversionFuncForNonPropertyType: (NonPropertyTypeInfo, Entity) => Seq[QueryPattern]): Seq[QueryPattern] = {
+            val typesNotYetProcessed = typeInspectionResult.copy(entities = typeInspectionResult.entities -- processedTypeInfo)
 
             typesNotYetProcessed.getTypeOfEntity(entity) match {
                 case Some(nonPropInfo: NonPropertyTypeInfo) =>
@@ -441,12 +441,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Converts the given statement based on the given type information using `conversionFuncForPropertyType`.
           *
           * @param statementPattern              the statement to be converted.
-          * @param typeInspection                type information.
+          * @param typeInspectionResult          type information.
           * @param conversionFuncForPropertyType the function to use for the conversion.
           * @return a sequence of [[QueryPattern]] representing the converted statement.
           */
-        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspection: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
-            typeInspection.getTypeOfEntity(statementPattern.pred) match {
+        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
+            typeInspectionResult.getTypeOfEntity(statementPattern.pred) match {
                 case Some(propInfo: PropertyTypeInfo) =>
                     // process type information for the predicate into additional statements
                     conversionFuncForPropertyType(propInfo, statementPattern)
@@ -455,7 +455,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case None =>
                     // no type information given and thus no further processing needed, just return the originally given statement (e.g., rdf:type), converted to the internal schema.
-                    Seq(statementPatternToInternalSchema(statementPattern))
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
             }
         }
 
@@ -479,52 +479,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue -> OntologyConstants.KnoraBase.ValueHasGeonameCode
         )
 
-        // A set of knora-api complex value predicates that aren't allowed in Gravsearch. // TODO: complete this.
-        protected val forbiddenApiV2ComplexPreds: Set[IRI] = Set(
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
-            OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
-            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
-            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
-            OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
-            OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
-            OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel
-        )
-
         /**
-          * Converts a statement pattern to the internal schema, checking that the correct schema is used
-          * and that the predicate is allowed in Gravsearch.
+          * Calls [[checkSchemaAndPredicateInStatement]], then converts the specified statement pattern to the internal schema.
           *
-          * @param statementPattern the statement pattern to be converted.
+          * @param statementPattern     the statement pattern to be converted.
+          * @param typeInspectionResult the type inspection result.
           * @return the converted statement pattern.
           */
-        protected def statementPatternToInternalSchema(statementPattern: StatementPattern): StatementPattern = {
-
-            // Check that all the entities in the statement that have a schema are in the query schema.
-            Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj).foreach {
-                case IriRef(iri, _) => iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: $iri"))
-                case _ => ()
-            }
-
-            // Check that the predicate is allowed in a Gravsearch query.
-            statementPattern.pred match {
-                case iriRef: IriRef =>
-                    val predIriStr = iriRef.iri.toString
-
-                    if (forbiddenApiV2ComplexPreds.contains(predIriStr)) {
-                        throw GravsearchException(s"Predicate $predIriStr cannot be used in a Gravsearch query")
-                    }
-
-                case _ => ()
-            }
+        protected def statementPatternToInternalSchema(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): StatementPattern = {
+            checkSchemaAndPredicateInStatement(
+                statementPattern = statementPattern,
+                querySchema = querySchema,
+                typeInspectionResult = typeInspectionResult
+            )
 
             statementPattern.toOntologySchema(InternalSchema)
         }
@@ -561,6 +528,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return a [[TransformedFilterPattern]].
           */
         private def handlePropertyIriQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, iriRef: IriRef, propInfo: PropertyTypeInfo): TransformedFilterPattern = {
+
+            iriRef.iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: ${iriRef.toSparql}"))
 
             val internalIriRef = iriRef.toOntologySchema(InternalSchema)
 
@@ -756,14 +725,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles a [[FilterPattern]] containing a query variable.
           *
-          * @param queryVar          the query variable.
-          * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection    the type inspection results.
+          * @param queryVar             the query variable.
+          * @param compareExpression    the filter pattern's compare expression.
+          * @param typeInspectionResult the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
+        private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
-            typeInspection.getTypeOfEntity(queryVar) match {
+            typeInspectionResult.getTypeOfEntity(queryVar) match {
                 case Some(typeInfo) =>
                     // check if queryVar represents a property or a value
                     typeInfo match {
@@ -871,19 +840,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * Handles the use of the SPARQL lang function in a [[FilterPattern]].
           *
-          * @param langFunctionCall  the lang function call to be handled.
-          * @param compareExpression the filter pattern's compare expression.
-          * @param typeInspection    the type inspection results.
+          * @param langFunctionCall     the lang function call to be handled.
+          * @param compareExpression    the filter pattern's compare expression.
+          * @param typeInspectionResult the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
+        private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             if (querySchema == ApiV2WithValueObjects) {
                 throw GravsearchException(s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema")
             }
 
             // make sure that the query variable represents a text value
-            typeInspection.getTypeOfEntity(langFunctionCall.textValueVar) match {
+            typeInspectionResult.getTypeOfEntity(langFunctionCall.textValueVar) match {
                 case Some(typeInfo) =>
                     typeInfo match {
 
@@ -931,11 +900,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Handles the use of the SPARQL regex function in a [[FilterPattern]].
           *
-          * @param regexFunctionCall the regex function call to be handled.
-          * @param typeInspection    the type inspection results.
+          * @param regexFunctionCall    the regex function call to be handled.
+          * @param typeInspectionResult the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
+        private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspectionResult: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // If the query uses the API v2 complex schema, leave the function call as it is.
             if (querySchema == ApiV2WithValueObjects) {
@@ -944,7 +913,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // If the query uses only the simple schema, transform the function call.
 
                 // make sure that the query variable (first argument of regex function) represents a text value
-                typeInspection.getTypeOfEntity(regexFunctionCall.textValueVar) match {
+                typeInspectionResult.getTypeOfEntity(regexFunctionCall.textValueVar) match {
                     case Some(typeInfo) =>
                         typeInfo match {
 
@@ -987,10 +956,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Handles a Gravsearch specific function call in a [[FilterPattern]].
           *
           * @param functionCallExpression the function call to be handled.
-          * @param typeInspection         the type inspection results.
+          * @param typeInspectionResult   the type inspection results.
           * @return a [[TransformedFilterPattern]].
           */
-        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        private def handleKnoraFunctionCall(functionCallExpression: FunctionCallExpression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
             val functionIri: SmartIri = functionCallExpression.functionIri.iri
 
             functionIri.toString match {
@@ -1014,7 +983,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // a QueryVariable expected to represent a text value
                     val textValueVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
 
-                    typeInspection.getTypeOfEntity(textValueVar) match {
+                    typeInspectionResult.getTypeOfEntity(textValueVar) match {
                         case Some(nonPropInfo: NonPropertyTypeInfo) =>
 
                             nonPropInfo.typeIri.toString match {
@@ -1086,11 +1055,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Transforms a Filter expression provided in the input query (knora-api simple) into a knora-base compliant Filter expression.
           *
-          * @param filterExpression the Filter expression to be transformed.
-          * @param typeInspection   the results of type inspection.
+          * @param filterExpression     the Filter expression to be transformed.
+          * @param typeInspectionResult the results of type inspection.
           * @return a [[TransformedFilterPattern]].
           */
-        protected def transformFilterPattern(filterExpression: Expression, typeInspection: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
+        protected def transformFilterPattern(filterExpression: Expression, typeInspectionResult: GravsearchTypeInspectionResult, isTopLevel: Boolean): TransformedFilterPattern = {
 
             filterExpression match {
 
@@ -1101,7 +1070,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case queryVar: QueryVariable =>
 
-                            handleQueryVar(queryVar = queryVar, compareExpression = filterCompare, typeInspection = typeInspection)
+                            handleQueryVar(queryVar = queryVar, compareExpression = filterCompare, typeInspectionResult = typeInspectionResult)
 
                         case functionCallExpr: FunctionCallExpression if functionCallExpr.functionIri.iri.toString == OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunctionIri =>
 
@@ -1114,7 +1083,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             // A QueryVariable expected to represent a date value.
                             val dateValueVar: QueryVariable = functionCallExpr.getArgAsQueryVar(pos = 0)
 
-                            typeInspection.getTypeOfEntity(dateValueVar) match {
+                            typeInspectionResult.getTypeOfEntity(dateValueVar) match {
                                 case Some(nonPropInfo: NonPropertyTypeInfo) =>
                                     if (nonPropInfo.typeIri.toString != OntologyConstants.KnoraApiV2WithValueObjects.DateValue) {
                                         throw GravsearchException(s"$dateValueVar is expected to be of type ${OntologyConstants.KnoraApiV2WithValueObjects.DateValue}")
@@ -1127,7 +1096,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case lang: LangFunction =>
 
-                            handleLangFunctionCall(langFunctionCall = lang, compareExpression = filterCompare, typeInspection = typeInspection)
+                            handleLangFunctionCall(langFunctionCall = lang, compareExpression = filterCompare, typeInspectionResult = typeInspectionResult)
 
                         case other => throw GravsearchException(s"Invalid left argument of comparison: $other")
                     }
@@ -1135,8 +1104,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case filterOr: OrExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterOr.leftArg, typeInspection, isTopLevel = false)
-                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterOr.rightArg, typeInspection, isTopLevel = false)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterOr.leftArg, typeInspectionResult, isTopLevel = false)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterOr.rightArg, typeInspectionResult, isTopLevel = false)
 
                     // recreate Or expression and include additional statements
                     TransformedFilterPattern(
@@ -1147,8 +1116,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case filterAnd: AndExpression =>
                     // recursively call this method for both arguments
-                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterAnd.leftArg, typeInspection, isTopLevel = false)
-                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterAnd.rightArg, typeInspection, isTopLevel = false)
+                    val filterExpressionLeft: TransformedFilterPattern = transformFilterPattern(filterAnd.leftArg, typeInspectionResult, isTopLevel = false)
+                    val filterExpressionRight: TransformedFilterPattern = transformFilterPattern(filterAnd.rightArg, typeInspectionResult, isTopLevel = false)
 
                     // recreate And expression and include additional statements
                     TransformedFilterPattern(
@@ -1158,7 +1127,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case regexFunction: RegexFunction =>
 
-                    handleRegexFunctionCall(regexFunctionCall = regexFunction, typeInspection = typeInspectionResult)
+                    handleRegexFunctionCall(regexFunctionCall = regexFunction, typeInspectionResult = typeInspectionResult)
 
                 case functionCall: FunctionCallExpression =>
 
@@ -1696,7 +1665,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
-                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult, isTopLevel = true)
+                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
                     case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
@@ -1743,6 +1712,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
+
+            // Validate schemas and predicates in the CONSTRUCT clause.
+            _ = checkSchemaAndPredicatesInConstructClause(
+                constructClause = inputQuery.constructClause,
+                typeInspectionResult = typeInspectionResult
+            )
 
             // Create a Select prequery
 
@@ -1847,7 +1822,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
               */
             override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = {
 
-                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspection = typeInspectionResult, isTopLevel = true)
+                val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
                     case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
@@ -1995,11 +1970,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param constructClause      the Construct clause to be looked at.
           * @param resource             the [[Entity]] representing the resource whose properties are to be collected
-          * @param typeInspection       results of type inspection.
+          * @param typeInspectionResult results of type inspection.
           * @param variableConcatSuffix the suffix appended to variable names in prequery results.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspection: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspectionResult: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
 
             // make sure resource is a query variable or an IRI
             resource match {
@@ -2029,9 +2004,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // if the given key exists in the type annotations map, add it to the collection
-                    if (typeInspection.entities.contains(typeableEntity)) {
+                    if (typeInspectionResult.entities.contains(typeableEntity)) {
 
-                        val propTypeInfo: PropertyTypeInfo = typeInspection.entities(typeableEntity) match {
+                        val propTypeInfo: PropertyTypeInfo = typeInspectionResult.entities(typeableEntity) match {
                             case propType: PropertyTypeInfo => propType
 
                             case _: NonPropertyTypeInfo =>
@@ -2191,6 +2166,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(inputQuery.whereClause, requestingUser)
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
+            // Validate schemas and predicates in the CONSTRUCT clause.
+            _ = checkSchemaAndPredicatesInConstructClause(
+                constructClause = inputQuery.constructClause,
+                typeInspectionResult = typeInspectionResult
+            )
+
             // Create a Select prequery
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
@@ -2238,7 +2219,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            queryResultsSeparatedWithFullQueryPath <- if (mainResourceIris.nonEmpty) {
+            queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // variables representing dependent resources
@@ -2630,4 +2611,80 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
 
     }
+
+
+    /**
+      * Checks that the correct schema is used in a statement pattern and that the predicate is allowed in Gravsearch.
+      *
+      * @param statementPattern     the statement pattern to be checked.
+      * @param querySchema          the API v2 ontology schema used in the query.
+      * @param typeInspectionResult the type inspection result.
+      */
+    protected def checkSchemaAndPredicateInStatement(statementPattern: StatementPattern, querySchema: ApiV2Schema, typeInspectionResult: GravsearchTypeInspectionResult): Unit = {
+        // Check that all the entities in the statement are in the query schema.
+        for (entity <- Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)) {
+            entity match {
+                case IriRef(iri, _) => iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: $iri"))
+                case _ => ()
+            }
+
+            typeInspectionResult.getTypeOfEntity(entity).map {
+                typeInfo: GravsearchEntityTypeInfo =>
+                    val entityTypeIri: SmartIri = typeInfo match {
+                        case propertyTypeInfo: PropertyTypeInfo => propertyTypeInfo.objectTypeIri
+                        case nonPropertyTypeInfo: NonPropertyTypeInfo => nonPropertyTypeInfo.typeIri
+                    }
+
+                    entityTypeIri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for ${entity.toSparql}: $typeInfo"))
+            }
+        }
+
+        // Check that the predicate is allowed in a Gravsearch query.
+        statementPattern.pred match {
+            case iriRef: IriRef =>
+                val predIriStr = iriRef.iri.toString
+
+                if (forbiddenApiV2ComplexPreds.contains(predIriStr)) {
+                    throw GravsearchException(s"Predicate $predIriStr cannot be used in a Gravsearch query")
+                }
+
+            case _ => ()
+        }
+    }
+
+    /**
+      * Checks that the correct schema is used in a CONSTRUCT clause that all the predicates used are allowed in Gravsearch.
+      *
+      * @param constructClause      the CONSTRUCT clause to be checked.
+      * @param typeInspectionResult the type inspection result.
+      */
+    protected def checkSchemaAndPredicatesInConstructClause(constructClause: ConstructClause, typeInspectionResult: GravsearchTypeInspectionResult): Unit = {
+        for (statementPattern <- constructClause.statements) {
+            checkSchemaAndPredicateInStatement(
+                statementPattern = statementPattern,
+                querySchema = constructClause.querySchema.getOrElse(throw AssertionException(s"ConstructClause has no QuerySchema")),
+                typeInspectionResult = typeInspectionResult
+            )
+        }
+    }
+
+    // A set of knora-api complex value predicates that aren't allowed in Gravsearch. // TODO: complete this.
+    private val forbiddenApiV2ComplexPreds: Set[IRI] = Set(
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar,
+        OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml,
+        OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNodeLabel
+    )
 }
