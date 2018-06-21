@@ -152,7 +152,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     /**
       * An abstract base class providing shared methods for [[WhereTransformer]] instances.
       */
-    abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult, queryUsesApiV2ComplexSchema: Boolean) extends WhereTransformer {
+    abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
 
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
@@ -193,15 +193,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         val valueVariablesCreatedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
 
         /**
-          * Convert an [[Entity]] to a [[TypeableEntity]] (key of type inspection results).
-          * The entity is expected to be a variable or an IRI, otherwise `None` is returned.
-          *
-          * @param entity the entity to be converted to a [[TypeableEntity]].
-          * @return an Option of a [[TypeableEntity]].
-          */
-        protected def toTypeableEntityKey(entity: Entity): Option[TypeableEntity] = GravsearchTypeInspectionUtil.maybeTypeableEntity(entity)
-
-        /**
           * Create a unique variable from a whole statement.
           *
           * @param baseStatement the statement to be used to create the variable base name.
@@ -225,10 +216,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     val iriStr = iri.toString
 
                     if (iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.IsMainResource) {
-                        if (queryUsesApiV2ComplexSchema && iriStr == OntologyConstants.KnoraApiV2Simple.IsMainResource) {
-                            throw GravsearchException(s"${OntologyConstants.KnoraApiV2Simple.IsMainResource} cannot be used in a Gravsearch query that uses that complex schema. Use ${OntologyConstants.KnoraApiV2WithValueObjects.IsMainResource} instead.")
-                        }
-
                         statementPattern.obj match {
                             case XsdLiteral(value, SmartIri(OntologyConstants.Xsd.Boolean)) if value.toBoolean =>
                                 statementPattern.subj match {
@@ -377,7 +364,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // simple schema. If the query uses the complex schema, check whether the property's object type is
                 // a Knora API v2 value class.
 
-                val objectVarIsValueObject = !queryUsesApiV2ComplexSchema || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
+                val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
 
                 if (objectVarIsValueObject) {
                     // The variable refers to a value object. Add it to the collection representing value objects.
@@ -513,14 +500,21 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         )
 
         /**
-          * Converts a statement pattern to the internal schema, replacing Knora API v2 complex schema predicates
-          * with the corresponding internal ones, and throwing an exception if a predicate is used that isn't
-          * allowed in Gravsearch.
+          * Converts a statement pattern to the internal schema, checking that the correct schema is used
+          * and that the predicate is allowed in Gravsearch.
           *
           * @param statementPattern the statement pattern to be converted.
           * @return the converted statement pattern.
           */
         protected def statementPatternToInternalSchema(statementPattern: StatementPattern): StatementPattern = {
+
+            // Check that all the entities in the statement that have a schema are in the query schema.
+            Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj).foreach {
+                case IriRef(iri, _) => iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema for IRI: $iri"))
+                case _ => ()
+            }
+
+            // Check that the predicate is allowed in a Gravsearch query.
             statementPattern.pred match {
                 case iriRef: IriRef =>
                     val predIriStr = iriRef.iri.toString
@@ -607,7 +601,6 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param xsdType                  valid xsd types of the literal.
           * @param valueHasProperty         the property of the value object pointing to the literal (in the internal schema).
           * @param validComparisonOperators a set of valid comparison operators, if to be restricted.
-          *
           * @return a [[TransformedFilterPattern]].
           */
         private def handleLiteralQueryVar(queryVar: QueryVariable, comparisonOperator: CompareExpressionOperator.Value, literalValueExpression: Expression, xsdType: Set[IRI], valueHasProperty: IRI, validComparisonOperators: Set[CompareExpressionOperator.Value] = Set.empty[CompareExpressionOperator.Value]): TransformedFilterPattern = {
@@ -770,114 +763,107 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         private def handleQueryVar(queryVar: QueryVariable, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
-            // make a key to look up information in type inspection results
-            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(queryVar)
+            typeInspection.getTypeOfEntity(queryVar) match {
+                case Some(typeInfo) =>
+                    // check if queryVar represents a property or a value
+                    typeInfo match {
 
-            // get information about the queryVar's type
-            if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
+                        case propInfo: PropertyTypeInfo =>
 
-                // get type information for queryVar
-                val typeInfo: GravsearchEntityTypeInfo = typeInspection.entities(queryVarTypeInfoKey.get)
+                            // left arg queryVar is a variable representing a property
+                            // therefore the right argument must be an IRI restricting the property variable to a certain property
+                            compareExpression.rightArg match {
+                                case iriRef: IriRef =>
 
-                // check if queryVar represents a property or a value
-                typeInfo match {
-
-                    case propInfo: PropertyTypeInfo =>
-
-                        // left arg queryVar is a variable representing a property
-                        // therefore the right argument must be an IRI restricting the property variable to a certain property
-                        compareExpression.rightArg match {
-                            case iriRef: IriRef =>
-
-                                handlePropertyIriQueryVar(
-                                    queryVar = queryVar,
-                                    comparisonOperator = compareExpression.operator,
-                                    iriRef = iriRef,
-                                    propInfo = propInfo
-                                )
-
-                            case other => throw GravsearchException(s"right argument of CompareExpression is expected to be an IRI representing a property, but $other is given")
-                        }
-
-                    case nonPropInfo: NonPropertyTypeInfo =>
-
-                        // Is the query using the API v2 complex schema?
-                        if (!queryUsesApiV2ComplexSchema) {
-                            // No, just the simple schema.
-                            // depending on the value type, transform the given Filter pattern.
-                            // add an extra level by getting the value literal from the value object.
-                            // If queryVar refers to a value object as a literal, for the value literal an extra variable has to be created, taking its type into account.
-                            nonPropInfo.typeIri.toString match {
-
-                                case OntologyConstants.Xsd.Integer =>
-
-                                    handleLiteralQueryVar(
+                                    handlePropertyIriQueryVar(
                                         queryVar = queryVar,
                                         comparisonOperator = compareExpression.operator,
-                                        literalValueExpression = compareExpression.rightArg,
-                                        xsdType = Set(OntologyConstants.Xsd.Integer),
-                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger
+                                        iriRef = iriRef,
+                                        propInfo = propInfo
                                     )
 
-                                case OntologyConstants.Xsd.Decimal =>
-
-                                    handleLiteralQueryVar(
-                                        queryVar = queryVar,
-                                        comparisonOperator = compareExpression.operator,
-                                        literalValueExpression = compareExpression.rightArg,
-                                        xsdType = Set(OntologyConstants.Xsd.Decimal, OntologyConstants.Xsd.Integer), // an integer literal is also valid
-                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
-                                    )
-
-                                case OntologyConstants.Xsd.Boolean =>
-
-                                    handleLiteralQueryVar(
-                                        queryVar = queryVar,
-                                        comparisonOperator = compareExpression.operator,
-                                        literalValueExpression = compareExpression.rightArg,
-                                        xsdType = Set(OntologyConstants.Xsd.Boolean),
-                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasBoolean,
-                                        validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                    )
-
-                                case OntologyConstants.Xsd.String =>
-
-                                    handleLiteralQueryVar(
-                                        queryVar = queryVar,
-                                        comparisonOperator = compareExpression.operator,
-                                        literalValueExpression = compareExpression.rightArg,
-                                        xsdType = Set(OntologyConstants.Xsd.String),
-                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasString,
-                                        validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                    )
-
-                                case OntologyConstants.Xsd.Uri =>
-
-                                    handleLiteralQueryVar(
-                                        queryVar = queryVar,
-                                        comparisonOperator = compareExpression.operator,
-                                        literalValueExpression = compareExpression.rightArg,
-                                        xsdType = Set(OntologyConstants.Xsd.Uri),
-                                        valueHasProperty = OntologyConstants.KnoraBase.ValueHasUri,
-                                        validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
-                                    )
-
-                                case OntologyConstants.KnoraApiV2Simple.Date =>
-
-                                    handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
-
-                                case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
-
+                                case other => throw GravsearchException(s"right argument of CompareExpression is expected to be an IRI representing a property, but $other is given")
                             }
 
-                        } else {
-                            TransformedFilterPattern(Some(compareExpression))
-                        }
+                        case nonPropInfo: NonPropertyTypeInfo =>
 
-                 }
+                            // Is the query using the API v2 simple schema?
+                            if (querySchema == ApiV2Simple) {
+                                // Yes. Depending on the value type, transform the given Filter pattern.
+                                // Add an extra level by getting the value literal from the value object.
+                                // If queryVar refers to a value object as a literal, for the value literal an extra variable has to be created, taking its type into account.
+                                nonPropInfo.typeIri.toString match {
 
-            } else {
-                throw GravsearchException(s"type information about $queryVar is missing")
+                                    case OntologyConstants.Xsd.Integer =>
+
+                                        handleLiteralQueryVar(
+                                            queryVar = queryVar,
+                                            comparisonOperator = compareExpression.operator,
+                                            literalValueExpression = compareExpression.rightArg,
+                                            xsdType = Set(OntologyConstants.Xsd.Integer),
+                                            valueHasProperty = OntologyConstants.KnoraBase.ValueHasInteger
+                                        )
+
+                                    case OntologyConstants.Xsd.Decimal =>
+
+                                        handleLiteralQueryVar(
+                                            queryVar = queryVar,
+                                            comparisonOperator = compareExpression.operator,
+                                            literalValueExpression = compareExpression.rightArg,
+                                            xsdType = Set(OntologyConstants.Xsd.Decimal, OntologyConstants.Xsd.Integer), // an integer literal is also valid
+                                            valueHasProperty = OntologyConstants.KnoraBase.ValueHasDecimal
+                                        )
+
+                                    case OntologyConstants.Xsd.Boolean =>
+
+                                        handleLiteralQueryVar(
+                                            queryVar = queryVar,
+                                            comparisonOperator = compareExpression.operator,
+                                            literalValueExpression = compareExpression.rightArg,
+                                            xsdType = Set(OntologyConstants.Xsd.Boolean),
+                                            valueHasProperty = OntologyConstants.KnoraBase.ValueHasBoolean,
+                                            validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                        )
+
+                                    case OntologyConstants.Xsd.String =>
+
+                                        handleLiteralQueryVar(
+                                            queryVar = queryVar,
+                                            comparisonOperator = compareExpression.operator,
+                                            literalValueExpression = compareExpression.rightArg,
+                                            xsdType = Set(OntologyConstants.Xsd.String),
+                                            valueHasProperty = OntologyConstants.KnoraBase.ValueHasString,
+                                            validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                        )
+
+                                    case OntologyConstants.Xsd.Uri =>
+
+                                        handleLiteralQueryVar(
+                                            queryVar = queryVar,
+                                            comparisonOperator = compareExpression.operator,
+                                            literalValueExpression = compareExpression.rightArg,
+                                            xsdType = Set(OntologyConstants.Xsd.Uri),
+                                            valueHasProperty = OntologyConstants.KnoraBase.ValueHasUri,
+                                            validComparisonOperators = Set(CompareExpressionOperator.EQUALS, CompareExpressionOperator.NOT_EQUALS)
+                                        )
+
+                                    case OntologyConstants.KnoraApiV2Simple.Date =>
+
+                                        handleDateQueryVar(queryVar = queryVar, comparisonOperator = compareExpression.operator, dateValueExpression = compareExpression.rightArg)
+
+                                    case other => throw NotImplementedException(s"Value type $other not supported in FilterExpression")
+
+                                }
+
+                            } else {
+                                // The query is using the complex schema. Keep the expression as it is.
+                                TransformedFilterPattern(Some(compareExpression))
+                            }
+
+                    }
+
+                case None =>
+                    throw GravsearchException(s"type information about $queryVar is missing")
             }
         }
 
@@ -892,12 +878,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         private def handleLangFunctionCall(langFunctionCall: LangFunction, compareExpression: CompareExpression, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
-            if (queryUsesApiV2ComplexSchema) {
+            if (querySchema == ApiV2WithValueObjects) {
                 throw GravsearchException(s"The lang function is not allowed in a Gravsearch query that uses the API v2 complex schema")
             }
 
             // make a key to look up information about the lang functions argument (query var) in type inspection results
-            val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(langFunctionCall.textValueVar)
+            val queryVarTypeInfoKey: Option[TypeableEntity] = GravsearchTypeInspectionUtil.maybeTypeableEntity(langFunctionCall.textValueVar)
 
             // get information about the queryVar's type
             if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
@@ -958,7 +944,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         private def handleRegexFunctionCall(regexFunctionCall: RegexFunction, typeInspection: GravsearchTypeInspectionResult): TransformedFilterPattern = {
 
             // If the query uses the API v2 complex schema, leave the function call as it is.
-            if (queryUsesApiV2ComplexSchema) {
+            if (querySchema == ApiV2WithValueObjects) {
                 TransformedFilterPattern(Some(regexFunctionCall))
             } else {
                 // If the query uses only the simple schema, transform the function call.
@@ -966,7 +952,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // make sure that the query variable (first argument of regex function) represents a text value
 
                 // make a key to look up information in type inspection results
-                val queryVarTypeInfoKey: Option[TypeableEntity] = toTypeableEntityKey(regexFunctionCall.textValueVar)
+                val queryVarTypeInfoKey: Option[TypeableEntity] = GravsearchTypeInspectionUtil.maybeTypeableEntity(regexFunctionCall.textValueVar)
 
                 // get information about the queryVar's type
                 if (queryVarTypeInfoKey.nonEmpty && (typeInspection.entities contains queryVarTypeInfoKey.get)) {
@@ -1025,8 +1011,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case OntologyConstants.KnoraApiV2Simple.MatchFunctionIri =>
 
-                    if (queryUsesApiV2ComplexSchema) {
-                        throw GravsearchException(s"Function $functionIri cannot be used in a Gravsearch query that uses the complex schema; use ${OntologyConstants.KnoraApiV2WithValueObjects.MatchFunctionIri} instead")
+                    if (querySchema == ApiV2WithValueObjects) {
+                        throw GravsearchException(s"Function $functionIri cannot be used in a Gravsearch query written in the complex schema; use ${OntologyConstants.KnoraApiV2WithValueObjects.MatchFunctionIri} instead")
                     }
 
                     // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1077,8 +1063,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.MatchFunctionIri =>
 
-                    if (!queryUsesApiV2ComplexSchema) {
-                        throw GravsearchException(s"Function $functionIri cannot be used in a Gravsearch query that uses only the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunctionIri} instead")
+                    if (querySchema == ApiV2Simple) {
+                        throw GravsearchException(s"Function $functionIri cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunctionIri} instead")
                     }
 
                     // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1133,8 +1119,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                         case functionCallExpr: FunctionCallExpression if functionCallExpr.functionIri.iri.toString == OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunctionIri =>
 
-                            if (!queryUsesApiV2ComplexSchema) {
-                                throw GravsearchException(s"Function ${functionCallExpr.functionIri} can only be used in a Gravsearch query that uses the complex schema")
+                            if (querySchema == ApiV2Simple) {
+                                throw GravsearchException(s"Function ${functionCallExpr.functionIri} cannot be used in a query written in the simple schema")
                             }
 
                             if (functionCallExpr.args.size != 1) throw GravsearchException(s"One argument is expected for ${functionCallExpr.functionIri}")
@@ -1700,7 +1686,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult, queryUsesApiV2Schema: Boolean) extends AbstractSparqlTransformer(typeInspectionResult, queryUsesApiV2Schema) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractSparqlTransformer(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
             def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
                 // Just identify the main resource variable and put it in mainResourceVariable.
@@ -1776,7 +1762,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
                 typeInspectionResult = typeInspectionResult,
-                queryUsesApiV2Schema = inputQuery.usesApiV2ComplexSchema
+                querySchema = inputQuery.querySchema.get
             )
 
             nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -1832,7 +1818,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param typeInspectionResult the result of type inspection of the original query.
           */
-        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult, queryUsesApiV2Schema: Boolean) extends AbstractSparqlTransformer(typeInspectionResult, queryUsesApiV2Schema) with ConstructToSelectTransformer {
+        class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractSparqlTransformer(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
             /**
               * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -2223,7 +2209,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
                 typeInspectionResult = typeInspectionResult,
-                queryUsesApiV2Schema = inputQuery.usesApiV2ComplexSchema
+                querySchema = inputQuery.querySchema.get
             )
 
 

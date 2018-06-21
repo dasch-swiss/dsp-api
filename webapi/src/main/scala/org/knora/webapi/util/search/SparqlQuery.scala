@@ -466,7 +466,7 @@ case class ConstructClause(statements: Seq[StatementPattern]) extends SparqlGene
   *
   * @param patterns the patterns in the WHERE clause.
   */
-case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity], usesApiV2ComplexSchema: Boolean = false) extends SparqlGenerator {
+case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity], querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
 
@@ -491,7 +491,7 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param whereClause     the WHERE clause.
   * @param orderBy         the variables that the results should be ordered by.
   */
-case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, usesApiV2ComplexSchema: Boolean = false) extends SparqlGenerator {
+case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
     def toSparql: String = {
         val stringBuilder = new StringBuilder
         stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)

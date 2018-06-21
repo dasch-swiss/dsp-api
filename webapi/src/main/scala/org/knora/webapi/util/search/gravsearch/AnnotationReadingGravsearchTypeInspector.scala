@@ -58,7 +58,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
             typeAnnotations: Seq[GravsearchTypeAnnotation] <- Future {
                 QueryTraverser.visitWherePatterns(
                     patterns = whereClause.patterns,
-                    whereVisitor = new AnnotationCollectingWhereVisitor,
+                    whereVisitor = new AnnotationCollectingWhereVisitor(whereClause.querySchema.get),
                     initialAcc = Vector.empty[GravsearchTypeAnnotation]
                 )
             }
@@ -87,11 +87,11 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
     /**
       * A [[WhereVisitor]] that collects type annotations.
       */
-    private class AnnotationCollectingWhereVisitor extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
+    private class AnnotationCollectingWhereVisitor(querySchema: ApiV2Schema) extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
         override def visitStatementInWhere(statementPattern: StatementPattern,
                                            acc: Vector[GravsearchTypeAnnotation]): Vector[GravsearchTypeAnnotation] = {
             if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
-                acc :+ annotationStatementToAnnotation(statementPattern)
+                acc :+ annotationStatementToAnnotation(statementPattern, querySchema)
             } else {
                 acc
             }
@@ -108,11 +108,11 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
       * @param statementPattern the statement pattern.
       * @return an [[GravsearchTypeAnnotation]].
       */
-    private def annotationStatementToAnnotation(statementPattern: StatementPattern): GravsearchTypeAnnotation = {
+    private def annotationStatementToAnnotation(statementPattern: StatementPattern, querySchema: ApiV2Schema): GravsearchTypeAnnotation = {
         val typeableEntity: TypeableEntity = GravsearchTypeInspectionUtil.toTypeableEntity(statementPattern.subj)
 
         val annotationPropIri: SmartIri = statementPattern.pred match {
-            case IriRef(iri, _) => iri
+            case IriRef(iri, _) => iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
             case other => throw AssertionException(s"Not a type annotation predicate: $other")
         }
 
@@ -120,7 +120,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
             TypeAnnotationProperties.fromIri(annotationPropIri).getOrElse(throw AssertionException(s"Not a type annotation predicate: $annotationPropIri"))
 
         val typeIri: SmartIri = statementPattern.obj match {
-            case IriRef(iri, _) => iri
+            case IriRef(iri, _) => iri.checkApiV2Schema(querySchema, throw GravsearchException(s"Invalid schema in IRI: $iri"))
             case other => throw AssertionException(s"Not a valid type in a type annotation: $other")
         }
 

@@ -424,6 +424,18 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def getOntologySchema: Option[OntologySchema]
 
     /**
+      * Checks that the IRI's ontology schema, if present, corresponds to the specified schema. If the IRI
+      * has no schema, does nothing. If the IRI has a schema that's different to the specified schema, calls
+      * `errorFun`.
+      *
+      * @param allowedSchema the schema to be allowed.
+      * @param errorFun a function that throws an exception. It will be called if the IRI has a different schema
+      *                 to the one specified.
+      * @return the same IRI
+      */
+    def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri
+
+    /**
       * Converts this IRI to another ontology schema.
       *
       * @param targetSchema the target schema.
@@ -902,6 +914,19 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         override def getOntologySchema: Option[OntologySchema] = iriInfo.ontologySchema
+
+        override def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri = {
+            iriInfo.ontologySchema match {
+                case Some(schema) =>
+                    if (schema == allowedSchema) {
+                        this
+                    } else {
+                        errorFun
+                    }
+
+                case None => this
+            }
+        }
 
         override def getShortPrefixLabel: String = getOntologyName
 
