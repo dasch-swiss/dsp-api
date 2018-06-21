@@ -355,7 +355,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 QueryVariable("pageLabel"),
                 QueryVariable("pageType")
             ),
-            querySchema = Some(ApiV2Simple)),
+            querySchema = Some(ApiV2Simple)
+        ),
         constructClause = ConstructClause(
             statements = Vector(
                 StatementPattern(
@@ -404,7 +405,7 @@ class GravsearchParserSpec extends CoreSpec() {
             ),
             querySchema = Some(ApiV2Simple)
         ),
-
+        querySchema = Some(ApiV2Simple)
     )
 
     val QueryWithBind: String =

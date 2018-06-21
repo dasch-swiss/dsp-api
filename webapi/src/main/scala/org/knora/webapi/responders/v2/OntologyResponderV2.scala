@@ -466,7 +466,10 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 val ontologyMetadataMap: Map[IRI, String] = rows.map {
-                    row => row.rowMap("ontologyPred") -> row.rowMap("ontologyObj")
+                    row =>
+                        val pred = row.rowMap.getOrElse("ontologyPred", throw InconsistentTriplestoreDataException(s"Empty predicate in ontology $ontologyIri"))
+                        val obj = row.rowMap.getOrElse("ontologyObj", throw InconsistentTriplestoreDataException(s"Empty object for predicate $pred in ontology $ontologyIri"))
+                        pred -> obj
                 }.toMap
 
                 val projectIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
