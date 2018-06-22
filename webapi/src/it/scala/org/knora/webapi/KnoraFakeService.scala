@@ -25,6 +25,8 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import org.knora.webapi.util.StringFormatter
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Created by subotic on 26.06.17.
   */
@@ -34,6 +36,11 @@ trait KnoraFakeService {
 
     // Initialise StringFormatter with the system settings.
     StringFormatter.initForTest()
+
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
@@ -62,12 +69,6 @@ trait KnoraFakeService {
       * Starts the Faked Knora API server.
       */
     def startService(): Unit = {
-
-        implicit val materializer = ActorMaterializer()
-
-        // needed for startup flags and the future map/flatmap in the end
-        implicit val executionContext = system.dispatcher
-
         Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
     }

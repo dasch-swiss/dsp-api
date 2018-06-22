@@ -23,7 +23,6 @@ import java.io.StringReader
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -452,6 +451,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * Checks connection to the triplestore.
       */
     private def checkRepository(): Future[CheckRepositoryResponse] = {
+
+        // needs to be a local import or other things don't work (spray json black magic)
+        import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
+
         try {
 
             log.debug("checkRepository entered")
@@ -498,12 +501,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             } yield json
 
-            val json: JsArray = Await.result(jsonFuture, 500.milliseconds)
+            val jsonArr: JsArray = Await.result(jsonFuture, 500.milliseconds)
 
-            // ToDo: parse json and check if the repository defined in 'application.conf' is present and correctly defined
+            // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
-            FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
+            val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
+            val idShouldBe = settings.triplestoreDatabaseName
+            val sesameTypeShouldBe = "openrdf:SailRepository"
+
+            val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
+            if (neededRepo.length == 1) {
+                // everything looks good
+                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
+            } else {
+                // none of the available repositories meet our requirements
+                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeShouldBe."))
+            }
         } catch {
             case e: Exception => {
                 println("checkRepository - exception", e)

@@ -91,6 +91,7 @@ trait LiveCore extends Core {
   */
 trait KnoraService {
     this: Core =>
+
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
@@ -240,7 +241,7 @@ trait KnoraService {
             log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)
         } else if (storeManagerResult.repositoryStatus == RepositoryStatus.NotInitialized) {
             log.info(s"KnoraService - checkRepository - status: {}: {}", storeManagerResult.repositoryStatus, storeManagerResult.msg)
-            log.info("Please create repository. Will exit now.")
+            log.info("Please initialize repository. Will exit now.")
             stopService()
         } else {
             applicationStateActor ! SetAppState(AppState.WaitingForRepository)

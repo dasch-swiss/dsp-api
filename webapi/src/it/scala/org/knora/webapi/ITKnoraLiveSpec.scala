@@ -21,11 +21,13 @@ package org.knora.webapi
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
+import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Suite}
 
+import scala.concurrent.ExecutionContext
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -37,8 +39,14 @@ object ITKnoraLiveSpec {
   * provides access to settings and logging.
   */
 class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with BeforeAndAfterAll {
+
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraLiveSpec.defaultConfig)))
@@ -63,7 +71,6 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
-        checkActorSystem()
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
         startService()
     }

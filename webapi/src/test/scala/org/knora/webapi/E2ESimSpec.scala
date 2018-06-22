@@ -22,6 +22,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import io.gatling.core.scenario.Simulation
@@ -30,7 +31,7 @@ import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.StringFormatter
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 
@@ -54,6 +55,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))

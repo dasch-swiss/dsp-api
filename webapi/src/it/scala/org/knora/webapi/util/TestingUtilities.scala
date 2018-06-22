@@ -25,13 +25,12 @@ import java.nio.file.{Files, Paths}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.stream.ActorMaterializer
 import org.knora.webapi.{Core, FileWriteException}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, Future}
 
 /**
   * Created by subotic on 26.06.17.
@@ -39,9 +38,6 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 trait TestingUtilities extends WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     this: Core =>
-
-    implicit protected val ec: ExecutionContextExecutor = system.dispatcher
-    implicit protected val materializer = ActorMaterializer()
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
