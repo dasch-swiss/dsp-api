@@ -50,7 +50,8 @@ object OntologyConstants {
     }
 
     object Owl {
-        val OwlPrefixExpansion: IRI = "http://www.w3.org/2002/07/owl#"
+        val OwlOntologyIri = "http://www.w3.org/2002/07/owl"
+        val OwlPrefixExpansion: IRI = OwlOntologyIri + "#"
 
         val Ontology: IRI = OwlPrefixExpansion + "Ontology"
         val Restriction: IRI = OwlPrefixExpansion + "Restriction"

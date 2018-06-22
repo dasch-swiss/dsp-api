@@ -720,8 +720,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
@@ -758,8 +756,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -804,8 +800,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -853,8 +847,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -901,8 +893,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -947,8 +937,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -995,8 +983,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -1041,8 +1027,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -1089,8 +1073,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -1135,8 +1117,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?region knora-api:isMainResource true .
-                  |
-                  |        ?region a knora-api:Region .
                   |
                   |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
                   |
@@ -1190,48 +1170,48 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         "get a book a page points to and include the page in the results (all properties present in WHERE clause)" in {
             val gravsearchQuery =
                 """
-            PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-            PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-
-            CONSTRUCT {
-
-                ?book knora-api:isMainResource true .
-
-                ?book incunabula:title ?title .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
-
-            } WHERE {
-
-                ?book a knora-api:Resource .
-
-                ?book incunabula:title ?title .
-
-                incunabula:title knora-api:objectType xsd:string .
-
-                ?title a xsd:string .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
-                knora-api:isPartOf knora-api:objectType knora-api:Resource .
-
-                <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
-                knora-api:seqnum knora-api:objectType xsd:integer .
-
-                ?seqnum a xsd:integer .
-
-                <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
-                knora-api:hasStillImageFile knora-api:objectType knora-api:File .
-
-                ?file a knora-api:File .
-
-            } OFFSET 0
-            """.stripMargin
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |
+                  |} WHERE {
+                  |
+                  |    ?book a knora-api:Resource .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    incunabula:title knora-api:objectType xsd:string .
+                  |
+                  |    ?title a xsd:string .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:isPartOf ?book .
+                  |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> a knora-api:Resource .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    knora-api:seqnum knora-api:objectType xsd:integer .
+                  |
+                  |    ?seqnum a xsd:integer .
+                  |
+                  |    <http://rdfh.ch/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    knora-api:hasStillImageFile knora-api:objectType knora-api:File .
+                  |
+                  |    ?file a knora-api:File .
+                  |
+                  |} OFFSET 0
+                """.stripMargin
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
@@ -1355,8 +1335,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal "2.1"^^xsd:decimal .
                   |} WHERE {
                   |
@@ -1388,8 +1366,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
@@ -1430,8 +1406,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
@@ -1470,8 +1444,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
@@ -1512,8 +1484,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean true
                   |} WHERE {
                   |
@@ -1545,8 +1515,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
@@ -1586,8 +1554,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
@@ -1632,8 +1598,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
                   |
@@ -1675,8 +1639,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |
@@ -1931,8 +1893,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
                   |     ?thing a knora-api:Resource .
@@ -1969,8 +1929,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
@@ -2435,7 +2393,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true ;
-                  |         a anything:Thing ;
                   |         anything:hasText ?text ;
                   |         anything:hasInteger ?integer .
                   |
@@ -3480,8 +3437,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate "JULIAN:1497-03-01"^^knora-api:Date .
@@ -3513,8 +3468,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -3552,8 +3505,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -3594,8 +3545,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -3634,8 +3583,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -3676,8 +3623,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -3716,8 +3661,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -3758,8 +3701,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -3799,8 +3740,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -3838,8 +3777,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?region knora-api:isMainResource true .
-                  |
-                  |        ?region a knora-api:Region .
                   |
                   |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
                   |
@@ -4013,8 +3950,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal"2.1"^^xsd:decimal .
                   |} WHERE {
                   |
@@ -4044,8 +3979,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
@@ -4082,8 +4015,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
@@ -4118,8 +4049,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
@@ -4156,8 +4085,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean true
                   |} WHERE {
                   |
@@ -4187,8 +4114,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
@@ -4225,8 +4150,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
@@ -4267,8 +4190,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |
@@ -4502,8 +4423,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
                   |     ?thing a anything:Thing .
@@ -4534,8 +4453,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
@@ -4839,7 +4756,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true ;
-                  |         a anything:Thing ;
                   |         anything:hasText ?text ;
                   |         anything:hasInteger ?integer .
                   |
@@ -5072,9 +4988,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |  ?page incunabula:partOf ?book ;
                   |    incunabula:seqnum ?seqnum .
                   |
-                  |  ?seqnum knora-api:intValueAsInt ?seqnumInt .
-                  |
-                  |  FILTER(?seqnumInt = 100)
+                  |  ?seqnum knora-api:intValueAsInt 100 .
                   |
                   |}
                 """.stripMargin
@@ -5112,9 +5026,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |  ?author beol:hasFamilyName ?name .
                   |
-                  |  ?name knora-api:valueAsString ?nameStr .
-                  |
-                  |  FILTER(?nameStr = "Meier")
+                  |  ?name knora-api:valueAsString "Meier" .
                   |
                   |} ORDER BY ?date
                 """.stripMargin
@@ -5145,9 +5057,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |        ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
                   |
                   |    }
                 """.stripMargin
@@ -5180,9 +5090,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |        ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
                   |
                   |    }
                 """.stripMargin
@@ -5211,9 +5119,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?book incunabula:title ?title .
                   |
-                  |        ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |        FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |        ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
                   |
                   |    }
                 """.stripMargin
@@ -5323,9 +5229,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
-                  |        ?seqnum knora-api:intValueAsInt ?seqnumInt .
-                  |
-                  |        FILTER(?seqnumInt = 10)
+                  |        ?seqnum knora-api:intValueAsInt 10 .
                   |
                   |    }
                 """.stripMargin
@@ -5363,10 +5267,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
-                  |        ?seqnum knora-api:intValueAsInt ?seqnumInt .
-                  |
-                  |        FILTER(?seqnumInt = 10)
-                  |
+                  |        ?seqnum knora-api:intValueAsInt 10 .
                   |    }
                 """.stripMargin
 
@@ -5399,9 +5300,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
-                  |        ?seqnum knora-api:intValueAsInt ?seqnumInt .
-                  |
-                  |        FILTER(?seqnumInt = 10)
+                  |        ?seqnum knora-api:intValueAsInt 10 .
                   |
                   |    }
                 """.stripMargin
@@ -5539,8 +5438,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -5578,8 +5475,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -5621,8 +5516,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -5662,8 +5555,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -5705,8 +5596,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -5746,8 +5635,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
-                  |
-                  |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -5789,8 +5676,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -5831,8 +5716,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?book knora-api:isMainResource true .
                   |
-                  |        ?book a incunabula:book .
-                  |
                   |        ?book incunabula:title ?title .
                   |
                   |        ?book incunabula:pubdate ?pubdate .
@@ -5870,8 +5753,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    CONSTRUCT {
                   |        ?region knora-api:isMainResource true .
-                  |
-                  |        ?region a knora-api:Region .
                   |
                   |        ?region knora-api:isRegionOf <http://rdfh.ch/9d626dc76c03> .
                   |
@@ -6045,8 +5926,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
@@ -6054,9 +5933,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |
-                  |     ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
-                  |
-                  |     FILTER(?decimalDec = "2.1"^^xsd:decimal)
+                  |     ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
                   |}
                   |
                 """.stripMargin
@@ -6083,8 +5960,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
-                  |
-                  |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
@@ -6123,8 +5998,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasDecimal ?decimal .
                   |} WHERE {
                   |
@@ -6162,8 +6035,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
                   |
@@ -6171,9 +6042,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?thing anything:hasBoolean ?boolean .
                   |
-                  |     ?boolean knora-api:booleanValueAsBoolean ?booleanBool .
-                  |
-                  |     FILTER(?booleanBool = true)
+                  |     ?boolean knora-api:booleanValueAsBoolean true .
                   |
                   |}
                   |
@@ -6202,8 +6071,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean ?boolean .
                   |} WHERE {
                   |
@@ -6213,9 +6080,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |         ?thing anything:hasBoolean ?boolean .
                   |
-                  |         ?boolean knora-api:booleanValueAsBoolean ?booleanBool .
-                  |
-                  |         FILTER(?booleanBool = true)
+                  |         ?boolean knora-api:booleanValueAsBoolean true .
                   |     }
                   |} OFFSET 1
                   |
@@ -6245,8 +6110,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasBoolean ?boolean .
                   |
                   |     ?thing anything:hasDecimal ?decimal .
@@ -6263,9 +6126,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     } UNION {
                   |         ?thing anything:hasDecimal ?decimal .
                   |
-                  |         ?decimal knora-api:decimalValueAsDecimal ?decimalDec .
-                  |
-                  |         FILTER(?decimalDec = "2.1"^^xsd:decimal)
+                  |         ?decimal knora-api:decimalValueAsDecimal "2.1"^^xsd:decimal .
                   |     }
                   |
                   |} OFFSET 0
@@ -6452,17 +6313,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
                   |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasText ?text .
                   |
-                  |     ?text knora-api:textValueHasLanguage ?textLang .
-                  |
-                  |     FILTER(?textLang = "fr")
+                  |     ?text knora-api:textValueHasLanguage "fr" .
                   |}
                 """.stripMargin
 
@@ -6487,19 +6344,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true .
                   |
-                  |     ?thing a anything:Thing .
-                  |
                   |     ?thing anything:hasText ?text .
                   |} WHERE {
                   |     ?thing a anything:Thing .
                   |
                   |     ?thing anything:hasText ?text .
                   |
-                  |     ?text knora-api:valueAsString ?textStr .
+                  |     ?text knora-api:valueAsString "Bonjour" .
                   |
-                  |     ?text knora-api:textValueHasLanguage ?textLang .
-                  |
-                  |     FILTER(?textLang = "fr" && ?textStr = "Bonjour")
+                  |     ?text knora-api:textValueHasLanguage "fr" .
                   |}
                 """.stripMargin
 
@@ -6624,10 +6477,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
-                  |        ?name knora-api:valueAsString ?nameStr .
-                  |
-                  |        FILTER(?nameStr = "Meier")
-                  |
+                  |        ?name knora-api:valueAsString "Meier" .
                   |
                   |    } ORDER BY ?date
                 """.stripMargin
@@ -6675,9 +6525,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        OPTIONAL {
                   |             ?person1 beol:hasFamilyName ?name .
                   |
-                  |             ?name knora-api:valueAsString ?nameStr .
-                  |
-                  |             FILTER(?nameStr = "Meier")
+                  |             ?name knora-api:valueAsString "Meier" .
                   |        }
                   |
                   |    } ORDER BY ?date
@@ -6725,10 +6573,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
-                  |        ?name knora-api:valueAsString ?nameStr .
-                  |
-                  |        FILTER(?nameStr = "Muster")
-                  |
+                  |        ?name knora-api:valueAsString "Muster" .
                   |
                   |    } ORDER BY ?date
                 """.stripMargin
@@ -6755,7 +6600,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |     ?thing knora-api:isMainResource true ;
-                  |         a anything:Thing ;
                   |         anything:hasText ?text ;
                   |         anything:hasInteger ?integer .
                   |
@@ -6926,9 +6770,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |    FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
                   |
                   |}
                 """.stripMargin
@@ -6972,9 +6814,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    ?title knora-api:valueAsString ?titleStr .
-                  |
-                  |    FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
                   |
                   |}
                 """.stripMargin
@@ -7026,6 +6866,70 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             }
 
+        }
+
+        "reject a Gravsearch query that uses a string literal in the CONSTRUCT clause" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |
+                  |
+                  |} WHERE {
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    ?title knora-api:valueAsString "Zeitglöcklein des Lebens und Leidens Christi" .
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.BAD_REQUEST, response.toString)
+
+            }
+        }
+
+        "reject a Gravsearch query in the complex schema with a variable in the CONSTRUCT clause referring to a non-property entity that isn't a resource or value" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    ?title knora-api:valueAsString ?titleStr .
+                  |
+                  |
+                  |} WHERE {
+                  |    ?book a incunabula:book .
+                  |
+                  |    ?book incunabula:title ?title .
+                  |
+                  |    ?title knora-api:valueAsString ?titleStr .
+                  |
+                  |    FILTER(?titleStr = "Zeitglöcklein des Lebens und Leidens Christi")
+                  |
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.BAD_REQUEST, response.toString)
+
+            }
         }
 
         "search for a list value that refers to a particular list node (submitting the complex schema)" in {
