@@ -220,7 +220,7 @@ case class StandoffDiffDelete(baseStartPosition: Int,
 case class XMLTagSeparatorRequired(maybeNamespace: Option[String], tagname: String, maybeClassname: Option[String]) {
 
     // generate an XPath expression to match this element
-    def toXPath = {
+    def toXPath: String = {
 
         val prefix: String = maybeNamespace match {
             case Some(namespace) => namespace + ":"
@@ -228,7 +228,7 @@ case class XMLTagSeparatorRequired(maybeNamespace: Option[String], tagname: Stri
         }
 
         val classSelector: String = maybeClassname match {
-            case Some(classSel) => s"""[@class=\"$classSel\"]"""
+            case Some(classSel) => s"""[@class='$classSel']""" // use single quotes because the xpath expression is wrapped in double quotes
             case None => ""
         }
 
