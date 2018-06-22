@@ -211,7 +211,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         protected def isMainResourceVariable(statementPattern: StatementPattern): Option[QueryVariable] = {
             statementPattern.pred match {
-                case IriRef((iri), _) =>
+                case IriRef(iri, _) =>
 
                     val iriStr = iri.toString
 
