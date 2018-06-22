@@ -15,18 +15,20 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
+import akka.actor.ActorSystem
+import akka.dispatch.MessageDispatcher
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.pattern._
+import akka.pattern.ask
 import akka.util.Timeout
+import org.knora.webapi.SettingsImpl
+import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
-import org.knora.webapi.{Settings, SettingsImpl}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A route used for rejecting requests to certain paths depending on the state of the app or the configuration.
@@ -35,49 +37,51 @@ import scala.concurrent.ExecutionContext
   * If the current state of the application is [[AppState.Running]], then reject requests to paths as defined
   * in 'application.conf'.
   */
-class RejectingRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter, applicationStateActor: ActorRef) {
+class RejectingRoute(_system: ActorSystem, settings: SettingsImpl) {
+
+    implicit val system: ActorSystem = _system
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+    implicit val timeout: Timeout = 3.seconds
+
+    val log = akka.event.Logging(_system, this.getClass)
+
+    private val applicationStateActor = _system.actorSelection(APPLICATION_STATE_ACTOR_PATH)
 
     def knoraApiPath(): Route = {
 
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatcher
-        implicit val timeout: Timeout = settings.defaultTimeout
-
         path(Remaining) { wholepath =>
-                requestContext => {
-                    log.debug(s"got request: ${requestContext.toString}")
-                    val settings = Settings(system)
-                    val reject: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject =>
-                        if (wholepath.contains(pathToReject.toCharArray)) {
-                            Some(true)
-                        } else {
-                            None
-                        }
-                    }
 
-                    val result = for {
-                        // get the current application state
-                        appState: AppState <- (applicationStateActor ? GetAppState).mapTo[AppState]
-
-                        // only if application state is 'Running' then go on and apply filter
-                        result = if (appState == AppState.Running) {
-                            if (reject.flatten.nonEmpty) {
-                                // route not allowed. will complete request.
-                                val msg = s"Request to $wholepath not allowed as per configuration for routes to reject."
-                                log.info(msg)
-                                requestContext.complete(NotFound, "The requested path is deactivated.")
-                            } else {
-                                // route is allowed. by rejecting, I'm letting it through so that some other route can match
-                                requestContext.reject()
-                            }
-                        } else { // if any state other then 'Running', then return ServiceUnavailable
-                            val msg = s"Request to $wholepath rejected. Application not available at the moment (state = $appState). Please try again later."
-                            log.info(msg)
-                            requestContext.complete(ServiceUnavailable, msg)
-                        }
-                    } yield result
-                    result.flatten
+            // check to see if route is on the rejection list
+            val rejectSeq: Seq[Option[Boolean]] = settings.routesToReject.map { pathToReject: String =>
+                if (wholepath.contains(pathToReject.toCharArray)) {
+                    Some(true)
+                } else {
+                    None
                 }
+            }
+
+            val appStateFuture: Future[AppState] = (applicationStateActor ? GetAppState).mapTo[AppState]
+
+            onSuccess(appStateFuture) {
+                case AppState.Running if rejectSeq.flatten.nonEmpty => {
+                    // route not allowed. will complete request.
+                    val msg = s"Request to $wholepath not allowed as per configuration for routes to reject."
+                    log.info(msg)
+                    complete(NotFound, "The requested path is deactivated.")
+                }
+                case AppState.Running if rejectSeq.flatten.isEmpty => {
+                    // route is allowed. by rejecting, I'm letting it through so that some other route can match
+                    reject()
+                }
+                case other => {
+                    // if any state other then 'Running', then return ServiceUnavailable
+                    val msg = s"Request to $wholepath rejected. Application not available at the moment (state = $other). Please try again later."
+                    log.info(msg)
+                    complete(ServiceUnavailable, msg)
+                }
+            }
+
+
         }
     }
 }

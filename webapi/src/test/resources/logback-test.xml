@@ -59,13 +59,14 @@
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
     <logger name="org.knora.webapi.KnoraExceptionHandler" level="INFO"/>
-    <logger name="org.knora.webapi.app.ApplicationStateActor" level="INFO"/>
+    <logger name="org.knora.webapi.app.ApplicationStateActor" level="DEBUG"/>
     <logger name="org.knora.webapi.util.cache" level="INFO"/>
     <logger name="org.knora.webapi.util.PermissionUtilADM" level="INFO"/>
     <logger name="org.knora.webapi.util.TransformData" level="INFO"/>
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.JWTHelper" level="INFO"/>
     <logger name="org.knora.webapi.routing.HealthRoute" level="INFO"/>
+    <logger name="org.knora.webapi.routing.RejectingRoute" level="DEBUG"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ResourcesRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="INFO"/>

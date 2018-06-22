@@ -19,21 +19,20 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.dispatch.MessageDispatcher
-import akka.event.LoggingAdapter
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
+import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 
 case class HealthCheckResult(name: String,
@@ -47,16 +46,13 @@ case class HealthCheckResult(name: String,
 trait HealthCheck {
     this: HealthRoute =>
 
-    implicit private val timeout: Timeout = Timeout(1.seconds)
+    implicit private val timeout: Timeout = 1.second
 
-    protected def healthcheck(): HealthCheckResult = {
+    protected def healthcheck(): Future[HttpResponse] = for {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
 
-        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
-
-        state match {
+        result = state match {
             case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
             case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
             case AppState.RepositoryReady => unhealthy("Repository ready. Please retry later.")
@@ -67,7 +63,10 @@ trait HealthCheck {
             case AppState.MaintenanceMode => unhealthy("Application is in maintenance mode. Please retry later.")
             case AppState.Running => healthy()
         }
-    }
+
+        response = createResponse(result)
+
+    } yield response
 
     protected def createResponse(result: HealthCheckResult): HttpResponse = {
 
@@ -111,24 +110,19 @@ trait HealthCheck {
 /**
   * Provides the '/health' endpoint serving the health status.
   */
-class HealthRoute(_system: ActorSystem, settings: SettingsImpl, _log: LoggingAdapter, _applicationStateActor: ActorRef) extends HealthCheck{
+class HealthRoute(_system: ActorSystem, settings: SettingsImpl) extends HealthCheck{
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+    protected val applicationStateActor: ActorSelection = system.actorSelection(APPLICATION_STATE_ACTOR_PATH)
 
-
-
-    val applicationStateActor: ActorRef = _applicationStateActor
-    val log = _log
+    val log = akka.event.Logging(system, this.getClass)
 
     def knoraApiPath: Route = {
         path("health") {
             get {
-                requestContext => {
-                    requestContext.complete {
-                        createResponse(healthcheck())
-                    }
-                }
+                requestContext =>
+                    requestContext.complete(healthcheck())
             }
         }
     }
