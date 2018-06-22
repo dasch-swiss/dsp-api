@@ -80,6 +80,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
         startService()
+        log.debug("E2ESpec - beforeAll - finished")
     }
 
     override def afterAll: Unit = {

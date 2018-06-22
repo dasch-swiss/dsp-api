@@ -99,7 +99,7 @@
 
     <!-- Spec Logging -->
 
-    <logger name="org.knora.webapi.E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.E2ESpec" level="DEBUG"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>
@@ -120,7 +120,7 @@
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="INFO"/>
-    <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="DEBUG"/>
 
 
     <root level="INFO">
