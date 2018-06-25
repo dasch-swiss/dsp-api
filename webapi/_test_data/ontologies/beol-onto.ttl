@@ -1946,6 +1946,15 @@
 
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
 
+###  http://www.knora.org/ontology/0801/beol#StandoffMarginalTag
+
+:StandoffMarginalTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "text in margins of the page"@en .
+
+
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffNoWikiTag
 
