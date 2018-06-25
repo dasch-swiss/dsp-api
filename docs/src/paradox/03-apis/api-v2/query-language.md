@@ -176,9 +176,9 @@ belonging to subclasses of that type.
 Every Gravsearch query is a valid SPARQL 1.1
 [CONSTRUCT](https://www.w3.org/TR/sparql11-query/#construct) query.
 However, Gravsearch only supports a subset of the elements that can be used
-in a SPARQL Construct query. Additionally, Gravsearch requires the client to
-use explicit type annotations, explained below; these are valid SPARQL,
-but specific to the Knora API. Also, the main resource has to be marked.
+in a SPARQL Construct query, and a Gravsearch
+@ref:[CONSTRUCT Clause](#construct-clause) has to indicate which variable
+is to be used for the main resource in each search result.
 
 ### Supported SPARQL Syntax
 
