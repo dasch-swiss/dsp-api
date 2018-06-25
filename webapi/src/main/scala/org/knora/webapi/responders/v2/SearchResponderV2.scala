@@ -295,8 +295,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
             }
 
+            // Is the property a link property?
             if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)) {
-                // linking property
+                // It's a link property.
 
                 // make sure that the object is either an IRI or a variable (cannot be a literal)
                 statementPattern.obj match {
@@ -349,7 +350,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
 
             } else {
-                // Is the subject a resource?
+                // It's not a link property. Is the subject a resource?
                 typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
                     case Some(NonPropertyTypeInfo(typeIri: SmartIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri) =>
                         // Yes. Make sure that the object of the property is a variable.
