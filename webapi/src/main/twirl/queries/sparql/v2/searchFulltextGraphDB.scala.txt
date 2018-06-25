@@ -104,7 +104,7 @@ WHERE {
             ?matchingSubject a ?valueObjectType .
         }
 
-        FILTER(?valueObjectType != knora-base:LinkValue)
+        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
 
         ?containingResource knora-base:hasValue ?matchingSubject .
 
