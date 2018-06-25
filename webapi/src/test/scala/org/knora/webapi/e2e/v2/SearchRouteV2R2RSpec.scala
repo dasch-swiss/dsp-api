@@ -150,6 +150,30 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "perform a fulltext query for a search value containing a single character wildcard" in {
+            Get("/v2/search/Unif%3Frm") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingUniform.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
+        "perform a fulltext query for a search value containing a multiple character wildcard" in {
+            Get("/v2/search/Unif*m") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingUniform.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // Queries without type inference
 
