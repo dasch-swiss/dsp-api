@@ -1,0 +1,19 @@
+{
+  "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA",
+  "@type" : "beol:letter",
+  "beol:hasSubject" : {
+    "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/LFXE4suQQdqsPkP3eq1IbA",
+    "@type" : "knora-api:ListValue",
+    "knora-api:listValueAsListNode" : {
+      "@id" : "http://rdfh.ch/lists/0801/logarithmic_curves"
+    },
+    "knora-api:listValueAsListNodeLabel" : "Logarithmic curves"
+  },
+  "rdfs:label" : "Testbrief1",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#"
+  }
+}
