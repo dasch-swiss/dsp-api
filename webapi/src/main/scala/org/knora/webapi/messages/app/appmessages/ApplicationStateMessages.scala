@@ -4,6 +4,16 @@ import org.knora.webapi.messages.app.appmessages.AppState.AppState
 
 sealed trait ApplicationStateRequest
 
+/**
+  * Check if actor is ready.
+  */
+case class ActorReady() extends ApplicationStateRequest
+
+/**
+  * Response used to acknowledge that actor is ready.
+  */
+case class ActorReadyAck()
+
 case class SetLoadDemoDataState(value: Boolean) extends ApplicationStateRequest
 case class GetLoadDemoDataState() extends ApplicationStateRequest
 

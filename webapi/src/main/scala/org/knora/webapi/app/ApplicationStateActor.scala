@@ -20,6 +20,11 @@ class ApplicationStateActor extends Actor with ActorLogging {
     private var printConfigState = false
 
     def receive: PartialFunction[Any, Unit] = {
+
+        case ActorReady() => {
+            sender ! ActorReadyAck()
+        }
+
         case SetAllowReloadOverHTTPState(value) => {
             log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
             allowReloadOverHTTPState = value

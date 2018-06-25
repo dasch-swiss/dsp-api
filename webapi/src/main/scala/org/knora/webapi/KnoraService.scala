@@ -186,6 +186,25 @@ trait KnoraService {
     }
 
     /**
+      * Returns only when the application state actor is ready.
+      */
+    def applicationStateActorReady(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        try {
+            Await.result(applicationStateActor ? ActorReady(), 2.second).asInstanceOf[ActorReadyAck]
+            log.info("KnoraService - applicationStateActorReady")
+        } catch {
+            case e: AskTimeoutException => {
+                // if we are here, then the ask timed out, so we need to try again until the actor is ready
+                applicationStateActorReady()
+            }
+        }
+    }
+
+    /**
       * Triggers the startupChecks periodically and only returns when AppState.Running is reached.
       */
     private def startupTaskRunner(): Unit = {

@@ -71,6 +71,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
+        applicationStateActorReady()
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
         startService()
     }
