@@ -94,6 +94,9 @@ object GravsearchParser {
         // Entities mentioned positively (i.e. not only in a FILTER NOT EXISTS or MINUS) in the WHERE clause.
         private val positiveEntities: collection.mutable.Set[Entity] = collection.mutable.Set.empty[Entity]
 
+        // A set of all IRIs found by the visitor. Used to determine whether the Knora API v2 complex schema is used.
+        private val allIris: collection.mutable.Set[SmartIri] = collection.mutable.Set.empty[SmartIri]
+
         /**
           * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
           * the query that was parsed.
@@ -137,11 +140,18 @@ object GravsearchParser {
                     )
             }
 
+            val querySchema = if (allIris.exists(_.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                ApiV2WithValueObjects
+            } else {
+                ApiV2Simple
+            }
+
             ConstructQuery(
-                constructClause = ConstructClause(statements = constructStatements),
-                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet),
+                constructClause = ConstructClause(statements = constructStatements, querySchema = Some(querySchema)),
+                whereClause = WhereClause(patterns = getWherePatterns, positiveEntities = positiveEntities.toSet, querySchema = Some(querySchema)),
                 orderBy = orderBy,
-                offset = offset
+                offset = offset,
+                querySchema = Some(querySchema)
             )
         }
 
@@ -163,7 +173,7 @@ object GravsearchParser {
 
             if (smartIri.isKnoraEntityIri) {
                 smartIri.getOntologySchema match {
-                    case Some(ApiV2Simple) => ()
+                    case Some(_: ApiV2Schema) => allIris.add(smartIri)
                     case _ => throw GravsearchException(s"Ontology schema not allowed in Gravsearch query: $smartIri")
                 }
             }
@@ -276,6 +286,7 @@ object GravsearchParser {
                     val leftArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherLeftArg.visit(leftArgVisitor)
                     positiveEntities ++= leftArgVisitor.positiveEntities
+                    allIris ++= leftArgVisitor.allIris
                     checkBlockPatterns(leftArgVisitor.getWherePatterns)
             }
 
@@ -287,6 +298,7 @@ object GravsearchParser {
                     val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     rightArgUnion.visit(rightArgVisitor)
                     positiveEntities ++= rightArgVisitor.positiveEntities
+                    allIris ++= rightArgVisitor.allIris
                     val rightWherePatterns = rightArgVisitor.getWherePatterns
 
                     if (rightWherePatterns.size > 1) {
@@ -302,6 +314,7 @@ object GravsearchParser {
                     val rightArgVisitor = new ConstructQueryModelVisitor(isInNegation = isInNegation)
                     otherRightArg.visit(rightArgVisitor)
                     positiveEntities ++= rightArgVisitor.positiveEntities
+                    allIris ++= rightArgVisitor.allIris
                     Seq(checkBlockPatterns(rightArgVisitor.getWherePatterns))
             }
 
@@ -518,6 +531,7 @@ object GravsearchParser {
             val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
             node.getRightArg.visit(subQueryVisitor)
             wherePatterns.append(MinusPattern(subQueryVisitor.getWherePatterns))
+            allIris ++= subQueryVisitor.allIris
         }
 
         override def meet(deleteData: algebra.DeleteData): Unit = {
@@ -715,6 +729,7 @@ object GravsearchParser {
                     case exists: algebra.Exists =>
                         val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
                         exists.getSubQuery.visit(subQueryVisitor)
+                        allIris ++= subQueryVisitor.allIris
                         FilterNotExistsPattern(subQueryVisitor.getWherePatterns)
 
                     case _ => throw GravsearchException(s"Unsupported NOT expression: $not")
@@ -811,6 +826,7 @@ object GravsearchParser {
             }
 
             positiveEntities ++= rightArgVisitor.positiveEntities
+            allIris ++= rightArgVisitor.allIris
             wherePatterns.append(OptionalPattern(rightArgVisitor.getWherePatterns ++ filterPattern))
         }
 
