@@ -161,6 +161,20 @@ HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClass
 Please note that the first parameter has to be preceded by a question
 mark `?`, any following parameter by an ampersand `&`.
 
+A search value must have a minimal length of three characters (default value) as defined in `app/v2` in `application.conf`.
+
+A search term may contain wildcards. A `?` represents a single character. It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. For example, the term `Uniform` can be search for like this: 
+
+```
+HTTP GET to http://host/v2/search/Unif%3Frm
+``` 
+
+A `*` represents zero, one or multiple characters. For example, the term `Uniform` can be searched for like this:
+
+```
+HTTP GET to http://host/v2/search/Uni*m
+```
+
 The default value for the parameter `offset` is 0 which returns the
 first page of search results. Subsequent pages of results can be fetched
 by increasing `offset` by one. The amount of results per page is defined
