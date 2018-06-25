@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import org.knora.webapi.util.SmartIri
+
 /**
   * Contains string constants for IRIs from ontologies used by the application.
   */
@@ -48,7 +50,8 @@ object OntologyConstants {
     }
 
     object Owl {
-        val OwlPrefixExpansion: IRI = "http://www.w3.org/2002/07/owl#"
+        val OwlOntologyIri = "http://www.w3.org/2002/07/owl"
+        val OwlPrefixExpansion: IRI = OwlOntologyIri + "#"
 
         val Ontology: IRI = OwlPrefixExpansion + "Ontology"
         val Restriction: IRI = OwlPrefixExpansion + "Restriction"
@@ -174,10 +177,6 @@ object OntologyConstants {
 
         val XSLTransformation: IRI = KnoraBasePrefixExpansion + "XSLTransformation"
         val MappingHasDefaultXSLTransformation: IRI = KnoraBasePrefixExpansion + "mappingHasDefaultXSLTransformation"
-
-        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
-        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
-        val MatchFunctionIri: IRI = KnoraBasePrefixExpansion + "match"
 
         val SubjectClassConstraint: IRI = KnoraBasePrefixExpansion + "subjectClassConstraint"
         val ObjectClassConstraint: IRI = KnoraBasePrefixExpansion + "objectClassConstraint"
@@ -313,6 +312,9 @@ object OntologyConstants {
         val ListNodePosition: IRI = KnoraBasePrefixExpansion + "listNodePosition"
 
         val IsDeleted: IRI = KnoraBasePrefixExpansion + "isDeleted"
+
+        val IsMainResource: IRI = KnoraBasePrefixExpansion + "isMainResource"
+        val MatchesTextIndex: IRI = KnoraBasePrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
 
         /* Resource creator */
         val AttachedToUser: IRI = KnoraBasePrefixExpansion + "attachedToUser"
@@ -611,6 +613,15 @@ object OntologyConstants {
         val KnoraApiOntologyLabel: String = "knora-api"
 
         val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
+
+        /**
+          * Returns `true` if the specified IRI is `knora-api:Resource` in Knora API v2, in the simple
+          * or complex schema.
+          */
+        def isKnoraApiV2Resource(iri: SmartIri): Boolean = {
+            val iriStr = iri.toString
+            iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource
+        }
     }
 
     object KnoraApiV2WithValueObjects {
@@ -685,6 +696,31 @@ object OntologyConstants {
         val DDDFileValue: IRI = KnoraApiV2PrefixExpansion + "DDDFileValue"
         val TextFileValue: IRI = KnoraApiV2PrefixExpansion + "TextFileValue"
         val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
+
+        val FileValueClasses = Set(
+            FileValue,
+            StillImageFileValue,
+            MovingImageFileValue,
+            AudioFileValue,
+            DDDFileValue,
+            TextFileValue,
+            DocumentFileValue
+        )
+
+        val ValueClasses = Set(
+            TextValue,
+            IntValue,
+            DecimalValue,
+            BooleanValue,
+            DateValue,
+            GeomValue,
+            IntervalValue,
+            LinkValue,
+            ListValue,
+            UriValue,
+            GeonameValue,
+            ColorValue
+        ) ++ FileValueClasses
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraApiV2PrefixExpansion + "hasValue"
@@ -770,6 +806,9 @@ object OntologyConstants {
 
         val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
 
+        val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
+        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
+        val ToSimpleDateFunctionIri: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -804,6 +843,8 @@ object OntologyConstants {
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
+        val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
+        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 
@@ -899,7 +940,16 @@ object OntologyConstants {
         (InternalSchema, ApiV2WithValueObjects) -> Map(
             KnoraBase.SubjectClassConstraint -> KnoraApiV2WithValueObjects.SubjectType,
             KnoraBase.ObjectClassConstraint -> KnoraApiV2WithValueObjects.ObjectType,
-            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType
+            KnoraBase.ObjectDatatypeConstraint -> KnoraApiV2WithValueObjects.ObjectType,
+            KnoraBase.ValueHasUri -> KnoraApiV2WithValueObjects.UriValueAsUri,
+            KnoraBase.ValueHasInteger -> KnoraApiV2WithValueObjects.IntValueAsInt,
+            KnoraBase.ValueHasBoolean -> KnoraApiV2WithValueObjects.BooleanValueAsBoolean,
+            KnoraBase.ValueHasString -> KnoraApiV2WithValueObjects.ValueAsString,
+            KnoraBase.ValueHasLanguage -> KnoraApiV2WithValueObjects.TextValueHasLanguage,
+            KnoraBase.ValueHasListNode -> KnoraApiV2WithValueObjects.ListValueAsListNode,
+            KnoraBase.ValueHasGeonameCode -> KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
+            KnoraBase.ValueHasColor -> KnoraApiV2WithValueObjects.ColorValueAsColor
+
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -924,7 +974,16 @@ object OntologyConstants {
         ),
         (ApiV2WithValueObjects, InternalSchema) -> Map(
             KnoraApiV2WithValueObjects.SubjectType -> KnoraBase.SubjectClassConstraint,
-            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint
+            KnoraApiV2WithValueObjects.ObjectType -> KnoraBase.ObjectClassConstraint,
+            KnoraApiV2WithValueObjects.UriValueAsUri -> KnoraBase.ValueHasUri,
+            KnoraApiV2WithValueObjects.IntValueAsInt -> KnoraBase.ValueHasInteger,
+            KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> KnoraBase.ValueHasDecimal,
+            KnoraApiV2WithValueObjects.BooleanValueAsBoolean -> KnoraBase.ValueHasBoolean,
+            KnoraApiV2WithValueObjects.ValueAsString -> KnoraBase.ValueHasString,
+            KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
+            KnoraApiV2WithValueObjects.ListValueAsListNode -> KnoraBase.ValueHasListNode,
+            KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
+            KnoraApiV2WithValueObjects.ColorValueAsColor -> KnoraBase.ValueHasColor
         )
     )
 
