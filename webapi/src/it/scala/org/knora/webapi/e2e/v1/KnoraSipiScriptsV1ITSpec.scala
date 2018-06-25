@@ -26,7 +26,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.util.{MutableTestIri, TestingUtilities}
+import org.knora.webapi.util.MutableTestIri
 import spray.json._
 
 
@@ -43,7 +43,7 @@ object KnoraSipiScriptsV1ITSpec {
   * `sipi.knora-config.lua`. This spec uses the KnoraFakeService to start a faked `webapi` server that always allows
   * access to files.
   */
-class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
+class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass)
 

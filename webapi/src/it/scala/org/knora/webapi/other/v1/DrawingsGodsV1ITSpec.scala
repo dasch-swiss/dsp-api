@@ -26,7 +26,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.TestingUtilities
 import org.knora.webapi.{ITKnoraLiveSpec, InvalidApiJsonException}
 import spray.json._
 
@@ -43,7 +42,7 @@ object DrawingsGodsV1ITSpec {
 /**
   * End-to-End (E2E) test specification for additional testing of permissions.
   */
-class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
+class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with TriplestoreJsonProtocol {
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 

@@ -61,6 +61,10 @@ trait Core {
     implicit val settings: SettingsImpl
 
     implicit val log: LoggingAdapter
+
+    implicit val materializer: ActorMaterializer
+
+    implicit val executionContext: ExecutionContext
 }
 
 /**
@@ -82,6 +86,16 @@ trait LiveCore extends Core {
       * Provide logging
       */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
+
+    /**
+      * Provides the actor materializer (akka-http)
+      */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    /**
+      * Provides the default global execution context
+      */
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 }
 
 /**
@@ -96,10 +110,6 @@ trait KnoraService {
     StringFormatter.init(settings)
 
     import scala.language.postfixOps
-
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-
-    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     /**
       * The actor used for storing the application application wide variables in a thread safe manner.

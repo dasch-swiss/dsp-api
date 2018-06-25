@@ -54,7 +54,12 @@ object E2ESimSpec {
 abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraService {
 
     /* needed by the core trait */
+
     implicit lazy val settings: SettingsImpl = Settings(system)
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 
     StringFormatter.initForTest()
 
