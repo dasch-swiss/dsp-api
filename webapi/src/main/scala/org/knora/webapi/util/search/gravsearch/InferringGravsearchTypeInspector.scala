@@ -130,10 +130,15 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             val inferredType = NonPropertyTypeInfo(InferenceRuleUtil.getResourceTypeIriForSchema(usageIndex.querySchema))
                                             log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
                                             Some(inferredType)
+                                        } else if (classDef.isStandoffClass) {
+                                            // It's not a resource class, it's a standoff class. Infer rdf:type knora-api:StandoffTag.
+                                            val inferredType = NonPropertyTypeInfo(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                                            log.debug("RdfTypeRule: {} {} .", entityToType, inferredType)
+                                            Some(inferredType)
                                         } else {
                                             val inferredType = NonPropertyTypeInfo(rdfType)
 
-                                            // It's not a resource class. Is it valid in a type inspection result?
+                                            // It's not a resource class or standoff class. Is it valid in a type inspection result?
                                             if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(rdfType.toString)) {
                                                 // Yes. Return it.
                                                 val inferredType = NonPropertyTypeInfo(rdfType)
@@ -194,7 +199,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 entityInfo.propertyInfoMap.get(iri) match {
                                     case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                         // Yes. Try to infer its knora-api:objectType from the provided information.
-                                        InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, usageIndex.querySchema) match {
+                                        InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
                                             case Some(objectTypeIri: SmartIri) =>
                                                 val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
                                                 log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
@@ -314,7 +319,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     entityInfo.propertyInfoMap.get(predIri) match {
                                         case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                             // Yes. Can we infer the property's knora-api:subjectType from that definition?
-                                            InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo, usageIndex.querySchema) match {
+                                            InferenceRuleUtil.readPropertyInfoToSubjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
                                                 case Some(subjectTypeIri: SmartIri) =>
                                                     // Yes. Use that type.
                                                     val inferredType = NonPropertyTypeInfo(subjectTypeIri)
@@ -433,7 +438,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                             entityInfo.propertyInfoMap.get(propertyIri) match {
                                                 case Some(readPropertyInfo: ReadPropertyInfoV2) =>
                                                     // Yes. Can we determine the property's knora-api:objectType from that definition?
-                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, usageIndex.querySchema) match {
+                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
                                                         case Some(objectTypeIri: SmartIri) =>
                                                             // Yes. Use that type.
                                                             val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
@@ -520,10 +525,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           * Given a [[ReadPropertyInfoV2]], returns the IRI of the inferred `knora-api:subjectType` of the property, if any.
           *
           * @param readPropertyInfo the property definition.
-          * @param querySchema      the ontology schema that the query is written in.
+          * @param querySchema      the query schema.
           * @return the IRI of the inferred `knora-api:subjectType` of the property, or `None` if it could not inferred.
           */
-        def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2, querySchema: ApiV2Schema): Option[SmartIri] = {
+        def readPropertyInfoToSubjectType(readPropertyInfo: ReadPropertyInfoV2, entityInfo: EntityInfoGetResponseV2, querySchema: ApiV2Schema): Option[SmartIri] = {
             // Is this a resource property?
             if (readPropertyInfo.isResourceProp) {
                 // Yes. Infer knora-api:subjectType knora-api:Resource.
@@ -540,15 +545,23 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             // Yes. Don't use it.
                             None
                         } else if (OntologyConstants.KnoraApiV2WithValueObjects.FileValueClasses.contains(subjectTypeStr)) {
-                            // If it's a file value class, return the representation of file values in the specified schema.
+                            // No. If it's a file value class, return the representation of file values in the specified schema.
                             Some(getFileTypeForSchema(querySchema))
                         } else {
-                            // It's not any of those. Is it valid in a type inspection result?
-                            if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(subjectTypeStr)) {
-                                // Yes. Return it.
+                            // It's not a file value class, either. Is it a standoff class?
+                            val isStandoffClass: Boolean = entityInfo.classInfoMap.get(subjectType) match {
+                                case Some(classDef) => classDef.isStandoffClass
+                                case None => false
+                            }
+
+                            if (isStandoffClass) {
+                                // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
+                                Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(subjectTypeStr)) {
+                                // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(subjectType)
                             } else {
-                                // No. This must mean it's not allowed in Gravsearch queries.
+                                // It's not valid in a type inspection result. This must mean it's not allowed in Gravsearch queries.
                                 throw GravsearchException(s"Type not allowed in Gravsearch queries: ${readPropertyInfo.entityInfoContent.propertyIri} knora-api:subjectType $subjectType")
                             }
                         }
@@ -565,7 +578,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           * @param querySchema      the ontology schema that the query is written in.
           * @return the IRI of the inferred `knora-api:objectType` of the property, or `None` if it could not inferred.
           */
-        def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2, querySchema: ApiV2Schema): Option[SmartIri] = {
+        def readPropertyInfoToObjectType(readPropertyInfo: ReadPropertyInfoV2, entityInfo: EntityInfoGetResponseV2, querySchema: ApiV2Schema): Option[SmartIri] = {
             // Is this a link property?
             if (readPropertyInfo.isLinkProp) {
                 // Yes. Infer knora-api:objectType knora-api:Resource.
@@ -585,9 +598,17 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             // Yes. Don't use it.
                             None
                         } else {
-                            // No. Is it valid in a type inspection result?
-                            if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(objectTypeStr)) {
-                                // Yes. Return it.
+                            // No. Is it a standoff class?
+                            val isStandoffClass: Boolean = entityInfo.classInfoMap.get(objectType) match {
+                                case Some(classDef) => classDef.isStandoffClass
+                                case None => false
+                            }
+
+                            if (isStandoffClass) {
+                                // Yes. Infer knora-api:subjectType knora-api:StandoffTag.
+                                Some(OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri)
+                            } else if (GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(objectTypeStr)) {
+                                // It's not any of those. If it's valid in a type inspection result, return it.
                                 Some(objectType)
                             } else {
                                 // No. This must mean it's not allowed in Gravsearch queries.
@@ -647,26 +668,74 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
 
             // Ask the ontology responder about all the Knora class and property IRIs mentioned in the query.
 
-            entityInfoRequest = EntityInfoGetRequestV2(
+            initialEntityInfoRequest = EntityInfoGetRequestV2(
                 classIris = usageIndex.knoraClassIris,
                 propertyIris = usageIndex.knoraPropertyIris,
-                requestingUser = requestingUser)
+                requestingUser = requestingUser
+            )
 
-            entityInfo: EntityInfoGetResponseV2 <- (responderManager ? entityInfoRequest).mapTo[EntityInfoGetResponseV2]
+            initialEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? initialEntityInfoRequest).mapTo[EntityInfoGetResponseV2]
 
             // The ontology responder may return the requested information in the internal schema. Convert each entity
             // definition back to the input schema.
-            entityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
+            initialEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
                 usageIndex = usageIndex,
-                entityInfo = entityInfo
+                entityInfo = initialEntityInfo
+            )
+
+            // Ask the ontology responder about all the Knora classes mentioned as subject or object types of the
+            // properties returned.
+
+            subjectAndObjectTypes: Set[SmartIri] = initialEntityInfoInInputSchemas.propertyInfoMap.foldLeft(Set.empty[SmartIri]) {
+                case (acc, (propertyIri, propertyDef)) =>
+                    val propertyIriSchema = propertyIri.getOntologySchema match {
+                        case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
+                        case other => throw AssertionException(s"Expected an ApiV2Schema, got $other")
+                    }
+
+                    val maybeSubjectType: Option[SmartIri] = propertyDef.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApi.getSubjectTypePredicate(propertyIriSchema).toSmartIri) match {
+                        case Some(subjectType) if subjectType.isKnoraEntityIri => Some(subjectType)
+                        case _ => None
+                    }
+
+                    val maybeObjectType: Option[SmartIri] = propertyDef.entityInfoContent.getPredicateIriObject(OntologyConstants.KnoraApi.getObjectTypePredicate(propertyIriSchema).toSmartIri) match {
+                        case Some(objectType) if objectType.isKnoraEntityIri => Some(objectType)
+                        case _ => None
+                    }
+
+                    acc ++ maybeSubjectType ++ maybeObjectType
+            }
+
+            additionalEntityInfoRequest = EntityInfoGetRequestV2(
+                classIris = subjectAndObjectTypes,
+                requestingUser = requestingUser
+            )
+
+            additionalEntityInfo: EntityInfoGetResponseV2 <- (responderManager ? additionalEntityInfoRequest).mapTo[EntityInfoGetResponseV2]
+
+            // Add the additional classes to the usage index.
+            usageIndexWithAdditionalClasses = usageIndex.copy(
+                knoraClassIris = usageIndex.knoraClassIris ++ subjectAndObjectTypes
+            )
+
+            // The ontology responder may return the requested information in the internal schema. Convert each entity
+            // definition back to the input schema.
+            additionalEntityInfoInInputSchemas: EntityInfoGetResponseV2 = convertEntityInfoResponseToInputSchemas(
+                usageIndex = usageIndexWithAdditionalClasses,
+                entityInfo = additionalEntityInfo
+            )
+
+            // Combine all the entity info into one object.
+            allEntityInfo: EntityInfoGetResponseV2 = initialEntityInfoInInputSchemas.copy(
+                classInfoMap = initialEntityInfoInInputSchemas.classInfoMap ++ additionalEntityInfoInInputSchemas.classInfoMap
             )
 
             // Iterate over the inference rules until no new type information can be inferred.
             intermediateResult: IntermediateTypeInspectionResult = doIterations(
                 iterationNumber = 1,
                 intermediateResult = previousResult,
-                entityInfo = entityInfoInInputSchemas,
-                usageIndex = usageIndex
+                entityInfo = allEntityInfo,
+                usageIndex = usageIndexWithAdditionalClasses
             )
 
             // Pass the intermediate result to the next type inspector in the pipeline.

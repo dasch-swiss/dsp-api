@@ -85,6 +85,7 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Simple.Color,
         OntologyConstants.KnoraApiV2Simple.File,
         OntologyConstants.KnoraApiV2WithValueObjects.Resource,
+        OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag,
         OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
         OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
         OntologyConstants.KnoraApiV2WithValueObjects.IntValue,

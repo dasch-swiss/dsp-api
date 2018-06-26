@@ -277,7 +277,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
-        protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern): Seq[QueryPattern] = {
+        protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectioResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
             /**
               * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
               * is the main resource. Throws an exception otherwise.
@@ -295,100 +295,102 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }
             }
 
-            // Is the property a link property?
-            if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)) {
-                // It's a link property.
+            // Is the subject of the statement a resource?
+            val subjectIsResource: Boolean = typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+                case Some(NonPropertyTypeInfo(subjectTypeIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(subjectTypeIri) => true
+                case _ => false
+            }
 
-                // make sure that the object is either an IRI or a variable (cannot be a literal)
-                statementPattern.obj match {
-                    case _: IriRef => ()
-                    case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
-                    case other => throw GravsearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
+            if (subjectIsResource) {
+                // Yes. Is the object of the statement also a resource?
+                if (OntologyConstants.KnoraApi.isKnoraApiV2Resource(propertyTypeInfo.objectTypeIri)) {
+                    // Yes. This is a link property. Make sure that the object is either an IRI or a variable (cannot be a literal).
+                    statementPattern.obj match {
+                        case _: IriRef => ()
+                        case objectVar: QueryVariable => checkSubjectInOrderBy(objectVar)
+                        case other => throw GravsearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
+                    }
+
+                    // a variable representing the corresponding link value has to be created
+
+                    // create a variable representing the link value
+                    val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+                        base = statementPattern.obj,
+                        propertyIri = OntologyConstants.KnoraBase.LinkValue
+                    )
+
+                    // add variable to collection representing value objects
+                    valueObjectVariables += linkValueObjVar
+
+                    // create an Entity that connects the subject of the linking property with the link value object
+                    val linkValueProp: Entity = statementPattern.pred match {
+                        case linkingPropQueryVar: QueryVariable =>
+                            // create a variable representing the link value property
+                            // in case FILTER patterns are given restricting the linking property's possible IRIs, the same variable will recreated when processing FILTER patterns
+                            createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
+
+                        case propIri: IriRef =>
+                            // convert the given linking property IRI to the corresponding link value property IRI
+                            // only matches the linking property's link value
+                            IriRef(propIri.iri.toOntologySchema(InternalSchema).fromLinkPropToLinkValueProp)
+
+                        case literal: XsdLiteral => throw GravsearchException(s"literal $literal cannot be used as a predicate")
+
+                        case other => throw GravsearchException(s"$other cannot be used as a predicate")
+                    }
+
+                    // create statements that represent the link value's properties for the given linking property
+                    // do not check for the predicate because inference would not work
+                    // instead, linkValueProp restricts the link value objects to be returned
+                    val linkValueStatements = Seq(
+                        StatementPattern.makeInferred(subj = statementPattern.subj, pred = linkValueProp, obj = linkValueObjVar),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject.toSmartIri), obj = statementPattern.subj),
+                        StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri), obj = statementPattern.obj)
+                    )
+
+                    // linking property: just include the original statement relating the subject to the target of the link
+                    statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
+
+                } else {
+                    // The subject is a resource, but the object isn't, so this isn't a link property. Make sure that the object of the property is a variable.
+                    val objectVar: QueryVariable = statementPattern.obj match {
+                        case queryVar: QueryVariable =>
+                            checkSubjectInOrderBy(queryVar)
+                            queryVar
+
+                        case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
+                    }
+
+                    // Does the variable refer to a Knora value object? We assume it does if the query just uses the
+                    // simple schema. If the query uses the complex schema, check whether the property's object type is
+                    // a Knora API v2 value class.
+
+                    val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
+
+                    if (objectVarIsValueObject) {
+                        // The variable refers to a value object. Add it to the collection representing value objects.
+                        valueObjectVariables += objectVar
+
+                        // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
+                        val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
+                        Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
+                    } else {
+                        // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
+                        Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                    }
+
+
                 }
-
-                // we are given a linking property
-                // a variable representing the corresponding link value has to be created
-
-                // create a variable representing the link value
-                val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
-                    base = statementPattern.obj,
-                    propertyIri = OntologyConstants.KnoraBase.LinkValue
-                )
-
-                // add variable to collection representing value objects
-                valueObjectVariables += linkValueObjVar
-
-                // create an Entity that connects the subject of the linking property with the link value object
-                val linkValueProp: Entity = statementPattern.pred match {
-                    case linkingPropQueryVar: QueryVariable =>
-                        // create a variable representing the link value property
-                        // in case FILTER patterns are given restricting the linking property's possible IRIs, the same variable will recreated when processing FILTER patterns
-                        createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
-
-                    case propIri: IriRef =>
-                        // convert the given linking property IRI to the corresponding link value property IRI
-                        // only matches the linking property's link value
-                        IriRef(propIri.iri.toOntologySchema(InternalSchema).fromLinkPropToLinkValueProp)
-
-                    case literal: XsdLiteral => throw GravsearchException(s"literal $literal cannot be used as a predicate")
-
-                    case other => throw GravsearchException(s"$other cannot be used as a predicate")
-                }
-
-                // create statements that represent the link value's properties for the given linking property
-                // do not check for the predicate because inference would not work
-                // instead, linkValueProp restricts the link value objects to be returned
-                val linkValueStatements = Seq(
-                    StatementPattern.makeInferred(subj = statementPattern.subj, pred = linkValueProp, obj = linkValueObjVar),
-                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri), obj = IriRef(OntologyConstants.KnoraBase.LinkValue.toSmartIri)),
-                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)),
-                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Subject.toSmartIri), obj = statementPattern.subj),
-                    StatementPattern.makeExplicit(subj = linkValueObjVar, pred = IriRef(OntologyConstants.Rdf.Object.toSmartIri), obj = statementPattern.obj)
-                )
-
-                // linking property: just include the original statement relating the subject to the target of the link
-                statementPatternToInternalSchema(statementPattern, typeInspectionResult) +: linkValueStatements
-
             } else {
-                // It's not a link property. Is the subject a resource?
-                typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-                    case Some(NonPropertyTypeInfo(typeIri: SmartIri)) if OntologyConstants.KnoraApi.isKnoraApiV2Resource(typeIri) =>
-                        // Yes. Make sure that the object of the property is a variable.
-                        val objectVar: QueryVariable = statementPattern.obj match {
-                            case queryVar: QueryVariable =>
-                                checkSubjectInOrderBy(queryVar)
-                                queryVar
-
-                            case other => throw GravsearchException(s"Object of a value property statement must be a QueryVariable, but $other given.")
-                        }
-
-                        // Does the variable refer to a Knora value object? We assume it does if the query just uses the
-                        // simple schema. If the query uses the complex schema, check whether the property's object type is
-                        // a Knora API v2 value class.
-
-                        val objectVarIsValueObject = querySchema == ApiV2Simple || OntologyConstants.KnoraApiV2WithValueObjects.ValueClasses.contains(propertyTypeInfo.objectTypeIri.toString)
-
-                        if (objectVarIsValueObject) {
-                            // The variable refers to a value object. Add it to the collection representing value objects.
-                            valueObjectVariables += objectVar
-
-                            // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
-                            val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
-                        } else {
-                            // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
-                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
-                        }
-
-                    case _ =>
-                        // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?
-                        if (querySchema == ApiV2WithValueObjects) {
-                            // Yes. Just convert the statement pattern to the internal schema.
-                            Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
-                        } else {
-                            // No. The query is invalid.
-                            throw GravsearchException(s"Invalid statement pattern: ${statementPattern.toSparql}")
-                        }
+                // The subject isn't a resource, so it must be a value object or standoff node. Is the query in the complex schema?
+                if (querySchema == ApiV2WithValueObjects) {
+                    // Yes. Just convert the statement pattern to the internal schema.
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))
+                } else {
+                    // No. The query is invalid.
+                    throw GravsearchException(s"Invalid statement pattern: ${statementPattern.toSparql}")
                 }
             }
         }
@@ -458,11 +460,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param conversionFuncForPropertyType the function to use for the conversion.
           * @return a sequence of [[QueryPattern]] representing the converted statement.
           */
-        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern) => Seq[QueryPattern]): Seq[QueryPattern] = {
+        protected def checkForPropertyTypeInfoForStatement(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult, conversionFuncForPropertyType: (PropertyTypeInfo, StatementPattern, GravsearchTypeInspectionResult) => Seq[QueryPattern]): Seq[QueryPattern] = {
             typeInspectionResult.getTypeOfEntity(statementPattern.pred) match {
                 case Some(propInfo: PropertyTypeInfo) =>
                     // process type information for the predicate into additional statements
-                    conversionFuncForPropertyType(propInfo, statementPattern)
+                    conversionFuncForPropertyType(propInfo, statementPattern, typeInspectionResult)
 
                 case Some(other) => throw AssertionException(s"PropertyTypeInfo expected for ${statementPattern.pred}, got $other")
 
@@ -1326,7 +1328,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @param requestingUser the user making the request.
       * @return the forbidden resource.
       */
-    private def getForbiddenResource(requestingUser: UserADM) = {
+    private def getForbiddenResource(requestingUser: UserADM): Future[Some[ReadResourceV2]] = {
         import SearchResponderV2Constants.forbiddenResourceIri
 
         for {

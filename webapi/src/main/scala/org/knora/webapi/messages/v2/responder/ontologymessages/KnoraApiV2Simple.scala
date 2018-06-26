@@ -318,6 +318,16 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation,
             OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass,
             OntologyConstants.KnoraBase.MappingElementRequiresSeparator,
+            OntologyConstants.KnoraBase.StandoffTagHasLink,
+            OntologyConstants.KnoraBase.StandoffTagHasInternalReference,
+            OntologyConstants.KnoraBase.StandoffTagHasStart,
+            OntologyConstants.KnoraBase.StandoffTagHasEnd,
+            OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
+            OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
+            OntologyConstants.KnoraBase.StandoffTagHasStartParent,
+            OntologyConstants.KnoraBase.StandoffTagHasEndParent,
+            OntologyConstants.KnoraBase.StandoffTagHasUUID,
+            OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
             OntologyConstants.KnoraBase.IsRootNode,
             OntologyConstants.KnoraBase.HasRootNode,
             OntologyConstants.KnoraBase.HasSubListNode,
@@ -326,7 +336,6 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.ValueCreationDate,
             OntologyConstants.KnoraBase.ValueHas,
             OntologyConstants.KnoraBase.ValueHasComment,
-            OntologyConstants.KnoraBase.ValueHasMapping,
             OntologyConstants.KnoraBase.ValueHasCalendar,
             OntologyConstants.KnoraBase.ValueHasColor,
             OntologyConstants.KnoraBase.ValueHasStartJDN,
@@ -399,7 +408,8 @@ object KnoraApiV2Simple {
         ).map(_.toSmartIri)
 
         /**
-          * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
+          * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema. Standoff classes
+          * are removed, too, but aren't included here, because this is taken care of in [[ReadOntologyV2]].
           */
         val KnoraBaseClassesToRemove: Set[SmartIri] = Set(
             OntologyConstants.KnoraBase.ValueBase,

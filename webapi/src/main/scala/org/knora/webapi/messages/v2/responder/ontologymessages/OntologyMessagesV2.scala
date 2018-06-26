@@ -877,7 +877,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
                 case ApiV2Simple =>
                     classes.filterNot {
-                        case (classIri, _) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri)
+                        case (classIri, classDef) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri) || classDef.isStandoffClass
                     }
 
                 case _ => classes
