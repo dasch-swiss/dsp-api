@@ -4,7 +4,9 @@ This directory holds Knora specific scripts and configurations for [Sipi](https:
 
 ## Usage
 
-To start Sipi (with config for integration tests), run from inside this folder:
+### With Docker
+
+To start Sipi using Docker (with config for integration tests), run from inside this folder:
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
@@ -13,3 +15,12 @@ $ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/con
 ```
 
 where `LOCAL_IP_ADDRESS` is the IP of the host running the `Knora-Service`.
+
+### Using a Locally-Compiled Sipi
+
+Type the following in this directory, assuming that the Sipi source tree is in
+`../../Sipi` and the Sipi binary has been installed in `../../Sipi/local/bin/sipi`:
+
+```
+$ ../../Sipi/local/bin/sipi --config config/sipi.knora-local-config.lua
+```
