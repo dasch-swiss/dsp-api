@@ -128,7 +128,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         HttpGetTest(s"/v2/ontologies/allentities/$knoraApiWithValueObjectsOntologySegment", "knoraApiOntologyWithValueObjects"),
         HttpGetTest("/ontology/knora-api/v2", "knoraApiOntologyWithValueObjects", disableWrite = true),
         HttpGetTest("/ontology/salsah-gui/v2", "salsahGuiOntology"),
-        HttpGetTest("/ontology/standoff/simple/v2", "standoffOntologySimple"),
         HttpGetTest("/ontology/standoff/v2", "standoffOntologyWithValueObjects"),
         HttpGetTest(s"/v2/ontologies/allentities/$incunabulaOntologySimpleSegment", "incunabulaOntologySimple"),
         HttpGetTest(s"/v2/ontologies/allentities/$incunabulaOntologyWithValueObjectsSegment", "incunabulaOntologyWithValueObjects"),

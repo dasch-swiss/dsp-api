@@ -1061,6 +1061,12 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
+            entitiesInWrongSchema = (standoffClassIris ++ standoffPropertyIris).filter(_.getOntologySchema.contains(ApiV2Simple))
+
+            _ = if (entitiesInWrongSchema.nonEmpty) {
+                throw NotFoundException(s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}")
+            }
+
             classIrisForCache = standoffClassIris.map(_.toOntologySchema(InternalSchema))
             propertyIrisForCache = standoffPropertyIris.map(_.toOntologySchema(InternalSchema))
 
@@ -1245,6 +1251,10 @@ class OntologyResponderV2 extends Responder {
     private def getOntologyEntitiesV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
+
+            _ = if (ontologyIri.getOntologyName == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple)) {
+                throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
+            }
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
