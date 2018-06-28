@@ -218,7 +218,7 @@ object GravsearchParser {
                     case other => throw GravsearchException(s"Invalid object for triple patterns: $other")
                 }
             } else {
-                QueryVariable(objVar.getName)
+                makeQueryVariable(objVar.getName)
             }
 
             // only add entity to positiveEntities if it is not in a negative context (FILTER NOT EXISTS, MINUS)
@@ -238,6 +238,14 @@ object GravsearchParser {
             }
 
             entity
+        }
+
+        private def makeQueryVariable(variableName: String): QueryVariable = {
+            if (variableName.contains("__")) {
+                throw GravsearchException(s"Invalid variable name: $variableName")
+            } else {
+                QueryVariable(variableName)
+            }
         }
 
         override def meet(node: algebra.StatementPattern): Unit = {
@@ -485,7 +493,7 @@ object GravsearchParser {
                         // It's a BIND. Accept it if it refers to a Knora data IRI.
                         valueConstant.getValue match {
                             case iri: rdf4j.model.IRI =>
-                                val variable = QueryVariable(node.getName)
+                                val variable = makeQueryVariable(node.getName)
                                 val iriValue: IriRef = makeIri(iri)
 
                                 if (!iriValue.iri.isKnoraDataIri) {
@@ -494,7 +502,7 @@ object GravsearchParser {
 
                                 val bindPattern = BindPattern(
                                     variable = variable,
-                                    iriValue = iriValue
+                                    expression = iriValue
                                 )
 
                                 wherePatterns.append(bindPattern)
@@ -691,17 +699,15 @@ object GravsearchParser {
                     }
 
                     // third argument representing the modifier to be used with when applying the REGEX pattern
-                    val modifierArg: algebra.ValueExpr = regex.getFlagsArg
-
-                    val modifier: String = modifierArg match {
-                        case valConstant: algebra.ValueConstant =>
-                            valConstant.getValue.stringValue()
+                    val modifier: Option[String] = Option(regex.getFlagsArg) match {
+                        case Some(valConstant: algebra.ValueConstant) => Some(valConstant.getValue.stringValue())
+                        case None => None
                         case other => throw GravsearchException(s"$other not allowed in regex function as the third argument, a string is expected")
 
                     }
 
                     RegexFunction(
-                        textValueVar = textValueVar,
+                        textVar = textValueVar,
                         pattern = pattern,
                         modifier = modifier
                     )

@@ -778,8 +778,10 @@ object OntologyConstants {
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
-        val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
         val TextValueHasLanguage: IRI = KnoraApiV2PrefixExpansion + "textValueHasLanguage"
+        val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
+        val StandoffTagHasStartParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartParent"
+        val StandoffTagHasEndParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndParent"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
@@ -828,6 +830,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
         val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchInStandoff: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
         val ToSimpleDateFunctionIri: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
     }
 

@@ -186,11 +186,17 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
 
         // suffix appended to variables that are returned by a SPARQL aggregation function.
-        val groupConcatVariableAppendix = "Concat"
+        val groupConcatVariableSuffix = "__Concat"
 
         // variables that are created when processing filter statements
         // they represent the value of a literal pointed to by a value object
-        val valueVariablesCreatedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+        val valueVariablesGeneratedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+
+        // Generated statements for date literals.
+        val generatedDateStatements = mutable.Set.empty[StatementPattern]
+
+        // Variables generated to represent marked-up text in standoff.
+        val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
 
         /**
           * Create a unique variable from a whole statement.
@@ -311,9 +317,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case other => throw GravsearchException(s"Object of a linking statement must be an IRI or a variable, but $other given.")
                     }
 
-                    // a variable representing the corresponding link value has to be created
-
-                    // create a variable representing the link value
+                    // Generate a variable name representing the link value
                     val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
                         base = statementPattern.obj,
                         propertyIri = OntologyConstants.KnoraBase.LinkValue
@@ -325,7 +329,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // create an Entity that connects the subject of the linking property with the link value object
                     val linkValueProp: Entity = statementPattern.pred match {
                         case linkingPropQueryVar: QueryVariable =>
-                            // create a variable representing the link value property
+                            // Generate a variable name representing the link value property
                             // in case FILTER patterns are given restricting the linking property's possible IRIs, the same variable will recreated when processing FILTER patterns
                             createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropQueryVar)
 
@@ -339,7 +343,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case other => throw GravsearchException(s"$other cannot be used as a predicate")
                     }
 
-                    // create statements that represent the link value's properties for the given linking property
+                    // Add statements that represent the link value's properties for the given linking property
                     // do not check for the predicate because inference would not work
                     // instead, linkValueProp restricts the link value objects to be returned
                     val linkValueStatements = Seq(
@@ -529,9 +533,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param expression           the transformed FILTER expression. In some cases, a given FILTER expression is replaced by additional statements, but
           *                             only if it is the top-level expression in the FILTER.
-          * @param additionalStatements additionally created statement patterns.
+          * @param additionalPatterns additionally created query patterns.
           */
-        protected case class TransformedFilterPattern(expression: Option[Expression], additionalStatements: Seq[StatementPattern] = Seq.empty[StatementPattern])
+        protected case class TransformedFilterPattern(expression: Option[Expression], additionalPatterns: Seq[QueryPattern] = Seq.empty[QueryPattern])
 
         /**
           * Handles query variables that represent properties in a [[FilterPattern]].
@@ -548,7 +552,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             val internalIriRef = iriRef.toOntologySchema(InternalSchema)
 
-            // make sure that the comparison operator is a `CompareExpressionOperator.EQUALS`
+            // make sure that the comparison operator is a CompareExpressionOperator.EQUALS
             if (comparisonOperator != CompareExpressionOperator.EQUALS)
                 throw GravsearchException(s"Comparison operator in a CompareExpression for a property type is expected to be ${CompareExpressionOperator.EQUALS}, but $comparisonOperator given. For negations use 'FILTER NOT EXISTS' ")
 
@@ -600,21 +604,29 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             if (validComparisonOperators.nonEmpty && !validComparisonOperators(comparisonOperator))
                 throw GravsearchException(s"Filter expressions for a literal of type ${xsdType.mkString(", ")} supports the following operators: ${validComparisonOperators.mkString(", ")}, but $comparisonOperator given")
 
-            // create a variable representing the literal attached to the value object
+            // Generate a variable name representing the literal attached to the value object
             val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
                 base = queryVar,
                 propertyIri = valueHasProperty
             )
 
-            // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-            valueVariablesCreatedInFilters.put(queryVar, valueObjectLiteralVar)
+            // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+            // if that statement hasn't been added already.
+            val statementToAddForValueHas: Seq[StatementPattern] = if (!valueVariablesGeneratedInFilters.contains(queryVar)) {
+                valueVariablesGeneratedInFilters.put(queryVar, valueObjectLiteralVar)
 
-            TransformedFilterPattern(
-                Some(CompareExpression(valueObjectLiteralVar, comparisonOperator, literal)), // compares the provided literal to the value object's literal value
                 Seq(
                     // connects the query variable with the value object (internal structure: values are represented as objects)
                     StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(valueHasProperty.toSmartIri), valueObjectLiteralVar)
                 )
+            } else {
+                Seq.empty[StatementPattern]
+            }
+
+
+            TransformedFilterPattern(
+                Some(CompareExpression(valueObjectLiteralVar, comparisonOperator, literal)), // compares the provided literal to the value object's literal value
+                statementToAddForValueHas
             )
 
         }
@@ -641,13 +653,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
 
-            // create a variable representing the period's start
+            // Generate a variable name representing the period's start
             val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
             // sort dates by their period's start (in the prequery)
-            valueVariablesCreatedInFilters.put(queryVar, dateValueHasStartVar)
+            valueVariablesGeneratedInFilters.put(queryVar, dateValueHasStartVar)
 
-            // create a variable representing the period's end
+            // Generate a variable name representing the period's end
             val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
             // connects the value object with the periods start variable
@@ -668,11 +680,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     val filter = AndExpression(leftArgFilter, rightArgFilter)
 
+                    val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                    generatedDateStatements ++= statementsToAdd
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(
-                            dateValStartStatement, dateValEndStatement
-                        )
+                        statementsToAdd
                     )
 
                 case CompareExpressionOperator.NOT_EQUALS =>
@@ -684,11 +697,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     val filter = OrExpression(leftArgFilter, rightArgFilter)
 
+                    val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement))
+                    generatedDateStatements ++= statementsToAdd
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(
-                            dateValStartStatement, dateValEndStatement
-                        )
+                        statementsToAdd
                     )
 
                 case CompareExpressionOperator.LESS_THAN =>
@@ -696,9 +710,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // period ends before indicated period
                     val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
+                    val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                    generatedDateStatements ++= statementsToAdd
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
+                        statementsToAdd
                     )
 
                 case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
@@ -706,9 +723,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // period ends before indicated period or equals it (any overlap)
                     val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
+                    val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
+                        generatedDateStatements += dateValStartStatement
+                        Seq(dateValStartStatement)
+                    } else {
+                        Seq.empty[StatementPattern]
+                    }
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(dateValStartStatement)
+                        statementToAdd
                     )
 
                 case CompareExpressionOperator.GREATER_THAN =>
@@ -716,9 +740,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // period starts after end of indicated period
                     val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
+                    val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
+                        generatedDateStatements += dateValStartStatement
+                        Seq(dateValStartStatement)
+                    } else {
+                        Seq.empty[StatementPattern]
+                    }
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(dateValStartStatement)
+                        statementToAdd
                     )
 
                 case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
@@ -726,9 +757,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // period starts after indicated period or equals it (any overlap)
                     val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
+                    val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
+                    generatedDateStatements ++= statementsToAdd
+
                     TransformedFilterPattern(
                         Some(filter),
-                        Seq(dateValStartStatement, dateValEndStatement) // dateValStartStatement may be used as ORDER BY statement
+                        statementsToAdd
                     )
 
                 case other => throw GravsearchException(s"operator $other not supported in filter expressions for dates")
@@ -896,18 +930,26 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case other => throw GravsearchException(s"Right argument of comparison statement is expected to be a string literal for the use with a 'lang' function call.")
             }
 
-            // create a variable representing the language of the text value
+            // Generate a variable name representing the language of the text value
             val textValHasLanguage: QueryVariable = createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasLanguage)
 
-            // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-            valueVariablesCreatedInFilters.put(langFunctionCall.textValueVar, textValHasLanguage)
+            // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+            // if that statement hasn't been added already.
+            val statementToAddForValueHasLanguage = if (!valueVariablesGeneratedInFilters.contains(langFunctionCall.textValueVar)) {
+                // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                valueVariablesGeneratedInFilters.put(langFunctionCall.textValueVar, textValHasLanguage)
 
-            TransformedFilterPattern(
-                Some(CompareExpression(textValHasLanguage, compareExpression.operator, langLiteral)),
                 Seq(
                     // connects the value object with the value language code
                     StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri), textValHasLanguage)
                 )
+            } else {
+                Seq.empty[StatementPattern]
+            }
+
+            TransformedFilterPattern(
+                Some(CompareExpression(textValHasLanguage, compareExpression.operator, langLiteral)),
+                statementToAddForValueHasLanguage
             )
 
         }
@@ -928,7 +970,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // If the query uses only the simple schema, transform the function call.
 
                 // make sure that the query variable (first argument of regex function) represents a text value
-                typeInspectionResult.getTypeOfEntity(regexFunctionCall.textValueVar) match {
+                typeInspectionResult.getTypeOfEntity(regexFunctionCall.textVar) match {
                     case Some(typeInfo) =>
                         typeInfo match {
 
@@ -938,28 +980,37 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                     case OntologyConstants.Xsd.String => () // xsd:string is expected, TODO: should also xsd:anyUri be allowed?
 
-                                    case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type xsd:string")
+                                    case _ => throw GravsearchException(s"${regexFunctionCall.textVar} is expected to be of type xsd:string")
                                 }
 
-                            case _ => throw GravsearchException(s"${regexFunctionCall.textValueVar} is expected to be of type NonPropertyTypeInfo")
+                            case _ => throw GravsearchException(s"${regexFunctionCall.textVar} is expected to be of type NonPropertyTypeInfo")
                         }
 
                     case None =>
-                        throw GravsearchException(s"type information about ${regexFunctionCall.textValueVar} is missing")
+                        throw GravsearchException(s"type information about ${regexFunctionCall.textVar} is missing")
                 }
 
-                // create a variable representing the string literal
-                val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+                // Generate a variable name representing the string literal
+                val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
-                // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                valueVariablesCreatedInFilters.put(regexFunctionCall.textValueVar, textValHasString)
+                // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+                // if that statement hasn't been added already.
+                val statementToAddForValueHasString: Seq[StatementPattern] = if (!valueVariablesGeneratedInFilters.contains(regexFunctionCall.textVar)) {
+                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                    valueVariablesGeneratedInFilters.put(regexFunctionCall.textVar, textValHasString)
+
+                    Seq(
+                        // connects the value object with the value literal
+                        StatementPattern.makeExplicit(subj = regexFunctionCall.textVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
+                    )
+                } else {
+                    Seq.empty[StatementPattern]
+                }
+
 
                 TransformedFilterPattern(
                     Some(RegexFunction(textValHasString, regexFunctionCall.pattern, regexFunctionCall.modifier)),
-                    Seq(
-                        // connects the value object with the value literal
-                        StatementPattern.makeExplicit(subj = regexFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
-                    )
+                    statementToAddForValueHasString
                 )
 
             }
@@ -1011,11 +1062,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case _ => throw GravsearchException(s"$textValueVar is expected to be of type NonPropertyTypeInfo")
                     }
 
-                    // create a variable representing the string literal
                     val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
-                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                    valueVariablesCreatedInFilters.put(textValueVar, textValHasString)
+                    // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
+                    // if that statement hasn't been added already.
+                    val valueHasStringStatement = if (!valueVariablesGeneratedInFilters.contains(textValueVar)) {
+                        // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
+                        valueVariablesGeneratedInFilters.put(textValueVar, textValHasString)
+
+                        Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
+                    } else {
+                        Seq.empty[StatementPattern]
+                    }
 
                     val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
@@ -1024,9 +1082,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     TransformedFilterPattern(
                         None, // FILTER has been replaced by statements
-                        Seq(
-                            // connects the value object with the value literal
-                            StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString),
+                        valueHasStringStatement ++ Seq(
                             StatementPattern.makeExplicit(subj = textValHasString, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
                         )
                     )
@@ -1050,10 +1106,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // a QueryVariable expected to represent a string
                     val stringVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
 
-                    val searchTerm: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+                    val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(1, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
 
                     // combine search terms with a logical AND (Lucene syntax)
-                    val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTerm.value)
+                    val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTermStr.value)
 
                     TransformedFilterPattern(
                         None, // FILTER has been replaced by statements
@@ -1061,6 +1117,94 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             StatementPattern.makeExplicit(subj = stringVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri))
                         )
                     )
+
+                case OntologyConstants.KnoraApiV2WithValueObjects.MatchInStandoff =>
+                    if (querySchema == ApiV2Simple) {
+                        throw GravsearchException(s"Function $functionIri cannot be used in a Gravsearch query written in the simple schema")
+                    }
+
+                    if (!isTopLevel) {
+                        throw GravsearchException(s"Function $functionIri must be the top-level expression in a FILTER")
+                    }
+
+                    // Three arguments are expected:
+                    // 1. a variable representing the string literal value of the text value
+                    // 2. a variable representing the standoff tag
+                    // 3. a string literal containing space-separated search terms
+
+                    if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for $functionIri")
+
+                    // A variable representing the object of the text value's valueHasString.
+                    val textValueStringLiteralVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 0)
+
+                    // A variable representing the standoff tag.
+                    val standoffTagVar: QueryVariable = functionCallExpression.getArgAsQueryVar(pos = 1)
+
+                    // A string literal representing the search terms.
+                    val searchTermStr: XsdLiteral = functionCallExpression.getArgAsLiteral(pos = 2, xsdDatatype = OntologyConstants.Xsd.String.toSmartIri)
+
+                    // Combine the search terms with logical AND (Lucene syntax).
+                    val searchTerms: CombineSearchTerms = CombineSearchTerms(searchTermStr.value)
+
+                    // Generate a statement to search the full-text search index, to assert that text value contains
+                    // the search terms.
+                    val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeExplicit(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri)))
+
+                    // Generate query patterns to assign the text in the standoff tag to a variable, if we
+                    // haven't done so already.
+
+                    val startVariable = QueryVariable(standoffTagVar.variableName + "__start")
+                    val endVariable = QueryVariable(standoffTagVar.variableName + "__end")
+                    val markedUpVariable = QueryVariable(standoffTagVar.variableName + "__markedUp")
+
+                    val markedUpPatternsToAdd: Seq[QueryPattern] = if (!standoffMarkedUpVariables.contains(markedUpVariable)) {
+                        standoffMarkedUpVariables += markedUpVariable
+
+                        Seq(
+                            // ?standoffTag knora-base:standoffTagHasStart ?standoffTag__start .
+                            StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasStart.toSmartIri), startVariable),
+                            // ?standoffTag knora-base:standoffTagHasEnd ?standoffTag__end .
+                            StatementPattern.makeExplicit(standoffTagVar, IriRef(OntologyConstants.KnoraBase.StandoffTagHasEnd.toSmartIri), endVariable),
+                            // BIND(SUBSTR(?textValueStr, ?standoffTag__start + 1, ?standoffTag__end - ?standoffTag__start) AS ?standoffTag__markedUp)
+                            BindPattern(
+                                variable = markedUpVariable,
+                                expression = SubStrFunction(
+                                    textLiteralVar = textValueStringLiteralVar,
+                                    startExpression = ArithmeticExpression(
+                                        leftArg = startVariable,
+                                        operator = PlusOperator,
+                                        rightArg = IntegerLiteral(1)
+                                    ),
+                                    lengthExpression = ArithmeticExpression(
+                                        leftArg = endVariable,
+                                        operator = MinusOperator,
+                                        rightArg = startVariable
+                                    )
+                                )
+                            )
+                        )
+                    } else {
+                        Seq.empty[QueryPattern]
+                    }
+
+                    // Generate a FILTER pattern for each search term, using the regex function to assert that the text in the
+                    // standoff tag contains the term:
+                    // FILTER REGEX(?standoffTag__markedUp, 'term', "i")
+                    val regexFilters: Seq[FilterPattern] = searchTerms.terms.map {
+                        term => FilterPattern(
+                            expression = RegexFunction(
+                                textVar = markedUpVariable,
+                                pattern = term,
+                                modifier = Some("i")
+                            )
+                        )
+                    }
+
+                    TransformedFilterPattern(
+                        expression = None, // The expression has been replaced by additional patterns.
+                        additionalPatterns = fullTextSearchStatement ++ markedUpPatternsToAdd ++ regexFilters
+                    )
+
 
                 case _ => throw NotImplementedException(s"Gravsearch function ${functionCallExpression.functionIri} not implemented")
             }
@@ -1125,7 +1269,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // recreate Or expression and include additional statements
                     TransformedFilterPattern(
                         Some(OrExpression(filterExpressionLeft.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")), filterExpressionRight.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")))),
-                        filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns
                     )
 
 
@@ -1137,7 +1281,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // recreate And expression and include additional statements
                     TransformedFilterPattern(
                         Some(AndExpression(filterExpressionLeft.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")), filterExpressionRight.expression.getOrElse(throw DataConversionException("Expression was expected from previous FILTER conversion, but None given")))),
-                        filterExpressionLeft.additionalStatements ++ filterExpressionRight.additionalStatements
+                        filterExpressionLeft.additionalPatterns ++ filterExpressionRight.additionalPatterns
                     )
 
                 case regexFunction: RegexFunction =>
@@ -1683,9 +1827,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
-                    case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
+                    case Some(expression: Expression) => filterExpression.additionalPatterns :+ FilterPattern(expression)
 
-                    case None => filterExpression.additionalStatements // no FILTER expression given
+                    case None => filterExpression.additionalPatterns // no FILTER expression given
                 }
 
             }
@@ -1840,9 +1984,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val filterExpression: TransformedFilterPattern = transformFilterPattern(filterPattern.expression, typeInspectionResult = typeInspectionResult, isTopLevel = true)
 
                 filterExpression.expression match {
-                    case Some(expression: Expression) => filterExpression.additionalStatements :+ FilterPattern(expression)
+                    case Some(expression: Expression) => filterExpression.additionalPatterns :+ FilterPattern(expression)
 
-                    case None => filterExpression.additionalStatements // no FILTER expression given
+                    case None => filterExpression.additionalPatterns // no FILTER expression given
                 }
 
             }
@@ -1860,7 +2004,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     dependentResVar: QueryVariable =>
                         GroupConcat(inputVariable = dependentResVar,
                             separator = groupConcatSeparator,
-                            outputVariableName = dependentResVar.variableName + groupConcatVariableAppendix)
+                            outputVariableName = dependentResVar.variableName + groupConcatVariableSuffix)
                 }.toSet
 
                 dependentResourceVariablesGroupConcat = dependentResourceGroupConcat.map(_.outputVariable)
@@ -1869,7 +2013,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     valueObjVar: QueryVariable =>
                         GroupConcat(inputVariable = valueObjVar,
                             separator = groupConcatSeparator,
-                            outputVariableName = valueObjVar.variableName + groupConcatVariableAppendix)
+                            outputVariableName = valueObjVar.variableName + groupConcatVariableSuffix)
                 }.toSet
 
                 valueObjectVarsGroupConcat = valueObjectGroupConcat.map(_.outputVariable)
@@ -1894,7 +2038,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case (acc, criterion) =>
                         // Did a FILTER already generate a unique variable for the literal value of this value object?
 
-                        valueVariablesCreatedInFilters.get(criterion.queryVariable) match {
+                        valueVariablesGeneratedInFilters.get(criterion.queryVariable) match {
                             case Some(generatedVariable) =>
                                 // Yes. Use the already generated variable in the ORDER BY.
                                 acc.copy(
@@ -2220,7 +2364,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            // _ = println(triplestoreSpecificPrequery.toSparql)
+            _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
@@ -2346,8 +2490,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // Convert the result to a SPARQL string and send it to the triplestore.
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-                // println("++++++++")
-                // println(triplestoreSpecificSparql)
+                println("++++++++")
+                println(triplestoreSpecificSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
@@ -2390,12 +2534,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
                     valueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
                         depResVar =>
-                            collectValueVariablesForResource(inputQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                            collectValueVariablesForResource(inputQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableSuffix)
                     }
 
                     valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
                         depResIri =>
-                            collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableAppendix)
+                            collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableSuffix)
                     }
 
                     allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris

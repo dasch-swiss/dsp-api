@@ -1153,7 +1153,7 @@ class GravsearchParserSpec extends CoreSpec() {
             patterns = Vector(
                 BindPattern(
                     variable = QueryVariable(variableName = "thing"),
-                    iriValue = IriRef(
+                    expression = IriRef(
                         iri = "http://rdfh.ch/a-thing".toSmartIri,
                         propertyPathOperator = None
                     )
@@ -1577,7 +1577,7 @@ class GravsearchParserSpec extends CoreSpec() {
                     namedGraph = None
                 ),
                 FilterPattern(expression = RegexFunction(
-                    textValueVar = QueryVariable(variableName = "propVal0"),
+                    textVar = QueryVariable(variableName = "propVal0"),
                     pattern = "Zeit",
                     modifier = "i"
                 ))
