@@ -1579,7 +1579,7 @@ class GravsearchParserSpec extends CoreSpec() {
                 FilterPattern(expression = RegexFunction(
                     textVar = QueryVariable(variableName = "propVal0"),
                     pattern = "Zeit",
-                    modifier = "i"
+                    modifier = Some("i")
                 ))
             ),
             positiveEntities = Set(
