@@ -2137,7 +2137,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         val subjectTypeStatement: Option[(IRI, JsonLDObject)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDUtil.iriToJsonLDObject(subjectTypeObj.toString)))
         val objectTypeStatement: Option[(IRI, JsonLDObject)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDUtil.iriToJsonLDObject(objectTypeObj.toString)))
 
-        val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.map {
+        val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.sorted.map {
             superProperty => JsonLDUtil.iriToJsonLDObject(superProperty.toString)
         }
 
@@ -2214,9 +2214,11 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
             case (acc, (predicateIri, predicateInfo)) =>
                 if (predicateInfo.objects.nonEmpty) {
                     val nonLanguageSpecificObjectsAsJson: Seq[JsonLDValue] = predicateInfo.objects.collect {
-                        case StringLiteralV2(str, None) => JsonLDString(str)
-                        case SmartIriLiteralV2(iri) => JsonLDUtil.iriToJsonLDObject(iri.toString)
-                    }
+                        case StringLiteralV2(str, None) => (JsonLDString(str), str)
+                        case SmartIriLiteralV2(iri) =>
+                            val iriStr = iri.toString
+                            (JsonLDUtil.iriToJsonLDObject(iri.toString), iriStr)
+                    }.sortBy(_._2).map(_._1) // Sort for determinism in testing.
 
                     acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
                 } else {

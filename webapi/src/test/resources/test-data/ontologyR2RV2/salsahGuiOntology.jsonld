@@ -93,7 +93,7 @@
     } ]
   }, {
     "@id" : "salsah-gui:SimpleText",
-    "salsah-gui:guiAttributeDefinition" : [ "size:integer", "maxlength:integer" ],
+    "salsah-gui:guiAttributeDefinition" : [ "maxlength:integer", "size:integer" ],
     "rdf:type" : [ {
       "@id" : "salsah-gui:Guielement"
     }, {

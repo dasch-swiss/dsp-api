@@ -188,15 +188,63 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         // suffix appended to variables that are returned by a SPARQL aggregation function.
         val groupConcatVariableSuffix = "__Concat"
 
+        /**
+          * A container for a generated variable representing a value literal.
+          *
+          * @param variable     the generated variable.
+          * @param useInOrderBy if `true`, the generated variable can be used in ORDER BY.
+          */
+        private case class GeneratedQueryVariable(variable: QueryVariable, useInOrderBy: Boolean)
+
         // variables that are created when processing filter statements
         // they represent the value of a literal pointed to by a value object
-        val valueVariablesGeneratedInFilters = mutable.Map.empty[QueryVariable, QueryVariable]
+        private val valueVariablesGeneratedInFilters = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
 
-        // Generated statements for date literals.
-        val generatedDateStatements = mutable.Set.empty[StatementPattern]
+        /**
+          * Saves a generated variable representing a value literal, if it hasn't been saved already.
+          *
+          * @param valueVar     the variable representing the value.
+          * @param generatedVar the generated variable representing the value literal.
+          * @param useInOrderBy if `true`, the generated variable can be used in ORDER BY.
+          * @return `true` if the generated variable was saved, `false` if it had already been saved.
+          */
+        protected def addGeneratedVariableForValueLiteral(valueVar: QueryVariable, generatedVar: QueryVariable, useInOrderBy: Boolean = true): Boolean = {
+            val currentGeneratedVars = valueVariablesGeneratedInFilters.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
 
-        // Variables generated to represent marked-up text in standoff.
-        val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
+            if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
+                valueVariablesGeneratedInFilters.put(valueVar, currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
+                true
+            } else {
+                false
+            }
+        }
+
+        /**
+          * Gets a saved generated variable representing a value literal, for use in ORDER BY.
+          *
+          * @param valueVar the variable representing the value.
+          * @return a generated variable that represents a value literal and can be used in ORDER BY, or `None` if no such variable has been saved.
+          */
+        protected def getGeneratedVariableForValueLiteralInOrderBy(valueVar: QueryVariable): Option[QueryVariable] = {
+            valueVariablesGeneratedInFilters.get(valueVar) match {
+                case Some(generatedVars: Set[GeneratedQueryVariable]) =>
+                    val generatedVarsForOrderBy: Set[QueryVariable] = generatedVars.filter(_.useInOrderBy).map(_.variable)
+
+                    if (generatedVarsForOrderBy.size > 1) {
+                        throw AssertionException(s"More than one variable was generated for the literal values of ${valueVar.toSparql} and marked for use in ORDER BY: ${generatedVarsForOrderBy.map(_.toSparql).mkString(", ")}")
+                    }
+
+                    generatedVarsForOrderBy.headOption
+
+                case None => None
+            }
+        }
+
+        // Generated statements for date literals, so we don't generate the same statements twice.
+        protected val generatedDateStatements = mutable.Set.empty[StatementPattern]
+
+        // Variables generated to represent marked-up text in standoff, so we don't generate the same variables twice.
+        protected val standoffMarkedUpVariables = mutable.Set.empty[QueryVariable]
 
         /**
           * Create a unique variable from a whole statement.
@@ -531,8 +579,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Represents a transformed Filter expression and additional statement patterns that possibly had to be created during transformation.
           *
-          * @param expression           the transformed FILTER expression. In some cases, a given FILTER expression is replaced by additional statements, but
-          *                             only if it is the top-level expression in the FILTER.
+          * @param expression         the transformed FILTER expression. In some cases, a given FILTER expression is replaced by additional statements, but
+          *                           only if it is the top-level expression in the FILTER.
           * @param additionalPatterns additionally created query patterns.
           */
         protected case class TransformedFilterPattern(expression: Option[Expression], additionalPatterns: Seq[QueryPattern] = Seq.empty[QueryPattern])
@@ -612,9 +660,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
             // if that statement hasn't been added already.
-            val statementToAddForValueHas: Seq[StatementPattern] = if (!valueVariablesGeneratedInFilters.contains(queryVar)) {
-                valueVariablesGeneratedInFilters.put(queryVar, valueObjectLiteralVar)
 
+            val statementToAddForValueHas: Seq[StatementPattern] = if (addGeneratedVariableForValueLiteral(queryVar, valueObjectLiteralVar)) {
                 Seq(
                     // connects the query variable with the value object (internal structure: values are represented as objects)
                     StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(valueHasProperty.toSmartIri), valueObjectLiteralVar)
@@ -657,7 +704,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
             // sort dates by their period's start (in the prequery)
-            valueVariablesGeneratedInFilters.put(queryVar, dateValueHasStartVar)
+            addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
 
             // Generate a variable name representing the period's end
             val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
@@ -935,10 +982,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
             // if that statement hasn't been added already.
-            val statementToAddForValueHasLanguage = if (!valueVariablesGeneratedInFilters.contains(langFunctionCall.textValueVar)) {
-                // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                valueVariablesGeneratedInFilters.put(langFunctionCall.textValueVar, textValHasLanguage)
-
+            val statementToAddForValueHasLanguage = if (addGeneratedVariableForValueLiteral(valueVar = langFunctionCall.textValueVar, generatedVar = textValHasLanguage, useInOrderBy = false)) {
                 Seq(
                     // connects the value object with the value language code
                     StatementPattern.makeExplicit(subj = langFunctionCall.textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasLanguage.toSmartIri), textValHasLanguage)
@@ -995,10 +1039,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
                 // if that statement hasn't been added already.
-                val statementToAddForValueHasString: Seq[StatementPattern] = if (!valueVariablesGeneratedInFilters.contains(regexFunctionCall.textVar)) {
-                    // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                    valueVariablesGeneratedInFilters.put(regexFunctionCall.textVar, textValHasString)
-
+                val statementToAddForValueHasString: Seq[StatementPattern] = if (addGeneratedVariableForValueLiteral(regexFunctionCall.textVar, textValHasString)) {
                     Seq(
                         // connects the value object with the value literal
                         StatementPattern.makeExplicit(subj = regexFunctionCall.textVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString)
@@ -1066,10 +1107,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
                     // if that statement hasn't been added already.
-                    val valueHasStringStatement = if (!valueVariablesGeneratedInFilters.contains(textValueVar)) {
-                        // add this variable to the collection of additionally created variables (needed for sorting in the prequery)
-                        valueVariablesGeneratedInFilters.put(textValueVar, textValHasString)
-
+                    val valueHasStringStatement = if (addGeneratedVariableForValueLiteral(textValueVar, textValHasString)) {
                         Seq(StatementPattern.makeExplicit(subj = textValueVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri), textValHasString))
                     } else {
                         Seq.empty[StatementPattern]
@@ -1191,13 +1229,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // standoff tag contains the term:
                     // FILTER REGEX(?standoffTag__markedUp, 'term', "i")
                     val regexFilters: Seq[FilterPattern] = searchTerms.terms.map {
-                        term => FilterPattern(
-                            expression = RegexFunction(
-                                textVar = markedUpVariable,
-                                pattern = term,
-                                modifier = Some("i")
+                        term =>
+                            FilterPattern(
+                                expression = RegexFunction(
+                                    textVar = markedUpVariable,
+                                    pattern = term,
+                                    modifier = Some("i")
+                                )
                             )
-                        )
                     }
 
                     TransformedFilterPattern(
@@ -2038,7 +2077,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     case (acc, criterion) =>
                         // Did a FILTER already generate a unique variable for the literal value of this value object?
 
-                        valueVariablesGeneratedInFilters.get(criterion.queryVariable) match {
+                        getGeneratedVariableForValueLiteralInOrderBy(criterion.queryVariable) match {
                             case Some(generatedVariable) =>
                                 // Yes. Use the already generated variable in the ORDER BY.
                                 acc.copy(
@@ -2050,7 +2089,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                                 val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
                                     case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
-                                        valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"Type ${nonPropertyTypeInfo} is not supported in ORDER BY")).toSmartIri
+                                        valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"Type $nonPropertyTypeInfo is not supported in ORDER BY")).toSmartIri
 
                                     case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.variableName} represents a property, and therefore cannot be used in ORDER BY")
 
