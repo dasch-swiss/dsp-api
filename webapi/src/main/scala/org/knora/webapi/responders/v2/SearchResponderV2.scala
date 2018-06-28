@@ -2364,7 +2364,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
@@ -2490,8 +2490,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // Convert the result to a SPARQL string and send it to the triplestore.
                 val triplestoreSpecificSparql: String = triplestoreSpecificQuery.toSparql
 
-                println("++++++++")
-                println(triplestoreSpecificSparql)
+                // println("++++++++")
+                // println(triplestoreSpecificSparql)
 
                 for {
                     searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
