@@ -411,30 +411,4 @@ trait KnoraService {
             Kamon.addReporter(new JaegerReporter()) // tracing
         }
     }
-
-    /**
-      * Checks if application state is 'Running' and only then returns.
-      */
-    private def waitForRunningState(): Unit = {
-
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
-
-        log.debug("KnoraService - waitForRunningState - waitForRunningState called")
-
-        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
-
-        log.debug("KnoraService - waitForRunningState - AppState requested")
-
-        state match {
-            case value if value == AppState.Running => {
-                log.debug("KnoraService - waitForRunningState - received AppState: {}", value)
-            }
-            case value =>
-                log.debug("KnoraService - waitForRunningState - received AppState: {}", value)
-                // wait a bit and then check again
-                Thread.sleep(500)
-                waitForRunningState()
-        }
-    }
 }
