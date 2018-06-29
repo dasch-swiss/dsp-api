@@ -22,7 +22,6 @@ package org.knora.webapi.e2e.v1
 import akka.http.scaladsl.model.{HttpEntity, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.TestingUtilities
 import spray.json._
 
 import scala.concurrent.duration._
@@ -32,7 +31,7 @@ import scala.concurrent.duration._
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-docker-it-config.lua`.
   */
-class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol with TestingUtilities {
+class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

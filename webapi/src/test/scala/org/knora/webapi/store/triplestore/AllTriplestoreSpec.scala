@@ -23,6 +23,7 @@ import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SettingsConstants._
+import org.knora.webapi.messages.store.triplestoremessages
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.{StoreManager, _}
 import org.knora.webapi.{CoreSpec, LiveActorMaker}
@@ -206,8 +207,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
     s"The Triplestore ($tsType) Actor " when {
         "started " should {
             "only start answering after initialization has finished " in {
-                storeManager ! Initialized()
-                expectMsg(InitializedResponse(true))
+                storeManager ! CheckRepositoryRequest()
+                val response = expectMsgType[CheckRepositoryResponse](1.second)
+
+                response.repositoryStatus should be (RepositoryStatus.ServiceAvailable)
             }
         }
 

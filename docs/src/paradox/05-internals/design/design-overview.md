@@ -122,6 +122,23 @@ bindingFuture.onFailure {
 }
 ```
 
+## Coordinated Application Startup
+
+To coordinate necessary startup tasks, the application goes through a few states at startup:
+
+  - Stopped: Application starting. Http layer is still not started.
+  - StartingUp: Http layer is started. Only '/health' and monitoring routes are working.
+  - WaitingForRepository:
+  - RepositoryReady:
+  - CreatingCaches:
+  - CachesReady:
+  - LoadingOntologies:
+  - OntologiesReady:
+  - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
+  - Running: Running state. All APIs are open.
+
+                                                
+
 ## Concurrency
 
 Except for a bit of caching, Knora is written in a purely

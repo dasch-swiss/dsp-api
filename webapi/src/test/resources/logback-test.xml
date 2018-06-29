@@ -65,6 +65,8 @@
     <logger name="org.knora.webapi.util.TransformData" level="INFO"/>
     <logger name="org.knora.webapi.routing.Authenticator" level="INFO"/>
     <logger name="org.knora.webapi.routing.JWTHelper" level="INFO"/>
+    <logger name="org.knora.webapi.routing.HealthRoute" level="INFO"/>
+    <logger name="org.knora.webapi.routing.RejectingRoute" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.AssetsRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.ResourcesRouteV1" level="INFO"/>
     <logger name="org.knora.webapi.routing.v1.StandoffRouteV1" level="INFO"/>
@@ -85,7 +87,7 @@
 
     <!-- V2 -->
 
-    <logger name="org.knora.webapi.util.search.gravsearch" level="DEBUG"/>
+    <logger name="org.knora.webapi.util.search.gravsearch" level="INFO"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
@@ -97,6 +99,8 @@
 
 
     <!-- Spec Logging -->
+
+    <logger name="org.knora.webapi.E2ESpec" level="DEBUG"/>
 
     <!-- V1 -->
     <logger name="org.knora.webapi.responders.v1.ListsResponderV1Spec" level="INFO"/>
@@ -114,6 +118,7 @@
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
+    <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ListsADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.ProjectsADME2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.admin.UsersADME2ESpec" level="INFO"/>

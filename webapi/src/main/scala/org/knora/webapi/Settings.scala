@@ -110,6 +110,8 @@ class SettingsImpl(config: Config) extends Extension {
     val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
     val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
 
+    val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
+
     val triplestorePort: Int = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")

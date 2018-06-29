@@ -193,29 +193,29 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                             )
                     }
                 } ~
-                        delete {
-                            /* delete a user identified by iri */
-                            requestContext => {
-                                val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                                val requestingUser = getUserADM(requestContext)
+                delete {
+                    /* delete a user identified by iri */
+                    requestContext => {
+                        val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+                        val requestingUser = getUserADM(requestContext)
 
-                                /* update existing user's status to false */
-                                val requestMessage = UserChangeStatusRequestADM(
-                                    userIri,
-                                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
-                                    requestingUser,
-                                    apiRequestID = UUID.randomUUID()
-                                )
+                        /* update existing user's status to false */
+                        val requestMessage = UserChangeStatusRequestADM(
+                            userIri,
+                            changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                            requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                                RouteUtilADM.runJsonRoute(
-                                    requestMessage,
-                                    requestContext,
-                                    settings,
-                                    responderManager,
-                                    log
-                                )
-                            }
-                        }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                    }
+                }
             } ~
             path("admin" / "users" / "projects" / Segment) { userIri =>
                 get {
@@ -264,29 +264,29 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                             log
                         )
                 } ~
-                        delete {
-                            /* remove user from project (and all groups belonging to this project) */
-                            requestContext =>
-                                val requestingUser = getUserADM(requestContext)
+                delete {
+                    /* remove user from project (and all groups belonging to this project) */
+                    requestContext =>
+                        val requestingUser = getUserADM(requestContext)
 
-                                val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                                val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+                        val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                                val requestMessage = UserProjectMembershipRemoveRequestADM(
-                                    userIri = checkedUserIri,
-                                    projectIri = checkedProjectIri,
-                                    requestingUser = requestingUser,
-                                    apiRequestID = UUID.randomUUID()
-                                )
+                        val requestMessage = UserProjectMembershipRemoveRequestADM(
+                            userIri = checkedUserIri,
+                            projectIri = checkedProjectIri,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                                RouteUtilADM.runJsonRoute(
-                                    requestMessage,
-                                    requestContext,
-                                    settings,
-                                    responderManager,
-                                    log
-                                )
-                        }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             } ~
             path("admin" / "users" / "projects-admin" / Segment) { userIri =>
                 get {
@@ -335,29 +335,29 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                             log
                         )
                 } ~
-                        delete {
-                            /* remove user from project admin */
-                            requestContext =>
-                                val requestingUser = getUserADM(requestContext)
+                delete {
+                    /* remove user from project admin */
+                    requestContext =>
+                        val requestingUser = getUserADM(requestContext)
 
-                                val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                                val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+                        val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                                val requestMessage = UserProjectAdminMembershipRemoveRequestADM(
-                                    userIri = checkedUserIri,
-                                    projectIri = checkedProjectIri,
-                                    requestingUser = requestingUser,
-                                    apiRequestID = UUID.randomUUID()
-                                )
+                        val requestMessage = UserProjectAdminMembershipRemoveRequestADM(
+                            userIri = checkedUserIri,
+                            projectIri = checkedProjectIri,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                                RouteUtilADM.runJsonRoute(
-                                    requestMessage,
-                                    requestContext,
-                                    settings,
-                                    responderManager,
-                                    log
-                                )
-                        }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             } ~
             path("admin" / "users" / "groups" / Segment) { userIri =>
                 get {
@@ -406,28 +406,28 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                             log
                         )
                 } ~
-                        delete {
-                            /* remove user from group */
-                            requestContext =>
-                                val requestingUser = getUserADM(requestContext)
+                delete {
+                    /* remove user from group */
+                    requestContext =>
+                        val requestingUser = getUserADM(requestContext)
 
-                                val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                                val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
+                        val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                        val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                                val requestMessage = UserGroupMembershipRemoveRequestADM(
-                                    userIri = checkedUserIri,
-                                    groupIri = checkedGroupIri,
-                                    requestingUser = requestingUser,
-                                    apiRequestID = UUID.randomUUID()
-                                )
+                        val requestMessage = UserGroupMembershipRemoveRequestADM(
+                            userIri = checkedUserIri,
+                            groupIri = checkedGroupIri,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                                RouteUtilADM.runJsonRoute(
-                                    requestMessage,
-                                    requestContext,
-                                    settings,
-                                    responderManager,
-                                    log
-                                )
-                        }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
 }
