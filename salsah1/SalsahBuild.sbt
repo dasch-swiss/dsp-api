@@ -46,7 +46,7 @@ lazy val salsah1 = (project in file(".")).
 lazy val salsahCommonSettings = Seq(
     organization := "org.knora",
     name := "salsah",
-    version := "1.5.0",
+    version := "1.6.0",
     scalaVersion := "2.12.4"
 )
 
