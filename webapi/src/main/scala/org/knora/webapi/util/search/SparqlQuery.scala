@@ -120,9 +120,9 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
 
     override def toSparql: String = {
         if (propertyPathOperator.nonEmpty) {
-            s"<$iri>${propertyPathOperator.get}"
+            s"${iri.toSparql}${propertyPathOperator.get}"
         } else {
-            s"<$iri>"
+            iri.toSparql
         }
     }
 
@@ -138,7 +138,7 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
   * @param datatype the value's XSD type IRI.
   */
 case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
-    override def toSparql: String = "\"" + value + "\"^^<" + datatype + ">"
+    override def toSparql: String = "\"" + value + "\"^^" + datatype.toSparql
 }
 
 /**
@@ -386,7 +386,7 @@ case class SubStrFunction(textLiteralVar: QueryVariable, startExpression: Expres
   * @param args        the arguments passed to the function.
   */
 case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
-    override def toSparql: String = s"<${functionIri.iri.toString}>(${args.map(_.toSparql).mkString(", ")})"
+    override def toSparql: String = s"${functionIri.iri.toSparql}(${args.map(_.toSparql).mkString(", ")})"
 
     /**
       * Gets the argument at the given position as a [[QueryVariable]].
@@ -402,7 +402,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
         args(pos) match {
             case queryVar: QueryVariable => queryVar
 
-            case other => throw GravsearchException(s"$other is expected to be a QueryVariable")
+            case other => throw GravsearchException(s"Variable required as function argument: $other")
         }
 
     }
@@ -422,7 +422,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
         args(pos) match {
             case literal: XsdLiteral if literal.datatype == xsdDatatype => literal
 
-            case other => throw GravsearchException(s"$other is expected to be a literal of type ${xsdDatatype.toString}")
+            case other => throw GravsearchException(s"Literal of type $xsdDatatype required as function argument: $other")
 
         }
 

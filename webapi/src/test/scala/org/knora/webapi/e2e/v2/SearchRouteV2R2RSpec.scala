@@ -1993,7 +1993,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the term 'text' marked up as a paragraph" in {
 
-            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2007,7 +2007,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the term 'text' marked up as a paragraph" in {
 
-            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2019,7 +2019,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the term 'text' marked up as italic" in {
 
-            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2033,7 +2033,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the term 'text' marked up as italic" in {
 
-            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2044,7 +2044,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
 
-            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2058,7 +2058,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
 
-            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2069,7 +2069,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
 
-            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

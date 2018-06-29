@@ -1859,7 +1859,7 @@ class OntologyResponderV2 extends Responder {
                                 "would inherit"
                             }
 
-                            errorFun(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
+                            errorFun(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's ${OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri.toOntologySchema(errorSchema)}, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
                         }
 
                     case None => ()

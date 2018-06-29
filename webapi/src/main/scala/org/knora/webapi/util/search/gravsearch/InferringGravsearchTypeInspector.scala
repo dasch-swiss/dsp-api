@@ -977,7 +977,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
 
                             val variableType = functionCall.functionIri.iri.toString match {
-                                case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunctionIri =>
+                                case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
                                     // The knora-api:toSimpleDate function takes a DateValue argument.
                                     OntologyConstants.KnoraApiV2WithValueObjects.DateValue.toSmartIri
 

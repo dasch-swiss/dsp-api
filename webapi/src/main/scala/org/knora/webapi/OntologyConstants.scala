@@ -829,9 +829,10 @@ object OntologyConstants {
         val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
-        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
-        val MatchInStandoff: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
-        val ToSimpleDateFunctionIri: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
+        val ToSimpleDateFunction: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
+        val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
+        val StandoffLinkFunction:  IRI = KnoraApiV2PrefixExpansion + "standoffLink"
     }
 
     object SalsahGuiApiV2WithValueObjects {
