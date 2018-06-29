@@ -1,16 +1,18 @@
 package org.knora.webapi.app
 
 import akka.actor.{Actor, ActorLogging}
+import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse}
 import org.knora.webapi.{Settings, SettingsImpl}
 
 class ApplicationStateActor extends Actor with ActorLogging {
 
+    log.debug("entered the ApplicationStateActor constructor")
+
     // the prometheus, zipkin, jaeger, and printConfig flags can be set via application.conf and via command line parameter
     val settings: SettingsImpl = Settings(context.system)
 
-    private var loadDemoDataState = false
+    private var appState: AppState = AppState.Stopped
     private var allowReloadOverHTTPState = false
     private var prometheusReporterState = false
     private var zipkinReporterState = false
@@ -18,15 +20,11 @@ class ApplicationStateActor extends Actor with ActorLogging {
     private var printConfigState = false
 
     def receive: PartialFunction[Any, Unit] = {
-        case Initialized() => sender ! InitializedResponse(true)
-        case SetLoadDemoDataState(value) => {
-            log.debug("ApplicationStateActor - SetLoadDemoDataState - value: {}", value)
-            loadDemoDataState = value
+
+        case ActorReady() => {
+            sender ! ActorReadyAck()
         }
-        case GetLoadDemoDataState() => {
-            log.debug("ApplicationStateActor - GetLoadDemoDataState - value: {}", loadDemoDataState)
-            sender ! loadDemoDataState
-        }
+
         case SetAllowReloadOverHTTPState(value) => {
             log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
             allowReloadOverHTTPState = value
@@ -67,5 +65,20 @@ class ApplicationStateActor extends Actor with ActorLogging {
             log.debug("ApplicationStateActor - GetPrintConfigState - value: {}", printConfigState)
             sender ! (printConfigState | settings.printConfig)
         }
+        case SetAppState(value: AppState) => {
+            log.debug("ApplicationStateActor - SetAppState - value {}", value)
+            appState = value
+        }
+        case GetAppState() => {
+            log.debug("ApplicationStateActor - GetAppState - value: {}", appState)
+            sender ! appState
+        }
     }
+
+    override def postStop(): Unit = {
+        super.postStop()
+        log.debug("ApplicationStateActor - postStop called")
+    }
+
+
 }

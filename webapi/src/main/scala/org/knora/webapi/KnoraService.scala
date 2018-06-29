@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import akka.actor._
+import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -33,22 +34,23 @@ import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{Initialized, InitializedResponse, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
-import org.knora.webapi.routing.{RejectingRoute, SwaggerApiDocsRoute}
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
+import org.knora.webapi.routing.{HealthRoute, RejectingRoute, SwaggerApiDocsRoute}
 import org.knora.webapi.store._
-import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.language.postfixOps
+import scala.languageFeature.postfixOps
 
 /**
   * Knora Core abstraction.
@@ -59,6 +61,10 @@ trait Core {
     implicit val settings: SettingsImpl
 
     implicit val log: LoggingAdapter
+
+    implicit val materializer: ActorMaterializer
+
+    implicit val executionContext: ExecutionContext
 }
 
 /**
@@ -80,6 +86,16 @@ trait LiveCore extends Core {
       * Provide logging
       */
     implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
+
+    /**
+      * Provides the actor materializer (akka-http)
+      */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    /**
+      * Provides the default global execution context
+      */
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
 }
 
 /**
@@ -89,11 +105,14 @@ trait LiveCore extends Core {
   */
 trait KnoraService {
     this: Core =>
+
     // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
     StringFormatter.init(settings)
 
+    import scala.language.postfixOps
+
     /**
-      * The actor used for storing the application application wide variables in a thread safe maner.
+      * The actor used for storing the application application wide variables in a thread safe manner.
       */
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
 
@@ -121,7 +140,8 @@ trait KnoraService {
       * All routes composed together and CORS activated.
       */
     private val apiRoutes: Route = CORS(
-        RejectingRoute.knoraApiPath(system, settings, log) ~
+        new HealthRoute(system, settings).knoraApiPath ~
+        new RejectingRoute(system, settings).knoraApiPath() ~
             ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
@@ -152,31 +172,198 @@ trait KnoraService {
     )
 
     /**
-      * Sends messages to all supervisor actors in a blocking manner, checking if they are all ready.
-      */
-    def checkActorSystem(): Unit = {
-
-        val applicationStateActorResult = Await.result(applicationStateActor ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
-        log.info(s"ApplicationStateActor ready: $applicationStateActorResult")
-
-        // TODO: Check if ResponderManager is ready
-        log.info(s"ResponderManager ready: - ")
-
-        // TODO: Check if Sipi is also ready/accessible
-        val storeManagerResult = Await.result(storeManager ? Initialized(), 5.seconds).asInstanceOf[InitializedResponse]
-        log.info(s"StoreManager ready: $storeManagerResult")
-        log.info(s"ActorSystem ${system.name} started")
-    }
-
-    /**
       * Starts the Knora API server.
       */
     def startService(): Unit = {
 
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
+        startReporters()
 
-        // needed for startup flags and the future map/flatmap in the end
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+
+        // Kick of startup tasks. This method returns when Running state is reached.
+        println("KnoraService - startupTaskRunner starting")
+        startupTaskRunner()
+        println("KnoraService - startupTaskRunner finished")
+    }
+
+    /**
+      * Stops Knora.
+      */
+    def stopService(): Unit = {
+        system.terminate()
+        CacheUtil.removeAllCaches()
+        //Kamon.shutdown()
+    }
+
+    /**
+      * Returns only when the application state actor is ready.
+      */
+    def applicationStateActorReady(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        try {
+            Await.result(applicationStateActor ? ActorReady(), 2.second).asInstanceOf[ActorReadyAck]
+            log.info("KnoraService - applicationStateActorReady")
+        } catch {
+            case e: AskTimeoutException => {
+                // if we are here, then the ask timed out, so we need to try again until the actor is ready
+                applicationStateActorReady()
+            }
+        }
+    }
+
+    /**
+      * Triggers the startupChecks periodically and only returns when AppState.Running is reached.
+      */
+    private def startupTaskRunner(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
+
+        state match {
+            case value if value == AppState.Running => {
+                printWelcomeMsg()
+                printConfig()
+            }
+            case value => {
+                // not in running state so call startup checks again
+                startupChecks()
+
+                // we should wait a bit before we call ourselves again
+                Await.result(blockingFuture(), 2.second)
+                startupTaskRunner()
+            }
+        }
+    }
+
+    /**
+      * A blocking future running on the blocking dispatcher.
+      */
+    private def blockingFuture(): Future[Unit] = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val delay: Long = 1.second.toMillis
+
+        Future {
+            // uses the good "blocking dispatcher" that we configured,
+            // instead of the default dispatcher to isolate the blocking.
+            Thread.sleep(delay)
+            Future.successful(())
+        }
+    }
+
+    /**
+      * Executes startup tasks in the correct order and state.
+      */
+    private def startupChecks(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val state = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
+
+        state match {
+            case AppState.Stopped => applicationStateActor ! SetAppState(AppState.StartingUp)
+            case AppState.StartingUp => {
+                log.info(s"KnoraService - Startup State: {}", AppState.StartingUp)
+                checkRepository()
+            }
+            case AppState.WaitingForRepository => checkRepository() // check DB again
+            case AppState.RepositoryReady => createCaches() // create caches
+            case AppState.CachesReady => loadOntologies() // load ontologies
+            case AppState.OntologiesReady => {
+                // everything is up and running so set state to Running
+                applicationStateActor ! SetAppState(AppState.Running)
+                log.info(s"KnoraService - Startup State: {}", AppState.Running)
+            }
+            case value => throw UnsupportedValueException(s"The value: $value is not supported.")
+        }
+    }
+
+    /**
+      * Checks if repository is running and initialized
+      */
+    private def checkRepository(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
+        if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
+            applicationStateActor ! SetAppState(AppState.RepositoryReady)
+            log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)
+        } else if (storeManagerResult.repositoryStatus == RepositoryStatus.NotInitialized) {
+            log.info(s"KnoraService - checkRepository - status: {}: {}", storeManagerResult.repositoryStatus, storeManagerResult.msg)
+            log.info("Please initialize repository. Will exit now.")
+            stopService()
+        } else {
+            applicationStateActor ! SetAppState(AppState.WaitingForRepository)
+            log.info(s"KnoraService - Startup State: {}", AppState.WaitingForRepository)
+
+        }
+    }
+
+    /**
+      * Creates caches
+      */
+    private def createCaches(): Unit = {
+        applicationStateActor ! SetAppState(AppState.CreatingCaches)
+        CacheUtil.createCaches(settings.caches)
+        applicationStateActor ! SetAppState(AppState.CachesReady)
+        log.info(s"KnoraService - Startup State: {}", AppState.CachesReady)
+    }
+
+    /**
+      * Loads ontologies
+      */
+    private def loadOntologies(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        // load ontologies and set OntologiesReady state
+        applicationStateActor ! SetAppState(AppState.LoadingOntologies)
+        val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
+
+        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
+        applicationStateActor ! SetAppState(AppState.OntologiesReady)
+        log.info(s"KnoraService - Startup State: {}", AppState.OntologiesReady)
+    }
+
+    /**
+      * Prints the welcome message
+      */
+    private def printWelcomeMsg(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        println("")
+        println("----------------------------------------------------------------")
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
+        println("----------------------------------------------------------------")
+
+        // get allowReloadOverHTTP value from application state actor
+        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+
+        if (allowReloadOverHTTP) {
+            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
+        }
+    }
+
+    /**
+      * Prints the configuration if the print config flag is set.
+      */
+    private def printConfig(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
 
         val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
         if (printConfig) {
@@ -198,34 +385,16 @@ trait KnoraService {
             println("")
         }
 
-        CacheUtil.createCaches(settings.caches)
+    }
 
-        // get loadDemoData value from application state actor
-        val loadDemoData = Await.result(applicationStateActor ? GetLoadDemoDataState(), 1.second).asInstanceOf[Boolean]
+    /**
+      * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and
+      * the application which we will use to look at the collected data.
+      */
+    private def startReporters(): Unit = {
 
-        if (loadDemoData) {
-            println("Start loading of demo data ...")
-            val configList = settings.tripleStoreConfig.getConfigList("rdf-data")
-            val rdfDataObjectList = configList.asScala.map {
-                config => RdfDataObjectFactory(config)
-            }
-            val resultFuture = storeManager ? ResetTriplestoreContent(rdfDataObjectList)
-            Await.result(resultFuture, timeout.duration).asInstanceOf[ResetTriplestoreContentACK]
-            println("... loading of demo data finished.")
-        }
-
-        val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
-        Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
-
-        // get allowReloadOverHTTP value from application state actor
-        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
-
-        if (allowReloadOverHTTP) {
-            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
-        }
-
-        // start the different reporters. reporters are the connection points between kamon (the collector) and
-        // the application which we will use to look at the collected data.
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
 
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {
@@ -241,20 +410,5 @@ trait KnoraService {
         if (jaegerReporter) {
             Kamon.addReporter(new JaegerReporter()) // tracing
         }
-
-        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
-        println("")
-        println("----------------------------------------------------------------")
-        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
-        println("----------------------------------------------------------------")
-    }
-
-    /**
-      * Stops Knora.
-      */
-    def stopService(): Unit = {
-        system.terminate()
-        CacheUtil.removeAllCaches()
-        //Kamon.shutdown()
     }
 }

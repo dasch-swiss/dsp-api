@@ -22,6 +22,7 @@ package org.knora.webapi
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.pattern._
+import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import io.gatling.core.scenario.Simulation
@@ -30,7 +31,7 @@ import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.StringFormatter
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.languageFeature.postfixOps
 
@@ -53,7 +54,13 @@ object E2ESimSpec {
 abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with KnoraService {
 
     /* needed by the core trait */
+
     implicit lazy val settings: SettingsImpl = Settings(system)
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESimSpec.defaultConfig)))
@@ -76,7 +83,6 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
     before {
         /* Set the startup flags and start the Knora Server */
         log.info(s"executing before setup started")
-        checkActorSystem()
 
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
