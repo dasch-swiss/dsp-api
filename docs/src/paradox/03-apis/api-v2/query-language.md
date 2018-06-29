@@ -91,7 +91,7 @@ A Gravsearch query can be written in either of the two
 @ref:[Knora API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
 anything below the level of a Knora value. If your query needs to refer to
-list nodes, you must use the complex schema. Each query must use a single
+list nodes or standoff markup, you must use the complex schema. Each query must use a single
 schema, with one exception (see @ref:[Date Comparisons](#date-comparisons)).
 
 Gravsearch query results can be requested in the simple or complex schema;
@@ -367,6 +367,65 @@ In the complex schema, use it on the object of the text value's
 ?title knora-api:valueAsString ?titleStr .
 FILTER regex(?titleStr, "Zeit", "i")
 ```
+
+#### Searching for Standoff Markup in the Complex Schema
+
+To refer to standoff markup in text values, you must write your query in the complex
+schema.
+
+A `knora-api:TextValue` can have the property
+`knora-api:textValueHasStandoff`, whose objects are the standoff markup
+tags in the text. You can match the tags you're interested in using
+`rdf:type` or other properties of each tag. Gravsearch also provides
+functions for certain operations on standoff tags:
+
+* `knora-api:matchInStandoff` for searching for standoff tags containing certain terms.
+  The implementation is optimised using the full-text search index where available.
+  Takes three arguments:
+    1. A variable representing the string literal value of a text value.
+    2. A variable representing a standoff tag.
+    3. A string literal containing space-separated search terms.
+* `knora-api:standoffLink` for searching for standoff links to resources. Takes
+  three arguments:
+    1. A variable or IRI representing the resource that is the source of the link.
+    2. A variable representing the standoff link tag.
+    3. A variable or IRI representing the resource that is the target of the link.
+
+These functions can only be used as the top-level expression in a `FILTER`.
+Here is an example:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:creationDate ?date .
+    ?letter beol:hasText ?text .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:creationDate ?date .
+    FILTER(knora-api:toSimpleDate(?date) < "GREGORIAN:1756-02 CE"^^knora-api-simple:Date)
+    ?letter beol:hasText ?text .
+    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+    ?standoffLinkTag a knora-api:StandoffLinkTag .
+    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, ?person)
+    ?person a beol:person .
+    ?person beol:hasIAFIdentifier ?iafIdentifier .
+    ?iafIdentifier knora-api:valueAsString "(VIAF)271899510" .
+    ?text knora-api:valueAsString ?textStr .
+    ?text knora-api:textValueHasStandoff ?standoffParagraphTag .
+    ?standoffParagraphTag a standoff:StandoffParagraphTag .
+    FILTER knora-api:matchInStandoff(?textStr, ?standoffParagraphTag, "Grund Richtigkeit")
+}
+```
+
+Here we are looking for letters written before February 1756, containing
+links to the historian Claude Jordan (who is identified by his
+Integrated Authority File identifier, `(VIAF)271899510`), and containing
+the words "Grund" and "Richtigkeit" within a single paragraph.
 
 ### CONSTRUCT Clause
 

@@ -1312,7 +1312,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // Three arguments are expected:
             // 1. a variable or IRI representing the resource that is the source of the link
             // 2. a variable representing the standoff link tag
-            // 3. a variable or IRI the resource that is the target of the link
+            // 3. a variable or IRI representing the resource that is the target of the link
 
             if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionIri.toSparql}")
 
@@ -1409,6 +1409,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         typeInspectionResult = typeInspectionResult,
                         isTopLevel = isTopLevel
                     )
+
+                case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
+                    throw GravsearchException(s"Function ${functionIri.toSparql} must be used in a comparison expression")
 
                 case _ => throw NotImplementedException(s"Function ${functionCallExpression.functionIri} not found")
             }
