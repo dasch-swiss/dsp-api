@@ -411,6 +411,8 @@ CONSTRUCT {
     ?letter beol:hasText ?text .
     ?text knora-api:textValueHasStandoff ?standoffLinkTag .
     ?standoffLinkTag a knora-api:StandoffLinkTag .
+    ?standoffLinkTag knora-api:standoffTagHasStartParent ?standoffItalicTag .
+    ?standoffItalicTag a standoff:StandoffItalicTag .
     FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, ?person)
     ?person a beol:person .
     ?person beol:hasIAFIdentifier ?iafIdentifier .
@@ -422,10 +424,12 @@ CONSTRUCT {
 }
 ```
 
-Here we are looking for letters written before February 1756, containing
-links to the historian Claude Jordan (who is identified by his
-Integrated Authority File identifier, `(VIAF)271899510`), and containing
-the words "Grund" and "Richtigkeit" within a single paragraph.
+Here we are looking for letters written before February 1756, containing:
+
+1. A link to the historian Claude Jordan (who is
+   identified by his Integrated Authority File identifier, `(VIAF)271899510`),
+   within italicised text.
+2. The words "Grund" and "Richtigkeit" within a single paragraph.
 
 ### CONSTRUCT Clause
 
