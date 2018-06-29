@@ -7014,5 +7014,65 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "search for a standoff link using the knora-api:standoffLink function (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffLinkTag .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, ?otherThing)
+                  |    ?otherThing a anything:Thing .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinks.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for matching words in a particular type of standoff tag (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasRichtext ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasRichtext ?text .
+                  |    ?text knora-api:valueAsString ?textStr .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a standoff:StandoffItalicTag .
+                  |    FILTER knora-api:matchInStandoff(?textStr, ?standoffTag, "interesting text")
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+
+        }
+
     }
 }

@@ -1230,7 +1230,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // Generate a statement to search the full-text search index, to assert that text value contains
             // the search terms.
-            val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeExplicit(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri)))
+            val fullTextSearchStatement: Seq[StatementPattern] = Seq(StatementPattern.makeInferred(subj = textValueStringLiteralVar, pred = IriRef(OntologyConstants.KnoraBase.MatchesTextIndex.toSmartIri), XsdLiteral(searchTerms.combineSearchTermsWithLogicalAnd, OntologyConstants.Xsd.String.toSmartIri)))
 
             // Generate query patterns to assign the text in the standoff tag to a variable, if we
             // haven't done so already.
@@ -1347,19 +1347,24 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case _ => throw GravsearchException(s"The third argument of ${functionIri.toSparql} must represent a knora-api:Resource")
             }
 
-            // Generate a statement linking the standoff tag to the target resource.
-            val standoffTagHasLinkStatement: Seq[StatementPattern] = Seq(StatementPattern.makeInferred(subj = standoffTagVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri), obj = linkTargetEntity))
+            val hasStandoffLinkToIriRef = IriRef(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
+
+            // Generate statements linking the source resource and the standoff tag to the target resource.
+            val linkStatements = Seq(
+                StatementPattern.makeExplicit(subj = linkSourceEntity, pred = hasStandoffLinkToIriRef, obj = linkTargetEntity),
+                StatementPattern.makeInferred(subj = standoffTagVar, pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri), obj = linkTargetEntity)
+            )
 
             // Generate statements matching the link value that describes the standoff link between the source and target resources.
             val statementsForLinkValue: Seq[StatementPattern] = generateStatementsForLinkValue(
                 linkSource = linkSourceEntity,
-                linkPred = IriRef(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri),
+                linkPred = hasStandoffLinkToIriRef,
                 linkTarget = linkTargetEntity
             )
 
             TransformedFilterPattern(
                 None, // FILTER has been replaced with statements
-                standoffTagHasLinkStatement ++ statementsForLinkValue
+                linkStatements ++ statementsForLinkValue
             )
         }
 
