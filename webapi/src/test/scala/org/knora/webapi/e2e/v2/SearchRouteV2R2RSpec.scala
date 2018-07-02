@@ -7186,5 +7186,38 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for a standoff tag using knora-api:standoffTagHasStartAncestor (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffDateTag .
+                  |    ?standoffDateTag a knora-api:StandoffDateTag .
+                  |    FILTER(knora-api:toSimpleDate(?standoffDateTag) = "GREGORIAN:2016-12-24 CE"^^knora-api-simple:Date)
+                  |    ?standoffDateTag knora-api:standoffTagHasStartAncestor ?standoffParagraphTag .
+                  |    ?standoffParagraphTag a standoff:StandoffParagraphTag .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                assert(responseAs[String].contains("we will have a party"))
+
+            }
+
+        }
+
     }
 }

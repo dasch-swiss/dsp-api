@@ -4352,6 +4352,15 @@
       "@id" : "knora-api:StandoffTag"
     }
   }, {
+    "@id" : "knora-api:standoffTagHasStartAncestor",
+    "@type" : [ "owl:ObjectProperty", "owl:TransitiveProperty" ],
+    "knora-api:objectType" : {
+      "@id" : "knora-api:StandoffTag"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:StandoffTag"
+    }
+  }, {
     "@id" : "knora-api:standoffTagHasStartIndex",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
@@ -4368,6 +4377,9 @@
     },
     "knora-api:subjectType" : {
       "@id" : "knora-api:StandoffTag"
+    },
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:standoffTagHasStartAncestor"
     }
   }, {
     "@id" : "knora-api:standoffTagHasUUID",

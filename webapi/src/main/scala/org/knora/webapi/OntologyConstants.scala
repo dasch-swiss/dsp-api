@@ -432,6 +432,7 @@ object OntologyConstants {
         val StandoffTagHasUUID: IRI = KnoraBasePrefixExpansion + "standoffTagHasUUID"
         val StandoffTagHasOriginalXMLID: IRI = KnoraBasePrefixExpansion + "standoffTagHasOriginalXMLID"
         val StandoffTagHasInternalReference: IRI = KnoraBasePrefixExpansion + "standoffTagHasInternalReference"
+        val StandoffTagHasStartAncestor: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartAncestor"
 
         val StandoffTagHasLink: IRI = KnoraBasePrefixExpansion + "standoffTagHasLink"
         val HasStandoffLinkTo: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkTo"

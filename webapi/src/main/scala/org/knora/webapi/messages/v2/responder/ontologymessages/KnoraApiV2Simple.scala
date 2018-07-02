@@ -325,6 +325,7 @@ object KnoraApiV2Simple {
             OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
             OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
             OntologyConstants.KnoraBase.StandoffTagHasStartParent,
+            OntologyConstants.KnoraBase.StandoffTagHasStartAncestor,
             OntologyConstants.KnoraBase.StandoffTagHasEndParent,
             OntologyConstants.KnoraBase.StandoffTagHasUUID,
             OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,

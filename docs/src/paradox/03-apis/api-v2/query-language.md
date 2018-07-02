@@ -309,7 +309,7 @@ CONSTRUCT {
 ```
 
 You can also use `knora-api:toSimpleDate` with to search for date tags in standoff
-text markup (see @ref:[Searching for Standoff Markup in the Complex Schema](#searching-for-standoff-markup-in-the-complex-schema)).
+text markup (see @ref:[Matching Standoff Dates](#matching-standoff-dates)).
 
 #### Searching for Matching Words
 
@@ -371,7 +371,7 @@ In the complex schema, use it on the object of the text value's
 FILTER regex(?titleStr, "Zeit", "i")
 ```
 
-#### Searching for Standoff Markup in the Complex Schema
+### Searching for Text Markup
 
 To refer to standoff markup in text values, you must write your query in the complex
 schema.
@@ -379,47 +379,32 @@ schema.
 A `knora-api:TextValue` can have the property
 `knora-api:textValueHasStandoff`, whose objects are the standoff markup
 tags in the text. You can match the tags you're interested in using
-`rdf:type` or other properties of each tag. Gravsearch also provides
-functions for certain operations on standoff tags:
+`rdf:type` or other properties of each tag.
 
-* `knora-api:matchInStandoff` for searching for standoff tags containing certain terms.
-  The implementation is optimised using the full-text search index where available.
-  Takes three arguments:
-    1. A variable representing the string literal value of a text value.
-    2. A variable representing a standoff tag.
-    3. A string literal containing space-separated search terms.
-* `knora-api:standoffLink` for searching for standoff links to resources. Takes
-  three arguments:
-    1. A variable or IRI representing the resource that is the source of the link.
-    2. A variable representing the standoff link tag.
-    3. A variable or IRI representing the resource that is the target of the link.
+#### Matching Text in a Standoff Tag
 
-These functions can only be used as the top-level expression in a `FILTER`.
-Here is an example:
+The function `knora-api:matchInStandoff` searches for standoff tags containing certain terms.
+The implementation is optimised using the full-text search index if available. The
+function takes three arguments:
+
+  1. A variable representing the string literal value of a text value.
+  2. A variable representing a standoff tag.
+  3. A string literal containing space-separated search terms.
+
+This function can only be used as the top-level expression in a `FILTER`.
+For example:
 
 ```
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
 PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
 
 CONSTRUCT {
     ?letter knora-api:isMainResource true .
-    ?letter beol:creationDate ?date .
     ?letter beol:hasText ?text .
 } WHERE {
     ?letter a beol:letter .
-    ?letter beol:creationDate ?date .
-    FILTER(knora-api:toSimpleDate(?date) < "GREGORIAN:1756-02 CE"^^knora-api-simple:Date)
     ?letter beol:hasText ?text .
-    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
-    ?standoffLinkTag a knora-api:StandoffLinkTag .
-    ?standoffLinkTag knora-api:standoffTagHasStartParent ?standoffItalicTag .
-    ?standoffItalicTag a standoff:StandoffItalicTag .
-    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, ?person)
-    ?person a beol:person .
-    ?person beol:hasIAFIdentifier ?iafIdentifier .
-    ?iafIdentifier knora-api:valueAsString "(VIAF)271899510" .
     ?text knora-api:valueAsString ?textStr .
     ?text knora-api:textValueHasStandoff ?standoffParagraphTag .
     ?standoffParagraphTag a standoff:StandoffParagraphTag .
@@ -427,15 +412,77 @@ CONSTRUCT {
 }
 ```
 
-Here we are looking for letters written before February 1756, containing:
+Here we are looking for letters containing the words "Grund" and "Richtigkeit"
+within a single paragraph.
 
-1. A link to the historian Claude Jordan (who is
-   identified by his Integrated Authority File identifier, `(VIAF)271899510`),
-   within italicised text.
-2. The words "Grund" and "Richtigkeit" within a single paragraph.
+#### Matching Standoff Links
 
-You can also use the `knora-api:toSimpleDate` function (see @ref[Date Comparisons](#date-comparisons))
-to find standoff date tags, i.e. instances of `knora-api:StandoffDateTag` or
+If you are only interested in specifying that a resource has some text
+value containing a standoff link to another resource, the most efficient
+way is to use the property `knora-api:hasStandoffLinkTo`, whose subjects and objects
+are resources. This property is automatically maintained by Knora. For example:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:hasText ?text .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:hasText ?text .
+    ?letter knora-api:hasStandoffLinkTo ?person .
+    ?person a beol:person .
+    ?person beol:hasIAFIdentifier ?iafIdentifier .
+    ?iafIdentifier knora-api:valueAsString "(VIAF)271899510" .
+}
+```
+
+Here we are looking for letters containing a link to the historian
+Claude Jordan, who is identified by his Integrated Authority File
+identifier, `(VIAF)271899510`.
+
+However, if you need to specify the context in which the link tag occurs, you must
+use the function `knora-api:standoffLink`. It takes three arguments:
+
+  1. A variable or IRI representing the resource that is the source of the link.
+  2. A variable representing the standoff link tag.
+  3. A variable or IRI representing the resource that is the target of the link.
+
+This function can only be used as the top-level expression in a `FILTER`.
+For example:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:hasText ?text .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:hasText ?text .
+    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+    ?standoffLinkTag a knora-api:StandoffLinkTag .
+    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, ?person)
+    ?person a beol:person .
+    ?person beol:hasIAFIdentifier ?iafIdentifier .
+    ?iafIdentifier knora-api:valueAsString "(VIAF)271899510" .
+    ?standoffLinkTag knora-api:standoffTagHasStartParent ?standoffItalicTag .
+    ?standoffItalicTag a standoff:StandoffItalicTag .
+}
+```
+
+This has the same effect as the previous example, except that because we are matching
+the link tag itself, we can specify that its immediate parent is a
+`StandoffItalicTag`.
+
+#### Matching Standoff Dates
+
+You can use the `knora-api:toSimpleDate` function (see @ref[Date Comparisons](#date-comparisons))
+to match dates in standoff date tags, i.e. instances of `knora-api:StandoffDateTag` or
 of one of its subclasses. For example, here we are looking for a text containing
 an `anything:StandoffEventTag` (which is a project-specific subclass of `knora-api:StandoffDateTag`)
 representing an event that occurred sometime during the month of December 2016:
@@ -454,6 +501,35 @@ CONSTRUCT {
     ?text knora-api:textValueHasStandoff ?standoffEventTag .
     ?standoffEventTag a anything:StandoffEventTag .
     FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
+}
+```
+
+#### Matching Ancestor Tags
+
+Suppose we want to search for a standoff date in a paragraph, but we know
+that the paragraph tag might not be the immediate parent of the date tag.
+For example, the date tag might be in an italics tag, which is in a paragraph
+tag. In that case, we can use the inferred property
+`knora-api:standoffTagHasStartAncestor`. We can modify the previous example to
+do this:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?thing knora-api:isMainResource true .
+    ?thing anything:hasText ?text .
+} WHERE {
+    ?thing a anything:Thing .
+    ?thing anything:hasText ?text .
+    ?text knora-api:textValueHasStandoff ?standoffDateTag .
+    ?standoffDateTag a knora-api:StandoffDateTag .
+    FILTER(knora-api:toSimpleDate(?standoffDateTag) = "GREGORIAN:2016-12-24 CE"^^knora-api-simple:Date)
+    ?standoffDateTag knora-api:standoffTagHasStartAncestor ?standoffParagraphTag .
+    ?standoffParagraphTag a standoff:StandoffParagraphTag .
 }
 ```
 
