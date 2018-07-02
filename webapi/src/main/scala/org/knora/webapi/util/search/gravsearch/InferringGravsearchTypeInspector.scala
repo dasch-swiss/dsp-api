@@ -1020,10 +1020,12 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
                             )
 
-                        case _ =>
+                        case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
                             // The function knora-api:toSimpleDate can take either a knora-api:DateValue or a knora-api:StandoffTag,
                             // so we don't infer the type of its argument.
                             acc
+
+                        case _ => throw GravsearchException(s"Unrecognised function: ${functionCallExpression.functionIri.toSparql}")
                     }
 
                 case andExpression: AndExpression =>

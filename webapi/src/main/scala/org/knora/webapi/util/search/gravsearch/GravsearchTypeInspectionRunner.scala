@@ -163,20 +163,20 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
                             // A variable is compared to an XSD literal. The variable is typeable.
                             acc + TypeableVariable(queryVariable.variableName)
 
-                        case CompareExpression(functionCallExpression: FunctionCallExpression, _, _) =>
-                            // The left side of the expression is a function call. Arguments that are variables or IRIs are typeable.
-
-                            val variableArguments: Seq[TypeableEntity] = functionCallExpression.args.collect {
-                                case queryVariable: QueryVariable => TypeableVariable(queryVariable.variableName)
-                                case iriRef: IriRef => TypeableIri(iriRef.iri)
-                            }
-
-                            acc ++ variableArguments
-
                         case _ =>
                             val accFromLeft = visitFilterExpression(compareExpr.leftArg, acc)
                             visitFilterExpression(compareExpr.rightArg, accFromLeft)
                     }
+
+                case functionCallExpression: FunctionCallExpression =>
+                    // Function arguments that are variables or IRIs are typeable.
+
+                    val variableArguments: Seq[TypeableEntity] = functionCallExpression.args.collect {
+                        case queryVariable: QueryVariable => TypeableVariable(queryVariable.variableName)
+                        case iriRef: IriRef => TypeableIri(iriRef.iri)
+                    }
+
+                    acc ++ variableArguments
 
                 case andExpr: AndExpression =>
                     val accFromLeft = visitFilterExpression(andExpr.leftArg, acc)
