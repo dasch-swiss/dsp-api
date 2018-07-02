@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValue
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.ResponderWithStandoffV2
+import org.knora.webapi.responders.v2.SearchResponderV2Constants.GravsearchConstants
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
@@ -130,6 +131,9 @@ object SearchResponderV2Constants {
 
         // SPARQL variable representing the label of a list node pointed to by a (list) value object
         val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
+
+        // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
+        val dateTypes = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
     }
 
 }
@@ -1161,7 +1165,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
 
             if (querySchema == ApiV2Simple) {
-                throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunctionIri.toSmartIri.toSparql} instead")
+                throw GravsearchException(s"Function ${functionIri.toSparql} cannot be used in a Gravsearch query written in the simple schema; use ${OntologyConstants.KnoraApiV2Simple.MatchFunction.toSmartIri.toSparql} instead")
             }
 
             // The match function must be the top-level expression, otherwise boolean logic won't work properly.
@@ -1382,7 +1386,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             functionIri.toString match {
 
-                case OntologyConstants.KnoraApiV2Simple.MatchFunctionIri =>
+                case OntologyConstants.KnoraApiV2Simple.MatchFunction =>
                     handleMatchFunctionInSimpleSchema(
                         functionCallExpression = functionCallExpression,
                         typeInspectionResult = typeInspectionResult,
@@ -1433,19 +1437,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             if (functionCallExpr.args.size != 1) throw GravsearchException(s"One argument is expected for ${functionCallExpr.functionIri.toSparql}")
 
-            // A QueryVariable expected to represent a date value.
-            val dateValueVar: QueryVariable = functionCallExpr.getArgAsQueryVar(pos = 0)
+            // One argument is expected: a QueryVariable representing something that belongs to a subclass of knora-api:DateBase.
+            val dateBaseVar: QueryVariable = functionCallExpr.getArgAsQueryVar(pos = 0)
 
-            typeInspectionResult.getTypeOfEntity(dateValueVar) match {
+            typeInspectionResult.getTypeOfEntity(dateBaseVar) match {
                 case Some(nonPropInfo: NonPropertyTypeInfo) =>
-                    if (nonPropInfo.typeIri.toString != OntologyConstants.KnoraApiV2WithValueObjects.DateValue) {
-                        throw GravsearchException(s"${dateValueVar.toSparql} must be a ${OntologyConstants.KnoraApiV2WithValueObjects.DateValue.toSmartIri.toSparql}")
+                    if (!GravsearchConstants.dateTypes.contains(nonPropInfo.typeIri.toString)) {
+                        throw GravsearchException(s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag")
                     }
 
-                case _ => GravsearchException(s"${dateValueVar.toSparql} must be a ${OntologyConstants.KnoraApiV2WithValueObjects.DateValue.toSmartIri.toSparql}")
+                case _ => throw GravsearchException(s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag")
             }
 
-            handleDateQueryVar(queryVar = dateValueVar, comparisonOperator = filterCompare.operator, dateValueExpression = filterCompare.rightArg)
+            handleDateQueryVar(queryVar = dateBaseVar, comparisonOperator = filterCompare.operator, dateValueExpression = filterCompare.rightArg)
         }
 
         /**

@@ -190,39 +190,31 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
             // Is this entity an IRI?
             val inferredTypes: Set[GravsearchEntityTypeInfo] = entityToType match {
                 case TypeableIri(iri) =>
-                    // Yes. Has it been used as a predicate?
-                    usageIndex.predicateIndex.get(entityToType) match {
-                        case Some(_) =>
-                            // Yes. Is it a Knora property?
-                            if (iri.isKnoraEntityIri) {
-                                // Yes. Has the ontology responder provided information about it?
-                                entityInfo.propertyInfoMap.get(iri) match {
-                                    case Some(readPropertyInfo: ReadPropertyInfoV2) =>
-                                        // Yes. Try to infer its knora-api:objectType from the provided information.
-                                        InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
-                                            case Some(objectTypeIri: SmartIri) =>
-                                                val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
-                                                log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
-                                                Set(inferredType)
-
-                                            case None =>
-                                                // Its knora-api:objectType couldn't be inferred.
-                                                Set.empty[GravsearchEntityTypeInfo]
-                                        }
+                    // Yes. Is it a Knora property IRI?
+                    if (usageIndex.knoraPropertyIris.contains(iri)) {
+                        // Yes. Has the ontology responder provided information about it?
+                        entityInfo.propertyInfoMap.get(iri) match {
+                            case Some(readPropertyInfo: ReadPropertyInfoV2) =>
+                                // Yes. Try to infer its knora-api:objectType from the provided information.
+                                InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
+                                    case Some(objectTypeIri: SmartIri) =>
+                                        val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
+                                        log.debug("PropertyIriObjectTypeRule: {} {} .", entityToType, inferredType)
+                                        Set(inferredType)
 
                                     case None =>
-                                        // The ontology responder hasn't provided a definition of this property. This should have caused
-                                        // an error earlier from the ontology responder.
-                                        throw AssertionException(s"No information found about property $iri")
+                                        // Its knora-api:objectType couldn't be inferred.
+                                        Set.empty[GravsearchEntityTypeInfo]
                                 }
-                            } else {
-                                // It's not a Knora property.
-                                Set.empty[GravsearchEntityTypeInfo]
-                            }
 
-                        case None =>
-                            // The IRI hasn't been used as a predicate, so this rule isn't relevant.
-                            Set.empty[GravsearchEntityTypeInfo]
+                            case None =>
+                                // The ontology responder hasn't provided a definition of this property. This should have caused
+                                // an error earlier from the ontology responder.
+                                throw AssertionException(s"No information found about property $iri")
+                        }
+                    } else {
+                        // The IRI isn't a Knora property IRI, so this rule isn't relevant.
+                        Set.empty[GravsearchEntityTypeInfo]
                     }
 
                 case _ =>
@@ -312,9 +304,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                     // Yes. Try to infer type information from the predicate of each of those statements.
                     statements.flatMap {
                         statement =>
-                            // Is the predicate a Knora IRI?
+                            // Is the predicate a Knora IRI, and not a type annotation predicate?
                             statement.pred match {
-                                case IriRef(predIri, _) if predIri.isKnoraEntityIri =>
+                                case IriRef(predIri, _) if predIri.isKnoraEntityIri && !GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(predIri.toString) =>
                                     // Yes. Has the ontology responder provided a property definition for it?
                                     entityInfo.propertyInfoMap.get(predIri) match {
                                         case Some(readPropertyInfo: ReadPropertyInfoV2) =>
@@ -339,7 +331,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                     }
 
                                 case _ =>
-                                    // The predicate isn't a Knora IRI, so this rule isn't relevant.
+                                    // The predicate isn't a Knora IRI, or is a type inspection predicate, so this rule isn't relevant.
                                     None
                             }
                     }
@@ -467,9 +459,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             usageIndex.typedVariablesInFilters.get(variableToType) match {
                                 case Some(typesFromFilters: Set[SmartIri]) =>
                                     // Yes. If any of them are valid in type inspection results, return them.
+
                                     typesFromFilters.collect {
-                                        case xsdLiteralType if GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(xsdLiteralType.toString) =>
-                                            val inferredType = NonPropertyTypeInfo(xsdLiteralType)
+                                        case typeFromFilter if GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(typeFromFilter.toString) =>
+                                            val inferredType = NonPropertyTypeInfo(typeFromFilter)
                                             log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
                                             inferredType
                                     }
@@ -890,9 +883,9 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                 case _ => None
             })
 
-            // If the statement's predicate is a Knora property, add it to the set of Knora property IRIs.
+            // If the statement's predicate is a Knora property, and isn't a type annotation predicate, add it to the set of Knora property IRIs.
             val knoraPropertyIris: Set[SmartIri] = acc.knoraPropertyIris ++ (statementPattern.pred match {
-                case IriRef(predIri, _) if predIri.isKnoraEntityIri =>
+                case IriRef(predIri, _) if predIri.isKnoraEntityIri && !GravsearchTypeInspectionUtil.TypeAnnotationProperties.allTypeAnnotationIris.contains(predIri.toString) =>
                     Some(predIri)
 
                 case _ => None
@@ -948,16 +941,18 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
           */
         private def visitFilterExpression(filterExpression: Expression, acc: UsageIndex): UsageIndex = {
             filterExpression match {
-                case compareExpr: CompareExpression =>
-                    compareExpr match {
+                case compareExpression: CompareExpression =>
+                    compareExpression match {
                         case CompareExpression(queryVariable: QueryVariable, operator: CompareExpressionOperator.Value, iriRef: IriRef)
                             if operator == CompareExpressionOperator.EQUALS && iriRef.iri.isKnoraEntityIri =>
                             // A variable is compared to a Knora entity IRI, which must be a property IRI.
-                            // Index the variable and the property IRI.
+                            // Index the property IRI.
+
                             val typeableVariable = TypeableVariable(queryVariable.variableName)
                             val currentIris: Set[SmartIri] = acc.knoraPropertyVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
 
                             acc.copy(
+                                knoraPropertyIris = acc.knoraPropertyIris + iriRef.iri,
                                 knoraPropertyVariablesInFilters = acc.knoraPropertyVariablesInFilters + (typeableVariable -> (currentIris + iriRef.iri))
                             )
 
@@ -970,38 +965,74 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                 typedVariablesInFilters = acc.typedVariablesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
                             )
 
-                        case CompareExpression(functionCall: FunctionCallExpression, _, _) =>
-                            // A variable is used in a function. Index the variable and the type of the function's argument.
+                        case _ =>
+                            val accFromLeft = visitFilterExpression(compareExpression.leftArg, acc)
+                            visitFilterExpression(compareExpression.rightArg, accFromLeft)
+                    }
 
-                            val typeableVariable = TypeableVariable(functionCall.getArgAsQueryVar(0).variableName)
-                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
+                case functionCallExpression: FunctionCallExpression =>
+                    // One or more variables are used in functions. Index them and their types, if those can be determined from
+                    // the function.
 
-                            val variableType = functionCall.functionIri.iri.toString match {
-                                case OntologyConstants.KnoraApiV2WithValueObjects.ToSimpleDateFunction =>
-                                    // The knora-api:toSimpleDate function takes a DateValue argument.
-                                    OntologyConstants.KnoraApiV2WithValueObjects.DateValue.toSmartIri
-
-                                case _ =>
-                                    // All other supported functions take string arguments.
-                                    OntologyConstants.Xsd.String.toSmartIri
-                            }
+                    functionCallExpression.functionIri.iri.toString match {
+                        case OntologyConstants.KnoraApiV2Simple.MatchFunction | OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction =>
+                            // The first argument is a variable representing a string.
+                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(textVar, Set.empty[SmartIri])
 
                             acc.copy(
-                                typedVariablesInFilters = acc.typedVariablesInFilters + (typeableVariable -> (currentVarTypesFromFilters + variableType))
+                                typedVariablesInFilters = acc.typedVariablesInFilters +
+                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2WithValueObjects.MatchInStandoffFunction =>
+                            // The first argument is a variable representing a string.
+                            val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(textVar, Set.empty[SmartIri])
+
+                            // The second argument is a variable representing a standoff tag.
+                            val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedVariablesInFilters = acc.typedVariablesInFilters +
+                                    (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri)) +
+                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
+                            )
+
+                        case OntologyConstants.KnoraApiV2WithValueObjects.StandoffLinkFunction =>
+                            if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}")
+
+                            // The first and third arguments are variables or IRIs representing resources.
+                            val resourceVarsAndTypes: Seq[(TypeableVariable, Set[SmartIri])] = Seq(functionCallExpression.args.head, functionCallExpression.args(2)).collect {
+                                case queryVar: QueryVariable =>
+                                    val resourceVar = TypeableVariable(queryVar.variableName)
+                                    val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(resourceVar, Set.empty[SmartIri])
+                                    resourceVar -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri)
+                            }
+
+                            // The second argument is a variable representing a standoff tag.
+                            val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
+                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
+
+                            acc.copy(
+                                typedVariablesInFilters = acc.typedVariablesInFilters ++ resourceVarsAndTypes +
+                                    (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
                             )
 
                         case _ =>
-                            visitFilterExpression(compareExpr.leftArg, acc)
-                            visitFilterExpression(compareExpr.rightArg, acc)
+                            // The function knora-api:toSimpleDate can take either a knora-api:DateValue or a knora-api:StandoffTag,
+                            // so we don't infer the type of its argument.
+                            acc
                     }
 
-                case andExpr: AndExpression =>
-                    visitFilterExpression(andExpr.leftArg, acc)
-                    visitFilterExpression(andExpr.rightArg, acc)
+                case andExpression: AndExpression =>
+                    val accFromLeft = visitFilterExpression(andExpression.leftArg, acc)
+                    visitFilterExpression(andExpression.rightArg, accFromLeft)
 
-                case orExpr: OrExpression =>
-                    visitFilterExpression(orExpr.leftArg, acc)
-                    visitFilterExpression(orExpr.rightArg, acc)
+                case orExpression: OrExpression =>
+                    val accFromLeft = visitFilterExpression(orExpression.leftArg, acc)
+                    visitFilterExpression(orExpression.rightArg, accFromLeft)
 
                 case _ => acc
             }
@@ -1016,19 +1047,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       */
     private def makeUsageIndex(whereClause: WhereClause): UsageIndex = {
         // Traverse the query, collecting information for the usage index.
-        val usageIndex: UsageIndex = QueryTraverser.visitWherePatterns(
+        QueryTraverser.visitWherePatterns(
             patterns = whereClause.patterns,
             whereVisitor = new UsageIndexCollectingWhereVisitor,
             initialAcc = UsageIndex(querySchema = whereClause.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")))
-        )
-
-        // Add the Knora property IRIs found in filters to the set of Knora property IRIs.
-        val knoraPropertiesFromFilters: Set[SmartIri] = usageIndex.knoraPropertyVariablesInFilters.flatMap {
-            case (_, propertyIris) => propertyIris
-        }.toSet
-
-        usageIndex.copy(
-            knoraPropertyIris = usageIndex.knoraPropertyIris ++ knoraPropertiesFromFilters
         )
     }
 }

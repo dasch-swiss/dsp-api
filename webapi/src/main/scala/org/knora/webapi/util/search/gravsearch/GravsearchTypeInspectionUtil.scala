@@ -65,7 +65,7 @@ object GravsearchTypeInspectionUtil {
             valueMap.get(iri.toString)
         }
 
-        def getAllIris: Set[IRI] = valueMap.keySet.map(_.toString)
+        val allTypeAnnotationIris: Set[IRI] = valueMap.keySet.map(_.toString)
     }
 
     /**
@@ -103,7 +103,7 @@ object GravsearchTypeInspectionUtil {
     /**
       * IRIs that do not need to be annotated to specify their types.
       */
-    val ApiV2NonTypeableIris: Set[IRI] = GravsearchTypeIris ++ TypeAnnotationProperties.getAllIris
+    val ApiV2NonTypeableIris: Set[IRI] = GravsearchTypeIris ++ TypeAnnotationProperties.allTypeAnnotationIris
 
     /**
       * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].

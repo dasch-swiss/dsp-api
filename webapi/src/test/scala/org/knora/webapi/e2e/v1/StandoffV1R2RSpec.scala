@@ -62,7 +62,6 @@ class StandoffV1R2RSpec extends R2RSpec {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val standoffPath = StandoffRouteV1.knoraApiPath(system, settings, log)
-    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     private val anythingUser = SharedTestDataV1.anythingUser1
