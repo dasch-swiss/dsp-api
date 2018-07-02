@@ -21,7 +21,6 @@ package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
 import org.knora.webapi.{GravsearchException, OntologyConstants}
 
