@@ -25,7 +25,7 @@ import java.net.URLEncoder
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, Multipart}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
@@ -43,7 +43,7 @@ import org.knora.webapi.util.search.SparqlQueryConstants
 import spray.json.JsString
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 
 /**
@@ -79,6 +79,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val incunabulaUserEmail = incunabulaUser.email
 
     private val password = "test"
+
+
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -7093,7 +7095,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a standoff date tag indicating a date in a particular range" in {
+        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
             // First, create a standoff-to-XML mapping that can handle standoff date tags.
 
             val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
@@ -7164,10 +7166,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |    ?thing knora-api:isMainResource true .
-                  |    ?thing anything:hasRichtext ?text .
+                  |    ?thing anything:hasText ?text .
                   |} WHERE {
                   |    ?thing a anything:Thing .
-                  |    ?thing anything:hasRichtext ?text .
+                  |    ?thing anything:hasText ?text .
                   |    ?text knora-api:textValueHasStandoff ?standoffEventTag .
                   |    ?standoffEventTag a anything:StandoffEventTag .
                   |    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
@@ -7178,15 +7180,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                println(responseAs[String])
+                assert(responseAs[String].contains("we will have a party"))
 
-                // FileUtil.writeTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithDate.jsonld"), responseAs[String])
-
-                /*
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithDate.jsonld"))
-
-                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-                */
             }
 
         }

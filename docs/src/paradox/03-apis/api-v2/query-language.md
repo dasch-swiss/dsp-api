@@ -308,6 +308,9 @@ CONSTRUCT {
 } ORDER BY ?pubdate
 ```
 
+You can also use `knora-api:toSimpleDate` with to search for date tags in standoff
+text markup (see @ref:[Searching for Standoff Markup in the Complex Schema](#searching-for-standoff-markup-in-the-complex-schema)).
+
 #### Searching for Matching Words
 
 The function `knora-api:match` searches for matching words anywhere in a
@@ -430,6 +433,29 @@ Here we are looking for letters written before February 1756, containing:
    identified by his Integrated Authority File identifier, `(VIAF)271899510`),
    within italicised text.
 2. The words "Grund" and "Richtigkeit" within a single paragraph.
+
+You can also use the `knora-api:toSimpleDate` function (see @ref[Date Comparisons](#date-comparisons))
+to find standoff date tags, i.e. instances of `knora-api:StandoffDateTag` or
+of one of its subclasses. For example, here we are looking for a text containing
+an `anything:StandoffEventTag` (which is a project-specific subclass of `knora-api:StandoffDateTag`)
+representing an event that occurred sometime during the month of December 2016:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?thing knora-api:isMainResource true .
+    ?thing anything:hasText ?text .
+} WHERE {
+    ?thing a anything:Thing .
+    ?thing anything:hasText ?text .
+    ?text knora-api:textValueHasStandoff ?standoffEventTag .
+    ?standoffEventTag a anything:StandoffEventTag .
+    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
+}
+```
 
 ### CONSTRUCT Clause
 
