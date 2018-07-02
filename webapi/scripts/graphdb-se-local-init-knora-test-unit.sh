@@ -18,7 +18,7 @@ printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
 sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-se-knora-test-unit-repository-config.ttl.tmpl > graphdb-se-knora-test-unit-repository-config.ttl
 
-curl -X POST -H "Content-Type:application/x-turtle" -T graphdb-se-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
+curl -X POST -H "Content-Type:application/x-turtle" -T graphdb-se-knora-test-unit-repository-config.ttl -d graph=http://www.knora.org/config-test-unit "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service"
 
 curl -X POST -H "Content-Type:application/x-turtle" -d "<http://www.knora.org/config-test-unit> a <http://www.openrdf.org/config/repository#RepositoryContext> ." $GRAPHDB/repositories/SYSTEM/statements
 
