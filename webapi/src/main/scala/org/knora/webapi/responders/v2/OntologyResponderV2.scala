@@ -3158,12 +3158,18 @@ class OntologyResponderV2 extends Responder {
             throw InconsistentTriplestoreDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
         }
 
-        PropertyInfoContentV2(
+        val propertyDef = PropertyInfoContentV2(
             propertyIri = propertyIri,
             subPropertyOf = subPropertyOf,
             predicates = otherPreds,
             ontologySchema = propertyIri.getOntologySchema.get
         )
+
+        if (!propertyIri.isKnoraBuiltInDefinitionIri && propertyDef.getRdfTypes.contains(OntologyConstants.Owl.TransitiveProperty.toSmartIri)) {
+            throw InconsistentTriplestoreDataException(s"Project-specific property $propertyIri cannot be an owl:TransitiveProperty")
+        }
+
+        propertyDef
     }
 
     /**

@@ -63,6 +63,7 @@ object OntologyConstants {
         val ObjectProperty: IRI = OwlPrefixExpansion + "ObjectProperty"
         val DatatypeProperty: IRI = OwlPrefixExpansion + "DatatypeProperty"
         val AnnotationProperty: IRI = OwlPrefixExpansion + "AnnotationProperty"
+        val TransitiveProperty: IRI = OwlPrefixExpansion + "TransitiveProperty"
 
         val Class: IRI = OwlPrefixExpansion + "Class"
 
