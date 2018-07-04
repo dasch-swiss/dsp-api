@@ -50,7 +50,7 @@
 
 <http://rdfh.ch/permissions/forbiddenResource> a knora-base:ForbiddenResource ;
 
-                      rdfs:label "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)"@en ;
+                      rdfs:label "This resource is a proxy for a resource you are not allowed to see (may depend on the context: query path)" ;
 
                       knora-base:isDeleted false ;
 
