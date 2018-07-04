@@ -18,17 +18,12 @@ printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
 sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-se-knora-test-unit-repository-config.ttl.tmpl > graphdb-se-knora-test-unit-repository-config.ttl
 
-curl -X POST -H "Content-Type:application/x-turtle" -T graphdb-se-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
+curl -X POST -H "Content-Type:text/turtle" -T graphdb-se-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
 
-curl -X POST -H "Content-Type:application/x-turtle" -d "<http://www.knora.org/config-test-unit> a <http://www.openrdf.org/config/repository#RepositoryContext> ." $GRAPHDB/repositories/SYSTEM/statements
+curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-test-unit> a <http://www.openrdf.org/config/repository#RepositoryContext> ." $GRAPHDB/repositories/SYSTEM/statements
 
-printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene index${NO_COLOUR}\n\n"
+printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Connector${NO_COLOUR}\n\n"
 
-STATUS=$(curl -s -w '%{http_code}' -S -X POST -H "Content-Type:text/turtle" --data-binary @./graphdb-se-knora-test-unit-index-config.ttl $GRAPHDB/repositories/knora-test-unit/statements)
+curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-config.rq' $GRAPHDB/repositories/knora-test-unit/statements
 
-if [ "$STATUS" == "204" ]
-then
-    printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
-else
-    printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
-fi
+printf "\n${GREEN}Lucene Connector created.${NO_COLOUR}\n\n"
