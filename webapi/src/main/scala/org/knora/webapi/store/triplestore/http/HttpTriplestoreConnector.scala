@@ -508,7 +508,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
             val idShouldBe = settings.triplestoreDatabaseName
-            val sesameTypeShouldBe = "openrdf:SailRepository"
+            val sesameTypeShouldBe = "owlim:MonitorRepository"
 
             val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
             if (neededRepo.length == 1) {
