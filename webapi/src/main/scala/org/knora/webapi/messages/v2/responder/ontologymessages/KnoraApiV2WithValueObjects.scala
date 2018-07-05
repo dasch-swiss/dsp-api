@@ -82,6 +82,69 @@ object KnoraApiV2WithValueObjects {
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
+    private val IsResourceClass: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsResourceClass,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is resource class"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether class is a subclass of Resource."
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.Owl.Class),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    private val IsValueClass: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsValueClass,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is value class"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether class is a subclass of Value."
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.Owl.Class),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    private val IsStandoffClass: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsStandoffClass,
+        propertyType = OntologyConstants.Owl.AnnotationProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is standoff class"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether class is a subclass of StandoffTag."
+                )
+            )
+        ),
+        subjectType = Some(OntologyConstants.Owl.Class),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
     private val IsLinkProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsLinkProperty,
         propertyType = OntologyConstants.Owl.AnnotationProperty,
@@ -1313,6 +1376,9 @@ object KnoraApiV2WithValueObjects {
           */
         val KnoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
             Result,
+            IsResourceClass,
+            IsStandoffClass,
+            IsValueClass,
             IsEditable,
             IsLinkProperty,
             IsLinkValueProperty,

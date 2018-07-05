@@ -2442,6 +2442,24 @@ knora-api:isPartOfValue a owl:ObjectProperty;
   knora-api:subjectType knora-api:Resource;
   rdfs:subPropertyOf knora-api:hasLinkToValue .
 
+knora-api:isResourceClass a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Class;
+  rdfs:comment "Indicates whether class is a subclass of Resource.";
+  rdfs:label "is resource class" .
+
+knora-api:isStandoffClass a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Class;
+  rdfs:comment "Indicates whether class is a subclass of StandoffTag.";
+  rdfs:label "is standoff class" .
+
+knora-api:isValueClass a owl:AnnotationProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Class;
+  rdfs:comment "Indicates whether class is a subclass of Value.";
+  rdfs:label "is value class" .
+
 knora-api:linkValueHasTarget a owl:ObjectProperty;
   knora-api:objectType knora-api:Resource;
   knora-api:subjectType knora-api:LinkValue;

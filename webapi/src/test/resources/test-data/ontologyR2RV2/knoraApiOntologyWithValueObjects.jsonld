@@ -4059,6 +4059,39 @@
       "@id" : "knora-api:hasLinkToValue"
     }
   }, {
+    "@id" : "knora-api:isResourceClass",
+    "@type" : "owl:AnnotationProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Class"
+    },
+    "rdfs:comment" : "Indicates whether class is a subclass of Resource.",
+    "rdfs:label" : "is resource class"
+  }, {
+    "@id" : "knora-api:isStandoffClass",
+    "@type" : "owl:AnnotationProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Class"
+    },
+    "rdfs:comment" : "Indicates whether class is a subclass of StandoffTag.",
+    "rdfs:label" : "is standoff class"
+  }, {
+    "@id" : "knora-api:isValueClass",
+    "@type" : "owl:AnnotationProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Class"
+    },
+    "rdfs:comment" : "Indicates whether class is a subclass of Value.",
+    "rdfs:label" : "is value class"
+  }, {
     "@id" : "knora-api:knoraProject",
     "@type" : "owl:Class",
     "rdfs:comment" : "Represents a project that uses Knora",

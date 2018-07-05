@@ -20,7 +20,7 @@
 package org.knora.webapi.util.search.gravsearch
 
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.search.{IriRef, QueryVariable}
+import org.knora.webapi.util.search.{Entity, IriRef, QueryVariable}
 
 /**
   * Represents the type information that was found concerning a Gravsearch entity.
@@ -74,4 +74,14 @@ case class TypeableIri(iri: SmartIri) extends TypeableEntity {
   *
   * @param entities a map of Gravsearch entities to the types that were determined for them.
   */
-case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo])
+case class GravsearchTypeInspectionResult(entities: Map[TypeableEntity, GravsearchEntityTypeInfo]) {
+    /**
+      * Given an [[Entity]], returns its type, if the entity is typeable and its type is available.
+      *
+      * @param entity the entity whose type is to be checked.
+      * @return the entity's type, if available.
+      */
+    def getTypeOfEntity(entity: Entity): Option[GravsearchEntityTypeInfo] = {
+        GravsearchTypeInspectionUtil.maybeTypeableEntity(entity).flatMap(typeableEntity => entities.get(typeableEntity))
+    }
+}

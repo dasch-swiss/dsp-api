@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import java.io.{ByteArrayInputStream, StringReader}
+import java.io.ByteArrayInputStream
 import java.util
 
 import akka.actor.ActorSystem
@@ -30,8 +30,6 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
 import spray.json._
 
 import scala.concurrent.duration._

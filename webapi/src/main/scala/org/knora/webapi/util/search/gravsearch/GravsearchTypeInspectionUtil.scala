@@ -19,6 +19,7 @@
 
 package org.knora.webapi.util.search.gravsearch
 
+import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
 import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 
@@ -28,24 +29,49 @@ import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyC
 object GravsearchTypeInspectionUtil {
 
     /**
-      * An enumeration of the properties that are used in type annotations.
+      * A trait for case objects representing type annotation properties.
       */
-    object TypeAnnotationProperties extends Enumeration {
+    sealed trait TypeAnnotationProperty
 
-        import Ordering.Tuple2 // scala compiler issue: https://issues.scala-lang.org/browse/SI-8541
+    /**
+      * Contains instances of [[TypeAnnotationProperty]].
+      */
+    object TypeAnnotationProperties {
 
-        // TODO: support OntologyConstants.KnoraApiV2WithValueObjects.ObjectType as well.
+        /**
+          * Represents a type annotation that uses `rdf:type`.
+          */
+        case object RdfType extends TypeAnnotationProperty
 
-        val RDF_TYPE: Value = Value(0, OntologyConstants.Rdf.Type)
-        val OBJECT_TYPE: Value = Value(1, OntologyConstants.KnoraApiV2Simple.ObjectType)
+        /**
+          * Represents a type annotation that uses `knora-api:objectType` (in the simple or complex schema).
+          */
+        case object ObjectType extends TypeAnnotationProperty
 
-        val valueMap: Map[IRI, Value] = values.map(v => (v.toString, v)).toMap
+        private val valueMap = Map(
+            OntologyConstants.Rdf.Type -> RdfType,
+            OntologyConstants.KnoraApiV2Simple.ObjectType -> ObjectType,
+            OntologyConstants.KnoraApiV2WithValueObjects.ObjectType -> ObjectType
+        )
+
+        /**
+          * Converts an IRI to a [[TypeAnnotationProperty]].
+          *
+          * @param iri the IRI to be converted.
+          * @return a [[TypeAnnotationProperty]], or `None` if the IRI does not correspond to a type
+          *         annotation property.
+          */
+        def fromIri(iri: SmartIri): Option[TypeAnnotationProperty] = {
+            valueMap.get(iri.toString)
+        }
+
+        def getAllIris: Set[IRI] = valueMap.keySet.map(_.toString)
     }
 
     /**
       * The IRIs of non-property types that Gravsearch type inspectors return.
       */
-    val ApiV2SimpleTypeIris: Set[IRI] = Set(
+    val GravsearchTypeIris: Set[IRI] = Set(
         OntologyConstants.Xsd.Boolean,
         OntologyConstants.Xsd.String,
         OntologyConstants.Xsd.Integer,
@@ -57,13 +83,26 @@ object GravsearchTypeInspectionUtil {
         OntologyConstants.KnoraApiV2Simple.Geoname,
         OntologyConstants.KnoraApiV2Simple.Interval,
         OntologyConstants.KnoraApiV2Simple.Color,
-        OntologyConstants.KnoraApiV2Simple.File
+        OntologyConstants.KnoraApiV2Simple.File,
+        OntologyConstants.KnoraApiV2WithValueObjects.Resource,
+        OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.TextValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.IntValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.UriValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.DateValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.ListNode,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeomValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.ColorValue,
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValue
     )
 
     /**
       * IRIs that do not need to be annotated to specify their types.
       */
-    val ApiV2SimpleNonTypeableIris: Set[IRI] = ApiV2SimpleTypeIris ++ TypeAnnotationProperties.valueMap.keySet
+    val ApiV2NonTypeableIris: Set[IRI] = GravsearchTypeIris ++ TypeAnnotationProperties.getAllIris
 
     /**
       * Given a Gravsearch entity that is known to need type information, converts it to a [[TypeableEntity]].
@@ -87,7 +126,7 @@ object GravsearchTypeInspectionUtil {
     def maybeTypeableEntity(entity: Entity): Option[TypeableEntity] = {
         entity match {
             case QueryVariable(variableName) => Some(TypeableVariable(variableName))
-            case IriRef(iri, _) if !ApiV2SimpleNonTypeableIris.contains(iri.toString) => Some(TypeableIri(iri))
+            case IriRef(iri, _) if !ApiV2NonTypeableIris.contains(iri.toString) => Some(TypeableIri(iri))
             case _ => None
         }
     }
@@ -148,21 +187,22 @@ object GravsearchTypeInspectionUtil {
           */
         def isValidTypeInAnnotation(entity: Entity): Boolean = {
             entity match {
-                case IriRef(objIri, _) if ApiV2SimpleTypeIris(objIri.toString) => true
+                case IriRef(objIri, _) if GravsearchTypeIris.contains(objIri.toString) => true
                 case _ => false
             }
         }
 
         statementPattern.pred match {
             case IriRef(predIri, _) =>
-                TypeAnnotationProperties.valueMap.get(predIri.toString) match {
-                    case Some(TypeAnnotationProperties.RDF_TYPE) =>
+                TypeAnnotationProperties.fromIri(predIri) match {
+                    case Some(TypeAnnotationProperties.RdfType) =>
                         // The statement's predicate is rdf:type. Check whether its object is valid in a type
                         // annotation. If not, that's not an error, because the object could be specifying
-                        // a subclass of knora-api:Resource, in which case this isn't a type annotation.
+                        // a subclass of knora-api:Resource, knora-api:FileValue, etc., in which case this isn't a
+                        // type annotation.
                         isValidTypeInAnnotation(statementPattern.obj)
 
-                    case Some(TypeAnnotationProperties.OBJECT_TYPE) =>
+                    case Some(TypeAnnotationProperties.ObjectType) =>
                         // The statement's predicate is knora-api:objectType. Check whether its object is valid
                         // in a type annotation. If not, that's an error, because knora-api:objectType isn't used
                         // for anything other than type annotations in Gravsearch queries.

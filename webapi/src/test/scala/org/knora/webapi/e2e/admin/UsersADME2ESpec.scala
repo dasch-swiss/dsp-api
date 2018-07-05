@@ -41,8 +41,8 @@ import scala.concurrent.duration._
 object UsersADME2ESpec {
     val config = ConfigFactory.parseString(
         """
-          akka.loglevel = "ERROR"
-          akka.stdout-loglevel = "ERROR"
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 

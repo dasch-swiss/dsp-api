@@ -30,9 +30,11 @@ import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.language.postfixOps
 import scala.languageFeature.postfixOps
+
 
 object E2ESpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -45,7 +47,13 @@ object E2ESpec {
 class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* needed by the core trait */
+
     implicit lazy val settings: SettingsImpl = Settings(system)
+
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(E2ESpec.defaultConfig)))
@@ -66,9 +74,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
-    implicit protected val ec: ExecutionContextExecutor = system.dispatcher
-    implicit protected val materializer = ActorMaterializer()
-
     def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
@@ -77,11 +82,17 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
         log.debug(s"Starting Knora Service")
-        checkActorSystem()
 
+        // waits until the application state actor is ready
+        applicationStateActorReady()
+
+        // set allow reload over http
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
+        // start the knora service
         startService()
+
+        log.debug("E2ESpec - beforeAll - finished")
     }
 
     override def afterAll: Unit = {

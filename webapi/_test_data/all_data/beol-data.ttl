@@ -118,6 +118,17 @@
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
 	knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> .
 
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA>  <http://www.knora.org/ontology/0801/beol#hasSubject> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/LFXE4suQQdqsPkP3eq1IbA> .
+
+<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/LFXE4suQQdqsPkP3eq1IbA> a knora-base:ListValue ;
+    knora-base:attachedToUser <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser" ;
+	knora-base:isDeleted "false"^^<http://www.w3.org/2001/XMLSchema#boolean> ;
+	knora-base:valueCreationDate "2018-06-25T09:23:12.035Z"^^<http://www.w3.org/2001/XMLSchema#dateTimeStamp> ;
+	knora-base:valueHasListNode <http://rdfh.ch/lists/0801/logarithmic_curves> ;
+	knora-base:valueHasOrder "0"^^<http://www.w3.org/2001/XMLSchema#integer> ;
+	knora-base:valueHasString "http://rdfh.ch/lists/0801/logarithmic_curves" .
+
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> <http://www.knora.org/ontology/0801/beol#creationDate> <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ> .
 
 <http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ> a knora-base:DateValue ;
