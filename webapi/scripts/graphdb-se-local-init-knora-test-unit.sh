@@ -24,6 +24,11 @@ curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-test
 
 printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Index${NO_COLOUR}\n\n"
 
-curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-create.rq' $GRAPHDB/repositories/knora-test-unit/statements
+STATUS=$(curl -s -w '%{http_code}' -S -X POST --data-urlencode 'update@./graphdb-se-knora-index-create.rq' $GRAPHDB/repositories/knora-test-unit/statements)
 
-printf "\n${GREEN}Lucene Index created.${NO_COLOUR}\n\n"
+if [ "$STATUS" == "204" ]
+then
+    printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
+else
+    printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
+fi
