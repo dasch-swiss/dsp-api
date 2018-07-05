@@ -22,10 +22,16 @@ curl -X POST -H "Content-Type:text/turtle" -T graphdb-se-knora-prod-repository-c
 
 curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-prod> a <http://www.openrdf.org/config/repository#RepositoryContext>." $GRAPHDB/repositories/SYSTEM/statements
 
-printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Connector${NO_COLOUR}\n\n"
+printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Index${NO_COLOUR}\n\n"
 
-curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-config.rq' $GRAPHDB/repositories/knora-prod/statements
+curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-create.rq' $GRAPHDB/repositories/knora-prod/statements
 
-printf "\n${GREEN}Lucene Connector created.\n\n${DELIMITER}Loading Data${NO_COLOUR}\n\n"
+printf "${GREEN}Lucene Index created.\n\n${DELIMITER}Loading Data${NO_COLOUR}\n\n"
 
 ./graphdb-knora-prod-data.expect $GRAPHDB
+
+printf "${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
+
+curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-update.rq' $GRAPHDB/repositories/knora-prod/statements
+
+printf "${GREEN}Lucene Index Updated.${NO_COLOUR}"

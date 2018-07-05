@@ -22,8 +22,8 @@ curl -X POST -H "Content-Type:text/turtle" -T graphdb-se-knora-test-unit-reposit
 
 curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-test-unit> a <http://www.openrdf.org/config/repository#RepositoryContext> ." $GRAPHDB/repositories/SYSTEM/statements
 
-printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Connector${NO_COLOUR}\n\n"
+printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Index${NO_COLOUR}\n\n"
 
-curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-config.rq' $GRAPHDB/repositories/knora-test-unit/statements
+curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-create.rq' $GRAPHDB/repositories/knora-test-unit/statements
 
-printf "\n${GREEN}Lucene Connector created.${NO_COLOUR}\n\n"
+printf "\n${GREEN}Lucene Index created.${NO_COLOUR}\n\n"
