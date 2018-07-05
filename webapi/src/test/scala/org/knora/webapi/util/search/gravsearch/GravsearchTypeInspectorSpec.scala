@@ -142,6 +142,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
             assert(result == TypeInferenceResult5)
         }
 
+        "infer the type of a non-property IRI used as the argument of a function in a FILTER" in {
+            val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
+            val parsedQuery = GravsearchParser.parseQuery(QueryIriTypeFromFunction)
+            val resultFuture: Future[GravsearchTypeInspectionResult] = typeInspectionRunner.inspectTypes(parsedQuery.whereClause, requestingUser = anythingAdminUser)
+            val result = Await.result(resultFuture, timeout)
+            assert(result == TypeInferenceResult6)
+        }
+
         "infer the types in a query that requires 6 iterations" in {
             val typeInspectionRunner = new GravsearchTypeInspectionRunner(system = system, inferTypes = true)
             val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
@@ -490,6 +498,25 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |}
         """.stripMargin
 
+    val QueryIriTypeFromFunction: String =
+        """
+          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+          |
+          |CONSTRUCT {
+          |    ?letter knora-api:isMainResource true .
+          |    ?letter beol:hasText ?text .
+          |} WHERE {
+          |    ?letter a beol:letter .
+          |    ?letter beol:hasText ?text .
+          |    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+          |    ?standoffLinkTag a knora-api:StandoffLinkTag .
+          |
+          |    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, <http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA>)
+          |}
+        """.stripMargin
+
     val QueryWithInconsistentTypes1: String =
         """
           |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -655,5 +682,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
         TypeableVariable(variableName = "mainRes") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri),
         TypeableVariable(variableName = "titleProp") -> PropertyTypeInfo(objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri),
         TypeableVariable(variableName = "propVal0") -> NonPropertyTypeInfo(typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri)
+    ))
+
+    val TypeInferenceResult6 = GravsearchTypeInspectionResult(entities = Map(
+        TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
+        TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri),
+        TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA".toSmartIri) -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri),
+        TypeableIri(iri = "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri) -> PropertyTypeInfo(objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri),
+        TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri)
     ))
 }

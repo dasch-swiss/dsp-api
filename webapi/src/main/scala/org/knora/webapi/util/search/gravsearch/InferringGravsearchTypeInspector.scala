@@ -407,74 +407,74 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     }
 
     /**
-      * Infers the types of variables from their use in FILTER expressions.
+      * Infers the types of entities from their use in FILTER expressions.
       */
-    private class VarTypeFromFilterRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
+    private class EntityTypeFromFilterRule(nextRule: Option[InferenceRule]) extends InferenceRule(nextRule = nextRule) {
         override def infer(entityToType: TypeableEntity,
                            intermediateResult: IntermediateTypeInspectionResult,
                            entityInfo: EntityInfoGetResponseV2,
                            usageIndex: UsageIndex): IntermediateTypeInspectionResult = {
-            // Is this entity a variable?
-            val inferredTypes: Set[GravsearchEntityTypeInfo] = entityToType match {
-                case variableToType: TypeableVariable =>
-                    // Yes. Has it been used as a predicate?
-                    usageIndex.predicateIndex.get(variableToType) match {
-                        case Some(_) =>
-                            // Yes. Has it been compared with one or more Knora property IRIs in a FILTER?
-                            usageIndex.knoraPropertyVariablesInFilters.get(variableToType) match {
-                                case Some(propertyIris: Set[SmartIri]) =>
-                                    // Yes.
-                                    propertyIris.flatMap {
-                                        propertyIri: SmartIri =>
-                                            // Has the ontology responder provided a definition of this property?
-                                            entityInfo.propertyInfoMap.get(propertyIri) match {
-                                                case Some(readPropertyInfo: ReadPropertyInfoV2) =>
-                                                    // Yes. Can we determine the property's knora-api:objectType from that definition?
-                                                    InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
-                                                        case Some(objectTypeIri: SmartIri) =>
-                                                            // Yes. Use that type.
-                                                            val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
-                                                            log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
-                                                            Some(inferredType)
-
-                                                        case None =>
-                                                            // No knora-api:objectType could be determined for the property IRI.
-                                                            None
-                                                    }
-
-                                                case None =>
-                                                    // The ontology responder hasn't provided a definition of this property. This should have caused
-                                                    // an error earlier from the ontology responder.
-                                                    throw AssertionException(s"No information found about property $propertyIri")
-                                            }
-                                    }
-
-                                case None =>
-                                    // The variable hasn't been compared with an IRI in a FILTER, so this rule isn't relevant.
-                                    Set.empty[GravsearchEntityTypeInfo]
-                            }
-
-                        case None =>
-                            // The variable hasn't been used as a predicate. Do we have one or more types for it from a FILTER?
-                            usageIndex.typedVariablesInFilters.get(variableToType) match {
-                                case Some(typesFromFilters: Set[SmartIri]) =>
-                                    // Yes. If any of them are valid in type inspection results, return them.
-
-                                    typesFromFilters.collect {
-                                        case typeFromFilter if GravsearchTypeInspectionUtil.GravsearchTypeIris.contains(typeFromFilter.toString) =>
-                                            val inferredType = NonPropertyTypeInfo(typeFromFilter)
-                                            log.debug("VarTypeFromFilterRule: {} {} .", variableToType, inferredType)
-                                            inferredType
-                                    }
-
-                                case None =>
-                                    Set.empty[GravsearchEntityTypeInfo]
-                            }
+            // Do we have one or more types for this entity from a FILTER?
+            val inferredTypes: Set[GravsearchEntityTypeInfo] = usageIndex.typedEntitiesInFilters.get(entityToType) match {
+                case Some(typesFromFilters: Set[SmartIri]) =>
+                    // Yes. Return those types.
+                    typesFromFilters.map {
+                        typeFromFilter =>
+                            val inferredType = NonPropertyTypeInfo(typeFromFilter)
+                            log.debug("EntityTypeFromFilterRule: {} {} .", entityToType, inferredType)
+                            inferredType
                     }
 
-                case _ =>
-                    // The entity isn't a variable, so this rule isn't relevant.
-                    Set.empty[GravsearchEntityTypeInfo]
+                case None =>
+                    // We don't have a type for this entity from a FILTER. Is the entity a variable?
+                    entityToType match {
+                        case variableToType: TypeableVariable =>
+                            // Yes. Has it been used as a predicate?
+                            usageIndex.predicateIndex.get(entityToType) match {
+                                case Some(_) =>
+                                    // Yes. Has it been compared with one or more Knora property IRIs in a FILTER?
+                                    usageIndex.knoraPropertyVariablesInFilters.get(variableToType) match {
+                                        case Some(propertyIris: Set[SmartIri]) =>
+                                            // Yes.
+                                            propertyIris.flatMap {
+                                                propertyIri: SmartIri =>
+                                                    // Has the ontology responder provided a definition of this property?
+                                                    entityInfo.propertyInfoMap.get(propertyIri) match {
+                                                        case Some(readPropertyInfo: ReadPropertyInfoV2) =>
+                                                            // Yes. Can we determine the property's knora-api:objectType from that definition?
+                                                            InferenceRuleUtil.readPropertyInfoToObjectType(readPropertyInfo, entityInfo, usageIndex.querySchema) match {
+                                                                case Some(objectTypeIri: SmartIri) =>
+                                                                    // Yes. Use that type.
+                                                                    val inferredType = PropertyTypeInfo(objectTypeIri = objectTypeIri)
+                                                                    log.debug("EntityTypeFromFilterRule: {} {} .", variableToType, inferredType)
+                                                                    Some(inferredType)
+
+                                                                case None =>
+                                                                    // No knora-api:objectType could be determined for the property IRI.
+                                                                    None
+                                                            }
+
+                                                        case None =>
+                                                            // The ontology responder hasn't provided a definition of this property. This should have caused
+                                                            // an error earlier from the ontology responder.
+                                                            throw AssertionException(s"No information found about property $propertyIri")
+                                                    }
+                                            }
+
+                                        case None =>
+                                            // The variable hasn't been compared with an IRI in a FILTER.
+                                            Set.empty[GravsearchEntityTypeInfo]
+                                    }
+
+                                case None =>
+                                    // The variable hasn't been used as a predicate.
+                                    Set.empty[GravsearchEntityTypeInfo]
+                            }
+
+                        case _ =>
+                            // The entity isn't a variable.
+                            Set.empty[GravsearchEntityTypeInfo]
+                    }
             }
 
             runNextRule(
@@ -620,7 +620,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
     private val firstIterationRulePipeline = new RdfTypeRule(
         Some(new PropertyIriObjectTypeRule(
             Some(new TypeOfSubjectFromPropertyRule(
-                Some(new VarTypeFromFilterRule(
+                Some(new EntityTypeFromFilterRule(
                     Some(new TypeOfObjectFromPropertyRule(
                         Some(new PropertyTypeFromObjectRule(None)))))))))))
 
@@ -639,7 +639,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
       * @param objectIndex                     a map of all statement objects to the statements they occur in.
       * @param knoraPropertyVariablesInFilters a map of query variables to Knora property IRIs that they are compared to in
       *                                        FILTER expressions.
-      * @param typedVariablesInFilters         a map of query variables to types found for them in FILTER expressions.
+      * @param typedEntitiesInFilters          a map of entities to types found for them in FILTER expressions.
       */
     private case class UsageIndex(knoraClassIris: Set[SmartIri] = Set.empty[SmartIri],
                                   knoraPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
@@ -647,7 +647,7 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                                   predicateIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   objectIndex: Map[TypeableEntity, Set[StatementPattern]] = Map.empty[TypeableEntity, Set[StatementPattern]],
                                   knoraPropertyVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
-                                  typedVariablesInFilters: Map[TypeableVariable, Set[SmartIri]] = Map.empty[TypeableVariable, Set[SmartIri]],
+                                  typedEntitiesInFilters: Map[TypeableEntity, Set[SmartIri]] = Map.empty[TypeableEntity, Set[SmartIri]],
                                   querySchema: ApiV2Schema)
 
     override def inspectTypes(previousResult: IntermediateTypeInspectionResult,
@@ -959,10 +959,10 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         case CompareExpression(queryVariable: QueryVariable, _, xsdLiteral: XsdLiteral) =>
                             // A variable is compared to an XSD literal. Index the variable and the literal's type.
                             val typeableVariable = TypeableVariable(queryVariable.variableName)
-                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
+                            val currentVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(typeableVariable, Set.empty[SmartIri])
 
                             acc.copy(
-                                typedVariablesInFilters = acc.typedVariablesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters + (typeableVariable -> (currentVarTypesFromFilters + xsdLiteral.datatype))
                             )
 
                         case _ =>
@@ -978,24 +978,24 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                         case OntologyConstants.KnoraApiV2Simple.MatchFunction | OntologyConstants.KnoraApiV2WithValueObjects.MatchFunction =>
                             // The first argument is a variable representing a string.
                             val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(textVar, Set.empty[SmartIri])
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
 
                             acc.copy(
-                                typedVariablesInFilters = acc.typedVariablesInFilters +
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri))
                             )
 
                         case OntologyConstants.KnoraApiV2WithValueObjects.MatchInStandoffFunction =>
                             // The first argument is a variable representing a string.
                             val textVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(0).variableName)
-                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(textVar, Set.empty[SmartIri])
+                            val currentTextVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(textVar, Set.empty[SmartIri])
 
                             // The second argument is a variable representing a standoff tag.
                             val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
-                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
+                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
 
                             acc.copy(
-                                typedVariablesInFilters = acc.typedVariablesInFilters +
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters +
                                     (textVar -> (currentTextVarTypesFromFilters + OntologyConstants.Xsd.String.toSmartIri)) +
                                     (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
                             )
@@ -1004,19 +1004,20 @@ class InferringGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspe
                             if (functionCallExpression.args.size != 3) throw GravsearchException(s"Three arguments are expected for ${functionCallExpression.functionIri.toSparql}")
 
                             // The first and third arguments are variables or IRIs representing resources.
-                            val resourceVarsAndTypes: Seq[(TypeableVariable, Set[SmartIri])] = Seq(functionCallExpression.args.head, functionCallExpression.args(2)).collect {
-                                case queryVar: QueryVariable =>
-                                    val resourceVar = TypeableVariable(queryVar.variableName)
-                                    val currentVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(resourceVar, Set.empty[SmartIri])
-                                    resourceVar -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri)
+                            val resourceEntitiesAndTypes: Seq[(TypeableEntity, Set[SmartIri])] = Seq(functionCallExpression.args.head, functionCallExpression.args(2)).flatMap {
+                                entity => GravsearchTypeInspectionUtil.maybeTypeableEntity(entity)
+                            }.map {
+                                typeableEntity =>
+                                    val currentVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(typeableEntity, Set.empty[SmartIri])
+                                    typeableEntity -> (currentVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.Resource.toSmartIri)
                             }
 
                             // The second argument is a variable representing a standoff tag.
                             val standoffTagVar = TypeableVariable(functionCallExpression.getArgAsQueryVar(1).variableName)
-                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedVariablesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
+                            val currentStandoffVarTypesFromFilters: Set[SmartIri] = acc.typedEntitiesInFilters.getOrElse(standoffTagVar, Set.empty[SmartIri])
 
                             acc.copy(
-                                typedVariablesInFilters = acc.typedVariablesInFilters ++ resourceVarsAndTypes +
+                                typedEntitiesInFilters = acc.typedEntitiesInFilters ++ resourceEntitiesAndTypes +
                                     (standoffTagVar -> (currentStandoffVarTypesFromFilters + OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag.toSmartIri))
                             )
 
