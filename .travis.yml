@@ -95,6 +95,7 @@ jobs:
         - sudo apt-add-repository -y ppa:rael-gc/rvm
         - sudo apt-get update
         - sudo apt-get install rvm
+        - rvm reload
         - rvm install ruby 2.5.1
         - rvm use 2.5.1 --default
         - ruby -v
