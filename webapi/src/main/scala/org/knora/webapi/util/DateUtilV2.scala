@@ -52,14 +52,6 @@ object DateUtilV2 {
                 case None => throw InconsistentTriplestoreDataException(s"Calendar era not supported: $name")
             }
         }
-
-        def fromInputString(name: String, errorFun: => Nothing): Value = {
-            name match {
-                case StringFormatter.Era_BCE | StringFormatter.Era_BC => BCE
-                case StringFormatter.Era_CE | StringFormatter.Era_AD => CE
-                case _ => errorFun
-            }
-        }
     }
 
     /**

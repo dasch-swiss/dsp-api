@@ -19,8 +19,26 @@
 
 package org.knora.webapi.responders.v2
 
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.util.ActorUtil._
 
+import scala.concurrent.Future
+
+/**
+  * Handles requests to read and write Knora values.
+  */
 class ValuesResponderV2 extends Responder {
-    override def receive: Receive = ???
+    override def receive: Receive = {
+        case createValueRequest: CreateValueRequestV2 => future2Message(sender(), createValue(createValueRequest), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    }
+
+    /**
+      * Creates a new value in an existing resource.
+      *
+      * @param createValueRequest the request to create the value.
+      * @return a [[CreateValueResponseV2]].
+      */
+    def createValue(createValueRequest: CreateValueRequestV2): Future[CreateValueResponseV2] = ???
 }

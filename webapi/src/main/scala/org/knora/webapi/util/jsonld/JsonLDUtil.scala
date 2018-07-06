@@ -374,7 +374,7 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   * @param body    the body of the JSON-LD document.
   * @param context the context of the JSON-LD document.
   */
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
+case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue])) {
     /**
       * A convenience function that calls `body.requireString`.
       */

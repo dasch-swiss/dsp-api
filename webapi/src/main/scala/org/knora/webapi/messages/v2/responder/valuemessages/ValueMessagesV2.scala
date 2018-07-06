@@ -24,9 +24,9 @@ import java.util.UUID
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.messages.v2.responder.{KnoraContentV2, KnoraJsonLDRequestReaderV2, KnoraReadV2, KnoraRequestV2}
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
 import org.knora.webapi.util.IriConversions._
@@ -34,12 +34,26 @@ import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
 import org.knora.webapi.util.{DateUtilV1, DateUtilV2, SmartIri, StringFormatter}
 
+/**
+  * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
+  */
 sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
 
+/**
+  * Requests the creation of a value.
+  *
+  * @param createValue    a [[CreateValueV2]] representing the value to be created. A successful response will be
+  *                       a [[CreateValueResponseV2]].
+  * @param requestingUser the user making the request.
+  * @param apiRequestID   the API request ID.
+  */
 case class CreateValueRequestV2(createValue: CreateValueV2,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
+/**
+  * Constructs [[CreateValueRequestV2]] based on JSON-LD input.
+  */
 object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueRequestV2] {
     override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateValueRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -90,6 +104,27 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             createValue = createValue,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
+        )
+    }
+}
+
+/**
+  * Represents a successful response to a [[CreateValueRequestV2]].
+  *
+  * @param valueIri the IRI of the value that was created.
+  */
+case class CreateValueResponseV2(valueIri: IRI) extends KnoraResponseV2 {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        if (targetSchema != ApiV2WithValueObjects) {
+            throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
+        }
+
+        JsonLDDocument(
+            body = JsonLDObject(
+                Map(
+                    JsonLDConstants.ID -> JsonLDUtil.iriToJsonLDObject(valueIri)
+                )
+            )
         )
     }
 }
@@ -203,10 +238,23 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
     def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue
 }
 
-trait ValueContentReaderV2[C] {
+/**
+  * A trait for objects that can convert JSON-LD objects into value content objects (subclasses of [[ValueContentV2]]).
+  * @tparam C a subclass of [[ValueContentV2]].
+  */
+trait ValueContentReaderV2[C <: ValueContentV2] {
+    /**
+      * Converts a JSON-LD object to a subclass of [[ValueContentV2]].
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return a subclass of [[ValueContentV2]].
+      */
     def fromJsonLDObject(jsonLDObject: JsonLDObject): C
 }
 
+/**
+  * Generates instances of value content classes (subclasses of [[ValueContentV2]]) from JSON-LD input.
+  */
 object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
     def fromJsonLDObject(jsonLDObject: JsonLDObject): ValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -322,10 +370,20 @@ case class DateValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[DateValueContentV2]] objects based on JSON-LD input.
+  */
 object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): DateValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        /**
+          * Given an optional month and an optional day of the month, determines the precision of a date.
+          *
+          * @param maybeMonth an optional month.
+          * @param maybeDay an optional day of the month.
+          * @return the precision of the date.
+          */
         def getPrecision(maybeMonth: Option[Int], maybeDay: Option[Int]): KnoraPrecisionV1.Value = {
             (maybeMonth, maybeMonth) match {
                 case (Some(_), Some(_)) => KnoraPrecisionV1.DAY
@@ -335,18 +393,18 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
             }
         }
 
-        val calendar = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, KnoraCalendarV1.fromInputString)
+        val calendar: KnoraCalendarV1.Value = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
 
         val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear).value
         val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth).map(_.value)
         val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay).map(_.value)
-        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, KnoraEraV2.fromInputString)
+        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
         val startPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasStartMonth, maybeDateValueHasStartDay)
 
         val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear).value
         val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth).map(_.value)
         val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay).map(_.value)
-        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, KnoraEraV2.fromInputString)
+        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
         val endPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasEndMonth, maybeDateValueHasEndDay)
 
         val startDate = DateYearMonthDay(
@@ -463,6 +521,9 @@ case class TextValueContentV2(valueType: SmartIri,
 
 }
 
+/**
+  * Constructs [[TextValueContentV2]] objects based on JSON-LD input.
+  */
 object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): TextValueContentV2 = {
         // TODO: figure out how to do this.
@@ -510,6 +571,9 @@ case class IntegerValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[IntegerValueContentV2]] objects based on JSON-LD input.
+  */
 object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): IntegerValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -558,6 +622,9 @@ case class DecimalValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[DecimalValueContentV2]] objects based on JSON-LD input.
+  */
 object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): DecimalValueContentV2 = {
         // TODO
@@ -593,6 +660,9 @@ case class BooleanValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[BooleanValueContentV2]] objects based on JSON-LD input.
+  */
 object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): BooleanValueContentV2 = {
         // TODO
@@ -632,6 +702,9 @@ case class GeomValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[GeomValueContentV2]] objects based on JSON-LD input.
+  */
 object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): GeomValueContentV2 = {
         // TODO
@@ -678,6 +751,9 @@ case class IntervalValueContentV2(valueType: SmartIri,
 
 }
 
+/**
+  * Constructs [[IntervalValueContentV2]] objects based on JSON-LD input.
+  */
 object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): IntervalValueContentV2 = {
         // TODO
@@ -722,6 +798,9 @@ case class HierarchicalListValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[HierarchicalListValueContentV2]] objects based on JSON-LD input.
+  */
 object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalListValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
         // TODO
@@ -762,6 +841,9 @@ case class ColorValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[ColorValueContentV2]] objects based on JSON-LD input.
+  */
 object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): ColorValueContentV2 = {
         // TODO
@@ -801,6 +883,9 @@ case class UriValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[UriValueContentV2]] objects based on JSON-LD input.
+  */
 object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): UriValueContentV2 = {
         // TODO
@@ -841,7 +926,9 @@ case class GeonameValueContentV2(valueType: SmartIri,
     }
 }
 
-
+/**
+  * Constructs [[GeonameValueContentV2]] objects based on JSON-LD input.
+  */
 object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): GeonameValueContentV2 = {
         // TODO
@@ -851,7 +938,6 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
 
 /**
   * An abstract trait representing any file value.
-  *
   */
 sealed trait FileValueContentV2 {
     val internalMimeType: String
@@ -918,7 +1004,9 @@ case class StillImageFileValueContentV2(valueType: SmartIri,
     }
 }
 
-
+/**
+  * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
+  */
 object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): StillImageFileValueContentV2 = {
         // TODO
@@ -966,7 +1054,9 @@ case class TextFileValueContentV2(valueType: SmartIri,
 
 }
 
-
+/**
+  * Constructs [[TextFileValueContentV2]] objects based on JSON-LD input.
+  */
 object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): TextFileValueContentV2 = {
         // TODO
@@ -1046,6 +1136,9 @@ case class LinkValueContentV2(valueType: SmartIri,
     }
 }
 
+/**
+  * Constructs [[LinkValueContentV2]] objects based on JSON-LD input.
+  */
 object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject): LinkValueContentV2 = {
         // TODO

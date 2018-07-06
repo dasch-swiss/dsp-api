@@ -591,13 +591,6 @@ object KnoraCalendarV1 extends Enumeration {
             case None => throw InconsistentTriplestoreDataException(s"Calendar type not supported: $name")
         }
     }
-
-    def fromInputString(name: String, errorFun: => Nothing): Value = {
-        valueMap.get(name) match {
-            case Some(value) => value
-            case None => errorFun
-        }
-    }
 }
 
 /**
