@@ -13,7 +13,7 @@ scala:
   - 2.12.1
 
 jdk:
-  - oraclejdk8
+  - openjdk8
 
 services:
   - docker
