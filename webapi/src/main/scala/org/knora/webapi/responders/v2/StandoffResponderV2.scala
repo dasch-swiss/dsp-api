@@ -24,7 +24,7 @@ import java.util.UUID
 
 import akka.actor.Status
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{StatusCodes, _}
+import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import javax.xml.XMLConstants
@@ -38,6 +38,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
@@ -63,7 +64,7 @@ class StandoffResponderV2 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    override def receive: Receive = {
         case CreateMappingRequestV2(metadata, xml, userProfile, uuid) => future2Message(sender(), createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, userProfile, uuid), log)
         case GetMappingRequestV2(mappingIri, userProfile) => future2Message(sender(), getMappingV2(mappingIri, userProfile), log)
         case GetXSLTransformationRequestV2(xsltTextReprIri, userProfile) => future2Message(sender(), getXSLTransformation(xsltTextReprIri, userProfile), log)

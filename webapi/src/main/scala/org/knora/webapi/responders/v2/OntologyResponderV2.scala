@@ -77,7 +77,7 @@ class OntologyResponderV2 extends Responder {
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                          propertiesUsedInStandoffCardinalities: Set[SmartIri])
 
-    def receive = {
+    override def receive: Receive = {
         case LoadOntologiesRequestV2(requestingUser) => future2Message(sender(), loadOntologies(requestingUser), log)
         case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => future2Message(sender(), getEntityInfoResponseV2(classIris, propertyIris, requestingUser), log)
         case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser), log)

@@ -571,10 +571,10 @@ case class ValueObjectV1(valueObjectIri: IRI,
   * of the values of this enumeration; use `lookup` instead, because it reports errors better.
   */
 object KnoraCalendarV1 extends Enumeration {
-    val JULIAN = Value(0, "JULIAN")
-    val GREGORIAN = Value(1, "GREGORIAN")
-    val JEWISH = Value(2, "JEWISH")
-    val REVOLUTIONARY = Value(3, "REVOLUTIONARY")
+    val JULIAN: Value = Value(0, "JULIAN")
+    val GREGORIAN: Value = Value(1, "GREGORIAN")
+    val JEWISH: Value = Value(2, "JEWISH")
+    val REVOLUTIONARY: Value = Value(3, "REVOLUTIONARY")
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -589,6 +589,13 @@ object KnoraCalendarV1 extends Enumeration {
         valueMap.get(name) match {
             case Some(value) => value
             case None => throw InconsistentTriplestoreDataException(s"Calendar type not supported: $name")
+        }
+    }
+
+    def fromInputString(name: String, errorFun: => Nothing): Value = {
+        valueMap.get(name) match {
+            case Some(value) => value
+            case None => errorFun
         }
     }
 }

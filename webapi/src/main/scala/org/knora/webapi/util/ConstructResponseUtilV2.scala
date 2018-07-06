@@ -25,6 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRespon
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._

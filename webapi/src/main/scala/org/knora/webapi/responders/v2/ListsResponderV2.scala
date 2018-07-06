@@ -43,7 +43,7 @@ class ListsResponderV2 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    override def receive: Receive = {
         case ListGetRequestV2(listIri, userProfile) => future2Message(sender(), getList(listIri, userProfile), log)
         case NodeGetRequestV2(nodeIri, userProfile) => future2Message(sender(), getNode(nodeIri, userProfile), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)

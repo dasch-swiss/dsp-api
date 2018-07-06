@@ -27,7 +27,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.responders.ResponderWithStandoffV2
@@ -45,7 +46,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    def receive = {
+    override def receive: Receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
@@ -420,7 +421,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 body = TEIBody(
                     bodyInfo = bodyTextValue,
                     bodyXSLT = bodyXslt,
-                    TEIMapping = teiMapping.mapping
+                    teiMapping = teiMapping.mapping
                 )
             )
 
