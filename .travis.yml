@@ -55,12 +55,11 @@ jobs:
     - stage: test
       script:
         # prepare needed graphdb-se files
-        - mkdir -p $TRAVIS_BUILD_DIR/knora-db/conf
-        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/knora-db/conf/graphdb.license
-        - mkdir -p $TRAVIS_BUILD_DIR/graphdb
+        - mkdir -p $TRAVIS_BUILD_DIR/graphdb/conf
+        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/graphdb/conf/graphdb.license
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/knora-db:/opt/knora-db -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:$GRAPHDB_VERSION -Xmx3g -Xms3g -Dgraphdb.global.page.cache=true -Dgraphdb.page.cache.size=2G -Dgraphdb.home=/opt/knora-db
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb ontotext/graphdb:$GRAPHDB_VERSION -Xmx3g -Xms3g -Dgraphdb.global.page.cache=true -Dgraphdb.page.cache.size=2G -Dgraphdb.home=/graphdb
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # hit graphdb with a request "waking-it-up"
