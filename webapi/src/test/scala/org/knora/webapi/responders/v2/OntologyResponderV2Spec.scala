@@ -3392,5 +3392,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             loadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
+
+        "not load a project-specific ontology containing an owl:TransitiveProperty" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            loadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
     }
 }

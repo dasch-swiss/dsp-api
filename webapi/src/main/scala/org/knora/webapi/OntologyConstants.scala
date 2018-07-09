@@ -63,6 +63,7 @@ object OntologyConstants {
         val ObjectProperty: IRI = OwlPrefixExpansion + "ObjectProperty"
         val DatatypeProperty: IRI = OwlPrefixExpansion + "DatatypeProperty"
         val AnnotationProperty: IRI = OwlPrefixExpansion + "AnnotationProperty"
+        val TransitiveProperty: IRI = OwlPrefixExpansion + "TransitiveProperty"
 
         val Class: IRI = OwlPrefixExpansion + "Class"
 
@@ -432,6 +433,7 @@ object OntologyConstants {
         val StandoffTagHasUUID: IRI = KnoraBasePrefixExpansion + "standoffTagHasUUID"
         val StandoffTagHasOriginalXMLID: IRI = KnoraBasePrefixExpansion + "standoffTagHasOriginalXMLID"
         val StandoffTagHasInternalReference: IRI = KnoraBasePrefixExpansion + "standoffTagHasInternalReference"
+        val StandoffTagHasStartAncestor: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartAncestor"
 
         val StandoffTagHasLink: IRI = KnoraBasePrefixExpansion + "standoffTagHasLink"
         val HasStandoffLinkTo: IRI = KnoraBasePrefixExpansion + "hasStandoffLinkTo"
@@ -622,6 +624,26 @@ object OntologyConstants {
             val iriStr = iri.toString
             iriStr == OntologyConstants.KnoraApiV2Simple.Resource || iriStr == OntologyConstants.KnoraApiV2WithValueObjects.Resource
         }
+
+        /**
+          * Returns the IRI of `knora-api:subjectType` in the specified schema.
+          */
+        def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
+            apiV2Schema match {
+                case ApiV2Simple => KnoraApiV2Simple.SubjectType
+                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.SubjectType
+            }
+        }
+
+        /**
+          * Returns the IRI of `knora-api:objectType` in the specified schema.
+          */
+        def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
+            apiV2Schema match {
+                case ApiV2Simple => KnoraApiV2Simple.ObjectType
+                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.ObjectType
+            }
+        }
     }
 
     object KnoraApiV2WithValueObjects {
@@ -758,8 +780,10 @@ object OntologyConstants {
         val TextValueAsHtml: IRI = KnoraApiV2PrefixExpansion + "textValueAsHtml"
         val TextValueAsXml: IRI = KnoraApiV2PrefixExpansion + "textValueAsXml"
         val TextValueHasMapping: IRI = KnoraApiV2PrefixExpansion + "textValueHasMapping"
-        val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
         val TextValueHasLanguage: IRI = KnoraApiV2PrefixExpansion + "textValueHasLanguage"
+        val StandoffTag: IRI = KnoraApiV2PrefixExpansion + "StandoffTag"
+        val StandoffTagHasStartParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasStartParent"
+        val StandoffTagHasEndParent: IRI = KnoraApiV2PrefixExpansion + "standoffTagHasEndParent"
 
         val IntValueAsInt: IRI = KnoraApiV2PrefixExpansion + "intValueAsInt"
 
@@ -807,8 +831,10 @@ object OntologyConstants {
         val MappingHasName: IRI = KnoraApiV2PrefixExpansion + "mappingHasName"
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
-        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
-        val ToSimpleDateFunctionIri: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
+        val ToSimpleDateFunction: IRI = KnoraApiV2PrefixExpansion + "toSimpleDate"
+        val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
+        val StandoffLinkFunction:  IRI = KnoraApiV2PrefixExpansion + "standoffLink"
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -844,7 +870,7 @@ object OntologyConstants {
 
         val IsMainResource: IRI = KnoraApiV2PrefixExpansion + "isMainResource"
         val MatchesTextIndex: IRI = KnoraApiV2PrefixExpansion + "matchesTextIndex" // virtual property to be replaced by a triplestore-specific one
-        val MatchFunctionIri: IRI = KnoraApiV2PrefixExpansion + "match"
+        val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
 
         val ResourceProperty: IRI = KnoraApiV2PrefixExpansion + "resourceProperty"
 
@@ -948,8 +974,8 @@ object OntologyConstants {
             KnoraBase.ValueHasLanguage -> KnoraApiV2WithValueObjects.TextValueHasLanguage,
             KnoraBase.ValueHasListNode -> KnoraApiV2WithValueObjects.ListValueAsListNode,
             KnoraBase.ValueHasGeonameCode -> KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode,
-            KnoraBase.ValueHasColor -> KnoraApiV2WithValueObjects.ColorValueAsColor
-
+            KnoraBase.ValueHasColor -> KnoraApiV2WithValueObjects.ColorValueAsColor,
+            KnoraBase.ValueHasStandoff -> KnoraApiV2WithValueObjects.TextValueHasStandoff
         ),
         (ApiV2Simple, InternalSchema) -> Map(
             // Not all types in ApiV2Simple can be converted here to types in KnoraBase. For example,
@@ -983,7 +1009,8 @@ object OntologyConstants {
             KnoraApiV2WithValueObjects.TextValueHasLanguage -> KnoraBase.ValueHasLanguage,
             KnoraApiV2WithValueObjects.ListValueAsListNode -> KnoraBase.ValueHasListNode,
             KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode -> KnoraBase.ValueHasGeonameCode,
-            KnoraApiV2WithValueObjects.ColorValueAsColor -> KnoraBase.ValueHasColor
+            KnoraApiV2WithValueObjects.ColorValueAsColor -> KnoraBase.ValueHasColor,
+            KnoraApiV2WithValueObjects.TextValueHasStandoff -> KnoraBase.ValueHasStandoff
         )
     )
 

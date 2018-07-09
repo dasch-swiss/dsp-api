@@ -1,0 +1,34 @@
+{
+  "@graph" : [ {
+    "@id" : "http://rdfh.ch/0001/a-thing-with-text-values",
+    "@type" : "anything:Thing",
+    "anything:hasText" : [ {
+      "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
+      "@type" : "knora-api:TextValue",
+      "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
+      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    }, {
+      "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
+      "@type" : "knora-api:TextValue",
+      "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
+      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    } ],
+    "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen"
+  }, {
+    "@id" : "http://rdfh.ch/0001/project-thing-1",
+    "@type" : "anything:Thing",
+    "anything:hasText" : {
+      "@id" : "http://rdfh.ch/0001/project-thing-1/values/2",
+      "@type" : "knora-api:TextValue",
+      "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/0001/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
+      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+    },
+    "rdfs:label" : "A thing that only project members can see"
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}

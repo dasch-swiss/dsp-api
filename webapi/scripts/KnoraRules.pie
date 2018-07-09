@@ -260,7 +260,13 @@ Id: rdfs13
     -------------------------------
      x  <rdfs:subClassOf>  <rdfs:Literal>
 
-
+// <owl:TransitiveProperty>, implemented here to optimise standoff searches.
+Id: prp_trp
+    p <rdf:type> <owl:TransitiveProperty>
+    x p y
+    y p z
+    -------------------------------
+    x p z
 
 /********************************************************************************
  * Knora-specific consistency checks                                            *

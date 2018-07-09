@@ -1581,7 +1581,8 @@ knora-api:standoffTagHasStartIndex a owl:DatatypeProperty;
 
 knora-api:standoffTagHasStartParent a owl:ObjectProperty;
   knora-api:objectType knora-api:StandoffTag;
-  knora-api:subjectType knora-api:StandoffTag .
+  knora-api:subjectType knora-api:StandoffTag;
+  rdfs:subPropertyOf knora-api:standoffTagHasStartAncestor .
 
 knora-api:standoffTagHasUUID a owl:DatatypeProperty;
   knora-api:objectType xsd:string;
@@ -2503,6 +2504,10 @@ knora-api:seqnum a owl:ObjectProperty;
   rdfs:comment "Indicates the position of a resource within a sequence";
   rdfs:label "Sequence number";
   rdfs:subPropertyOf knora-api:hasValue .
+
+knora-api:standoffTagHasStartAncestor a owl:ObjectProperty, owl:TransitiveProperty;
+  knora-api:objectType knora-api:StandoffTag;
+  knora-api:subjectType knora-api:StandoffTag .
 
 knora-api:subjectType a rdf:Property;
   rdfs:comment "Specifies the required type of the subjects of a property";

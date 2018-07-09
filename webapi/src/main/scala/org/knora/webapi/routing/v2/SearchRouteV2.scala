@@ -29,7 +29,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
+import org.knora.webapi._
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -129,8 +129,8 @@ object SearchRouteV2 extends Authenticator {
             case Some(standoffClassIriStr: String) =>
                 val externalStandoffClassIri = standoffClassIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid standoff class IRI: $limitToStandoffClassIriStr"))
 
-                if (!externalStandoffClassIri.isKnoraApiV2EntityIri) {
-                    throw BadRequestException(s"$externalStandoffClassIri is not a valid knora-api standoff class IRI")
+                if (!externalStandoffClassIri.getOntologySchema.contains(ApiV2WithValueObjects)) {
+                    throw BadRequestException(s"$externalStandoffClassIri is not a valid standoff class IRI")
                 }
 
                 Some(externalStandoffClassIri.toOntologySchema(InternalSchema))
