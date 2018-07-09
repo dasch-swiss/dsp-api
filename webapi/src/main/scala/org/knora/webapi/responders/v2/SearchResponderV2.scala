@@ -2357,7 +2357,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param variableConcatSuffix the suffix appended to variable names in prequery results.
           * @return a Set of [[PropertyTypeInfo]] representing the value and link value properties to be returned to the client.
           */
-            def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspectionResult: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
+        def collectValueVariablesForResource(constructClause: ConstructClause, resource: Entity, typeInspectionResult: GravsearchTypeInspectionResult, variableConcatSuffix: String): Set[QueryVariable] = {
 
             // make sure resource is a query variable or an IRI
             resource match {
@@ -2735,7 +2735,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                         case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
                             // check for presence of dependent resources: dependentResourceIrisPerMainResource plus the dependent resources whose Iris where provided in the Gravsearch query.
-                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/ // TODO: https://github.com/dhlab-basel/Knora/issues/924
+                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
+                            // TODO: https://github.com/dhlab-basel/Knora/issues/924
 
                             // println(expectedDependentResources)
 
