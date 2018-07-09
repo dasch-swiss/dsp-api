@@ -406,7 +406,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             log.debug("==>> Drop All Data End")
             Future.successful(DropAllTriplestoreContentACK())
         } catch {
-            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute DROP ALL", e, log))
+            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute DROP ALL", e, log))
         }
     }
 
@@ -442,7 +442,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             Future.successful(InsertTriplestoreContentACK())
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Future.failed(e)
-            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute insert into triplestore", e, log))
+            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
 
     }
