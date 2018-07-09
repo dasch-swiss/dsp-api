@@ -212,9 +212,9 @@
     "rdfs:comment" : "Description",
     "rdfs:label" : "Description",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/description"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:hasAuthor",
@@ -228,9 +228,9 @@
     "rdfs:comment" : "Erzeuger/Autor",
     "rdfs:label" : "Creator",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/creator"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:hasLeftSideband",
@@ -570,9 +570,9 @@
     "rdfs:comment" : "Datum der Herausgabe",
     "rdfs:label" : "Datum der Herausgabe",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/date"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:publisher",
@@ -586,9 +586,9 @@
     "rdfs:comment" : "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
     "rdfs:label" : "Publisher",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/publisher"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:publoc",
@@ -615,9 +615,9 @@
     },
     "rdfs:label" : "Title",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/title"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:seqnum",
@@ -659,9 +659,9 @@
     "rdfs:comment" : "Titel",
     "rdfs:label" : "Title",
     "rdfs:subPropertyOf" : [ {
-      "@id" : "knora-api:hasValue"
-    }, {
       "@id" : "http://purl.org/dc/terms/title"
+    }, {
+      "@id" : "knora-api:hasValue"
     } ]
   }, {
     "@id" : "incunabula:transcription",
