@@ -1,0 +1,56 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/invalid> .
+
+# An ontology that contains an owl:TransitiveProperty.
+
+@prefix : <http://www.knora.org/ontology/invalid#> .
+<http://www.knora.org/ontology/invalid> rdf:type owl:Ontology ;
+    rdfs:label "The invalid ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+
+
+:hasLinkToFoo rdf:type owl:ObjectProperty, owl:TransitiveProperty ;
+
+       rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+       rdfs:label "has link to foo"@en ;
+
+       knora-base:subjectClassConstraint :Foo ;
+
+       knora-base:objectClassConstraint :Foo .
+
+
+:hasLinkToFooValue rdf:type owl:ObjectProperty ;
+
+      rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+      rdfs:label "has link to foo"@en ;
+
+      knora-base:subjectClassConstraint :Foo ;
+
+      knora-base:objectClassConstraint knora-base:LinkValue .
+
+
+:Foo rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasLinkToFoo ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasLinkToFooValue ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger
+                      ] ;
+
+      rdfs:label "foo"@en ;
+
+      knora-base:resourceIcon "thing.png" .
