@@ -303,7 +303,7 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaBaseTestOptions = Seq(
     // "-showversion",
-    "-Xms1GM",
+    "-Xms1G",
     "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
