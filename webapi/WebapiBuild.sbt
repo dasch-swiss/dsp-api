@@ -294,8 +294,8 @@ lazy val library =
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
-    "-Xms1500M",
-    "-Xmx1500M"
+    "-Xms1G",
+    "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
@@ -303,8 +303,8 @@ lazy val javaRunOptions = Seq(
 
 lazy val javaBaseTestOptions = Seq(
     // "-showversion",
-    "-Xms1500M",
-    "-Xmx1500M"
+    "-Xms1GM",
+    "-Xmx1G"
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500",
