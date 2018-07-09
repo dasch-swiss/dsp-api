@@ -480,6 +480,35 @@ This has the same effect as the previous example, except that because we are mat
 the link tag itself, we can specify that its immediate parent is a
 `StandoffItalicTag`.
 
+If you actually want to get the target of the link (in this example, `?person`)
+in the search results, you need to add a statement like
+`?letter knora-api:hasStandoffLinkTo ?person .` to the `WHERE` clause and to the
+`CONSTRUCT` clause:
+
+```
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+
+CONSTRUCT {
+    ?letter knora-api:isMainResource true .
+    ?letter beol:hasText ?text .
+    ?letter knora-api:hasStandoffLinkTo ?person .
+} WHERE {
+    ?letter a beol:letter .
+    ?letter beol:hasText ?text .
+    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+    ?standoffLinkTag a knora-api:StandoffLinkTag .
+    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, ?person)
+    ?person a beol:person .
+    ?person beol:hasIAFIdentifier ?iafIdentifier .
+    ?iafIdentifier knora-api:valueAsString "(VIAF)271899510" .
+    ?standoffLinkTag knora-api:standoffTagHasStartParent ?standoffItalicTag .
+    ?standoffItalicTag a standoff:StandoffItalicTag .
+    ?letter knora-api:hasStandoffLinkTo ?person .
+}
+```
+
 #### Matching Standoff Dates
 
 You can use the `knora-api:toSimpleDate` function (see @ref[Date Comparisons](#date-comparisons))
