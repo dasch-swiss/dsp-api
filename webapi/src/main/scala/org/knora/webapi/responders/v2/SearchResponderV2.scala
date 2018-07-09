@@ -2588,7 +2588,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 transformer = triplestoreSpecificQueryPatternTransformerSelect
             )
 
-            _ = println(triplestoreSpecificPrequery.toSparql)
+            // _ = println(triplestoreSpecificPrequery.toSparql)
 
             prequeryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(triplestoreSpecificPrequery.toSparql)).mapTo[SparqlSelectResponse]
 
@@ -2605,12 +2605,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
-                println("main res" + nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable)
+                // println("main res" + nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable)
 
                 // variables representing dependent resources
                 val dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.getDependentResourceVariablesGroupConcat
 
-                println("dependent resource Iris concat: " + dependentResourceVariablesConcat)
+                // println("dependent resource Iris concat: " + dependentResourceVariablesConcat)
 
                 // get all the IRIs for variables representing dependent resources per main resource
                 val dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
@@ -2657,7 +2657,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // value objects variables present in the prequery's WHERE clause
                 val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
 
-                println("value object Iris concat: " + valueObjectVariablesConcat)
+                // println("value object Iris concat: " + valueObjectVariablesConcat)
 
                 // for each main resource, create a Map of value object variables and their values
                 val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
@@ -2757,7 +2757,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             // println(allValueObjects)
 
-                            println("+++++++++")
+                            /*println("+++++++++")
 
                             println("graph pattern check for " + mainResIri)
 
@@ -2771,7 +2771,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             println("given value objs: " + resAndValueObjIris.valueObjectIris)
 
-                            println("all expected value objects present: " + allValueObjects)
+                            println("all expected value objects present: " + allValueObjects)*/
 
                             if (allDependentResources && allValueObjects) {
                                 // sufficient permissions, include the main resource and its values
