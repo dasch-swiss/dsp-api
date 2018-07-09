@@ -1,65 +1,60 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/8be1b7cf7103",
-    "@type" : "incunabula:book",
-    "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/8be1b7cf7103/values/463b6498b70d",
-      "@type" : "knora-api:TextValue",
-      "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
-    }, {
-      "@id" : "http://rdfh.ch/8be1b7cf7103/values/0965b7d1b70d",
-      "@type" : "knora-api:TextValue",
-      "knora-api:valueAsString" : "Stultifera navis (...)"
-    } ],
-    "knora-api:hasIncomingLink" : {
-      "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
-      "@type" : "knora-api:LinkValue",
-      "knora-api:linkValueHasSource" : {
-        "@id" : "http://rdfh.ch/50e7460a7203",
-        "@type" : "incunabula:page",
-        "incunabula:partOfValue" : {
-          "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
-          "@type" : "knora-api:LinkValue",
-          "knora-api:linkValueHasTargetIri" : {
-            "@id" : "http://rdfh.ch/8be1b7cf7103"
-          }
-        },
-        "incunabula:seqnum" : {
-          "@id" : "http://rdfh.ch/50e7460a7203/values/44150900c10d",
-          "@type" : "knora-api:IntValue",
-          "knora-api:intValueAsInt" : 1
-        },
-        "knora-api:hasStillImageFileValue": [
-          {
-              "@id": "http://rdfh.ch/50e7460a7203/reps/7ead1231b806",
-              "@type": "knora-api:StillImageFileValue",
-              "knora-api:fileValueAsUrl": "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
-              "knora-api:fileValueHasFilename": "incunabula_0000003856.jp2",
-              "knora-api:fileValueIsPreview": false,
-              "knora-api:stillImageFileValueHasDimX": 1904,
-              "knora-api:stillImageFileValueHasDimY": 2700,
-              "knora-api:stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
-          },
-          {
-              "@id": "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
-              "@type": "knora-api:StillImageFileValue",
-              "knora-api:fileValueAsUrl": "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg",
-              "knora-api:fileValueHasFilename": "incunabula_0000003856.jpg",
-              "knora-api:fileValueIsPreview": true,
-              "knora-api:stillImageFileValueHasDimX": 90,
-              "knora-api:stillImageFileValueHasDimY": 128,
-              "knora-api:stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
-          }
-                    ],
-        "rdfs:label" : "vorderer Spiegel"
-      }
-    },
-    "rdfs:label" : "[Das] Narrenschiff (lat.)"
+  "@id" : "http://rdfh.ch/8be1b7cf7103",
+  "@type" : "incunabula:book",
+  "incunabula:title" : [ {
+    "@id" : "http://rdfh.ch/8be1b7cf7103/values/463b6498b70d",
+    "@type" : "knora-api:TextValue",
+    "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
+  }, {
+    "@id" : "http://rdfh.ch/8be1b7cf7103/values/0965b7d1b70d",
+    "@type" : "knora-api:TextValue",
+    "knora-api:valueAsString" : "Stultifera navis (...)"
+  } ],
+  "knora-api:hasIncomingLink" : {
+    "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
+    "@type" : "knora-api:LinkValue",
+    "knora-api:linkValueHasSource" : {
+      "@id" : "http://rdfh.ch/50e7460a7203",
+      "@type" : "incunabula:page",
+      "incunabula:partOfValue" : {
+        "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
+        "@type" : "knora-api:LinkValue",
+        "knora-api:linkValueHasTargetIri" : {
+          "@id" : "http://rdfh.ch/8be1b7cf7103"
+        }
+      },
+      "incunabula:seqnum" : {
+        "@id" : "http://rdfh.ch/50e7460a7203/values/44150900c10d",
+        "@type" : "knora-api:IntValue",
+        "knora-api:intValueAsInt" : 1
+      },
+      "knora-api:hasStillImageFileValue" : [ {
+        "@id" : "http://rdfh.ch/50e7460a7203/reps/7ead1231b806",
+        "@type" : "knora-api:StillImageFileValue",
+        "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
+        "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
+        "knora-api:fileValueIsPreview" : false,
+        "knora-api:stillImageFileValueHasDimX" : 1904,
+        "knora-api:stillImageFileValueHasDimY" : 2700,
+        "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+      }, {
+        "@id" : "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
+        "@type" : "knora-api:StillImageFileValue",
+        "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg",
+        "knora-api:fileValueHasFilename" : "incunabula_0000003856.jpg",
+        "knora-api:fileValueIsPreview" : true,
+        "knora-api:stillImageFileValueHasDimX" : 90,
+        "knora-api:stillImageFileValueHasDimY" : 128,
+        "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+      } ],
+      "rdfs:label" : "vorderer Spiegel"
+    }
   },
+  "rdfs:label" : "[Das] Narrenschiff (lat.)",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
   }
 }

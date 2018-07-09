@@ -36,7 +36,7 @@ The two cases are described in the TypeScript interfaces `simpletext`
 and `richtext` in module `basicMessageComponents`.
 
 Knora offers a standard mapping with the IRI
-`http://data.knora.org/projects/standoff/mappings/StandardMapping`. The
+`http://rdfh.ch/standoff/mappings/StandardMapping`. The
 standard mapping covers the HTML elements and attributes supported by
 the GUI's text editor, [CKEditor](https://ckeditor.com/). (Please note that the HTML has to be
 encoded in strict XML syntax. CKeditor offers the possibility to define filter rules.

@@ -24,8 +24,8 @@ import java.net.URLEncoder
 
 import akka.actor.{ActorSystem, Props}
 import akka.http.javadsl.model.StatusCodes
-import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
@@ -35,10 +35,12 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.RouteUtilV2
-import org.knora.webapi.routing.v2.SearchRouteV2
+import org.knora.webapi.routing.v1.ValuesRouteV1
+import org.knora.webapi.routing.v2.{SearchRouteV2, StandoffRouteV2}
 import org.knora.webapi.store._
 import org.knora.webapi.util.FileUtil
 import org.knora.webapi.util.search.SparqlQueryConstants
+import spray.json.JsString
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -60,20 +62,25 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val searchPath = SearchRouteV2.knoraApiPath(system, settings, log)
+    private val standoffPath = StandoffRouteV2.knoraApiPath(system, settings, log)
+    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     implicit private val timeout: Timeout = settings.defaultRestoreTimeout
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(15).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     private val anythingUser = SharedTestDataADM.anythingUser1
     private val anythingUserEmail = anythingUser.email
+    private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val incunabulaUserEmail = incunabulaUser.email
 
     private val password = "test"
+
+
 
     private val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -1499,6 +1506,42 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "search for an anything:Thing that has a specific URI value" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |     ?thing knora-api:isMainResource true .
+                  |
+                  |     ?thing anything:hasUri ?uri .
+                  |} WHERE {
+                  |
+                  |     ?thing a anything:Thing .
+                  |     ?thing a knora-api:Resource .
+                  |
+                  |     ?thing anything:hasUri ?uri .
+                  |
+                  |     FILTER(?uri = "http://www.google.ch"^^xsd:anyURI)
+                  |}
+                  |
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingWithURI.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+                checkSearchResponseNumberOfResults(responseAs[String], 1)
+
+            }
+
+        }
+
         "search for an anything:Thing that has a Boolean value that is true" ignore { // literals are not supported
             val gravsearchQuery =
                 """
@@ -1869,7 +1912,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a anything:Thing with a list value" in {
+        "search for an anything:Thing with a list value" ignore { // ignored because the list node label returned is not deterministic
 
             val gravsearchQuery =
                 """
@@ -1993,7 +2036,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the term 'text' marked up as a paragraph" in {
 
-            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2007,7 +2050,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the term 'text' marked up as a paragraph" in {
 
-            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffParagraphTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2019,7 +2062,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the term 'text' marked up as italic" in {
 
-            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2033,7 +2076,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the term 'text' marked up as italic" in {
 
-            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/count/text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2044,7 +2087,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the terms 'interesting' and 'text' marked up as italic" in {
 
-            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2058,7 +2101,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search count query for the terms 'interesting' and 'text' marked up as italic" in {
 
-            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20text?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2069,7 +2112,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         "do a fulltext search for the terms 'interesting' and 'boring' marked up as italic" in {
 
-            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/simple/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
+            Get("/v2/search/interesting%20boring?limitToStandoffClass=" + URLEncoder.encode("http://api.knora.org/ontology/standoff/v2#StandoffItalicTag", "UTF-8")) ~> searchPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 
@@ -2166,8 +2209,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
                   |
                   |    } ORDER BY ?date
                 """.stripMargin
@@ -2217,7 +2262,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?person1 a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
@@ -2275,7 +2323,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?person1 a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
                   |
                   |        OPTIONAL {
                   |             ?person1 beol:hasFamilyName ?name .
@@ -2334,7 +2385,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?person1 a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
@@ -2476,7 +2530,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?person1 a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+                  |
+                  |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+                  |        beol:hasRecipient knora-api:objectType knora-api:Resource .
                   |
                   |        ?person1 beol:hasFamilyName ?familyName .
                   |        beol:hasFamilyName knora-api:objectType xsd:string .
@@ -4403,7 +4460,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a anything:Thing with a list value (with type inference)" in {
+        "search for an anything:Thing with a list value (with type inference)" ignore { // ignored because the list node label returned is not deterministic
 
             val gravsearchQuery =
                 """
@@ -4561,7 +4618,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        # testperson2
                   |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
                   |
                   |    } ORDER BY ?date
@@ -4605,7 +4662,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter ?linkingProp1 ?person1 .
                   |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
@@ -4653,7 +4710,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter ?linkingProp1 ?person1 .
                   |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
                   |        OPTIONAL {
                   |             ?person1 beol:hasFamilyName ?name .
@@ -4702,7 +4759,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter ?linkingProp1 ?person1 .
                   |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
                   |        ?person1 beol:hasFamilyName ?name .
                   |
@@ -4827,7 +4884,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        # testperson2
                   |        ?letter ?linkingProp1 ?person1 .
                   |
-                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+                  |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
                   |        ?person1 beol:hasFamilyName ?familyName .
                   |
@@ -6293,7 +6350,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
-        "search for a anything:Thing with a list value (submitting the complex schema)" in {
+        "search for an anything:Thing with a list value (submitting the complex schema)" ignore { // ignored because the list node label returned is not deterministic
 
             val gravsearchQuery =
                 """
@@ -6956,7 +7013,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
-        "search for a list value that refers to a particular list node (submitting the complex schema)" in {
+        "search for a list value that refers to a particular list node (submitting the complex schema)" ignore { // ignored because the list node label returned is not deterministic
             val gravsearchQuery =
                 """
                   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
@@ -7012,6 +7069,279 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/letterWithSubject.jsonld"))
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
+        }
+
+        "search for a standoff link using the knora-api:standoffLink function (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffLinkTag .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, ?otherThing)
+                  |    ?otherThing a anything:Thing .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinks.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for a standoff link using the knora-api:standoffLink function, referring to the target resource in the function call only (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffLinkTag .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, ?otherThing)
+                  |
+                  |    # Note that ?otherThing is only used as a argument in the function, not in any other statement
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinks.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffLinkTag .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/0001/a-thing>)
+                  |    <http://rdfh.ch/0001/a-thing> a anything:Thing .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for a standoff link using the knora-api:standoffLink function specifying an Iri for the target resource, referring to the target resource in the function call only (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a knora-api:StandoffLinkTag .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/0001/a-thing>)
+                  |
+                  |    # Note that <http://rdfh.ch/0001/a-thing> is only used as a argument in the function, not in any other statement
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/thingsWithStandoffLinksToSpecificThing.jsonld"))
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+        }
+
+        "search for matching words in a particular type of standoff tag (submitting the complex schema)" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasRichtext ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasRichtext ?text .
+                  |    ?text knora-api:valueAsString ?textStr .
+                  |    ?text knora-api:textValueHasStandoff ?standoffTag .
+                  |    ?standoffTag a standoff:StandoffItalicTag .
+                  |    FILTER knora-api:matchInStandoff(?textStr, ?standoffTag, "interesting text")
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/searchR2RV2/ThingWithRichtextWithTermTextInParagraph.jsonld"))
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+            }
+
+        }
+
+        "search for a standoff date tag indicating a date in a particular range (submitting the complex schema)" in {
+            // First, create a standoff-to-XML mapping that can handle standoff date tags.
+
+            val mappingFileToSend = new File("_test_data/test_route/texts/mappingForHTML.xml")
+
+            val paramsCreateHTMLMappingFromXML =
+                s"""
+                   |{
+                   |    "knora-api:mappingHasName": "HTMLMapping",
+                   |    "knora-api:attachedToProject": "$anythingProjectIri",
+                   |    "rdfs:label": "mapping for HTML",
+                   |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}
+                """.stripMargin
+
+            val formDataMapping = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "json",
+                    HttpEntity(ContentTypes.`application/json`, paramsCreateHTMLMappingFromXML)
+                ),
+                Multipart.FormData.BodyPart(
+                    "xml",
+                    HttpEntity.fromPath(ContentTypes.`text/xml(UTF-8)`, mappingFileToSend.toPath),
+                    Map("filename" -> mappingFileToSend.getName)
+                )
+            )
+
+            // send mapping xml to route
+            Post("/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+
+                assert(status == StatusCodes.OK)
+
+            }
+
+
+            // Next, create a resource with a text value containing a standoff date tag. Use API v1, because v2 doesn't yet have update routes.
+
+            val xmlFileToSend = new File("_test_data/test_route/texts/HTML.xml")
+
+            val newValueParams =
+                s"""
+                   |{
+                   |  "project_id": "http://rdfh.ch/projects/0001",
+                   |  "res_id": "http://rdfh.ch/0001/a-thing",
+                   |  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
+                   |  "richtext_value": {
+                   |        "xml": ${JsString(FileUtil.readTextFile(xmlFileToSend))},
+                   |        "mapping_id": "$anythingProjectIri/mappings/HTMLMapping"
+                   |  }
+                   |}
+                 """.stripMargin
+
+            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+
+                assert(status == StatusCodes.OK)
+
+            }
+
+            // Finally, do a Gravsearch query that finds the date tag.
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffEventTag .
+                  |    ?standoffEventTag a anything:StandoffEventTag .
+                  |    FILTER(knora-api:toSimpleDate(?standoffEventTag) = "GREGORIAN:2016-12 CE"^^knora-api-simple:Date)
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                assert(responseAs[String].contains("we will have a party"))
+
+            }
+
+        }
+
+        "search for a standoff tag using knora-api:standoffTagHasStartAncestor (submitting the complex schema)" in {
+
+            val gravsearchQuery =
+                """
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+                  |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+                  |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+                  |PREFIX knora-api-simple: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?thing knora-api:isMainResource true .
+                  |    ?thing anything:hasText ?text .
+                  |} WHERE {
+                  |    ?thing a anything:Thing .
+                  |    ?thing anything:hasText ?text .
+                  |    ?text knora-api:textValueHasStandoff ?standoffDateTag .
+                  |    ?standoffDateTag a knora-api:StandoffDateTag .
+                  |    FILTER(knora-api:toSimpleDate(?standoffDateTag) = "GREGORIAN:2016-12-24 CE"^^knora-api-simple:Date)
+                  |    ?standoffDateTag knora-api:standoffTagHasStartAncestor ?standoffParagraphTag .
+                  |    ?standoffParagraphTag a standoff:StandoffParagraphTag .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                assert(responseAs[String].contains("we will have a party"))
+
+            }
+
         }
 
     }

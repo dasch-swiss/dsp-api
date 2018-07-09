@@ -1061,6 +1061,12 @@ class OntologyResponderV2 extends Responder {
         for {
             cacheData <- getCacheData
 
+            entitiesInWrongSchema = (standoffClassIris ++ standoffPropertyIris).filter(_.getOntologySchema.contains(ApiV2Simple))
+
+            _ = if (entitiesInWrongSchema.nonEmpty) {
+                throw NotFoundException(s"Some requested standoff classes were not found: ${entitiesInWrongSchema.mkString(", ")}")
+            }
+
             classIrisForCache = standoffClassIris.map(_.toOntologySchema(InternalSchema))
             propertyIrisForCache = standoffPropertyIris.map(_.toOntologySchema(InternalSchema))
 
@@ -1245,6 +1251,10 @@ class OntologyResponderV2 extends Responder {
     private def getOntologyEntitiesV2(ontologyIri: SmartIri, allLanguages: Boolean, requestingUser: UserADM): Future[ReadOntologyV2] = {
         for {
             cacheData <- getCacheData
+
+            _ = if (ontologyIri.getOntologyName == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple)) {
+                throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
+            }
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1849,7 +1859,7 @@ class OntologyResponderV2 extends Responder {
                                 "would inherit"
                             }
 
-                            errorFun(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's knora-api:subjectType, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
+                            errorFun(s"Class ${internalClassDef.classIri.toOntologySchema(errorSchema)} $hasOrWouldInherit a cardinality for property ${propertyIri.toOntologySchema(errorSchema)}, but is not a subclass of that property's ${OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri.toOntologySchema(errorSchema)}, ${subjectClassConstraint.toOntologySchema(errorSchema)}")
                         }
 
                     case None => ()
@@ -3148,12 +3158,18 @@ class OntologyResponderV2 extends Responder {
             throw InconsistentTriplestoreDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
         }
 
-        PropertyInfoContentV2(
+        val propertyDef = PropertyInfoContentV2(
             propertyIri = propertyIri,
             subPropertyOf = subPropertyOf,
             predicates = otherPreds,
             ontologySchema = propertyIri.getOntologySchema.get
         )
+
+        if (!propertyIri.isKnoraBuiltInDefinitionIri && propertyDef.getRdfTypes.contains(OntologyConstants.Owl.TransitiveProperty.toSmartIri)) {
+            throw InconsistentTriplestoreDataException(s"Project-specific property $propertyIri cannot be an owl:TransitiveProperty")
+        }
+
+        propertyDef
     }
 
     /**

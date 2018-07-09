@@ -113,6 +113,13 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
       * A [[WhereVisitor]] that collects typeable entities from a Gravsearch WHERE clause.
       */
     private class TypeableEntityCollectingWhereVisitor extends WhereVisitor[Set[TypeableEntity]] {
+        /**
+          * Collects typeable entities from a statement.
+          *
+          * @param statementPattern the pattern to be visited.
+          * @param acc              the accumulator.
+          * @return the accumulator.
+          */
         override def visitStatementInWhere(statementPattern: StatementPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
             statementPattern.pred match {
                 case iriRef: IriRef if iriRef.iri.toString == OntologyConstants.Rdf.Type =>
@@ -125,7 +132,61 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
             }
         }
 
-        override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = acc
-    }
+        /**
+          * Collects typeable entities from a `FILTER`.
+          *
+          * @param filterPattern the pattern to be visited.
+          * @param acc           the accumulator.
+          * @return the accumulator.
+          */
+        override def visitFilter(filterPattern: FilterPattern, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
+            visitFilterExpression(filterPattern.expression, acc)
+        }
 
+        /**
+          * Collects typeable entities from a filter expression.
+          *
+          * @param filterExpression the filter expression to be visited.
+          * @param acc              the accumulator.
+          * @return the accumulator.
+          */
+        private def visitFilterExpression(filterExpression: Expression, acc: Set[TypeableEntity]): Set[TypeableEntity] = {
+            filterExpression match {
+                case compareExpr: CompareExpression =>
+                    compareExpr match {
+                        case CompareExpression(queryVariable: QueryVariable, _: CompareExpressionOperator.Value, iriRef: IriRef) =>
+                            // A variable is compared to an IRI. The variable and the IRI are typeable.
+                            acc + TypeableVariable(queryVariable.variableName) + TypeableIri(iriRef.iri)
+
+                        case CompareExpression(queryVariable: QueryVariable, _, _: XsdLiteral) =>
+                            // A variable is compared to an XSD literal. The variable is typeable.
+                            acc + TypeableVariable(queryVariable.variableName)
+
+                        case _ =>
+                            val accFromLeft = visitFilterExpression(compareExpr.leftArg, acc)
+                            visitFilterExpression(compareExpr.rightArg, accFromLeft)
+                    }
+
+                case functionCallExpression: FunctionCallExpression =>
+                    // Function arguments that are variables or IRIs are typeable.
+
+                    val variableArguments: Seq[TypeableEntity] = functionCallExpression.args.collect {
+                        case queryVariable: QueryVariable => TypeableVariable(queryVariable.variableName)
+                        case iriRef: IriRef => TypeableIri(iriRef.iri)
+                    }
+
+                    acc ++ variableArguments
+
+                case andExpr: AndExpression =>
+                    val accFromLeft = visitFilterExpression(andExpr.leftArg, acc)
+                    visitFilterExpression(andExpr.rightArg, accFromLeft)
+
+                case orExpr: OrExpression =>
+                    val accFromLeft = visitFilterExpression(orExpr.leftArg, acc)
+                    visitFilterExpression(orExpr.rightArg, accFromLeft)
+
+                case _ => acc
+            }
+        }
+    }
 }

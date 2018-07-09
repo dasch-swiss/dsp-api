@@ -94,7 +94,7 @@ jobs:
         - sudo apt-get install -y graphviz software-properties-common
         - sudo apt-add-repository -y ppa:rael-gc/rvm
         - sudo apt-get update
-        - sudo apt-get install rvm
+        - sudo apt-get --allow-unauthenticated install rvm
         - rvm reload
         - rvm install ruby 2.5.1
         - rvm use 2.5.1 --default
