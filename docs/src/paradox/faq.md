@@ -87,3 +87,38 @@ checks, if the obstacles to its adoption can be overcome
 (see [Diverging views of SHACL](https://research.nuance.com/diverging-views-of-shacl/)).
 For further discussion of these issues, see
 [SHACL and OWL Compared](http://spinrdf.org/shacl-and-owl.html).
+
+### Can a project-specific property be an `owl:TransitiveProperty`?
+
+No, because in Knora, a resource controls its properties. This basic
+assumption is what allows Knora to enforce permissions and transaction
+integrity. The concept of a transitive property would break this assumption.
+
+Consider a link property `hasLinkToFoo` that is defined as an `owl:TransitiveProperty`,
+and is used to link resource `Foo1` to resource `Foo2`:
+
+![Figure 1](faq-fig1.dot.png "Figure 1")
+
+Suppose that `Foo1` and `Foo2` are owned by different users, and that
+the owner of `Foo2` does not have permission to change `Foo1`.
+Now suppose that the owner of `Foo2` adds a link from `Foo2` to `Foo3`,
+using the transitive property:
+
+![Figure 2](faq-fig2.dot.png "Figure 2")
+
+Since the property is transitive, a link from `Foo1` to `Foo3` is now
+inferred. But this should not be allowed, because the owner of `Foo2`
+does not have permission to add a link to `Foo1`.
+
+Moreover, even if the owner of `Foo2` did have that permission, the inferred
+link would not have a `knora-base:LinkValue` (a reification), which every Knora
+link must have. The `LinkValue` is what stores metadata about the creator
+of the link, its creation date, its permissions, and so on
+(see @ref:[LinkValue](02-knora-ontologies/knora-base.md#linkvalue)).
+
+Finally, if an update to one resource could modify another
+resource, this would violate Knora's model of transaction integrity, in which
+each transaction can modify only one resource
+(see @ref:[Application-level Locking](05-internals/design/triplestore-updates.md#application-level-locking)). Knora
+would then be unable to ensure that concurrent transactions do not
+interfere with each other.

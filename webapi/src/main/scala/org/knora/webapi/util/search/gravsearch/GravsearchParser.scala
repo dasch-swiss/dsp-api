@@ -133,9 +133,9 @@ object GravsearchParser {
             val constructStatements: Seq[search.StatementPattern] = constructStatementsWithConstants.toVector.map {
                 (constructStatementWithConstant: ConstructStatementWithConstants) =>
                     StatementPattern(
-                        subj = makeEntity(nameToVar(constructStatementWithConstant.subj)),
-                        pred = makeEntity(nameToVar(constructStatementWithConstant.pred)),
-                        obj = makeEntity(nameToVar(constructStatementWithConstant.obj)),
+                        subj = makeEntityFromVar(nameToVar(constructStatementWithConstant.subj)),
+                        pred = makeEntityFromVar(nameToVar(constructStatementWithConstant.pred)),
+                        obj = makeEntityFromVar(nameToVar(constructStatementWithConstant.obj)),
                         namedGraph = None
                     )
             }
@@ -182,7 +182,13 @@ object GravsearchParser {
         private def makeIri(rdf4jIri: rdf4j.model.IRI): IriRef = {
             val smartIri: SmartIri = rdf4jIri.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid IRI: ${rdf4jIri.stringValue}"))
             checkIriSchema(smartIri)
-            IriRef(smartIri)
+            val iriRef = IriRef(smartIri)
+
+            if (!isInNegation) {
+                positiveEntities += iriRef
+            }
+
+            iriRef
         }
 
         override def meet(node: algebra.Slice): Unit = {
@@ -200,50 +206,56 @@ object GravsearchParser {
         }
 
         /**
-          * Converts an RDF4J [[algebra.Var]] into a [[Entity]].
+          * Converts an RDF4J [[algebra.Var]] into an [[Entity]].
           *
           * @param objVar the [[algebra.Var]] to be converted.
           * @return a [[Entity]].
           */
-        private def makeEntity(objVar: algebra.Var): Entity = {
-            val entity: Entity = if (objVar.isAnonymous || objVar.isConstant) {
-                objVar.getValue match {
-                    case iri: rdf4j.model.IRI => makeIri(iri)
-
-                    case literal: rdf4j.model.Literal =>
-                        val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
-                        checkIriSchema(datatype)
-                        XsdLiteral(value = literal.stringValue, datatype = datatype)
-
-                    case other => throw GravsearchException(s"Invalid object for triple patterns: $other")
-                }
+        private def makeEntityFromVar(objVar: algebra.Var): Entity = {
+            if (objVar.isAnonymous || objVar.isConstant) {
+                makeEntityFromValue(objVar.getValue)
             } else {
-                QueryVariable(objVar.getName)
+                makeQueryVariable(objVar.getName)
+            }
+        }
+
+        /**
+          * Converts an [[rdf4j.model.Value]] into an [[Entity]].
+          *
+          * @param value the value to be converted.
+          * @return a [[Entity]].
+          */
+        private def makeEntityFromValue(value: rdf4j.model.Value): Entity = {
+            value match {
+                case iri: rdf4j.model.IRI => makeIri(iri)
+
+                case literal: rdf4j.model.Literal =>
+                    val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
+                    checkIriSchema(datatype)
+                    XsdLiteral(value = literal.stringValue, datatype = datatype)
+
+                case other => throw GravsearchException(s"Unsupported Value: $other with class ${other.getClass.getName}")
+            }
+        }
+
+        private def makeQueryVariable(variableName: String): QueryVariable = {
+            val queryVar = if (variableName.contains("__")) {
+                throw GravsearchException(s"Invalid variable name: $variableName")
+            } else {
+                QueryVariable(variableName)
             }
 
-            // only add entity to positiveEntities if it is not in a negative context (FILTER NOT EXISTS, MINUS)
             if (!isInNegation) {
-
-                // only add entity to positive entities if it is an Iri or a query variable
-                // ignore literals
-                entity match {
-                    case iri: IriRef =>
-                        positiveEntities += iri
-
-                    case queryVar: QueryVariable =>
-                        positiveEntities += queryVar
-
-                    case _ =>
-                }
+                positiveEntities += queryVar
             }
 
-            entity
+            queryVar
         }
 
         override def meet(node: algebra.StatementPattern): Unit = {
-            val subj: Entity = makeEntity(node.getSubjectVar)
-            val pred: Entity = makeEntity(node.getPredicateVar)
-            val obj: Entity = makeEntity(node.getObjectVar)
+            val subj: Entity = makeEntityFromVar(node.getSubjectVar)
+            val pred: Entity = makeEntityFromVar(node.getPredicateVar)
+            val obj: Entity = makeEntityFromVar(node.getObjectVar)
 
             if (Option(node.getContextVar).nonEmpty) {
                 throw GravsearchException("Named graphs are not supported in search queries")
@@ -396,7 +408,7 @@ object GravsearchParser {
 
                 val queryVariable: QueryVariable = expression match {
                     case objVar: algebra.Var =>
-                        makeEntity(objVar) match {
+                        makeEntityFromVar(objVar) match {
                             case queryVar: QueryVariable => queryVar
                             case _ => throw GravsearchException(s"Entity $objVar not allowed in ORDER BY")
                         }
@@ -485,7 +497,7 @@ object GravsearchParser {
                         // It's a BIND. Accept it if it refers to a Knora data IRI.
                         valueConstant.getValue match {
                             case iri: rdf4j.model.IRI =>
-                                val variable = QueryVariable(node.getName)
+                                val variable = makeQueryVariable(node.getName)
                                 val iriValue: IriRef = makeIri(iri)
 
                                 if (!iriValue.iri.isKnoraDataIri) {
@@ -494,7 +506,7 @@ object GravsearchParser {
 
                                 val bindPattern = BindPattern(
                                     variable = variable,
-                                    iriValue = iriValue
+                                    expression = iriValue
                                 )
 
                                 wherePatterns.append(bindPattern)
@@ -641,21 +653,13 @@ object GravsearchParser {
                         rightArg = rightArg
                     )
 
-                case valueConstant: algebra.ValueConstant =>
-                    valueConstant.getValue match {
-                        case iri: rdf4j.model.IRI => makeIri(iri)
+                case valueConstant: algebra.ValueConstant => makeEntityFromValue(valueConstant.getValue)
 
-                        case literal: rdf4j.model.Literal =>
-                            val datatype = literal.getDatatype.stringValue.toSmartIriWithErr(throw GravsearchException(s"Invalid datatype: ${literal.getDatatype.stringValue}"))
-                            checkIriSchema(datatype)
-                            XsdLiteral(value = literal.stringValue, datatype = datatype)
-                        case other => throw GravsearchException(s"Unsupported ValueConstant: $other with class ${other.getClass.getName}")
-                    }
-
-                case sparqlVar: algebra.Var => makeEntity(sparqlVar)
+                case sparqlVar: algebra.Var => makeEntityFromVar(sparqlVar)
 
                 case functionCall: algebra.FunctionCall =>
                     val functionIri = IriRef(functionCall.getURI.toSmartIri)
+
                     val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
                         case entity: Entity => entity
                         case other => throw GravsearchException(s"Unsupported argument in function: $other")
@@ -667,13 +671,12 @@ object GravsearchParser {
                     )
 
                 case regex: algebra.Regex =>
-
                     // first argument representing the text value to be checked
                     val textValueArg: algebra.ValueExpr = regex.getArg
 
                     val textValueVar: QueryVariable = textValueArg match {
                         case objVar: algebra.Var =>
-                            makeEntity(objVar) match {
+                            makeEntityFromVar(objVar) match {
                                 case queryVar: QueryVariable => queryVar
                                 case _ => throw GravsearchException(s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
                             }
@@ -691,17 +694,15 @@ object GravsearchParser {
                     }
 
                     // third argument representing the modifier to be used with when applying the REGEX pattern
-                    val modifierArg: algebra.ValueExpr = regex.getFlagsArg
-
-                    val modifier: String = modifierArg match {
-                        case valConstant: algebra.ValueConstant =>
-                            valConstant.getValue.stringValue()
+                    val modifier: Option[String] = Option(regex.getFlagsArg) match {
+                        case Some(valConstant: algebra.ValueConstant) => Some(valConstant.getValue.stringValue())
+                        case None => None
                         case other => throw GravsearchException(s"$other not allowed in regex function as the third argument, a string is expected")
 
                     }
 
                     RegexFunction(
-                        textValueVar = textValueVar,
+                        textVar = textValueVar,
                         pattern = pattern,
                         modifier = modifier
                     )
@@ -710,7 +711,7 @@ object GravsearchParser {
 
                     val textValueVar = lang.getArg match {
                         case objVar: algebra.Var =>
-                            makeEntity(objVar) match {
+                            makeEntityFromVar(objVar) match {
                                 case queryVar: QueryVariable => queryVar
                                 case _ => throw GravsearchException(s"Entity $objVar not allowed in lang function as an argument, a variable is required")
                             }

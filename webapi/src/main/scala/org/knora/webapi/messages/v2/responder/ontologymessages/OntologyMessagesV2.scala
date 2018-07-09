@@ -877,7 +877,7 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
 
                 case ApiV2Simple =>
                     classes.filterNot {
-                        case (classIri, _) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri)
+                        case (classIri, classDef) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri) || classDef.isStandoffClass
                     }
 
                 case _ => classes
@@ -1533,12 +1533,20 @@ sealed trait EntityInfoContentV2 {
     }
 
     /**
-      * A convenience method that returns the `rdf:type` of this entity. Throws [[InconsistentTriplestoreDataException]]
+      * A convenience method that returns the canonical `rdf:type` of this entity. Throws [[InconsistentTriplestoreDataException]]
       * if the entity's predicates do not include `rdf:type`.
       *
       * @return the entity's `rdf:type`.
       */
     def getRdfType: SmartIri
+
+    /**
+      * A convenience method that returns all the objects of this entity's `rdf:type` predicate. Throws [[InconsistentTriplestoreDataException]]
+      * * if the entity's predicates do not include `rdf:type`.
+      *
+      * @return all the values of `rdf:type` for this entity, sorted for determinism.
+      */
+    def getRdfTypes: Seq[SmartIri]
 
     /**
       * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
@@ -2080,7 +2088,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         Map(
             JsonLDConstants.ID -> JsonLDString(entityInfoContent.classIri.toString),
-            JsonLDConstants.TYPE -> JsonLDString(entityInfoContent.getRdfType.toString)
+            JsonLDConstants.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
         ) ++ jsonSubClassOfStatement ++ resourceIconStatement ++ isKnoraResourceClassStatement ++
             isStandoffClassStatement ++ canBeInstantiatedStatement ++ isValueClassStatement
     }
@@ -2137,7 +2145,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
         val subjectTypeStatement: Option[(IRI, JsonLDObject)] = maybeSubjectType.map(subjectTypeObj => (subjectTypePred, JsonLDUtil.iriToJsonLDObject(subjectTypeObj.toString)))
         val objectTypeStatement: Option[(IRI, JsonLDObject)] = maybeObjectType.map(objectTypeObj => (objectTypePred, JsonLDUtil.iriToJsonLDObject(objectTypeObj.toString)))
 
-        val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.map {
+        val jsonSubPropertyOf: Seq[JsonLDObject] = entityInfoContent.subPropertyOf.toSeq.sorted.map {
             superProperty => JsonLDUtil.iriToJsonLDObject(superProperty.toString)
         }
 
@@ -2192,7 +2200,7 @@ case class ReadPropertyInfoV2(entityInfoContent: PropertyInfoContentV2,
 
         Map(
             JsonLDConstants.ID -> JsonLDString(entityInfoContent.propertyIri.toString),
-            JsonLDConstants.TYPE -> JsonLDString(entityInfoContent.getRdfType.toString)
+            JsonLDConstants.TYPE -> JsonLDArray(entityInfoContent.getRdfTypes.map(typeIri => JsonLDString(typeIri.toString)))
         ) ++ jsonSubPropertyOfStatement ++ subjectTypeStatement ++ objectTypeStatement ++
             isResourcePropStatement ++ isEditableStatement ++ isLinkValuePropertyStatement ++
             isLinkPropertyStatement ++ guiElementStatement ++ guiAttributeStatement
@@ -2214,9 +2222,11 @@ case class ReadIndividualInfoV2(entityInfoContent: IndividualInfoContentV2) exte
             case (acc, (predicateIri, predicateInfo)) =>
                 if (predicateInfo.objects.nonEmpty) {
                     val nonLanguageSpecificObjectsAsJson: Seq[JsonLDValue] = predicateInfo.objects.collect {
-                        case StringLiteralV2(str, None) => JsonLDString(str)
-                        case SmartIriLiteralV2(iri) => JsonLDUtil.iriToJsonLDObject(iri.toString)
-                    }
+                        case StringLiteralV2(str, None) => (JsonLDString(str), str)
+                        case SmartIriLiteralV2(iri) =>
+                            val iriStr = iri.toString
+                            (JsonLDUtil.iriToJsonLDObject(iri.toString), iriStr)
+                    }.sortBy(_._2).map(_._1) // Sort for determinism in testing.
 
                     acc + (predicateIri.toString -> JsonLDArray(nonLanguageSpecificObjectsAsJson))
                 } else {
@@ -2316,7 +2326,7 @@ case class ClassInfoContentV2(classIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        val classTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is missing or invalid")).filter {
+        val classTypeSet: Seq[SmartIri] = getRdfTypes.filter {
             classType => OntologyConstants.ClassTypes.contains(classType.toString)
         }
 
@@ -2326,6 +2336,8 @@ case class ClassInfoContentV2(classIri: SmartIri,
             throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is invalid")
         }
     }
+
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $classIri is missing or invalid")).toVector.sorted
 
     /**
       * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
@@ -2553,7 +2565,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
     }
 
     override def getRdfType: SmartIri = {
-        val propertyTypeSet: Set[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is missing or invalid")).filter {
+        val propertyTypeSet: Seq[SmartIri] = getRdfTypes.filter {
             classType => OntologyConstants.PropertyTypes.contains(classType.toString)
         }
 
@@ -2563,6 +2575,8 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
             throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is invalid")
         }
     }
+
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $propertyIri is missing or invalid")).toVector.sorted
 
     /**
       * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
@@ -2652,9 +2666,7 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
     override def getRdfType: SmartIri = {
         val rdfTypePred = predicates.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has no rdf:type"))
 
-        val nonIndividualTypes: Seq[SmartIri] = rdfTypePred.objects.collect {
-            case SmartIriLiteralV2(iri) if iri != OntologyConstants.Owl.NamedIndividual.toSmartIri => iri
-        }
+        val nonIndividualTypes: Seq[SmartIri] = getRdfTypes.filter(iri => iri.toString != OntologyConstants.Owl.NamedIndividual)
 
         if (nonIndividualTypes.size != 1) {
             throw InconsistentTriplestoreDataException(s"OWL named individual $individualIri has too many objects for rdf:type: ${rdfTypePred.objects.mkString(", ")}")
@@ -2662,6 +2674,8 @@ case class IndividualInfoContentV2(individualIri: SmartIri,
 
         nonIndividualTypes.head
     }
+
+    override def getRdfTypes: Seq[SmartIri] = requireIriObjects(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"The rdf:type of $individualIri is missing or invalid")).toVector.sorted
 
     override def toOntologySchema(targetSchema: OntologySchema): IndividualInfoContentV2 = {
         copy(

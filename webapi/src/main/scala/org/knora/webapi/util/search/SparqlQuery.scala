@@ -62,7 +62,7 @@ trait SelectQueryColumn extends Entity
   * @param variableName the name of the variable.
   */
 case class QueryVariable(variableName: String) extends SelectQueryColumn {
-    def toSparql: String = s"?$variableName"
+    override def toSparql: String = s"?$variableName"
 }
 
 /**
@@ -76,7 +76,7 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
 
     val outputVariable = QueryVariable(outputVariableName)
 
-    def toSparql: String = {
+    override def toSparql: String = {
         s"(GROUP_CONCAT(DISTINCT(${inputVariable.toSparql}); SEPARATOR='$separator') AS ${outputVariable.toSparql})"
     }
 }
@@ -98,7 +98,7 @@ case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariable
         ""
     }
 
-    def toSparql: String = {
+    override def toSparql: String = {
 
         s"(COUNT($distinctAsStr ${inputVariable.toSparql}) AS ${outputVariable.toSparql})"
     }
@@ -118,11 +118,11 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
       */
     def toInternalEntityIri: IriRef = IriRef(iri.toOntologySchema(InternalSchema))
 
-    def toSparql: String = {
+    override def toSparql: String = {
         if (propertyPathOperator.nonEmpty) {
-            s"<$iri>${propertyPathOperator.get}"
+            s"${iri.toSparql}${propertyPathOperator.get}"
         } else {
-            s"<$iri>"
+            iri.toSparql
         }
     }
 
@@ -138,7 +138,7 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
   * @param datatype the value's XSD type IRI.
   */
 case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
-    def toSparql: String = "\"" + value + "\"^^<" + datatype + ">"
+    override def toSparql: String = "\"" + value + "\"^^" + datatype.toSparql
 }
 
 /**
@@ -155,7 +155,7 @@ sealed trait QueryPattern extends SparqlGenerator
   * @param namedGraph the named graph this statement should be searched in. Defaults to [[None]].
   */
 case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph: Option[IriRef] = None) extends QueryPattern {
-    def toSparql: String = {
+    override def toSparql: String = {
         val triple = s"${subj.toSparql} ${pred.toSparql} ${obj.toSparql} ."
 
         namedGraph match {
@@ -189,12 +189,12 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 /**
   * Represents a BIND command in a query.
   *
-  * @param variable the variable in the BIND.
-  * @param iriValue the value of the variable, which must be a Knora data IRI.
+  * @param variable   the variable in the BIND.
+  * @param expression the expression to be bound to the variable.
   */
-case class BindPattern(variable: QueryVariable, iriValue: IriRef) extends QueryPattern {
-    def toSparql: String = {
-        s"BIND(${iriValue.toSparql} AS ${variable.toSparql})\n"
+case class BindPattern(variable: QueryVariable, expression: Expression) extends QueryPattern {
+    override def toSparql: String = {
+        s"BIND(${expression.toSparql} AS ${variable.toSparql})\n"
     }
 }
 
@@ -286,7 +286,7 @@ sealed trait Expression extends SparqlGenerator
   * @param rightArg the right argument.
   */
 case class CompareExpression(leftArg: Expression, operator: CompareExpressionOperator.Value, rightArg: Expression) extends Expression {
-    def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
+    override def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
 }
 
 /**
@@ -296,7 +296,7 @@ case class CompareExpression(leftArg: Expression, operator: CompareExpressionOpe
   * @param rightArg the right argument.
   */
 case class AndExpression(leftArg: Expression, rightArg: Expression) extends Expression {
-    def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
+    override def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
 }
 
 /**
@@ -306,18 +306,57 @@ case class AndExpression(leftArg: Expression, rightArg: Expression) extends Expr
   * @param rightArg the right argument.
   */
 case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expression {
-    def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
+    override def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
+}
+
+/**
+  * A trait representing arithmetic operators.
+  */
+sealed trait ArithmeticOperator
+
+/**
+  * Represents the plus operator.
+  */
+case object PlusOperator extends ArithmeticOperator {
+    override def toString = "+"
+}
+
+/**
+  * Represents the minus operator.
+  */
+case object MinusOperator extends ArithmeticOperator {
+    override def toString = "-"
+}
+
+/**
+  * Represents an integer literal.
+  */
+case class IntegerLiteral(value: Int) extends Expression {
+    override def toSparql: String = value.toString
+}
+
+/**
+  * Represents an arithmetic expression.
+  */
+case class ArithmeticExpression(leftArg: Expression, operator: ArithmeticOperator, rightArg: Expression) extends Expression {
+    override def toSparql: String = s"""${leftArg.toSparql} $operator ${rightArg.toSparql}"""
 }
 
 /**
   * Represents a regex function in a query (in a FILTER).
   *
-  * @param textValueVar the variable representing the text value to be checked against the provided pattern.
-  * @param pattern      the REGEX pattern to be used.
-  * @param modifier     the modifier to be used.
+  * @param textVar  the variable representing the text value or string literal to be checked against the provided pattern.
+  * @param pattern  the REGEX pattern to be used.
+  * @param modifier the modifier to be used.
   */
-case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier: String) extends Expression {
-    def toSparql: String = s"""regex(${textValueVar.toSparql}, "$pattern", "$modifier")"""
+case class RegexFunction(textVar: QueryVariable, pattern: String, modifier: Option[String]) extends Expression {
+    override def toSparql: String = modifier match {
+        case Some(modifierStr) =>
+            s"""regex(${textVar.toSparql}, "$pattern", "$modifierStr")"""
+
+        case None =>
+            s"""regex(${textVar.toSparql}, "$pattern")"""
+    }
 }
 
 /**
@@ -326,7 +365,18 @@ case class RegexFunction(textValueVar: QueryVariable, pattern: String, modifier:
   * @param textValueVar the variable representing the text value to be restricted to the specified language.
   */
 case class LangFunction(textValueVar: QueryVariable) extends Expression {
-    def toSparql: String = s"""lang(${textValueVar.toSparql})"""
+    override def toSparql: String = s"""lang(${textValueVar.toSparql})"""
+}
+
+/**
+  * Represents the SPARQL `substr` function.
+  *
+  * @param textLiteralVar   the variable containing the string literal from which a substring is to be taken.
+  * @param startExpression  an expression representing the 1-based index of the first character of the substring.
+  * @param lengthExpression the length of the substring.
+  */
+case class SubStrFunction(textLiteralVar: QueryVariable, startExpression: Expression, lengthExpression: Expression) extends Expression {
+    override def toSparql: String = s"""substr(${textLiteralVar.toSparql}, ${startExpression.toSparql}, ${lengthExpression.toSparql})"""
 }
 
 /**
@@ -336,7 +386,7 @@ case class LangFunction(textValueVar: QueryVariable) extends Expression {
   * @param args        the arguments passed to the function.
   */
 case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extends Expression {
-    def toSparql: String = s"<${functionIri.iri.toString}>(${args.map(_.toSparql).mkString(", ")})"
+    override def toSparql: String = s"${functionIri.iri.toSparql}(${args.map(_.toSparql).mkString(", ")})"
 
     /**
       * Gets the argument at the given position as a [[QueryVariable]].
@@ -352,7 +402,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
         args(pos) match {
             case queryVar: QueryVariable => queryVar
 
-            case other => throw GravsearchException(s"$other is expected to be a QueryVariable")
+            case other => throw GravsearchException(s"Variable required as function argument: $other")
         }
 
     }
@@ -372,7 +422,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
         args(pos) match {
             case literal: XsdLiteral if literal.datatype == xsdDatatype => literal
 
-            case other => throw GravsearchException(s"$other is expected to be a literal of type ${xsdDatatype.toString}")
+            case other => throw GravsearchException(s"Literal of type $xsdDatatype required as function argument: $other")
 
         }
 
@@ -385,7 +435,7 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
   * @param expression the expression in the FILTER.
   */
 case class FilterPattern(expression: Expression) extends QueryPattern {
-    def toSparql: String = s"FILTER(${expression.toSparql})\n"
+    override def toSparql: String = s"FILTER(${expression.toSparql})\n"
 }
 
 /**
@@ -395,7 +445,7 @@ case class FilterPattern(expression: Expression) extends QueryPattern {
   * @param values   the IRIs that will be assigned to the variable.
   */
 case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends QueryPattern {
-    def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"
+    override def toSparql: String = s"VALUES ${variable.toSparql} { ${values.map(_.toSparql).mkString(" ")} }\n"
 }
 
 /**
@@ -404,7 +454,7 @@ case class ValuesPattern(variable: QueryVariable, values: Set[IriRef]) extends Q
   * @param blocks the blocks of patterns contained in the UNION.
   */
 case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
-    def toSparql: String = {
+    override def toSparql: String = {
         val blocksAsStrings = blocks.map {
             block: Seq[QueryPattern] =>
                 val queryPatternStrings: Seq[String] = block.map {
@@ -424,7 +474,7 @@ case class UnionPattern(blocks: Seq[Seq[QueryPattern]]) extends QueryPattern {
   * @param patterns the patterns in the OPTIONAL block.
   */
 case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    def toSparql: String = {
+    override def toSparql: String = {
         val queryPatternStrings: Seq[String] = patterns.map {
             queryPattern: QueryPattern => queryPattern.toSparql
         }
@@ -439,7 +489,7 @@ case class OptionalPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   * @param patterns the patterns contained in the FILTER NOT EXISTS.
   */
 case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    def toSparql: String = s"FILTER NOT EXISTS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+    override def toSparql: String = s"FILTER NOT EXISTS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
 }
 
 /**
@@ -448,7 +498,7 @@ case class FilterNotExistsPattern(patterns: Seq[QueryPattern]) extends QueryPatt
   * @param patterns the patterns contained in the MINUS.
   */
 case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
-    def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
+    override def toSparql: String = s"MINUS {\n ${patterns.map(_.toSparql).mkString}\n}\n"
 }
 
 
@@ -459,7 +509,7 @@ case class MinusPattern(patterns: Seq[QueryPattern]) extends QueryPattern {
   * @param querySchema if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
 case class ConstructClause(statements: Seq[StatementPattern], querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
-    def toSparql: String = "CONSTRUCT {\n" + statements.map(_.toSparql).mkString + "} "
+    override def toSparql: String = "CONSTRUCT {\n" + statements.map(_.toSparql).mkString + "} "
 }
 
 /**
@@ -471,7 +521,7 @@ case class ConstructClause(statements: Seq[StatementPattern], querySchema: Optio
   * @param querySchema      if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
 case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity] = Set.empty[Entity], querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
-    def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
+    override def toSparql: String = "WHERE {\n" + patterns.map(_.toSparql).mkString + "}\n"
 }
 
 /**
@@ -481,7 +531,7 @@ case class WhereClause(patterns: Seq[QueryPattern], positiveEntities: Set[Entity
   * @param isAscending   indicates if the order is ascending or descending.
   */
 case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) extends SparqlGenerator {
-    def toSparql: String = if (isAscending) {
+    override def toSparql: String = if (isAscending) {
         s"ASC(${queryVariable.toSparql})"
     } else {
         s"DESC(${queryVariable.toSparql})"
@@ -498,7 +548,7 @@ case class OrderCriterion(queryVariable: QueryVariable, isAscending: Boolean) ex
   * @param querySchema     if this is a Gravsearch query, represents the Knora API v2 ontology schema used in the query.
   */
 case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereClause, orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], offset: Long = 0, querySchema: Option[ApiV2Schema] = None) extends SparqlGenerator {
-    def toSparql: String = {
+    override def toSparql: String = {
         val stringBuilder = new StringBuilder
         stringBuilder.append(constructClause.toSparql).append(whereClause.toSparql)
 
@@ -525,7 +575,7 @@ case class ConstructQuery(constructClause: ConstructClause, whereClause: WhereCl
   * @param offset      the offset to be used (limit of the previous query + 1 to do paging).
   */
 case class SelectQuery(variables: Seq[SelectQueryColumn], useDistinct: Boolean = true, whereClause: WhereClause, groupBy: Seq[QueryVariable] = Seq.empty[QueryVariable], orderBy: Seq[OrderCriterion] = Seq.empty[OrderCriterion], limit: Option[Int] = None, offset: Long = 0) extends SparqlGenerator {
-    def toSparql: String = {
+    override def toSparql: String = {
         val stringBuilder = new StringBuilder
 
         stringBuilder.append("SELECT ")

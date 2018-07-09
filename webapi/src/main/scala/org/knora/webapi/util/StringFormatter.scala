@@ -337,7 +337,12 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     StringFormatter. To make this work, SmartIri provides its own equals and hashCode
     methods, which delegate to the string representation of the IRI.
 
-     */
+    */
+
+    /**
+      * Returns this IRI as a string in angle brackets.
+      */
+    def toSparql: String
 
     /**
       * Returns `true` if this is a Knora data or definition IRI.
@@ -842,6 +847,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
 
         override def toString: String = iri
+
+        override def toSparql: String = "<" + iri + ">"
 
         override def isKnoraIri: Boolean = iriInfo.iriType != UnknownIriType
 
