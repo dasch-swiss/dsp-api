@@ -320,7 +320,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
                     val requestMessage = ClassesGetRequestV2(
-                        resourceClassIris = classesForResponder,
+                        classIris = classesForResponder,
                         allLanguages = allLanguages,
                         requestingUser = requestingUser
                     )

@@ -80,13 +80,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
 
             // check if all the requested resources were returned
-            requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
+            requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
 
             _ = if (requestedButMissing.nonEmpty) {
                 throw NotFoundException(
                     s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
                         maybe you do not have the right to see all of them or some are marked as deleted.
-                        Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
+                        Missing: ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}""".stripMargin)
 
             }
         } yield queryResultsSeparated

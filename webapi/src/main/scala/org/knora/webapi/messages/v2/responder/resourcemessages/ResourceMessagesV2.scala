@@ -194,6 +194,9 @@ sealed trait ResourceV2 {
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,
                           resourceClass: SmartIri,
+                          attachedToUser: IRI,
+                          attachedToProject: IRI,
+                          permissions: String,
                           values: Map[SmartIri, Seq[ReadValueV2]]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
         copy(

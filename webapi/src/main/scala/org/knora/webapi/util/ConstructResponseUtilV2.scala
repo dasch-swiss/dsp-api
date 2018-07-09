@@ -669,6 +669,9 @@ object ConstructResponseUtilV2 {
         val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
         val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
         val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type).toSmartIri
+        val attachedToUser: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToUser)
+        val attachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
+        val permissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
 
         // get the resource's values
         val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
@@ -696,6 +699,9 @@ object ConstructResponseUtilV2 {
             resourceIri = resourceIri,
             resourceClass = resourceClass,
             label = rdfLabel,
+            attachedToUser = attachedToUser,
+            attachedToProject = attachedToProject,
+            permissions = permissions,
             values = valueObjects
         )
     }

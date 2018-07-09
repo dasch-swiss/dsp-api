@@ -815,11 +815,11 @@ case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boo
 /**
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologyV2]].
   *
-  * @param resourceClassIris the IRIs of the classes to be queried.
-  * @param allLanguages      true if information in all available languages should be returned.
-  * @param requestingUser    the user making the request.
+  * @param classIris      the IRIs of the classes to be queried.
+  * @param allLanguages   true if information in all available languages should be returned.
+  * @param requestingUser the user making the request.
   */
-case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
   * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologyV2]].

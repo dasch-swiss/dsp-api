@@ -206,8 +206,8 @@ object PermissionUtilADM {
                              entityProject: IRI,
                              entityPermissionLiteral: String,
                              requestingUser: UserADM): Option[EntityPermission] = {
-        val maybePermissionLevel = if (requestingUser.isSystemAdmin || requestingUser.permissions.hasProjectAdminAllPermissionFor(entityProject)) {
-            // If the user is in the SystemAdmin group or has ProjectAdminAllPermission, just give them the maximum permission.
+        val maybePermissionLevel = if (requestingUser.isSystemUser || requestingUser.isSystemAdmin || requestingUser.permissions.hasProjectAdminAllPermissionFor(entityProject)) {
+            // If the user is the system user, is in the SystemAdmin group, or has ProjectAdminAllPermission, just give them the maximum permission.
             Some(MaxPermissionLevel)
         } else {
             val entityPermissions: Map[EntityPermission, Set[IRI]] = parsePermissions(entityPermissionLiteral)

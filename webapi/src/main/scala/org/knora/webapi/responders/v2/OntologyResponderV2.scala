@@ -529,15 +529,30 @@ class OntologyResponderV2 extends Responder {
                 val fileValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allFileValueProps)
 
                 // Make sure there is a link value property for each link property.
+
                 val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
+
                 if (missingLinkValueProps.nonEmpty) {
                     throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.mkString(", ")}")
                 }
 
                 // Make sure there is a link property for each link value property.
+
                 val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
+
                 if (missingLinkProps.nonEmpty) {
                     throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.mkString(", ")}")
+                }
+
+                // Make sure that the cardinality for each link property is the same as the cardinality for the corresponding link value property.
+                for (linkProp <- linkPropsInClass) {
+                    val linkValueProp = linkProp.fromLinkPropToLinkValueProp
+                    val linkPropCardinality = allOwlCardinalitiesForClass(linkProp)
+                    val linkValuePropCardinality = allOwlCardinalitiesForClass(linkValueProp)
+
+                    if (linkPropCardinality != linkValuePropCardinality) {
+                        throw InconsistentTriplestoreDataException(s"In class $classIri, the cardinality for $linkProp is different from the cardinality for $linkValueProp")
+                    }
                 }
 
                 // Make maps of the class's direct and inherited cardinalities.
