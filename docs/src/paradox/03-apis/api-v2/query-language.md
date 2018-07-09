@@ -239,6 +239,7 @@ The following Knora value types can be compared with literals in `FILTER`
 expressions in the simple schema:
 
 - Text values (`xsd:string`)
+- Uri values (`xsd:anyURI`)
 - Integer values (`xsd:integer`)
 - Decimal values (`xsd:decimal`)
 - Boolean values (`xsd:boolean`)
