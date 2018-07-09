@@ -29,25 +29,28 @@
           "@type" : "knora-api:IntValue",
           "knora-api:intValueAsInt" : 1
         },
-        "knora-api:hasStillImageFileValue" : [ {
-          "@id" : "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
-          "@type" : "knora-api:StillImageFileValue",
-          "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg",
-          "knora-api:fileValueHasFilename" : "incunabula_0000003856.jpg",
-          "knora-api:fileValueIsPreview" : true,
-          "knora-api:stillImageFileValueHasDimX" : 90,
-          "knora-api:stillImageFileValueHasDimY" : 128,
-          "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-        }, {
-          "@id" : "http://rdfh.ch/50e7460a7203/reps/7ead1231b806",
-          "@type" : "knora-api:StillImageFileValue",
-          "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
-          "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
-          "knora-api:fileValueIsPreview" : false,
-          "knora-api:stillImageFileValueHasDimX" : 1904,
-          "knora-api:stillImageFileValueHasDimY" : 2700,
-          "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-        } ],
+        "knora-api:hasStillImageFileValue": [
+          {
+              "@id": "http://rdfh.ch/50e7460a7203/reps/7ead1231b806",
+              "@type": "knora-api:StillImageFileValue",
+              "knora-api:fileValueAsUrl": "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
+              "knora-api:fileValueHasFilename": "incunabula_0000003856.jp2",
+              "knora-api:fileValueIsPreview": false,
+              "knora-api:stillImageFileValueHasDimX": 1904,
+              "knora-api:stillImageFileValueHasDimY": 2700,
+              "knora-api:stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
+          },
+          {
+              "@id": "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
+              "@type": "knora-api:StillImageFileValue",
+              "knora-api:fileValueAsUrl": "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg",
+              "knora-api:fileValueHasFilename": "incunabula_0000003856.jpg",
+              "knora-api:fileValueIsPreview": true,
+              "knora-api:stillImageFileValueHasDimX": 90,
+              "knora-api:stillImageFileValueHasDimY": 128,
+              "knora-api:stillImageFileValueHasIIIFBaseUrl": "http://localhost:1024/knora"
+          }
+                    ],
         "rdfs:label" : "vorderer Spiegel"
       }
     },
