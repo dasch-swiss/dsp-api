@@ -18,17 +18,13 @@ printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
 sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-se-knora-test-repository-config.ttl.tmpl > graphdb-se-knora-test-repository-config.ttl
 
-curl -X POST -H "Content-Type:application/x-turtle" -T graphdb-se-knora-test-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config"
+curl -X POST -H "Content-Type:text/turtle" -T graphdb-se-knora-test-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test"
 
-curl -X POST -H "Content-Type:application/x-turtle" -d "<http://www.knora.org/config> a <http://www.openrdf.org/config/repository#RepositoryContext>." $GRAPHDB/repositories/SYSTEM/statements
+curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-test> a <http://www.openrdf.org/config/repository#RepositoryContext>." $GRAPHDB/repositories/SYSTEM/statements
 
-printf "${GREEN}Repository created.\n\n${DELIMITER}Loading test data${NO_COLOUR}\n\n"
+printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Index${NO_COLOUR}\n\n"
 
-./graphdb-knora-test-data.expect $GRAPHDB
-
-printf "\n\n${GREEN}${DELIMITER}Creating Lucene index${NO_COLOUR}\n\n"
-
-STATUS=$(curl -s -w '%{http_code}' -S -X POST -H "Content-Type:text/turtle" --data-binary @./graphdb-se-knora-test-index-config.ttl $GRAPHDB/repositories/knora-test/statements)
+STATUS=$(curl -s -w '%{http_code}' -S -X POST --data-urlencode 'update@./graphdb-se-knora-index-create.rq' $GRAPHDB/repositories/knora-test/statements)
 
 if [ "$STATUS" == "204" ]
 then
@@ -36,3 +32,13 @@ then
 else
     printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
 fi
+
+printf "${GREEN}Loading Data${NO_COLOUR}\n\n"
+
+./graphdb-knora-test-data.expect $GRAPHDB
+
+printf "${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
+
+curl -X POST --data-urlencode 'update@./graphdb-se-knora-index-update.rq' $GRAPHDB/repositories/knora-test/statements
+
+printf "${GREEN}Lucene Index Updated.${NO_COLOUR}"

@@ -29,7 +29,7 @@
 
 <http://www.knora.org/ontology/standoff> rdf:type owl:Ontology ;
 
-    rdfs:label "The standoff ontology" ;
+    rdfs:label "The standoff ontology"@en ;
 
     knora-base:attachedToProject knora-base:SystemProject .
 
