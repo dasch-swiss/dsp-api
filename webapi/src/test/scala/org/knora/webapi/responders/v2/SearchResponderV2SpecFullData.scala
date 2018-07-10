@@ -27,7 +27,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -48,7 +48,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -69,7 +69,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -90,7 +90,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -111,7 +111,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -132,7 +132,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -153,7 +153,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -174,7 +174,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -195,7 +195,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -216,7 +216,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -237,7 +237,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -258,7 +258,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -279,7 +279,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -300,7 +300,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -321,7 +321,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -342,7 +342,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -363,7 +363,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -384,7 +384,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -405,7 +405,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -426,7 +426,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -447,7 +447,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -468,7 +468,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -489,7 +489,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -510,7 +510,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -531,7 +531,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -558,7 +558,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
             values = Map("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = Some(StandoffAndMapping(
+                        standoffAndMapping = Some(StandoffAndMapping(
                             standoff = Vector(
                                 StandoffTagV2(
                                     endParentIndex = None,
@@ -879,7 +879,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = Some(StandoffAndMapping(
+                        standoffAndMapping = Some(StandoffAndMapping(
                             standoff = Vector(
                                 StandoffTagV2(
                                     endParentIndex = None,
@@ -1246,7 +1246,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -1267,7 +1267,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,

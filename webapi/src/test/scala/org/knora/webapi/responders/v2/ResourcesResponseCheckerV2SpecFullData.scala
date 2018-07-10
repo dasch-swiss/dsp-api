@@ -19,7 +19,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
         values = Map(
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -33,7 +33,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -46,7 +46,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -59,7 +59,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -72,7 +72,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -85,7 +85,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -98,7 +98,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -111,7 +111,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -124,7 +124,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -137,7 +137,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -151,7 +151,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ),
             "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -164,7 +164,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -177,7 +177,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             )),
             "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -190,7 +190,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -204,7 +204,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -217,7 +217,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -230,7 +230,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -243,7 +243,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -256,7 +256,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -270,7 +270,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             ),
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -283,7 +283,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
-                    standoff = None,
+                    standoffAndMapping = None,
                     valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                     valueHasLanguage = None,
                     comment = None,
@@ -312,7 +312,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,
@@ -325,7 +325,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 ),
                 ReadValueV2(
                     valueContent = TextValueContentV2(
-                        standoff = None,
+                        standoffAndMapping = None,
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
                         comment = None,

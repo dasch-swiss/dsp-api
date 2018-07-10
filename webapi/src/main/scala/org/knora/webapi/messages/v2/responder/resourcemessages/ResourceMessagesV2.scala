@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import java.io.{StringReader, StringWriter}
+import java.time.Instant
 
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
@@ -78,15 +79,13 @@ case class ResourceTEIGetRequestV2(resourceIri: IRI, textProperty: SmartIri, map
   */
 case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
 
-    def toXML = {
-
+    def toXML: String =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                ${header.toXML}
-                ${body.toXML}
+           |    ${header.toXML}
+           |    ${body.toXML}
            |</TEI>
         """.stripMargin
-    }
 
 }
 
@@ -153,10 +152,10 @@ case class TEIHeader(headerInfo: ReadResourceV2, headerXSLT: Option[String], set
 case class TEIBody(bodyInfo: TextValueContentV2, teiMapping: MappingXMLtoStandoff, bodyXSLT: String) {
 
     def toXML: String = {
-        if (bodyInfo.standoff.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
+        if (bodyInfo.standoffAndMapping.isEmpty) throw BadRequestException(s"text is expected to have standoff markup")
 
         // create XML from standoff (temporary XML) that is going to be converted to TEI/XML
-        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoff.get.standoff, teiMapping)
+        val tmpXml = StandoffTagUtilV2.convertStandoffTagV2ToXML(bodyInfo.valueHasString, bodyInfo.standoffAndMapping.get.standoff, teiMapping)
 
         XMLUtil.applyXSLTransformation(tmpXml, bodyXSLT)
     }
@@ -200,6 +199,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           attachedToUser: IRI,
                           attachedToProject: IRI,
                           permissions: String,
+                          creationDate: Instant,
                           values: Map[SmartIri, Seq[ReadValueV2]]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
         copy(

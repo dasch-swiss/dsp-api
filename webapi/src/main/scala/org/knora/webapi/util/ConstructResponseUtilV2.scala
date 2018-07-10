@@ -19,6 +19,8 @@
 
 package org.knora.webapi.util
 
+import java.time.Instant
+
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
@@ -467,7 +469,7 @@ object ConstructResponseUtilV2 {
                         valueType = valueType.toSmartIri,
                         valueHasString = valueObjectValueHasString,
                         valueHasLanguage = valueLanguageOption,
-                        standoff = Some(
+                        standoffAndMapping = Some(
                             StandoffAndMapping(
                                 standoff = standoffTags,
                                 mappingIri = mappingIri,
@@ -484,7 +486,7 @@ object ConstructResponseUtilV2 {
                         valueType = valueType.toSmartIri,
                         valueHasString = valueObjectValueHasString,
                         valueHasLanguage = valueLanguageOption,
-                        standoff = None,
+                        standoffAndMapping = None,
                         comment = valueCommentOption
                     )
                 }
@@ -672,6 +674,8 @@ object ConstructResponseUtilV2 {
         val resourceAttachedToUser: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToUser)
         val resourceAttachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
         val resourcePermissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
+        val resourceCreationDateStr: String = resourceAssertionsMap(OntologyConstants.KnoraBase.CreationDate)
+        val resourceCreationDate: Instant = stringFormatter.toInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
 
         // get the resource's values
         val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
@@ -688,13 +692,19 @@ object ConstructResponseUtilV2 {
                 }.map {
                     (valObj: ValueRdfData) =>
                         val valueContent: ValueContentV2 = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
+                        val valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
+                        val valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
+                        val maybeValueHasRefCountStr: Option[String] = valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasRefCount)
+                        val valueHasRefCount: Option[Int] = maybeValueHasRefCountStr.map(refCountStr => stringFormatter.validateInt(refCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $refCountStr")))
 
                         ReadValueV2(
                             valueIri = valObj.valueObjectIri,
                             attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
                             attachedToProject = resourceAttachedToProject,
                             permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
-                            valueContent = valueContent
+                            valueCreationDate = valueCreationDate,
+                            valueContent = valueContent,
+                            valueHasRefCount = valueHasRefCount
                         )
                 }
 
@@ -708,6 +718,7 @@ object ConstructResponseUtilV2 {
             attachedToUser = resourceAttachedToUser,
             attachedToProject = resourceAttachedToProject,
             permissions = resourcePermissions,
+            creationDate = resourceCreationDate,
             values = valueObjects
         )
     }

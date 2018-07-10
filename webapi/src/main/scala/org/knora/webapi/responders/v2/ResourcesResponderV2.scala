@@ -258,7 +258,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
                     // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
                     valObjs.head.valueContent match {
-                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoffAndMapping.nonEmpty =>
                             textValWithStandoff
 
                         case _ => throw BadRequestException(s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
@@ -357,7 +357,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
 
             // the ext value is expected to have standoff markup
-            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+            _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
             headerResource = resource.resources.head.copy(

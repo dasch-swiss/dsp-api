@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v2.responder.valuemessages
 
+import java.time.Instant
 import java.util.UUID
 
 import org.knora.webapi._
@@ -27,12 +28,12 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValu
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{DateUtilV1, DateUtilV2, SmartIri, StringFormatter}
+import org.knora.webapi.util._
 
 /**
   * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -148,7 +149,9 @@ case class ReadValueV2(valueIri: IRI,
                        attachedToUser: IRI,
                        attachedToProject: IRI,
                        permissions: String,
-                       valueContent: ValueContentV2) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
+                       valueCreationDate: Instant,
+                       valueContent: ValueContentV2,
+                       valueHasRefCount: Option[Int] = None) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
     /**
       * Converts this value to the specified ontology schema.
       *
@@ -206,6 +209,14 @@ case class CreateValueV2(resourceIri: IRI, propertyIri: SmartIri, valueContent: 
   * @param valueContent the content of the new version of the value.
   */
 case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2
+
+/**
+  * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
+  *
+  * @param newValueIri the IRI that was assigned to the new value.
+  * @param value the content of the new value.
+  */
+case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2)
 
 /**
   * The content of the value of a Knora property.
@@ -502,17 +513,29 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
 }
 
 /**
+  * Represents a [[StandoffTagV2]] for a standoff tag of a certain type (standoff tag class) that is about to be created in the triplestore.
+  *
+  * @param standoffNode           the standoff node to be created.
+  * @param standoffTagInstanceIri the standoff node's IRI.
+  * @param startParentIri         the IRI of the parent of the start tag.
+  * @param endParentIri           the IRI of the parent of the end tag, if any.
+  */
+case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standoffTagInstanceIri: IRI, startParentIri: Option[IRI] = None, endParentIri: Option[IRI] = None)
+
+
+/**
   * Represents a Knora text value.
   *
   * @param valueHasString the string representation of the text (without markup).
-  * @param standoff       a [[StandoffAndMapping]], if any.
+  * @param standoffAndMapping       a [[StandoffAndMapping]], if any.
   * @param comment        a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(valueType: SmartIri,
                               valueHasString: String,
                               valueHasLanguage: Option[String] = None,
-                              standoff: Option[StandoffAndMapping],
+                              standoffAndMapping: Option[StandoffAndMapping],
                               comment: Option[String]) extends ValueContentV2 {
+    private val knoraIdUtil = new KnoraIdUtil
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -536,14 +559,14 @@ case class TextValueContentV2(valueType: SmartIri,
                 }
 
             case ApiV2WithValueObjects =>
-                val objectMap: Map[IRI, JsonLDValue] = if (standoff.nonEmpty) {
+                val objectMap: Map[IRI, JsonLDValue] = if (standoffAndMapping.nonEmpty) {
 
-                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoff.get.standoff, standoff.get.mapping)
+                    val xmlFromStandoff = StandoffTagUtilV2.convertStandoffTagV2ToXML(valueHasString, standoffAndMapping.get.standoff, standoffAndMapping.get.mapping)
 
                     // check if there is an XSL transformation
-                    if (standoff.get.XSLT.nonEmpty) {
+                    if (standoffAndMapping.get.XSLT.nonEmpty) {
 
-                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(xmlFromStandoff, standoff.get.XSLT.get)
+                        val xmlTransformed: String = XMLUtil.applyXSLTransformation(xmlFromStandoff, standoffAndMapping.get.XSLT.get)
 
                         // the xml was converted to HTML
                         Map(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> JsonLDString(xmlTransformed))
@@ -551,7 +574,7 @@ case class TextValueContentV2(valueType: SmartIri,
                         // xml is returned
                         Map(
                             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoff.get.mappingIri)
+                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoffAndMapping.get.mappingIri)
                         )
                     }
 
@@ -571,6 +594,80 @@ case class TextValueContentV2(valueType: SmartIri,
 
                 JsonLDObject(objectMapWithLanguage)
         }
+    }
+
+
+    /**
+      * A convenience method that creates an IRI for each [[StandoffTagV2]] and resolves internal references to standoff node Iris.
+      *
+      * @return a list of [[CreateStandoffTagV2InTriplestore]] each representing a [[StandoffTagV2]] object
+      *         along with is standoff tag class and IRI that is going to identify it in the triplestore.
+      */
+    def prepareForSparqlInsert(valueIri: IRI): Seq[CreateStandoffTagV2InTriplestore] = {
+
+        standoffAndMapping match {
+            case Some(definedStandoffAndMapping) =>
+                // create an IRI for each standoff tag
+                // internal references to XML ids are not resolved yet
+                val standoffTagsWithOriginalXMLIDs: Seq[CreateStandoffTagV2InTriplestore] = definedStandoffAndMapping.standoff.map {
+                    case (standoffNode: StandoffTagV2) =>
+                        CreateStandoffTagV2InTriplestore(
+                            standoffNode = standoffNode,
+                            standoffTagInstanceIri = knoraIdUtil.makeRandomStandoffTagIri(valueIri) // generate IRI for new standoff node
+                        )
+                }
+
+                // collect all the standoff tags that contain XML ids and
+                // map the XML ids to standoff node Iris
+                val iDsToStandoffNodeIris: Map[IRI, IRI] = standoffTagsWithOriginalXMLIDs.filter {
+                    (standoffTag: CreateStandoffTagV2InTriplestore) =>
+                        // filter those tags out that have an XML id
+                        standoffTag.standoffNode.originalXMLID.isDefined
+                }.map {
+                    (standoffTagWithID: CreateStandoffTagV2InTriplestore) =>
+                        // return the XML id as a key and the standoff IRI as the value
+                        standoffTagWithID.standoffNode.originalXMLID.get -> standoffTagWithID.standoffTagInstanceIri
+                }.toMap
+
+                // Map the start index of each tag to its IRI, so we can resolve references to parent tags as references to
+                // tag IRIs. We only care about start indexes here, because only hierarchical tags can be parents, and
+                // hierarchical tags don't have end indexes.
+                val startIndexesToStandoffNodeIris: Map[Int, IRI] = standoffTagsWithOriginalXMLIDs.map {
+                    tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
+                }.toMap
+
+                // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
+                val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
+                    (standoffTag: CreateStandoffTagV2InTriplestore) =>
+
+                        // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
+                        val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
+                            (attributeWithOriginalXMLID: StandoffTagAttributeV2) =>
+                                attributeWithOriginalXMLID match {
+                                    case refAttr: StandoffTagInternalReferenceAttributeV2 =>
+                                        // resolve the XML id to the corresponding standoff node IRI
+                                        refAttr.copy(value = iDsToStandoffNodeIris(refAttr.value))
+                                    case attr => attr
+                                }
+                        }
+
+                        val startParentIndex: Option[Int] = standoffTag.standoffNode.startParentIndex
+                        val endParentIndex: Option[Int] = standoffTag.standoffNode.endParentIndex
+
+                        // return standoff tag with updated attributes
+                        standoffTag.copy(
+                            standoffNode = standoffTag.standoffNode.copy(attributes = attributesWithStandoffNodeIriReferences),
+                            startParentIri = startParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)), // If there's a start parent index, get its IRI, otherwise None
+                            endParentIri = endParentIndex.map(parentIndex => startIndexesToStandoffNodeIris(parentIndex)) // If there's an end parent index, get its IRI, otherwise None
+                        )
+                }
+
+                standoffTagsWithNodeReferences
+
+            case None => Seq.empty[CreateStandoffTagV2InTriplestore]
+
+        }
+
     }
 
     override def unescape: ValueContentV2 = {
@@ -600,7 +697,7 @@ case class TextValueContentV2(valueType: SmartIri,
                 val valueHasStringIdentical: Boolean = stringFormatter.fromSparqlEncodedString(valueHasString) == thatTextValue.valueHasString
 
                 // compare standoff nodes (sort them first, since the order does not make any difference) and the XML-to-standoff mapping IRI
-                val (standoffIdentical, sameMapping): (Boolean, Boolean) = (standoff, thatTextValue.standoff) match {
+                val (standoffIdentical, sameMapping): (Boolean, Boolean) = (standoffAndMapping, thatTextValue.standoffAndMapping) match {
                     case (Some(thisStandoffAndMapping), Some(thatStandoffAndMapping)) =>
                         val thisStandoffSorted: Seq[StandoffTagV2] = thisStandoffAndMapping.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
                         val thatStandoffSorted: Seq[StandoffTagV2] = thatStandoffAndMapping.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
