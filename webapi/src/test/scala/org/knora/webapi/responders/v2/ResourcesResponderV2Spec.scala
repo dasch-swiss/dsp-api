@@ -28,14 +28,13 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
-import org.knora.webapi.util.IriConversions._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 import scala.concurrent.duration._
-import scala.io.{Codec, Source}
 
 object ResourcesResponderV2Spec {
     private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
@@ -80,7 +79,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = response)
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein, received = response)
             }
 
         }
@@ -101,7 +101,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = response)
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = response)
             }
 
         }
@@ -111,7 +112,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
             }
 
         }
@@ -132,7 +134,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder, received = response)
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseInversedAndZeitgloeckleinInversedOrder, received = response)
             }
 
         }
@@ -143,7 +146,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {
-                case response: ReadResourcesSequenceV2 => compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
+                case response: ReadResourcesSequenceV2 =>
+                    compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise, received = response)
             }
 
         }

@@ -192,14 +192,15 @@ object PermissionUtilADM {
     }
 
     /**
-      * Determines the permissions that a user has on a entity, and returns an integer permission code.
+      * Determines the permissions that a user has on a entity, and returns an [[EntityPermission]].
       *
       * @param entityIri               the IRI of the entity.
       * @param entityCreator           the IRI of the user that created the entity.
       * @param entityProject           the IRI of the entity's project.
       * @param entityPermissionLiteral the literal that is the object of the entity's `knora-base:hasPermissions` predicate.
       * @param requestingUser          the user making the request.
-      * @return a string representing the user's permission level for the entity.
+      * @return an [[EntityPermission]] representing the user's permission level for the entity, or `None` if the user
+      *         has no permissions on the entity.
       */
     def getUserPermissionADM(entityIri: IRI,
                              entityCreator: IRI,

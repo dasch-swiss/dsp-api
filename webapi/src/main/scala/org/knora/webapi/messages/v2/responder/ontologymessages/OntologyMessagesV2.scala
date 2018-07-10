@@ -1398,6 +1398,10 @@ object Cardinality extends Enumeration {
         }
 
         override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
+
+        def equalsWithoutGuiOrder(that: OwlCardinalityInfo): Boolean = {
+            owlCardinalityIri == that.owlCardinalityIri && owlCardinalityValue == that.owlCardinalityValue
+        }
     }
 
     /**

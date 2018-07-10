@@ -546,11 +546,11 @@ class OntologyResponderV2 extends Responder {
 
                 // Make sure that the cardinality for each link property is the same as the cardinality for the corresponding link value property.
                 for (linkProp <- linkPropsInClass) {
-                    val linkValueProp = linkProp.fromLinkPropToLinkValueProp
-                    val linkPropCardinality = allOwlCardinalitiesForClass(linkProp)
-                    val linkValuePropCardinality = allOwlCardinalitiesForClass(linkValueProp)
+                    val linkValueProp: SmartIri = linkProp.fromLinkPropToLinkValueProp
+                    val linkPropCardinality: OwlCardinalityInfo = allOwlCardinalitiesForClass(linkProp)
+                    val linkValuePropCardinality: OwlCardinalityInfo = allOwlCardinalitiesForClass(linkValueProp)
 
-                    if (linkPropCardinality != linkValuePropCardinality) {
+                    if (!linkPropCardinality.equalsWithoutGuiOrder(linkValuePropCardinality)) {
                         throw InconsistentTriplestoreDataException(s"In class $classIri, the cardinality for $linkProp is different from the cardinality for $linkValueProp")
                     }
                 }

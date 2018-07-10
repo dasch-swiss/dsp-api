@@ -25,8 +25,8 @@ import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructRespon
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -667,16 +667,16 @@ object ConstructResponseUtilV2 {
     def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
-        val rdfLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
+        val resourceLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
         val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type).toSmartIri
-        val attachedToUser: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToUser)
-        val attachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
-        val permissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
+        val resourceAttachedToUser: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToUser)
+        val resourceAttachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
+        val resourcePermissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
 
         // get the resource's values
         val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                val readValues = valObjs.sortBy(_.valueObjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
+                val readValues: Seq[ReadValueV2] = valObjs.sortBy(_.valueObjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
                     (valObj: ValueRdfData) =>
 
                         valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
@@ -687,9 +687,15 @@ object ConstructResponseUtilV2 {
 
                 }.map {
                     (valObj: ValueRdfData) =>
-                        val readValue = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
+                        val valueContent: ValueContentV2 = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
 
-                        ReadValueV2(valObj.valueObjectIri, readValue)
+                        ReadValueV2(
+                            valueIri = valObj.valueObjectIri,
+                            attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
+                            attachedToProject = resourceAttachedToProject,
+                            permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                            valueContent = valueContent
+                        )
                 }
 
                 property.toSmartIri -> readValues
@@ -698,10 +704,10 @@ object ConstructResponseUtilV2 {
         ReadResourceV2(
             resourceIri = resourceIri,
             resourceClass = resourceClass,
-            label = rdfLabel,
-            attachedToUser = attachedToUser,
-            attachedToProject = attachedToProject,
-            permissions = permissions,
+            label = resourceLabel,
+            attachedToUser = resourceAttachedToUser,
+            attachedToProject = resourceAttachedToProject,
+            permissions = resourcePermissions,
             values = valueObjects
         )
     }

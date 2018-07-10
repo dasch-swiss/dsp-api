@@ -186,10 +186,13 @@ sealed trait ResourceV2 {
 /**
   * Represents a Knora resource when being read back from the triplestore.
   *
-  * @param resourceIri   the IRI of the resource.
-  * @param label         the resource's label.
-  * @param resourceClass the class the resource belongs to.
-  * @param values        a map of property IRIs to values.
+  * @param resourceIri       the IRI of the resource.
+  * @param label             the resource's label.
+  * @param resourceClass     the class the resource belongs to.
+  * @param attachedToUser    the user that created the resource.
+  * @param attachedToProject the project that the resource belongs to.
+  * @param permissions       the permissions that the resource grants to user groups.
+  * @param values            a map of property IRIs to values.
   */
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,

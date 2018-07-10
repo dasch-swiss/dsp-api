@@ -138,10 +138,17 @@ sealed trait IOValueV2
 /**
   * The value of a Knora property read back from the triplestore.
   *
-  * @param valueIri     the IRI of the value.
-  * @param valueContent the content of the value.
+  * @param valueIri          the IRI of the value.
+  * @param attachedToUser    the user that created the value.
+  * @param attachedToProject the project that the value's resource belongs to.
+  * @param permissions       the permissions that the value grants to user groups.
+  * @param valueContent      the content of the value.
   */
-case class ReadValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
+case class ReadValueV2(valueIri: IRI,
+                       attachedToUser: IRI,
+                       attachedToProject: IRI,
+                       permissions: String,
+                       valueContent: ValueContentV2) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
     /**
       * Converts this value to the specified ontology schema.
       *
@@ -240,6 +247,7 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
 
 /**
   * A trait for objects that can convert JSON-LD objects into value content objects (subclasses of [[ValueContentV2]]).
+  *
   * @tparam C a subclass of [[ValueContentV2]].
   */
 trait ValueContentReaderV2[C <: ValueContentV2] {
@@ -381,7 +389,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
           * Given an optional month and an optional day of the month, determines the precision of a date.
           *
           * @param maybeMonth an optional month.
-          * @param maybeDay an optional day of the month.
+          * @param maybeDay   an optional day of the month.
           * @return the precision of the date.
           */
         def getPrecision(maybeMonth: Option[Int], maybeDay: Option[Int]): KnoraPrecisionV1.Value = {
