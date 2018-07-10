@@ -1740,13 +1740,13 @@
     				[
     				    rdf:type owl:Restriction ;
                         owl:onProperty :hasFamilyName ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                     ] ,
                     [
                         rdf:type owl:Restriction ;
                         owl:onProperty :hasGivenName ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                     ] ,
                     [
@@ -1800,25 +1800,25 @@
                     [
                         rdf:type owl:Restriction ;
                         owl:onProperty :hasBirthPlace ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
                     ] ,
                     [
                         rdf:type owl:Restriction ;
                         owl:onProperty :hasDeathPlace ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                     ] ,
                     [
                         rdf:type owl:Restriction ;
                         owl:onProperty :hasFloruitPlace ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
                     ] ,
                     [
                         rdf:type owl:Restriction ;
                         owl:onProperty :hasMarriagePlace ;
-                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                         salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
                     ] ,
                     [
