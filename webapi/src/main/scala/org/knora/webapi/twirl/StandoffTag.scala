@@ -168,7 +168,27 @@ case class StandoffTagV2(standoffTagClassIri: IRI,
                          endIndex: Option[Int] = None,
                          startParentIndex: Option[Int] = None,
                          endParentIndex: Option[Int] = None,
-                         attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2])
+                         attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2]) {
+
+    /**
+      * Compares this standoff tag to another standoff tag, ignoring any differences in their UUIDs.
+      *
+      * @param that another standoff tag.
+      * @return `true` if the two standoff tags are identical, aside from any differences in their UUIDs.
+      */
+    def equalsWithoutUuid(that: StandoffTagV2): Boolean = {
+        standoffTagClassIri == that.standoffTagClassIri &&
+            dataType == that.dataType &&
+            originalXMLID == that.originalXMLID &&
+            startPosition == that.startPosition &&
+            endPosition == that.endPosition &&
+            startIndex == that.startIndex &&
+            endIndex == that.endIndex &&
+            startParentIndex == that.startParentIndex &&
+            endParentIndex == that.endParentIndex &&
+            attributes == that.attributes
+    }
+}
 
 
 

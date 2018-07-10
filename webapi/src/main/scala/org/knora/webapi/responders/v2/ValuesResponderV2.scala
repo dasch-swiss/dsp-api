@@ -126,6 +126,10 @@ class ValuesResponderV2 extends Responder {
                 }
 
                 // Check that the new value would not duplicate an existing value.
+                _ = if (currentValuesForProp.exists(currentVal => internalValueContent.wouldDuplicateOtherValue(currentVal.valueContent))) {
+                    throw DuplicateValueException()
+                }
+
 
             } yield CreateValueResponseV2(valueIri = "")
         }
