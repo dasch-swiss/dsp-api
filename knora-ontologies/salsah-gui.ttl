@@ -26,7 +26,7 @@
 
 <http://www.knora.org/ontology/salsah-gui> rdf:type owl:Ontology ;
 
-    rdfs:label "The salsah-gui ontology" ;
+    rdfs:label "The salsah-gui ontology"@en ;
 
     knora-base:attachedToProject knora-base:SystemProject .
 

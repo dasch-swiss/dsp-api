@@ -28,7 +28,7 @@
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology ;
 
-    rdfs:label "The Knora base ontology" ;
+    rdfs:label "The Knora base ontology"@en ;
 
     :attachedToProject :SystemProject .
 

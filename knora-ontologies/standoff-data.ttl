@@ -26,7 +26,7 @@
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
 
 <http://rdfh.ch/standoff/mappings/StandardMapping> a knora-base:XMLToStandoffMapping ;
-	rdfs:label "mapping for HTML" ;
+	rdfs:label "mapping for HTML"@en ;
     knora-base:hasMappingElement 
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/4b-Cx4qYQOyy9mUswmvW7g> , 
                                  <http://rdfh.ch/standoff/mappings/StandardMapping/elements/5NtsUzYWTa6O427LTaORkg> , 
@@ -317,7 +317,7 @@
 ### TEI Mapping for standard standoff tags
 
 <http://rdfh.ch/standoff/mappings/TEIMapping> a knora-base:XMLToStandoffMapping ;
-	rdfs:label "mapping for TEI" .
+	rdfs:label "mapping for TEI"@en .
 
 <http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/LhZRKPt1Tteef02WMkYEMA> .
 
