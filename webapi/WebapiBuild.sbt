@@ -207,8 +207,8 @@ lazy val webApiLibs = Seq(
 lazy val library =
     new {
         object Version {
-            val akkaBase = "2.5.11"
-            val akkaHttp = "10.1.0"
+            val akkaBase = "2.5.13"
+            val akkaHttp = "10.1.3"
             val jena = "3.4.0"
         }
 
