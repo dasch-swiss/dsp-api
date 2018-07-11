@@ -66,6 +66,8 @@ jobs:
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test coverageReport
+        # upload code coverage report
+        - bash <(curl -s https://codecov.io/bash) -F unit
         # test sbt stage
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
@@ -87,6 +89,8 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker run -d --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-it-config.lua
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test coverageReport
+        # upload code coverage report
+        - bash <(curl -s https://codecov.io/bash) -F integration
     # testing docs generation
     - stage: test
       script:
@@ -150,10 +154,6 @@ jobs:
         - docker pull $SIPI_REPO:develop
         - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
         - docker push $SIPI_REPO
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
-
 notifications:
   slack:
     secure: gaazomUbAB4q7bH2XOiZXqHvU2gd/X/jIRLAJW9vjcRbY6o48eiEdNXF2umraHG0q+5UUEJ5dfvxiPtC4PiUq8uD6J+R0fEWrWznYoIeEWEXjKxRxWplrWJ9Ke+PJb3wCV6cXBGMfxDpvYQbVjsy7n0aQmjNs4Drz+llqL5SilTdswTylwvUdufad0QaovXklL+p0w9vRHRKzQkYKa9phL10VcJa8TPI74tuFcTHnK6TcMNW6p0vzAaF6JVgzoRPzUgXnEPCw4pI8zqOF1ghPpQByNXKiYofPWt1yTFgb60LQarDEiHXunXAA/sf2gx616pWLVjDFGziXVzhiGUDUjM5I1p7hPyA2rTB63AAZustFcGeD+jbHNHIFhcvvCHVHjJfp8M7LrUR+MBqz5mJNi/9KgxyZ8I9Df28TxmKxGFaGW8t4PZdA75/49Hos0TqtIp5m+eo8mTksUJogEJJokRZUKraMBhC0cNCry0kp+EQ06F4usLoDyZTUar4OSuNSiymf+zwz6jZo8dF/cluRYellwewE9NJiNWGN4DiBhk2vGJ7OtWMDPkl1tqkG8npoqbT4s38esjxfa/XcworGfeqE+9mzugVzkIKIX2lB6QxZp0AKQVOiy7JwwdtcjVMLvceiNPEWfe8fhLMX02oqYz2uoibRmHMxKPa5CpmUIg=
