@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/dhlab-basel/Knora.svg?branch=develop)](https://travis-ci.org/dhlab-basel/Knora)
+[![Coverage Status](https://coveralls.io/repos/github/dhlab-basel/Knora/badge.svg?branch=develop)](https://coveralls.io/github/dhlab-basel/Knora?branch=develop)
 
 # Knora
 
