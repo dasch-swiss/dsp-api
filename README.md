@@ -1,6 +1,5 @@
 [![Build Status](https://travis-ci.org/dhlab-basel/Knora.svg?branch=develop)](https://travis-ci.org/dhlab-basel/Knora)
-[![Coverage Status](https://coveralls.io/repos/github/dhlab-basel/Knora/badge.svg?branch=develop)](https://coveralls.io/github/dhlab-basel/Knora?branch=develop)
-
+[![codecov](https://codecov.io/gh/dhlab-basel/Knora/branch/develop/graph/badge.svg)](https://codecov.io/gh/dhlab-basel/Knora)
 # Knora
 
 [Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a server
