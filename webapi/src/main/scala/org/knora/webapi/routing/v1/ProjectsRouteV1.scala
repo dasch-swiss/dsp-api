@@ -27,6 +27,7 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.v1.ProjectsRouteV1.getUserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
@@ -52,7 +53,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                 /* returns all projects */
                 requestContext =>
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                     } yield ProjectsGetRequestV1(Some(userProfile))
 
 
@@ -73,12 +74,12 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                         val requestMessage = if (identifier != "iri") { // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectInfoByShortnameGetRequestV1(shortNameDec, Some(userProfile))
                         } else { // identify project by iri. this is the default case.
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
                         }
 
@@ -101,12 +102,12 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <-getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 
@@ -128,12 +129,12 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectAdminMembersByShortnameGetRequestV1(shortNameDec, userProfile)
                         } else {
                             val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                             for {
-                                userProfile <- getUserProfileV1(requestContext)
+                                userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             } yield ProjectAdminMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 

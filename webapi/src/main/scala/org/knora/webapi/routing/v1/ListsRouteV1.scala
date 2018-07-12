@@ -48,7 +48,7 @@ object ListsRouteV1 extends Authenticator {
                 requestContext =>
 
                     val requestMessageFuture = for {
-                            userProfile <- getUserProfileV1(requestContext)
+                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                             requestMessage = requestContext.request.uri.query().get("reqtype") match {
@@ -72,7 +72,7 @@ object ListsRouteV1 extends Authenticator {
             get {
                 requestContext =>
                     val requestMessageFuture = for {
-                            userProfile <- getUserProfileV1(requestContext)
+                            userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                             selIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
                             requestMessage = requestContext.request.uri.query().get("reqtype") match {

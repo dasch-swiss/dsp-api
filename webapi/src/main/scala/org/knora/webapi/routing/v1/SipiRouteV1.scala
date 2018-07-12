@@ -25,6 +25,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
+import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -51,7 +52,7 @@ object SipiRouteV1 extends Authenticator {
                 requestContext =>
 
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                         //val fileValueIRI = StringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid file value IRI: $iri"))
                         filename = stringFormatter.toSparqlEncodedString(file, throw BadRequestException(s"Invalid filename: '$file'"))
                     } yield SipiFileInfoGetRequestV1(filename, userProfile)

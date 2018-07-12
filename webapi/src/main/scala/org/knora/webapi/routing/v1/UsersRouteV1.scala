@@ -29,6 +29,7 @@ import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 
@@ -56,7 +57,7 @@ object UsersRouteV1 extends Authenticator {
                 /* return all users */
                 requestContext =>
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                     } yield UsersGetRequestV1(userProfile)
 
                     RouteUtilV1.runJsonRouteWithFuture(
@@ -77,11 +78,11 @@ object UsersRouteV1 extends Authenticator {
                             /* check if email or iri was supplied */
                             val requestMessage = if (identifier == "email") {
                                 for {
-                                    userProfile <- getUserProfileV1(requestContext)
+                                    userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                                 } yield UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                             } else {
                                 for {
-                                    userProfile <- getUserProfileV1(requestContext)
+                                    userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                                     userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
                                 } yield UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                             }
@@ -102,7 +103,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
 
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                         checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                     } yield UserProjectMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -125,7 +126,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
 
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                         checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                     } yield UserProjectAdminMembershipsGetRequestV1(
                         userIri = checkedUserIri,
@@ -148,7 +149,7 @@ object UsersRouteV1 extends Authenticator {
                 requestContext =>
 
                     val requestMessage = for {
-                        userProfile <- getUserProfileV1(requestContext)
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
                         checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                     } yield UserGroupMembershipsGetRequestV1(
                         userIri = checkedUserIri,
