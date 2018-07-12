@@ -27,13 +27,13 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
-import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses}
+import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util._
 
 /**
   * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -137,6 +137,15 @@ case class CreateValueResponseV2(valueIri: IRI) extends KnoraResponseV2 {
 sealed trait IOValueV2
 
 /**
+  * Provides information about the deletion of a resource or value.
+  *
+  * @param deleteDate    the date when the resource was deleted.
+  * @param deleteComment the reason why the resource was deleted.
+  */
+case class DeletionInfo(deleteDate: Instant,
+                        deleteComment: String)
+
+/**
   * The value of a Knora property read back from the triplestore.
   *
   * @param valueIri          the IRI of the value.
@@ -144,6 +153,9 @@ sealed trait IOValueV2
   * @param attachedToProject the project that the value's resource belongs to.
   * @param permissions       the permissions that the value grants to user groups.
   * @param valueContent      the content of the value.
+  * @param previousValueIri  the IRI of the previous version of this value.
+  * @param deletionInfo      if this value has been marked as deleted, provides the date when it was
+  *                          deleted and the reason why it was deleted.
   */
 case class ReadValueV2(valueIri: IRI,
                        attachedToUser: IRI,
@@ -151,7 +163,15 @@ case class ReadValueV2(valueIri: IRI,
                        permissions: String,
                        valueCreationDate: Instant,
                        valueContent: ValueContentV2,
-                       valueHasRefCount: Option[Int] = None) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
+                       previousValueIri: Option[IRI] = None,
+                       valueHasRefCount: Option[Int] = None,
+                       deletionInfo: Option[DeletionInfo]) extends IOValueV2 with KnoraReadV2[ReadValueV2] {
+    // TODO: consider paramaterising ReadValueV2 with the subtype of its ValueContentV2. This would make
+    // it possible to write a method that, e.g., is declared as returning a ReadValueV2[LinkValueContentV2] (like
+    // ValuesResponderV2.findLinkValue). The challenge would be dealing with methods like ReadValueV2.toOntologySchema
+    // and ValueContentV2.toOntologySchema, which would have to return instances of subtypes.
+    // See <https://tpolecat.github.io/2015/04/29/f-bounds.html>.
+
     /**
       * Converts this value to the specified ontology schema.
       *
@@ -197,8 +217,8 @@ case class ReadValueV2(valueIri: IRI,
   * The value of a Knora property sent to Knora to be created.
   *
   * @param resourceIri  the resource the new value should be attached to.
-  * @param propertyIri  the property of the new value.
-  * @param valueContent the content of the new value.
+  * @param propertyIri  the property of the new value. If the client wants to create a link, this must be a link value property.
+  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
   */
 case class CreateValueV2(resourceIri: IRI, propertyIri: SmartIri, valueContent: ValueContentV2) extends IOValueV2
 
@@ -214,7 +234,7 @@ case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IO
   * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
   *
   * @param newValueIri the IRI that was assigned to the new value.
-  * @param value the content of the new value.
+  * @param value       the content of the new value.
   */
 case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2)
 
@@ -526,9 +546,9 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
 /**
   * Represents a Knora text value.
   *
-  * @param valueHasString the string representation of the text (without markup).
-  * @param standoffAndMapping       a [[StandoffAndMapping]], if any.
-  * @param comment        a comment on this `TextValueContentV2`, if any.
+  * @param valueHasString     the string representation of the text (without markup).
+  * @param standoffAndMapping a [[StandoffAndMapping]], if any.
+  * @param comment            a comment on this `TextValueContentV2`, if any.
   */
 case class TextValueContentV2(valueType: SmartIri,
                               valueHasString: String,
@@ -536,6 +556,29 @@ case class TextValueContentV2(valueType: SmartIri,
                               standoffAndMapping: Option[StandoffAndMapping],
                               comment: Option[String]) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
+
+    /**
+      * Returns the IRIs of any resources that are target of standoff link tags in this text value.
+      */
+    lazy val standoffLinkTagTargetResourceIris: Set[IRI] = {
+        standoffAndMapping match {
+            case Some(definedStandoffAndMapping) =>
+                definedStandoffAndMapping.standoff.foldLeft(Set.empty[IRI]) {
+                    case (acc, standoffTag: StandoffTagV2) =>
+                        if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
+                            val iriAttributes: Set[IRI] = standoffTag.attributes.collect {
+                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute.value
+                            }.toSet
+
+                            acc ++ iriAttributes
+                        } else {
+                            acc
+                        }
+                }
+
+            case None => Set.empty[IRI]
+        }
+    }
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1504,8 +1547,8 @@ case class LinkValueContentV2(valueType: SmartIri,
         that match {
             case thatLinkValue: LinkValueContentV2 =>
                 subject == thatLinkValue.subject &&
-                predicate == thatLinkValue.predicate &&
-                target == thatLinkValue.target
+                    predicate == thatLinkValue.predicate &&
+                    target == thatLinkValue.target
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }

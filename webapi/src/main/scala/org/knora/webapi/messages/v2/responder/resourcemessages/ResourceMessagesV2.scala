@@ -52,9 +52,9 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
 case class ResourcesGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
 
 /**
-  * Requests a preview of a resource. A successful response will be a [[ReadResourcesSequenceV2]].
+  * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
   *
-  * @param resourceIris   the Iris of the resources to obtain a preview for.
+  * @param resourceIris   the IRIs of the resources to obtain a preview for.
   * @param requestingUser the user making the request.
   */
 case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI], requestingUser: UserADM) extends ResourcesResponderRequestV2
@@ -185,13 +185,17 @@ sealed trait ResourceV2 {
 /**
   * Represents a Knora resource when being read back from the triplestore.
   *
-  * @param resourceIri       the IRI of the resource.
-  * @param label             the resource's label.
-  * @param resourceClass     the class the resource belongs to.
-  * @param attachedToUser    the user that created the resource.
-  * @param attachedToProject the project that the resource belongs to.
-  * @param permissions       the permissions that the resource grants to user groups.
-  * @param values            a map of property IRIs to values.
+  * @param resourceIri          the IRI of the resource.
+  * @param label                the resource's label.
+  * @param resourceClass        the class the resource belongs to.
+  * @param attachedToUser       the user that created the resource.
+  * @param attachedToProject    the project that the resource belongs to.
+  * @param permissions          the permissions that the resource grants to user groups.
+  * @param values               a map of property IRIs to values.
+  * @param creationDate         the date when this resource was created.
+  * @param lastModificationDate the date when this resource was last modified.
+  * @param deletionInfo         if this resource has been marked as deleted, provides the date when it was
+  *                             deleted and the reason why it was deleted.
   */
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,
@@ -199,8 +203,10 @@ case class ReadResourceV2(resourceIri: IRI,
                           attachedToUser: IRI,
                           attachedToProject: IRI,
                           permissions: String,
+                          values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
-                          values: Map[SmartIri, Seq[ReadValueV2]]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
+                          lastModificationDate: Option[Instant],
+                          deletionInfo: Option[DeletionInfo]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
         copy(
             resourceClass = resourceClass.toOntologySchema(targetSchema),

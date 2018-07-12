@@ -668,14 +668,38 @@ object ConstructResponseUtilV2 {
       */
     def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val resourceAssertionsMap = resourceWithValueRdfData.resourceAssertions.toMap
+
+        def getDeletionInfo(entityIri: IRI, assertions: Map[IRI, String]): Option[DeletionInfo] = {
+            val isDeletedStr: String = assertions(OntologyConstants.KnoraBase.IsDeleted)
+            val resourceIsDeleted: Boolean = stringFormatter.toBoolean(isDeletedStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:isDeleted in entity <$entityIri>: $isDeletedStr"))
+
+            if (resourceIsDeleted) {
+                val deleteDateStr = assertions(OntologyConstants.KnoraBase.DeleteDate)
+                val deleteDate = stringFormatter.toInstant(deleteDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:deleteDate in entity <$entityIri>: $deleteDateStr"))
+                val deleteComment = assertions(OntologyConstants.KnoraBase.DeleteComment)
+
+                Some(
+                    DeletionInfo(
+                        deleteDate = deleteDate,
+                        deleteComment = deleteComment
+                    )
+                )
+            } else {
+                None
+            }
+        }
+
+        val resourceAssertionsMap: Map[IRI, String] = new ErrorHandlingMap(resourceWithValueRdfData.resourceAssertions.toMap, { key: IRI => throw InconsistentTriplestoreDataException(s"Resource <$resourceIri> has no <$key>") })
         val resourceLabel: String = resourceAssertionsMap(OntologyConstants.Rdfs.Label)
-        val resourceClass = resourceAssertionsMap(OntologyConstants.Rdf.Type).toSmartIri
+        val resourceClassStr: IRI = resourceAssertionsMap(OntologyConstants.Rdf.Type)
+        val resourceClass = resourceClassStr.toSmartIriWithErr(throw InconsistentTriplestoreDataException(s"Couldn't parse rdf:type of resource <$resourceIri>: <$resourceClassStr>"))
         val resourceAttachedToUser: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToUser)
         val resourceAttachedToProject: IRI = resourceAssertionsMap(OntologyConstants.KnoraBase.AttachedToProject)
         val resourcePermissions: String = resourceAssertionsMap(OntologyConstants.KnoraBase.HasPermissions)
         val resourceCreationDateStr: String = resourceAssertionsMap(OntologyConstants.KnoraBase.CreationDate)
         val resourceCreationDate: Instant = stringFormatter.toInstant(resourceCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:creationDate: $resourceCreationDateStr"))
+        val resourceLastModificationDate: Option[Instant] = resourceAssertionsMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(resourceLastModificationDateStr => stringFormatter.toInstant(resourceLastModificationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:lastModificationDate: $resourceLastModificationDateStr")))
+        val resourceDeletionInfo = getDeletionInfo(entityIri = resourceIri, assertions = resourceAssertionsMap)
 
         // get the resource's values
         val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
@@ -696,6 +720,8 @@ object ConstructResponseUtilV2 {
                         val valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
                         val maybeValueHasRefCountStr: Option[String] = valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasRefCount)
                         val valueHasRefCount: Option[Int] = maybeValueHasRefCountStr.map(refCountStr => stringFormatter.validateInt(refCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $refCountStr")))
+                        val previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
+                        val valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
 
                         ReadValueV2(
                             valueIri = valObj.valueObjectIri,
@@ -704,12 +730,15 @@ object ConstructResponseUtilV2 {
                             permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                             valueCreationDate = valueCreationDate,
                             valueContent = valueContent,
-                            valueHasRefCount = valueHasRefCount
-                        )
+                            valueHasRefCount = valueHasRefCount,
+                            previousValueIri = previousValueIri,
+                            deletionInfo = valueDeletionInfo
+                         )
                 }
 
                 property.toSmartIri -> readValues
         }
+
 
         ReadResourceV2(
             resourceIri = resourceIri,
@@ -718,8 +747,10 @@ object ConstructResponseUtilV2 {
             attachedToUser = resourceAttachedToUser,
             attachedToProject = resourceAttachedToProject,
             permissions = resourcePermissions,
+            values = valueObjects,
             creationDate = resourceCreationDate,
-            values = valueObjects
+            lastModificationDate = resourceLastModificationDate,
+            deletionInfo = resourceDeletionInfo
         )
     }
 

@@ -20,7 +20,9 @@
 package org.knora.webapi.util
 
 import java.text.ParseException
-import java.time.Instant
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -1559,9 +1561,17 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toInstant(s: String, errorFun: => Nothing): Instant = {
         try {
+            // Try parsing it as an ISO 8601 date in UTC.
             Instant.parse(s)
         } catch {
-            case _: Exception => errorFun
+            case _: Exception =>
+                // Try parsing it as an ISO 8601 date with an offset.
+                try {
+                    val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+                    Instant.from(creationAccessor)
+                } catch {
+                    case _: Exception => errorFun
+                }
         }
     }
 
@@ -1693,6 +1703,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = {
         try {
             maybe.exists(_.toBoolean)
+        } catch {
+            case _: IllegalArgumentException => errorFun
+        }
+    }
+
+    /**
+      * Converts a string to a boolean.
+      *
+      * @param s        the string to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+      *                 as a boolean value.
+      * @return a Boolean.
+      */
+    def toBoolean(s: String, errorFun: => Nothing): Boolean = {
+        try {
+            s.toBoolean
         } catch {
             case _: IllegalArgumentException => errorFun
         }
