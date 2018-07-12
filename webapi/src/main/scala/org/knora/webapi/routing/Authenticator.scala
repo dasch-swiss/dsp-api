@@ -35,7 +35,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGet
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.Authenticator.getUserADMByEmail
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
@@ -104,6 +103,7 @@ trait Authenticator {
       *         the generated session id.
       */
     def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = for {
+
         authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
         settings = Settings(system)
@@ -305,8 +305,6 @@ trait Authenticator {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-
-
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
             log.debug("getUserADM - Authentication skipping active, returning 'anonymousUser'.")
@@ -362,44 +360,47 @@ object Authenticator {
       */
     def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Future[Boolean] = {
 
-        val settings = Settings(system)
+        for {
+            settings <- FastFuture.successful(Settings(system))
 
-        credentials match {
-            case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                for {
-                    user <- getUserADMByEmail(passCreds.email)
+            result <- credentials match {
+                case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                    for {
+                        user <- getUserADMByEmail(passCreds.email)
 
-                    /* check if the user is active, if not, then no need to check the password */
-                    _ = if (!user.isActive) {
-                        log.debug("authenticateCredentials - user is not active")
-                        throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
-                    }
+                        /* check if the user is active, if not, then no need to check the password */
+                        _ = if (!user.isActive) {
+                            log.debug("authenticateCredentials - user is not active")
+                            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                        }
 
-                    _ = if (!user.passwordMatch(passCreds.password)) {
-                        log.debug("authenticateCredentialsV2 - password did not match")
+                        _ = if (!user.passwordMatch(passCreds.password)) {
+                            log.debug("authenticateCredentialsV2 - password did not match")
+                            throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                        }
+                    } yield true
+                }
+                case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                    if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
+                        log.debug("authenticateCredentialsV2 - token was not valid")
                         throw BadCredentialsException(BAD_CRED_NOT_VALID)
                     }
-                } yield true
-            }
-            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-                if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
-                    log.debug("authenticateCredentialsV2 - token was not valid")
-                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    FastFuture.successful(true)
                 }
-                FastFuture.successful(true)
-            }
-            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-                if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
-                    log.debug("authenticateCredentialsV2 - session token was not valid")
-                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                    if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
+                        log.debug("authenticateCredentialsV2 - session token was not valid")
+                        throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    }
+                    FastFuture.successful(true)
                 }
-                FastFuture.successful(true)
+                case None => {
+                    log.debug("authenticateCredentialsV2 - no credentials supplied")
+                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+                }
             }
-            case None => {
-                log.debug("authenticateCredentialsV2 - no credentials supplied")
-                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-            }
-        }
+
+        } yield result
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -568,42 +569,43 @@ object Authenticator {
 
         val settings = Settings(system)
 
-        authenticateCredentialsV2(credentials)
+        for {
+            authenticated <- authenticateCredentialsV2(credentials)
 
-        val userFuture: Future[UserADM] = credentials match {
-            case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                log.debug("getUserADMThroughCredentialsV2 - used email")
-                getUserADMByEmail(passCreds.email)
-            }
-            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-                val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
-                    case Some(iri) => iri
-                    case None => {
-                        // should not happen, as the token is already validated
-                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-                    }
+            user: UserADM <- credentials match {
+                case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                    log.debug("getUserADMThroughCredentialsV2 - used email")
+                    getUserADMByEmail(passCreds.email)
                 }
-                log.debug("getUserADMThroughCredentialsV2 - used token")
-                getUserADMByIri(userIri)
-            }
-            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-                val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
-                    case Some(iri) => iri
-                    case None => {
-                        // should not happen, as the token is already validated
-                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                    val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
+                        case Some(iri) => iri
+                        case None => {
+                            // should not happen, as the token is already validated
+                            throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                        }
                     }
+                    log.debug("getUserADMThroughCredentialsV2 - used token")
+                    getUserADMByIri(userIri)
                 }
-                log.debug("getUserADMThroughCredentialsV2 - used session token")
-                getUserADMByIri(userIri)
+                case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                    val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
+                        case Some(iri) => iri
+                        case None => {
+                            // should not happen, as the token is already validated
+                            throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                        }
+                    }
+                    log.debug("getUserADMThroughCredentialsV2 - used session token")
+                    getUserADMByIri(userIri)
+                }
+                case None => {
+                    log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+                }
             }
-            case None => {
-                log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
-                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-            }
-        }
 
-        userFuture
+        } yield user
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
