@@ -30,7 +30,7 @@ env:
     - CHROME_BIN=google-chrome-stable
     - GDB_HEAP_SIZE="2G"
     - TAG=${TRAVIS_BRANCH//\//-}
-    - GRAPHDB_VERSION="8.6.0-se"
+    - GRAPHDB_VERSION="8.5.0-se"
 
 before_cache:
     - sudo chown -R travis:travis $HOME/.ivy2
