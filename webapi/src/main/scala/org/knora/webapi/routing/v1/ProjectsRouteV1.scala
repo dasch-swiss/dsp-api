@@ -56,7 +56,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                     } yield ProjectsGetRequestV1(Some(userProfile))
 
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -82,7 +82,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             } yield ProjectInfoByIRIGetRequestV1(checkedProjectIri, Some(userProfile))
                         }
 
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilV1.runJsonRouteWithFuture(
                             requestMessage,
                             requestContext,
                             settings,
@@ -110,7 +110,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
                             } yield ProjectMembersByIRIGetRequestV1(checkedProjectIri, userProfile)
                         }
 
-                        RouteUtilV1.runJsonRoute(
+                        RouteUtilV1.runJsonRouteWithFuture(
                             requestMessage,
                             requestContext,
                             settings,

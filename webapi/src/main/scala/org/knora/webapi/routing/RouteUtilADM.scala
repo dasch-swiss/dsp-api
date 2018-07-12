@@ -60,7 +60,7 @@ object RouteUtilADM {
             requestMessage <- requestMessageF
 
             // Optionally log the request message. TODO: move this to the testing framework.
-            if (settings.dumpMessages) {
+            _ = if (settings.dumpMessages) {
                 log.debug(requestMessage.toString)
             }
 

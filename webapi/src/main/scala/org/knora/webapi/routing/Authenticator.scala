@@ -264,7 +264,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    @deprecated("Please use: getUserADM()")
+    @deprecated("Please use: getUserADM()", "webapi")
     def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserProfileV1] = {
 
         val settings = Settings(system)
