@@ -862,7 +862,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -871,7 +871,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -880,7 +880,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a region with a comment containing standoff information" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/047db418ae06", userProfile = SharedTestDataADM.incunabulaMemberUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/047db418ae06", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1208,7 +1208,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             // See if we can query the resource.
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userADM = SharedTestDataADM.incunabulaProjectAdminUser)
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
             }
@@ -1312,7 +1312,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             val resourceDeleteRequest = ResourceDeleteRequestV1(
                 resourceIri = newPageResourceIri.get,
                 deleteComment = Some("This page was deleted as a test"),
-                userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
+                userADM = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1360,7 +1360,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userProfile = SharedTestDataADM.anythingUser1)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1371,7 +1371,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userProfile = SharedTestDataADM.anythingUser2)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1383,7 +1383,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userProfile = SharedTestDataADM.anythingUser1)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1399,7 +1399,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userProfile = SharedTestDataADM.anythingUser2)
+            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1467,7 +1467,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! ChangeResourceLabelRequestV1(
                 resourceIri = "http://rdfh.ch/c5058f3a",
                 label = myNewLabel,
-                userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
+                userADM = SharedTestDataADM.incunabulaProjectAdminUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1503,7 +1503,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
-                userProfile = SharedTestDataADM.anythingUser1
+                userADM = SharedTestDataADM.anythingUser1
             )
 
             val response = expectMsgType[GraphDataGetResponseV1](timeout)
@@ -1518,7 +1518,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
-                userProfile = SharedTestDataADM.incunabulaProjectAdminUser
+                userADM = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
             val response = expectMsgType[GraphDataGetResponseV1](timeout)
@@ -1533,7 +1533,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/a-thing",
                 depth = 4,
-                userProfile = SharedTestDataADM.anythingUser1
+                userADM = SharedTestDataADM.anythingUser1
             )
 
             expectMsgPF(timeout) {
@@ -1545,7 +1545,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             actorUnderTest ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/another-thing",
                 depth = 4,
-                userProfile = SharedTestDataADM.anythingUser1
+                userADM = SharedTestDataADM.anythingUser1
             )
 
             expectMsgPF(timeout) {

@@ -1087,7 +1087,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "get all the vocabularies" in {
             actorUnderTest ! NamedGraphsGetRequestV1(
-                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+                userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
             val receivedMsg = expectMsgType[NamedGraphsResponseV1](timeout)
@@ -1099,7 +1099,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the resource classes with their property types for incunabula named graph" in {
             actorUnderTest ! ResourceTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
-                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+                userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
             expectMsgPF(timeout) {
@@ -1112,7 +1112,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the properties for the named graph incunabula" in {
             actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
-                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+                userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
             expectMsgPF(timeout) {
@@ -1124,7 +1124,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "get all the properties for all vocabularies" in {
             actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = None,
-                userProfile = OntologyResponderV1Spec.userProfileWithEnglish
+                userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
             expectMsgPF(timeout) {

@@ -28,9 +28,12 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import javax.imageio.ImageIO
 import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.Authenticator
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * A route used for faking the image server.
@@ -38,9 +41,9 @@ import org.knora.webapi.routing.Authenticator
 object AssetsRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val system: ActorSystem = _system
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v1" / "assets" / Remaining) { assetId =>
             get {
