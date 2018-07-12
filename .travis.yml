@@ -68,12 +68,6 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test coverageReport
         # upload code coverage report
         - bash <(curl -s https://codecov.io/bash) -F unit
-        # test sbt stage
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
-        # only uncomment if docker image is needed for this branch. remove before merging into develop
-        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
-        # - docker push $WEBAPI_REPO
     # integration tests
     - stage: test
       script:
@@ -113,6 +107,14 @@ jobs:
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (paradox, typescript, jekyll)
         - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
+    # test sbt stage
+    - stage: test
+      scripts:
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
+        # only uncomment if docker image is needed for this branch. remove before merging into develop
+        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
+        # - docker push $WEBAPI_REPO
     # Salsah browser tests
     #- stage: test
     #  script:
