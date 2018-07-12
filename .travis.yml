@@ -110,6 +110,7 @@ jobs:
     # test sbt stage
     - stage: test
       scripts:
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt compile
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
