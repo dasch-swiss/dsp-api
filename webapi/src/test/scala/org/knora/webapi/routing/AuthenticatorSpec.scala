@@ -117,18 +117,16 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
                 resF map {res => assert(res)}
             }
             "fail with invalidated token" in {
-                an [BadCredentialsException] should be thrownBy {
                     val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
                     val tokenCreds = KnoraTokenCredentialsV2(token)
                     CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
-                    Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
-                }
+                    val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
+                    resF map {res => assertThrows(BadCredentialsException)}
             }
             "fail with wrong token" in {
-                an [BadCredentialsException] should be thrownBy {
                     val tokenCreds = KnoraTokenCredentialsV2("123456")
-                    Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
-                }
+                    val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds), system, executionContext)
+                    resF map {res => assertThrows(BadCredentialsException)}
             }
 
         }
