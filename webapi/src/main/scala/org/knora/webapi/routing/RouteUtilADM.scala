@@ -39,7 +39,7 @@ object RouteUtilADM {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
       *
-      * @param requestMessage   a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
+      * @param requestMessageF  a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -48,18 +48,22 @@ object RouteUtilADM {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runJsonRoute(requestMessage: KnoraRequestADM,
+    def runJsonRoute(requestMessageF: Future[KnoraRequestADM],
                      requestContext: RequestContext,
                      settings: SettingsImpl,
                      responderManager: ActorSelection,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
-        // Optionally log the request message. TODO: move this to the testing framework.
-        if (settings.dumpMessages) {
-            log.debug(requestMessage.toString)
-        }
 
         val httpResponse: Future[HttpResponse] = for {
+
+            requestMessage <- requestMessageF
+
+            // Optionally log the request message. TODO: move this to the testing framework.
+            if (settings.dumpMessages) {
+                log.debug(requestMessage.toString)
+            }
+
             // Make sure the responder sent a reply of type KnoraResponseV2.
             knoraResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: KnoraResponseADM => replyMessage

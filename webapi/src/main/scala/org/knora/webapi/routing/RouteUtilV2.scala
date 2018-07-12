@@ -153,7 +153,7 @@ object RouteUtilV2 {
     /**
       * Sends a message to a responder and completes the HTTP request by returning the response as TEI/XML.
       *
-      * @param requestMessage   a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
+      * @param requestMessageF  a future containing a [[KnoraRequestV2]] message that should be sent to the responder manager.
       * @param requestContext   the akka-http [[RequestContext]].
       * @param settings         the application's settings.
       * @param responderManager a reference to the responder manager.
@@ -163,7 +163,7 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runTEIXMLRoute(requestMessage: KnoraRequestV2,
+    def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
                        settings: SettingsImpl,
                        responderManager: ActorSelection,
@@ -174,6 +174,8 @@ object RouteUtilV2 {
         val contentType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
 
         val httpResponse: Future[HttpResponse] = for {
+
+            requestMessage <- requestMessageF
 
             teiResponse <- (responderManager ? requestMessage).map {
                 case replyMessage: ResourceTEIGetResponseV2 => replyMessage
@@ -326,7 +328,7 @@ object RouteUtilV2 {
                     case RdfMediaTypes.`text/turtle` =>
                         val turtleWriter = Rio.createWriter(RDFFormat.TURTLE, stringWriter)
                         turtleWriter.getWriterConfig.set[java.lang.Boolean](BasicWriterSettings.INLINE_BLANK_NODES, true).
-                            set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
+                                set[java.lang.Boolean](BasicWriterSettings.PRETTY_PRINT, true)
                         turtleWriter
 
                     case RdfMediaTypes.`application/rdf+xml` => new RDFXMLPrettyWriter(stringWriter)

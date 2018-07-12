@@ -55,10 +55,11 @@ object UsersRouteV1 extends Authenticator {
             get {
                 /* return all users */
                 requestContext =>
-                    val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
-                    val requestMessage = UsersGetRequestV1(userProfile)
+                    val requestMessage = for {
+                        userProfile <- getUserProfileV1(requestContext)
+                    } yield UsersGetRequestV1(userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -72,16 +73,20 @@ object UsersRouteV1 extends Authenticator {
                 /* return a single user identified by iri or email */
                 parameters("identifier" ? "iri") { (identifier: String) =>
                     requestContext =>
-                        val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
                             /* check if email or iri was supplied */
                             val requestMessage = if (identifier == "email") {
-                                UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
+                                for {
+                                    userProfile <- getUserProfileV1(requestContext)
+                                } yield UserProfileByEmailGetRequestV1(value, UserProfileTypeV1.RESTRICTED, userProfile)
                             } else {
-                                val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                                UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
+                                for {
+                                    userProfile <- getUserProfileV1(requestContext)
+                                    userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+                                } yield UserProfileByIRIGetRequestV1(userIri, UserProfileTypeV1.RESTRICTED, userProfile)
                             }
-                            RouteUtilV1.runJsonRoute(
+
+                            RouteUtilV1.runJsonRouteWithFuture(
                                 requestMessage,
                                 requestContext,
                                 settings,
@@ -95,17 +100,17 @@ object UsersRouteV1 extends Authenticator {
             get {
                 /* get user's project memberships */
                 requestContext =>
-                    val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserProjectMembershipsGetRequestV1(
+                    val requestMessage = for {
+                        userProfile <- getUserProfileV1(requestContext)
+                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                    } yield UserProjectMembershipsGetRequestV1(
                         userIri = checkedUserIri,
                         userProfileV1 = userProfile,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -118,17 +123,17 @@ object UsersRouteV1 extends Authenticator {
             get {
                 /* get user's project admin memberships */
                 requestContext =>
-                    val userProfile: UserProfileV1 = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserProjectAdminMembershipsGetRequestV1(
+                    val requestMessage = for {
+                        userProfile <- getUserProfileV1(requestContext)
+                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                    } yield UserProjectAdminMembershipsGetRequestV1(
                         userIri = checkedUserIri,
                         userProfileV1 = userProfile,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -141,17 +146,17 @@ object UsersRouteV1 extends Authenticator {
             get {
                 /* get user's group memberships */
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
 
-                    val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                    val requestMessage = UserGroupMembershipsGetRequestV1(
+                    val requestMessage = for {
+                        userProfile <- getUserProfileV1(requestContext)
+                        checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+                    } yield UserGroupMembershipsGetRequestV1(
                         userIri = checkedUserIri,
                         userProfileV1 = userProfile,
                         apiRequestID = UUID.randomUUID()
                     )
 
-                    RouteUtilV1.runJsonRoute(
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,

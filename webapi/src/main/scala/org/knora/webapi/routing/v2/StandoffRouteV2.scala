@@ -30,6 +30,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
+import org.knora.webapi.routing.v2.ResourcesRouteV2.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
@@ -50,7 +51,7 @@ object StandoffRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        implicit val materializer = ActorMaterializer()
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v2" / "mapping") {
@@ -62,8 +63,6 @@ object StandoffRouteV2 extends Authenticator {
                         val XML_PART = "xml"
 
                         type Name = String
-
-                        val userProfile = getUserADM(requestContext)
 
                         val apiRequestUUID = UUID.randomUUID
 
@@ -93,35 +92,32 @@ object StandoffRouteV2 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessageFuture: Future[CreateMappingRequestV2] = allPartsFuture.map {
-                            allParts: Map[Name, String] =>
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
 
-                                val jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
+                            allParts: Map[Name, String] <- allPartsFuture
 
-                                val metadata: CreateMappingRequestMetadataV2 = CreateMappingRequestMetadataV2.fromJsonLD(jsonldDoc, apiRequestUUID, userProfile)
+                            jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
 
-                                val xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
+                            metadata: CreateMappingRequestMetadataV2 = CreateMappingRequestMetadataV2.fromJsonLD(jsonldDoc, apiRequestUUID, requestingUser)
 
-                                CreateMappingRequestV2(
+                            xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
+                        } yield CreateMappingRequestV2(
                                     metadata,
                                     CreateMappingRequestXMLV2(xml),
-                                    userProfile,
+                                    requestingUser,
                                     apiRequestUUID
                                 )
 
-                        }
-
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessageFuture,
+                            requestMessage,
                             requestContext,
                             settings,
                             responderManager,
                             log,
                             ApiV2WithValueObjects
                         )
-
                 }
-
             }
 
         }
