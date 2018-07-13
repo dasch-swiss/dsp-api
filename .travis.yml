@@ -76,7 +76,7 @@ jobs:
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt coverage test coverageReport
         # upload code coverage report
-        - bash <(curl -s https://codecov.io/bash) -F unit-e2e
+        - bash <(curl -s https://codecov.io/bash) -F unit_e2e
     # integration tests
     - stage: test
       script:
