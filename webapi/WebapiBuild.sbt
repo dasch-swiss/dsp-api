@@ -89,9 +89,7 @@ lazy val webapi = (project in file(".")).
             parallelExecution in Test := false,
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
             publishArtifact in (Test, packageBin) := true,
-            publishArtifact in (IntegrationTest, packageBin) := true,
-            // enable test code coverage
-            coverageEnabled := true
+            publishArtifact in (IntegrationTest, packageBin) := true
         ).
         settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
             // we specify the name for our fat jars (main, test, it)
@@ -207,8 +205,8 @@ lazy val webApiLibs = Seq(
 lazy val library =
     new {
         object Version {
-            val akkaBase = "2.5.11"
-            val akkaHttp = "10.1.0"
+            val akkaBase = "2.5.13"
+            val akkaHttp = "10.1.3"
             val jena = "3.4.0"
         }
 

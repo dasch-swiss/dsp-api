@@ -442,7 +442,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             responderManager ! ResourceFullGetRequestV1(
                 iri = zeitglöckleinIri,
-                userProfile = incunabulaUser
+                userADM = incunabulaUser
             )
 
             expectMsgPF(timeout) {

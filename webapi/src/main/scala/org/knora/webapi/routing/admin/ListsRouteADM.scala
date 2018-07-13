@@ -21,7 +21,7 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -46,8 +46,8 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager = system.actorSelection("/user/responderManager")
-    val stringFormatter = StringFormatter.getGeneralInstance
+    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def knoraApiPath: Route = {
 
@@ -57,11 +57,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 /* return all lists */
                 parameters("projectIri".?) { maybeProjectIri: Option[IRI] =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
-                        val requestMessage = ListsGetRequestADM(projectIri, requestingUser)
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ListsGetRequestADM(projectIri, requestingUser)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -76,9 +76,9 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 /* create a list */
                 entity(as[CreateListApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = ListCreateRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ListCreateRequestADM(
                             createListRequest = apiRequest,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -98,10 +98,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
             get {
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListGetRequestADM(listIri, requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -126,10 +127,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
             get {
                 /* return information about a list (without children) */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListInfoGetRequestADM(listIri, requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListInfoGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -143,10 +145,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 /* update list info */
                 entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
                         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        val requestMessage = ListInfoChangeRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ListInfoChangeRequestADM(
                             listIri = listIri,
                             changeListRequest = apiRequest,
                             requestingUser = requestingUser,
@@ -167,10 +170,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
             get {
                 /* return information about a single node (without children) */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = ListNodeInfoGetRequestADM(listIri, requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,

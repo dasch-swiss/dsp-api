@@ -25,6 +25,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
 import akka.http.scaladsl.model.{headers, _}
 import akka.http.scaladsl.server.RequestContext
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
@@ -39,7 +40,7 @@ import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 /**
@@ -65,29 +66,32 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val settings = Settings(system)
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserADMThroughCredentialsV2(credentials).asUserProfileV1 // will return or throw
+        for {
+            userADM <- getUserADMThroughCredentialsV2(credentials) // will return or throw
+            userProfile = userADM.asUserProfileV1
 
-        val sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
+            sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
 
-        HttpResponse(
-            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionToken, path = Some("/")))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("credentials are OK"),
-                    "sid" -> JsString(sessionToken),
-                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-                ).compactPrint
+            httpResponse = HttpResponse(
+                headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionToken, path = Some("/")))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    JsObject(
+                        "status" -> JsNumber(0),
+                        "message" -> JsString("credentials are OK"),
+                        "sid" -> JsString(sessionToken),
+                        "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                    ).compactPrint
+                )
             )
-        )
+        } yield httpResponse
     }
 
     /**
@@ -98,17 +102,18 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = for {
 
-        authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
+        authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
-        val settings = Settings(system)
+        settings = Settings(system)
 
-        val userADM = getUserADMByEmail(credentials.email)
+        userADM <- getUserADMByEmail(credentials.email)
 
-        val token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
+        token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
-        HttpResponse(
+
+        httpResponse = HttpResponse(
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
@@ -117,7 +122,8 @@ trait Authenticator {
                 ).compactPrint
             )
         )
-    }
+
+    } yield httpResponse
 
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,23 +138,27 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        val userProfile = getUserADMThroughCredentialsV2(credentials).asUserProfileV1 // will authenticate and either return or throw
+        for {
+            userADM: UserADM <- getUserADMThroughCredentialsV2(credentials) // will authenticate and either return or throw
 
-        HttpResponse(
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "status" -> JsNumber(0),
-                    "message" -> JsString("credentials are OK"),
-                    "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
-                ).compactPrint
+            userProfile: UserProfileV1 = userADM.asUserProfileV1
+
+            httpResponse = HttpResponse(
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    JsObject(
+                        "status" -> JsNumber(0),
+                        "message" -> JsString("credentials are OK"),
+                        "userProfile" -> userProfile.ofType(UserProfileTypeV1.RESTRICTED).toJsValue
+                    ).compactPrint
+                )
             )
-        )
+        } yield httpResponse
     }
 
     /**
@@ -158,21 +168,23 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]]
       */
-    def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): HttpResponse = {
+    def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
-        authenticateCredentialsV2(credentials) // will throw exception if not valid
+        for {
+            authenticated <- authenticateCredentialsV2(credentials) // will throw exception if not valid
 
-        HttpResponse(
-            status = StatusCodes.OK,
-            entity = HttpEntity(
-                ContentTypes.`application/json`,
-                JsObject(
-                    "message" -> JsString("credentials are OK")
-                ).compactPrint
+            httpResponse = HttpResponse(
+                status = StatusCodes.OK,
+                entity = HttpEntity(
+                    ContentTypes.`application/json`,
+                    JsObject(
+                        "message" -> JsString("credentials are OK")
+                    ).compactPrint
+                )
             )
-        )
+        } yield httpResponse
     }
 
 
@@ -252,7 +264,8 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV1 = {
+    @deprecated("Please use: getUserADM()", "Knora v1.7.0")
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserProfileV1] = {
 
         val settings = Settings(system)
 
@@ -261,16 +274,18 @@ trait Authenticator {
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
             log.debug("getUserProfileV1 - Authentication skipping active, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
-            UserProfileV1()
+            FastFuture.successful(UserProfileV1())
         } else if (credentials.isEmpty) {
             log.debug("getUserProfileV1 - No credentials found, returning default UserProfileV1 with 'anonymousUser' inside 'permissionData' set to true!")
-            UserProfileV1()
+            FastFuture.successful(UserProfileV1())
         } else {
-            val userProfile: UserProfileV1 = getUserADMThroughCredentialsV2(credentials).asUserProfileV1
-            log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfile.toString)
+            for {
+                userADM <- getUserADMThroughCredentialsV2(credentials)
+                userProfile: UserProfileV1 = userADM.asUserProfileV1
+                _ = log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfile.toString)
 
-            /* we return the userProfileV1 without sensitive information */
-            userProfile.ofType(UserProfileTypeV1.RESTRICTED)
+                /* we return the userProfileV1 without sensitive information */
+            } yield userProfile.ofType(UserProfileTypeV1.RESTRICTED)
         }
     }
 
@@ -284,7 +299,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserADM = {
+    def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserADM] = {
 
         val settings = Settings(system)
 
@@ -293,20 +308,20 @@ trait Authenticator {
         if (settings.skipAuthentication) {
             // return anonymous if skipAuthentication
             log.debug("getUserADM - Authentication skipping active, returning 'anonymousUser'.")
-            KnoraSystemInstances.Users.AnonymousUser
+            FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
         } else if (credentials.isEmpty) {
             log.debug("getUserADM - No credentials found, returning 'anonymousUser'.")
-            KnoraSystemInstances.Users.AnonymousUser
+            FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
         } else {
-            val user: UserADM = getUserADMThroughCredentialsV2(credentials)
-            log.debug("getUserProfileV1 - I got a UserProfileV1: {}", user.toString)
 
-            /* we return the complete UserADM */
-            user.ofType(UserInformationTypeADM.FULL)
+            for {
+                user: UserADM <- getUserADMThroughCredentialsV2(credentials)
+                _ = log.debug("getUserADM - I got a getUserADM: {}", user.toString)
+
+                /* we return the complete UserADM */
+            } yield user.ofType(UserInformationTypeADM.FULL)
         }
     }
-
-    // def getUserProfileV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): UserProfileV2 = ???
 }
 
 /**
@@ -343,44 +358,49 @@ object Authenticator {
       * @throws BadCredentialsException when no credentials are supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
       */
-    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Boolean = {
+    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Future[Boolean] = {
 
-        val settings = Settings(system)
+        for {
+            settings <- FastFuture.successful(Settings(system))
 
-        credentials match {
-            case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                val user = getUserADMByEmail(passCreds.email)
+            result <- credentials match {
+                case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                    for {
+                        user <- getUserADMByEmail(passCreds.email)
 
-                /* check if the user is active, if not, then no need to check the password */
-                if (!user.isActive) {
-                    log.debug("authenticateCredentials - user is not active")
-                    throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                        /* check if the user is active, if not, then no need to check the password */
+                        _ = if (!user.isActive) {
+                            log.debug("authenticateCredentials - user is not active")
+                            throw BadCredentialsException(BAD_CRED_USER_INACTIVE)
+                        }
+
+                        _ = if (!user.passwordMatch(passCreds.password)) {
+                            log.debug("authenticateCredentialsV2 - password did not match")
+                            throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                        }
+                    } yield true
                 }
-
-                if (!user.passwordMatch(passCreds.password)) {
-                    log.debug("authenticateCredentialsV2 - password did not match")
-                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                    if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
+                        log.debug("authenticateCredentialsV2 - token was not valid")
+                        throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    }
+                    FastFuture.successful(true)
+                }
+                case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                    if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
+                        log.debug("authenticateCredentialsV2 - session token was not valid")
+                        throw BadCredentialsException(BAD_CRED_NOT_VALID)
+                    }
+                    FastFuture.successful(true)
+                }
+                case None => {
+                    log.debug("authenticateCredentialsV2 - no credentials supplied")
+                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
                 }
             }
-            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-                if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
-                    log.debug("authenticateCredentialsV2 - token was not valid")
-                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
-                }
-            }
-            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-                if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
-                    log.debug("authenticateCredentialsV2 - session token was not valid")
-                    throw BadCredentialsException(BAD_CRED_NOT_VALID)
-                }
-            }
-            case None => {
-                log.debug("authenticateCredentialsV2 - no credentials supplied")
-                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-            }
-        }
 
-        true
+        } yield result
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -545,47 +565,47 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
       */
-    private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): UserADM = {
+    private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserADM] = {
 
         val settings = Settings(system)
 
-        authenticateCredentialsV2(credentials)
+        for {
+            authenticated <- authenticateCredentialsV2(credentials)
 
-        val userProfile: UserADM = credentials match {
-            case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                log.debug("getUserProfileV1ThroughCredentialsV2 - used email")
-                getUserADMByEmail(passCreds.email)
-            }
-            case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-                val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
-                    case Some(iri) => iri
-                    case None => {
-                        // should not happen, as the token is already validated
-                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-                    }
+            user: UserADM <- credentials match {
+                case Some(passCreds: KnoraPasswordCredentialsV2) => {
+                    log.debug("getUserADMThroughCredentialsV2 - used email")
+                    getUserADMByEmail(passCreds.email)
                 }
-                log.debug("getUserProfileV1ThroughCredentialsV2 - used token")
-                getUserADMByIri(userIri)
-            }
-            case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-                val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
-                    case Some(iri) => iri
-                    case None => {
-                        // should not happen, as the token is already validated
-                        throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                case Some(tokenCreds: KnoraTokenCredentialsV2) => {
+                    val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
+                        case Some(iri) => iri
+                        case None => {
+                            // should not happen, as the token is already validated
+                            throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                        }
                     }
+                    log.debug("getUserADMThroughCredentialsV2 - used token")
+                    getUserADMByIri(userIri)
                 }
-                log.debug("getUserProfileV1ThroughCredentialsV2 - used session token")
-                getUserADMByIri(userIri)
+                case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+                    val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
+                        case Some(iri) => iri
+                        case None => {
+                            // should not happen, as the token is already validated
+                            throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
+                        }
+                    }
+                    log.debug("getUserADMThroughCredentialsV2 - used session token")
+                    getUserADMByIri(userIri)
+                }
+                case None => {
+                    log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+                    throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
+                }
             }
-            case None => {
-                log.debug("getUserProfileV1ThroughCredentialsV2 - no credentials supplied")
-                throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-            }
-        }
 
-        log.debug("getUserProfileV1ThroughCredentialsV2 - userProfile: {}", userProfile)
-        userProfile
+        } yield user
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -602,12 +622,12 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws BadCredentialsException when no user can be found with the supplied IRI.
       */
-    private def getUserADMByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserADM = {
+    private def getUserADMByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userProfileV1Future = for {
+        val userADMFuture = for {
             maybeUser <- (responderManager ? UserGetADM(maybeIri = Some(iri), maybeEmail = None, UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             user = maybeUser match {
-                case Some(up) => up
+                case Some(userADM) => userADM
                 case None => {
                     log.debug(s"getUserADMByIri - supplied IRI not found - throwing exception")
                     throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
@@ -615,8 +635,7 @@ object Authenticator {
             }
         } yield user
 
-        // TODO: return the future here instead of using Await.
-        Await.result(userProfileV1Future, Duration(3, SECONDS))
+        userADMFuture
     }
 
     /**
@@ -629,7 +648,7 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
       */
-    private def getUserADMByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): UserADM = {
+    private def getUserADMByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
@@ -646,8 +665,7 @@ object Authenticator {
                 _ = log.debug(s"getUserADMByEmail - user: $user")
             } yield user
 
-            // TODO: return the future here instead of using Await.
-            Await.result(userADMFuture, Duration(3, SECONDS))
+            userADMFuture
         } else {
             throw BadCredentialsException(BAD_CRED_EMAIL_NOT_SUPPLIED)
         }

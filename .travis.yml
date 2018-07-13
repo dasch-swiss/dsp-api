@@ -30,7 +30,7 @@ env:
     - CHROME_BIN=google-chrome-stable
     - GDB_HEAP_SIZE="2G"
     - TAG=${TRAVIS_BRANCH//\//-}
-    - GRAPHDB_VERSION="8.6.0-se"
+    - GRAPHDB_VERSION="8.5.0-se"
 
 before_cache:
     - sudo chown -R travis:travis $HOME/.ivy2
@@ -45,12 +45,21 @@ before_install:
   - sudo apt-get install -y expect
 
 stages:
+  - compile and stage
   - test
   - name: publish # generally, only publish if we are on 'develop' or tagged
     if: branch = develop OR tag IS present
 
 jobs:
   include:
+    # test sbt compile and stage
+    - stage: compile and stage
+      script:
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt compile stage
+        # only uncomment if docker image is needed for this branch. remove before merging into develop
+        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
+        # - docker push $WEBAPI_REPO
     # unit and e2e tests
     - stage: test
       script:
@@ -59,21 +68,15 @@ jobs:
         - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
-        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE="2560M" ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.epool.onheap=true -Dgraphdb.license.file=/graphdb/graphdb.license
+        - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt graphdb:test coverageReport
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt coverage test coverageReport
         # upload code coverage report
-        - bash <(curl -s https://codecov.io/bash) -F unit
-        # test sbt stage
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt stage
-        # only uncomment if docker image is needed for this branch. remove before merging into develop
-        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
-        # - docker push $WEBAPI_REPO
+        - bash <(curl -s https://codecov.io/bash) -F unit_e2e
     # integration tests
     - stage: test
       script:
@@ -88,7 +91,7 @@ jobs:
         # start the sipi container (with production config)
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker run -d --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-it-config.lua
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt it:test coverageReport
+        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt coverage it:test coverageReport
         # upload code coverage report
         - bash <(curl -s https://codecov.io/bash) -F integration
     # testing docs generation
