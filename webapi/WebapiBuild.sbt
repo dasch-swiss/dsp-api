@@ -89,9 +89,7 @@ lazy val webapi = (project in file(".")).
             parallelExecution in Test := false,
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
             publishArtifact in (Test, packageBin) := true,
-            publishArtifact in (IntegrationTest, packageBin) := true,
-            // enable test code coverage
-            coverageEnabled := true
+            publishArtifact in (IntegrationTest, packageBin) := true
         ).
         settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
             // we specify the name for our fat jars (main, test, it)
