@@ -30,6 +30,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -144,7 +145,7 @@ object SearchRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {

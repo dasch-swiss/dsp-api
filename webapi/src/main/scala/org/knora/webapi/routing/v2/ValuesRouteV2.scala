@@ -19,24 +19,26 @@
 
 package org.knora.webapi.routing.v2
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.server.Directives.{get, path, _}
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, SettingsImpl}
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
 import scala.concurrent.ExecutionContextExecutor
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 
 /**
-  * Provides a function for API routes that deal with lists and nodes.
+  * Provides a routing function for API v2 routes that deal with values.
   */
-object ListsRouteV2 extends Authenticator {
-
+object ValuesRouteV2 extends Authenticator {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -44,16 +46,17 @@ object ListsRouteV2 extends Authenticator {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        path("v2" / "lists" / Segment) { lIri: String =>
-            get {
-
-                /* return a list (a graph with all list nodes) */
-                requestContext =>
+        path("v2" / "values") {
+            entity(as[String]) { jsonRequest =>
+                requestContext => {
                     val requestingUser = getUserADM(requestContext)
+                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-
-                    val requestMessage = ListGetRequestV2(listIri, requestingUser)
+                    val requestMessage = CreateValueRequestV2.fromJsonLD(
+                        requestDoc,
+                        apiRequestID = UUID.randomUUID,
+                        requestingUser = requestingUser
+                    )
 
                     RouteUtilV2.runRdfRoute(
                         requestMessage,
@@ -63,31 +66,8 @@ object ListsRouteV2 extends Authenticator {
                         log,
                         ApiV2WithValueObjects
                     )
-
-            }
-        } ~
-        path("v2" / "node" / Segment) { nIri: String =>
-            get {
-
-                /* return a list (a graph with all list nodes) */
-                requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-
-                    val nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
-
-                    val requestMessage = NodeGetRequestV2(nodeIri, requestingUser)
-
-                    RouteUtilV2.runRdfRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        ApiV2WithValueObjects
-                    )
-
+                }
             }
         }
-
     }
 }

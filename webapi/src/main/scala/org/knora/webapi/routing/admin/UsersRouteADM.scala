@@ -21,7 +21,7 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -31,6 +31,7 @@ import javax.ws.rs.Path
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 
@@ -47,8 +48,8 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager = system.actorSelection("/user/responderManager")
-    val stringFormatter = StringFormatter.getGeneralInstance
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(

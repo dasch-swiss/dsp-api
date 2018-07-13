@@ -21,7 +21,7 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -29,6 +29,7 @@ import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, IRI, NotImplementedException, SettingsImpl}
@@ -46,8 +47,8 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager = system.actorSelection("/user/responderManager")
-    val stringFormatter = StringFormatter.getGeneralInstance
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def knoraApiPath: Route = {
 

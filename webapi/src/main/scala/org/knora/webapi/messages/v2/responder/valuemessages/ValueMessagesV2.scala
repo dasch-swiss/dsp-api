@@ -53,23 +53,27 @@ case class CreateValueRequestV2(createValue: CreateValueV2,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
 /**
-  * Constructs [[CreateValueRequestV2]] based on JSON-LD input.
+  * Constructs a [[CreateValueRequestV2]] based on JSON-LD input.
   */
 object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueRequestV2] {
     override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateValueRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+        // Get the IRI of the resource that the value is to be created in.
         val resourceIri = jsonLDDocument.requireIriInObject(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
         if (!resourceIri.isKnoraDataIri) {
             throw BadRequestException(s"Invalid resource IRI: $resourceIri")
         }
 
+        // Get the resource class.
         val resourceClassIri = jsonLDDocument.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
         if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
             throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
         }
+
+        // Ensure that only one value is being submitted.
 
         val resourceProps: Map[IRI, JsonLDValue] = jsonLDDocument.body.value - JsonLDConstants.ID - JsonLDConstants.TYPE
 
@@ -80,6 +84,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
         if (resourceProps.size > 1) {
             throw BadRequestException(s"Only one value can be created per request using this route")
         }
+
+        // Get the resource property that points to the new value, and the value to be created.
 
         val createValue: CreateValueV2 = resourceProps.head match {
             case (key: IRI, jsonLDValue: JsonLDValue) =>

@@ -22,15 +22,15 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -42,19 +42,13 @@ import scala.concurrent.ExecutionContextExecutor
 @Path("/admin/projects")
 class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ProjectsADMJsonProtocol {
 
-    private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
-
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager = system.actorSelection("/user/responderManager")
-    val stringFormatter = StringFormatter.getGeneralInstance
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
     def knoraApiPath: Route = {
-
-
-
         path("admin" / "projects") {
             get {
                 /* returns all projects */
@@ -69,26 +63,26 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                         log
                     )
             } ~
-            post {
-                /* create a new project */
-                entity(as[CreateProjectApiRequestADM]) { apiRequest =>
-                    requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-                        val requestMessage = ProjectCreateRequestADM(
-                            createRequest = apiRequest,
-                            requestingUser = requestingUser,
-                            apiRequestID = UUID.randomUUID()
-                        )
+                post {
+                    /* create a new project */
+                    entity(as[CreateProjectApiRequestADM]) { apiRequest =>
+                        requestContext =>
+                            val requestingUser = getUserADM(requestContext)
+                            val requestMessage = ProjectCreateRequestADM(
+                                createRequest = apiRequest,
+                                requestingUser = requestingUser,
+                                apiRequestID = UUID.randomUUID()
+                            )
 
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
+                            RouteUtilADM.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
                 }
-            }
         } ~ path("admin" / "projects" / "keywords") {
             get {
                 /* returns all unique keywords for all projects as a list */
@@ -153,18 +147,40 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                         )
                 }
             } ~
-            put {
-                /* update a project identified by iri */
-                entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
+                put {
+                    /* update a project identified by iri */
+                    entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
+                        requestContext =>
+                            val requestingUser = getUserADM(requestContext)
+                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                            /* the api request is already checked at time of creation. see case class. */
+
+                            val requestMessage = ProjectChangeRequestADM(
+                                projectIri = checkedProjectIri,
+                                changeProjectRequest = apiRequest,
+                                requestingUser = requestingUser,
+                                apiRequestID = UUID.randomUUID()
+                            )
+
+                            RouteUtilADM.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            )
+                    }
+                } ~
+                delete {
+                    /* update project status to false */
                     requestContext =>
                         val requestingUser = getUserADM(requestContext)
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                        /* the api request is already checked at time of creation. see case class. */
-
                         val requestMessage = ProjectChangeRequestADM(
                             projectIri = checkedProjectIri,
-                            changeProjectRequest = apiRequest,
+                            changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
                         )
@@ -177,28 +193,6 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                             log
                         )
                 }
-            } ~
-            delete {
-                /* update project status to false */
-                requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-                    val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
-                    val requestMessage = ProjectChangeRequestADM(
-                        projectIri = checkedProjectIri,
-                        changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
         } ~ path("admin" / "projects" / "members" / Segment) { value =>
             get {
                 /* returns all members part of a project identified through iri or shortname */

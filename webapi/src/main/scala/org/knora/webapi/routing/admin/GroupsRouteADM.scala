@@ -29,6 +29,7 @@ import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
@@ -46,7 +47,7 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def knoraApiPath: Route = {
