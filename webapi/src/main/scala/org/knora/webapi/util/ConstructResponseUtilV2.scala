@@ -514,7 +514,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.DecimalValue =>
                 DecimalValueContentV2(
                     valueType = valueObject.valueObjectClass.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasDecimal = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasDecimal)),
                     comment = valueCommentOption
                 )
@@ -522,7 +521,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.BooleanValue =>
                 BooleanValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean,
                     comment = valueCommentOption
                 )
@@ -530,7 +528,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.UriValue =>
                 UriValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasUri = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasUri),
                     comment = valueCommentOption
                 )
@@ -538,7 +535,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.ColorValue =>
                 ColorValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasColor = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasColor),
                     comment = valueCommentOption
                 )
@@ -546,7 +542,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.GeomValue =>
                 GeomValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasGeometry = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeometry),
                     comment = valueCommentOption
                 )
@@ -554,7 +549,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.GeonameValue =>
                 GeonameValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasGeonameCode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeonameCode),
                     comment = valueCommentOption
                 )
@@ -568,7 +562,6 @@ object ConstructResponseUtilV2 {
 
                 HierarchicalListValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode),
                     listNodeLabel = listNodeLabel,
                     comment = valueCommentOption,
@@ -578,7 +571,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.IntervalValue =>
                 IntervalValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)),
                     valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)),
                     comment = valueCommentOption
@@ -591,7 +583,6 @@ object ConstructResponseUtilV2 {
 
                 val linkValue = LinkValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     subject = sourceResourceIri,
                     predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate).toSmartIri,
                     target = targetResourceIri,
@@ -635,7 +626,6 @@ object ConstructResponseUtilV2 {
                     dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
                     qualityLevel = valueObject.assertions(OntologyConstants.KnoraBase.QualityLevel).toInt,
                     isPreview = isPreview,
-                    valueHasString = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString),
                     comment = valueCommentOption
                 )
 
@@ -647,7 +637,6 @@ object ConstructResponseUtilV2 {
                     internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
                     originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
                     originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
-                    valueHasString = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasString),
                     comment = valueCommentOption
                 )
 

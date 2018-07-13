@@ -798,7 +798,7 @@ case class IntegerValueContentV2(valueType: SmartIri,
                                  valueHasInteger: Int,
                                  comment: Option[String] = None) extends ValueContentV2 {
 
-    override def valueHasString: String = valueHasInteger.toString
+    override lazy val valueHasString: String = valueHasInteger.toString
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -851,14 +851,14 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
 /**
   * Represents a Knora decimal value.
   *
-  * @param valueHasString  the string representation of the decimal.
   * @param valueHasDecimal the decimal value.
   * @param comment         a comment on this `DecimalValueContentV2`, if any.
   */
 case class DecimalValueContentV2(valueType: SmartIri,
-                                 valueHasString: String,
                                  valueHasDecimal: BigDecimal,
                                  comment: Option[String] = None) extends ValueContentV2 {
+
+    override lazy val valueHasString: String = valueHasDecimal.toString
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -906,14 +906,14 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
 /**
   * Represents a Boolean value.
   *
-  * @param valueHasString  the string representation of the Boolean.
   * @param valueHasBoolean the Boolean value.
   * @param comment         a comment on this `BooleanValueContentV2`, if any.
   */
 case class BooleanValueContentV2(valueType: SmartIri,
-                                 valueHasString: String,
                                  valueHasBoolean: Boolean,
                                  comment: Option[String] = None) extends ValueContentV2 {
+
+    override lazy val valueHasString: String = valueHasBoolean.toString
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -960,14 +960,14 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
 /**
   * Represents a Knora geometry value (a 2D-shape).
   *
-  * @param valueHasString   a stringified JSON representing a 2D-geometrical shape.
   * @param valueHasGeometry a stringified JSON representing a 2D-geometrical shape.
   * @param comment          a comment on this `GeomValueContentV2`, if any.
   */
 case class GeomValueContentV2(valueType: SmartIri,
-                              valueHasString: String,
                               valueHasGeometry: String,
                               comment: Option[String] = None) extends ValueContentV2 {
+
+    override def valueHasString: String = valueHasGeometry
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1016,16 +1016,16 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
 /**
   * Represents a Knora time interval value.
   *
-  * @param valueHasString        the string representation of the time interval.
   * @param valueHasIntervalStart the start of the time interval.
   * @param valueHasIntervalEnd   the end of the time interval.
   * @param comment               a comment on this `IntervalValueContentV2`, if any.
   */
 case class IntervalValueContentV2(valueType: SmartIri,
-                                  valueHasString: String,
                                   valueHasIntervalStart: BigDecimal,
                                   valueHasIntervalEnd: BigDecimal,
                                   comment: Option[String] = None) extends ValueContentV2 {
+
+    override lazy val valueHasString: String = s"$valueHasIntervalStart - $valueHasIntervalEnd"
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1079,17 +1079,17 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
 /**
   * Represents a value pointing to a Knora hierarchical list node.
   *
-  * @param valueHasString   the string representation of the hierarchical list node value.
   * @param valueHasListNode the IRI of the hierarchical list node pointed to.
   * @param listNodeLabel    the label of the hierarchical list node pointed to.
   * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
   */
 case class HierarchicalListValueContentV2(valueType: SmartIri,
-                                          valueHasString: String,
                                           valueHasListNode: IRI,
                                           listNodeLabel: String,
                                           comment: Option[String],
                                           ontologySchema: OntologySchema) extends ValueContentV2 {
+
+    override def valueHasString: String = listNodeLabel
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1143,14 +1143,14 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
 /**
   * Represents a Knora color value.
   *
-  * @param valueHasString the string representation of the color value.
   * @param valueHasColor  a hexadecimal string containing the RGB color value
   * @param comment        a comment on this `ColorValueContentV2`, if any.
   */
 case class ColorValueContentV2(valueType: SmartIri,
-                               valueHasString: String,
                                valueHasColor: String,
                                comment: Option[String] = None) extends ValueContentV2 {
+
+    override def valueHasString: String = valueHasColor
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1198,14 +1198,14 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
 /**
   * Represents a Knora URI value.
   *
-  * @param valueHasString the string representation of the URI value.
   * @param valueHasUri    the URI value.
   * @param comment        a comment on this `UriValueContentV2`, if any.
   */
 case class UriValueContentV2(valueType: SmartIri,
-                             valueHasString: String,
                              valueHasUri: String,
                              comment: Option[String] = None) extends ValueContentV2 {
+
+    override def valueHasString: String = valueHasUri
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1254,14 +1254,14 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   *
   * Represents a Knora geoname value.
   *
-  * @param valueHasString      the string representation of the geoname value.
   * @param valueHasGeonameCode the geoname code.
   * @param comment             a comment on this `GeonameValueContentV2`, if any.
   */
 case class GeonameValueContentV2(valueType: SmartIri,
-                                 valueHasString: String,
                                  valueHasGeonameCode: String,
                                  comment: Option[String] = None) extends ValueContentV2 {
+
+    override def valueHasString: String = valueHasGeonameCode
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1326,7 +1326,6 @@ sealed trait FileValueContentV2 {
 /**
   * Represents an image file. Please note that the file itself is managed by Sipi.
   *
-  * @param valueHasString   the string representation of the image file value.
   * @param internalMimeType the mime type of the file corresponding to this image file value.
   * @param internalFilename the name of the file corresponding to this image file value.
   * @param originalFilename the original mime type of the image file before importing it.
@@ -1338,7 +1337,6 @@ sealed trait FileValueContentV2 {
   * @param comment          a comment on this `StillImageFileValueContentV2`, if any.
   */
 case class StillImageFileValueContentV2(valueType: SmartIri,
-                                        valueHasString: String,
                                         internalMimeType: String,
                                         internalFilename: String,
                                         originalFilename: String,
@@ -1348,6 +1346,8 @@ case class StillImageFileValueContentV2(valueType: SmartIri,
                                         qualityLevel: Int,
                                         isPreview: Boolean,
                                         comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+
+    override def valueHasString: String = internalFilename
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1409,7 +1409,6 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
 /**
   * Represents a text file value. Please note that the file itself is managed by Sipi.
   *
-  * @param valueHasString   the string representation of the text file value.
   * @param internalMimeType the mime type of the file corresponding to this text file value.
   * @param internalFilename the name of the file corresponding to this text file value.
   * @param originalFilename the original mime type of the text file before importing it.
@@ -1417,12 +1416,13 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
   * @param comment          a comment on this `TextFileValueContentV2`, if any.
   */
 case class TextFileValueContentV2(valueType: SmartIri,
-                                  valueHasString: String,
                                   internalMimeType: String,
                                   internalFilename: String,
                                   originalFilename: String,
                                   originalMimeType: Option[String],
                                   comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+
+    override def valueHasString: String = internalFilename
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1477,7 +1477,6 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
 /**
   * Represents a Knora link value.
   *
-  * @param valueHasString the string representation of the referred resource.
   * @param subject        the IRI of the link's source resource.
   * @param predicate      the link's predicate.
   * @param target         the IRI of the link's target resource.
@@ -1486,13 +1485,14 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
   * @param nestedResource information about the nested resource, if given.
   */
 case class LinkValueContentV2(valueType: SmartIri,
-                              valueHasString: String,
                               subject: IRI,
                               predicate: SmartIri,
                               target: IRI,
                               comment: Option[String],
                               incomingLink: Boolean,
                               nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
+
+    override def valueHasString: String = target
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         val convertedNestedResource = nestedResource.map {
