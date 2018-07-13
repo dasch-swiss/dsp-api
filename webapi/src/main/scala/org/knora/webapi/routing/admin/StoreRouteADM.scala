@@ -32,7 +32,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 
 /**
@@ -64,7 +64,9 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
                     requestContext =>
-                        val requestMessage = ResetTriplestoreContentRequestADM(apiRequest)
+                        val requestMessage: Future[ResetTriplestoreContentRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ResetTriplestoreContentRequestADM(apiRequest)
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,

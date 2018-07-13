@@ -30,7 +30,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, IRI, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a function for API routes that deal with lists and nodes.
@@ -49,13 +49,12 @@ object ListsRouteV2 extends Authenticator {
 
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
+                    val requestMessage: Future[ListGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                        listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
+                    } yield ListGetRequestV2(listIri, requestingUser)
 
-                    val listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-
-                    val requestMessage = ListGetRequestV2(listIri, requestingUser)
-
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -71,13 +70,12 @@ object ListsRouteV2 extends Authenticator {
 
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
+                    val requestMessage: Future[NodeGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                        nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
+                    } yield NodeGetRequestV2(nodeIri, requestingUser)
 
-                    val nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
-
-                    val requestMessage = NodeGetRequestV2(nodeIri, requestingUser)
-
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -85,7 +83,6 @@ object ListsRouteV2 extends Authenticator {
                         log,
                         ApiV2WithValueObjects
                     )
-
             }
         }
 

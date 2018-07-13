@@ -28,6 +28,7 @@ import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 /**
@@ -38,21 +39,23 @@ object CkanRouteV1 extends Authenticator {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = Timeout(30.seconds)
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = Timeout(30.seconds)
         val responderManager = system.actorSelection("/user/responderManager")
 
         path("v1" / "ckan") {
             get {
                 requestContext =>
-                    val userProfile = getUserADM(requestContext)
-                    val params = requestContext.request.uri.query().toMap
-                    val project: Option[Seq[String]] = params.get("project").map(_.split(","))
-                    val limit: Option[Int] = params.get("limit").map(_.toInt)
-                    val info: Boolean = params.getOrElse("info", false) == true
-                    val requestMessage = CkanRequestV1(project, limit, info, userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    val requestMessage = for {
+                        userProfile <- getUserADM(requestContext)
+                        params = requestContext.request.uri.query().toMap
+                        project: Option[Seq[String]] = params.get("project").map(_.split(","))
+                        limit: Option[Int] = params.get("limit").map(_.toInt)
+                        info: Boolean = params.getOrElse("info", false) == true
+                    } yield CkanRequestV1(project, limit, info, userProfile)
+
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,

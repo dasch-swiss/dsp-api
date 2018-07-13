@@ -35,7 +35,7 @@ import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a spray-routing function for API routes that deal with users.
@@ -59,8 +59,9 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     def getUsers = path("admin" / "users") {
         get {
             requestContext =>
-                val requestingUser = getUserADM(requestContext)
-                val requestMessage = UsersGetRequestADM(requestingUser = requestingUser)
+                val requestMessage: Future[UsersGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield UsersGetRequestADM(requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -85,9 +86,9 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         post {
             entity(as[CreateUserApiRequestADM]) { apiRequest =>
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-
-                    val requestMessage = UserCreateRequestADM(
+                    val requestMessage: Future[UserCreateRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield UserCreateRequestADM(
                         createRequest = apiRequest,
                         requestingUser = requestingUser,
                         apiRequestID = UUID.randomUUID()
@@ -118,15 +119,16 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         get {
             parameters("identifier" ? "iri") { (identifier: String) =>
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-
                     /* check if email or iri was supplied */
-                    val requestMessage = if (identifier == "email") {
+                    val requestMessage: Future[UserGetRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield  if (identifier == "email") {
                         UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
                     } else {
                         val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
                         UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
                     }
+
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -147,11 +149,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                         requestContext =>
 
                             val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                            val requestingUser = getUserADM(requestContext)
 
                             /* the api request is already checked at time of creation. see case class. */
 
-                            val requestMessage = if (apiRequest.requesterPassword.isDefined && apiRequest.newPassword.isDefined) {
+                            val requestMessage: Future[UsersResponderRequestADM with Product with Serializable] = for {
+                                requestingUser <- getUserADM(requestContext)
+                            } yield  if (apiRequest.requesterPassword.isDefined && apiRequest.newPassword.isDefined) {
                                 /* update existing user's password */
                                 UserChangePasswordRequestADM(
                                     userIri = userIri,
@@ -198,10 +201,11 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     /* delete a user identified by iri */
                     requestContext => {
                         val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                        val requestingUser = getUserADM(requestContext)
 
                         /* update existing user's status to false */
-                        val requestMessage = UserChangeStatusRequestADM(
+                        val requestMessage: Future[UserChangeStatusRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserChangeStatusRequestADM(
                             userIri,
                             changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
                             requestingUser,
@@ -222,11 +226,11 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 get {
                     /* get user's project memberships */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                        val requestMessage = UserProjectMembershipsGetRequestADM(
+                        val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectMembershipsGetRequestADM(
                             userIri = checkedUserIri,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -245,12 +249,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 post {
                     /* add user to project */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                        val requestMessage = UserProjectMembershipAddRequestADM(
+                        val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectMembershipAddRequestADM(
                             userIri = checkedUserIri,
                             projectIri = checkedProjectIri,
                             requestingUser = requestingUser,
@@ -268,12 +272,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 delete {
                     /* remove user from project (and all groups belonging to this project) */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                        val requestMessage = UserProjectMembershipRemoveRequestADM(
+                        val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectMembershipRemoveRequestADM(
                             userIri = checkedUserIri,
                             projectIri = checkedProjectIri,
                             requestingUser = requestingUser,
@@ -293,11 +297,11 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 get {
                     /* get user's project admin memberships */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                        val requestMessage = UserProjectAdminMembershipsGetRequestADM(
+                        val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectAdminMembershipsGetRequestADM(
                             userIri = checkedUserIri,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -316,12 +320,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 post {
                     /* add user to project admin */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                        val requestMessage = UserProjectAdminMembershipAddRequestADM(
+                        val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectAdminMembershipAddRequestADM(
                             userIri = checkedUserIri,
                             projectIri = checkedProjectIri,
                             requestingUser = requestingUser,
@@ -339,12 +343,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 delete {
                     /* remove user from project admin */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                        val requestMessage = UserProjectAdminMembershipRemoveRequestADM(
+                        val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserProjectAdminMembershipRemoveRequestADM(
                             userIri = checkedUserIri,
                             projectIri = checkedProjectIri,
                             requestingUser = requestingUser,
@@ -364,11 +368,11 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 get {
                     /* get user's group memberships */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                        val requestMessage = UserGroupMembershipsGetRequestADM(
+                        val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserGroupMembershipsGetRequestADM(
                             userIri = checkedUserIri,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -387,12 +391,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 post {
                     /* add user to group */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                        val requestMessage = UserGroupMembershipAddRequestADM(
+                        val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserGroupMembershipAddRequestADM(
                             userIri = checkedUserIri,
                             groupIri = checkedGroupIri,
                             requestingUser = requestingUser,
@@ -410,12 +414,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 delete {
                     /* remove user from group */
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
                         val checkedUserIri = stringFormatter.validateAndEscapeIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
                         val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                        val requestMessage = UserGroupMembershipRemoveRequestADM(
+                        val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserGroupMembershipRemoveRequestADM(
                             userIri = checkedUserIri,
                             groupIri = checkedGroupIri,
                             requestingUser = requestingUser,

@@ -158,10 +158,10 @@ case class ResourceInfoGetRequestV1(iri: IRI, userProfile: UserADM) extends Reso
   * information. A successful response will be a [[ResourceFullResponseV1]].
   *
   * @param iri         the IRI of the resource to be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param userADM     the profile of the user making the request.
   * @param getIncoming if `true`, information about incoming references will be included in the response.
   */
-case class ResourceFullGetRequestV1(iri: IRI, userProfile: UserADM, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
+case class ResourceFullGetRequestV1(iri: IRI, userADM: UserADM, getIncoming: Boolean = true) extends ResourcesResponderRequestV1
 
 /**
   * Requests a [[ResourceContextResponseV1]] describing the context of a resource (i.e. the resources that are part of it).
@@ -275,12 +275,12 @@ case class ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProf
   *
   * @param resourceIri   the IRI of the resource to be marked as deleted.
   * @param deleteComment an optional comment explaining why the resource is being marked as deleted.
-  * @param userProfile   the profile of the user making the request.
+  * @param userADM       the profile of the user making the request.
   * @param apiRequestID  the ID of the API request.
   */
 case class ResourceDeleteRequestV1(resourceIri: IRI,
                                    deleteComment: Option[String],
-                                   userProfile: UserADM,
+                                   userADM: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
@@ -396,11 +396,11 @@ case class PropertiesGetResponseV1(properties: PropsGetV1) extends KnoraResponse
   *
   * @param resourceIri  the IRI of the resource whose label should be changed.
   * @param label        the new value of the label.
-  * @param userProfile  the profile of the user making the request.
+  * @param userADM      the profile of the user making the request.
   * @param apiRequestID the ID of the API request.
   *
   */
-case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userProfile: UserADM, apiRequestID: UUID) extends ResourcesResponderRequestV1
+case class ChangeResourceLabelRequestV1(resourceIri: IRI, label: String, userADM: UserADM, apiRequestID: UUID) extends ResourcesResponderRequestV1
 
 /**
   * Represents the answer to a [[ChangeResourceLabelRequestV1]].
@@ -418,9 +418,9 @@ case class ChangeResourceLabelResponseV1(res_id: IRI, label: String) extends Kno
   *
   * @param resourceIri the IRI of the initial resource.
   * @param depth       the maximum depth of the graph, counting from the initial resource.
-  * @param userProfile the profile of the user making the request.
+  * @param userADM     the profile of the user making the request.
   */
-case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userProfile: UserADM) extends ResourcesResponderRequestV1
+case class GraphDataGetRequestV1(resourceIri: IRI, depth: Int, userADM: UserADM) extends ResourcesResponderRequestV1
 
 /**
   * Provides a graph of resources that are reachable via links to or from a given resource, in response to a
@@ -949,15 +949,15 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "label" -> propertyV1.label.toJson,
                         "attributes" -> propertyV1.attributes.toJson,
                         "occurrence" -> propertyV1.occurrence.toJson) ++
-                        // Don't generate JSON for these lists if they're empty.
-                        list2JsonOption("values", propertyV1.values, () => propertyV1.values.toJson) ++
-                        list2JsonOption("value_ids", propertyV1.value_ids, () => propertyV1.value_ids.toJson) ++
-                        list2JsonOption("comments", propertyV1.comments, () => propertyV1.comments.toJson) ++
-                        list2JsonOption("value_restype", propertyV1.value_restype, () => propertyV1.value_restype.toJson) ++
-                        list2JsonOption("value_iconsrcs", propertyV1.value_iconsrcs, () => propertyV1.value_iconsrcs.toJson) ++
-                        list2JsonOption("value_firstprops", propertyV1.value_firstprops, () => propertyV1.value_firstprops.toJson) ++
-                        list2JsonOption("value_rights", propertyV1.value_rights, () => propertyV1.value_rights.toJson) ++
-                        list2JsonOption("locations", propertyV1.locations, () => propertyV1.locations.toJson)
+                            // Don't generate JSON for these lists if they're empty.
+                            list2JsonOption("values", propertyV1.values, () => propertyV1.values.toJson) ++
+                            list2JsonOption("value_ids", propertyV1.value_ids, () => propertyV1.value_ids.toJson) ++
+                            list2JsonOption("comments", propertyV1.comments, () => propertyV1.comments.toJson) ++
+                            list2JsonOption("value_restype", propertyV1.value_restype, () => propertyV1.value_restype.toJson) ++
+                            list2JsonOption("value_iconsrcs", propertyV1.value_iconsrcs, () => propertyV1.value_iconsrcs.toJson) ++
+                            list2JsonOption("value_firstprops", propertyV1.value_firstprops, () => propertyV1.value_firstprops.toJson) ++
+                            list2JsonOption("value_rights", propertyV1.value_rights, () => propertyV1.value_rights.toJson) ++
+                            list2JsonOption("locations", propertyV1.locations, () => propertyV1.locations.toJson)
                     (propertyV1.pid, JsObject(fields))
             }(breakOut)
 
@@ -993,8 +993,8 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "guielement" -> propertyGetV1.guielement.toJson,
                         "is_annotation" -> propertyGetV1.is_annotation.toJson,
                         "attributes" -> propertyGetV1.attributes.toJson) ++
-                        // Don't generate JSON for these lists if they're empty.
-                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                            // Don't generate JSON for these lists if they're empty.
+                            list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
                     (propertyGetV1.pid, JsObject(fields))
             }(breakOut)
 
@@ -1081,8 +1081,8 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "guielement" -> propertyGetV1.guielement.toJson,
                         "is_annotation" -> propertyGetV1.is_annotation.toJson,
                         "attributes" -> propertyGetV1.attributes.toJson) ++
-                        // Don't generate JSON for these lists if they're empty.
-                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                            // Don't generate JSON for these lists if they're empty.
+                            list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
                     (propertyGetV1.pid, JsObject(fields))
             }(breakOut)
 

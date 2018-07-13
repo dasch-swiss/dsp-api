@@ -32,7 +32,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 
 /**
@@ -49,16 +49,17 @@ object ValuesRouteV2 extends Authenticator {
         path("v2" / "values") {
             entity(as[String]) { jsonRequest =>
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessage = CreateValueRequestV2.fromJsonLD(
+                    val requestMessage: Future[CreateValueRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield CreateValueRequestV2.fromJsonLD(
                         requestDoc,
                         apiRequestID = UUID.randomUUID,
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,

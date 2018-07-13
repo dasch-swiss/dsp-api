@@ -31,7 +31,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a routing function for API v2 routes that deal with resources.
@@ -131,7 +131,6 @@ object ResourcesRouteV2 extends Authenticator {
         path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
 
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
@@ -140,9 +139,11 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
-                    val requestMessage = ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    val requestMessage: Future[ResourcesGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -155,8 +156,6 @@ object ResourcesRouteV2 extends Authenticator {
         } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
             get {
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
-
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
 
                     val resourceIris: Seq[IRI] = resIris.map {
@@ -164,9 +163,11 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
                     }
 
-                    val requestMessage = ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
+                    val requestMessage: Future[ResourcesPreviewGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -180,7 +181,6 @@ object ResourcesRouteV2 extends Authenticator {
         } ~ path("v2" / "tei" / Segment) { (resIri: String) =>
             get {
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
 
                     val resourceIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
 
@@ -195,7 +195,9 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val headerXSLTIri = getHeaderXSLTIriFromParams(params)
 
-                    val requestMessage = ResourceTEIGetRequestV2(
+                    val requestMessage: Future[ResourceTEIGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ResourceTEIGetRequestV2(
                         resourceIri = resourceIri,
                         textProperty = textProperty,
                         mappingIri = mappingIri,

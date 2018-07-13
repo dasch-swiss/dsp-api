@@ -153,7 +153,7 @@ class ValuesResponderV1 extends Responder {
 
             resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
                 iri = createValueRequest.resourceIri,
-                userProfile = createValueRequest.userProfile,
+                userADM = createValueRequest.userProfile,
                 getIncoming = false
             )).mapTo[ResourceFullResponseV1]
 
@@ -846,7 +846,7 @@ class ValuesResponderV1 extends Responder {
                 // and there's no point in doing it if the other checks fail.)
                 resourceFullResponse <- (responderManager ? ResourceFullGetRequestV1(
                     iri = findResourceWithValueResult.resourceIri,
-                    userProfile = changeValueRequest.userProfile,
+                    userADM = changeValueRequest.userProfile,
                     getIncoming = false
                 )).mapTo[ResourceFullResponseV1]
 

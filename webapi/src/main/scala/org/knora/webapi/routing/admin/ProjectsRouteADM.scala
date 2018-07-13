@@ -35,7 +35,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 
 @Api(value = "projects", produces = "application/json")
@@ -48,139 +48,29 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-    def knoraApiPath: Route = {
-        path("admin" / "projects") {
-            get {
-                /* returns all projects */
-                requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-                    val requestMessage = ProjectsGetRequestADM(requestingUser = requestingUser)
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            } ~
-                post {
-                    /* create a new project */
-                    entity(as[CreateProjectApiRequestADM]) { apiRequest =>
-                        requestContext =>
-                            val requestingUser = getUserADM(requestContext)
-                            val requestMessage = ProjectCreateRequestADM(
-                                createRequest = apiRequest,
-                                requestingUser = requestingUser,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                }
-        } ~ path("admin" / "projects" / "keywords") {
-            get {
-                /* returns all unique keywords for all projects as a list */
-                requestContext =>
-
-                    val requestingUser = getUserADM(requestContext)
-
-                    val requestMessage = ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~ path("admin" / "projects" / "keywords" / Segment) { value =>
-            get {
-                /* returns all keywords for a single project */
-                requestContext =>
-
-                    val requestingUser = getUserADM(requestContext)
-
-                    val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
-                    val requestMessage = ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
-        } ~ path("admin" / "projects" / Segment) { value =>
-            get {
-                /* returns a single project identified either through iri, shortname, or shortcode */
-                parameters("identifier" ? "iri") { identifier: String =>
+    def knoraApiPath: Route = path("admin" / "projects") {
+        get {
+            /* returns all projects */
+            requestContext =>
+                val requestMessage: Future[ProjectsGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ProjectsGetRequestADM(requestingUser = requestingUser)
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        } ~
+            post {
+                /* create a new project */
+                entity(as[CreateProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
-
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = if (identifier == "shortname") { // identify project by shortname.
-                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                            ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
-                        } else if (identifier == "shortcode") {
-                            val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
-                            ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
-                        } else { // identify project by iri. this is the default case.
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-                            ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
-                        }
-
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
-            } ~
-                put {
-                    /* update a project identified by iri */
-                    entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
-                        requestContext =>
-                            val requestingUser = getUserADM(requestContext)
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
-                            /* the api request is already checked at time of creation. see case class. */
-
-                            val requestMessage = ProjectChangeRequestADM(
-                                projectIri = checkedProjectIri,
-                                changeProjectRequest = apiRequest,
-                                requestingUser = requestingUser,
-                                apiRequestID = UUID.randomUUID()
-                            )
-
-                            RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            )
-                    }
-                } ~
-                delete {
-                    /* update project status to false */
-                    requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-
-                        val requestMessage = ProjectChangeRequestADM(
-                            projectIri = checkedProjectIri,
-                            changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                        val requestMessage: Future[ProjectCreateRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ProjectCreateRequestADM(
+                            createRequest = apiRequest,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
                         )
@@ -193,48 +83,84 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                             log
                         )
                 }
-        } ~ path("admin" / "projects" / "members" / Segment) { value =>
-            get {
-                /* returns all members part of a project identified through iri or shortname */
-                parameters("identifier" ? "iri") { identifier: String =>
-                    requestContext =>
-
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = if (identifier != "iri") {
-                            // identify project by shortname.
-                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                            ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
-                        } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-                            ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
-                        }
-
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
-                }
             }
-        } ~ path("admin" / "projects" / "admin-members" / Segment) { value =>
-            get {
-                /* returns all admin members part of a project identified through iri or shortname */
-                parameters("identifier" ? "iri") { identifier: String =>
+    } ~ path("admin" / "projects" / "keywords") {
+        get {
+            /* returns all unique keywords for all projects as a list */
+            requestContext =>
+                val requestMessage: Future[ProjectsKeywordsGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    } ~ path("admin" / "projects" / "keywords" / Segment) { value =>
+        get {
+            /* returns all keywords for a single project */
+            requestContext =>
+                val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                val requestMessage: Future[ProjectKeywordsGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
+
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
+        }
+    } ~ path("admin" / "projects" / Segment) { value =>
+        get {
+            /* returns a single project identified either through iri, shortname, or shortcode */
+            parameters("identifier" ? "iri") { identifier: String =>
+                requestContext =>
+                    val requestMessage: Future[ProjectGetRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield if (identifier == "shortname") { // identify project by shortname.
+                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                    } else if (identifier == "shortcode") {
+                        val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
+                    } else { // identify project by iri. this is the default case.
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                        ProjectGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                    }
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        } ~
+            put {
+                /* update a project identified by iri */
+                entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                        val requestingUser = getUserADM(requestContext)
+                        /* the api request is already checked at time of creation. see case class. */
 
-                        val requestMessage = if (identifier != "iri") {
-                            // identify project by shortname.
-                            val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
-                            ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
-                        } else {
-                            val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
-                            ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
-                        }
+                        val requestMessage: Future[ProjectChangeRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ProjectChangeRequestADM(
+                            projectIri = checkedProjectIri,
+                            changeProjectRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
                         RouteUtilADM.runJsonRoute(
                             requestMessage,
@@ -244,6 +170,77 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                             log
                         )
                 }
+            } ~
+            delete {
+                /* update project status to false */
+                requestContext =>
+                    val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+
+                    val requestMessage: Future[ProjectChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectChangeRequestADM(
+                        projectIri = checkedProjectIri,
+                        changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+    } ~ path("admin" / "projects" / "members" / Segment) { value =>
+        get {
+            /* returns all members part of a project identified through iri or shortname */
+            parameters("identifier" ? "iri") { identifier: String =>
+                requestContext =>
+                    val requestMessage: Future[ProjectMembersGetRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield if (identifier != "iri") {
+                        // identify project by shortname.
+                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                    } else {
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                        ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                    }
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
+        }
+    } ~ path("admin" / "projects" / "admin-members" / Segment) { value =>
+        get {
+            /* returns all admin members part of a project identified through iri or shortname */
+            parameters("identifier" ? "iri") { identifier: String =>
+                requestContext =>
+                    val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield if (identifier != "iri") {
+                        // identify project by shortname.
+                        val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                    } else {
+                        val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
+                        ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
+                    }
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
             }
         }
     }

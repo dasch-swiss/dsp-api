@@ -28,6 +28,7 @@ import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -35,7 +36,7 @@ import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 
 
@@ -46,9 +47,9 @@ object StandoffRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
-        implicit val materializer = ActorMaterializer()
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
+        implicit val materializer: ActorMaterializer = ActorMaterializer()
         val stringFormatter = StringFormatter.getGeneralInstance
 
         val responderManager = system.actorSelection("/user/responderManager")
@@ -58,14 +59,10 @@ object StandoffRouteV1 extends Authenticator {
                 entity(as[Multipart.FormData]) { formdata: Multipart.FormData =>
                     requestContext =>
 
-
-                        val userProfile = getUserADM(requestContext)
-
                         type Name = String
 
                         val JSON_PART = "json"
                         val XML_PART = "xml"
-
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
@@ -92,31 +89,32 @@ object StandoffRouteV1 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessageFuture: Future[CreateMappingRequestV1] = allPartsFuture.map {
-                            (allParts: Map[Name, String]) =>
+                        val requestMessageFuture: Future[CreateMappingRequestV1] = for {
 
-                                // get the json params and turn them into a case class
-                                val standoffApiJSONRequest: CreateMappingApiRequestV1 = try {
+                            userProfile <- getUserADM(requestContext)
 
-                                    val jsonString: String = allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!"))
+                            allParts: Map[Name, String] <- allPartsFuture
 
-                                    jsonString.parseJson.convertTo[CreateMappingApiRequestV1]
-                                } catch {
-                                    case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
-                                }
+                            // get the json params and turn them into a case class
+                            standoffApiJSONRequest: CreateMappingApiRequestV1 = try {
 
-                                val xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
+                                val jsonString: String = allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!"))
 
-                                CreateMappingRequestV1(
-                                    projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
-                                    xml = xml,
-                                    userProfile = userProfile,
-                                    label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, throw BadRequestException("'label' contains invalid characters")),
-                                    mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, throw BadRequestException("'mappingName' contains invalid characters")),
-                                    apiRequestID = UUID.randomUUID
-                                )
+                                jsonString.parseJson.convertTo[CreateMappingApiRequestV1]
+                            } catch {
+                                case e: DeserializationException => throw BadRequestException("JSON params structure is invalid: " + e.toString)
+                            }
 
-                        }
+                            xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
+                            
+                        } yield CreateMappingRequestV1(
+                            projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id, throw BadRequestException("invalid project IRI")),
+                            xml = xml,
+                            userProfile = userProfile,
+                            label = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label, throw BadRequestException("'label' contains invalid characters")),
+                            mappingName = stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.mappingName, throw BadRequestException("'mappingName' contains invalid characters")),
+                            apiRequestID = UUID.randomUUID
+                        )
 
                         RouteUtilV1.runJsonRouteWithFuture(
                             requestMessageFuture,

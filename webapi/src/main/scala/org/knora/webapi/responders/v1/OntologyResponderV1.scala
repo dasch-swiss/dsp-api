@@ -237,7 +237,7 @@ class OntologyResponderV1 extends Responder {
       */
     private def getSubClasses(getSubClassesRequest: SubClassesGetRequestV1): Future[SubClassesGetResponseV1] = {
         for {
-            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri.toSmartIri, getSubClassesRequest.userProfile)).mapTo[SubClassesGetResponseV2]
+            response: SubClassesGetResponseV2 <- (responderManager ? SubClassesGetRequestV2(getSubClassesRequest.resourceClassIri.toSmartIri, getSubClassesRequest.userADM)).mapTo[SubClassesGetResponseV2]
 
             subClasses = response.subClasses.map {
                 subClassInfoV2 => SubClassInfoV1(

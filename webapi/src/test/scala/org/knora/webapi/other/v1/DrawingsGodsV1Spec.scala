@@ -150,7 +150,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
             val createResponse = expectMsgType[ResourceCreateResponseV1](timeout)
             val resourceIri = createResponse.res_id
 
-            responderManager ! ResourceFullGetRequestV1(iri = resourceIri, userProfile = ddd1.get)
+            responderManager ! ResourceFullGetRequestV1(iri = resourceIri, userADM = ddd1.get)
 
             val getResponse = expectMsgType[ResourceFullResponseV1](timeout)
 

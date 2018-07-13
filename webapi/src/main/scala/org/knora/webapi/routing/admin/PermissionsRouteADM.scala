@@ -47,10 +47,11 @@ class PermissionsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Log
         path("admin" / "permissions" / Segment / Segment) { (projectIri, groupIri) =>
             get {
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val params = requestContext.request.uri.query().toMap
                     val permissionType = params.getOrElse("permissionType", PermissionType.AP)
-                    val requestMessage = permissionType match {
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield permissionType match {
                         case _ => AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
                     }
 

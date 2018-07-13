@@ -56,9 +56,9 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
             get {
                 /* return all groups */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-
-                    val requestMessage = GroupsGetRequestADM(requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GroupsGetRequestADM(requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -72,9 +72,9 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
                 /* create a new group */
                 entity(as[CreateGroupApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = GroupCreateRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield GroupCreateRequestADM(
                             createRequest = apiRequest,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -94,10 +94,11 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
             get {
                 /* returns a single group identified through iri */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
-                    val requestMessage = GroupGetRequestADM(checkedGroupIri, requestingUser)
+
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GroupGetRequestADM(checkedGroupIri, requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -111,12 +112,13 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
                 /* update a group identified by iri */
                 entity(as[ChangeGroupApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
                         val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
                         /* the api request is already checked at time of creation. see case class. */
 
-                        val requestMessage = GroupChangeRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield GroupChangeRequestADM(
                             groupIri = checkedGroupIri,
                             changeGroupRequest = apiRequest,
                             requestingUser = requestingUser,
@@ -135,10 +137,11 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
             delete {
                 /* update group status to false */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
-                    val requestMessage = GroupChangeRequestADM(
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GroupChangeRequestADM(
                         groupIri = checkedGroupIri,
                         changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
                         requestingUser = requestingUser,
@@ -158,11 +161,11 @@ class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingA
             get {
                 /* returns all members of the group identified through iri */
                 requestContext =>
-
-                    val requestingUser = getUserADM(requestContext)
                     val checkedGroupIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
-                    val requestMessage = GroupMembersGetRequestADM(groupIri = checkedGroupIri, requestingUser = requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GroupMembersGetRequestADM(groupIri = checkedGroupIri, requestingUser = requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,

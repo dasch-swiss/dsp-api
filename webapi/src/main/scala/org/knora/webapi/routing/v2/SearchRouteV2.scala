@@ -24,15 +24,15 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a function for API routes that deal with search.
@@ -151,8 +151,6 @@ object SearchRouteV2 extends Authenticator {
             get {
                 requestContext =>
 
-                    val requestingUser = getUserADM(requestContext)
-
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
                     if (searchString.length < settings.searchValueMinLength) {
@@ -167,7 +165,9 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-                    val requestMessage = FullTextSearchCountRequestV2(
+                    val requestMessage: Future[FullTextSearchCountRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield FullTextSearchCountRequestV2(
                         searchValue = searchString,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
@@ -175,7 +175,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -187,7 +187,6 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -205,7 +204,9 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-                    val requestMessage = FulltextSearchRequestV2(
+                    val requestMessage: Future[FulltextSearchRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield FulltextSearchRequestV2(
                         searchValue = searchString,
                         offset = offset,
                         limitToProject = limitToProject,
@@ -214,7 +215,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -228,11 +229,12 @@ object SearchRouteV2 extends Authenticator {
             post {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
-                        val requestingUser = getUserADM(requestContext)
                         val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val requestMessage = GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                        val requestMessage: Future[GravsearchCountRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                        RouteUtilV2.runRdfRoute(
+                        RouteUtilV2.runRdfRouteWithFuture(
                             requestMessage,
                             requestContext,
                             settings,
@@ -247,11 +249,13 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
                     val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                    val requestMessage = GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                    RouteUtilV2.runRdfRoute(
+                    val requestMessage: Future[GravsearchCountRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -265,11 +269,12 @@ object SearchRouteV2 extends Authenticator {
             post {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
-                        val requestingUser = getUserADM(requestContext)
                         val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val requestMessage = GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                        val requestMessage: Future[GravsearchRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                        RouteUtilV2.runRdfRoute(
+                        RouteUtilV2.runRdfRouteWithFuture(
                             requestMessage,
                             requestContext,
                             settings,
@@ -284,11 +289,12 @@ object SearchRouteV2 extends Authenticator {
             get {
 
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
                     val constructQuery = GravsearchParser.parseQuery(sparql)
-                    val requestMessage = GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
+                    val requestMessage: Future[GravsearchRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -304,7 +310,6 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "searchbylabel" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -318,14 +323,16 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = SearchResourceByLabelCountRequestV2(
+                    val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield SearchResourceByLabelCountRequestV2(
                         searchValue = searchString,
                         limitToProject = limitToProject,
                         limitToResourceClass = limitToResourceClass,
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
@@ -338,8 +345,6 @@ object SearchRouteV2 extends Authenticator {
         } ~ path("v2" / "searchbylabel" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
                 requestContext => {
-
-                    val requestingUser = getUserADM(requestContext)
 
                     val searchString = stringFormatter.toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
 
@@ -355,7 +360,9 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = SearchResourceByLabelRequestV2(
+                    val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield SearchResourceByLabelRequestV2(
                         searchValue = searchString,
                         offset = offset,
                         limitToProject = limitToProject,
@@ -363,7 +370,7 @@ object SearchRouteV2 extends Authenticator {
                         requestingUser = requestingUser
                     )
 
-                    RouteUtilV2.runRdfRoute(
+                    RouteUtilV2.runRdfRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,
