@@ -82,8 +82,8 @@ case class ResourceTEIGetResponseV2(header: TEIHeader, body: TEIBody) {
     def toXML: String =
         s"""<?xml version="1.0" encoding="UTF-8"?>
            |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-           |    ${header.toXML}
-           |    ${body.toXML}
+           |${header.toXML}
+           |${body.toXML}
            |</TEI>
         """.stripMargin
 
