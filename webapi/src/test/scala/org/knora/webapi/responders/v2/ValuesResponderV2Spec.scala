@@ -19,26 +19,33 @@
 
 package org.knora.webapi.responders.v2
 
+import java.util.UUID
+
 import akka.actor.Props
+import akka.http.scaladsl.util.FastFuture
 import akka.testkit.{ImplicitSender, TestActorRef}
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
+import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
 
+/**
+  * Tests [[ValuesResponderV2]].
+  */
 class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
     private val anythingProjectIri = ANYTHING_PROJECT_IRI
@@ -64,6 +71,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
+    private val currentSeqnumValueIri = new MutableTestIri
+
     private def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -75,31 +84,93 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
     }
 
+    private def getValue(resourceIri: IRI, propertyIri: SmartIri, expectedValueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
+        // Make a Gravsearch query from a template.
+        val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
+            resourceIri = resourceIri,
+            propertyIris = Seq(propertyIri)
+        ).toString()
+
+        // Run the query.
+
+        val parsedGravsearchQuery = GravsearchParser.parseQuery(gravsearchQuery)
+        responderManager ! GravsearchRequestV2(parsedGravsearchQuery, requestingUser)
+
+        expectMsgPF(timeout) {
+            case searchResponse: ReadResourcesSequenceV2 =>
+                // Get the resource from the response.
+                val resource = resourcesSequenceToResource(
+                    requestedResourceIri = resourceIri,
+                    readResourcesSequence = searchResponse,
+                    requestingUser = requestingUser
+                )
+
+                val propertyValues = resource.values.getOrElse(propertyIri, throw AssertionException(s"Resource <$resourceIri> does not have property <$propertyIri>"))
+                propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIri> of resource <$resourceIri> does not have value <$expectedValueIri>"))
+        }
+    }
+
+    private def resourcesSequenceToResource(requestedResourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
+        if (readResourcesSequence.numberOfResources == 0) {
+            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+        }
+
+        if (readResourcesSequence.numberOfResources > 1) {
+            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+        }
+
+        val resourceInfo = readResourcesSequence.resources.head
+
+        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
+            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
+        }
+
+        resourceInfo.toOntologySchema(ApiV2WithValueObjects)
+    }
+
     "Load test data" in {
         loadTestData(rdfDataObjs = rdfDataObjects, expectOK = true)
     }
 
     "The values responder" should {
-        /*
         "add a new Integer value (seqnum of a page)" in {
+            // Add the value.
 
+            val resourceIri = "http://rdfh.ch/8a0b1e75"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum".toSmartIri
             val seqnum = 4
 
-            actorUnderTest ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/8a0b1e75",
-                propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum",
-                value = IntegerValueV1(seqnum),
-                userProfile = incunabulaUser,
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        valueType = OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri,
+                        valueHasInteger = seqnum
+                    )
+                ),
+                requestingUser = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsgPF(timeout) {
-                case CreateValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
-                    currentSeqnumValueIri.set(newValueIri)
-                    newValue should ===(IntegerValueV1(seqnum))
+                case createValueResponse: CreateValueResponseV2 => currentSeqnumValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = currentSeqnumValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case intValue: IntegerValueContentV2 => intValue.valueHasInteger should ===(seqnum)
+                case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
             }
         }
-        */
 
     }
 }

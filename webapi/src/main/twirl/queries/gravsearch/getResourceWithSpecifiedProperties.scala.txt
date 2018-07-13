@@ -36,9 +36,7 @@ CONSTRUCT {
   ?resource knora-api:isMainResource true .
 
   @for((propertyIri, index) <- propertyIris.zipWithIndex) {
-    OPTIONAL {
-      ?resource <@propertyIri> ?propertyObj@index .
-    }
+    ?resource <@propertyIri> ?propertyObj@index .
   }
 } WHERE {
   BIND(<@resourceIri> AS ?resource)

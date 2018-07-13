@@ -38,7 +38,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, ModifyPermission}
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
+import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
 
@@ -234,6 +234,13 @@ class ValuesResponderV2 extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Given a text value, checks whether the targets of the value's standoff link tags exist and are Knora resources.
+      * If not, throws an exception.
+      *
+      * @param textValueContent the text value.
+      * @param requestingUser the user making the request.
+      */
     private def checkStandoffLinkTargets(textValueContent: TextValueContentV2, requestingUser: UserADM): Future[Unit] = {
         val targetResourceIris: Seq[IRI] = textValueContent.standoffLinkTagTargetResourceIris.toSeq
 
@@ -250,7 +257,7 @@ class ValuesResponderV2 extends Responder {
 
                 // If any of the resources are not found, or the user doesn't have permission to see them, this will throw an exception.
 
-                resourcePreviewResponse <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
+                _ <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
             } yield ()
         }
     }
@@ -262,7 +269,7 @@ class ValuesResponderV2 extends Responder {
       * for any resources that are objects of `knora-base:hasStandoffLinkTo`.
       *
       * @param resourceIri    the resource IRI.
-      * @param propertyInfo   the property definition. If the caller wants to query a link, this must be the link property,
+      * @param propertyInfo   the property definition (in the internal schema). If the caller wants to query a link, this must be the link property,
       *                       not the link value property.
       * @param requestingUser the user making the request.
       * @return a [[ReadResourceV2]] containing only the resource's metadata and its values for the specified property.
@@ -271,24 +278,31 @@ class ValuesResponderV2 extends Responder {
         // TODO: when text values in Gravsearch query results are shortened, make a way for this query to get the complete value.
 
         for {
+            // Get the property's object class constraint.
             objectClassConstraint: SmartIri <- Future(propertyInfo.entityInfoContent.requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property ${propertyInfo.entityInfoContent.propertyIri} has no knora-base:objectClassConstraint")))
 
+            // If the property points to a text value, also query the resource's standoff links.
             maybeStandoffLinkToPropertyIri: Option[SmartIri] = if (objectClassConstraint.toString == OntologyConstants.KnoraBase.TextValue) {
                 Some(OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri)
             } else {
                 None
             }
 
-            propertyIrisForGravsearchQuery: Seq[SmartIri] = Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri
+            // Convert the property IRIs to be queried to the API v2 complex schema for Gravsearch.
+            propertyIrisForGravsearchQuery: Seq[SmartIri] = (Seq(propertyInfo.entityInfoContent.propertyIri) ++ maybeStandoffLinkToPropertyIri).map(_.toOntologySchema(ApiV2WithValueObjects))
 
+            // Make a Gravsearch query from a template.
             gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
                 propertyIris = propertyIrisForGravsearchQuery
             ).toString()
 
+            // Run the query.
+
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
 
+            // Get the resource from the response.
             resource = resourcesSequenceToResource(
                 requestedResourceIri = resourceIri,
                 readResourcesSequence = searchResponse,
@@ -301,7 +315,7 @@ class ValuesResponderV2 extends Responder {
       * Verifies that a value was written correctly to the triplestore.
       *
       * @param resourceIri     the IRI of the resource that the value belongs to.
-      * @param propertyIri     the IRI of the resource property that points to the value.
+      * @param propertyIri     the IRI of the resource property that points to the value (in the internal schema).
       * @param unverifiedValue the value that should have been written to the triplestore.
       * @param requestingUser  the user making the request.
       */
@@ -309,7 +323,7 @@ class ValuesResponderV2 extends Responder {
         for {
             gravsearchQuery: String <- Future(queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
-                propertyIris = Seq(propertyIri)
+                propertyIris = Seq(propertyIri.toOntologySchema(ApiV2WithValueObjects))
             ).toString())
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))

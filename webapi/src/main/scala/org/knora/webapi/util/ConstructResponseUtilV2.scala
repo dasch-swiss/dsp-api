@@ -507,7 +507,6 @@ object ConstructResponseUtilV2 {
             case OntologyConstants.KnoraBase.IntValue =>
                 IntegerValueContentV2(
                     valueType = valueType.toSmartIri,
-                    valueHasString = valueObjectValueHasString,
                     valueHasInteger = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasInteger).toInt,
                     comment = valueCommentOption
                 )

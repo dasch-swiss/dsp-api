@@ -367,7 +367,7 @@ case class DateValueContentV2(valueType: SmartIri,
                               valueHasStartPrecision: KnoraPrecisionV1.Value,
                               valueHasEndPrecision: KnoraPrecisionV1.Value,
                               valueHasCalendar: KnoraCalendarV1.Value,
-                              comment: Option[String]) extends ValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     // We compute valueHasString instead of taking it from the triplestore, because the
     // string literal in the triplestore isn't in API v2 format.
     override lazy val valueHasString: String = {
@@ -560,7 +560,7 @@ case class TextValueContentV2(valueType: SmartIri,
                               valueHasString: String,
                               valueHasLanguage: Option[String] = None,
                               standoffAndMapping: Option[StandoffAndMapping],
-                              comment: Option[String]) extends ValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
 
     /**
@@ -791,14 +791,14 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, map
 /**
   * Represents a Knora integer value.
   *
-  * @param valueHasString  the string representation of the integer.
   * @param valueHasInteger the integer value.
   * @param comment         a comment on this `IntegerValueContentV2`, if any.
   */
 case class IntegerValueContentV2(valueType: SmartIri,
-                                 valueHasString: String,
                                  valueHasInteger: Int,
-                                 comment: Option[String]) extends ValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
+
+    override def valueHasString: String = valueHasInteger.toString
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -842,7 +842,6 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
 
         IntegerValueContentV2(
             valueType = OntologyConstants.KnoraBase.IntValue.toSmartIri,
-            valueHasString = intValueAsInt.toString,
             valueHasInteger = intValueAsInt,
             comment = maybeComment
         )
@@ -859,7 +858,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
 case class DecimalValueContentV2(valueType: SmartIri,
                                  valueHasString: String,
                                  valueHasDecimal: BigDecimal,
-                                 comment: Option[String]) extends ValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -914,7 +913,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
 case class BooleanValueContentV2(valueType: SmartIri,
                                  valueHasString: String,
                                  valueHasBoolean: Boolean,
-                                 comment: Option[String]) extends ValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -968,7 +967,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
 case class GeomValueContentV2(valueType: SmartIri,
                               valueHasString: String,
                               valueHasGeometry: String,
-                              comment: Option[String]) extends ValueContentV2 {
+                              comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1026,7 +1025,7 @@ case class IntervalValueContentV2(valueType: SmartIri,
                                   valueHasString: String,
                                   valueHasIntervalStart: BigDecimal,
                                   valueHasIntervalEnd: BigDecimal,
-                                  comment: Option[String]) extends ValueContentV2 {
+                                  comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1151,7 +1150,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
 case class ColorValueContentV2(valueType: SmartIri,
                                valueHasString: String,
                                valueHasColor: String,
-                               comment: Option[String]) extends ValueContentV2 {
+                               comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1206,7 +1205,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
 case class UriValueContentV2(valueType: SmartIri,
                              valueHasString: String,
                              valueHasUri: String,
-                             comment: Option[String]) extends ValueContentV2 {
+                             comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1262,7 +1261,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
 case class GeonameValueContentV2(valueType: SmartIri,
                                  valueHasString: String,
                                  valueHasGeonameCode: String,
-                                 comment: Option[String]) extends ValueContentV2 {
+                                 comment: Option[String] = None) extends ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1348,7 +1347,7 @@ case class StillImageFileValueContentV2(valueType: SmartIri,
                                         dimY: Int,
                                         qualityLevel: Int,
                                         isPreview: Boolean,
-                                        comment: Option[String]) extends FileValueContentV2 with ValueContentV2 {
+                                        comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
@@ -1423,7 +1422,7 @@ case class TextFileValueContentV2(valueType: SmartIri,
                                   internalFilename: String,
                                   originalFilename: String,
                                   originalMimeType: Option[String],
-                                  comment: Option[String]) extends FileValueContentV2 with ValueContentV2 {
+                                  comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         copy(
