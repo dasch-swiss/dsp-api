@@ -105,7 +105,7 @@ object RouteUtilV2 {
       * @param executionContext an execution context for futures.
       * @return a [[Future]] containing a [[RouteResult]].
       */
-    def runRdfRoute(requestMessage: KnoraRequestV2,
+    private def runRdfRoute(requestMessage: KnoraRequestV2,
                     requestContext: RequestContext,
                     settings: SettingsImpl,
                     responderManager: ActorSelection,
