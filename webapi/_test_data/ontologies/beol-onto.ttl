@@ -1285,6 +1285,25 @@
                    rdfs:comment """Der Brief ist publiziert"""@de ,
                               """Letter is published"""@en .
 
+
+### ###########################################
+### beol:externalRepository
+
+:externalRepository rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:UriValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasValue ;
+
+                   rdfs:label "Dieser Brief ist auch vorhanden in"@de ,
+                              "Letter is also available at"@en ;
+
+                   rdfs:comment """Dieser Brief ist auch vorhanden in"""@de ,
+                              """Letter is also available at"""@en .
+
+
 ##########################################################
 #
 # RESOURCES
@@ -1546,7 +1565,19 @@
                             owl:onProperty :mentionsPersonValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
-                        ] ;
+                        ] ,
+                         [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :comment ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
+                        ],
+                         [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :externalRepository ;
+                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
+                         ];
 
         knora-base:resourceIcon "letter.png" ;
 
