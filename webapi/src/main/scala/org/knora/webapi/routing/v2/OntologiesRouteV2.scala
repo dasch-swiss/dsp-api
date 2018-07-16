@@ -80,7 +80,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage: Future[OntologyEntitiesGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield OntologyEntitiesGetRequestV2(
                         ontologyIri = requestedOntology,
@@ -89,7 +89,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -102,12 +102,12 @@ object OntologiesRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val requestMessage: Future[OntologyMetadataGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyMetadataGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield OntologyMetadataGetRequestV2(requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -121,16 +121,19 @@ object OntologiesRouteV2 extends Authenticator {
 
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                        val requestMessage: Future[ChangeOntologyMetadataRequestV2] = for {
+                        val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
-                        } yield ChangeOntologyMetadataRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -144,13 +147,13 @@ object OntologiesRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val requestMessage: Future[OntologyMetadataGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyMetadataGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                         validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
                     } yield OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -173,7 +176,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage: Future[OntologyEntitiesGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyEntitiesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield OntologyEntitiesGetRequestV2(
                         ontologyIri = requestedOntologyIri,
@@ -182,7 +185,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -197,17 +200,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[CreateClassRequestV2] = for {
+                        val requestMessageFuture: Future[CreateClassRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield CreateClassRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -221,17 +227,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
+                        val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -247,17 +256,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[AddCardinalitiesToClassRequestV2] = for {
+                        val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield AddCardinalitiesToClassRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -271,17 +283,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[ChangeCardinalitiesRequestV2] = for {
+                        val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield ChangeCardinalitiesRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -329,7 +344,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage: Future[ClassesGetRequestV2] = for {
+                    val requestMessageFuture: Future[ClassesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ClassesGetRequestV2(
                         classIris = classesForResponder,
@@ -338,7 +353,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -363,7 +378,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
                     val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
-                    val requestMessage: Future[DeleteClassRequestV2] = for {
+                    val requestMessageFuture: Future[DeleteClassRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield DeleteClassRequestV2(
                         classIri = classIri,
@@ -373,7 +388,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -388,17 +403,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[CreatePropertyRequestV2] = for {
+                        val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield CreatePropertyRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -412,17 +430,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
+                        val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -470,7 +491,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val allLanguagesStr = params.get(ALL_LANGUAGES)
                     val allLanguages = stringFormatter.optionStringToBoolean(params.get(ALL_LANGUAGES), throw BadRequestException(s"Invalid boolean for $ALL_LANGUAGES: $allLanguagesStr"))
 
-                    val requestMessage: Future[PropertiesGetRequestV2] = for {
+                    val requestMessageFuture: Future[PropertiesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield PropertiesGetRequestV2(
                         propertyIris = propsForResponder,
@@ -479,7 +500,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -504,7 +525,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
                     val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
-                    val requestMessage: Future[DeletePropertyRequestV2] = for {
+                    val requestMessageFuture: Future[DeletePropertyRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield DeletePropertyRequestV2(
                         propertyIri = propertyIri,
@@ -514,7 +535,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -529,17 +550,20 @@ object OntologiesRouteV2 extends Authenticator {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
 
-                        val requestMessage: Future[CreateOntologyRequestV2] = for {
+                        val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
-                        } yield CreateOntologyRequestV2.fromJsonLD(
-                            jsonLDDocument = requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser
-                        )
+                            requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
+                                jsonLDDocument = requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,
@@ -562,7 +586,7 @@ object OntologiesRouteV2 extends Authenticator {
                     val lastModificationDateStr = requestContext.request.uri.query().toMap.getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
                     val lastModificationDate = stringFormatter.toInstant(lastModificationDateStr, throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
 
-                    val requestMessage: Future[DeleteOntologyRequestV2] = for {
+                    val requestMessageFuture: Future[DeleteOntologyRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield DeleteOntologyRequestV2(
                         ontologyIri = ontologyIri,
@@ -572,7 +596,7 @@ object OntologiesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,

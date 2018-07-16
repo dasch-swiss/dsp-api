@@ -22,6 +22,9 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import java.time.Instant
 import java.util.UUID
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
@@ -34,6 +37,8 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A tagging trait for requests handled by [[org.knora.webapi.responders.v2.ValuesResponderV2]].
@@ -53,61 +58,84 @@ case class CreateValueRequestV2(createValue: CreateValueV2,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
 /**
-  * Constructs a [[CreateValueRequestV2]] based on JSON-LD input.
+  * Constructs [[CreateValueRequestV2]] instances based on JSON-LD input.
   */
 object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueRequestV2] {
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateValueRequestV2 = {
+    /**
+      * Converts JSON-LD input to a [[CreateValueRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        // Get the IRI of the resource that the value is to be created in.
-        val resourceIri = jsonLDDocument.requireIriInObject(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        for {
+            // Get the IRI of the resource that the value is to be created in.
+            resourceIri <- Future(jsonLDDocument.requireIriInObject(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
 
-        if (!resourceIri.isKnoraDataIri) {
-            throw BadRequestException(s"Invalid resource IRI: $resourceIri")
-        }
+            _ = if (!resourceIri.isKnoraDataIri) {
+                throw BadRequestException(s"Invalid resource IRI: $resourceIri")
+            }
 
-        // Get the resource class.
-        val resourceClassIri = jsonLDDocument.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            // Get the resource class.
+            resourceClassIri = jsonLDDocument.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
-        if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-            throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
-        }
+            _ = if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
+            }
 
-        // Ensure that only one value is being submitted.
+            // Ensure that only one value is being submitted.
 
-        val resourceProps: Map[IRI, JsonLDValue] = jsonLDDocument.body.value - JsonLDConstants.ID - JsonLDConstants.TYPE
+            resourceProps: Map[IRI, JsonLDValue] = jsonLDDocument.body.value - JsonLDConstants.ID - JsonLDConstants.TYPE
 
-        if (resourceProps.isEmpty) {
-            throw BadRequestException("No value submitted")
-        }
+            _ = if (resourceProps.isEmpty) {
+                throw BadRequestException("No value submitted")
+            }
 
-        if (resourceProps.size > 1) {
-            throw BadRequestException(s"Only one value can be created per request using this route")
-        }
+            _ = if (resourceProps.size > 1) {
+                throw BadRequestException(s"Only one value can be created per request using this route")
+            }
 
-        // Get the resource property that points to the new value, and the value to be created.
+            // Get the resource property that points to the new value, and the value to be created.
 
-        val createValue: CreateValueV2 = resourceProps.head match {
-            case (key: IRI, jsonLDValue: JsonLDValue) =>
-                val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
+            createValue: CreateValueV2 <- resourceProps.head match {
+                case (key: IRI, jsonLDValue: JsonLDValue) =>
+                    val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
 
-                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                    throw BadRequestException(s"Invalid property IRI: $propertyIri")
-                }
+                    if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                        throw BadRequestException(s"Invalid property IRI: $propertyIri")
+                    }
 
-                val valueContent: ValueContentV2 = jsonLDValue match {
-                    case jsonLDObject: JsonLDObject => ValueContentV2.fromJsonLDObject(jsonLDObject)
-                    case _ => throw BadRequestException(s"Invalid value for $propertyIri")
-                }
+                    jsonLDValue match {
+                        case jsonLDObject: JsonLDObject =>
+                            for {
+                                valueContent: ValueContentV2 <-
+                                    ValueContentV2.fromJsonLDObject(
+                                        jsonLDObject = jsonLDObject,
+                                        responderManager = responderManager,
+                                        log = log
+                                    )
+                            } yield CreateValueV2(
+                                resourceIri = resourceIri.toString,
+                                propertyIri = propertyIri,
+                                valueContent = valueContent
+                            )
 
-                CreateValueV2(
-                    resourceIri = resourceIri.toString,
-                    propertyIri = propertyIri,
-                    valueContent = valueContent
-                )
-        }
-
-        CreateValueRequestV2(
+                        case _ => throw BadRequestException(s"Invalid value for $propertyIri")
+                    }
+            }
+        } yield CreateValueRequestV2(
             createValue = createValue,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
@@ -319,35 +347,56 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
       * Converts a JSON-LD object to a subclass of [[ValueContentV2]].
       *
       * @param jsonLDObject the JSON-LD object.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a subclass of [[ValueContentV2]].
       */
-    def fromJsonLDObject(jsonLDObject: JsonLDObject): C
+    def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                         responderManager: ActorSelection,
+                         log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }
 
 /**
   * Generates instances of value content classes (subclasses of [[ValueContentV2]]) from JSON-LD input.
   */
 object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
-    def fromJsonLDObject(jsonLDObject: JsonLDObject): ValueContentV2 = {
+    /**
+      * Constructs instances of [[ValueContentV2]] from JSON-LD input.
+      *
+      * @param jsonLDObject     a JSON-LD object representing a value.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a subclass of [[ValueContentV2]].
+      */
+    def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                         responderManager: ActorSelection,
+                         log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val valueType: SmartIri = jsonLDObject.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+        for {
+            valueType: SmartIri <- Future(jsonLDObject.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
 
-        valueType.toString match {
-            case OntologyConstants.KnoraApiV2WithValueObjects.TextValue => TextValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.IntValue => IntegerValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue => DecimalValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue => BooleanValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.DateValue => DateValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue => GeomValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue => IntervalValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.LinkValue => LinkValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.ListValue => HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.UriValue => UriValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue => GeonameValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue => ColorValueContentV2.fromJsonLDObject(jsonLDObject: JsonLDObject)
-            case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
-        }
+            valueContent <- valueType.toString match {
+                case OntologyConstants.KnoraApiV2WithValueObjects.TextValue => TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.IntValue => IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue => DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue => BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.DateValue => DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue => GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue => IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.LinkValue => LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.ListValue => HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.UriValue => UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue => GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue => ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, responderManager = responderManager, log = log)
+                case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
+            }
+
+        } yield valueContent
     }
 }
 
@@ -465,7 +514,9 @@ case class DateValueContentV2(valueType: SmartIri,
   * Constructs [[DateValueContentV2]] objects based on JSON-LD input.
   */
 object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): DateValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         /**
@@ -484,49 +535,50 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
             }
         }
 
-        val calendar: KnoraCalendarV1.Value = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
+        for {
+            calendar: KnoraCalendarV1.Value <- Future(jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar))
 
-        val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear).value
-        val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth).map(_.value)
-        val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay).map(_.value)
-        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
-        val startPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasStartMonth, maybeDateValueHasStartDay)
+            dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear).value
+            maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth).map(_.value)
+            maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay).map(_.value)
+            maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
+            startPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasStartMonth, maybeDateValueHasStartDay)
 
-        val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear).value
-        val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth).map(_.value)
-        val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay).map(_.value)
-        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
-        val endPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasEndMonth, maybeDateValueHasEndDay)
+            dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear).value
+            maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth).map(_.value)
+            maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay).map(_.value)
+            maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
+            endPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasEndMonth, maybeDateValueHasEndDay)
 
-        val startDate = DateYearMonthDay(
-            year = dateValueHasStartYear,
-            month = maybeDateValueHasStartMonth.getOrElse(1),
-            day = maybeDateValueHasStartDay.getOrElse(1),
-            era = maybeDateValueHasStartEra.getOrElse(KnoraEraV2.CE),
-            precision = startPrecision
-        )
+            startDate = DateYearMonthDay(
+                year = dateValueHasStartYear,
+                month = maybeDateValueHasStartMonth.getOrElse(1),
+                day = maybeDateValueHasStartDay.getOrElse(1),
+                era = maybeDateValueHasStartEra.getOrElse(KnoraEraV2.CE),
+                precision = startPrecision
+            )
 
-        val endDate = DateYearMonthDay(
-            year = dateValueHasEndYear,
-            month = maybeDateValueHasEndMonth.getOrElse(12),
-            day = maybeDateValueHasEndDay.getOrElse(31),
-            era = maybeDateValueHasEndEra.getOrElse(KnoraEraV2.CE),
-            precision = endPrecision
-        )
+            endDate = DateYearMonthDay(
+                year = dateValueHasEndYear,
+                month = maybeDateValueHasEndMonth.getOrElse(12),
+                day = maybeDateValueHasEndDay.getOrElse(31),
+                era = maybeDateValueHasEndEra.getOrElse(KnoraEraV2.CE),
+                precision = endPrecision
+            )
 
-        // TODO: convert the date range to start and end JDNs without first converting it to a string.
+            // TODO: convert the date range to start and end JDNs without first converting it to a string.
 
-        val dateRangeStr = DateUtilV2.dateRangeToString(
-            startDate = startDate,
-            endDate = endDate,
-            calendar = calendar
-        )
+            dateRangeStr = DateUtilV2.dateRangeToString(
+                startDate = startDate,
+                endDate = endDate,
+                calendar = calendar
+            )
 
-        val julianDateRange: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateRangeStr)
+            julianDateRange: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateRangeStr)
 
-        val maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
+            maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
 
-        DateValueContentV2(
+        } yield DateValueContentV2(
             valueType = OntologyConstants.KnoraBase.DateValue.toSmartIri,
             valueHasStartJDN = julianDateRange.dateval1,
             valueHasEndJDN = julianDateRange.dateval2,
@@ -559,7 +611,7 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
 case class TextValueContentV2(valueType: SmartIri,
                               valueHasString: String,
                               valueHasLanguage: Option[String] = None,
-                              standoffAndMapping: Option[StandoffAndMapping],
+                              standoffAndMapping: Option[StandoffAndMapping] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
 
@@ -771,10 +823,69 @@ case class TextValueContentV2(valueType: SmartIri,
   * Constructs [[TextValueContentV2]] objects based on JSON-LD input.
   */
 object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): TextValueContentV2 = {
-        // TODO: figure out how to do this.
-        throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
-    }
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = ???
+
+    /*{
+           implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+           val maybeValueAsString: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString, stringFormatter.toSparqlEncodedString)
+           val maybeValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml, stringFormatter.toSparqlEncodedString)
+
+           (maybeValueAsString, maybeValueAsXml) match {
+               case (Some(valueAsString), None) =>
+                   TextValueContentV2(
+                       valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
+                       valueHasString = valueAsString
+                   )
+
+               case (None, Some(valueAsXml)) =>
+                   val mappingIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping, stringFormatter.toSmartIriWithErr)
+
+           }
+
+           /*
+           // check if text has markup
+           if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
+               // simple text
+               Future((TextValueSimpleV1(stringFormatter.toSparqlEncodedString(richtext.utf8str.get, throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")), richtext.language),
+                   apiRequest.comment))
+           } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
+               // XML: text with markup
+
+               val mappingIri = stringFormatter.validateAndEscapeIri(richtext.mapping_id.get, throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+
+               for {
+
+                   textWithStandoffTags: TextWithStandoffTagsV2 <- RouteUtilV1.convertXMLtoStandoffTagV1(
+                       xml = richtext.xml.get,
+                       mappingIri = mappingIri,
+                       acceptStandoffLinksToClientIDs = false,
+                       userProfile = userADM,
+                       settings = settings,
+                       responderManager = responderManager,
+                       log = loggingAdapter
+                   )
+
+                   // collect the resource references from the linking standoff nodes
+                   resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(textWithStandoffTags.standoffTagV2)
+
+               } yield (TextValueWithStandoffV1(
+                   utf8str = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw InconsistentTriplestoreDataException("utf8str for for TextValue contains invalid characters")),
+                   language = textWithStandoffTags.language,
+                   resource_reference = resourceReferences,
+                   standoff = textWithStandoffTags.standoffTagV2,
+                   mappingIri = textWithStandoffTags.mapping.mappingIri,
+                   mapping = textWithStandoffTags.mapping.mapping
+               ), apiRequest.comment)
+
+           }
+           else {
+               throw BadRequestException("invalid parameters given for TextValueV1")
+           }
+           */
+       }*/
 }
 
 /**
@@ -834,13 +945,15 @@ case class IntegerValueContentV2(valueType: SmartIri,
   * Constructs [[IntegerValueContentV2]] objects based on JSON-LD input.
   */
 object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): IntegerValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value
-        val maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
-
-        IntegerValueContentV2(
+        for {
+            intValueAsInt: Int <- Future(jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value)
+            maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
+        } yield IntegerValueContentV2(
             valueType = OntologyConstants.KnoraBase.IntValue.toSmartIri,
             valueHasInteger = intValueAsInt,
             comment = maybeComment
@@ -897,7 +1010,9 @@ case class DecimalValueContentV2(valueType: SmartIri,
   * Constructs [[DecimalValueContentV2]] objects based on JSON-LD input.
   */
 object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): DecimalValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -951,7 +1066,9 @@ case class BooleanValueContentV2(valueType: SmartIri,
   * Constructs [[BooleanValueContentV2]] objects based on JSON-LD input.
   */
 object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): BooleanValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1006,7 +1123,9 @@ case class GeomValueContentV2(valueType: SmartIri,
   * Constructs [[GeomValueContentV2]] objects based on JSON-LD input.
   */
 object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): GeomValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1070,7 +1189,9 @@ case class IntervalValueContentV2(valueType: SmartIri,
   * Constructs [[IntervalValueContentV2]] objects based on JSON-LD input.
   */
 object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): IntervalValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1133,7 +1254,9 @@ case class HierarchicalListValueContentV2(valueType: SmartIri,
   * Constructs [[HierarchicalListValueContentV2]] objects based on JSON-LD input.
   */
 object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalListValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1143,8 +1266,8 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
 /**
   * Represents a Knora color value.
   *
-  * @param valueHasColor  a hexadecimal string containing the RGB color value
-  * @param comment        a comment on this `ColorValueContentV2`, if any.
+  * @param valueHasColor a hexadecimal string containing the RGB color value
+  * @param comment       a comment on this `ColorValueContentV2`, if any.
   */
 case class ColorValueContentV2(valueType: SmartIri,
                                valueHasColor: String,
@@ -1189,7 +1312,9 @@ case class ColorValueContentV2(valueType: SmartIri,
   * Constructs [[ColorValueContentV2]] objects based on JSON-LD input.
   */
 object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): ColorValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1198,8 +1323,8 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
 /**
   * Represents a Knora URI value.
   *
-  * @param valueHasUri    the URI value.
-  * @param comment        a comment on this `UriValueContentV2`, if any.
+  * @param valueHasUri the URI value.
+  * @param comment     a comment on this `UriValueContentV2`, if any.
   */
 case class UriValueContentV2(valueType: SmartIri,
                              valueHasUri: String,
@@ -1244,7 +1369,9 @@ case class UriValueContentV2(valueType: SmartIri,
   * Constructs [[UriValueContentV2]] objects based on JSON-LD input.
   */
 object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): UriValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1300,7 +1427,9 @@ case class GeonameValueContentV2(valueType: SmartIri,
   * Constructs [[GeonameValueContentV2]] objects based on JSON-LD input.
   */
 object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): GeonameValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1400,7 +1529,9 @@ case class StillImageFileValueContentV2(valueType: SmartIri,
   * Constructs [[StillImageFileValueContentV2]] objects based on JSON-LD input.
   */
 object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): StillImageFileValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1467,7 +1598,9 @@ case class TextFileValueContentV2(valueType: SmartIri,
   * Constructs [[TextFileValueContentV2]] objects based on JSON-LD input.
   */
 object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): TextFileValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }
@@ -1566,7 +1699,9 @@ case class LinkValueContentV2(valueType: SmartIri,
   * Constructs [[LinkValueContentV2]] objects based on JSON-LD input.
   */
 object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
-    override def fromJsonLDObject(jsonLDObject: JsonLDObject): LinkValueContentV2 = {
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
     }

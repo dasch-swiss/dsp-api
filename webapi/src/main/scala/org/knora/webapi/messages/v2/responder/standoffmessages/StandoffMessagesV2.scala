@@ -21,6 +21,9 @@ package org.knora.webapi.messages.v2.responder.standoffmessages
 
 import java.util.UUID
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
@@ -30,6 +33,7 @@ import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDObje
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
@@ -41,26 +45,42 @@ sealed trait StandoffResponderRequestV2 extends KnoraRequestV2
   * Represents a request to create a mapping between XML elements and attributes and standoff classes and properties.
   * A successful response will be a [[CreateMappingResponseV2]].
   *
-  * @param metadata the metadata describing the mapping.
-  * @param xml the mapping in XML syntax.
-  * @param userProfile the profile of the user making the request.
-  * @param apiRequestID the ID of the API request.
+  * @param metadata       the metadata describing the mapping.
+  * @param xml            the mapping in XML syntax.
+  * @param requestingUser the the user making the request.
+  * @param apiRequestID   the ID of the API request.
   */
-case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, userProfile: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV2
+case class CreateMappingRequestV2(metadata: CreateMappingRequestMetadataV2, xml: CreateMappingRequestXMLV2, requestingUser: UserADM, apiRequestID: UUID) extends StandoffResponderRequestV2
 
 /**
   * Represents the metadata describing the mapping that is to be created.
   *
-  * @param label the label describing the mapping.
+  * @param label       the label describing the mapping.
   * @param projectIri  the IRI of the project the mapping belongs to.
   * @param mappingName the name of the mapping to be created.
   */
 case class CreateMappingRequestMetadataV2(label: String, projectIri: SmartIri, mappingName: String) extends StandoffResponderRequestV2
 
 object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateMappingRequestMetadataV2] {
+
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            userProfile: UserADM): CreateMappingRequestMetadataV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): CreateMappingRequestMetadataV2 = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -89,7 +109,7 @@ case class CreateMappingRequestXMLV2(xml: String) extends StandoffResponderReque
   * Provides the IRI of the created mapping.
   *
   * @param mappingIri the IRI of the resource (knora-base:XMLToStandoffMapping) representing the mapping that has been created.
-  * @param label the label describing the mapping.
+  * @param label      the label describing the mapping.
   * @param projectIri the project the mapping belongs to.
   */
 case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: SmartIri) extends KnoraResponseV2 {

@@ -61,7 +61,7 @@ object StandoffRouteV2 extends Authenticator {
                         val XML_PART = "xml"
                         type Name = String
 
-                        val apiRequestUUID = UUID.randomUUID
+                        val apiRequestID = UUID.randomUUID
 
                         // collect all parts of the multipart as it arrives into a map
                         val allPartsFuture: Future[Map[Name, String]] = formdata.parts.mapAsync[(Name, String)](1) {
@@ -88,21 +88,29 @@ object StandoffRouteV2 extends Authenticator {
                             case _ => throw BadRequestException("multipart request could not be handled")
                         }.runFold(Map.empty[Name, String])((map, tuple) => map + tuple)
 
-                        val requestMessage: Future[CreateMappingRequestV2] = for {
+                        val requestMessageFuture: Future[CreateMappingRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             allParts: Map[Name, String] <- allPartsFuture
                             jsonldDoc = JsonLDUtil.parseJsonLD(allParts.getOrElse(JSON_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")).toString)
-                            metadata: CreateMappingRequestMetadataV2 = CreateMappingRequestMetadataV2.fromJsonLD(jsonldDoc, apiRequestUUID, requestingUser)
+
+                            metadata: CreateMappingRequestMetadataV2 <- CreateMappingRequestMetadataV2.fromJsonLD(
+                                jsonLDDocument = jsonldDoc,
+                                apiRequestID = apiRequestID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+
                             xml: String = allParts.getOrElse(XML_PART, throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")).toString
                         } yield CreateMappingRequestV2(
-                            metadata,
-                            CreateMappingRequestXMLV2(xml),
-                            requestingUser,
-                            apiRequestUUID
+                            metadata = metadata,
+                            xml = CreateMappingRequestXMLV2(xml),
+                            requestingUser = requestingUser,
+                            apiRequestID = apiRequestID
                         )
 
                         RouteUtilV2.runRdfRouteWithFuture(
-                            requestMessage,
+                            requestMessageFuture,
                             requestContext,
                             settings,
                             responderManager,

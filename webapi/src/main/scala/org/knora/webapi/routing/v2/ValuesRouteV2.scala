@@ -51,16 +51,19 @@ object ValuesRouteV2 extends Authenticator {
                 requestContext => {
                     val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessage: Future[CreateValueRequestV2] = for {
+                    val requestMessageFuture: Future[CreateValueRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield CreateValueRequestV2.fromJsonLD(
-                        requestDoc,
-                        apiRequestID = UUID.randomUUID,
-                        requestingUser = requestingUser
-                    )
+                        requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
+                            requestDoc,
+                            apiRequestID = UUID.randomUUID,
+                            requestingUser = requestingUser,
+                            responderManager = responderManager,
+                            log = log
+                        )
+                    } yield requestMessage
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,

@@ -95,7 +95,7 @@ class StandoffResponderV1 extends Responder {
             xml = CreateMappingRequestXMLV2(
                 xml = xml
             ),
-            userProfile = userProfile,
+            requestingUser = userProfile,
             apiRequestID = apiRequestID)
 
         for {
