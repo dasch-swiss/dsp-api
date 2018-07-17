@@ -1143,6 +1143,23 @@
                     rdfs:subPropertyOf knora-base:hasValue .
 
 ### ###########################################
+### beol:hasSystemNumber
+
+:hasSystemNumber rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "system number"@en ;
+
+                    rdfs:comment """system number"""@en ;
+
+                    knora-base:objectClassConstraint knora-base:TextValue ;
+
+                    salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                    knora-base:subjectClassConstraint :writtenSource ;
+
+                    rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
 ### beol:archiveHasName
 
 :archiveHasName rdf:type owl:ObjectProperty ;
@@ -1530,10 +1547,10 @@
                             salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                         ] ,
                         [
-                           rdf:type owl:Restriction ;
-                           owl:onProperty :letterIsPublished ;
-                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                           salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :letterIsPublished ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                         ] ,
                         [
                              rdf:type owl:Restriction ;
@@ -1541,7 +1558,6 @@
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                              salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                         ] ,
-
                         [
                             rdf:type owl:Restriction ;
                             owl:onProperty :letterHasRepertoriumNumber ;
@@ -1566,18 +1582,24 @@
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
                         ] ,
-                         [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :comment ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :comment ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                         ],
-                         [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :externalRepository ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
-                         ];
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :externalRepository ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
+                        ],
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :hasSystemNumber ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "13"^^xsd:nonNegativeInteger
+                        ];
 
         knora-base:resourceIcon "letter.png" ;
 
