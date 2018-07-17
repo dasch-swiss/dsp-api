@@ -58,6 +58,7 @@ object UsersResponderADMSpec {
 class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
 
     private implicit val executionContext = system.dispatcher
+
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataADM.rootUser
@@ -359,7 +360,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test123456"))) should be (true)
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test123456")))
+
+                resF map { res => assert(res) }
             }
 
             "UPDATE the user's password (by a system admin)" in {
@@ -376,7 +379,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test654321"))) should be (true)
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test654321")))
+
+                resF map { res => assert(res) }
             }
 
             "UPDATE the user's status, (deleting) making him inactive " in {

@@ -48,24 +48,24 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
                     }
                 }
             } ~
-                post { // login
-                    /* send email, password in body as: {"email": "usersemail", "password": "userspassword"}
-                     * returns a JWT token, which can be supplied with every request thereafter in the authorization
-                     * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
-                     */
-                    entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
-                        requestContext =>
-                            requestContext.complete {
-                                doLoginV2(KnoraPasswordCredentialsV2(apiRequest.email, apiRequest.password))
-                            }
-                    }
-                } ~
-                delete { // logout
+            post { // login
+                /* send email, password in body as: {"email": "usersemail", "password": "userspassword"}
+                 * returns a JWT token, which can be supplied with every request thereafter in the authorization
+                 * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
+                 */
+                entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
                     requestContext =>
                         requestContext.complete {
-                            doLogoutV2(requestContext)
+                            doLoginV2(KnoraPasswordCredentialsV2(apiRequest.email, apiRequest.password))
                         }
                 }
+            } ~
+            delete { // logout
+                requestContext =>
+                    requestContext.complete {
+                        doLogoutV2(requestContext)
+                    }
+            }
         }
     }
 }
