@@ -1,5 +1,5 @@
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../src/main/resources/mappingXMLToStandoff.xsd">
-    <defaultXSLTransformation>toBeDefined</defaultXSLTransformation>
+    <defaultXSLTransformation>http://rdfh.ch/0801/U-xVNhuLRpGd4raiDZNrIg</defaultXSLTransformation>
     <mappingElement>
         <tag>
             <name>text</name>
@@ -70,7 +70,7 @@
     
     <mappingElement>
         <tag>
-            <name>ptr</name>
+            <name>ref</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
             <separatesWords>false</separatesWords>

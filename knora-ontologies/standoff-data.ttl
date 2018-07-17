@@ -368,7 +368,7 @@
 <http://rdfh.ch/standoff/mappings/TEIMapping> <http://www.knora.org/ontology/knora-base#hasMappingElement> <http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> .
 
 <http://rdfh.ch/standoff/mappings/TEIMapping/elements/AaZeqWbUR7-p0EbYaSzpCw> a <http://www.knora.org/ontology/knora-base#MappingElement> ;
-	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "ptr" ;
+	<http://www.knora.org/ontology/knora-base#mappingHasXMLTagname> "ref" ;
 	<http://www.knora.org/ontology/knora-base#mappingHasXMLNamespace> "noNamespace" ;
 	<http://www.knora.org/ontology/knora-base#mappingHasXMLClass> "noClass" ;
 	<http://www.knora.org/ontology/knora-base#mappingHasStandoffClass> <http://www.knora.org/ontology/knora-base#StandoffUriTag> ;
