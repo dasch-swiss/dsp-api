@@ -31,7 +31,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
-import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -367,7 +366,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the XSL transformation for the TEI header
             headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
                 for {
-                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
                 } yield Some(xslTransformation.xslt)
             } else {
                 Future(None)
@@ -385,7 +384,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // get mapping to convert standoff markup to TEI/XML
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, requestingUser = requestingUser)).mapTo[GetMappingResponseV2]
 
             // get XSLT from mapping for the TEI body
             bodyXslt: String <- teiMapping.mappingIri match {
@@ -404,7 +403,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     case Some(xslTransformationIri) =>
                         // get XSLT for the TEI body.
                         for {
-                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
                         } yield xslTransformation.xslt
 
 

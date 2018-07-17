@@ -474,7 +474,7 @@ object ConstructResponseUtilV2 {
                                 standoff = standoffTags,
                                 mappingIri = mappingIri,
                                 mapping = mapping.mapping,
-                                XSLT = mapping.XSLTransformation
+                                xslt = mapping.XSLTransformation
                             )
                         ),
                         comment = valueCommentOption

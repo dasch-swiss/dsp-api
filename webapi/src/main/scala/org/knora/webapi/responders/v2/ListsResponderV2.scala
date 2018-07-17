@@ -44,8 +44,8 @@ class ListsResponderV2 extends Responder {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     override def receive: Receive = {
-        case ListGetRequestV2(listIri, userProfile) => future2Message(sender(), getList(listIri, userProfile), log)
-        case NodeGetRequestV2(nodeIri, userProfile) => future2Message(sender(), getNode(nodeIri, userProfile), log)
+        case ListGetRequestV2(listIri, requestingUser) => future2Message(sender(), getList(listIri, requestingUser), log)
+        case NodeGetRequestV2(nodeIri, requestingUser) => future2Message(sender(), getNode(nodeIri, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -53,29 +53,29 @@ class ListsResponderV2 extends Responder {
       * Gets a list from the triplestore.
       *
       * @param listIri the Iri of the list's root node.
-      * @param userProfile the user making the request.
+      * @param requestingUser the user making the request.
       * @return a [[ListGetResponseV2]].
       */
-    def getList(listIri: IRI, userProfile: UserADM): Future[ListGetResponseV2] = {
+    def getList(listIri: IRI, requestingUser: UserADM): Future[ListGetResponseV2] = {
 
         for {
-            listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIri, requestingUser = userProfile)).mapTo[ListGetResponseADM]
+            listResponseADM: ListGetResponseADM <- (responderManager ? ListGetRequestADM(iri = listIri, requestingUser = requestingUser)).mapTo[ListGetResponseADM]
 
-        } yield ListGetResponseV2(list = listResponseADM.list, userProfile.lang, settings.fallbackLanguage)
+        } yield ListGetResponseV2(list = listResponseADM.list, requestingUser.lang, settings.fallbackLanguage)
     }
 
     /**
       * Gets a single list node from the triplestore.
       *
       * @param nodeIri the Iri of the list node.
-      * @param userProfile the user making the request.
+      * @param requestingUser the user making the request.
       * @return a  [[NodeGetResponseV2]].
       */
-    def getNode(nodeIri: IRI, userProfile: UserADM): Future[NodeGetResponseV2] = {
+    def getNode(nodeIri: IRI, requestingUser: UserADM): Future[NodeGetResponseV2] = {
 
         for {
-            nodeResponse: ListNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(iri = nodeIri, requestingUser = userProfile)).mapTo[ListNodeInfoGetResponseADM]
-        } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, userProfile.lang, settings.fallbackLanguage)
+            nodeResponse: ListNodeInfoGetResponseADM <- (responderManager ? ListNodeInfoGetRequestADM(iri = nodeIri, requestingUser = requestingUser)).mapTo[ListNodeInfoGetResponseADM]
+        } yield NodeGetResponseV2(node = nodeResponse.nodeinfo, requestingUser.lang, settings.fallbackLanguage)
 
     }
 }

@@ -139,10 +139,10 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
 /**
   * Represents a request to get a mapping from XML elements and attributes to standoff entities.
   *
-  * @param mappingIri  the IRI of the mapping.
-  * @param userProfile the profile of the user making the request.
+  * @param mappingIri     the IRI of the mapping.
+  * @param requestingUser the the user making the request.
   */
-case class GetMappingRequestV2(mappingIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV2
+case class GetMappingRequestV2(mappingIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
   * Represents a response to a [[GetMappingRequestV2]].
@@ -157,9 +157,9 @@ case class GetMappingResponseV2(mappingIri: IRI, mapping: MappingXMLtoStandoff, 
   * Represents a request that gets an XSL Transformation represented by a `knora-base:XSLTransformation`.
   *
   * @param xsltTextRepresentationIri the IRI of the `knora-base:XSLTransformation`.
-  * @param userProfile               the profile of the user making the request.
+  * @param requestingUser            the the user making the request.
   */
-case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI, userProfile: UserADM) extends StandoffResponderRequestV2
+case class GetXSLTransformationRequestV2(xsltTextRepresentationIri: IRI, requestingUser: UserADM) extends StandoffResponderRequestV2
 
 /**
   * Represents a response to a [[GetXSLTransformationRequestV2]].

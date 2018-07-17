@@ -1044,7 +1044,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 )),
                                 defaultXSLTransformation = None
                             ),
-                            XSLT = None
+                            xslt = None
                         )),
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
@@ -1369,7 +1369,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 )),
                                 defaultXSLTransformation = None
                             ),
-                            XSLT = None
+                            xslt = None
                         )),
                         valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
                         valueHasLanguage = None,
