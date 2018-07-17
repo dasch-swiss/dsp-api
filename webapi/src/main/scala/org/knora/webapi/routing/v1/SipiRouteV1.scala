@@ -23,10 +23,14 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
+import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{BadRequestException, SettingsImpl}
+
+import scala.concurrent.ExecutionContextExecutor
 
 /**
   * Provides a spray-routing function for the API routes that Sipi connects to.
@@ -38,20 +42,22 @@ object SipiRouteV1 extends Authenticator {
       */
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext = system.dispatcher
-        implicit val timeout = settings.defaultTimeout
+        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v1" / "files" / Segment) { file =>
             get {
                 requestContext =>
-                    val userProfile = getUserProfileV1(requestContext)
-                    //val fileValueIRI = StringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid file value IRI: $iri"))
-                    val filename = stringFormatter.toSparqlEncodedString(file, throw BadRequestException(s"Invalid filename: '$file'"))
-                    val requestMessage = SipiFileInfoGetRequestV1(filename, userProfile)
 
-                    RouteUtilV1.runJsonRoute(
+                    val requestMessage = for {
+                        userProfile <- getUserADM(requestContext).map(_.asUserProfileV1)
+                        //val fileValueIRI = StringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid file value IRI: $iri"))
+                        filename = stringFormatter.toSparqlEncodedString(file, throw BadRequestException(s"Invalid filename: '$file'"))
+                    } yield SipiFileInfoGetRequestV1(filename, userProfile)
+
+                    RouteUtilV1.runJsonRouteWithFuture(
                         requestMessage,
                         requestContext,
                         settings,

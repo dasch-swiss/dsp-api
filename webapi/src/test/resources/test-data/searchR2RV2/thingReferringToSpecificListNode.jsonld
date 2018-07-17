@@ -7,7 +7,7 @@
     "knora-api:listValueAsListNode" : {
       "@id" : "http://rdfh.ch/lists/0001/treeList02"
     },
-    "knora-api:listValueAsListNodeLabel" : "Baumlistenknoten 02"
+    "knora-api:listValueAsListNodeLabel" : "Tree list node 02"
   },
   "rdfs:label" : "A thing that has a list value",
   "@context" : {

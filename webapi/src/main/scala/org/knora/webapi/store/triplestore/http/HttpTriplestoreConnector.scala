@@ -406,7 +406,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             log.debug("==>> Drop All Data End")
             Future.successful(DropAllTriplestoreContentACK())
         } catch {
-            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute DROP ALL", e, log))
+            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute DROP ALL", e, log))
         }
     }
 
@@ -425,24 +425,24 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 GraphProtocolAccessor.post(elem.name, elem.path)
 
-                if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
-                    /* need to update the lucene index */
-                    val indexUpdateSparqlString =
-                        """
-                            PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
-                            INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
-                    """
-                    Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 30.seconds)
-                }
-
                 log.debug(s"added: ${elem.name}")
+            }
+
+            if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+                /* need to update the lucene index */
+                val indexUpdateSparqlString =
+                    """
+                        PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
+                        INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
+                    """
+                Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 30.seconds)
             }
 
             log.debug("==>> Loading Data End")
             Future.successful(InsertTriplestoreContentACK())
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Future.failed(e)
-            case e: Exception => Future.failed(TriplestoreResponseException("Failed to execute insert into triplestore", e, log))
+            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
 
     }
@@ -501,14 +501,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             } yield json
 
-            val jsonArr: JsArray = Await.result(jsonFuture, 500.milliseconds)
+            val jsonArr: JsArray = Await.result(jsonFuture, 750.milliseconds)
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
             val idShouldBe = settings.triplestoreDatabaseName
-            val sesameTypeShouldBe = "openrdf:SailRepository"
+            val sesameTypeShouldBe = "owlim:MonitorRepository"
 
             val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
             if (neededRepo.length == 1) {
@@ -520,7 +520,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
         } catch {
             case e: Exception => {
-                println("checkRepository - exception", e)
+                // println("checkRepository - exception", e)
                 FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
             }
         }

@@ -43,9 +43,9 @@ sealed trait OntologyResponderRequestV1 extends KnoraRequestV1
   * Requests that all ontologies in the repository are loaded. This message must be sent only once, when the application
   * starts, before it accepts any API requests. A successful response will be a [[LoadOntologiesResponse]].
   *
-  * @param userProfile the profile of the user making the request.
+  * @param userADM the profile of the user making the request.
   */
-case class LoadOntologiesRequest(userProfile: UserADM) extends OntologyResponderRequestV1
+case class LoadOntologiesRequest(userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Indicates that all ontologies were loaded.
@@ -166,11 +166,11 @@ case class CheckSubClassResponseV1(isSubClass: Boolean)
   * Requests information about named graphs containing ontologies. This corresponds to the concept of vocabularies in
   * the SALSAH prototype.
   *
-  * @param projectIris    the IRIs of the projects for which named graphs should be returned. If this set is empty, information
-  *                       about all ontology named graphs is returned.
-  * @param userProfile the profile of the user making the request.
+  * @param projectIris the IRIs of the projects for which named graphs should be returned. If this set is empty, information
+  *                    about all ontology named graphs is returned.
+  * @param userADM     the profile of the user making the request.
   */
-case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
+case class NamedGraphsGetRequestV1(projectIris: Set[IRI] = Set.empty[IRI], userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[NamedGraphsGetRequestV1]].
@@ -184,10 +184,10 @@ case class NamedGraphsResponseV1(vocabularies: Seq[NamedGraphV1]) extends KnoraR
 /**
   * Requests all resource classes that are defined in the given named graph.
   *
-  * @param namedGraph  the named graph for which the resource classes shall be returned.
-  * @param userProfile the profile of the user making the request.
+  * @param namedGraph the named graph for which the resource classes shall be returned.
+  * @param userADM    the profile of the user making the request.
   */
-case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
+case class ResourceTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[ResourceTypesForNamedGraphGetRequestV1]].
@@ -203,10 +203,10 @@ case class ResourceTypesForNamedGraphResponseV1(resourcetypes: Seq[ResourceTypeV
   * Requests all property types that are defined in the given named graph.
   * If the named graph is not set, the property types of all named graphs are requested.
   *
-  * @param namedGraph  the named graph to query for or None if all the named graphs should be queried.
-  * @param userProfile the profile of the user making the request.
+  * @param namedGraph the named graph to query for or None if all the named graphs should be queried.
+  * @param userADM    the profile of the user making the request.
   */
-case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userProfile: UserADM) extends OntologyResponderRequestV1
+case class PropertyTypesForNamedGraphGetRequestV1(namedGraph: Option[IRI], userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Represents the Knora API V1 response to a [[PropertyTypesForNamedGraphGetRequestV1]].
@@ -241,9 +241,9 @@ case class PropertyTypesForResourceTypeResponseV1(properties: Vector[PropertyDef
   * a [[SubClassesGetResponseV1]].
   *
   * @param resourceClassIri the IRI of the Knora resource class.
-  * @param userProfile      the profile of the user making the request.
+  * @param userADM          the profile of the user making the request.
   */
-case class SubClassesGetRequestV1(resourceClassIri: IRI, userProfile: UserADM) extends OntologyResponderRequestV1
+case class SubClassesGetRequestV1(resourceClassIri: IRI, userADM: UserADM) extends OntologyResponderRequestV1
 
 /**
   * Provides information about the subclasses of a Knora resource class.
@@ -359,7 +359,7 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
 
     /**
       * Returns a [[Map]] of properties to [[Cardinality.Value]] objects representing the resource class's
-      *                            cardinalities on those properties.
+      * cardinalities on those properties.
       */
     def knoraResourceCardinalities: Map[IRI, KnoraCardinalityInfo] = {
         classInfoV2.allResourcePropertyCardinalities.map {

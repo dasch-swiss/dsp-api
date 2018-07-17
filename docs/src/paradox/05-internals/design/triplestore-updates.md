@@ -55,7 +55,7 @@ We can assume that each SPARQL update operation will run in its own
 database transaction with an isolation level of 'read committed'. This
 is what GraphDB does when it receives a SPARQL update over HTTP (see
 [GraphDB SE
-Transactions](http://graphdb.ontotext.com/documentation/free/storage.html#transaction-control)).
+Transactions](http://graphdb.ontotext.com/documentation/standard/storage.html#transaction-control)).
 We cannot assume that it is possible to run more than one SPARQL update
 in a single database transaction. (The [SPARQL 1.1
 Protocol](http://www.w3.org/TR/sparql11-protocol/) does not provide a
@@ -256,9 +256,10 @@ is OK to add the data, and that both updates would then succeed,
 inserting redundant data and possibly violating ontology constraints.
 Therefore, Knora uses short-lived, application-level write locks on
 resources, to ensure that only one request at a time can update a given
-resource. Before each update, the application acquires a resource lock.
+resource. Before each update, the application acquires a lock on a resource.
+To prevent deadlocks, Knora locks only one resource per API operation.
 It then does the pre-update checks and the update, then releases the
-lock. The lock implementation (in `ResourceLocker`) requires each API
+lock. The lock implementation (in `IriLocker`) requires each API
 request message to include a random UUID, which is generated in the
 @ref:[API Routing](design-overview.md#api-routing) package. Using
 application-level locks allows us to do pre-update checks in their own

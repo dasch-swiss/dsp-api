@@ -59,8 +59,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
             get {
                 /* returns all projects */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
-                    val requestMessage = ProjectsGetRequestADM(requestingUser = requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectsGetRequestADM(requestingUser = requestingUser)
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
                         requestContext,
@@ -73,8 +74,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* create a new project */
                 entity(as[CreateProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
-                        val requestMessage = ProjectCreateRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ProjectCreateRequestADM(
                             createRequest = apiRequest,
                             requestingUser = requestingUser,
                             apiRequestID = UUID.randomUUID()
@@ -94,9 +96,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* returns all unique keywords for all projects as a list */
                 requestContext =>
 
-                    val requestingUser = getUserADM(requestContext)
-
-                    val requestMessage = ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectsKeywordsGetRequestADM(requestingUser = requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -110,12 +112,11 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
             get {
                 /* returns all keywords for a single project */
                 requestContext =>
-
-                    val requestingUser = getUserADM(requestContext)
-
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                    val requestMessage = ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectKeywordsGetRequestADM(projectIri = checkedProjectIri, requestingUser = requestingUser)
 
                     RouteUtilADM.runJsonRoute(
                         requestMessage,
@@ -130,10 +131,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* returns a single project identified either through iri, shortname, or shortcode */
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
-
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = if (identifier == "shortname") { // identify project by shortname.
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield if (identifier == "shortname") { // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
                         } else if (identifier == "shortcode") {
@@ -157,12 +157,13 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* update a project identified by iri */
                 entity(as[ChangeProjectApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestingUser = getUserADM(requestContext)
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
                         /* the api request is already checked at time of creation. see case class. */
 
-                        val requestMessage = ProjectChangeRequestADM(
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ProjectChangeRequestADM(
                             projectIri = checkedProjectIri,
                             changeProjectRequest = apiRequest,
                             requestingUser = requestingUser,
@@ -181,10 +182,11 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
             delete {
                 /* update project status to false */
                 requestContext =>
-                    val requestingUser = getUserADM(requestContext)
                     val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
 
-                    val requestMessage = ProjectChangeRequestADM(
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ProjectChangeRequestADM(
                         projectIri = checkedProjectIri,
                         changeProjectRequest = ChangeProjectApiRequestADM(status = Some(false)),
                         requestingUser = requestingUser,
@@ -204,10 +206,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* returns all members part of a project identified through iri or shortname */
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
-
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = if (identifier != "iri") {
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield if (identifier != "iri") {
                             // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
@@ -230,10 +231,9 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
                 /* returns all admin members part of a project identified through iri or shortname */
                 parameters("identifier" ? "iri") { identifier: String =>
                     requestContext =>
-
-                        val requestingUser = getUserADM(requestContext)
-
-                        val requestMessage = if (identifier != "iri") {
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield if (identifier != "iri") {
                             // identify project by shortname.
                             val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                             ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)

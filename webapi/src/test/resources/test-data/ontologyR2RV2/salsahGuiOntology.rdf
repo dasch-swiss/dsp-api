@@ -58,8 +58,8 @@
 	<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
 </rdf:Description>
 <rdf:Description rdf:about="http://api.knora.org/ontology/salsah-gui/v2#SimpleText">
-	<salsah-gui:guiAttributeDefinition rdf:datatype="http://www.w3.org/2001/XMLSchema#string">size:integer</salsah-gui:guiAttributeDefinition>
 	<salsah-gui:guiAttributeDefinition rdf:datatype="http://www.w3.org/2001/XMLSchema#string">maxlength:integer</salsah-gui:guiAttributeDefinition>
+	<salsah-gui:guiAttributeDefinition rdf:datatype="http://www.w3.org/2001/XMLSchema#string">size:integer</salsah-gui:guiAttributeDefinition>
 	<rdf:type rdf:resource="http://api.knora.org/ontology/salsah-gui/v2#Guielement"/>
 	<rdf:type rdf:resource="http://www.w3.org/2002/07/owl#NamedIndividual"/>
 </rdf:Description>

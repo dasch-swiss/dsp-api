@@ -28,7 +28,7 @@
 
 <http://www.knora.org/ontology/knora-base> rdf:type owl:Ontology ;
 
-    rdfs:label "The Knora base ontology" ;
+    rdfs:label "The Knora base ontology"@en ;
 
     :attachedToProject :SystemProject .
 
@@ -565,11 +565,23 @@
                   :objectDatatypeConstraint xsd:integer .
 
 
+
+### http://www.knora.org/ontology/knora-base#standoffTagHasStartAncestor
+
+:standoffTagHasStartAncestor rdf:type owl:ObjectProperty, owl:TransitiveProperty ;
+
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                  :subjectClassConstraint :StandoffTag ;
+
+                  :objectClassConstraint :StandoffTag .
+
+
 ### http://www.knora.org/ontology/knora-base#standoffTagHasStartParent
 
 :standoffTagHasStartParent rdf:type owl:ObjectProperty ;
 
-                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted, :standoffTagHasStartAncestor ;
 
                   :subjectClassConstraint :StandoffTag ;
 

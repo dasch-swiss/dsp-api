@@ -119,8 +119,7 @@ character:
 With each character added to the last term, the selection gets more
 specific. The first term should at least contain four characters. To
 make this kind of "search as you type" possible, a wildcard character is
-automatically added to the last search
-    term.
+automatically added to the last search term.
 
     HTTP GET to http://host/v2/searchbylabel/searchValue[limitToResourceClass=resourceClassIRI]
     [limitToProject=projectIRI][offset=Integer]
@@ -158,16 +157,16 @@ HTTP GET to http://host/v2/search/searchValue[limitToResourceClass=resourceClass
 [limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
 
-Please note that the first parameter has to be preceded by a question
+The first parameter has to be preceded by a question
 mark `?`, any following parameter by an ampersand `&`.
 
 A search value must have a minimal length of three characters (default value) as defined in `app/v2` in `application.conf`.
 
-A search term may contain wildcards. A `?` represents a single character. It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. For example, the term `Uniform` can be search for like this: 
+A search term may contain wildcards. A `?` represents a single character. It has to be URL-encoded as `%3F` since it has a special meaning in the URL syntax. For example, the term `Uniform` can be search for like this:
 
 ```
 HTTP GET to http://host/v2/search/Unif%3Frm
-``` 
+```
 
 A `*` represents zero, one or multiple characters. For example, the term `Uniform` can be searched for like this:
 
@@ -189,6 +188,9 @@ do a count query:
 ```
 HTTP GET to http://host/v2/search/count/searchValue[limitToResourceClass=resourceClassIRI][limitToStandoffClass=standoffClassIri][limitToProject=projectIRI][offset=Integer]
 ```
+
+The first parameter has to be preceded by a question
+mark `?`, any following parameter by an ampersand `&`.
 
 The response to a count query request is an object with one predicate,
 `http://schema.org/numberOfItems`, with an integer value.

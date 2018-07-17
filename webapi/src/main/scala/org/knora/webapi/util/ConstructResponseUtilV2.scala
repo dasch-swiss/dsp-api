@@ -685,7 +685,7 @@ object ConstructResponseUtilV2 {
         // get the resource's values
         val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                val readValues = valObjs.sortBy { // order values by knora-base:valueHasOrder
+                val readValues = valObjs.sortBy(_.valueObjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
                     (valObj: ValueRdfData) =>
 
                         valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
