@@ -1,5 +1,5 @@
 <mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../src/main/resources/mappingXMLToStandoff.xsd">
-    <defaultXSLTransformation>http://rdfh.ch/0801/U-xVNhuLRpGd4raiDZNrIg</defaultXSLTransformation>
+    <defaultXSLTransformation>toBeDefined</defaultXSLTransformation>
     <mappingElement>
         <tag>
             <name>text</name>
@@ -236,7 +236,19 @@
             <separatesWords>true</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffTableTag</classIri>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffTableTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>border</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableTagHasBorder</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>cellpadding</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableTagHasCellPadding</propertyIri>
+                </attribute>
+            </attributes>
         </standoffClass>
     </mappingElement>
 
@@ -272,7 +284,34 @@
             <separatesWords>true</separatesWords>
         </tag>
         <standoffClass>
-            <classIri>http://www.knora.org/ontology/standoff#StandoffTableCellTag</classIri>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffTableCellTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>width</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasWidth</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>align</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasAlignment</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>valign</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>rowspan</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasRowSpan</propertyIri>
+                </attribute>
+                <attribute>
+                    <attributeName>colspan</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasColumnSpan</propertyIri>
+                </attribute>
+            </attributes>
         </standoffClass>
     </mappingElement>
 
@@ -285,6 +324,18 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffBrTag</classIri>
+        </standoffClass>
+    </mappingElement>
+
+    <mappingElement>
+        <tag>
+            <name>br2</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>true</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffBrTag</classIri>
         </standoffClass>
     </mappingElement>
 

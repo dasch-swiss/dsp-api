@@ -261,7 +261,7 @@
 
     <!--
 
-        http://www.knora.org/ontology/standoff#StandoffTableBrTag
+        http://www.knora.org/ontology/standoff#StandoffTableCellTag
 
         http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-cell.html
     -->
@@ -273,11 +273,12 @@
 
     <!--
 
-        http://www.knora.org/ontology/standoff#StandoffTableCellTag
+        http://www.knora.org/ontology/standoff#StandoffBrTag
+        http://www.knora.org/ontology/0801/beol#StandoffBrTag
 
         http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-lb.html
         -->
-    <xsl:template match="br">
+    <xsl:template match="br|br2">
         <lb>
             <xsl:apply-templates/>
         </lb>

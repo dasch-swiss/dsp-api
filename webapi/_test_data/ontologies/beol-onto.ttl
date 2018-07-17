@@ -1981,16 +1981,6 @@
 
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
 
-
-###  http://www.knora.org/ontology/0801/beol#StandoffNoWikiTag
-
-:StandoffNoWikiTag rdf:type owl:Class ;
-
-                 rdfs:subClassOf knora-base:StandoffTag ;
-
-                 rdfs:comment "escapes a special character in the MediaWiki syntax"@en .
-
-
 ###  http://www.knora.org/ontology/0801/beol#StandoffHrTag
 
 :StandoffHrTag rdf:type owl:Class ;
@@ -1999,26 +1989,13 @@
 
                  rdfs:comment "represents a horizontal line"@en .
 
-
-###  http://www.knora.org/ontology/0801/beol#StandoffNbspTag
-
-:StandoffNbspTag rdf:type owl:Class ;
-
-                 rdfs:subClassOf knora-base:StandoffTag ;
-
-                 rdfs:comment "represents a non breaking space"@en .
-
-
 ###  http://www.knora.org/ontology/0801/beol#StandoffBrTag
 
 :StandoffBrTag rdf:type owl:Class ;
 
-              rdfs:subClassOf knora-base:StandoffTag ;
+              rdfs:subClassOf standoff:StandoffBrTag ;
 
-              rdfs:comment "represents a break"@en .
-
-              ###  http://www.knora.org/ontology/0801/beol#StandoffBrTag
-
+              rdfs:comment "represents a linebreak"@en .
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffPbTag
 
@@ -2041,7 +2018,7 @@
 
              rdfs:subClassOf knora-base:StandoffTag ;
 
-             rdfs:comment "represents a footnote (<ref>) tag in MediaWiki"@en .
+             rdfs:comment "represents a footnote"@en .
 
 
 ###  http://www.knora.org/ontology/0801/beol#standoffTableTagHasBorder
