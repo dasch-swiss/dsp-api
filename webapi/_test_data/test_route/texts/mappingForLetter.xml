@@ -126,18 +126,6 @@
 
     <mappingElement>
         <tag>
-            <name>nowiki</name>
-            <class>noClass</class>
-            <namespace>noNamespace</namespace>
-            <separatesWords>false</separatesWords>
-        </tag>
-        <standoffClass>
-            <classIri>http://www.knora.org/ontology/0801/beol#StandoffNoWikiTag</classIri>
-        </standoffClass>
-    </mappingElement>
-
-    <mappingElement>
-        <tag>
             <name>a</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
