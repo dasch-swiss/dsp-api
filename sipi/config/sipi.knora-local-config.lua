@@ -116,7 +116,7 @@ sipi = {
     --
     -- Path to Knora Application
     --
-    knora_path = 'webapihost',
+    knora_path = 'localhost',
 
     --
     -- Port of Knora Application
