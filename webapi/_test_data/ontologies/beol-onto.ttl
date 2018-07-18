@@ -1409,10 +1409,10 @@
 
           rdfs:subClassOf knora-base:StillImageRepresentation ,
                           [
-                               rdf:type owl:Restriction ;
-                               owl:onProperty :hasCaption ;
-                               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                               salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasCaption ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                           ] ,
                           [
                              rdf:type owl:Restriction ;
@@ -1451,9 +1451,9 @@
                      "Fac-similé"@fr ,
                      "Facsimile"@en ;
 
-          rdfs:comment """Eine Seite ist ein Teil eines Konvoluts"""@de ,
-                       """Une page est une partie d'un convoluté"""@fr ,
-                       """A facsimile is a representation of a """@en .
+          rdfs:comment """Ein Faksimile ist eine originalgetreue Nachbildung oder Reproduktion eines Manuskriptes"""@de ,
+                       """Un fac-similé est une copie ou reproduction d'un vieux livre ou manuscrit"""@fr ,
+                       """A facsimile is a copy or reproduction of a letter or manuscript"""@en .
 
 
 ### ###########################################
@@ -2206,6 +2206,7 @@
 
               rdfs:comment "Represents font for special character"@en .
 
+
 ###  http://www.knora.org/ontology/0801/beol#StandoffFigTag
 :StandoffFigTag rdf:type owl:Class ;
 
@@ -2214,9 +2215,9 @@
             rdfs:comment "represents a html figure tag"@en .
 
 
-###  http://www.knora.org/ontology/0801/beol#StandoffCaptionTag
-:StandoffCaptionTag rdf:type owl:Class ;
+###  http://www.knora.org/ontology/0801/beol#StandoffFigCaptionTag
+:StandoffFigCaptionTag rdf:type owl:Class ;
 
             rdfs:subClassOf knora-base:StandoffTag ;
 
-            rdfs:comment "represents a caption tag"@en .
+            rdfs:comment "represents a html figcaption tag"@en .
