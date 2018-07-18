@@ -2,6 +2,7 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import org.knora.webapi.InternalSchema
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -22,7 +23,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Dimension: 8\u00B0"
@@ -40,7 +41,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Schramm Bd. XXI, S. 27"
@@ -57,7 +58,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "GW 4168"
@@ -74,7 +75,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "ISTC ib00512000"
@@ -92,7 +93,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Johann Amerbach"
@@ -109,7 +110,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Berthold, der Bruder"
@@ -126,7 +127,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "http://www.ub.uni-koeln.de/cdm/compoundobject/collection/inkunabeln/id/1878/rec/1"
@@ -143,7 +144,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Universit\u00E4ts- und Stadtbibliothek K\u00F6ln, Sign: AD+S167"
@@ -160,7 +161,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Basel"
@@ -178,7 +179,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 valueContent = DateValueContentV2(
                     valueHasEndJDN = 2266376,
                     valueHasStartJDN = 2266011,
-                    valueType = "http://www.knora.org/ontology/knora-base#DateValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasStartPrecision = KnoraPrecisionV1.YEAR,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
                     comment = None,
@@ -196,7 +197,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Zeitgl\u00F6cklein des Lebens und Leidens Christi"
@@ -240,7 +241,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Extent: 1 Bd.; Dimensions: f\u00B0"
@@ -258,7 +259,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Van der Haegen I: 9,14"
@@ -275,7 +276,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Goff M165"
@@ -292,7 +293,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "C 3833"
@@ -309,7 +310,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Klebs 651.2"
@@ -326,7 +327,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Schr 4799"
@@ -343,7 +344,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Schramm XXI p. 9 & 26"
@@ -360,7 +361,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "FairMur(G) 283"
@@ -377,7 +378,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "IBP 3556"
@@ -394,7 +395,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Borm 1751"
@@ -412,7 +413,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#publisher".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Bernhard Richel"
@@ -429,7 +430,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Jean Mandeville"
@@ -446,7 +447,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Katalogaufnahme anhand ISTC und v.d.Haegen"
@@ -463,7 +464,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320"
@@ -481,7 +482,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "deutsch von Otto von Diemeringen"
@@ -498,7 +499,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Rubr. mit Init. J zu Beginn"
@@ -515,7 +516,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Holzschnitte nicht koloriert"
@@ -532,7 +533,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Besitzervermerke: Kartause, H. Zscheckenb\u00FCrlin"
@@ -549,7 +550,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
@@ -567,7 +568,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Basel UB, Sign: Aleph D III 13:1"
@@ -584,7 +585,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
                 valueContent = TextValueContentV2(
                     standoffAndMapping = None,
-                    valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasLanguage = None,
                     comment = None,
                     valueHasString = "Basel"
@@ -602,7 +603,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 valueContent = DateValueContentV2(
                     valueHasEndJDN = 2262358,
                     valueHasStartJDN = 2261994,
-                    valueType = "http://www.knora.org/ontology/knora-base#DateValue".toSmartIri,
+                    ontologySchema = InternalSchema,
                     valueHasStartPrecision = KnoraPrecisionV1.YEAR,
                     valueHasCalendar = KnoraCalendarV1.JULIAN,
                     comment = None,
@@ -621,7 +622,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Reise ins Heilige Land"
@@ -638,7 +639,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Reysen und wanderschafften durch das Gelobte Land"
@@ -655,7 +656,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                 ReadValueV2(
                     valueContent = TextValueContentV2(
                         standoffAndMapping = None,
-                        valueType = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri,
+                        ontologySchema = InternalSchema,
                         valueHasLanguage = None,
                         comment = None,
                         valueHasString = "Itinerarius"

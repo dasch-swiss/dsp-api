@@ -336,7 +336,7 @@ class ValuesResponderV2 extends Responder {
             )
 
             propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
-            valueInTriplestore = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
+            valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
             _ = if (valueInTriplestore.valueContent != unverifiedValue.value) {
                 throw AssertionException(s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted")

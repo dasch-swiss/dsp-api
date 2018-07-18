@@ -24,7 +24,6 @@ import java.util.UUID
 
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
@@ -442,13 +441,18 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
   * @param valueHasCalendar       the calendar of the date.
   * @param comment                a comment on this `DateValueContentV2`, if any.
   */
-case class DateValueContentV2(valueType: SmartIri,
+case class DateValueContentV2(ontologySchema: OntologySchema,
                               valueHasStartJDN: Int,
                               valueHasEndJDN: Int,
                               valueHasStartPrecision: KnoraPrecisionV1.Value,
                               valueHasEndPrecision: KnoraPrecisionV1.Value,
                               valueHasCalendar: KnoraCalendarV1.Value,
                               comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.DateValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
+
     // We compute valueHasString instead of taking it from the triplestore, because the
     // string literal in the triplestore isn't in API v2 format.
     override lazy val valueHasString: String = {
@@ -471,11 +475,7 @@ case class DateValueContentV2(valueType: SmartIri,
         )
     }
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -625,7 +625,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
         val maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
 
         DateValueContentV2(
-            valueType = OntologyConstants.KnoraBase.DateValue.toSmartIri,
+            ontologySchema = ApiV2WithValueObjects,
             valueHasStartJDN = julianDateRange.dateval1,
             valueHasEndJDN = julianDateRange.dateval2,
             valueHasStartPrecision = startPrecision,
@@ -654,12 +654,17 @@ case class CreateStandoffTagV2InTriplestore(standoffNode: StandoffTagV2, standof
   * @param standoffAndMapping a [[StandoffAndMapping]], if any.
   * @param comment            a comment on this `TextValueContentV2`, if any.
   */
-case class TextValueContentV2(valueType: SmartIri,
+case class TextValueContentV2(ontologySchema: OntologySchema,
                               valueHasString: String,
                               valueHasLanguage: Option[String] = None,
                               standoffAndMapping: Option[StandoffAndMapping] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
     private val knoraIdUtil = new KnoraIdUtil
+
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.TextValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     /**
       * Returns the IRIs of any resources that are target of standoff link tags in this text value.
@@ -684,11 +689,7 @@ case class TextValueContentV2(valueType: SmartIri,
         }
     }
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -909,7 +910,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                 case (Some(valueAsString), None, None) =>
                     // Text without standoff.
                     TextValueContentV2(
-                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
+                        ontologySchema = ApiV2WithValueObjects,
                         valueHasString = valueAsString
                     )
 
@@ -931,7 +932,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     )
 
                     TextValueContentV2(
-                        valueType = OntologyConstants.KnoraBase.TextValue.toSmartIri,
+                        ontologySchema = ApiV2WithValueObjects,
                         valueHasString = stringFormatter.toSparqlEncodedString(textWithStandoffTags.text, throw BadRequestException("Text value contains invalid characters")),
                         valueHasLanguage = maybeValueHasLanguage,
                         standoffAndMapping = Some(standoffAndMapping),
@@ -962,17 +963,17 @@ case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, map
   * @param valueHasInteger the integer value.
   * @param comment         a comment on this `IntegerValueContentV2`, if any.
   */
-case class IntegerValueContentV2(valueType: SmartIri,
+case class IntegerValueContentV2(ontologySchema: OntologySchema,
                                  valueHasInteger: Int,
                                  comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.IntValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override lazy val valueHasString: String = valueHasInteger.toString
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1006,13 +1007,17 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
+        Future(fromJsonLDObjectSync(jsonLDObject))
+    }
+
+    private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): IntegerValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        for {
-            intValueAsInt: Int <- Future(jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value)
-            maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
-        } yield IntegerValueContentV2(
-            valueType = OntologyConstants.KnoraBase.IntValue.toSmartIri,
+        val intValueAsInt = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value
+        val maybeComment: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
+
+        IntegerValueContentV2(
+            ontologySchema = ApiV2WithValueObjects,
             valueHasInteger = intValueAsInt,
             comment = maybeComment
         )
@@ -1025,17 +1030,17 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
   * @param valueHasDecimal the decimal value.
   * @param comment         a comment on this `DecimalValueContentV2`, if any.
   */
-case class DecimalValueContentV2(valueType: SmartIri,
+case class DecimalValueContentV2(ontologySchema: OntologySchema,
                                  valueHasDecimal: BigDecimal,
                                  comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.DecimalValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override lazy val valueHasString: String = valueHasDecimal.toString
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1083,17 +1088,17 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
   * @param valueHasBoolean the Boolean value.
   * @param comment         a comment on this `BooleanValueContentV2`, if any.
   */
-case class BooleanValueContentV2(valueType: SmartIri,
+case class BooleanValueContentV2(ontologySchema: OntologySchema,
                                  valueHasBoolean: Boolean,
                                  comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.BooleanValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override lazy val valueHasString: String = valueHasBoolean.toString
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1140,17 +1145,17 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
   * @param valueHasGeometry a stringified JSON representing a 2D-geometrical shape.
   * @param comment          a comment on this `GeomValueContentV2`, if any.
   */
-case class GeomValueContentV2(valueType: SmartIri,
+case class GeomValueContentV2(ontologySchema: OntologySchema,
                               valueHasGeometry: String,
                               comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.GeomValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = valueHasGeometry
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1200,18 +1205,18 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
   * @param valueHasIntervalEnd   the end of the time interval.
   * @param comment               a comment on this `IntervalValueContentV2`, if any.
   */
-case class IntervalValueContentV2(valueType: SmartIri,
+case class IntervalValueContentV2(ontologySchema: OntologySchema,
                                   valueHasIntervalStart: BigDecimal,
                                   valueHasIntervalEnd: BigDecimal,
                                   comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.IntervalValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override lazy val valueHasString: String = s"$valueHasIntervalStart - $valueHasIntervalEnd"
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1266,20 +1271,18 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
   * @param listNodeLabel    the label of the hierarchical list node pointed to.
   * @param comment          a comment on this `HierarchicalListValueContentV2`, if any.
   */
-case class HierarchicalListValueContentV2(valueType: SmartIri,
+case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
                                           valueHasListNode: IRI,
                                           listNodeLabel: String,
-                                          comment: Option[String],
-                                          ontologySchema: OntologySchema) extends ValueContentV2 {
+                                          comment: Option[String]) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.ListValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = listNodeLabel
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema),
-            ontologySchema = targetSchema
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1332,17 +1335,17 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
   * @param valueHasColor a hexadecimal string containing the RGB color value
   * @param comment       a comment on this `ColorValueContentV2`, if any.
   */
-case class ColorValueContentV2(valueType: SmartIri,
+case class ColorValueContentV2(ontologySchema: OntologySchema,
                                valueHasColor: String,
                                comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.ColorValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = valueHasColor
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1390,17 +1393,17 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
   * @param valueHasUri the URI value.
   * @param comment     a comment on this `UriValueContentV2`, if any.
   */
-case class UriValueContentV2(valueType: SmartIri,
+case class UriValueContentV2(ontologySchema: OntologySchema,
                              valueHasUri: String,
                              comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.UriValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = valueHasUri
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1449,17 +1452,17 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
   * @param valueHasGeonameCode the geoname code.
   * @param comment             a comment on this `GeonameValueContentV2`, if any.
   */
-case class GeonameValueContentV2(valueType: SmartIri,
+case class GeonameValueContentV2(ontologySchema: OntologySchema,
                                  valueHasGeonameCode: String,
                                  comment: Option[String] = None) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.GeonameValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = valueHasGeonameCode
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
@@ -1531,7 +1534,7 @@ sealed trait FileValueContentV2 {
   * @param isPreview        indicates if the file value represents a preview image (thumbnail).
   * @param comment          a comment on this `StillImageFileValueContentV2`, if any.
   */
-case class StillImageFileValueContentV2(valueType: SmartIri,
+case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
                                         internalMimeType: String,
                                         internalFilename: String,
                                         originalFilename: String,
@@ -1541,14 +1544,14 @@ case class StillImageFileValueContentV2(valueType: SmartIri,
                                         qualityLevel: Int,
                                         isPreview: Boolean,
                                         comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.StillImageFileValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = internalFilename
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         val imagePath: String = s"${settings.externalSipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
@@ -1613,20 +1616,20 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
   * @param originalMimeType the original name of the text file before importing it.
   * @param comment          a comment on this `TextFileValueContentV2`, if any.
   */
-case class TextFileValueContentV2(valueType: SmartIri,
+case class TextFileValueContentV2(ontologySchema: OntologySchema,
                                   internalMimeType: String,
                                   internalFilename: String,
                                   originalFilename: String,
                                   originalMimeType: Option[String],
                                   comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.TextFileValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = internalFilename
 
-    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
-        copy(
-            valueType = valueType.toOntologySchema(targetSchema)
-        )
-    }
+    override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         val imagePath: String = s"${settings.externalSipiFileServerGetUrl}/$internalFilename"
@@ -1685,13 +1688,17 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
   * @param incomingLink   indicates if it is an incoming link.
   * @param nestedResource information about the nested resource, if given.
   */
-case class LinkValueContentV2(valueType: SmartIri,
+case class LinkValueContentV2(ontologySchema: OntologySchema,
                               subject: IRI,
                               predicate: SmartIri,
                               target: IRI,
                               comment: Option[String],
                               incomingLink: Boolean,
                               nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
+    override def valueType: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        OntologyConstants.KnoraBase.LinkValue.toSmartIri.toOntologySchema(ontologySchema)
+    }
 
     override def valueHasString: String = target
 
@@ -1707,7 +1714,7 @@ case class LinkValueContentV2(valueType: SmartIri,
         }
 
         copy(
-            valueType = valueType.toOntologySchema(targetSchema),
+            ontologySchema = targetSchema,
             nestedResource = convertedNestedResource
         )
     }

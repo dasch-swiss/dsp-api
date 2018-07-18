@@ -54,7 +54,7 @@
         @* Construct the value. *@
         <@newValueIri> rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
-            knora-base:valueHasString """@value.toString""" .
+            knora-base:valueHasString """@value.valueHasString""" .
 
         @value match {
 

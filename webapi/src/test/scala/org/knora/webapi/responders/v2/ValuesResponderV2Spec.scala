@@ -22,7 +22,6 @@ package org.knora.webapi.responders.v2
 import java.util.UUID
 
 import akka.actor.Props
-import akka.http.scaladsl.util.FastFuture
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
@@ -71,7 +70,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
-    private val currentSeqnumValueIri = new MutableTestIri
+    private val seqnumValueIri = new MutableTestIri
+    private val commentValueIri = new MutableTestIri
 
     private def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)
@@ -133,7 +133,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "The values responder" should {
-        "add a new Integer value (seqnum of a page)" in {
+        "add a new integer value (seqnum of a page)" in {
             // Add the value.
 
             val resourceIri = "http://rdfh.ch/8a0b1e75"
@@ -145,7 +145,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceIri = resourceIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
-                        valueType = OntologyConstants.KnoraApiV2WithValueObjects.IntValue.toSmartIri,
+                        ontologySchema = ApiV2WithValueObjects,
                         valueHasInteger = seqnum
                     )
                 ),
@@ -154,7 +154,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => currentSeqnumValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => seqnumValueIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -162,13 +162,49 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
-                expectedValueIri = currentSeqnumValueIri.get,
+                expectedValueIri = seqnumValueIri.get,
                 requestingUser = incunabulaUser
             )
 
             valueFromTriplestore.valueContent match {
                 case intValue: IntegerValueContentV2 => intValue.valueHasInteger should ===(seqnum)
                 case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "add a new text value without standoff" in {
+            val valueHasString = "Comment 1a"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                propertyIri = propertyIri,
+                expectedValueIri = commentValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case intValue: TextValueContentV2 => intValue.valueHasString should ===(valueHasString)
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
 
