@@ -33,6 +33,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.directives.FileInfo
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
@@ -408,20 +409,26 @@ object ResourcesRouteV1 extends Authenticator {
                     referencedOntologies: Set[IRI] = ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
 
                     // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
-                    futuresOfNamedGraphInfosForReferencedOntologies: Set[Future[Map[IRI, NamedGraphEntityInfoV1]]] = referencedOntologies.map {
-                        ontologyIri =>
-                            getNamedGraphInfosRec(
-                                initialOntologyIri = ontologyIri,
-                                intermediateResults = intermediateResults + (initialOntologyIri -> initialNamedGraphInfo),
-                                userProfile = userProfile
-                            )
+                    lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(Future(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))) {
+                        case (accFuture, ontologyIri) =>
+                            for {
+                                acc: Map[IRI, NamedGraphEntityInfoV1] <- accFuture
+
+                                // Has a previous recursion already dealt with this ontology?
+                                nextResults: Map[IRI, NamedGraphEntityInfoV1] <- if (acc.contains(ontologyIri)) {
+                                    // Yes, so there's no need to get it again.
+                                    FastFuture.successful(acc)
+                                } else {
+                                    // No. Recursively get it and the ontologies it depends on.
+                                    getNamedGraphInfosRec(
+                                        initialOntologyIri = ontologyIri,
+                                        intermediateResults = acc,
+                                        userProfile = userProfile
+                                    )
+                                }
+                            } yield acc ++ nextResults
                     }
-
-                    namedGraphInfosFromReferencedOntologies: Set[Map[IRI, NamedGraphEntityInfoV1]] <- Future.sequence(futuresOfNamedGraphInfosForReferencedOntologies)
-
-                    // Return the previous intermediate results, plus the information about the initial ontology
-                    // and the other referenced ontologies.
-                } yield namedGraphInfosFromReferencedOntologies.flatten.toMap ++ intermediateResults + (initialOntologyIri -> initialNamedGraphInfo)
+                } yield lastResults
             }
 
             for {
@@ -653,112 +660,112 @@ object ResourcesRouteV1 extends Authenticator {
           */
         def importXmlToCreateResourceRequests(rootElement: Elem): Seq[CreateResourceFromXmlImportRequestV1] = {
             rootElement.head.child
-                    .filter(node => node.label != "#PCDATA")
-                    .map(resourceNode => {
-                        // Get the client's unique ID for the resource.
-                        val clientIDForResource: String = (resourceNode \ "@id").toString
+                .filter(node => node.label != "#PCDATA")
+                .map(resourceNode => {
+                    // Get the client's unique ID for the resource.
+                    val clientIDForResource: String = (resourceNode \ "@id").toString
 
-                        // Convert the XML element's label and namespace to an internal resource class IRI.
+                    // Convert the XML element's label and namespace to an internal resource class IRI.
 
-                        val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
+                    val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
 
-                        val restype_id = stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
-                            namespace = elementNamespace,
-                            elementLabel = resourceNode.label,
-                            errorFun = throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
-                        )
+                    val restype_id = stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
+                        namespace = elementNamespace,
+                        elementLabel = resourceNode.label,
+                        errorFun = throw BadRequestException(s"Invalid XML namespace: $elementNamespace")
+                    )
 
-                        // Get the child elements of the resource element.
-                        val childElements: Seq[Node] = resourceNode.child.filterNot(_.label == "#PCDATA")
+                    // Get the child elements of the resource element.
+                    val childElements: Seq[Node] = resourceNode.child.filterNot(_.label == "#PCDATA")
 
-                        // The label must be the first child element of the resource element.
-                        val resourceLabel: String = childElements.headOption match {
-                            case Some(firstChildElem) => firstChildElem.text
-                            case None => throw BadRequestException(s"Resource '$clientIDForResource' contains no ${OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel}:label element")
-                        }
+                    // The label must be the first child element of the resource element.
+                    val resourceLabel: String = childElements.headOption match {
+                        case Some(firstChildElem) => firstChildElem.text
+                        case None => throw BadRequestException(s"Resource '$clientIDForResource' contains no ${OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel}:label element")
+                    }
 
-                        val childElementsAfterLabel = childElements.tail
+                    val childElementsAfterLabel = childElements.tail
 
-                        // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
-                        // If provided, it must be the second child element of the resource element.
-                        val file: Option[ReadFileV1] = childElementsAfterLabel.headOption match {
-                            case Some(secondChildElem) =>
-                                if (secondChildElem.label == "file") {
-                                    val path = Paths.get(secondChildElem.attribute("path").get.text)
+                    // Get the resource's file metadata, if any. This represents a file that has already been stored by Sipi.
+                    // If provided, it must be the second child element of the resource element.
+                    val file: Option[ReadFileV1] = childElementsAfterLabel.headOption match {
+                        case Some(secondChildElem) =>
+                            if (secondChildElem.label == "file") {
+                                val path = Paths.get(secondChildElem.attribute("path").get.text)
 
-                                    if (!path.isAbsolute) {
-                                        throw BadRequestException(s"File path $path in resource '$clientIDForResource' is not absolute")
-                                    }
-
-                                    Some(ReadFileV1(
-                                        file = path.toFile,
-                                        mimeType = secondChildElem.attribute("mimetype").get.text
-                                    ))
-                                } else {
-                                    None
+                                if (!path.isAbsolute) {
+                                    throw BadRequestException(s"File path $path in resource '$clientIDForResource' is not absolute")
                                 }
 
-                            case None => None
-                        }
+                                Some(ReadFileV1(
+                                    file = path.toFile,
+                                    mimeType = secondChildElem.attribute("mimetype").get.text
+                                ))
+                            } else {
+                                None
+                            }
 
-                        // Any remaining child elements of the resource element represent property values.
-                        val propertyElements = if (file.isDefined) {
-                            childElementsAfterLabel.tail
-                        } else {
-                            childElementsAfterLabel
-                        }
+                        case None => None
+                    }
 
-                        // Traverse the property value elements. This produces a sequence in which the same property IRI
-                        // can occur multiple times, once for each value.
-                        val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = propertyElements.map {
-                            propertyNode =>
-                                // Is this a property from another ontology (in the form prefixLabel__localName)?
-                                val propertyIri = stringFormatter.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
-                                    case Some(iri) =>
-                                        // Yes. Use the corresponding entity IRI for it.
-                                        iri
+                    // Any remaining child elements of the resource element represent property values.
+                    val propertyElements = if (file.isDefined) {
+                        childElementsAfterLabel.tail
+                    } else {
+                        childElementsAfterLabel
+                    }
 
-                                    case None =>
-                                        // No. Convert the XML element's label and namespace to an internal property IRI.
+                    // Traverse the property value elements. This produces a sequence in which the same property IRI
+                    // can occur multiple times, once for each value.
+                    val propertiesWithValues: Seq[(IRI, CreateResourceValueV1)] = propertyElements.map {
+                        propertyNode =>
+                            // Is this a property from another ontology (in the form prefixLabel__localName)?
+                            val propertyIri = stringFormatter.toPropertyIriFromOtherOntologyInXmlImport(propertyNode.label) match {
+                                case Some(iri) =>
+                                    // Yes. Use the corresponding entity IRI for it.
+                                    iri
 
-                                        val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
+                                case None =>
+                                    // No. Convert the XML element's label and namespace to an internal property IRI.
 
-                                        stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
-                                            namespace = propertyNodeNamespace,
-                                            elementLabel = propertyNode.label,
-                                            errorFun = throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
-                                }
+                                    val propertyNodeNamespace = propertyNode.getNamespace(propertyNode.prefix)
 
-                                // If the property element has one child element with a knoraType attribute, it's a link
-                                // property, otherwise it's an ordinary value property.
+                                    stringFormatter.xmlImportElementNameToInternalOntologyIriV1(
+                                        namespace = propertyNodeNamespace,
+                                        elementLabel = propertyNode.label,
+                                        errorFun = throw BadRequestException(s"Invalid XML namespace: $propertyNodeNamespace"))
+                            }
 
-                                val valueNodes: Seq[Node] = propertyNode.child.filterNot(_.label == "#PCDATA")
+                            // If the property element has one child element with a knoraType attribute, it's a link
+                            // property, otherwise it's an ordinary value property.
 
-                                if (valueNodes.size == 1 && valueNodes.head.attribute("knoraType").isDefined) {
-                                    propertyIri -> knoraDataTypeXml(valueNodes.head)
-                                } else {
-                                    propertyIri -> knoraDataTypeXml(propertyNode)
-                                }
-                        }
+                            val valueNodes: Seq[Node] = propertyNode.child.filterNot(_.label == "#PCDATA")
 
-                        // Group the values by property IRI.
-                        val groupedPropertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = propertiesWithValues.groupBy {
-                            case (propertyIri: IRI, _) => propertyIri
-                        }.map {
-                            case (propertyIri: IRI, resultsForProperty: Seq[(IRI, CreateResourceValueV1)]) =>
-                                propertyIri -> resultsForProperty.map {
-                                    case (_, propertyValue: CreateResourceValueV1) => propertyValue
-                                }
-                        }
+                            if (valueNodes.size == 1 && valueNodes.head.attribute("knoraType").isDefined) {
+                                propertyIri -> knoraDataTypeXml(valueNodes.head)
+                            } else {
+                                propertyIri -> knoraDataTypeXml(propertyNode)
+                            }
+                    }
 
-                        CreateResourceFromXmlImportRequestV1(
-                            restype_id = restype_id,
-                            client_id = clientIDForResource,
-                            label = resourceLabel,
-                            properties = groupedPropertiesWithValues,
-                            file = file
-                        )
-                    })
+                    // Group the values by property IRI.
+                    val groupedPropertiesWithValues: Map[IRI, Seq[CreateResourceValueV1]] = propertiesWithValues.groupBy {
+                        case (propertyIri: IRI, _) => propertyIri
+                    }.map {
+                        case (propertyIri: IRI, resultsForProperty: Seq[(IRI, CreateResourceValueV1)]) =>
+                            propertyIri -> resultsForProperty.map {
+                                case (_, propertyValue: CreateResourceValueV1) => propertyValue
+                            }
+                    }
+
+                    CreateResourceFromXmlImportRequestV1(
+                        restype_id = restype_id,
+                        client_id = clientIDForResource,
+                        label = resourceLabel,
+                        properties = groupedPropertiesWithValues,
+                        file = file
+                    )
+                })
         }
 
         /**
