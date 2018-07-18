@@ -409,7 +409,7 @@ object ResourcesRouteV1 extends Authenticator {
                     referencedOntologies: Set[IRI] = ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
 
                     // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
-                    lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(Future(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))) {
+                    lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(FastFuture.successful(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))) {
                         case (accFuture, ontologyIri) =>
                             for {
                                 acc: Map[IRI, NamedGraphEntityInfoV1] <- accFuture
