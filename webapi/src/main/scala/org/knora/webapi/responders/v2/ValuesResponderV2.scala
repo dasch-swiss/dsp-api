@@ -239,7 +239,7 @@ class ValuesResponderV2 extends Responder {
       * If not, throws an exception.
       *
       * @param textValueContent the text value.
-      * @param requestingUser the user making the request.
+      * @param requestingUser   the user making the request.
       */
     private def checkStandoffLinkTargets(textValueContent: TextValueContentV2, requestingUser: UserADM): Future[Unit] = {
         val targetResourceIris: Seq[IRI] = textValueContent.standoffLinkTagTargetResourceIris.toSeq
@@ -339,6 +339,15 @@ class ValuesResponderV2 extends Responder {
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
             _ = if (valueInTriplestore.valueContent != unverifiedValue.value) {
+                /*
+                println("==============================")
+                println("Submitted value:")
+                println(MessageUtil.toSource(unverifiedValue.value))
+                println
+                println("==============================")
+                println("Saved value:")
+                println(MessageUtil.toSource(valueInTriplestore.valueContent))
+                */
                 throw AssertionException(s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted")
             }
         } yield ()

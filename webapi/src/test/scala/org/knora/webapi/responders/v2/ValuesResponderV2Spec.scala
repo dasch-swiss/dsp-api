@@ -31,9 +31,11 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, XMLTag}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
@@ -73,16 +75,26 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val seqnumValueIri = new MutableTestIri
     private val commentValueIri = new MutableTestIri
 
-    private def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
-        storeManager ! ResetTriplestoreContent(rdfDataObjs)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
+    private val sampleStandoff: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 1
+        )
+    )
 
-        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
-
-        if (expectOK) {
-            expectMsgType[SuccessResponseV2](10.seconds)
-        }
-    }
+    private var standardMapping: Option[MappingXMLtoStandoff] = None
 
     private def getValue(resourceIri: IRI, propertyIri: SmartIri, expectedValueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
         // Make a Gravsearch query from a template.
@@ -129,7 +141,18 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "Load test data" in {
-        loadTestData(rdfDataObjs = rdfDataObjects, expectOK = true)
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(300.seconds, ResetTriplestoreContentACK())
+
+        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+        expectMsgType[SuccessResponseV2](timeout)
+
+        responderManager ! GetMappingRequestV2(mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping", requestingUser = KnoraSystemInstances.Users.SystemUser)
+
+        expectMsgPF(timeout) {
+            case mappingResponse: GetMappingResponseV2 =>
+                standardMapping = Some(mappingResponse.mapping)
+        }
     }
 
     "The values responder" should {
@@ -203,10 +226,57 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             valueFromTriplestore.valueContent match {
-                case intValue: TextValueContentV2 => intValue.valueHasString should ===(valueHasString)
+                case textValue: TextValueContentV2 => textValue.valueHasString should ===(valueHasString)
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
 
+        "add a new text value with standoff" in {
+
+            val valueHasString = "Comment 1aa"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoff,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                propertyIri = propertyIri,
+                expectedValueIri = commentValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case textValue: TextValueContentV2 =>
+                    textValue.valueHasString should ===(valueHasString)
+                    textValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
     }
 }

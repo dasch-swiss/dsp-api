@@ -955,7 +955,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
   * @param mapping    a mapping between XML and standoff.
   * @param xslt       an XSL transformation.
   */
-case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, xslt: Option[String])
+case class StandoffAndMapping(standoff: Seq[StandoffTagV2], mappingIri: IRI, mapping: MappingXMLtoStandoff, xslt: Option[String] = None)
 
 /**
   * Represents a Knora integer value.
