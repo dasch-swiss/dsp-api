@@ -58,6 +58,19 @@ class SettingsImpl(config: Config) extends Extension {
     val tmpDataDir: String = config.getString("app.tmp-datadir")
     val dataDir: String = config.getString("app.datadir")
 
+    // try to create the directories
+    try {
+        new File(tmpDataDir).mkdirs()
+        new File(dataDir).mkdirs()
+    }
+    catch {
+        case e: Exception => {
+            println(s"SettingsImpl - Exception thrown while trying to create tmp dirs: $e")
+            throw e
+        }
+    }
+
+
     val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         (mType: ConfigValue) => mType.unwrapped.toString
     }.toVector
