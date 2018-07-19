@@ -38,7 +38,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{EntityPermission, ModifyPermission}
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.util.{KnoraIdUtil, MessageUtil, PermissionUtilADM, SmartIri}
+import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
 
@@ -157,7 +157,10 @@ class ValuesResponderV2 extends Responder {
                 }
 
                 // Check that the new value would not duplicate an existing value.
-                _ = if (currentValuesForProp.exists(currentVal => submittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent))) {
+
+                unescapedSubmittedInternalValueContent = submittedInternalValueContent.unescape
+
+                _ = if (currentValuesForProp.exists(currentVal => unescapedSubmittedInternalValueContent.wouldDuplicateOtherValue(currentVal.valueContent))) {
                     throw DuplicateValueException()
                 }
 
@@ -338,8 +341,9 @@ class ValuesResponderV2 extends Responder {
             propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
-            _ = if (valueInTriplestore.valueContent != unverifiedValue.value) {
+            _ = if (!unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent)) {
                 /*
+                import org.knora.webapi.util.MessageUtil
                 println("==============================")
                 println("Submitted value:")
                 println(MessageUtil.toSource(unverifiedValue.value))
@@ -689,7 +693,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = value
+            value = value.unescape
         )
     }
 

@@ -27,6 +27,7 @@ import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
@@ -72,8 +73,17 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
-    private val seqnumValueIri = new MutableTestIri
+    private val intValueIri = new MutableTestIri
     private val commentValueIri = new MutableTestIri
+    private val decimalValueIri = new MutableTestIri
+    private val dateValueIri = new MutableTestIri
+    private val booleanValueIri = new MutableTestIri
+    private val geometryValueIri = new MutableTestIri
+    private val intervalValueIri = new MutableTestIri
+    private val listValueIri = new MutableTestIri
+    private val colorValueIri = new MutableTestIri
+    private val uriValueIri = new MutableTestIri
+    private val geonameValueIri = new MutableTestIri
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -156,7 +166,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "The values responder" should {
-        "add a new integer value (seqnum of a page)" in {
+        "create an integer value" in {
             // Add the value.
 
             val resourceIri = "http://rdfh.ch/8a0b1e75"
@@ -177,7 +187,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => seqnumValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => intValueIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -185,17 +195,17 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
                 propertyIri = propertyIri,
-                expectedValueIri = seqnumValueIri.get,
+                expectedValueIri = intValueIri.get,
                 requestingUser = incunabulaUser
             )
 
             valueFromTriplestore.valueContent match {
-                case intValue: IntegerValueContentV2 => intValue.valueHasInteger should ===(seqnum)
+                case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(seqnum)
                 case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
             }
         }
 
-        "add a new text value without standoff" in {
+        "create a text value without standoff" in {
             val valueHasString = "Comment 1a"
             val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
@@ -226,12 +236,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             valueFromTriplestore.valueContent match {
-                case textValue: TextValueContentV2 => textValue.valueHasString should ===(valueHasString)
+                case savedValue: TextValueContentV2 => savedValue.valueHasString should ===(valueHasString)
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
 
-        "add a new text value with standoff" in {
+        "create a text value with standoff" in {
 
             val valueHasString = "Comment 1aa"
 
@@ -271,11 +281,386 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             valueFromTriplestore.valueContent match {
-                case textValue: TextValueContentV2 =>
-                    textValue.valueHasString should ===(valueHasString)
-                    textValue.standoffAndMapping should ===(standoffAndMapping)
+                case savedValue: TextValueContentV2 =>
+                    savedValue.valueHasString should ===(valueHasString)
+                    savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a decimal value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val valueHasDecimal = 4.3
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = DecimalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasDecimal = valueHasDecimal
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => decimalValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = decimalValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: DecimalValueContentV2 => savedValue.valueHasDecimal should ===(valueHasDecimal)
+                case _ => throw AssertionException(s"Expected decimal value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a date value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+
+            val submittedValueContent = DateValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasStartJDN = 2264907,
+                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasEndJDN = 2265271,
+                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+            )
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = submittedValueContent
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => dateValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = dateValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: DateValueContentV2 =>
+                    savedValue.valueHasCalendar should ===(submittedValueContent.valueHasCalendar)
+                    savedValue.valueHasStartJDN should ===(submittedValueContent.valueHasStartJDN)
+                    savedValue.valueHasStartPrecision should ===(submittedValueContent.valueHasStartPrecision)
+                    savedValue.valueHasEndJDN should ===(submittedValueContent.valueHasEndJDN)
+                    savedValue.valueHasEndPrecision should ===(submittedValueContent.valueHasEndPrecision)
+
+                case _ => throw AssertionException(s"Expected date value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a boolean value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+            val valueHasBoolean = true
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = BooleanValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasBoolean = valueHasBoolean
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => booleanValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = booleanValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: BooleanValueContentV2 => savedValue.valueHasBoolean should ===(valueHasBoolean)
+                case _ => throw AssertionException(s"Expected boolean value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a geometry value" ignore { // geometry values are commented out in the anything ontology because Salsah can't handle them yet
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = GeomValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeometry = valueHasGeometry
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => geometryValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = geometryValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: GeomValueContentV2 => savedValue.valueHasGeometry should ===(valueHasGeometry)
+                case _ => throw AssertionException(s"Expected geometry value, got $valueFromTriplestore")
+            }
+        }
+
+        "create an interval value" ignore { // interval values aren't yet supported in Gravsearch, so we can't create them
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val valueHasIntervalStart = BigDecimal("1.2")
+            val valueHasIntervalEnd = BigDecimal("3.4")
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntervalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasIntervalStart = valueHasIntervalStart,
+                        valueHasIntervalEnd = valueHasIntervalEnd
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => intervalValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = intervalValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntervalValueContentV2 =>
+                    savedValue.valueHasIntervalStart should ===(valueHasIntervalStart)
+                    savedValue.valueHasIntervalEnd should ===(valueHasIntervalEnd)
+
+                case _ => throw AssertionException(s"Expected interval value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a list value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => listValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = listValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: HierarchicalListValueContentV2 =>
+                    savedValue.valueHasListNode should ===(valueHasListNode)
+
+                case _ => throw AssertionException(s"Expected list value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a color value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
+            val valueHasColor = "#ff3333"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = ColorValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasColor = valueHasColor
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => colorValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = colorValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: ColorValueContentV2 =>
+                    savedValue.valueHasColor should ===(valueHasColor)
+
+                case _ => throw AssertionException(s"Expected color value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a URI value" in {
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+            val valueHasUri = "https://www.knora.org"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = UriValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasUri = valueHasUri
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => uriValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = uriValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: UriValueContentV2 =>
+                    savedValue.valueHasUri should ===(valueHasUri)
+
+                case _ => throw AssertionException(s"Expected URI value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a geoname value" ignore { // geoname values aren't yet supported in Gravsearch, so we can't create them
+            // Add the value.
+
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
+            val valueHasGeonameCode = "2661604"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = GeonameValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeonameCode = valueHasGeonameCode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => uriValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                expectedValueIri = uriValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: GeonameValueContentV2 =>
+                    savedValue.valueHasGeonameCode should ===(valueHasGeonameCode)
+
+                case _ => throw AssertionException(s"Expected GeoNames value, got $valueFromTriplestore")
             }
         }
     }

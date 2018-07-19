@@ -304,7 +304,7 @@ object StandoffTagUtilV2 {
         }
 
         textWithStandoff.standoff.map {
-            case (standoffNodeFromXML: StandoffTag) =>
+            case standoffNodeFromXML: StandoffTag =>
 
                 val xmlNamespace = standoffNodeFromXML.xmlNamespace match {
                     case None => noNamespace
@@ -787,7 +787,7 @@ object StandoffTagUtilV2 {
                     },
                     attributes = attributes
                 )
-        }.toVector
+        }.toVector.sortBy(_.startIndex)
 
     }
 
@@ -831,7 +831,7 @@ object StandoffTagUtilV2 {
         val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
         val standoffTags: Seq[StandoffTag] = standoff.map {
-            (standoffTagV2: StandoffTagV2) =>
+            standoffTagV2: StandoffTagV2 =>
 
                 val xmlItemForStandoffClass: XMLTagItem = mappingStandoffToXML.getOrElse(standoffTagV2.standoffTagClassIri, throw NotFoundException(s"standoff class IRI ${standoffTagV2.standoffTagClassIri} not found in mapping"))
 

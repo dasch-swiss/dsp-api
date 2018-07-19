@@ -563,7 +563,7 @@ object ConstructResponseUtilV2 {
                 HierarchicalListValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode),
-                    listNodeLabel = listNodeLabel,
+                    listNodeLabel = Some(listNodeLabel),
                     comment = valueCommentOption
                 )
 
