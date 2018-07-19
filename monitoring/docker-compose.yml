@@ -11,7 +11,7 @@ volumes:
 services:
 
   prometheus:
-    image: prom/prometheus:v2.2.0-rc.0
+    image: prom/prometheus:v2.3.2
     container_name: prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -33,7 +33,7 @@ services:
 
 
   nodeexporter:
-    image: prom/node-exporter:v0.15.2
+    image: prom/node-exporter:v0.16.0
     container_name: nodeexporter
     user: root
     privileged: true
@@ -54,7 +54,7 @@ services:
       org.label-schema.group: "monitoring"
 
   cadvisor:
-    image: google/cadvisor:v0.28.3
+    image: google/cadvisor:v0.30.0
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro

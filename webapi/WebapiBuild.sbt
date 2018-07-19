@@ -254,12 +254,12 @@ lazy val library =
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
         // monitoring
-        val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.0"
-        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.0.0"
-        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.0.0"
+        val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.1.1"
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.1.1"
         val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
-        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.1"
-        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.8.13"
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.2"
+        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.9.1"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
