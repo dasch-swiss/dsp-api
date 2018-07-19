@@ -2020,7 +2020,7 @@
 
                  rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
-                 rdfs:comment "settings for the wifth of a table cell"@en ;
+                 rdfs:comment "settings for the width of a table cell"@en ;
 
                  knora-base:subjectClassConstraint :StandoffTableCellTag ;
 
@@ -2138,10 +2138,27 @@
                 rdfs:comment "Represents text in small letters format in a TextValue"@en .
 
 
+###  http://www.knora.org/ontology/0801/beol#standoffEntityType
+:standoffEntityType rdf:type owl:DatatypeProperty ;
+
+                 rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                 rdfs:comment "settings type of an entity"@en ;
+
+                 knora-base:subjectClassConstraint :StandoffEntityTag ;
+
+                 knora-base:objectDatatypeConstraint xsd:string .
+
+
+
 ###  http://www.knora.org/ontology/0801/beol#StandoffEntityTag
 :StandoffEntityTag  rdf:type owl:Class ;
 
-             rdfs:subClassOf knora-base:StandoffLinkTag ;
+             rdfs:subClassOf knora-base:StandoffLinkTag ,
+             [ rdf:type owl:Restriction ;
+               owl:onProperty :standoffEntityType ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger
+             ] ;
 
              rdfs:comment "represents an entity (<entity>) tag in text"@en .
 
