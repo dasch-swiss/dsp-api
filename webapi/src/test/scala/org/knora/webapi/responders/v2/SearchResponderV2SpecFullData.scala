@@ -742,6 +742,19 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                 StandoffTagV2(
                                     endParentIndex = None,
                                     originalXMLID = None,
+                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
+                                    endPosition = 45,
+                                    startParentIndex = None,
+                                    attributes = Nil,
+                                    startIndex = 0,
+                                    endIndex = None,
+                                    dataType = None,
+                                    startPosition = 0,
+                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
+                                ),
+                                StandoffTagV2(
+                                    endParentIndex = None,
+                                    originalXMLID = None,
                                     uuid = "80133696-26a1-4941-967b-6bf210d7d5e1",
                                     endPosition = 19,
                                     startParentIndex = Some(0),
@@ -754,19 +767,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
                                     startPosition = 14,
                                     standoffTagClassIri = "http://www.knora.org/ontology/knora-base#StandoffLinkTag"
-                                ),
-                                StandoffTagV2(
-                                    endParentIndex = None,
-                                    originalXMLID = None,
-                                    uuid = "2e136103-2a4b-4e59-ac8f-79a53f54b496",
-                                    endPosition = 45,
-                                    startParentIndex = None,
-                                    attributes = Nil,
-                                    startIndex = 0,
-                                    endIndex = None,
-                                    dataType = None,
-                                    startPosition = 0,
-                                    standoffTagClassIri = "http://www.knora.org/ontology/standoff#StandoffRootTag"
                                 )
                             ),
                             mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",

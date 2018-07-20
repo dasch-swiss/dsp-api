@@ -991,4 +991,25 @@ object StandoffTagUtilV2 {
         standoffUtil.textWithStandoff2Xml(textWithStandoff)
     }
 
+    /**
+      * Given a sequence of standoff tags from a text value, makes a collection that can be compared with standoff from
+      * another text value.
+      *
+      * @param standoff the standoff that needs to be compared.
+      * @return a sequence of sets of tags that have the same start index, ordered by start index. All tags have their
+      *         UUIDs replaced with empty strings.
+      */
+    def makeComparableStandoffCollection(standoff: Seq[StandoffTagV2]): Vector[Set[StandoffTagV2]] = {
+        // Since multiple tags could have the same index (e.g. if the standoff editor that
+        // generated them doesn't use indexes), we first group them into sets of tags that have the same index,
+        // then make a sequence of sets of tags sorted by index.
+
+        standoff.groupBy(_.startIndex).map {
+            case (index: Int, standoffForIndex: Seq[StandoffTagV2]) => index -> standoffForIndex.map(_.copy(uuid = "")).toSet
+        }.toVector.sortBy {
+            case (index: Int, standoffForIndex: Set[StandoffTagV2]) => index
+        }.map {
+            case (index: Int, standoffForIndex: Set[StandoffTagV2]) => standoffForIndex
+        }
+    }
 }

@@ -846,14 +846,9 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                 // compare standoff nodes (sort them first by index) and the XML-to-standoff mapping IRI
                 val standoffIdentical: Boolean = (standoffAndMapping, thatTextValue.standoffAndMapping) match {
                     case (Some(thisStandoffAndMapping), Some(thatStandoffAndMapping)) =>
-                        val thisStandoffSorted: Seq[StandoffTagV2] = thisStandoffAndMapping.standoff.sortBy(_.startIndex)
-                        val thatStandoffSorted: Seq[StandoffTagV2] = thatStandoffAndMapping.standoff.sortBy(_.startIndex)
-
-                        val sameStandoff: Boolean = thisStandoffSorted.size == thatStandoffSorted.size && thisStandoffSorted.zip(thatStandoffSorted).forall {
-                            case (thisStandoffTag, thatStandoffTag) => thisStandoffTag.equalsWithoutUuid(thatStandoffTag)
-                        }
-
-                        sameStandoff && thisStandoffAndMapping.mappingIri == thatStandoffAndMapping.mappingIri
+                        val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thisStandoffAndMapping.standoff)
+                        val thatComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(thatStandoffAndMapping.standoff)
+                        thisComparableStandoff == thatComparableStandoff && thisStandoffAndMapping.mappingIri == thatStandoffAndMapping.mappingIri
 
                     case (None, None) => true
 

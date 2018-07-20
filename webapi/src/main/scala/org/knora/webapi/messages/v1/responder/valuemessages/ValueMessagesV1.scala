@@ -785,14 +785,10 @@ case class TextValueWithStandoffV1(utf8str: String,
                 // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
                 val utf8strIdentical: Boolean = stringFormatter.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
 
-                // compare standoff nodes (sort them first by index)
-
-                val thisStandoffSorted: Seq[StandoffTagV2] = standoff.sortBy(_.startIndex)
-                val thatStandoffSorted: Seq[StandoffTagV2] = textValueWithStandoffV1.standoff.sortBy(_.startIndex)
-
-                val standoffIdentical: Boolean = thisStandoffSorted.size == thatStandoffSorted.size && thisStandoffSorted.zip(thatStandoffSorted).forall {
-                    case (thisStandoffTag, thatStandoffTag) => thisStandoffTag.equalsWithoutUuid(thatStandoffTag)
-                }
+                // Compare standoff tags.
+                val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(standoff)
+                val thatComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(textValueWithStandoffV1.standoff)
+                val standoffIdentical: Boolean = thisComparableStandoff == thatComparableStandoff
 
                 utf8strIdentical && standoffIdentical && textValueWithStandoffV1.mappingIri == this.mappingIri
 
