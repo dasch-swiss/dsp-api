@@ -51,6 +51,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
+import scala.util.{Failure, Success}
 
 /**
   * Knora Core abstraction.
@@ -176,23 +177,32 @@ trait KnoraService {
       */
     def startService(): Unit = {
 
-        startReporters()
+        val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
 
-        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+        bindingFuture onComplete {
+            case Success(_) => {
 
-        // Kick of startup tasks. This method returns when Running state is reached.
-        println("KnoraService - startupTaskRunner starting")
-        startupTaskRunner()
-        println("KnoraService - startupTaskRunner finished")
+                startReporters()
+
+                // Kick of startup tasks. This method returns when Running state is reached.
+                println("KnoraService - startupTaskRunner starting")
+                startupTaskRunner()
+                println("KnoraService - startupTaskRunner finished")
+            }
+            case Failure(ex) => {
+                log.error("Failed to bind to {}:{}! - {}", settings.internalKnoraApiHost, settings.internalKnoraApiPort, ex.getMessage)
+                stopService()
+            }
+        }
     }
 
     /**
       * Stops Knora.
       */
     def stopService(): Unit = {
-        system.terminate()
         CacheUtil.removeAllCaches()
-        //Kamon.shutdown()
+        Kamon.stopAllReporters()
+        system.terminate()
     }
 
     /**
