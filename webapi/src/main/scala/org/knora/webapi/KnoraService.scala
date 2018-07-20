@@ -32,6 +32,7 @@ import kamon.Kamon
 import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
+import kamon.datadog.DatadogAgentReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
@@ -419,6 +420,11 @@ trait KnoraService {
         val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
         if (jaegerReporter) {
             Kamon.addReporter(new JaegerReporter()) // tracing
+        }
+
+        val datadogReporter = Await.result(applicationStateActor ? GetDataDogReporterState(), 1.second).asInstanceOf[Boolean]
+        if (datadogReporter) {
+            Kamon.addReporter(new DatadogAgentReporter()) // tracing
         }
     }
 }

@@ -178,6 +178,7 @@ class SettingsImpl(config: Config) extends Extension {
     val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
     val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
     val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
+    val dataDogReporter: Boolean = config.getBoolean("app.monitoring.datadog-reporter")
 
 }
 

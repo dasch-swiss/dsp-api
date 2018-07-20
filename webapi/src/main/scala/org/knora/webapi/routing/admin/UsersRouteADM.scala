@@ -28,6 +28,7 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
+import kamon.akka.http.TracingDirectives
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -42,7 +43,7 @@ import scala.concurrent.ExecutionContextExecutor
 
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
-class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
+class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with TracingDirectives {
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -57,18 +58,20 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     /* return all users */
     def getUsers = path("admin" / "users") {
         get {
-            requestContext =>
-                val requestMessage = for {
-                    requestingUser <- getUserADM(requestContext)
-                } yield UsersGetRequestADM(requestingUser = requestingUser)
+            operationName("admin-get-users") {
+                requestContext =>
+                    val requestMessage = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield UsersGetRequestADM(requestingUser = requestingUser)
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 
@@ -83,23 +86,25 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     /* create a new user */
     def postUser = path("admin" / "users") {
         post {
-            entity(as[CreateUserApiRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield UserCreateRequestADM(
-                        createRequest = apiRequest,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
+            operationName("admin-create-user") {
+                entity(as[CreateUserApiRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield UserCreateRequestADM(
+                            createRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
         }
     }
@@ -116,25 +121,27 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     /* return a single user identified by iri or email */
     def getUser = path("admin" / "users" / Segment) { value =>
         get {
-            parameters("identifier" ? "iri") { (identifier: String) =>
-                requestContext =>
-                    /* check if email or iri was supplied */
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield  if (identifier == "email") {
-                        UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
-                    } else {
-                        val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                        UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
-                    }
+            operationName("admin-get-user") {
+                parameters("identifier" ? "iri") { (identifier: String) =>
+                    requestContext =>
+                        /* check if email or iri was supplied */
+                        val requestMessage = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield if (identifier == "email") {
+                            UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
+                        } else {
+                            val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+                            UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
+                        }
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
             }
         }
     }

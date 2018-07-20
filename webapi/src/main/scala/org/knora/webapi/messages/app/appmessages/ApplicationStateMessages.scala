@@ -29,6 +29,9 @@ case class GetZipkinReporterState() extends ApplicationStateRequest
 case class SetJaegerReporterState(value: Boolean) extends ApplicationStateRequest
 case class GetJaegerReporterState() extends ApplicationStateRequest
 
+case class SetDataDogReporterState(value: Boolean) extends ApplicationStateRequest
+case class GetDataDogReporterState() extends ApplicationStateRequest
+
 case class SetPrintConfigState(value: Boolean) extends ApplicationStateRequest
 case class GetPrintConfigState() extends ApplicationStateRequest
 
