@@ -31,6 +31,15 @@ services:
     labels:
       org.label-schema.group: "monitoring"
 
+  zipkin:
+    image: openzipkin/zipkin:2.10.2
+    container_name: zipkin
+    expose:
+      - 9411
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
 
   nodeexporter:
     image: prom/node-exporter:v0.16.0
@@ -71,14 +80,13 @@ services:
       org.label-schema.group: "monitoring"
 
   grafana:
-    image: grafana/grafana:4.6.3
+    image: grafana/grafana:5.2.1
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/datasources:/etc/grafana/datasources
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/etc/grafana/dashboards
-      - ./grafana/setup.sh:/setup.sh
-    entrypoint: /setup.sh
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
@@ -97,6 +105,7 @@ services:
       ports:
         - "3000:3000"
         - "9090:9090"
+        - "9411:9411"
       volumes:
         - ./caddy/:/etc/caddy/
       environment:
