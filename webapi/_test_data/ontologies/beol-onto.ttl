@@ -783,13 +783,11 @@
                rdfs:label "BEOL-IDs"@de ,
                         "BEOL-IDs"@en ;
 
-               rdfs:comment """Represents IDs given to a person."""@en ;
+               rdfs:comment """Represents IDs given to resource in BEOL project."""@en ;
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
                salsah-gui:guiElement salsah-gui:SimpleText ;
-
-               knora-base:subjectClassConstraint :person ;
 
                rdfs:subPropertyOf knora-base:hasValue .
 
@@ -1337,6 +1335,12 @@
                             owl:onProperty :comment ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ] ;
                     rdfs:label "Archive"@de ,
                                 "Archive"@en ;
@@ -1443,6 +1447,12 @@
                              owl:onProperty :comment ;
                              owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                              salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                          ] ,
+                          [
+                               rdf:type owl:Restriction ;
+                               owl:onProperty :beolIDs ;
+                               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                               salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                           ] ;
 
           knora-base:resourceIcon "page.gif" ;
@@ -1591,6 +1601,12 @@
                             owl:onProperty :hasCaption ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Figur"@de ,
@@ -1628,6 +1644,12 @@
                             owl:onProperty :hasText ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :beolIDs ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Endnote"@de ,
@@ -1655,6 +1677,12 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :hasText ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Einleitung"@de ,
@@ -1697,6 +1725,12 @@
                             owl:onProperty :hasSectionValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :beolIDs ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Sektion"@de ,
@@ -1745,6 +1779,12 @@
                 owl:onProperty :hasText ;
                 owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                 salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :beolIDs ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
              ] ;
 
     rdfs:comment "schriftliche Quelle"@de ,
@@ -1919,6 +1959,12 @@
                             owl:onProperty :publishedLetterEndPage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ] ;
 
         knora-base:resourceIcon "letter.png" ;
