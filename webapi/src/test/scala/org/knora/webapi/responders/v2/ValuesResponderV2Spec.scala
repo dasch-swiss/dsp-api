@@ -84,6 +84,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val colorValueIri = new MutableTestIri
     private val uriValueIri = new MutableTestIri
     private val geonameValueIri = new MutableTestIri
+    private val linkValueIri = new MutableTestIri
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -106,11 +107,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
-    private def getValue(resourceIri: IRI, propertyIri: SmartIri, expectedValueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
+    private def getValue(resourceIri: IRI, propertyIriForGravsearch: SmartIri, propertyIriInResult: SmartIri, expectedValueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
         // Make a Gravsearch query from a template.
         val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
-            propertyIris = Seq(propertyIri)
+            propertyIris = Seq(propertyIriForGravsearch)
         ).toString()
 
         // Run the query.
@@ -127,8 +128,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     requestingUser = requestingUser
                 )
 
-                val propertyValues = resource.values.getOrElse(propertyIri, throw AssertionException(s"Resource <$resourceIri> does not have property <$propertyIri>"))
-                propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIri> of resource <$resourceIri> does not have value <$expectedValueIri>"))
+                val propertyValues = resource.values.getOrElse(propertyIriInResult, throw AssertionException(s"Resource <$resourceIri> does not have property <$propertyIriInResult>"))
+                propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"))
         }
     }
 
@@ -194,7 +195,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
                 requestingUser = incunabulaUser
             )
@@ -230,7 +232,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = zeitglöckleinIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = commentValueIri.get,
                 requestingUser = incunabulaUser
             )
@@ -275,7 +278,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = zeitglöckleinIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = commentValueIri.get,
                 requestingUser = incunabulaUser
             )
@@ -317,7 +321,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = decimalValueIri.get,
                 requestingUser = anythingUser
             )
@@ -361,7 +366,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = dateValueIri.get,
                 requestingUser = anythingUser
             )
@@ -406,7 +412,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = booleanValueIri.get,
                 requestingUser = anythingUser
             )
@@ -445,7 +452,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = geometryValueIri.get,
                 requestingUser = anythingUser
             )
@@ -486,7 +494,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = intervalValueIri.get,
                 requestingUser = anythingUser
             )
@@ -528,7 +537,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = listValueIri.get,
                 requestingUser = anythingUser
             )
@@ -569,7 +579,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = colorValueIri.get,
                 requestingUser = anythingUser
             )
@@ -610,7 +621,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
                 expectedValueIri = uriValueIri.get,
                 requestingUser = anythingUser
             )
@@ -644,15 +656,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => uriValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => geonameValueIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
-                propertyIri = propertyIri,
-                expectedValueIri = uriValueIri.get,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = geonameValueIri.get,
                 requestingUser = anythingUser
             )
 
@@ -661,6 +674,103 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedValue.valueHasGeonameCode should ===(valueHasGeonameCode)
 
                 case _ => throw AssertionException(s"Expected GeoNames value, got $valueFromTriplestore")
+            }
+        }
+
+        "create a link between two resources" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+
+            val createValueRequest = CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        subject = resourceIri,
+                        predicate = linkPropertyIri,
+                        target = zeitglöckleinIri
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => linkValueIri.set(createValueResponse.valueIri)
+            }
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: LinkValueContentV2 =>
+                    savedValue.subject should ===(resourceIri)
+                    savedValue.predicate should ===(linkPropertyIri)
+                    savedValue.target should ===(zeitglöckleinIri)
+                    valueFromTriplestore.valueHasRefCount should ===(Some(1))
+
+                case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+            }
+        }
+
+        "not accept a link property in a request to create a link between two resources" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+
+            val createValueRequest = CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = linkPropertyIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        subject = resourceIri,
+                        predicate = linkPropertyIri,
+                        target = zeitglöckleinIri
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a link value with a link value property as its predicate" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+
+            val createValueRequest = CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        subject = resourceIri,
+                        predicate = linkValuePropertyIri,
+                        target = zeitglöckleinIri
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
     }

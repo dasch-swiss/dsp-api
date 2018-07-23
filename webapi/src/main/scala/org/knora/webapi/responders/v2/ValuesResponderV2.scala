@@ -82,7 +82,7 @@ class ValuesResponderV2 extends Responder {
                 // corresponding link property, whose objects we will need to query. Get ontology information about the
                 // adjusted property.
 
-                adjustedPropertyInfo: ReadPropertyInfoV2 <- if (propertyInfoForSubmittedProperty.isLinkValueProp) {
+                adjustedInternalPropertyInfo: ReadPropertyInfoV2 <- if (propertyInfoForSubmittedProperty.isLinkValueProp) {
                     if (submittedInternalValueContent.valueType.toString == OntologyConstants.KnoraBase.LinkValue) {
                         for {
                             internalLinkPropertyIri <- Future(submittedInternalPropertyIri.fromLinkValuePropToLinkProp)
@@ -98,16 +98,20 @@ class ValuesResponderV2 extends Responder {
                     } else {
                         FastFuture.failed(BadRequestException(s"A value of type <${submittedInternalValueContent.valueType.toOntologySchema(ApiV2WithValueObjects)}> cannot be an object of property <${createValueRequest.createValue.propertyIri}>"))
                     }
+                } else if (propertyInfoForSubmittedProperty.isLinkProp) {
+                    throw BadRequestException(s"Invalid property for creating a link value (submit a link value property instead): ${createValueRequest.createValue.propertyIri}")
                 } else {
                     FastFuture.successful(propertyInfoForSubmittedProperty)
                 }
+
+                adjustedInternalPropertyIri = adjustedInternalPropertyInfo.entityInfoContent.propertyIri
 
                 // Get the resource's metadata and relevant property objects, using the adjusted property. Do this as the system user,
                 // so we can see objects that the user doesn't have permission to see.
 
                 resourceInfo: ReadResourceV2 <- getResourceWithPropertyValues(
                     resourceIri = createValueRequest.createValue.resourceIri,
-                    propertyInfo = adjustedPropertyInfo,
+                    propertyInfo = adjustedInternalPropertyInfo,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
@@ -138,7 +142,7 @@ class ValuesResponderV2 extends Responder {
                 // the correct type for the adjusted property's knora-base:objectClassConstraint.
 
                 _ <- checkPropertyObjectClassConstraint(
-                    propertyInfo = adjustedPropertyInfo,
+                    propertyInfo = adjustedInternalPropertyInfo,
                     valueContent = submittedInternalValueContent,
                     requestingUser = createValueRequest.requestingUser
                 )
@@ -199,7 +203,7 @@ class ValuesResponderV2 extends Responder {
                     dataNamedGraph = newValueNamedGraph,
                     projectIri = projectInfo.project.id,
                     resourceInfo = resourceInfo,
-                    propertyIri = submittedInternalPropertyIri,
+                    propertyIri = adjustedInternalPropertyIri,
                     value = submittedInternalValueContent,
                     valueCreator = createValueRequest.requestingUser.id,
                     valuePermissions = newValuePermissionLiteral,
@@ -210,7 +214,8 @@ class ValuesResponderV2 extends Responder {
 
                 _ <- verifyValue(
                     resourceIri = createValueRequest.createValue.resourceIri,
-                    propertyIri = submittedInternalPropertyIri,
+                    propertyIriForGravsearch = adjustedInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects),
+                    propertyIriInResult = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = createValueRequest.requestingUser
                 )
@@ -317,16 +322,21 @@ class ValuesResponderV2 extends Responder {
     /**
       * Verifies that a value was written correctly to the triplestore.
       *
-      * @param resourceIri     the IRI of the resource that the value belongs to.
-      * @param propertyIri     the IRI of the resource property that points to the value (in the internal schema).
-      * @param unverifiedValue the value that should have been written to the triplestore.
-      * @param requestingUser  the user making the request.
+      * @param resourceIri              the IRI of the resource that the value belongs to.
+      * @param propertyIriForGravsearch the external IRI the property to be used in Gravsearch to find the value. If the value is a link value, this is the link property.
+      * @param propertyIriInResult      the internal IRI of the property that is expected to be returned. If the value is a link value, this is the link value property.
+      * @param unverifiedValue          the value that should have been written to the triplestore.
+      * @param requestingUser           the user making the request.
       */
-    private def verifyValue(resourceIri: IRI, propertyIri: SmartIri, unverifiedValue: UnverifiedValueV2, requestingUser: UserADM): Future[Unit] = {
+    private def verifyValue(resourceIri: IRI,
+                            propertyIriForGravsearch: SmartIri,
+                            propertyIriInResult: SmartIri,
+                            unverifiedValue: UnverifiedValueV2,
+                            requestingUser: UserADM): Future[Unit] = {
         for {
             gravsearchQuery: String <- Future(queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
-                propertyIris = Seq(propertyIri.toOntologySchema(ApiV2WithValueObjects))
+                propertyIris = Seq(propertyIriForGravsearch)
             ).toString())
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
@@ -338,7 +348,7 @@ class ValuesResponderV2 extends Responder {
                 requestingUser = requestingUser
             )
 
-            propertyValues = resource.values.getOrElse(propertyIri, throw UpdateNotPerformedException())
+            propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
             _ = if (!unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent)) {
@@ -475,7 +485,19 @@ class ValuesResponderV2 extends Responder {
 
             result: Unit <- valueContent match {
                 case linkValueContent: LinkValueContentV2 =>
-                    // We're creating a link. Check that the user has permission to view the target resource, and that the target resource has the correct type.
+                    // We're creating a link.
+
+                    // Check that the property whose object class constraint is to be checked is actually a link property.
+                    if (!propertyInfo.isLinkProp) {
+                        throw BadRequestException(s"Property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}> is not a link property")
+                    }
+
+                    // Check that the link value's predicate is the same link property.
+                    if (linkValueContent.predicate != propertyInfo.entityInfoContent.propertyIri) {
+                        throw BadRequestException(s"Invalid link value predicate: <${linkValueContent.predicate.toOntologySchema(ApiV2WithValueObjects)}>")
+                    }
+
+                    // Check that the user has permission to view the target resource, and that the target resource has the correct type.
                     checkLinkPropertyObjectClassConstraint(
                         linkPropertyIri = propertyInfo.entityInfoContent.propertyIri,
                         objectClassConstraint = objectClassConstraint,
@@ -550,7 +572,7 @@ class ValuesResponderV2 extends Responder {
                 createLinkValueV2AfterChecks(
                     dataNamedGraph = dataNamedGraph,
                     resourceInfo = resourceInfo,
-                    propertyIri = propertyIri,
+                    linkPropertyIri = propertyIri,
                     linkValueContent = linkValueContent,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
@@ -575,7 +597,7 @@ class ValuesResponderV2 extends Responder {
       *
       * @param dataNamedGraph   the named graph in which the link is to be created.
       * @param resourceInfo     information about the the resource in which to create the value.
-      * @param propertyIri      the link property.
+      * @param linkPropertyIri  the link property.
       * @param linkValueContent a [[LinkValueContentV2]] specifying the target resource.
       * @param valueCreator     the IRI of the new link value's owner.
       * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
@@ -584,7 +606,7 @@ class ValuesResponderV2 extends Responder {
       */
     private def createLinkValueV2AfterChecks(dataNamedGraph: IRI,
                                              resourceInfo: ReadResourceV2,
-                                             propertyIri: SmartIri,
+                                             linkPropertyIri: SmartIri,
                                              linkValueContent: LinkValueContentV2,
                                              valueCreator: IRI,
                                              valuePermissions: String,
@@ -592,7 +614,7 @@ class ValuesResponderV2 extends Responder {
         for {
             sparqlTemplateLinkUpdate <- Future(incrementLinkValue(
                 sourceResourceInfo = resourceInfo,
-                linkPropertyIri = propertyIri,
+                linkPropertyIri = linkPropertyIri,
                 targetResourceIri = linkValueContent.target,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
@@ -715,15 +737,11 @@ class ValuesResponderV2 extends Responder {
             linkValueInfos: Seq[ReadValueV2] =>
                 linkValueInfos.find {
                     linkValueInfo: ReadValueV2 =>
-                        val linkValueContent = linkValueInfo.valueContent match {
-                            case linkValue: LinkValueContentV2 => linkValue
+                        linkValueInfo.valueContent match {
+                            case linkValue: LinkValueContentV2 => linkValue.target == targetResourceIri
                             case _ => throw AssertionException(s"Expected a LinkValueContentV2: $linkValueInfo")
                         }
-
-                        linkValueContent.target == targetResourceIri
                 }
-
-                linkValueInfos.headOption
         }
     }
 

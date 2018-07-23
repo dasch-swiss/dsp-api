@@ -1891,9 +1891,9 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
                               subject: IRI,
                               predicate: SmartIri,
                               target: IRI,
-                              comment: Option[String],
-                              incomingLink: Boolean,
-                              nestedResource: Option[ReadResourceV2]) extends ValueContentV2 {
+                              comment: Option[String] = None,
+                              incomingLink: Boolean = false,
+                              nestedResource: Option[ReadResourceV2] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.LinkValue.toSmartIri.toOntologySchema(ontologySchema)
@@ -1914,6 +1914,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
 
         copy(
             ontologySchema = targetSchema,
+            predicate = predicate.toOntologySchema(targetSchema),
             nestedResource = convertedNestedResource
         )
     }
