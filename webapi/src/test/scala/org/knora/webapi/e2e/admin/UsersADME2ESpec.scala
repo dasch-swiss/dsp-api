@@ -130,10 +130,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
     }
 
     "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        // log.debug(s"request: ${request.toString}")
-        singleAwaitingRequest(request, 300.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "The Users Route ('v1/users')" when {

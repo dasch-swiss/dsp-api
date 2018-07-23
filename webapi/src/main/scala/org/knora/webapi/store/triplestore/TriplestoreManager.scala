@@ -37,8 +37,6 @@ class TriplestoreManager extends Actor with ActorLogging {
 
     private val settings = Settings(context.system)
 
-    implicit val timeout = settings.defaultRestoreTimeout
-
     var storeActorRef: ActorRef = _
 
     // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)

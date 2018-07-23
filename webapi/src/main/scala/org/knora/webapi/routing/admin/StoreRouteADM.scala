@@ -23,6 +23,7 @@ import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
@@ -32,7 +33,6 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.duration._
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
@@ -44,7 +44,8 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-    implicit val timeout: Timeout = Timeout(300.seconds)
+    implicit val timeout: Timeout = settings.defaultTimeout
+    val restoreTimeout: Timeout = new Timeout(settings.defaultRestoreTimeout)
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
 
     def knoraApiPath = Route {
@@ -59,22 +60,24 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     // TODO: Implement some simple return
                     requestContext.complete("Hello World")
             }
-        } ~ path("admin" / "store" / "ResetTriplestoreContent") {
-            post {
-                /* ResetTriplestoreContent */
-                entity(as[Seq[RdfDataObject]]) { apiRequest =>
-                    requestContext =>
-                        val requestMessage = for {
-                            requestingUser <- getUserADM(requestContext)
-                        } yield ResetTriplestoreContentRequestADM(apiRequest)
+        } ~
+        path("admin" / "store" / "ResetTriplestoreContent") {
+            withRequestTimeout(settings.defaultRestoreTimeout) {
+                post {
+                    /* ResetTriplestoreContent */
+                    entity(as[Seq[RdfDataObject]]) { apiRequest =>
+                        requestContext =>
 
-                        RouteUtilADM.runJsonRoute(
-                            requestMessage,
-                            requestContext,
-                            settings,
-                            responderManager,
-                            log
-                        )
+                            val requestMessage = FastFuture.successful(ResetTriplestoreContentRequestADM(apiRequest))
+
+                            RouteUtilADM.runJsonRoute(
+                                requestMessage,
+                                requestContext,
+                                settings,
+                                responderManager,
+                                log
+                            ) (restoreTimeout, executionContext)
+                    }
                 }
             }
         }

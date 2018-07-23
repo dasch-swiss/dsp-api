@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.admin
 
 import akka.pattern._
+import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
@@ -41,6 +42,12 @@ class StoresResponderADM extends Responder {
       * A user representing the Knora API server, used in those cases where a user is required.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
+
+
+    /**
+      * Need to set the higher timeout value because `resetTriplestoreContent` takes longer to run
+      */
+    val restoreTimeout: Timeout = Timeout(settings.defaultRestoreTimeout)
 
     def receive = {
         case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
@@ -67,7 +74,8 @@ class StoresResponderADM extends Responder {
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
-            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+            // need to send this of with a longer timeout
+            resetResponse <- (storeManager ask(ResetTriplestoreContent(rdfDataObjects), restoreTimeout)).mapTo[ResetTriplestoreContentACK]
             _ = log.info(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]

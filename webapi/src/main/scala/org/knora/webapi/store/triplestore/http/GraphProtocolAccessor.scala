@@ -30,7 +30,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
-import scala.concurrent.Await
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 
@@ -50,7 +50,7 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -61,7 +61,7 @@ object GraphProtocolAccessor {
       * @param filepath  path to the file containing turtle.
       * @return String
       */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -72,11 +72,11 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): String = {
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
         val file = new File(filepath)
 
         if (!file.exists) {
@@ -149,12 +149,9 @@ object GraphProtocolAccessor {
             case e: Exception => throw TriplestoreResponseException("GraphProtocolAccessor Communication Exception", e, log)
         }
 
-        val result = Await.result(responseFuture, 300.seconds)
-        log.debug(s"==>> Received result: $result")
-
         log.debug("==>> GraphProtocolAccessor END")
 
-        result
+        responseFuture
     }
 
 }

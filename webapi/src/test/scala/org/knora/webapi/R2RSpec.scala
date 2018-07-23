@@ -21,12 +21,18 @@ package org.knora.webapi
 
 import java.io.StringReader
 
+import akka.actor.{ActorRef, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.pattern._
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -46,6 +52,10 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings, log)
+
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)
@@ -67,5 +77,10 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+    }
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        Await.result(storeManager ask(ResetTriplestoreContent(rdfDataObjects) settings.defaultRestoreTimeout, settings.defaultRestoreTimeout)
+        Await.result(responderManager ask(LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout), settings.defaultTimeout)
     }
 }

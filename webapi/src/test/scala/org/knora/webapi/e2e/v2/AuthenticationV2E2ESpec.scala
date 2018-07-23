@@ -69,9 +69,7 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
     private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
     "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {

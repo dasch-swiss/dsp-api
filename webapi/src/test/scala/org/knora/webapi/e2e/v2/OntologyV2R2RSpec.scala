@@ -8,11 +8,9 @@ import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, LoadOntologiesRequestV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.store._
@@ -21,8 +19,8 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import spray.json._
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object OntologyV2R2RSpec {
     private val imagesUserProfile = SharedTestDataADM.imagesUser01
@@ -49,9 +47,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         """.stripMargin
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val ontologiesPath = OntologiesRouteV2.knoraApiPath(system, settings, log)
 
@@ -163,8 +158,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "The Ontologies v2 Endpoint" should {

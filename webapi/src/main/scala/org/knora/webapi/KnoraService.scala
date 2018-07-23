@@ -129,9 +129,9 @@ trait KnoraService {
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     /**
-      * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
+      * Timeout definition
       */
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
+    implicit private val timeout: Timeout = settings.defaultTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.

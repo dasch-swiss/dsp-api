@@ -70,8 +70,6 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.zipkinReporter should be (false)
             settings.jaegerReporter should be (false)
             settings.dataDogReporter should be (false)
-
-
         }
     }
 }

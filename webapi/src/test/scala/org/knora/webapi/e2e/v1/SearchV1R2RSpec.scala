@@ -53,7 +53,7 @@ class SearchV1R2RSpec extends R2RSpec {
 
     private val searchPath = SearchRouteV1.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
+    implicit private val timeout: Timeout = Timeout(settings.defaultTimeout)
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(30).second)
 
@@ -66,8 +66,7 @@ class SearchV1R2RSpec extends R2RSpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     /**

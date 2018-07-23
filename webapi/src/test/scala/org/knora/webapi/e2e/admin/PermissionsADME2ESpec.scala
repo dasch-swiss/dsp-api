@@ -45,9 +45,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
     private val rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
 
     "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 600.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {

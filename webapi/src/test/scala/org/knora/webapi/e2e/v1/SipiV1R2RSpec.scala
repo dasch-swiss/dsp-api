@@ -65,11 +65,9 @@ class SipiV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
+    implicit private val timeout: Timeout = Timeout(settings.defaultTimeout)
 
-
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
     private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
@@ -81,8 +79,7 @@ class SipiV1R2RSpec extends R2RSpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     object RequestParams {

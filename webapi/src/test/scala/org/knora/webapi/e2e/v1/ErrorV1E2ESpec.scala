@@ -14,9 +14,7 @@ class ErrorV1E2ESpec extends E2ESpec with TriplestoreJsonProtocol {
     private val rdfDataObjects = List.empty[RdfDataObject]
 
     "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "Make a request that causes an internal server error (unit type message)" in {

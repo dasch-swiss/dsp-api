@@ -23,18 +23,19 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
+import spray.json._
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
-
 
 object E2ESpec {
     val defaultConfig: Config = ConfigFactory.load()
@@ -44,7 +45,7 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class E2ESpec(_system: ActorSystem) extends Core with KnoraService with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* needed by the core trait */
 
@@ -77,6 +78,12 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Suite wi
     def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
+    }
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        // send POST to 'v1/store/ResetTriplestoreContent'
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        singleAwaitingRequest(request, settings.defaultRestoreTimeout)
     }
 
     override def beforeAll: Unit = {

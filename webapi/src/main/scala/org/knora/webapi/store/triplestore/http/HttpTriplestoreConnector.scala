@@ -395,19 +395,25 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     private def dropAllTriplestoreContent(): Future[DropAllTriplestoreContentACK] = {
 
-        try {
-            log.debug("==>> Drop All Data Start")
-            val dropAllSparqlString =
-                """
-                    DROP ALL
-                """
-            Await.result(getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true), 180.seconds)
+        log.debug("==>> Drop All Data Start")
 
-            log.debug("==>> Drop All Data End")
-            Future.successful(DropAllTriplestoreContentACK())
-        } catch {
-            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute DROP ALL", e, log))
+        val dropAllSparqlString =
+            """
+                DROP ALL
+            """
+
+        val response: Future[DropAllTriplestoreContentACK] = for {
+            result: String <- getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true)
+            _ = log.debug("==>> Drop All Data End")
+        } yield DropAllTriplestoreContentACK()
+
+        response.recover {
+             case t: Exception => {
+                throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
+            }
         }
+
+        response
     }
 
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Future[InsertTriplestoreContentACK] = {
@@ -423,7 +429,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             for (elem <- completeRdfDataObjectList) {
 
-                GraphProtocolAccessor.post(elem.name, elem.path)
+                for {
+                    result <- GraphProtocolAccessor.post(elem.name, elem.path)
+                } yield result
 
                 log.debug(s"added: ${elem.name}")
             }
@@ -435,7 +443,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                         INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
                     """
-                Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 30.seconds)
+
+                for {
+                    result <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+                } yield result
             }
 
             log.debug("==>> Loading Data End")
