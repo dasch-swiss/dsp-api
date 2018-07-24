@@ -26,12 +26,12 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 
 /**
@@ -50,7 +50,7 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -61,7 +61,7 @@ object GraphProtocolAccessor {
       * @param filepath  path to the file containing turtle.
       * @return String
       */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -72,11 +72,11 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[String] = {
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
         val file = new File(filepath)
 
         if (!file.exists) {
@@ -136,13 +136,12 @@ object GraphProtocolAccessor {
             response <- http.singleRequest(request)
 
             // Convert the HTTP response body to a string.
-            responseString <- response.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+            responseString <- Unmarshal(response.entity).to[String]
 
             _ = if (!response.status.isSuccess) {
                 throw TriplestoreResponseException(s"Unable to load file $filepath; triplestore responded with HTTP code ${response.status}: $responseString")
             }
-            responseMessage = response.status.intValue.toString
-        } yield responseMessage
+        } yield response.status
 
         responseFuture.recover {
             case tre: TriplestoreResponseException => throw tre

@@ -19,11 +19,19 @@
 
 package org.knora.webapi
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.pattern._
 import akka.testkit.{ImplicitSender, TestKit}
+import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
+import scala.concurrent.Await
 
 object CoreSpec {
 
@@ -49,17 +57,18 @@ object CoreSpec {
 
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
+    // can be overridden in individual spec
+    protected val rdfDataObjects = Seq.empty[RdfDataObject]
+
     val settings = Settings(_system)
     val log = akka.event.Logging(_system, this.getClass)
     StringFormatter.initForTest()
 
     final override def beforeAll() {
-        atStartup()
         CacheUtil.createCaches(settings.caches)
+        loadTestData(rdfDataObjects)
         // memusage()
     }
-
-    protected def atStartup() {}
 
     final override def afterAll() {
         system.terminate()
@@ -78,6 +87,23 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     def this(name: String) = this(ActorSystem(name, ConfigFactory.load()))
 
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
+
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        println("CoreSpec - loadTestData - started")
+
+        implicit val timeout: Timeout = Timeout(settings.defaultRestoreTimeout)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout)
+
+        println("CoreSpec - loadTestData - triplestore reset finished")
+
+        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout)
+
+        println("CoreSpec - loadTestData - load ontologies finished")
+        println("CoreSpec - loadTestData - finished")
+    }
 
     def memusage(): Unit = {
         // memory info

@@ -21,25 +21,19 @@ package org.knora.webapi.e2e.v2
 
 import java.io.File
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi.SharedTestDataV1.ANYTHING_PROJECT_IRI
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForMappingCreationResponse
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.StandoffRouteV2
-import org.knora.webapi.store._
 import org.knora.webapi.util.FileUtil
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContextExecutor
 
 
 /**
@@ -54,14 +48,9 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     private val standoffPath = StandoffRouteV2.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
-
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(15).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -98,8 +87,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
     )
 
     "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "The Standoff v2 Endpoint" should {
@@ -141,11 +129,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                 val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
                 compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-
             }
-
-
         }
-
     }
 }

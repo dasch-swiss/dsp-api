@@ -23,22 +23,18 @@ import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import java.util.zip.{ZipEntry, ZipInputStream}
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
-import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -62,9 +58,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
@@ -86,12 +79,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val biblioUser = SharedTestDataADM.biblioUser
     private val biblioUserEmail = biblioUser.email
 
-
     private val password = "test"
 
-    implicit private val timeout: Timeout = Timeout(settings.defaultTimeout)
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(360).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 

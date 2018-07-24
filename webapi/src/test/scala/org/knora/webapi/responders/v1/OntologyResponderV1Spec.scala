@@ -20,13 +20,9 @@
 package org.knora.webapi.responders.v1
 
 
-import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.store._
 import org.knora.webapi.util.MessageUtil
 
 import scala.concurrent.duration._
@@ -52,10 +48,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[OntologyResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val rdfDataObjects = List()
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -994,15 +986,6 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
                 assert(receivedProp.attributes == expectedProp.attributes, "The properties' attributes did not match.")
         }
 
-    }
-
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The ontology responder" should {

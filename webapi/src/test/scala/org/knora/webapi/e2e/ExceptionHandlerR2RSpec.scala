@@ -26,75 +26,61 @@ import org.knora.webapi._
   */
 class ExceptionHandlerR2RSpec extends R2RSpec {
 
-
-
-    // NotFoundException(_)
-    // ForbiddenException(_)
-    // BadCredentialsException(_)
-    // DuplicateValueException(_)
-    // OntologyConstraintException(_)
-    // EditConflictException(_)
-    // RequestRejectedException(_)
-    // UpdateNotPerformedException(_)
-    // InternalServerException(_)
-
-
-
-    val nfe = path( ("v1" | "v2" | "admin") / "nfe") {
+    private val nfe = path( ("v1" | "v2" | "admin") / "nfe") {
         get {
             throw NotFoundException("not found")
         }
     }
 
-    val fe = path( (("v1" | "v2") | "admin") / "fe") {
+    private val fe = path( (("v1" | "v2") | "admin") / "fe") {
         get {
             throw ForbiddenException("forbidden")
         }
     }
 
-    val bce = path( ("v1" | "v2" | "admin") / "bce") {
+    private val bce = path( ("v1" | "v2" | "admin") / "bce") {
         get {
             throw BadCredentialsException("bad credentials")
         }
     }
 
-    val dve = path( ("v1" | "v2" | "admin") / "dve") {
+    private val dve = path( ("v1" | "v2" | "admin") / "dve") {
         get {
             throw DuplicateValueException("duplicate value")
         }
     }
 
-    val oce = path( ("v1" | "v2" | "admin") / "oce") {
+    private val oce = path( ("v1" | "v2" | "admin") / "oce") {
         get {
             throw OntologyConstraintException("ontology constraint")
         }
     }
 
-    val ece = path( ("v1" | "v2" | "admin") / "ece") {
+    private val ece = path( ("v1" | "v2" | "admin") / "ece") {
         get {
             throw EditConflictException("edit conflict")
         }
     }
 
-    val sse = path( ("v1" | "v2" | "admin") / "sse") {
+    private val sse = path( ("v1" | "v2" | "admin") / "sse") {
         get {
             throw GravsearchException("sparql search")
         }
     }
 
-    val unpe = path( ("v1" | "v2" | "admin") / "unpe") {
+    private val unpe = path( ("v1" | "v2" | "admin") / "unpe") {
         get {
             throw UpdateNotPerformedException("update not performed")
         }
     }
 
-    val ae = path( ("v1" | "v2" | "admin") / "ae") {
+    private val ae = path( ("v1" | "v2" | "admin") / "ae") {
         get {
             throw AuthenticationException("authentication exception")
         }
     }
 
-    val route: Route = Route.seal(handleExceptions(KnoraExceptionHandler(settings, log)) {
+    private val route: Route = Route.seal(handleExceptions(KnoraExceptionHandler(settings, log)) {
         nfe ~ fe ~ bce ~ dve ~ oce ~ ece ~ sse ~ unpe ~ ae
     })
 

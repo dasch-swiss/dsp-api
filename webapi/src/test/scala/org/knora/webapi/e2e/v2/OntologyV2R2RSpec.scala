@@ -4,23 +4,19 @@ import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
-import org.knora.webapi.responders._
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.store._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import spray.json._
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.duration._
 
 object OntologyV2R2RSpec {
     private val imagesUserProfile = SharedTestDataADM.imagesUser01
@@ -50,9 +46,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val ontologiesPath = OntologiesRouteV2.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
-
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(360).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 

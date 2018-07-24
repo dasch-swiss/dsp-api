@@ -19,15 +19,11 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.searchmessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.store._
 
 import scala.concurrent.duration._
 
@@ -186,10 +182,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[SearchResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    val rdfDataObjects = List(
+    override val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -291,14 +285,6 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         paging = Vector(SearchResultPage(current = true, 0, 2)),
         thumb_max = SearchPreviewDimensionsV1(32, 32)
     )
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
 
     "The search responder" should {
         "return 3 results when we do a simple search for the word 'Zeitglöcklein' in the Incunabula test data" in {

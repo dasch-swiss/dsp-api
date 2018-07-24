@@ -19,14 +19,11 @@
 
 package org.knora.webapi.store.triplestore
 
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.SettingsConstants._
-import org.knora.webapi.messages.store.triplestoremessages
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.store.{StoreManager, _}
-import org.knora.webapi.{CoreSpec, LiveActorMaker}
 
 import scala.concurrent.duration._
 
@@ -52,15 +49,13 @@ object AllTriplestoreSpec {
  */
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
-
     private val timeout = 30.seconds
     private val tsType = settings.triplestoreType
 
     // println(system.settings.config.getConfig("app").root().render())
     // println(system.settings.config.getConfig("app.triplestore").root().render())
 
-    val rdfDataObjects = List(
+    override protected val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
@@ -226,7 +221,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "reset the data " in {
                 //println("==>> Reset test case start")
                 storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(300.seconds, ResetTriplestoreContentACK())
+                expectMsg(settings.defaultRestoreTimeout, ResetTriplestoreContentACK())
                 //println("==>> Reset test case end")
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)

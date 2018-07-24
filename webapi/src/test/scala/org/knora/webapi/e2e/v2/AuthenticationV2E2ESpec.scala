@@ -28,7 +28,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -49,7 +48,7 @@ object AuthenticationV2E2ESpec {
   */
 class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 

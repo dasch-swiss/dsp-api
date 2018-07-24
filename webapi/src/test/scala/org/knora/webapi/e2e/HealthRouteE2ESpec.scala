@@ -38,7 +38,7 @@ object HealthRouteE2ESpec {
   */
 class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass)
 

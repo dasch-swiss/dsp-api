@@ -27,6 +27,7 @@ import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.pattern._
+import akka.util.Timeout
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
@@ -52,6 +53,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings, log)
+
+    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
@@ -80,7 +83,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        Await.result(storeManager ask(ResetTriplestoreContent(rdfDataObjects) settings.defaultRestoreTimeout, settings.defaultRestoreTimeout)
+        // implicit val timeout = Timeout(settings.defaultRestoreTimeout)
+        Await.result(storeManager.ask(ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout), settings.defaultRestoreTimeout)
         Await.result(responderManager ask(LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout), settings.defaultTimeout)
     }
 }

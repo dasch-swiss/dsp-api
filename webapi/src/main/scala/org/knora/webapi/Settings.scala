@@ -22,7 +22,6 @@ package org.knora.webapi
 import java.io.File
 
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigValue}
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
@@ -30,6 +29,8 @@ import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
+
+import akka.ConfigurationException
 
 /**
   * Reads application settings that come from `application.conf`.
@@ -110,8 +111,9 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
 
-    val defaultTimeout: FiniteDuration = config.getDuration("app.default-timeout").asInstanceOf[FiniteDuration]
-    val defaultRestoreTimeout: FiniteDuration = config.getDuration("app.default-restore-timeout").asInstanceOf[FiniteDuration]
+    val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
+    val defaultRestoreTimeout: FiniteDuration = getFiniteDuration("app.default-restore-timeout", config)
+
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
     val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")
     val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
@@ -179,6 +181,11 @@ class SettingsImpl(config: Config) extends Extension {
     val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
     val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
     val dataDogReporter: Boolean = config.getBoolean("app.monitoring.datadog-reporter")
+
+    private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
+        case x: FiniteDuration ⇒ x
+        case _                 ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
+    }
 
 }
 

@@ -22,15 +22,12 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
@@ -51,8 +48,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private val anythingData = RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
@@ -67,7 +62,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val printErrorMessages = false
 
-    private def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
+    override val rdfDataObjects: Seq[RdfDataObject] = List(anythingData)
+
+    def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = true): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
 
@@ -77,11 +74,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgType[SuccessResponseV2](10.seconds)
         }
     }
-
-    "Load test data" in {
-        loadTestData(rdfDataObjs = List(anythingData), expectOK = true)
-    }
-
+    
     "The ontology responder v2" should {
         "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
             actorUnderTest ! CreateOntologyRequestV2(

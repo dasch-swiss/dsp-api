@@ -404,7 +404,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         val response: Future[DropAllTriplestoreContentACK] = for {
             result: String <- getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true)
-            _ = log.debug("==>> Drop All Data End")
+            _ = log.debug(s"==>> Drop All Data End, Result: $result")
         } yield DropAllTriplestoreContentACK()
 
         response.recover {
@@ -431,9 +431,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 for {
                     result <- GraphProtocolAccessor.post(elem.name, elem.path)
+                    _ = log.debug(s"added: ${elem.name}. Status: $result")
                 } yield result
 
-                log.debug(s"added: ${elem.name}")
+
             }
 
             if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
@@ -446,6 +447,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
                 for {
                     result <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+                    _ = log.debug(s"==>> Index update done, Result: $result")
                 } yield result
             }
 

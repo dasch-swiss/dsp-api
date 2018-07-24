@@ -50,9 +50,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
-    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     private val integerValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri

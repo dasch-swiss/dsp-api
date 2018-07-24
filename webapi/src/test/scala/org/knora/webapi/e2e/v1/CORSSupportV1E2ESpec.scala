@@ -21,15 +21,14 @@ package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.HttpMethods._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.http.CORSSupport
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -48,7 +47,7 @@ object CORSSupportV1E2ESpec {
 class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with TriplestoreJsonProtocol {
 
     /* set the timeout for the route test */
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(180).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings
@@ -59,9 +58,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
     )
 
     "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
+        loadTestData(rdfDataObjects)
     }
 
     "A Route with enabled CORS support " should {
