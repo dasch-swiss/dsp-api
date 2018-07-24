@@ -10,7 +10,7 @@
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ### page resource for R2R standoff tests
-<http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#page> ;
+<http://rdfh.ch/beol/page_resource> a <http://www.knora.org/ontology/0801/beol#facsimile> ;
                                     rdfs:label "Test page" ;
                                     <http://www.knora.org/ontology/knora-base#isDeleted> "false"^^xsd:boolean ;
                                     <http://www.knora.org/ontology/knora-base#creationDate> "2017-09-01T15:21:10.735+02:00"^^xsd:dateTimeStamp ;
