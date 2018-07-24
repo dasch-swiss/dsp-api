@@ -424,7 +424,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a geometry value" ignore { // geometry values are commented out in the anything ontology because Salsah can't handle them yet
+        "create a geometry value" in {
             // Add the value.
 
             val resourceIri = "http://rdfh.ch/0001/a-thing"
@@ -464,7 +464,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create an interval value" ignore { // interval values aren't yet supported in Gravsearch, so we can't create them
+        "create an interval value" in {
             // Add the value.
 
             val resourceIri = "http://rdfh.ch/0001/a-thing"
@@ -635,7 +635,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a geoname value" ignore { // geoname values aren't yet supported in Gravsearch, so we can't create them
+        "create a geoname value" in {
             // Add the value.
 
             val resourceIri = "http://rdfh.ch/0001/a-thing"
