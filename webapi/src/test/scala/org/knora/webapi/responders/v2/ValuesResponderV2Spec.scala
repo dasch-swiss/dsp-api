@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.Props
@@ -30,7 +31,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, XMLTag}
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -107,7 +108,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
-    private def getValue(resourceIri: IRI, propertyIriForGravsearch: SmartIri, propertyIriInResult: SmartIri, expectedValueIri: IRI, requestingUser: UserADM): ReadValueV2 = {
+    private def getValue(resourceIri: IRI,
+                         maybePreviousLastModDate: Option[Instant],
+                         propertyIriForGravsearch: SmartIri,
+                         propertyIriInResult: SmartIri,
+                         expectedValueIri: IRI,
+                         requestingUser: UserADM): ReadValueV2 = {
         // Make a Gravsearch query from a template.
         val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
@@ -127,6 +133,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     readResourcesSequence = searchResponse,
                     requestingUser = requestingUser
                 )
+
+                resource.lastModificationDate match {
+                    case Some(updatedLastModDate) =>
+                        maybePreviousLastModDate match {
+                            case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
+                            case None => ()
+                        }
+
+                    case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
+                }
 
                 val propertyValues = resource.values.getOrElse(propertyIriInResult, throw AssertionException(s"Resource <$resourceIri> does not have property <$propertyIriInResult>"))
                 propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"))
@@ -151,6 +167,21 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceInfo.toOntologySchema(ApiV2WithValueObjects)
     }
 
+    private def getResourceLastModificationDate(resourceIri: IRI, requestingUser: UserADM): Option[Instant] = {
+        responderManager ! ResourcesPreviewGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = requestingUser)
+
+        expectMsgPF(timeout) {
+            case previewResponse: ReadResourcesSequenceV2 =>
+                val resourcePreview: ReadResourceV2 = resourcesSequenceToResource(
+                    requestedResourceIri = resourceIri,
+                    readResourcesSequence = previewResponse,
+                    requestingUser = requestingUser
+                )
+
+                resourcePreview.lastModificationDate
+        }
+    }
+
     "Load test data" in {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
         expectMsg(300.seconds, ResetTriplestoreContentACK())
@@ -173,6 +204,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/8a0b1e75"
             val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum".toSmartIri
             val seqnum = 4
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -195,6 +227,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
@@ -210,6 +243,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a text value without standoff" in {
             val valueHasString = "Comment 1a"
             val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -232,6 +266,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = commentValueIri.get,
@@ -255,6 +290,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             ))
 
             val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -278,6 +314,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = commentValueIri.get,
@@ -299,6 +336,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val valueHasDecimal = 4.3
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -321,6 +359,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = decimalValueIri.get,
@@ -338,6 +377,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
@@ -366,6 +406,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = dateValueIri.get,
@@ -390,6 +431,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val valueHasBoolean = true
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -412,6 +454,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = booleanValueIri.get,
@@ -430,6 +473,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -452,6 +496,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geometryValueIri.get,
@@ -471,6 +516,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
             val valueHasIntervalEnd = BigDecimal("3.4")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -494,6 +540,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intervalValueIri.get,
@@ -515,6 +562,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -537,6 +585,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = listValueIri.get,
@@ -557,6 +606,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3333"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -579,6 +629,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = colorValueIri.get,
@@ -599,6 +650,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://www.knora.org"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -621,6 +673,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = uriValueIri.get,
@@ -641,6 +694,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2661604"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -663,6 +717,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geonameValueIri.get,
@@ -681,6 +736,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
             val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
@@ -705,6 +761,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val valueFromTriplestore = getValue(
                 resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = linkPropertyIri,
                 propertyIriInResult = linkValuePropertyIri,
                 expectedValueIri = linkValueIri.get,
