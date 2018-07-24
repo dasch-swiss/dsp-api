@@ -1445,6 +1445,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "22"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "23"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Publikation"@de ,
@@ -1500,6 +1506,12 @@
                                             owl:onProperty beol:mentionedIn ;
                                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty beol:beolIDs ;
+                                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                                         ] ;
 
                     rdfs:label "Edition"@de ,
@@ -1531,6 +1543,12 @@
                                             owl:onProperty beol:comment ;
                                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                                        ] ,
+                                        [
+                                            rdf:type owl:Restriction ;
+                                            owl:onProperty beol:beolIDs ;
+                                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                                         ] ;
 
                     rdfs:label "Organisation"@de ,
@@ -1701,6 +1719,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                          rdf:type owl:Restriction ;
+                                          owl:onProperty beol:beolIDs ;
+                                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                          salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Übersetzung"@de ,
@@ -1744,6 +1768,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Zeitschrift"@de ,
@@ -1781,6 +1811,12 @@
                                         owl:onProperty :hasContentValue ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Buch-Inhalt"@de ,
@@ -1912,6 +1948,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Serie"@de ,
@@ -1949,6 +1991,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Website"@de ,
@@ -2002,6 +2050,12 @@
                                         owl:onProperty beol:comment ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
+                                        owl:onProperty beol:beolIDs ;
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Webpage"@de ,
