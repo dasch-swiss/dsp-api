@@ -33,11 +33,11 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, XMLTag}
+import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders._
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
-import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
@@ -108,16 +108,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
-    private def getValue(resourceIri: IRI,
-                         maybePreviousLastModDate: Option[Instant],
-                         propertyIriForGravsearch: SmartIri,
-                         propertyIriInResult: SmartIri,
-                         expectedValueIri: IRI,
-                         requestingUser: UserADM): ReadValueV2 = {
+    private def getResourceWithValues(resourceIri: IRI,
+                                      propertyIrisForGravsearch: Seq[SmartIri],
+                                      requestingUser: UserADM): ReadResourceV2 = {
         // Make a Gravsearch query from a template.
         val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
-            propertyIris = Seq(propertyIriForGravsearch)
+            propertyIris = propertyIrisForGravsearch
         ).toString()
 
         // Run the query.
@@ -128,25 +125,61 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         expectMsgPF(timeout) {
             case searchResponse: ReadResourcesSequenceV2 =>
                 // Get the resource from the response.
-                val resource = resourcesSequenceToResource(
+                resourcesSequenceToResource(
                     requestedResourceIri = resourceIri,
                     readResourcesSequence = searchResponse,
                     requestingUser = requestingUser
                 )
+        }
+    }
 
-                resource.lastModificationDate match {
-                    case Some(updatedLastModDate) =>
-                        maybePreviousLastModDate match {
-                            case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
-                            case None => ()
-                        }
+    private def getValuesFromResource(resource: ReadResourceV2,
+                                      propertyIriInResult: SmartIri): Seq[ReadValueV2] = {
+        resource.values.getOrElse(propertyIriInResult, throw AssertionException(s"Resource <${resource.resourceIri}> does not have property <$propertyIriInResult>"))
+    }
 
-                    case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
+    private def getValueFromResource(resource: ReadResourceV2,
+                                     propertyIriInResult: SmartIri,
+                                     expectedValueIri: IRI): ReadValueV2 = {
+        val propertyValues = getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+        propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"))
+    }
+
+    private def checkLastModDate(resourceIri: IRI, maybePreviousLastModDate: Option[Instant], maybeUpdatedLastModDate: Option[Instant]): Unit = {
+        maybeUpdatedLastModDate match {
+            case Some(updatedLastModDate) =>
+                maybePreviousLastModDate match {
+                    case Some(previousLastModDate) => assert(updatedLastModDate.isAfter(previousLastModDate))
+                    case None => ()
                 }
 
-                val propertyValues = resource.values.getOrElse(propertyIriInResult, throw AssertionException(s"Resource <$resourceIri> does not have property <$propertyIriInResult>"))
-                propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"))
+            case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
         }
+    }
+
+    private def getValue(resourceIri: IRI,
+                         maybePreviousLastModDate: Option[Instant],
+                         propertyIriForGravsearch: SmartIri,
+                         propertyIriInResult: SmartIri,
+                         expectedValueIri: IRI,
+                         requestingUser: UserADM): ReadValueV2 = {
+        val resource = getResourceWithValues(
+            resourceIri = resourceIri,
+            propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+            requestingUser = requestingUser
+        )
+
+        checkLastModDate(
+            resourceIri = resourceIri,
+            maybePreviousLastModDate = maybePreviousLastModDate,
+            maybeUpdatedLastModDate = resource.lastModificationDate
+        )
+
+        getValueFromResource(
+            resource = resource,
+            propertyIriInResult = propertyIriInResult,
+            expectedValueIri = expectedValueIri
+        )
     }
 
     private def resourcesSequenceToResource(requestedResourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
@@ -1198,6 +1231,163 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure =>
                     // msg.cause.isInstanceOf[NotFoundException] should ===(true)
                     msg.cause.isInstanceOf[ForbiddenException] should ===(true) // TODO: #953
+            }
+        }
+
+        "not add a new value of the wrong type" in {
+            val resourceIri = "http://rdfh.ch/21abac2162"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = "this is not a date"
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "not add a new value that would violate a cardinality restriction" in {
+            val resourceIri = "http://rdfh.ch/4f11adaf"
+
+            // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/4f11adaf is already part of a book.
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        subject = resourceIri,
+                        predicate = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOf".toSmartIri,
+                        target = "http://rdfh.ch/e41ab5695c"
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+
+            // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/4f11adaf already has a seqnum.
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = "http://rdfh.ch/4f11adaf",
+                    propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = 1
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {
+            val resourceIri = "http://rdfh.ch/21abac2162"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val valueHasString = "This comment refers to another resource"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = Seq(StandoffTagV2(
+                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    startPosition = 31,
+                    endPosition = 39,
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                    uuid = UUID.randomUUID().toString,
+                    originalXMLID = None,
+                    startIndex = 0
+                )),
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedResource = getResourceWithValues(
+                resourceIri = resourceIri,
+                propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri),
+                requestingUser = incunabulaUser
+            )
+
+            checkLastModDate(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                maybeUpdatedLastModDate = updatedResource.lastModificationDate
+            )
+
+            val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
+                resource = updatedResource,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = commentValueIri.get
+            )
+
+            textValueFromTriplestore.valueContent match {
+                case savedTextValue: TextValueContentV2 =>
+                    savedTextValue.valueHasString should ===(valueHasString)
+                    savedTextValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
+            }
+
+            // Since this is the first Standoff resource reference between the source and target resources, we should
+            // now have version 1 of a LinkValue (it should have no previous version), with a reference count of 1.
+
+            val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
+                resource = updatedResource,
+                propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+            )
+
+            assert(linkValuesFromTripletore.size == 1)
+            val linkValueFromTriplestore: ReadValueV2 = linkValuesFromTripletore.head
+
+            linkValueFromTriplestore.valueContent match {
+                case savedLinkValue: LinkValueContentV2 =>
+                    linkValueFromTriplestore.previousValueIri.isEmpty should ===(true)
+                    linkValueFromTriplestore.valueHasRefCount.contains(1) should ===(true)
+                    savedLinkValue.subject should ===(resourceIri)
+                    savedLinkValue.predicate should ===(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri)
+                    savedLinkValue.target should ===(zeitglöckleinIri)
+
+                case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
             }
         }
     }

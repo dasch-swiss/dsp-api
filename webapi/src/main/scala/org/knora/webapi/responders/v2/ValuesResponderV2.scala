@@ -156,8 +156,8 @@ class ValuesResponderV2 extends Responder {
                     throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
                 }
 
-                _ = if (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty) {
-                    throw BadRequestException(s"Resource class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
+                _ = if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty)) {
+                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
                 }
 
                 // Check that the new value would not duplicate an existing value.
