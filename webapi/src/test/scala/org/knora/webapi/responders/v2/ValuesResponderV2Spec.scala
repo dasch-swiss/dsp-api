@@ -381,6 +381,50 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
+        
+        "create a text value with a comment" in {
+            val valueHasString = "this is a text value that has a comment"
+            val valueHasComment = "this is a comment"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        comment = Some(valueHasComment)
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = commentValueIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TextValueContentV2 =>
+                    savedValue.valueHasString should ===(valueHasString)
+                    savedValue.comment should ===(Some(valueHasComment))
+
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
 
         "create a text value with standoff" in {
 
@@ -1386,9 +1430,103 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedLinkValue.subject should ===(resourceIri)
                     savedLinkValue.predicate should ===(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri)
                     savedLinkValue.target should ===(zeitglöckleinIri)
+                    linkValueIri.set(linkValueFromTriplestore.valueIri)
 
                 case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
             }
+        }
+
+        "add another new text value containing a Standoff resource reference, and make a new version of the LinkValue" in {
+            val resourceIri = "http://rdfh.ch/21abac2162"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val valueHasString = "This remark refers to another resource"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = Seq(StandoffTagV2(
+                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    startPosition = 30,
+                    endPosition = 38,
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = zeitglöckleinIri)),
+                    uuid = UUID.randomUUID().toString,
+                    originalXMLID = None,
+                    startIndex = 0
+                )),
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedResource = getResourceWithValues(
+                resourceIri = resourceIri,
+                propertyIrisForGravsearch = Seq(propertyIri, OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri),
+                requestingUser = incunabulaUser
+            )
+
+            checkLastModDate(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                maybeUpdatedLastModDate = updatedResource.lastModificationDate
+            )
+
+            val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
+                resource = updatedResource,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = commentValueIri.get
+            )
+
+            textValueFromTriplestore.valueContent match {
+                case savedTextValue: TextValueContentV2 =>
+                    savedTextValue.valueHasString should ===(valueHasString)
+                    savedTextValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $textValueFromTriplestore")
+            }
+
+            // Now that we've added a different TextValue that refers to the same resource, we should have version 2
+            // of the LinkValue, with a reference count of 2. It should have a previousValue pointing to the previous
+            // version.
+
+            val linkValuesFromTripletore: Seq[ReadValueV2] = getValuesFromResource(
+                resource = updatedResource,
+                propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+            )
+
+            assert(linkValuesFromTripletore.size == 1)
+            val linkValueFromTriplestore: ReadValueV2 = linkValuesFromTripletore.head
+
+            linkValueFromTriplestore.valueContent match {
+                case savedLinkValue: LinkValueContentV2 =>
+                    linkValueFromTriplestore.previousValueIri.contains(linkValueIri.get) should ===(true)
+                    linkValueFromTriplestore.valueHasRefCount.contains(2) should ===(true)
+                    savedLinkValue.subject should ===(resourceIri)
+                    savedLinkValue.predicate should ===(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri)
+                    savedLinkValue.target should ===(zeitglöckleinIri)
+                    linkValueIri.set(linkValueFromTriplestore.valueIri)
+
+                case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
+            }
+
         }
     }
 }
