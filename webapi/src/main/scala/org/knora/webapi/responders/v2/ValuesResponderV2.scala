@@ -388,7 +388,7 @@ class ValuesResponderV2 extends Responder {
         }
 
         if (!hasRequiredPermission) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission <$permissionNeeded> on resource <${resourceInfo.resourceIri}>")
+            throw ForbiddenException(s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>")
         }
     }
 
@@ -539,7 +539,7 @@ class ValuesResponderV2 extends Responder {
         val resourceInfo = readResourcesSequence.resources.head
 
         if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
+            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <$requestedResourceIri>")
         }
 
         resourceInfo

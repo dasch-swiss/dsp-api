@@ -201,9 +201,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create an integer value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/8a0b1e75"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum".toSmartIri
-            val seqnum = 4
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
@@ -212,10 +212,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        valueHasInteger = seqnum
+                        valueHasInteger = intValue
                     )
                 ),
-                requestingUser = incunabulaUser,
+                requestingUser = anythingUser,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -231,12 +231,60 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
-                requestingUser = incunabulaUser
+                requestingUser = anythingUser
             )
 
             valueFromTriplestore.valueContent match {
-                case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(seqnum)
+                case savedValue: IntegerValueContentV2 => savedValue.valueHasInteger should ===(intValue)
                 case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a value if the user does not have modify permission on the resource" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 5
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "not create a duplicate integer value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 4
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -276,6 +324,28 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: TextValueContentV2 => savedValue.valueHasString should ===(valueHasString)
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate text value without standoff" in {
+            val valueHasString = "Comment 1a"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -330,6 +400,36 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a duplicate text value with standoff" in {
+            val valueHasString = "Comment 1aa"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoff,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "create a decimal value" in {
             // Add the value.
 
@@ -369,6 +469,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             valueFromTriplestore.valueContent match {
                 case savedValue: DecimalValueContentV2 => savedValue.valueHasDecimal should ===(valueHasDecimal)
                 case _ => throw AssertionException(s"Expected decimal value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate decimal value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val valueHasDecimal = 4.3
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = DecimalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasDecimal = valueHasDecimal
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -422,6 +545,35 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedValue.valueHasEndPrecision should ===(submittedValueContent.valueHasEndPrecision)
 
                 case _ => throw AssertionException(s"Expected date value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate date value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+
+            val submittedValueContent = DateValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasStartJDN = 2264907,
+                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasEndJDN = 2265271,
+                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+            )
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = submittedValueContent
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -509,6 +661,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a duplicate geometry value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = GeomValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeometry = valueHasGeometry
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "create an interval value" in {
             // Add the value.
 
@@ -556,6 +731,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a duplicate interval value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val valueHasIntervalStart = BigDecimal("1.2")
+            val valueHasIntervalEnd = BigDecimal("3.4")
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntervalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasIntervalStart = valueHasIntervalStart,
+                        valueHasIntervalEnd = valueHasIntervalEnd
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "create a list value" in {
             // Add the value.
 
@@ -597,6 +797,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedValue.valueHasListNode should ===(valueHasListNode)
 
                 case _ => throw AssertionException(s"Expected list value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate list value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -644,6 +867,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a duplicate color value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
+            val valueHasColor = "#ff3333"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = ColorValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasColor = valueHasColor
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "create a URI value" in {
             // Add the value.
 
@@ -685,6 +931,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedValue.valueHasUri should ===(valueHasUri)
 
                 case _ => throw AssertionException(s"Expected URI value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate URI value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+            val valueHasUri = "https://www.knora.org"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = UriValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasUri = valueHasUri
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -732,6 +1001,29 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a duplicate geoname value" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
+            val valueHasGeonameCode = "2661604"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = GeonameValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeonameCode = valueHasGeonameCode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "create a link between two resources" in {
             val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
             val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
@@ -776,6 +1068,33 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueFromTriplestore.valueHasRefCount should ===(Some(1))
 
                 case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate link" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+
+            val createValueRequest = CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = linkValuePropertyIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        subject = resourceIri,
+                        predicate = linkPropertyIri,
+                        target = zeitglöckleinIri
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
 
@@ -828,6 +1147,57 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not add a new value to a nonexistent resource" in {
+            val resourceIri = "http://rdfh.ch/nonexistent"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 6
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    // msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true) // TODO: #953
+            }
+        }
+
+        "not add a new value to a deleted resource" in {
+            val resourceIri = "http://rdfh.ch/9935159f67"
+            val valueHasString = "Comment 2"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    // msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true) // TODO: #953
             }
         }
     }

@@ -555,7 +555,7 @@ class OntologyResponderV2 extends Responder {
                     }
                 }
 
-                // Make maps of the class's direct and inherited cardinalities.
+                // The class's direct cardinalities.
 
                 val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = directClassCardinalities(classIri).map {
                     case (propertyIri, owlCardinalityInfo) =>
@@ -597,6 +597,20 @@ class OntologyResponderV2 extends Responder {
                                     throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $invalidProp, which is not allowed")
                                 }
                         }
+
+                        // A cardinality on a property with a boolean object must be 1 or 0-1.
+
+                        val invalidCardinalitiesOnBooleanProps: Set[SmartIri] = directCardinalities.filter {
+                            case (propertyIri, knoraCardinalityInfo) =>
+                                val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))
+                                propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
+                                    !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
+                        }.keySet
+
+                        if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
+                            throw InconsistentTriplestoreDataException(s"Class $classIri has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps.mkString(", ")}")
+                        }
+
 
                         // All its base classes with Knora IRIs must also be resource classes.
                         for (baseClass <- classDef.subClassOf) {

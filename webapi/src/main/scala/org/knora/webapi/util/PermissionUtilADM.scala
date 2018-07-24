@@ -47,6 +47,8 @@ object PermissionUtilADM {
         def toInt: Int
 
         override def compare(that: EntityPermission): Int = this.toInt - that.toInt
+
+        def getName: String
     }
 
     /**
@@ -56,6 +58,8 @@ object PermissionUtilADM {
         override def toInt: Int = 1
 
         override def toString: String = OntologyConstants.KnoraBase.RestrictedViewPermission
+
+        override val getName: String = "restricted view permission"
     }
 
     /**
@@ -65,6 +69,8 @@ object PermissionUtilADM {
         override def toInt: Int = 2
 
         override def toString: String = OntologyConstants.KnoraBase.ViewPermission
+
+        override val getName: String = "view permission"
     }
 
     /**
@@ -74,6 +80,8 @@ object PermissionUtilADM {
         override def toInt: Int = 6
 
         override def toString: String = OntologyConstants.KnoraBase.ModifyPermission
+
+        override val getName: String = "modify permission"
     }
 
     /**
@@ -83,6 +91,8 @@ object PermissionUtilADM {
         override def toInt: Int = 7
 
         override def toString: String = OntologyConstants.KnoraBase.DeletePermission
+
+        override val getName: String = "delete permission"
     }
 
     /**
@@ -92,6 +102,8 @@ object PermissionUtilADM {
         override def toInt: Int = 8
 
         override def toString: String = OntologyConstants.KnoraBase.ChangeRightsPermission
+
+        override val getName: String = "change rights permission"
     }
 
     /**
