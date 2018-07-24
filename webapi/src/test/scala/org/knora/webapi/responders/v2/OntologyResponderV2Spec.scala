@@ -1794,7 +1794,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, overriding the cardinality for anything:hasInteger" in {
+        "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, and overriding the cardinality for anything:hasInteger" in {
             val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
 
             val classInfoContent = ClassInfoContentV2(
@@ -1832,25 +1832,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"
             ).map(_.toSmartIri)
 
             expectMsgPF(timeout) {

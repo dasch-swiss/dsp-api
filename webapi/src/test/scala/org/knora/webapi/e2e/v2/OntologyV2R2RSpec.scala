@@ -513,6 +513,8 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
             )
 
