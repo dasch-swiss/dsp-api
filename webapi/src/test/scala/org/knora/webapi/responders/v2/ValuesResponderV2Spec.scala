@@ -320,12 +320,36 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create an integer value with invalid custom permissions" in {
-            // Add the value.
-
+        "not create an integer value with syntactically invalid custom permissions" in {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 87
+            val intValue = 1024
+            val permissions = "M knora-base:Creator,V knora-base:KnownUser"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    ),
+                    permissions = Some(permissions)
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+        }
+
+        "not create an integer value with custom permissions referring to a nonexistent group" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 1024
             val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
             actorUnderTest ! CreateValueRequestV2(

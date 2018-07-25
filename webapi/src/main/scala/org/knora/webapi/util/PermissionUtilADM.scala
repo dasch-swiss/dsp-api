@@ -338,16 +338,20 @@ object PermissionUtilADM {
 
         permissions.map {
             permission =>
-                val splitPermission = permission.split(' ')
-                val abbreviation = splitPermission(0)
+                val splitPermission: Array[String] = permission.split(' ')
+
+                if (splitPermission.length != 2) {
+                    errorFun(permissionLiteral)
+                }
+
+                val abbreviation: String = splitPermission(0)
 
                 if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
                     errorFun(permissionLiteral)
                 }
 
-                val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
+                val shortGroups: Set[String] = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
                 val groups = shortGroups.map(_.replace(OntologyConstants.KnoraBase.KnoraBasePrefix, OntologyConstants.KnoraBase.KnoraBasePrefixExpansion))
-
                 (permissionStringsToPermissionLevels(abbreviation), groups)
         }.toMap
     }
@@ -563,15 +567,19 @@ object PermissionUtilADM {
     def validatePermissions(permissionLiteral: String,
                             responderManager: ActorSelection)
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
+        val stringFormatter = StringFormatter.getGeneralInstance
+
         for {
             // Parse the permission literal.
-            parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(PermissionUtilADM.parsePermissions(permissionLiteral = permissionLiteral, errorFun = { literal => throw BadRequestException(s"Invalid permission literal: $literal") }))
+            parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(parsePermissions(permissionLiteral = permissionLiteral, errorFun = { literal => throw BadRequestException(s"Invalid permission literal: $literal") }))
 
             // Get the group IRIs that are mentioned, minus the built-in groups.
-            projectSpecificGroupIrisInPermissions: Set[IRI] = parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraBase.BuiltInGroups
+            projectSpecificGroupIris: Set[IRI] = parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraBase.BuiltInGroups
+
+            validatedProjectSpecificGroupIris: Set[IRI] = projectSpecificGroupIris.map(iri => stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri")))
 
             // Check that those groups exist.
-            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = projectSpecificGroupIrisInPermissions, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
+            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = validatedProjectSpecificGroupIris, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
 
             // Reformat the permission literal.
             permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap {

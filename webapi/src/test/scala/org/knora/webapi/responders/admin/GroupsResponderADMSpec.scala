@@ -87,7 +87,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 val response = expectMsgType[GroupsGetResponseADM](timeout)
                 // println(response.users)
                 response.groups.nonEmpty should be (true)
-                response.groups.size should be (1)
+                response.groups.size should be (2)
             }
         }
 
@@ -98,7 +98,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
             "return 'NotFoundException' when the group is unknown " in {
                 actorUnderTest ! GroupGetRequestADM("http://rdfh.ch/groups/notexisting", rootUser)
-                expectMsg(Failure(NotFoundException(s"For the given group iri 'http://rdfh.ch/groups/notexisting' no information was found")))
+
+                expectMsgPF(timeout) {
+                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                }
             }
         }
 
@@ -132,7 +135,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"Group with the name: 'NewGroup' already exists")))
+
+                expectMsgPF(timeout) {
+                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+                }
             }
 
             "return 'BadRequestException' if group name or project IRI are missing" in {
@@ -180,7 +186,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     UUID.randomUUID
                 )
 
-                expectMsg(Failure(NotFoundException(s"Group 'http://rdfh.ch/groups/notexisting' not found. Aborting update request.")))
+                expectMsgPF(timeout) {
+                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                }
             }
 
             "return 'BadRequest' if the new group name already exists inside the project" in {
@@ -191,7 +199,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     UUID.randomUUID
                 )
 
-                expectMsg(Failure(BadRequestException(s"Group with the name: 'Image reviewer' already exists.")))
+                expectMsgPF(timeout) {
+                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                }
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
@@ -218,7 +228,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
                     requestingUser = SharedTestDataADM.rootUser
                 )
+
                 val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+
                 received.members.map(_.id) should contain allElementsOf Seq(
                     SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
                     SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
@@ -230,7 +242,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                     groupIri = "http://rdfh.ch/groups/notexisting",
                     requestingUser = SharedTestDataADM.rootUser
                 )
-                expectMsg(Failure(NotFoundException(s"Group 'http://rdfh.ch/groups/notexisting' not found.")))
+
+                expectMsgPF(timeout) {
+                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                }
+
             }
         }
     }
