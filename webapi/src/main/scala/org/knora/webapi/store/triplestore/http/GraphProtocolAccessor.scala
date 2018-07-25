@@ -31,7 +31,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 
 /**
@@ -50,7 +50,7 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
+    def put(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -61,7 +61,7 @@ object GraphProtocolAccessor {
       * @param filepath  path to the file containing turtle.
       * @return String
       */
-    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
+    def put_string_payload(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
         this.execute(HTTP_PUT_METHOD, graphName, filepath)
     }
 
@@ -72,11 +72,11 @@ object GraphProtocolAccessor {
       * @param filepath  a path to the file containing turtle.
       * @return String
       */
-    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
+    def post(graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
         this.execute(HTTP_POST_METHOD, graphName, filepath)
     }
 
-    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): Future[StatusCode] = {
+    private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
         val file = new File(filepath)
 
         if (!file.exists) {
@@ -89,7 +89,7 @@ object GraphProtocolAccessor {
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
-        implicit val executionContext = _system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = _system.dispatcher
         val http = Http(_system)
 
         // Use HTTP basic authentication.
@@ -150,7 +150,7 @@ object GraphProtocolAccessor {
 
         log.debug("==>> GraphProtocolAccessor END")
 
-        responseFuture
+        Await.result(responseFuture, settings.defaultTimeout * 2)
     }
 
 }

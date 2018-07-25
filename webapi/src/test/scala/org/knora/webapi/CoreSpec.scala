@@ -31,7 +31,7 @@ import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContextExecutor}
 
 object CoreSpec {
 
@@ -60,9 +60,16 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     // can be overridden in individual spec
     protected val rdfDataObjects = Seq.empty[RdfDataObject]
 
-    val settings = Settings(_system)
-    val log = akka.event.Logging(_system, this.getClass)
+    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+
+    // needs to be initialized early on
     StringFormatter.initForTest()
+
+    val settings = Settings(system)
+    val log = akka.event.Logging(system, this.getClass)
+
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)
@@ -88,21 +95,10 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        println("CoreSpec - loadTestData - started")
-
         implicit val timeout: Timeout = Timeout(settings.defaultRestoreTimeout)
         Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout)
-
-        println("CoreSpec - loadTestData - triplestore reset finished")
-
         Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout)
-
-        println("CoreSpec - loadTestData - load ontologies finished")
-        println("CoreSpec - loadTestData - finished")
     }
 
     def memusage(): Unit = {

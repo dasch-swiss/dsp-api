@@ -49,17 +49,13 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
     /* set the timeout for the route test */
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
-    val exampleOrigin = HttpOrigin("http://example.com")
-    val corsSettings = CORSSupport.corsSettings
+    private val exampleOrigin = HttpOrigin("http://example.com")
+    private val corsSettings = CORSSupport.corsSettings
 
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "A Route with enabled CORS support " should {
 

@@ -26,15 +26,15 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.{ActorUtil, CacheUtil}
-import org.scalatest.{Assertion, PrivateMethodTester}
+import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Try}
 
 object AuthenticatorSpec {
     val config = ConfigFactory.parseString(
@@ -67,14 +67,16 @@ class MockUserActor extends Actor {
 
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
-    implicit val executionContext = system.dispatcher
-    implicit val timeout: Timeout = Duration(5, SECONDS)
+    implicit val timeout: Timeout = settings.defaultTimeout
 
     val getUserADMByEmail = PrivateMethod[Future[UserADM]]('getUserADMByEmail)
     val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]]('authenticateCredentialsV2)
 
-    val mockUsersActor = system.actorOf(Props(new MockUserActor), RESPONDER_MANAGER_ACTOR_NAME)
+    // rolling my own responderManager
+    override protected val responderManager = system.actorOf(Props(new MockUserActor), RESPONDER_MANAGER_ACTOR_NAME)
 
+    // no need to load anything
+    override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = ()
 
     "During Authentication" when {
         "called, the 'getUserADMByEmail' method " should {

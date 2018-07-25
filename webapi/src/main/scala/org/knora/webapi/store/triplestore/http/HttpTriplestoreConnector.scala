@@ -381,10 +381,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         val resetTriplestoreResult = for {
 
             // drop old content
-            dropResult <- dropAllTriplestoreContent()
+            _ <- dropAllTriplestoreContent()
 
             // insert new content
-            insertResult <- insertDataIntoTriplestore(rdfDataObjects)
+            _ <- insertDataIntoTriplestore(rdfDataObjects)
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
             result = ResetTriplestoreContentACK()
@@ -416,27 +416,32 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         response
     }
 
+    /**
+      * Inserts the data referenced inside the `rdfDataObjects`.
+      * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
+      * @return [[InsertTriplestoreContentACK]]
+      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Future[InsertTriplestoreContentACK] = {
         try {
             log.debug("==>> Loading Data Start")
 
             val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
-            val defaultRdfDataObjectList = defaultRdfDataList.asScala.map {
+            val defaultRdfDataObjectList: Seq[RdfDataObject] = defaultRdfDataList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
 
-            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+            val completeRdfDataObjectList: Seq[RdfDataObject] = defaultRdfDataObjectList ++ rdfDataObjects
 
-            for (elem <- completeRdfDataObjectList) {
+            // log.debug("==>> List of Graphs: {}", completeRdfDataObjectList.map(_.name))
 
-                for {
-                    result <- GraphProtocolAccessor.post(elem.name, elem.path)
-                    _ = log.debug(s"added: ${elem.name}. Status: $result")
-                } yield result
-
-
+            // inserting data synchronously
+            val result: Seq[StatusCode] = completeRdfDataObjectList.map { ele =>
+                val status: StatusCode = GraphProtocolAccessor.post(ele.name, ele.path)
+                log.debug(s"added: ${ele.name}. Status: $status")
+                status
             }
 
+            // update index if graphdb
             if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
                 /* need to update the lucene index */
                 val indexUpdateSparqlString =
@@ -448,11 +453,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 for {
                     result <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
                     _ = log.debug(s"==>> Index update done, Result: $result")
-                } yield result
+                } yield true
             }
 
-            log.debug("==>> Loading Data End")
-            Future.successful(InsertTriplestoreContentACK())
+            FastFuture.successful(InsertTriplestoreContentACK())
+
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Future.failed(e)
             case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))

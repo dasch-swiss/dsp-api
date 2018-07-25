@@ -28,12 +28,11 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.duration._
 
@@ -55,8 +54,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
     val rootCreds = CredentialsV1(
         SharedTestDataV1.rootUser.userData.user_id.get,
         SharedTestDataV1.rootUser.userData.email.get,
@@ -69,26 +66,25 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
+    private val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
+    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
-    val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
+    private val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
+    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
-    val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
+    private val wrongEmail = "wrong@example.com"
+    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
 
-    val wrongEmail = "wrong@example.com"
-    val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+    private val imagesProjectIri = SharedTestDataADM.imagesProject.id
+    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesProjectIri = SharedTestDataADM.imagesProject.id
-    val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
-
-    val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
-    val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
+    private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+    private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
     /**
       * Convenience method returning the users project memberships.
@@ -127,10 +123,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
         val request = Get(baseApiUrl + "/admin/users/groups/" + userIriEnc) ~> addCredentials(BasicHttpCredentials(credentials.email, credentials.password))
         val response: HttpResponse = singleAwaitingRequest(request)
         AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[GroupADM]]
-    }
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
     }
 
     "The Users Route ('v1/users')" when {

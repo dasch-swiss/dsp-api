@@ -53,7 +53,7 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects: List[RdfDataObject] = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -61,9 +61,6 @@ class ListsRouteV2R2Spec extends R2RSpec {
 
     )
 
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The lists v2 endpoint" should {
 

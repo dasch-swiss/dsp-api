@@ -65,16 +65,12 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     implicit val ec = system.dispatcher
 
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/beol-data.ttl", name = "http://www.knora.org/data/0801/beol"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     private val firstTextValueIri = new MutableTestIri
     private val secondTextValueIri = new MutableTestIri

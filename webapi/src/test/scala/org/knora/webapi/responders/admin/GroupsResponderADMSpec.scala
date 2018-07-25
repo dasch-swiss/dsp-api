@@ -50,7 +50,6 @@ object GroupsResponderADMSpec {
   */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
 
-    implicit private val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
     private val imagesProject = SharedTestDataADM.imagesProject

@@ -52,8 +52,6 @@ object UsersResponderADMSpec {
   */
 class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
 
-    private implicit val executionContext = system.dispatcher
-
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataADM.rootUser

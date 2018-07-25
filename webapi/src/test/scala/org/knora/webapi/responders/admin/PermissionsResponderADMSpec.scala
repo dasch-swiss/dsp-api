@@ -31,8 +31,8 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.collection.Map
+import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
 
 
 object PermissionsResponderADMSpec {
@@ -49,8 +49,6 @@ object PermissionsResponderADMSpec {
   * This spec is used to test the [[PermissionsResponderADM]] actor.
   */
 class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.config) with ImplicitSender {
-
-    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
     private val knoraIdUtil = new KnoraIdUtil
 

@@ -75,16 +75,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
-    def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
-        Await.result(responseFuture, duration)
-    }
-
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, settings.defaultRestoreTimeout)
-    }
+    protected val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
         /* Set the startup flags and start the Knora Server */
@@ -96,8 +87,14 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
         // set allow reload over http
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service
-        startService()
+        // start the knora service without startupTasks
+        startService(false)
+
+        // returns only when application state is running
+        applicationStateRunning()
+
+        // loadTestData
+        loadTestData(rdfDataObjects)
 
         log.debug("E2ESpec - beforeAll - finished")
     }
@@ -106,6 +103,16 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
         /* Stop the server when everything else has finished */
         log.debug(s"Stopping Knora Service")
         stopService()
+    }
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        singleAwaitingRequest(request, settings.defaultRestoreTimeout)
+    }
+
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+        val responseFuture = Http().singleRequest(request)
+        Await.result(responseFuture, duration)
     }
 
 }

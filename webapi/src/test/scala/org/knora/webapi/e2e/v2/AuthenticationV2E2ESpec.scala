@@ -52,11 +52,6 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List[RdfDataObject](
-        // RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        // RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
-    )
-
     private val rootIri = SharedTestDataADM.rootUser.id
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootEmail = SharedTestDataADM.rootUser.email
@@ -66,10 +61,6 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {
 

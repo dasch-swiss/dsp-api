@@ -64,9 +64,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     override val rdfDataObjects: Seq[RdfDataObject] = List(anythingData)
 
-    def loadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = true): Unit = {
+    private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
+        expectMsg(settings.defaultRestoreTimeout, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
 
@@ -3129,7 +3129,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/onto-without-project.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3138,7 +3138,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-value-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3148,7 +3148,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/missing-link-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3157,7 +3157,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-incompatible-with-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3166,7 +3166,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3175,7 +3175,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/property-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3184,7 +3184,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-is-standoff-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3193,7 +3193,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-missing-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3202,7 +3202,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-resource-prop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3211,7 +3211,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbresprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3220,7 +3220,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-cardinality-on-kbhasvalue-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3229,7 +3229,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3238,7 +3238,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-resprop-cardinality-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3247,7 +3247,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/standoff-class-with-invalid-base-class-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3256,7 +3256,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3265,7 +3265,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-value-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3274,7 +3274,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-guielement-scc-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3283,7 +3283,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-knora-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3292,7 +3292,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-incompatible-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3301,7 +3301,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3310,7 +3310,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-misdefined-link-value-property-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3319,7 +3319,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-occ-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3328,7 +3328,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-without-label-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3337,7 +3337,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-both-value-and-link-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3346,7 +3346,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/filevalue-prop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3355,7 +3355,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/resource-prop-wrong-base-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3364,7 +3364,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-guiorder-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3373,7 +3373,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guielement-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3382,7 +3382,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/cardinality-with-guiattribute-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
@@ -3391,7 +3391,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
-            loadTestData(invalidOnto)
+            customLoadTestData(invalidOnto)
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
     }

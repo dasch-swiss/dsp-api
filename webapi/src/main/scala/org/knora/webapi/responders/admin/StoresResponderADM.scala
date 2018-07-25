@@ -21,6 +21,7 @@ package org.knora.webapi.responders.admin
 
 import akka.pattern._
 import akka.util.Timeout
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
@@ -62,7 +63,7 @@ class StoresResponderADM extends Responder {
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
 
-        log.info(s"resetTriplestoreContent - called")
+        log.debug(s"resetTriplestoreContent - called")
         log.debug(s"resetTriplestoreContent called with: {}", rdfDataObjects.toString)
         val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
         log.debug(s"StartupFlags.allowReloadOverHTTP = {}", allowReloadOverHTTP)
@@ -75,11 +76,11 @@ class StoresResponderADM extends Responder {
             }
 
             // need to send this of with a longer timeout
-            resetResponse <- (storeManager ask(ResetTriplestoreContent(rdfDataObjects), restoreTimeout)).mapTo[ResetTriplestoreContentACK]
-            _ = log.info(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
+            resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
+            _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
-            _ = log.info(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
+            _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
             result = ResetTriplestoreContentResponseADM(message = "success")
 

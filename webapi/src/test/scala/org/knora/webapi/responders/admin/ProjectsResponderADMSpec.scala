@@ -51,8 +51,7 @@ object ProjectsResponderADMSpec {
   */
 class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
 
-    private implicit val executionContext = system.dispatcher
-    private implicit val stringFormatter = StringFormatter.getGeneralInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val timeout = 5.seconds
 
     private val rootUser= SharedTestDataADM.rootUser

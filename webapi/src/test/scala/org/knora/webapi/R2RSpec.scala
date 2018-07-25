@@ -60,8 +60,11 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
+    protected val rdfDataObjects = List.empty[RdfDataObject]
+
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)
+        loadTestData(rdfDataObjects)
     }
 
     override def afterAll {
@@ -83,8 +86,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        // implicit val timeout = Timeout(settings.defaultRestoreTimeout)
-        Await.result(storeManager.ask(ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout), settings.defaultRestoreTimeout)
-        Await.result(responderManager ask(LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout), settings.defaultTimeout)
+        implicit val timeout = Timeout(settings.defaultRestoreTimeout)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout)
+        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout)
     }
 }

@@ -47,7 +47,6 @@ object UsersResponderV1Spec {
   */
 class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
-    private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataV1.rootUser

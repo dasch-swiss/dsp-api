@@ -69,9 +69,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     private val password = "test"
 
-
-
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -80,10 +78,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl", name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
         RdfDataObject(path = "_test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl", name = "http://www.knora.org/data/0666/gravsearchtest1")
     )
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The Search v2 Endpoint" should {
         "perform a fulltext search for 'Narr'" in {

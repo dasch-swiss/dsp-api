@@ -26,7 +26,6 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRe
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
 import org.knora.webapi.util.MutableUserADM
 
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 object DrawingsGodsV1Spec {
@@ -42,7 +41,6 @@ object DrawingsGodsV1Spec {
   */
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
-    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
 
     override val rdfDataObjects: List[RdfDataObject] = List(

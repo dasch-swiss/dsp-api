@@ -50,8 +50,6 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val rdfDataObjects = List()
-
     // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
     // If false, the responses from the server are compared to the contents fo the expected response files.
     private val writeGetTestResponses = false
@@ -149,10 +147,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         classDef.value(OntologyConstants.Rdfs.SubClassOf).asInstanceOf[JsonLDArray].value.collect {
             case obj: JsonLDObject if !obj.isIri => obj.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
         }.toSet
-    }
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
     }
 
     "The Ontologies v2 Endpoint" should {

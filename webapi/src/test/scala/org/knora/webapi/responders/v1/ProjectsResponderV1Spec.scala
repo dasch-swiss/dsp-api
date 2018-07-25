@@ -30,7 +30,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1
 
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 
@@ -48,7 +47,6 @@ object ProjectsResponderV1Spec {
   */
 class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
 
-    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
 
     private val rootUserProfileV1 = SharedTestDataV1.rootUser

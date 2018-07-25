@@ -58,7 +58,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val textValueWithLangIri = new MutableTestIri
     private val boringComment = "This is a boring comment."
 
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
@@ -67,10 +67,6 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val testPass = "test"
 
     private val mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The Values Endpoint" should {
         "add an integer value to a resource" in {

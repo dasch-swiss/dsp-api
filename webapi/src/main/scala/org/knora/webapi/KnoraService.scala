@@ -176,7 +176,7 @@ trait KnoraService {
     /**
       * Starts the Knora API server.
       */
-    def startService(): Unit = {
+    def startService(startupTasks: Boolean): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
 
@@ -185,10 +185,16 @@ trait KnoraService {
 
                 startReporters()
 
-                // Kick of startup tasks. This method returns when Running state is reached.
-                println("KnoraService - startupTaskRunner starting")
-                startupTaskRunner()
-                println("KnoraService - startupTaskRunner finished")
+                if (startupTasks) {
+                    // Kick of startup tasks. This method returns when Running state is reached.
+                    println("KnoraService - startupTaskRunner startingo")
+                    startupTaskRunner()
+                    println("KnoraService - startupTaskRunner finished")
+                } else {
+                    // fast track startup
+                    CacheUtil.createCaches(settings.caches)
+                    applicationStateActor ! SetAppState(AppState.Running)
+                }
             }
             case Failure(ex) => {
                 log.error("Failed to bind to {}:{}! - {}", settings.internalKnoraApiHost, settings.internalKnoraApiPort, ex.getMessage)
@@ -222,6 +228,24 @@ trait KnoraService {
                 // if we are here, then the ask timed out, so we need to try again until the actor is ready
                 applicationStateActorReady()
             }
+        }
+    }
+
+    /**
+      * Returns only when the application state is 'Running'.
+      */
+    def applicationStateRunning(): Unit = {
+
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        implicit val executor: ExecutionContext = blockingDispatcher
+
+        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 2.second).asInstanceOf[AppState]
+
+        if (state != AppState.Running) {
+            // not in running state so call startup checks again
+            // we should wait a bit before we call ourselves again
+            Await.result(blockingFuture(), 2.second)
+            applicationStateRunning()
         }
     }
 

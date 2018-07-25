@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import java.io.File
+import java.nio.file.{Files, Paths}
 
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import com.typesafe.config.{Config, ConfigValue}
@@ -28,8 +29,6 @@ import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-
-
 import akka.ConfigurationException
 
 /**
@@ -60,17 +59,24 @@ class SettingsImpl(config: Config) extends Extension {
     val dataDir: String = config.getString("app.datadir")
 
     // try to create the directories
-    try {
-        new File(tmpDataDir).mkdirs()
-        new File(dataDir).mkdirs()
-    }
-    catch {
-        case e: Exception => {
-            println(s"SettingsImpl - Exception thrown while trying to create tmp dirs: $e")
-            throw e
+    if (!Files.exists(Paths.get(tmpDataDir))) {
+        try {
+            val _tmpDataDir = new File(tmpDataDir)
+            _tmpDataDir.mkdir()
+        } catch {
+            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
         }
     }
 
+    // try to create the directories
+    if (!Files.exists(Paths.get(dataDir))) {
+        try {
+            val _dataDir = new File(dataDir)
+            _dataDir.mkdir()
+        } catch {
+            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
+        }
+    }
 
     val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         (mType: ConfigValue) => mType.unwrapped.toString
@@ -112,7 +118,7 @@ class SettingsImpl(config: Config) extends Extension {
     }.toVector
 
     val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
-    val defaultRestoreTimeout: FiniteDuration = getFiniteDuration("app.default-restore-timeout", config)
+    val defaultRestoreTimeout: FiniteDuration = defaultTimeout * 6
 
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
     val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")

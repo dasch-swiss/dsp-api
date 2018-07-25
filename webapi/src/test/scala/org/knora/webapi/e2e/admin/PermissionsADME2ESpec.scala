@@ -19,11 +19,10 @@
 
 package org.knora.webapi.e2e.admin
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.StatusCodes
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.{E2ESpec, OntologyConstants, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.duration._
 
@@ -41,12 +40,6 @@ object PermissionsADME2ESpec {
   * This spec tests the 'v1/store' route.
   */
 class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with TriplestoreJsonProtocol {
-
-    private val rdfDataObjects: List[RdfDataObject] = List.empty[RdfDataObject]
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The Permissions Route ('admin/permissions/projectIri/groupIri')" should {
 

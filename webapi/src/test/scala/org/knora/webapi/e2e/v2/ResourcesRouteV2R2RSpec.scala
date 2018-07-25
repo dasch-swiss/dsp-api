@@ -58,17 +58,13 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
     private val password = "test"
 
-    private val rdfDataObjects = List(
+    override protected val rdfDataObjects: List[RdfDataObject] = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
     )
-
-    "Load test data" in {
-        loadTestData(rdfDataObjects)
-    }
 
     "The resources v2 endpoint" should {
 
