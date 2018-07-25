@@ -57,6 +57,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
         case GroupsGetADM(requestingUser) => future2Message(sender(), groupsGetADM(requestingUser), log)
         case GroupsGetRequestADM(requestingUser) => future2Message(sender(), groupsGetRequestADM(requestingUser), log)
         case GroupGetADM(groupIri, requestingUser) => future2Message(sender(), groupGetADM(groupIri, requestingUser), log)
+        case MultipleGroupsGetRequestADM(groupIris, requestingUser) => future2Message(sender(), multipleGroupsGetRequestADM(groupIris, requestingUser), log)
         case GroupGetRequestADM(groupIri, requestingUser) => future2Message(sender(), groupGetRequestADM(groupIri, requestingUser), log)
         case GroupMembersGetRequestADM(groupIri, userProfileV1) => future2Message(sender(), groupMembersGetRequestADM(groupIri, userProfileV1), log)
         case GroupCreateRequestADM(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupADM(newGroupInfo, userProfile, apiRequestID), log)
@@ -175,6 +176,21 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
                 case None => throw NotFoundException(s"For the given group iri '$groupIri' no information was found")
             }
         } yield result
+    }
+
+    /**
+      * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
+      *
+      * @param groupIris the IRIs of the groups being requested.
+      * @param requestingUser the user initiating the request.
+      * @return information about the group as a set of [[GroupGetResponseADM]] objects.
+      */
+    private def multipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: UserADM): Future[Set[GroupGetResponseADM]] = {
+        val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map {
+            groupIri => groupGetRequestADM(groupIri = groupIri, requestingUser = requestingUser)
+        }
+
+        Future.sequence(groupResponseFutures)
     }
 
     /**

@@ -129,10 +129,13 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                         responderManager = responderManager,
                                         log = log
                                     )
+
+                                maybePermissions: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueV2(
                                 resourceIri = resourceIri.toString,
                                 propertyIri = propertyIri,
-                                valueContent = valueContent
+                                valueContent = valueContent,
+                                permissions = maybePermissions
                             )
 
                         case _ => throw BadRequestException(s"Invalid value for $propertyIri")
@@ -171,7 +174,9 @@ case class CreateValueResponseV2(valueIri: IRI) extends KnoraResponseV2 {
   * The value of a Knora property in the context of some particular input or output operation.
   * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
-sealed trait IOValueV2
+sealed trait IOValueV2 {
+    def valueContent: ValueContentV2
+}
 
 /**
   * Provides information about the deletion of a resource or value.
@@ -256,8 +261,12 @@ case class ReadValueV2(valueIri: IRI,
   * @param resourceIri  the resource the new value should be attached to.
   * @param propertyIri  the property of the new value. If the client wants to create a link, this must be a link value property.
   * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
   */
-case class CreateValueV2(resourceIri: IRI, propertyIri: SmartIri, valueContent: ValueContentV2) extends IOValueV2
+case class CreateValueV2(resourceIri: IRI,
+                         propertyIri: SmartIri,
+                         valueContent: ValueContentV2,
+                         permissions: Option[String] = None) extends IOValueV2
 
 /**
   * A new version of a value of a Knora property to be created.

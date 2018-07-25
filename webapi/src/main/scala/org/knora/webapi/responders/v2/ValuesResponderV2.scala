@@ -176,19 +176,26 @@ class ValuesResponderV2 extends Responder {
                     case _ => FastFuture.successful(())
                 }
 
-                // Get the default permissions for the new value. TODO: let the user submit the permissions they want to use.
+                // Did the user submit permissions for the new value?
+                newValuePermissionLiteral <- createValueRequest.createValue.permissions match {
+                    case Some(permissions) =>
+                        // Yes. Validate them.
+                        PermissionUtilADM.validatePermissions(permissionLiteral = permissions, responderManager = responderManager)
 
-                defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-                    responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                        projectIri = resourceInfo.attachedToProject,
-                        resourceClassIri = resourceInfo.resourceClass.toString,
-                        propertyIri = submittedInternalPropertyIri.toString,
-                        targetUser = createValueRequest.requestingUser,
-                        requestingUser = KnoraSystemInstances.Users.SystemUser
-                    )
-                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
-
-                newValuePermissionLiteral: String = defaultObjectAccessPermissionsResponse.permissionLiteral
+                    case None =>
+                        // No. Get default permissions for the new value.
+                        for {
+                            defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
+                                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
+                                    projectIri = resourceInfo.attachedToProject,
+                                    resourceClassIri = resourceInfo.resourceClass.toString,
+                                    propertyIri = submittedInternalPropertyIri.toString,
+                                    targetUser = createValueRequest.requestingUser,
+                                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                                )
+                            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+                        } yield defaultObjectAccessPermissionsResponse.permissionLiteral
+                }
 
                 // Get information about the project that the resource is in, so we know which named graph to put the new value in.
                 projectInfo: ProjectGetResponseADM <- {

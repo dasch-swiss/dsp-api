@@ -381,7 +381,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
-        
+
         "create a text value with a comment" in {
             val valueHasString = "this is a text value that has a comment"
             val valueHasComment = "this is a comment"

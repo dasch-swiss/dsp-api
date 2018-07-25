@@ -19,14 +19,20 @@
 
 package org.knora.webapi.util
 
+import akka.actor.ActorSelection
+import akka.pattern._
+import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.responders.v1.GroupedProps.{ValueLiterals, ValueProps}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
 import org.slf4j.LoggerFactory
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
@@ -300,13 +306,13 @@ object PermissionUtilADM {
     /**
       * Parses the literal object of the predicate `knora-base:hasPermissions`.
       *
-      * @param permissionListStr the literal to parse.
+      * @param permissionLiteral the literal to parse.
       * @return a [[Map]] in which the keys are permission abbreviations in
       *         [[OntologyConstants.KnoraBase.EntityPermissionAbbreviations]], and the values are sets of
       *         user group IRIs.
       */
-    def parsePermissions(permissionListStr: String): Map[EntityPermission, Set[IRI]] = {
-        val permissions: Seq[String] = permissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
+    def parsePermissions(permissionLiteral: String, errorFun: String => Nothing = { permissionLiteral: String => throw InconsistentTriplestoreDataException(s"invalid permission literal: $permissionLiteral") }): Map[EntityPermission, Set[IRI]] = {
+        val permissions: Seq[String] = permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
 
         permissions.map {
             permission =>
@@ -314,7 +320,7 @@ object PermissionUtilADM {
                 val abbreviation = splitPermission(0)
 
                 if (!OntologyConstants.KnoraBase.EntityPermissionAbbreviations.contains(abbreviation)) {
-                    throw InconsistentTriplestoreDataException(s"Unrecognized permission abbreviation '$abbreviation'")
+                    errorFun(permissionLiteral)
                 }
 
                 val shortGroups = splitPermission(1).split(OntologyConstants.KnoraBase.GroupListDelimiter).toSet
@@ -523,6 +529,26 @@ object PermissionUtilADM {
         }
     }
 
+    /**
+      * Given a permission literal, checks that it refers to valid permissions and groups.
+      *
+      * @param permissionLiteral the permission literal.
+      * @param responderManager  a reference to the responder manager.
+      * @param timeout           a timeout for `ask` messages.
+      * @param executionContext  an execution context for futures.
+      * @return the validated permission literal.
+      */
+    def validatePermissions(permissionLiteral: String,
+                            responderManager: ActorSelection)
+                           (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
+        for {
+            // Parse the permission literal.
+            parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(PermissionUtilADM.parsePermissions(permissionLiteral = permissionLiteral, errorFun = { literal => throw BadRequestException(s"Invalid permission literal: $literal") }))
+            groupIrisInPermissions: Set[IRI] = parsedPermissions.values.flatten.toSet
+            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = groupIrisInPermissions, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
+        } yield permissionLiteral
+    }
+
     /////////////////////////////////////////
     // API v1 methods
 
@@ -630,8 +656,8 @@ object PermissionUtilADM {
                             entityPermissionLiteral: String,
                             userProfile: UserProfileV1): Option[Int] = {
 
-        val maybePermissionLevel = if (userProfile.permissionData.isSystemAdmin || userProfile.permissionData.hasProjectAdminAllPermissionFor(entityProject)) {
-            // If the user is in the SystemAdmin group or has ProjectAdminAllPermission, just give them the maximum permission.
+        val maybePermissionLevel = if (userProfile.isSystemUser || userProfile.permissionData.isSystemAdmin || userProfile.permissionData.hasProjectAdminAllPermissionFor(entityProject)) {
+            // If the user is the system user, is in the SystemAdmin group or has ProjectAdminAllPermission, just give them the maximum permission.
             Some(MaxPermissionLevel)
         } else {
             val entityPermissions: Map[EntityPermission, Set[IRI]] = parsePermissions(entityPermissionLiteral)
