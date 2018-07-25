@@ -362,6 +362,15 @@ object OntologyConstants {
         val SystemAdmin: IRI = KnoraBasePrefixExpansion + "SystemAdmin"
         val ProjectAdmin: IRI = KnoraBasePrefixExpansion + "ProjectAdmin"
 
+        val BuiltInGroups: Set[IRI] = Set(
+            UnknownUser,
+            KnownUser,
+            ProjectMember,
+            Creator,
+            SystemAdmin,
+            ProjectAdmin
+        )
+
         /* Institution */
         val Institution: IRI = KnoraBasePrefixExpansion + "Institution"
         val InstitutionDescription: IRI = KnoraBasePrefixExpansion + "institutionDescription"

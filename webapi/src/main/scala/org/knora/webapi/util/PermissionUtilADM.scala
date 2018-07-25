@@ -55,6 +55,8 @@ object PermissionUtilADM {
         override def compare(that: EntityPermission): Int = this.toInt - that.toInt
 
         def getName: String
+
+        def toPermissionADM(groupIri: IRI): PermissionADM
     }
 
     /**
@@ -66,6 +68,10 @@ object PermissionUtilADM {
         override def toString: String = OntologyConstants.KnoraBase.RestrictedViewPermission
 
         override val getName: String = "restricted view permission"
+
+        override def toPermissionADM(groupIri: IRI): PermissionADM = {
+            PermissionADM.restrictedViewPermission(groupIri)
+        }
     }
 
     /**
@@ -77,6 +83,10 @@ object PermissionUtilADM {
         override def toString: String = OntologyConstants.KnoraBase.ViewPermission
 
         override val getName: String = "view permission"
+
+        override def toPermissionADM(groupIri: IRI): PermissionADM = {
+            PermissionADM.viewPermission(groupIri)
+        }
     }
 
     /**
@@ -88,6 +98,10 @@ object PermissionUtilADM {
         override def toString: String = OntologyConstants.KnoraBase.ModifyPermission
 
         override val getName: String = "modify permission"
+
+        override def toPermissionADM(groupIri: IRI): PermissionADM = {
+            PermissionADM.modifyPermission(groupIri)
+        }
     }
 
     /**
@@ -99,6 +113,10 @@ object PermissionUtilADM {
         override def toString: String = OntologyConstants.KnoraBase.DeletePermission
 
         override val getName: String = "delete permission"
+
+        override def toPermissionADM(groupIri: IRI): PermissionADM = {
+            PermissionADM.deletePermission(groupIri)
+        }
     }
 
     /**
@@ -110,6 +128,10 @@ object PermissionUtilADM {
         override def toString: String = OntologyConstants.KnoraBase.ChangeRightsPermission
 
         override val getName: String = "change rights permission"
+
+        override def toPermissionADM(groupIri: IRI): PermissionADM = {
+            PermissionADM.changeRightsPermission(groupIri)
+        }
     }
 
     /**
@@ -536,7 +558,7 @@ object PermissionUtilADM {
       * @param responderManager  a reference to the responder manager.
       * @param timeout           a timeout for `ask` messages.
       * @param executionContext  an execution context for futures.
-      * @return the validated permission literal.
+      * @return the validated permission literal, normalised and reformatted.
       */
     def validatePermissions(permissionLiteral: String,
                             responderManager: ActorSelection)
@@ -544,9 +566,21 @@ object PermissionUtilADM {
         for {
             // Parse the permission literal.
             parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(PermissionUtilADM.parsePermissions(permissionLiteral = permissionLiteral, errorFun = { literal => throw BadRequestException(s"Invalid permission literal: $literal") }))
-            groupIrisInPermissions: Set[IRI] = parsedPermissions.values.flatten.toSet
-            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = groupIrisInPermissions, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
-        } yield permissionLiteral
+
+            // Get the group IRIs that are mentioned, minus the built-in groups.
+            projectSpecificGroupIrisInPermissions: Set[IRI] = parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraBase.BuiltInGroups
+
+            // Check that those groups exist.
+            _ <- (responderManager ? MultipleGroupsGetRequestADM(groupIris = projectSpecificGroupIrisInPermissions, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Set[GroupGetResponseADM]]
+
+            // Reformat the permission literal.
+            permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap {
+                case (entityPermission, groupIris) =>
+                    groupIris.map {
+                        groupIri => entityPermission.toPermissionADM(groupIri)
+                    }
+            }.toSet
+        } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
     }
 
     /////////////////////////////////////////

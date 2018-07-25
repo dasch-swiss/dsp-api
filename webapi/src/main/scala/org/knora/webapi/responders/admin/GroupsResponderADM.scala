@@ -173,7 +173,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
             maybeGroupADM: Option[GroupADM] <- groupGetADM(groupIri, requestingUser)
             result = maybeGroupADM match {
                 case Some(group) => GroupGetResponseADM(group = group)
-                case None => throw NotFoundException(s"For the given group iri '$groupIri' no information was found")
+                case None => throw NotFoundException(s"Group <$groupIri> not found")
             }
         } yield result
     }
@@ -207,7 +207,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
         for {
             groupExists: Boolean <- groupExists(groupIri)
 
-            _ = if (!groupExists) throw NotFoundException(s"Group '$groupIri' not found.")
+            _ = if (!groupExists) throw NotFoundException(s"Group <$groupIri> not found")
 
             sparqlQueryString <- Future(queries.sparql.v1.txt.getGroupMembersByIri(
                 triplestore = settings.triplestoreType,
@@ -263,14 +263,14 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
             nameExists <- groupByNameAndProjectExists(name = createRequest.name, projectIri = createRequest.project)
             _ = if (nameExists) {
-                throw DuplicateValueException(s"Group with the name: '${createRequest.name}' already exists")
+                throw DuplicateValueException(s"Group with the name '${createRequest.name}' already exists")
             }
 
             maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(maybeIri = Some(createRequest.project), maybeShortcode = None, maybeShortname = None, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
 
             projectADM: ProjectADM = maybeProjectADM match {
                 case Some(p) => p
-                case None => throw NotFoundException(s"Cannot create group inside project: '${createRequest.project}. The project was not found.")
+                case None => throw NotFoundException(s"Cannot create group inside project <${createRequest.project}>. The project was not found.")
             }
 
             /* generate a new random group IRI */
@@ -332,7 +332,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
             /* Get the project IRI which also verifies that the group exists. */
             maybeGroupADM <- groupGetADM(groupIri, KnoraSystemInstances.Users.SystemUser)
-            groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
+            groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
             /* check if the requesting user is allowed to perform updates */
             _ = if (!requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin) {
@@ -387,7 +387,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
         for {
             /* Verify that the group exists. */
             maybeGroupADM <- groupGetADM(groupIri = groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group '$groupIri' not found. Aborting update request."))
+            groupADM: GroupADM = maybeGroupADM.getOrElse(throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
 
             /* Verify that the potentially new name is unique */
             groupByNameAlreadyExists <- if (groupUpdatePayload.name.nonEmpty) {
@@ -399,7 +399,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
 
             _ = if (groupByNameAlreadyExists) {
                 log.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
-                throw BadRequestException(s"Group with the name: '${groupUpdatePayload.name.get}' already exists.")
+                throw BadRequestException(s"Group with the name '${groupUpdatePayload.name.get}' already exists.")
             }
 
 
