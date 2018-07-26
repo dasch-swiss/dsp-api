@@ -19,13 +19,18 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util
+
 import akka.actor.Status
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.HttpEntity.Strict
-import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
+import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
+import org.apache.http.{Consts, HttpHost, NameValuePair}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
@@ -39,7 +44,13 @@ import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
 import scala.concurrent.Future
-import scala.concurrent.duration._
+
+/*
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpEntity.Strict
+import akka.http.scaladsl.model._
+*/
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -47,10 +58,13 @@ import scala.concurrent.duration._
   */
 class SipiResponderV1 extends Responder {
 
-    implicit val materializer = ActorMaterializer()
+    implicit private val materializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
-    val valueUtilV1 = new ValueUtilV1(settings)
+    private val valueUtilV1 = new ValueUtilV1(settings)
+
+    private val targetHost: HttpHost = new HttpHost(s"${settings.internalSipiHost}", settings.internalSipiPort, "http")
+    private val httpClient: CloseableHttpClient = HttpClients.createDefault()
 
     /**
       * Receives a message of type [[SipiResponderRequestV1]], and returns an appropriate response message, or
@@ -113,9 +127,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
-
-        callSipiConvertRoute(url, conversionRequest)
+        callSipiConvertRoute("/" + settings.sipiPathConversionRoute, conversionRequest)
 
     }
 
@@ -127,9 +139,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
-
-        callSipiConvertRoute(url, conversionRequest)
+        callSipiConvertRoute("/" + settings.sipiFileConversionRoute, conversionRequest)
     }
 
 
@@ -137,82 +147,72 @@ class SipiResponderV1 extends Responder {
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
       *
-      * @param url               the Sipi route to be called.
+      * @param urlPath               the Sipi route to be called.
       * @param conversionRequest the message holding the information to make the request.
       * @return a [[SipiResponderConversionResponseV1]].
       */
-    private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+    private def callSipiConvertRoute(urlPath: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+        val context: HttpClientContext = HttpClientContext.create
 
-        val conversionResultFuture: Future[HttpResponse] = for {
-            request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
+        val formParams = new util.ArrayList[NameValuePair]()
 
-            response <- Http().singleRequest(
-                HttpRequest(
-                    method = HttpMethods.POST,
-                    uri = url,
-                    entity = request
-                )
-            )
-        } yield response
+        for ((key, value) <- conversionRequest.toFormData()) {
+            formParams.add(new BasicNameValuePair(key, value))
+        }
+
+        val postEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+        val httpPost = new HttpPost(urlPath)
+        httpPost.setEntity(postEntity)
+
+        val conversionResultFuture = Future {
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            try {
+                maybeResponse = Some(httpClient.execute(targetHost, httpPost, context))
+
+                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case None => ""
+                }
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                // TODO: improve error handling
+
+                if (statusCategory != 2) {
+                    throw SipiException(s"Sipi responded with HTTP code $statusCode: $responseEntityStr")
+                }
+
+                responseEntityStr
+            } finally {
+                maybeResponse match {
+                    case Some(response) => response.close()
+                    case None => ()
+                }
+            }
+        }
 
         //
         // handle unsuccessful requests to Sipi
         //
         val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
+            case sipiEx: SipiException => throw sipiEx
 
             case err =>
-                throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
+                throw SipiException(message = s"Could not connect to Sipi: ${err.toString}", e = err, log = log)
         }
 
         for {
-            conversionResultResponse <- recoveredConversionResultFuture
-
-            httpStatusCode: StatusCode = conversionResultResponse.status
-            statusInt: Int = httpStatusCode.intValue / 100
+            responseAsStr: String <- recoveredConversionResultFuture
 
             /* get json from response body */
-            responseAsJson: JsValue <- statusInt match {
-                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(
-                    (strict: Strict) =>
-                        try {
-                            strict.data.decodeString("UTF-8").parseJson
-                        } catch {
-                            // the Sipi response message could not be parsed correctly
-                            case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
-
-                            case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
-                        }
-                ) // returns a Future(Map(...))
-                case 4 =>
-                    // Bad Request: it is the user's responsibility
-                    val errMessage: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(
-                        (strict: Strict) =>
-                            try {
-                                strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
-                            } catch {
-                                // the Sipi error message could not be parsed correctly
-                                case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
-
-                                case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
-                            }
-                    )
-
-                    // most probably the user sent invalid data which caused a Sipi error
-                    errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
-                case 5 =>
-                    // Internal Server Error: not the user's fault
-                    val errString: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-                    errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
-                case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
-            }
+            responseAsJson: JsValue = JsonParser(responseAsStr)
 
             // get file type from Sipi response
             fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
-                case other => throw SipiException(message = s"Sipi did not return a correct file type, but: ${other}")
+                case other => throw SipiException(message = s"Sipi returned an invalid file type: $other")
             }
 
             // turn fileType returned by Sipi (a string) into an enum
