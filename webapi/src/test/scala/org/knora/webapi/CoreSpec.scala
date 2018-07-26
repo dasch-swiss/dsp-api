@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.http.scaladsl.Http
 import akka.pattern._
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
@@ -80,6 +81,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     }
 
     final override def afterAll() {
+        Http().shutdownAllConnectionPools()
         system.terminate()
         atTermination()
         CacheUtil.removeAllCaches()
