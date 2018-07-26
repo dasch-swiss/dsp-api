@@ -19,14 +19,12 @@
 
 package org.knora.webapi
 
-import java.io.File
-import java.nio.file.{Files, Paths}
-
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
@@ -36,7 +34,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -49,12 +47,11 @@ object ITKnoraLiveSpec {
   */
 class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
 
+    implicit lazy val settings: SettingsImpl = Settings(system)
+
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
-
-    /* needed by the core trait */
-    implicit lazy val settings: SettingsImpl = Settings(system)
 
     StringFormatter.initForTest()
 
@@ -70,7 +67,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     implicit lazy val system: ActorSystem = _system
 
     /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "ITSpec")
+    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl
@@ -80,18 +77,21 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     protected val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
-        /* Set the startup flags and start the Knora Server */
-        log.debug(s"Starting Knora Service")
 
+        // waits until the application state actor is ready
         applicationStateActorReady()
 
+        // set allow reload over http
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
-        // start knora fast tracked
+        // start knora without loading ontologies
         startService(false)
 
-        // blocks until Running state
+        // waits until knora is up and running
         applicationStateRunning()
+
+        // check knora
+        checkIfKnoraIsRunning()
 
         // check sipi
         checkIfSipiIsRunning()
@@ -102,13 +102,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        log.debug(s"Stopping Knora Service")
         stopService()
-    }
-
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15.seconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
-        Await.result(responseFuture, duration)
     }
 
     protected def getResponseString(request: HttpRequest): String = {
@@ -117,8 +111,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         //log.debug("REQUEST: {}", request)
         //log.debug("RESPONSE: {}", response.toString())
 
-        val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+        val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 5.seconds)
 
         assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
         responseBodyStr
@@ -132,6 +125,13 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         getResponseString(request).parseJson.asJsObject
     }
 
+    protected def checkIfKnoraIsRunning(): Unit = {
+        val request = Get(baseApiUrl + "/health")
+        val response = singleAwaitingRequest(request)
+        assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
+        if (response.status.isSuccess()) log.info("Knora is running.")
+    }
+
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
         singleAwaitingRequest(request, settings.defaultRestoreTimeout)
@@ -142,6 +142,12 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         val request = Get(baseSipiUrl + "/server/test.html")
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
+        if (response.status.isSuccess()) log.info("Sipi is running.")
+    }
+
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999 milliseconds): HttpResponse = {
+        val responseFuture = Http().singleRequest(request)
+        Await.result(responseFuture, duration)
     }
 
 }

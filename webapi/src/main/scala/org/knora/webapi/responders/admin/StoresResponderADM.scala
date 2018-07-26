@@ -62,7 +62,6 @@ class StoresResponderADM extends Responder {
       * @return a future containing a [[ResetTriplestoreContentResponseADM]].
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
-
         log.debug(s"resetTriplestoreContent - called")
         log.debug(s"resetTriplestoreContent called with: {}", rdfDataObjects.toString)
         val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]

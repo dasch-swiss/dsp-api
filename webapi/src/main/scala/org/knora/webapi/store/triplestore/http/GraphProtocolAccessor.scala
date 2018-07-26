@@ -28,8 +28,10 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import com.typesafe.scalalogging.Logger
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.{BadRequestException, Settings, TriplestoreResponseException, TriplestoreUnsupportedFeatureException}
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Await, ExecutionContextExecutor}
 
@@ -42,6 +44,8 @@ object GraphProtocolAccessor {
 
     val HTTP_PUT_METHOD = "PUT"
     val HTTP_POST_METHOD = "POST"
+
+    val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
       * Use the HTTP PUT method to send the data. Put is defined as SILENT DELETE of the graph and an INSERT.
@@ -77,6 +81,13 @@ object GraphProtocolAccessor {
     }
 
     private def execute(method: String, graphName: String, filepath: String)(implicit _system: ActorSystem, materializer: ActorMaterializer): StatusCode = {
+
+        val log = akka.event.Logging(_system, this.getClass)
+        val settings = Settings(_system)
+        implicit val executionContext: ExecutionContextExecutor = _system.dispatcher
+
+        log.debug("GraphProtocolAccessor - execute started")
+
         val file = new File(filepath)
 
         if (!file.exists) {
@@ -87,15 +98,8 @@ object GraphProtocolAccessor {
             throw TriplestoreUnsupportedFeatureException("Requests to the default graph are not supported")
         }
 
-        val log = akka.event.Logging(_system, this.getClass)
-        val settings = Settings(_system)
-        implicit val executionContext: ExecutionContextExecutor = _system.dispatcher
-        val http = Http(_system)
-
         // Use HTTP basic authentication.
         val authorization = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
-
-        log.debug("==>> GraphProtocolAccessor START")
 
         // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
         val requestPath = settings.triplestoreType match {
@@ -133,7 +137,7 @@ object GraphProtocolAccessor {
 
         val responseFuture = for {
             // Send the HTTP request.
-            response <- http.singleRequest(request)
+            response <- Http().singleRequest(request)
 
             // Convert the HTTP response body to a string.
             responseString <- Unmarshal(response.entity).to[String]

@@ -23,7 +23,7 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
+import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
@@ -47,8 +47,6 @@ object E2ESpec {
   */
 class E2ESpec(_system: ActorSystem) extends Core with KnoraService with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
-    /* needed by the core trait */
-
     implicit lazy val settings: SettingsImpl = Settings(system)
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -69,7 +67,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
     implicit lazy val system: ActorSystem = _system
 
     /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "E2ESpec")
+    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
@@ -78,8 +76,6 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
     protected val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
-        /* Set the startup flags and start the Knora Server */
-        log.debug(s"Starting Knora Service")
 
         // waits until the application state actor is ready
         applicationStateActorReady()
@@ -87,22 +83,29 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
         // set allow reload over http
         applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service without startupTasks
+        // start the knora service without loading of the ontologies
         startService(false)
 
-        // returns only when application state is running
+        // waits until knora is up and running
         applicationStateRunning()
+
+        // check if knora is running
+        checkIfKnoraIsRunning()
 
         // loadTestData
         loadTestData(rdfDataObjects)
-
-        log.debug("E2ESpec - beforeAll - finished")
     }
 
     override def afterAll: Unit = {
         /* Stop the server when everything else has finished */
-        log.debug(s"Stopping Knora Service")
         stopService()
+    }
+
+    protected def checkIfKnoraIsRunning(): Unit = {
+        val request = Get(baseApiUrl + "/health")
+        val response = singleAwaitingRequest(request)
+        assert(response.status == StatusCodes.OK, s"Knora is probably not running: ${response.status}")
+        if (response.status.isSuccess()) log.info("Knora is running.")
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
@@ -110,7 +113,8 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
         singleAwaitingRequest(request, settings.defaultRestoreTimeout)
     }
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+    // duration is intentionally like this, so that it could be found with search if seen in a stack trace
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999 milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }

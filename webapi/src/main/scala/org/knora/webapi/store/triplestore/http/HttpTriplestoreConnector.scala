@@ -475,7 +475,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         try {
 
-            log.debug("checkRepository entered")
+            // log.debug("checkRepository entered")
 
             // call endpoint returning all repositories
 

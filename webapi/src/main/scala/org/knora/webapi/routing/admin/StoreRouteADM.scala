@@ -23,7 +23,6 @@ import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
@@ -32,7 +31,7 @@ import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestor
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
@@ -68,7 +67,7 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     entity(as[Seq[RdfDataObject]]) { apiRequest =>
                         requestContext =>
 
-                            val requestMessage = FastFuture.successful(ResetTriplestoreContentRequestADM(apiRequest))
+                            val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(apiRequest))
 
                             RouteUtilADM.runJsonRoute(
                                 requestMessage,

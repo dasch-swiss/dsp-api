@@ -44,6 +44,7 @@ object StoreRouteADME2ESpec {
   * This spec tests the 'v1/store' route.
   */
 class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
+
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 
 	/**
@@ -57,12 +58,12 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
       *
       * and could have been supplied to the post request instead of the scala object.
       */
+    /*
     override protected val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
-
-    override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {}
+    */
 
     "The ResetTriplestoreContent Route ('admin/store/ResetTriplestoreContent')" should {
 
