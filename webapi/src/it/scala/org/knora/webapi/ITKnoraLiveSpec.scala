@@ -134,7 +134,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 6 minutes)
+        singleAwaitingRequest(request, 7 minutes)
     }
 
     protected def checkIfSipiIsRunning(): Unit = {
