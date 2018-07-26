@@ -87,7 +87,7 @@ class StandoffResponderV2 extends Responder {
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
             xsltFileValue: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClass.toString == OntologyConstants.KnoraBase.XSLTransformation =>
+                case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.XSLTransformation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                             case value: ReadValueV2 => value.valueContent match {

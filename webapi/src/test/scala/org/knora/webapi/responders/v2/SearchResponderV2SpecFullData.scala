@@ -26,7 +26,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/00505cf0a803",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:46Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -54,7 +54,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/00c650d23303",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:40Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -82,7 +82,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/02abe871e903",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:49Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -110,7 +110,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/04416f64ef03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:50Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -138,7 +138,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/04f25db73f03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:40Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -166,7 +166,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/05c7acceb703",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:47Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -194,7 +194,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/075d33c1bd03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:47Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -222,7 +222,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/0b8940a6c903",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -250,7 +250,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/0d1fc798cf03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -278,7 +278,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/0d5ac1099503",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:45Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -306,7 +306,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/0fb54d8bd503",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -334,7 +334,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/0ff047fc9a03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:45Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -362,7 +362,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/114bd47ddb03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:49Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -390,7 +390,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/14dd8cbc3403",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:40Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -418,7 +418,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/167313af3a03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:40Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -446,7 +446,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/1b746fabbe03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:47Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -474,7 +474,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/1baf691c8403",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:44Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -502,7 +502,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/1d0af69dc403",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:47Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -530,7 +530,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/1fa07c90ca03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -558,7 +558,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/1fdb76019003",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:45Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -586,7 +586,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/21360383d003",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -614,7 +614,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/2171fdf39503",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:45Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -642,7 +642,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/230784e69b03",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:45Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -670,7 +670,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/23427e576103",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:42Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -698,7 +698,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/23cc8975d603",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:48Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadValueV2(
@@ -731,7 +731,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
             resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
             permissions = "CR knora-base:Creator|V knora-base:ProjectMember",
             attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            resourceClass = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
             attachedToProject = "http://rdfh.ch/projects/0001",
             creationDate = Instant.parse("2016-03-02T15:05:10Z"),
             values = Map("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
@@ -1431,7 +1431,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/c5058f3a",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:10Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadValueV2(
@@ -1459,7 +1459,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 resourceIri = "http://rdfh.ch/ff17e5ef9601",
                 permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
                 attachedToProject = "http://rdfh.ch/projects/0803",
                 creationDate = Instant.parse("2016-03-02T15:05:23Z"),
                 values = Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadValueV2(

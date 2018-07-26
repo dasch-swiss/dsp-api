@@ -17,7 +17,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
         resourceIri = "http://rdfh.ch/2a6221216701",
         permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         attachedToProject = "http://rdfh.ch/projects/0803",
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
         values = Map(

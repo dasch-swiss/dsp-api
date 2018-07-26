@@ -729,7 +729,7 @@ object ConstructResponseUtilV2 {
 
         ReadResourceV2(
             resourceIri = resourceIri,
-            resourceClass = resourceClass,
+            resourceClassIri = resourceClass,
             label = resourceLabel,
             attachedToUser = resourceAttachedToUser,
             attachedToProject = resourceAttachedToProject,

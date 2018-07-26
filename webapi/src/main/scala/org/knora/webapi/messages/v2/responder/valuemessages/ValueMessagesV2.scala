@@ -84,14 +84,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri <- Future(jsonLDDocument.requireIriInObject(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
+            resourceIri <- Future(jsonLDDocument.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
 
             _ = if (!resourceIri.isKnoraDataIri) {
                 throw BadRequestException(s"Invalid resource IRI: $resourceIri")
             }
 
             // Get the resource class.
-            resourceClassIri = jsonLDDocument.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            resourceClassIri = jsonLDDocument.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
             _ = if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
                 throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
@@ -133,6 +133,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 maybePermissions: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueV2(
                                 resourceIri = resourceIri.toString,
+                                resourceClassIri = resourceClassIri,
                                 propertyIri = propertyIri,
                                 valueContent = valueContent,
                                 permissions = maybePermissions
@@ -154,7 +155,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
   *
   * @param valueIri the IRI of the value that was created.
   */
-case class CreateValueResponseV2(valueIri: IRI) extends KnoraResponseV2 {
+case class CreateValueResponseV2(valueIri: IRI,
+                                 valueType: SmartIri) extends KnoraResponseV2 {
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         if (targetSchema != ApiV2WithValueObjects) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
@@ -163,7 +165,8 @@ case class CreateValueResponseV2(valueIri: IRI) extends KnoraResponseV2 {
         JsonLDDocument(
             body = JsonLDObject(
                 Map(
-                    JsonLDConstants.ID -> JsonLDUtil.iriToJsonLDObject(valueIri)
+                    JsonLDConstants.ID -> JsonLDString(valueIri),
+                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2WithValueObjects).toString)
                 )
             )
         )
@@ -239,7 +242,7 @@ case class ReadValueV2(valueIri: IRI,
                 // In the complex schema, the value must be represented as a JSON-LD object.
                 valueContentAsJsonLD match {
                     case jsonLDObject: JsonLDObject =>
-                        // Add the value's IRI and type.
+                        // Add the value's IRI and type. TODO: add the value's other metadata.
                         JsonLDObject(
                             jsonLDObject.value +
                                 (JsonLDConstants.ID -> JsonLDString(valueIri)) +
@@ -258,12 +261,14 @@ case class ReadValueV2(valueIri: IRI,
 /**
   * The value of a Knora property sent to Knora to be created.
   *
-  * @param resourceIri  the resource the new value should be attached to.
-  * @param propertyIri  the property of the new value. If the client wants to create a link, this must be a link value property.
-  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
-  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
+  * @param resourceIri      the resource the new value should be attached to.
+  * @param resourceClassIri the resource class that the client believes the resource belongs to.
+  * @param propertyIri      the property of the new value. If the client wants to create a link, this must be a link value property.
+  * @param valueContent     the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+  * @param permissions      the permissions to be given to the new value. If not provided, these will be taken from defaults.
   */
 case class CreateValueV2(resourceIri: IRI,
+                         resourceClassIri: SmartIri,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
                          permissions: Option[String] = None) extends IOValueV2
@@ -398,7 +403,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireIriInObject(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
+            valueType: SmartIri <- Future(jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
 
             valueContent <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2WithValueObjects.TextValue =>

@@ -169,7 +169,7 @@ sealed trait ResourceV2 {
     /**
       * The IRI of the resource class.
       */
-    def resourceClass: SmartIri
+    def resourceClassIri: SmartIri
 
     /**
       * The resource's `rdfs:label`.
@@ -187,7 +187,7 @@ sealed trait ResourceV2 {
   *
   * @param resourceIri          the IRI of the resource.
   * @param label                the resource's label.
-  * @param resourceClass        the class the resource belongs to.
+  * @param resourceClassIri     the class the resource belongs to.
   * @param attachedToUser       the user that created the resource.
   * @param attachedToProject    the project that the resource belongs to.
   * @param permissions          the permissions that the resource grants to user groups.
@@ -199,7 +199,7 @@ sealed trait ResourceV2 {
   */
 case class ReadResourceV2(resourceIri: IRI,
                           label: String,
-                          resourceClass: SmartIri,
+                          resourceClassIri: SmartIri,
                           attachedToUser: IRI,
                           attachedToProject: IRI,
                           permissions: String,
@@ -209,7 +209,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           deletionInfo: Option[DeletionInfo]) extends ResourceV2 with KnoraReadV2[ReadResourceV2] {
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadResourceV2 = {
         copy(
-            resourceClass = resourceClass.toOntologySchema(targetSchema),
+            resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
             values = values.map {
                 case (propertyIri, readValues) =>
                     val propertyIriInTargetSchema = propertyIri.toOntologySchema(targetSchema)
@@ -239,7 +239,7 @@ case class ReadResourceV2(resourceIri: IRI,
     }
 
     def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
-        if (!resourceClass.getOntologySchema.contains(targetSchema)) {
+        if (!resourceClassIri.getOntologySchema.contains(targetSchema)) {
             throw DataConversionException(s"ReadClassInfoV2 for resource $resourceIri is not in schema $targetSchema")
         }
 
@@ -249,22 +249,68 @@ case class ReadResourceV2(resourceIri: IRI,
                 propIri.toString -> JsonLDArray(valuesAsJsonLD)
         }
 
-        JsonLDObject(Map(
-            JsonLDConstants.ID -> JsonLDString(resourceIri),
-            JsonLDConstants.TYPE -> JsonLDString(resourceClass.toString),
-            OntologyConstants.Rdfs.Label -> JsonLDString(label)
-        ) ++ propertiesAndValuesAsJsonLD)
+        val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2WithValueObjects) {
+            val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
+                OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(attachedToProject),
+                OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
+                OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> JsonLDObject(
+                    Map(
+                        JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                        JsonLDConstants.VALUE -> JsonLDString(creationDate.toString)
+                    )
+                )
+            )
+
+            val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+                case Some(definedDeletionInfo) =>
+                    Map(
+                        OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> JsonLDBoolean(true),
+                        OntologyConstants.KnoraApiV2WithValueObjects.DeleteDate -> JsonLDObject(
+                            Map(
+                                JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                                JsonLDConstants.VALUE -> JsonLDString(definedDeletionInfo.deleteDate.toString)
+                            )
+                        ),
+                        OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment -> JsonLDString(definedDeletionInfo.deleteComment)
+                    )
+
+                case None => Map.empty[IRI, JsonLDValue]
+            }
+
+            val lastModDateAsJsonLD: Option[(IRI, JsonLDValue)] = lastModificationDate.map {
+                definedLastModDate =>
+                    OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate -> JsonLDObject(
+                        Map(
+                            JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                            JsonLDConstants.VALUE -> JsonLDString(definedLastModDate.toString)
+                        )
+                    )
+            }
+
+            requiredMetadataForComplexSchema ++ deletionInfoAsJsonLD ++ lastModDateAsJsonLD
+        } else {
+            Map.empty[IRI, JsonLDValue]
+        }
+
+        JsonLDObject(
+            Map(
+                JsonLDConstants.ID -> JsonLDString(resourceIri),
+                JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
+                OntologyConstants.Rdfs.Label -> JsonLDString(label)
+            ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema
+        )
     }
 }
 
 /**
   * Represents a Knora resource that is about to be created.
   *
-  * @param label         the resource's label.
-  * @param resourceClass the class the resource belongs to.
-  * @param values        the resource's values.
+  * @param label            the resource's label.
+  * @param resourceClassIri the class the resource belongs to.
+  * @param values           the resource's values.
   */
-case class CreateResource(label: String, resourceClass: SmartIri, values: Map[SmartIri, Seq[CreateValueV2]]) extends ResourceV2
+case class CreateResource(label: String, resourceClassIri: SmartIri, values: Map[SmartIri, Seq[CreateValueV2]]) extends ResourceV2
 
 /**
   * Represents a sequence of resources read back from Knora.
@@ -293,7 +339,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
         val projectSpecificOntologiesUsed: Set[SmartIri] = resources.flatMap {
             resource =>
-                val resourceOntology = resource.resourceClass.getOntologyFromEntity
+                val resourceOntology = resource.resourceClassIri.getOntologyFromEntity
 
                 val propertyOntologies = resource.values.keySet.map {
                     property => property.getOntologyFromEntity

@@ -16,7 +16,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceIri = "http://rdfh.ch/c5058f3a",
         permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         attachedToProject = "http://rdfh.ch/projects/0803",
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
         values = Map(
@@ -221,7 +221,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceIri = "http://rdfh.ch/c5058f3a",
         permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         attachedToProject = "http://rdfh.ch/projects/0803",
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
         values = Map(),
@@ -234,7 +234,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         resourceIri = "http://rdfh.ch/2a6221216701",
         permissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         attachedToProject = "http://rdfh.ch/projects/0803",
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
         values = Map(
@@ -677,7 +677,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     )
 
     val expectedReadResourceV2ForReiseInsHeiligelandPreview = ReadResourceV2(
-        resourceClass = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         label = "Reise ins Heilige Land",
         creationDate = Instant.parse("2016-03-02T15:05:21Z"),
         resourceIri = "http://rdfh.ch/2a6221216701",

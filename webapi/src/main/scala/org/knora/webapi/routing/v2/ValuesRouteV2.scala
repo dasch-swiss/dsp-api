@@ -47,29 +47,31 @@ object ValuesRouteV2 extends Authenticator {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         path("v2" / "values") {
-            entity(as[String]) { jsonRequest =>
-                requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessageFuture: Future[CreateValueRequestV2] = for {
-                        requestingUser <- getUserADM(requestContext)
-                        requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
-                            requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            log = log
+                        val requestMessageFuture: Future[CreateValueRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            ApiV2WithValueObjects
                         )
-                    } yield requestMessage
-
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageFuture,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log,
-                        ApiV2WithValueObjects
-                    )
+                    }
                 }
             }
         }

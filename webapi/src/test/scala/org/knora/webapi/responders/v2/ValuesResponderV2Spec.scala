@@ -141,7 +141,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private def getValueFromResource(resource: ReadResourceV2,
                                      propertyIriInResult: SmartIri,
                                      expectedValueIri: IRI): ReadValueV2 = {
-        val propertyValues = getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+        val propertyValues: Seq[ReadValueV2] = getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
         propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"))
     }
 
@@ -237,11 +237,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 4
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -280,11 +281,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
             val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -329,6 +331,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -355,6 +358,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -379,6 +383,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -402,6 +407,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -426,6 +432,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -464,6 +471,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -488,6 +496,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -539,6 +548,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -588,6 +598,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -615,6 +626,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = DecimalValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -654,6 +666,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = DecimalValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -688,6 +701,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = submittedValueContent
                 ),
@@ -739,6 +753,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = submittedValueContent
                 ),
@@ -762,6 +777,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = BooleanValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -804,6 +820,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeomValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -843,6 +860,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeomValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -870,6 +888,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntervalValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -914,6 +933,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntervalValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -941,6 +961,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = HierarchicalListValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -982,6 +1003,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = HierarchicalListValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1008,6 +1030,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = ColorValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1049,6 +1072,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = ColorValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1075,6 +1099,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = UriValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1116,6 +1141,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = UriValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1142,6 +1168,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeonameValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1183,6 +1210,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = GeonameValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1208,6 +1236,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 CreateValueV2(
                     resourceIri = resourceIri,
                     propertyIri = linkValuePropertyIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
                         subject = resourceIri,
@@ -1253,6 +1282,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1279,6 +1309,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkPropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1305,6 +1336,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1332,6 +1364,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1358,6 +1391,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1375,6 +1409,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not add a new value if the resource's rdf:type is not correctly given" in {
+            val resourceIri = "http://rdfh.ch/0001/a-thing"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 2048
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "not add a new value of the wrong type" in {
             val resourceIri = "http://rdfh.ch/21abac2162"
             val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
@@ -1382,6 +1442,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1405,6 +1466,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
                     propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1426,6 +1488,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = "http://rdfh.ch/4f11adaf",
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
                     propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
                     valueContent = IntegerValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1466,6 +1529,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
@@ -1557,6 +1621,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
                     propertyIri = propertyIri,
                     valueContent = TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,

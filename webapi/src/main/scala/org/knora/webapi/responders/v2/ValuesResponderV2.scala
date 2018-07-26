@@ -123,10 +123,16 @@ class ValuesResponderV2 extends Responder {
                     requestingUser = createValueRequest.requestingUser
                 )
 
+                // Check that the resource has the rdf:type that the client thinks it has.
+
+                _ = if (resourceInfo.resourceClassIri != createValueRequest.createValue.resourceClassIri.toOntologySchema(InternalSchema)) {
+                    throw BadRequestException(s"The rdf:type of resource <${createValueRequest.createValue.resourceIri}> is not <${createValueRequest.createValue.resourceClassIri}>")
+                }
+
                 // Get the definition of the resource class.
 
                 classInfoRequest = ClassesGetRequestV2(
-                    classIris = Set(resourceInfo.resourceClass),
+                    classIris = Set(resourceInfo.resourceClassIri),
                     allLanguages = false,
                     requestingUser = createValueRequest.requestingUser
                 )
@@ -135,8 +141,8 @@ class ValuesResponderV2 extends Responder {
 
                 // Check that the resource class has a cardinality for the submitted property.
 
-                classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClass)
-                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw BadRequestException(s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"))
+                classInfo: ReadClassInfoV2 = classInfoResponse.classes(resourceInfo.resourceClassIri)
+                cardinalityInfo: Cardinality.KnoraCardinalityInfo = classInfo.allCardinalities.getOrElse(submittedInternalPropertyIri, throw BadRequestException(s"Resource <${createValueRequest.createValue.resourceIri}> belongs to class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>, which has no cardinality for property <${createValueRequest.createValue.propertyIri}>"))
 
                 // Check that the object of the adjusted property (the value to be created, or the target of the link to be created) will have
                 // the correct type for the adjusted property's knora-base:objectClassConstraint.
@@ -153,11 +159,11 @@ class ValuesResponderV2 extends Responder {
                 currentValuesForProp: Seq[ReadValueV2] = resourceInfo.values.getOrElse(submittedInternalPropertyIri, Seq.empty[ReadValueV2])
 
                 _ = if ((cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome) && currentValuesForProp.isEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
+                    throw InconsistentTriplestoreDataException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, but resource <${createValueRequest.createValue.resourceIri}> has no value for that property")
                 }
 
                 _ = if (cardinalityInfo.cardinality == Cardinality.MustHaveOne || (cardinalityInfo.cardinality == Cardinality.MayHaveOne && currentValuesForProp.nonEmpty)) {
-                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClass.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
+                    throw OntologyConstraintException(s"Resource class <${resourceInfo.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality of ${cardinalityInfo.cardinality} on property <${createValueRequest.createValue.propertyIri}>, and this does not allow a value to be added for that property to resource <${createValueRequest.createValue.resourceIri}>")
                 }
 
                 // Check that the new value would not duplicate an existing value.
@@ -188,7 +194,7 @@ class ValuesResponderV2 extends Responder {
                             defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
                                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
                                     projectIri = resourceInfo.attachedToProject,
-                                    resourceClassIri = resourceInfo.resourceClass.toString,
+                                    resourceClassIri = resourceInfo.resourceClassIri.toString,
                                     propertyIri = submittedInternalPropertyIri.toString,
                                     targetUser = createValueRequest.requestingUser,
                                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -227,7 +233,10 @@ class ValuesResponderV2 extends Responder {
                     requestingUser = createValueRequest.requestingUser
                 )
 
-            } yield CreateValueResponseV2(valueIri = unverifiedValue.newValueIri)
+            } yield CreateValueResponseV2(
+                valueIri = unverifiedValue.newValueIri,
+                valueType = unverifiedValue.value.valueType
+            )
         }
 
         for {
@@ -431,7 +440,7 @@ class ValuesResponderV2 extends Responder {
             // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
 
             subClassRequest = CheckSubClassRequestV2(
-                subClassIri = resource.resourceClass,
+                subClassIri = resource.resourceClassIri,
                 superClassIri = objectClassConstraint,
                 requestingUser = requestingUser
             )
