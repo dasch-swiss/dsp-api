@@ -26,7 +26,7 @@ import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -58,7 +58,7 @@ object CoreSpec {
 abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     // can be overridden in individual spec
-    protected val rdfDataObjects = Seq.empty[RdfDataObject]
+    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
 
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
@@ -68,8 +68,10 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     val settings = Settings(system)
     val log = akka.event.Logging(system, this.getClass)
 
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)), name = RESPONDER_MANAGER_ACTOR_NAME)
+    val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)

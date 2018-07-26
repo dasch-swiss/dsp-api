@@ -73,7 +73,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
-    protected val rdfDataObjects = List.empty[RdfDataObject]
+    lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
 

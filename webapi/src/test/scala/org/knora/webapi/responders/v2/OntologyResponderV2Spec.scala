@@ -62,7 +62,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val printErrorMessages = false
 
-    override val rdfDataObjects: Seq[RdfDataObject] = List(anythingData)
+    override lazy val rdfDataObjects: Seq[RdfDataObject] = List(anythingData)
 
     private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)

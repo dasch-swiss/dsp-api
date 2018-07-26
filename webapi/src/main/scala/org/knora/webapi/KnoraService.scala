@@ -204,6 +204,7 @@ trait KnoraService {
       * Stops Knora.
       */
     def stopService(): Unit = {
+        Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
         Kamon.stopAllReporters()
         system.terminate()

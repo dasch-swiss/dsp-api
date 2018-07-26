@@ -1169,56 +1169,58 @@ object ResourcesRouteV1 extends Authenticator {
                     )
             }
         } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
-            post {
-                entity(as[String]) { xml =>
-                    requestContext =>
-                        val requestMessage = for {
-                            userADM <- getUserADM(requestContext)
+            withRequestTimeout(1.hour) {
+                post {
+                    entity(as[String]) { xml =>
+                        requestContext =>
+                            val requestMessage = for {
+                                userADM <- getUserADM(requestContext)
 
-                            _ = if (userADM.isAnonymousUser) {
-                                throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
-                            }
+                                _ = if (userADM.isAnonymousUser) {
+                                    throw BadRequestException("You are not logged in, and only a system administrator or project administrator can perform a bulk import")
+                                }
 
-                            _ = if (!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId))) {
-                                throw BadRequestException(s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import")
-                            }
+                                _ = if (!(userADM.permissions.isSystemAdmin || userADM.permissions.isProjectAdmin(projectId))) {
+                                    throw BadRequestException(s"You are logged in as ${userADM.email}, but only a system administrator or project administrator can perform a bulk import")
+                                }
 
-                            // Parse the submitted XML.
-                            rootElement: Elem = XML.loadString(xml)
+                                // Parse the submitted XML.
+                                rootElement: Elem = XML.loadString(xml)
 
-                            // Make sure that the root element is knoraXmlImport:resources.
-                            _ = if (rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources) {
-                                throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
-                            }
+                                // Make sure that the root element is knoraXmlImport:resources.
+                                _ = if (rootElement.namespace + rootElement.label != OntologyConstants.KnoraXmlImportV1.Resources) {
+                                    throw BadRequestException(s"Root XML element must be ${OntologyConstants.KnoraXmlImportV1.Resources}")
+                                }
 
-                            // Get the default namespace of the submitted XML. This should be the Knora XML import
-                            // namespace corresponding to the main internal ontology used in the import.
-                            defaultNamespace = rootElement.getNamespace(null)
+                                // Get the default namespace of the submitted XML. This should be the Knora XML import
+                                // namespace corresponding to the main internal ontology used in the import.
+                                defaultNamespace = rootElement.getNamespace(null)
 
-                            // Validate the XML using XML schemas.
-                            _ <- validateImportXml(
-                                xml = xml,
-                                defaultNamespace = defaultNamespace,
-                                userADM = userADM
-                            )
+                                // Validate the XML using XML schemas.
+                                _ <- validateImportXml(
+                                    xml = xml,
+                                    defaultNamespace = defaultNamespace,
+                                    userADM = userADM
+                                )
 
-                            // Make a CreateResourceFromXmlImportRequestV1 for each resource to be created.
-                            resourcesToCreate: Seq[CreateResourceFromXmlImportRequestV1] = importXmlToCreateResourceRequests(rootElement)
+                                // Make a CreateResourceFromXmlImportRequestV1 for each resource to be created.
+                                resourcesToCreate: Seq[CreateResourceFromXmlImportRequestV1] = importXmlToCreateResourceRequests(rootElement)
 
-                            // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
-                            apiRequestID: UUID = UUID.randomUUID
-                            updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM)
-                        } yield updateRequest
+                                // Make a MultipleResourceCreateRequestV1 for the creation of all the resources.
+                                apiRequestID: UUID = UUID.randomUUID
+                                updateRequest: MultipleResourceCreateRequestV1 <- makeMultiResourcesRequestMessage(resourcesToCreate, projectId, apiRequestID, userADM)
+                            } yield updateRequest
 
-                        RouteUtilV1.runJsonRouteWithFuture(
-                            requestMessageF = requestMessage,
-                            requestContext = requestContext,
-                            settings = settings,
-                            responderManager = responderManager,
-                            log = loggingAdapter
-                        )(timeout = 1.hour, executionContext = executionContext)
+                            RouteUtilV1.runJsonRouteWithFuture(
+                                requestMessageF = requestMessage,
+                                requestContext = requestContext,
+                                settings = settings,
+                                responderManager = responderManager,
+                                log = loggingAdapter
+                            )(timeout = 1.hour, executionContext = executionContext)
+                    }
+
                 }
-
             }
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {

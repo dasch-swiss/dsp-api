@@ -58,7 +58,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val textValueWithLangIri = new MutableTestIri
     private val boringComment = "This is a boring comment."
 
-    override protected val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 

@@ -81,7 +81,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
       * member to substitute a custom actor instead of the default resources responder.
       */
-    protected val resourcesRouterV1: ActorRef = makeDefaultResourcesRouterV1
+    protected lazy val resourcesRouterV1: ActorRef = makeDefaultResourcesRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV1]].
@@ -92,7 +92,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
       * member to substitute a custom actor instead of the default values responder.
       */
-    protected val valuesRouterV1: ActorRef = makeDefaultValuesRouterV1
+    protected lazy val valuesRouterV1: ActorRef = makeDefaultValuesRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SipiResponderV1]].
@@ -103,7 +103,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Sipi responder.
       */
-    protected val sipiRouterV1: ActorRef = makeDefaultSipiRouterV1
+    protected lazy val sipiRouterV1: ActorRef = makeDefaultSipiRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
@@ -114,7 +114,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Sipi responder.
       */
-    protected val standoffRouterV1: ActorRef = makeDefaultStandoffRouterV1
+    protected lazy val standoffRouterV1: ActorRef = makeDefaultStandoffRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
@@ -125,7 +125,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
       * member to substitute a custom actor instead of the default users responder.
       */
-    protected val usersRouterV1: ActorRef = makeDefaultUsersRouterV1
+    protected lazy val usersRouterV1: ActorRef = makeDefaultUsersRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
@@ -136,7 +136,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
       * member to substitute a custom actor instead of the default lists responder.
       */
-    protected val listsRouterV1: ActorRef = makeDefaultListsRouterV1
+    protected lazy val listsRouterV1: ActorRef = makeDefaultListsRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
@@ -147,7 +147,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
       * member to substitute a custom actor instead of the default search responder.
       */
-    protected val searchRouterV1: ActorRef = makeDefaultSearchRouterV1
+    protected lazy val searchRouterV1: ActorRef = makeDefaultSearchRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
@@ -158,7 +158,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
       * member to substitute a custom actor instead of the default ontology responder.
       */
-    protected val ontologyRouterV1: ActorRef = makeDefaultOntologyRouterV1
+    protected lazy val ontologyRouterV1: ActorRef = makeDefaultOntologyRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
@@ -169,7 +169,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
       * member to substitute a custom actor instead of the default projects responder.
       */
-    protected val projectsRouterV1: ActorRef = makeDefaultProjectsRouterV1
+    protected lazy val projectsRouterV1: ActorRef = makeDefaultProjectsRouterV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[CkanResponderV1]].
@@ -180,7 +180,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the Ckan responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Ckan responder.
       */
-    protected val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
+    protected lazy val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
 
     //

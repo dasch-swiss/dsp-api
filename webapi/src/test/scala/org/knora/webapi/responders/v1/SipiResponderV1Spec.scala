@@ -46,7 +46,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[SipiResponderV1]
 
-    override val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
     )
 

@@ -60,7 +60,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
 
-    protected val rdfDataObjects = List.empty[RdfDataObject]
+    lazy val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)

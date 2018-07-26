@@ -74,7 +74,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     implicit protected val postfix: postfixOps = scala.language.postfixOps
 
-    protected val rdfDataObjects = List.empty[RdfDataObject]
+    val rdfDataObjects = List.empty[RdfDataObject]
 
     override def beforeAll: Unit = {
 
