@@ -49,9 +49,6 @@ class SipiV1R2RSpec extends R2RSpec {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    // need to inject the MockSipiResponder
-    override val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
@@ -65,6 +62,8 @@ class SipiV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
+
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
 
     object RequestParams {
 
