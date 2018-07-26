@@ -471,7 +471,7 @@
 
              rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ;
 
-             knora-base:subjectClassConstraint :page ;
+             knora-base:subjectClassConstraint :documentImage ;
 
              salsah-gui:guiElement salsah-gui:Searchbox .
 
@@ -491,7 +491,7 @@
         rdfs:comment """Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."""@de ,
                      """Represents a relation to another resource of which this resource is a part (dependent)"""@en ;
 
-        knora-base:subjectClassConstraint :page ;
+        knora-base:subjectClassConstraint :documentImage ;
 
         knora-base:objectClassConstraint :writtenSource ;
 
@@ -513,7 +513,7 @@
                      """Cette \"property\" dénote la position dans un séquence."""@fr ,
                      """This property stands for the position within a set of rdered items (resoucres)"""@en ;
 
-        knora-base:subjectClassConstraint :page ;
+        knora-base:subjectClassConstraint :documentImage ;
 
         knora-base:objectClassConstraint knora-base:IntValue ;
 
@@ -536,7 +536,7 @@
          rdfs:comment """Eine eindeutige numerische Bezeichnung einer Seite"""@de ,
                       """A distinct identification of a page"""@en ;
 
-         knora-base:subjectClassConstraint :page ;
+         knora-base:subjectClassConstraint :documentImage ;
 
          knora-base:objectClassConstraint knora-base:TextValue ;
 
@@ -602,7 +602,24 @@
 
                   salsah-gui:guiElement salsah-gui:Richtext .
 
+### ###########################################
+### beol:hasCaption
 
+:hasCaption rdf:type owl:ObjectProperty ;
+
+                  rdfs:subPropertyOf :hasText ;
+
+                  rdfs:label "Bildunterschrift"@de ,
+                             "légende"@fr ,
+                             "leggenda"@it ,
+                             "Caption"@en ;
+
+                  rdfs:comment """Bildunterschrift"""@de ,
+                               """Caption"""@en ;
+
+                  knora-base:objectClassConstraint knora-base:TextValue ;
+
+                  salsah-gui:guiElement salsah-gui:Richtext .
 
 ### ###########################################
 ### beol:hasSon
@@ -766,13 +783,11 @@
                rdfs:label "BEOL-IDs"@de ,
                         "BEOL-IDs"@en ;
 
-               rdfs:comment """Represents IDs given to a person."""@en ;
+               rdfs:comment """Represents IDs given to resource in BEOL project."""@en ;
 
                knora-base:objectClassConstraint knora-base:TextValue ;
 
                salsah-gui:guiElement salsah-gui:SimpleText ;
-
-               knora-base:subjectClassConstraint :person ;
 
                rdfs:subPropertyOf knora-base:hasValue .
 
@@ -1359,6 +1374,12 @@
                             owl:onProperty :comment ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                         ] ;
                     rdfs:label "Archive"@de ,
                                 "Archive"@en ;
@@ -1424,43 +1445,63 @@
           rdfs:comment """Diese Resource-Klasse beschreibt ein Manuskript"""@de .
 
 ### ###########################################
+### beol:documentImage
+
+:documentImage rdf:type owl:Class ;
+
+               rdfs:subClassOf knora-base:StillImageRepresentation ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :pagenum ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :partOfValue ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :partOf ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :seqnum ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :comment ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                              rdf:type owl:Restriction ;
+                              owl:onProperty :beolIDs ;
+                              owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                              salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                        ] ;
+
+                        knora-base:resourceIcon "page.gif" ;
+
+                        rdfs:label "Bild von Dokument"@de ,
+                                   "Document Image"@en ;
+
+                        rdfs:comment """Ein Bild von Dokument"""@de ,
+                                     """An image or scan of a document"""@en .
+
+
+### ###########################################
 ### beol:page
 
 :page rdf:type owl:Class ;
 
-          rdfs:subClassOf knora-base:StillImageRepresentation ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :pagenum ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
-                          ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :partOfValue ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :partOf ;
-                             owl:cardinality "1"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                          ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :seqnum ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                          ] ,
-                          [
-                             rdf:type owl:Restriction ;
-                             owl:onProperty :comment ;
-                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                          ] ;
-
-          knora-base:resourceIcon "page.gif" ;
+          rdfs:subClassOf :documentImage ;
 
           rdfs:label "Seite"@de ,
                      "Page"@fr ,
@@ -1469,6 +1510,28 @@
           rdfs:comment """Eine Seite ist ein Teil eines Konvoluts"""@de ,
                        """Une page est une partie d'un convoluté"""@fr ,
                        """A page is a part of a convolute"""@en .
+
+
+### ###########################################
+### beol:facsimile
+
+:facsimile rdf:type owl:Class ;
+
+          rdfs:subClassOf :documentImage ,
+                          [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :hasCaption ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                          ];
+
+          rdfs:label "Faksimile"@de ,
+                     "Fac-similé"@fr ,
+                     "Facsimile"@en ;
+
+          rdfs:comment """Ein Faksimile ist eine originalgetreue Nachbildung oder Reproduktion eines Manuskriptes"""@de ,
+                       """Un fac-similé est une copie ou reproduction d'un vieux livre ou manuscrit"""@fr ,
+                       """A facsimile is a copy or reproduction of a letter or manuscript"""@en .
 
 
 ### ###########################################
@@ -1603,9 +1666,15 @@
         rdfs:subClassOf knora-base:StillImageRepresentation ,
                         [
                             rdf:type owl:Restriction ;
-                            owl:onProperty :hasText ;
+                            owl:onProperty :hasCaption ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Figur"@de ,
@@ -1643,6 +1712,12 @@
                             owl:onProperty :hasText ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :beolIDs ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Endnote"@de ,
@@ -1670,6 +1745,12 @@
                             rdf:type owl:Restriction ;
                             owl:onProperty :hasText ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Einleitung"@de ,
@@ -1712,6 +1793,12 @@
                             owl:onProperty :hasSectionValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                             rdf:type owl:Restriction ;
+                             owl:onProperty :beolIDs ;
+                             owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                             salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ] ;
 
         rdfs:label "Sektion"@de ,
@@ -1760,6 +1847,12 @@
                 owl:onProperty :hasText ;
                 owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                 salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+             ] ,
+             [
+               rdf:type owl:Restriction ;
+               owl:onProperty :beolIDs ;
+               owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+               salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
              ] ;
 
     rdfs:comment "schriftliche Quelle"@de ,
@@ -1965,6 +2058,12 @@
                             owl:onProperty :publishedLetterEndPage ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                        ] ,
+                        [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :beolIDs ;
+                            owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
                         ] ;
 
         knora-base:resourceIcon "letter.png" ;
@@ -2261,6 +2360,7 @@
 
               rdfs:comment "Represents font for special character"@en .
 
+
 ###  http://www.knora.org/ontology/0801/beol#StandoffFigTag
 :StandoffFigTag rdf:type owl:Class ;
 
@@ -2269,13 +2369,12 @@
             rdfs:comment "represents a html figure tag"@en .
 
 
-###  http://www.knora.org/ontology/0801/beol#StandoffCaptionTag
-:StandoffCaptionTag rdf:type owl:Class ;
+###  http://www.knora.org/ontology/0801/beol#StandoffFigCaptionTag
+:StandoffFigCaptionTag rdf:type owl:Class ;
 
             rdfs:subClassOf knora-base:StandoffTag ;
 
-            rdfs:comment "represents a caption tag"@en .
-
+            rdfs:comment "represents a html figcaption tag"@en .
 
 ### http://www.knora.org/ontology/0801/beol#StandoffCenterTag
 :StandoffCenterTag rdf:type owl:Class ;
