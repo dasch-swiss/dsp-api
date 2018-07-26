@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  sipi:
+      image: dhlabbasel/sipi:develop
+      container_name: sipi
+      ports:
+        - "1024:1024"
+      volumes:
+        - $PWD/config:/sipi/config
+        - $PWD/scripts:/sipi/scripts
+        - /tmp:/tmp
+        - $HOME:$HOME
+        - $PWD/images:/sipi/test/_test_data/images
+        - $PWD/server:/sipi/server
+      extra_hosts:
+        - webapihost:$DOCKERHOST
+      restart: unless-stopped
+      command: --config=/sipi/config/sipi.knora-docker-it-config.lua

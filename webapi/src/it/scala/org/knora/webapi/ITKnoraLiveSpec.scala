@@ -143,6 +143,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         val response = singleAwaitingRequest(request)
         assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
         if (response.status.isSuccess()) log.info("Sipi is running.")
+        response.entity.discardBytes()
     }
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999 milliseconds): HttpResponse = {
