@@ -11,7 +11,7 @@ services:
         - $PWD/scripts:/sipi/scripts
         - /tmp:/tmp
         - $HOME:$HOME
-        - $PWD/images:/sipi/test/_test_data/images
+        - $PWD/images:/sipi/images
         - $PWD/server:/sipi/server
       extra_hosts:
         - webapihost:$DOCKERHOST
