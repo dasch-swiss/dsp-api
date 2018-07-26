@@ -6,6 +6,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.{CoreSpec, TriplestoreResponseException}
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
   * Tests the GraphDB triplestore consistency checking rules in webapi/scripts/KnoraRules.pie.
@@ -22,7 +23,7 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 
     override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(settings.defaultRestoreTimeout, ResetTriplestoreContentACK())
+        expectMsg(5 minutes, ResetTriplestoreContentACK())
     }
 
     if (settings.triplestoreType.startsWith("graphdb")) {

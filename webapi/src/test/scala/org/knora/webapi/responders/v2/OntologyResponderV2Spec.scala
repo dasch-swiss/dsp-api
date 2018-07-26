@@ -32,7 +32,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._
-
+import scala.language.postfixOps
 /**
   * Tests [[OntologyResponderV2]].
   */
@@ -66,7 +66,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
         storeManager ! ResetTriplestoreContent(rdfDataObjs)
-        expectMsg(settings.defaultRestoreTimeout, ResetTriplestoreContentACK())
+        expectMsg(5 minutes, ResetTriplestoreContentACK())
 
         responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
 

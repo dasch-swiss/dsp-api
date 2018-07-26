@@ -32,7 +32,7 @@ import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
@@ -40,7 +40,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
+import scala.language.postfixOps
 /**
   * Created by subotic on 08.12.15.
   */
@@ -87,8 +87,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     }
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        implicit val timeout = Timeout(settings.defaultRestoreTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout)
-        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout)
+        implicit val timeout = Timeout(settings.defaultTimeout)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
     }
 }

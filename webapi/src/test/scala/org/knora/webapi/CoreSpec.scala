@@ -27,12 +27,14 @@ import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
-import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.language.postfixOps
 
 object CoreSpec {
 
@@ -100,9 +102,9 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        implicit val timeout: Timeout = Timeout(settings.defaultRestoreTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), settings.defaultRestoreTimeout)
-        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), settings.defaultTimeout)
+        implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
     }
 
     def memusage(): Unit = {

@@ -44,7 +44,6 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     implicit val timeout: Timeout = settings.defaultTimeout
-    val restoreTimeout: Timeout = new Timeout(settings.defaultRestoreTimeout)
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
 
     def knoraApiPath = Route {
@@ -61,22 +60,20 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
             }
         } ~
         path("admin" / "store" / "ResetTriplestoreContent") {
-            withRequestTimeout(settings.defaultRestoreTimeout) {
-                post {
-                    /* ResetTriplestoreContent */
-                    entity(as[Seq[RdfDataObject]]) { apiRequest =>
-                        requestContext =>
+            post {
+                /* ResetTriplestoreContent */
+                entity(as[Seq[RdfDataObject]]) { apiRequest =>
+                    requestContext =>
 
-                            val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(apiRequest))
+                        val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(apiRequest))
 
-                            RouteUtilADM.runJsonRoute(
-                                requestMessage,
-                                requestContext,
-                                settings,
-                                responderManager,
-                                log
-                            ) (restoreTimeout, executionContext)
-                    }
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
                 }
             }
         }

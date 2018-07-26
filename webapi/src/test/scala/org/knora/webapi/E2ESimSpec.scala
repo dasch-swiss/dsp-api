@@ -24,21 +24,17 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse}
-import akka.pattern._
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import io.gatling.core.scenario.Simulation
-import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.StringFormatter
-
 import spray.json._
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
-import scala.languageFeature.postfixOps
+import scala.concurrent.{Await, ExecutionContext}
+import scala.language.postfixOps
 
 object E2ESimSpec {
 
@@ -110,7 +106,7 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, settings.defaultRestoreTimeout)
+        singleAwaitingRequest(request, 5 minutes)
     }
 
     protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {

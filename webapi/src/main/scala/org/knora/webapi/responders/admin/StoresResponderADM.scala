@@ -20,8 +20,6 @@
 package org.knora.webapi.responders.admin
 
 import akka.pattern._
-import akka.util.Timeout
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
@@ -43,12 +41,6 @@ class StoresResponderADM extends Responder {
       * A user representing the Knora API server, used in those cases where a user is required.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
-
-
-    /**
-      * Need to set the higher timeout value because `resetTriplestoreContent` takes longer to run
-      */
-    val restoreTimeout: Timeout = Timeout(settings.defaultRestoreTimeout)
 
     def receive = {
         case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)

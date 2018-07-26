@@ -118,7 +118,6 @@ class SettingsImpl(config: Config) extends Extension {
     }.toVector
 
     val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
-    val defaultRestoreTimeout: FiniteDuration = defaultTimeout * 6
 
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
     val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")

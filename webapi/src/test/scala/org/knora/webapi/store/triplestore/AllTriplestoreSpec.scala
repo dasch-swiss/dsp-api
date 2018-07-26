@@ -26,6 +26,7 @@ import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.store.triplestoremessages._
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object AllTriplestoreSpec {
 
@@ -221,7 +222,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "reset the data " in {
                 //println("==>> Reset test case start")
                 storeManager ! ResetTriplestoreContent(rdfDataObjects)
-                expectMsg(settings.defaultRestoreTimeout, ResetTriplestoreContentACK())
+                expectMsg(5 minutes, ResetTriplestoreContentACK())
                 //println("==>> Reset test case end")
 
                 storeManager ! SparqlSelectRequest(countTriplesQuery)
