@@ -640,7 +640,6 @@ class ValuesResponderV2 extends Responder {
             currentTime: String = Instant.now.toString
 
             // Generate a SPARQL update string.
-            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v2.txt.createLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,

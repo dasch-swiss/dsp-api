@@ -35,7 +35,6 @@
  * @param value the value to insert.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
- * @param maybeComment an optional comment on the value.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
  * @param currentTime an xsd:dateTimeStamp representing the current time.

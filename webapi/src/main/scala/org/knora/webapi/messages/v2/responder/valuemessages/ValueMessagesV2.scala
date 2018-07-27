@@ -269,12 +269,16 @@ case class ReadValueV2(valueIri: IRI,
                             OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions)
                         )
 
+                        val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueContent.comment.map {
+                            definedComment => OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment -> JsonLDString(definedComment)
+                        }
+
                         val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
                             case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2WithValueObjects)
                             case None => Map.empty[IRI, JsonLDValue]
                         }
 
-                        JsonLDObject(jsonLDObject.value ++ requiredMetadata ++ deletionInfoAsJsonLD)
+                        JsonLDObject(jsonLDObject.value ++ requiredMetadata ++ valueHasCommentAsJsonLD ++ deletionInfoAsJsonLD)
 
                     case other =>
                         throw AssertionException(s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other")
@@ -947,7 +951,8 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                     // Text without standoff.
                     TextValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        valueHasString = valueAsString
+                        valueHasString = valueAsString,
+                        comment = getComment(jsonLDObject)
                     )
 
                 case (None, Some(textValueAsXml), Some(mappingResponse)) =>

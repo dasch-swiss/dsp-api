@@ -28,11 +28,12 @@
  * single value in an existing resource, and when creating a new resource with its initial values.
  *
  * @param resourceIri the IRI of the resource.
+ * @param propertyIri the IRI of the property for which the value is being created.
  * @param value the value to insert.
+ * @param newValueIri the IRI of the new value.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
  *        are being created separately.
- * @param maybeComment an optional comment on the value.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
  * @param currentTime an xsd:dateTimeStamp representing the current time.

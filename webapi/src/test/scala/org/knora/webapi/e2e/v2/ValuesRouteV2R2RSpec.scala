@@ -363,5 +363,53 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
                 savedTextValueAsXml.contains("salsah-link") should ===(true)
             }
         }
+
+        "create a text value with a comment" in {
+            val resourceIri = zeitglöckleinIri
+            val valueAsString = "this is a text value that has a comment"
+            val valueHasComment = "this is a comment"
+            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
+
+            val jsonLDEntity =
+                s"""
+                   |{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "incunabula:book",
+                   |  "incunabula:book_comment" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:valueAsString" : "$valueAsString",
+                   |    "knora-api:valueHasComment" : "$valueHasComment"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+                   |  }
+                   |}
+                """.stripMargin
+
+            Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                commentValueIri.set(valueIri)
+                val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri)
+
+                val savedValue: JsonLDObject = getValue(
+                    resourceIri = resourceIri,
+                    maybePreviousLastModDate = maybeResourceLastModDate,
+                    propertyIriForGravsearch = propertyIri,
+                    propertyIriInResult = propertyIri,
+                    expectedValueIri = commentValueIri.get,
+                    userEmail = incunabulaUserEmail
+                )
+
+                val savedValueAsString: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString)
+                savedValueAsString should ===(valueAsString)
+                val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment)
+                savedValueHasComment should ===(valueHasComment)
+            }
+        }
     }
 }
