@@ -146,7 +146,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         response.entity.discardBytes()
     }
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999 milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 4999 milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }

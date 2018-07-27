@@ -54,19 +54,15 @@ class StoresResponderADM extends Responder {
       * @return a future containing a [[ResetTriplestoreContentResponseADM]].
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
+
         log.debug(s"resetTriplestoreContent - called")
-        log.debug(s"resetTriplestoreContent called with: {}", rdfDataObjects.toString)
-        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
-        log.debug(s"StartupFlags.allowReloadOverHTTP = {}", allowReloadOverHTTP)
 
         for {
             value: Boolean <- (applicationStateActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
             _ = if (!value) {
-                //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
-            // need to send this of with a longer timeout
             resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
             _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
