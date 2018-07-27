@@ -84,14 +84,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri <- Future(jsonLDDocument.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
+            resourceIri <- Future(jsonLDDocument.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
 
             _ = if (!resourceIri.isKnoraDataIri) {
                 throw BadRequestException(s"Invalid resource IRI: $resourceIri")
             }
 
             // Get the resource class.
-            resourceClassIri = jsonLDDocument.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            resourceClassIri = jsonLDDocument.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
             _ = if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
                 throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
@@ -130,7 +130,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                         log = log
                                     )
 
-                                maybePermissions: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                                maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                             } yield CreateValueV2(
                                 resourceIri = resourceIri.toString,
                                 resourceClassIri = resourceClassIri,
@@ -404,7 +404,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
     protected def getComment(jsonLDObject: JsonLDObject)(implicit stringFormatter: StringFormatter): Option[String] = {
-        jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
+        jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment, stringFormatter.toSparqlEncodedString)
     }
 }
 
@@ -430,7 +430,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            valueType: SmartIri <- Future(jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
+            valueType: SmartIri <- Future(jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr))
 
             valueContent <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2WithValueObjects.TextValue =>
@@ -627,18 +627,18 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val calendar: KnoraCalendarV1.Value = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
+        val calendar: KnoraCalendarV1.Value = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
 
         val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear).value
         val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth).map(_.value)
         val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay).map(_.value)
-        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
+        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
         val startPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasStartMonth, maybeDateValueHasStartDay)
 
         val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear).value
         val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth).map(_.value)
         val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay).map(_.value)
-        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
+        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
         val endPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasEndMonth, maybeDateValueHasEndDay)
 
         val startDate = DateYearMonthDay(
@@ -925,9 +925,9 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            maybeValueAsString: Option[String] <- Future(jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString, stringFormatter.toSparqlEncodedString))
-            maybeValueHasLanguage: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage, stringFormatter.toSparqlEncodedString)
-            maybeValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml, stringFormatter.toSparqlEncodedString)
+            maybeValueAsString: Option[String] <- Future(jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString, stringFormatter.toSparqlEncodedString))
+            maybeValueHasLanguage: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage, stringFormatter.toSparqlEncodedString)
+            maybeTextValueAsXml: Option[String] = jsonLDObject.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
             maybeMappingIri: Option[IRI] = jsonLDObject.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping, stringFormatter.validateAndEscapeIri)
 
             // If the client supplied the IRI of a standoff-to-XML mapping, get the mapping.
@@ -942,7 +942,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
             maybeMappingResponse: Option[GetMappingResponseV2] <- ActorUtil.optionFuture2FutureOption(maybeMappingFuture)
 
             // Did the client submit text with or without standoff markup?
-            textValue: TextValueContentV2 = (maybeValueAsString, maybeValueAsXml, maybeMappingResponse) match {
+            textValue: TextValueContentV2 = (maybeValueAsString, maybeTextValueAsXml, maybeMappingResponse) match {
                 case (Some(valueAsString), None, None) =>
                     // Text without standoff.
                     TextValueContentV2(
@@ -950,11 +950,11 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
                         valueHasString = valueAsString
                     )
 
-                case (None, Some(valueAsXml), Some(mappingResponse)) =>
+                case (None, Some(textValueAsXml), Some(mappingResponse)) =>
                     // Text with standoff.
 
                     val textWithStandoffTags: TextWithStandoffTagsV2 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
-                        xml = valueAsXml,
+                        xml = textValueAsXml,
                         mapping = mappingResponse,
                         acceptStandoffLinksToClientIDs = false,
                         log = log
@@ -1140,7 +1140,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): DecimalValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal, stringFormatter.validateBigDecimal)
+        val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal, stringFormatter.validateBigDecimal)
 
         DecimalValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1302,7 +1302,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): GeomValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val geometryValueAsGeometry: String = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.toSparqlEncodedString)
+        val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.toSparqlEncodedString)
 
         GeomValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1391,8 +1391,8 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): IntervalValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val intervalValueHasStart: BigDecimal = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart, stringFormatter.validateBigDecimal)
-        val intervalValueHasEnd: BigDecimal = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd, stringFormatter.validateBigDecimal)
+        val intervalValueHasStart: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart, stringFormatter.validateBigDecimal)
+        val intervalValueHasEnd: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd, stringFormatter.validateBigDecimal)
 
         IntervalValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1483,7 +1483,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val listValueAsListNode: IRI = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
+        val listValueAsListNode: IRI = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
 
         HierarchicalListValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1567,7 +1567,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): ColorValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val colorValueAsColor: String = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor, stringFormatter.toSparqlEncodedString)
+        val colorValueAsColor: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor, stringFormatter.toSparqlEncodedString)
 
         ColorValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1650,7 +1650,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): UriValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val uriValueAsUri: String = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri, stringFormatter.toSparqlEncodedString)
+        val uriValueAsUri: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri, stringFormatter.toSparqlEncodedString)
 
         UriValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1734,7 +1734,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): GeonameValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val geonameValueAsGeonameCode: String = jsonLDObject.requireString(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode, stringFormatter.toSparqlEncodedString)
+        val geonameValueAsGeonameCode: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode, stringFormatter.toSparqlEncodedString)
 
         GeonameValueContentV2(
             ontologySchema = ApiV2WithValueObjects,

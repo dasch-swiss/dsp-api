@@ -104,8 +104,8 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
                                requestingUser: UserADM): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
-        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
+        val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
@@ -1329,7 +1329,7 @@ object InputOntologyV2 {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyObj = jsonLDDocument.body
-        val externalOntologyIri: SmartIri = ontologyObj.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val externalOntologyIri: SmartIri = ontologyObj.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraApiV2DefinitionIri && externalOntologyIri.isKnoraOntologyIri)) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
@@ -1337,11 +1337,11 @@ object InputOntologyV2 {
 
         val projectIri = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val ontologyLabel = ontologyObj.maybeString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyLabel = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
-            ontologyObj.maybeString(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
-                orElse(ontologyObj.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant))
+            ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
+                orElse(ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant))
 
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
@@ -1357,7 +1357,7 @@ object InputOntologyV2 {
                 // Make a list of (entity definition, entity type IRI)
                 val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
                     case jsonLDObj: JsonLDObject =>
-                        val entityType = jsonLDObj.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val entityType = jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
                         (jsonLDObj, entityType)
 
                     case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
@@ -1864,7 +1864,7 @@ object EntityInfoContentV2 {
     def predicatesFromJsonLDObject(jsonLDObject: JsonLDObject): Map[SmartIri, PredicateInfoV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val entityType: SmartIri = jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+        val entityType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
@@ -2560,7 +2560,7 @@ object ClassInfoContentV2 {
     def fromJsonLDObject(jsonLDClassDef: JsonLDObject, ignoreExtraData: Boolean): ClassInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val classIri: SmartIri = jsonLDClassDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
         // TODO: handle custom datatypes.
@@ -2610,7 +2610,7 @@ object ClassInfoContentV2 {
                                 throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
                             }
 
-                            val cardinalityType = restriction.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                            val cardinalityType = restriction.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
                             if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
                                 throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
@@ -2794,7 +2794,7 @@ object PropertyInfoContentV2 {
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val propertyIri: SmartIri = jsonLDPropertyDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
         if (!ignoreExtraData) {
@@ -2873,7 +2873,7 @@ object IndividualInfoContentV2 {
     def fromJsonLDObject(jsonLDIndividualDef: JsonLDObject): IndividualInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val individualIri: SmartIri = jsonLDIndividualDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val individualIri: SmartIri = jsonLDIndividualDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = individualIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid named individual IRI: $individualIri"))
 
         IndividualInfoContentV2(

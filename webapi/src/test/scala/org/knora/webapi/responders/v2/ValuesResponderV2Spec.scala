@@ -50,15 +50,10 @@ import scala.concurrent.duration._
 class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
-    private val anythingProjectIri = ANYTHING_PROJECT_IRI
-
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
-    private val miscResourceIri = "http://rdfh.ch/miscResource"
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
-    private val imagesUser = SharedTestDataADM.imagesUser01
     private val anythingUser = SharedTestDataADM.anythingUser1
 
     val rdfDataObjects = List(
@@ -126,7 +121,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             case searchResponse: ReadResourcesSequenceV2 =>
                 // Get the resource from the response.
                 resourcesSequenceToResource(
-                    requestedResourceIri = resourceIri,
+                    requestedresourceIri = resourceIri,
                     readResourcesSequence = searchResponse,
                     requestingUser = requestingUser
                 )
@@ -182,13 +177,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
     }
 
-    private def resourcesSequenceToResource(requestedResourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
+    private def resourcesSequenceToResource(requestedresourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
         if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+            throw AssertionException(s"Expected one resource, <$requestedresourceIri>, but no resources were returned")
         }
 
         if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+            throw AssertionException(s"More than one resource returned with IRI <$requestedresourceIri>")
         }
 
         val resourceInfo = readResourcesSequence.resources.head
@@ -206,7 +201,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         expectMsgPF(timeout) {
             case previewResponse: ReadResourcesSequenceV2 =>
                 val resourcePreview: ReadResourceV2 = resourcesSequenceToResource(
-                    requestedResourceIri = resourceIri,
+                    requestedresourceIri = resourceIri,
                     readResourcesSequence = previewResponse,
                     requestingUser = requestingUser
                 )
@@ -234,8 +229,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create an integer value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
@@ -277,8 +272,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create an integer value with custom permissions" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
             val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
@@ -323,8 +318,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an integer value with syntactically invalid custom permissions" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
             val permissions = "M knora-base:Creator,V knora-base:KnownUser"
 
@@ -350,8 +345,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an integer value with custom permissions referring to a nonexistent group" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1024
             val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/nonexistent-group"
 
@@ -376,8 +371,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a value if the user does not have modify permission on the resource" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 5
 
             actorUnderTest ! CreateValueRequestV2(
@@ -400,8 +395,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate integer value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 4
 
             actorUnderTest ! CreateValueRequestV2(
@@ -426,7 +421,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "create a text value without standoff" in {
             val valueHasString = "Comment 1a"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
@@ -466,7 +461,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not create a duplicate text value without standoff" in {
             val valueHasString = "Comment 1a"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -490,7 +485,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a text value with a comment" in {
             val valueHasString = "this is a text value that has a comment"
             val valueHasComment = "this is a comment"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
@@ -542,7 +537,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 mapping = standardMapping.get
             ))
 
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
 
             actorUnderTest ! CreateValueRequestV2(
@@ -593,7 +588,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 mapping = standardMapping.get
             ))
 
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -618,8 +613,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a decimal value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val valueHasDecimal = 4.3
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -659,8 +654,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate decimal value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val valueHasDecimal = 4.3
 
             actorUnderTest ! CreateValueRequestV2(
@@ -685,8 +680,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a date value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val submittedValueContent = DateValueContentV2(
@@ -737,8 +732,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate date value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val submittedValueContent = DateValueContentV2(
@@ -769,8 +764,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a boolean value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val valueHasBoolean = true
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -812,8 +807,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a geometry value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -853,8 +848,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate geometry value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
             actorUnderTest ! CreateValueRequestV2(
@@ -879,8 +874,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create an interval value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
             val valueHasIntervalEnd = BigDecimal("3.4")
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
@@ -925,8 +920,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate interval value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
             val valueHasIntervalEnd = BigDecimal("3.4")
 
@@ -953,8 +948,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a list value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -996,8 +991,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate list value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1022,8 +1017,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a color value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3333"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -1065,8 +1060,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate color value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3333"
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1091,8 +1086,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a URI value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://www.knora.org"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -1134,8 +1129,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate URI value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://www.knora.org"
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1160,8 +1155,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a geoname value" in {
             // Add the value.
 
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2661604"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -1203,8 +1198,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate geoname value" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2661604"
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1227,9 +1222,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create a link between two resources" in {
-            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
-            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
             val createValueRequest = CreateValueRequestV2(
@@ -1275,9 +1270,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate link" in {
-            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
-            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
@@ -1303,8 +1298,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not accept a link property in a request to create a link between two resources" in {
-            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkPropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
@@ -1330,8 +1325,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a link value with a link value property as its predicate" in {
-            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkValuePropertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
                 CreateValueV2(
@@ -1357,8 +1352,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value to a nonexistent resource" in {
-            val resourceIri = "http://rdfh.ch/nonexistent"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/nonexistent"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 6
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1384,9 +1379,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value to a deleted resource" in {
-            val resourceIri = "http://rdfh.ch/9935159f67"
+            val resourceIri: IRI = "http://rdfh.ch/9935159f67"
             val valueHasString = "Comment 2"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1410,8 +1405,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value if the resource's rdf:type is not correctly given" in {
-            val resourceIri = "http://rdfh.ch/0001/a-thing"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 2048
 
             actorUnderTest ! CreateValueRequestV2(
@@ -1436,8 +1431,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value of the wrong type" in {
-            val resourceIri = "http://rdfh.ch/21abac2162"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1459,7 +1454,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value that would violate a cardinality restriction" in {
-            val resourceIri = "http://rdfh.ch/4f11adaf"
+            val resourceIri: IRI = "http://rdfh.ch/4f11adaf"
 
             // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/4f11adaf is already part of a book.
 
@@ -1506,8 +1501,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {
-            val resourceIri = "http://rdfh.ch/21abac2162"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val valueHasString = "This comment refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 
@@ -1598,8 +1593,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add another new text value containing a Standoff resource reference, and make a new version of the LinkValue" in {
-            val resourceIri = "http://rdfh.ch/21abac2162"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val valueHasString = "This remark refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
 

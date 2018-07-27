@@ -21,9 +21,9 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
-import org.knora.webapi._
 
 
 /**
@@ -148,6 +148,20 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     /**
       * Gets a required string value of a property of this JSON-LD object, throwing
       * [[BadRequestException]] if the property is not found or if its value is not a string.
+      *
+      * @param key the key of the required value.
+      * @return the value.
+      */
+    def requireString(key: String): String = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case JsonLDString(str) => str
+            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+        }
+    }
+
+    /**
+      * Gets a required string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a string.
       * Then parses the value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
       * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
       *
@@ -158,9 +172,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @tparam T the type of the validation function's return value.
       * @return the return value of the validation function.
       */
-    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = {
-        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+    def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
+        val str: String = requireString(key)
+        validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+    }
+
+    /**
+      * Gets an optional string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a string.
+      *
+      * @param key the key of the optional value.
+      * @return the value, or `None` if not found.
+      */
+    def maybeString(key: String): Option[String] = {
+        value.get(key).map {
+            case JsonLDString(str) => str
             case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
         }
     }
@@ -178,10 +204,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @tparam T the type of the validation function's return value.
       * @return the return value of the validation function, or `None` if the value was not present.
       */
-    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
-        value.get(key).map {
-            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
-            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+    def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
+        maybeString(key).map {
+            str => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
         }
     }
 
@@ -352,13 +377,13 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
-                val lang = obj.requireString(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
+                val lang = obj.requireStringWithValidation(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
 
                 if (!LanguageCodes.SupportedLanguageCodes(lang)) {
                     throw BadRequestException(s"Unsupported language code: $lang")
                 }
 
-                val text = obj.requireString(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
+                val text = obj.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
                 StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
@@ -378,12 +403,22 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     /**
       * A convenience function that calls `body.requireString`.
       */
-    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireString(key, validationFun)
+    def requireString(key: String): String = body.requireString(key)
+
+    /**
+      * A convenience function that calls `body.requireStringWithValidation`.
+      */
+    def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireStringWithValidation(key, validationFun)
 
     /**
       * A convenience function that calls `body.maybeString`.
       */
-    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeString(key, validationFun)
+    def maybeString(key: String): Option[String] = body.maybeString(key)
+
+    /**
+      * A convenience function that calls `body.maybeStringWithValidation`.
+      */
+    def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeStringWithValidation(key, validationFun)
 
     /**
       * A convenience function that calls `body.requireIriInObject`.

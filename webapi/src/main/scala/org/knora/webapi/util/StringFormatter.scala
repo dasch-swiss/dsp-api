@@ -39,7 +39,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.DateUtilV2.KnoraEraV2
 import org.knora.webapi.util.JavaUtil.Optional
-import spray.json.JsonParser
+import spray.json._
 
 import scala.util.control.Exception._
 import scala.util.matching.Regex
@@ -1436,6 +1436,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             SparqlEscapeOutput,
             SparqlEscapeInput
         )
+    }
+
+    /**
+      * Encodes a string for use in JSON.
+      *
+      * @param s the string to be encoded.
+      * @return the encoded string.
+      */
+    def toJsonEncodedString(s: String): String = {
+        JsString(s).compactPrint
     }
 
     /**

@@ -943,8 +943,8 @@ class OntologyV2R2RSpec extends R2RSpec {
             Delete(s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-                responseJsonDoc.requireString("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1008,8 +1008,8 @@ class OntologyV2R2RSpec extends R2RSpec {
             Delete(s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-                responseJsonDoc.requireString("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }
@@ -1022,8 +1022,8 @@ class OntologyV2R2RSpec extends R2RSpec {
             Delete(s"/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
-                responseJsonDoc.requireString("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
-                val newAnythingLastModDate = responseJsonDoc.requireString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
             }

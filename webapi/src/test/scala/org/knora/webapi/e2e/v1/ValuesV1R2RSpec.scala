@@ -31,7 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
-import org.knora.webapi.responders.{ResponderManager, _}
+import org.knora.webapi.responders._
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
