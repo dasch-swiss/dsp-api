@@ -515,7 +515,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri,
-                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -580,7 +583,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
-                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -793,7 +799,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
-                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -912,7 +921,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
-                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
             // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
@@ -980,7 +992,10 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
                 "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
-                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
             )
 
             Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {

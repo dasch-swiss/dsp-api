@@ -1216,9 +1216,6 @@ object KnoraApiV2WithValueObjects {
           * Properties to remove from `knora-base` before converting it to the [[ApiV2WithValueObjects]] schema.
           */
         val KnoraBasePropertiesToRemove: Set[SmartIri] = Set(
-            OntologyConstants.KnoraBase.IsDeleted,
-            OntologyConstants.KnoraBase.DeleteDate,
-            OntologyConstants.KnoraBase.DeleteComment,
             OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
             OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
             OntologyConstants.KnoraBase.ObjectClassConstraint,

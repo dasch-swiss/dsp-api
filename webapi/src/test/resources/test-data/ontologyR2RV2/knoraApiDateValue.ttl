@@ -21,8 +21,20 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:dateValueHasCalendar
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:hasPermissions
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
