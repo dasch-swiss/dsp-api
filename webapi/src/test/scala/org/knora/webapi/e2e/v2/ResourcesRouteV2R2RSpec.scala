@@ -29,6 +29,7 @@ import akka.http.scaladsl.model.headers.Accept
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
@@ -37,7 +38,6 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi._
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -68,6 +68,26 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
     private val password = "test"
 
+    // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
+    private val writeTestDataFiles = false
+
+    /**
+      * Reads or writes a test data file.
+      *
+      * @param responseAsString the API response received from Knora.
+      * @param file             the file in which the expected API response is stored.
+      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+      * @return the expected response.
+      */
+    private def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+        if (writeFile) {
+            FileUtil.writeTextFile(file, responseAsString)
+            responseAsString
+        } else {
+            FileUtil.readTextFile(file)
+        }
+    }
+
     private val rdfDataObjects = List(
 
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -89,7 +109,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -109,7 +129,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerTurtle = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))
+                val expectedAnswerTurtle = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"), writeTestDataFiles)
 
                 assert(parseTurtle(responseAs[String]) == parseTurtle(expectedAnswerTurtle))
 
@@ -122,7 +142,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerRdfXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"))
+                val expectedAnswerRdfXml = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLand.rdf"), writeTestDataFiles)
 
                 assert(parseRdfXml(responseAs[String]) == parseRdfXml(expectedAnswerRdfXml))
 
@@ -137,7 +157,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 // println(responseAs[String])
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandPreview.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -150,7 +170,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -165,7 +185,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerTurtle = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"))
+                val expectedAnswerTurtle = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.ttl"), writeTestDataFiles)
 
                 assert(parseTurtle(responseAs[String]) == parseTurtle(expectedAnswerTurtle))
             }
@@ -179,7 +199,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerRdfXml = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"))
+                val expectedAnswerRdfXml = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.rdf"), writeTestDataFiles)
 
                 assert(parseRdfXml(responseAs[String]) == parseRdfXml(expectedAnswerRdfXml))
 
@@ -193,7 +213,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimplePreview.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
             }
@@ -205,7 +225,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/BookReiseInsHeiligeLandSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -218,7 +238,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -232,7 +252,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate2.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithBCEDate2.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -246,7 +266,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValue.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithListValue.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -260,7 +280,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkComplex.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkComplex.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -273,7 +293,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkSimple.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithLinkSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -286,7 +306,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangComplex.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
@@ -300,7 +320,7 @@ class ResourcesRouteV2R2RSpec extends R2RSpec {
 
                 assert(status == StatusCodes.OK, response.toString)
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"))
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/resourcesR2RV2/ThingWithTextLangSimple.jsonld"), writeTestDataFiles)
 
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 

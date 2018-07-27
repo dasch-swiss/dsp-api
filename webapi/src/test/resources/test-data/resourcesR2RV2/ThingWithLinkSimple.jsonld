@@ -1,16 +1,15 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
-    "@type" : "anything:Thing",
-    "anything:isPartOfOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
-    },
-    "rdfs:label" : "Sierra"
+  "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+  "@type" : "anything:Thing",
+  "anything:isPartOfOtherThing" : {
+    "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
   },
+  "rdfs:label" : "Sierra",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
   }
 }

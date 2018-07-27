@@ -75,7 +75,8 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
     )
 
     private def getResourceWithValues(resourceIri: IRI,
-                                      propertyIrisForGravsearch: Seq[SmartIri]): JsonLDDocument = {
+                                      propertyIrisForGravsearch: Seq[SmartIri],
+                                      userEmail: String): JsonLDDocument = {
         // Make a Gravsearch query from a template.
         val gravsearchQuery: String = queries.gravsearch.txt.getResourceWithSpecifiedProperties(
             resourceIri = resourceIri,
@@ -84,7 +85,7 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
 
         // Run the query.
 
-        Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+        Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(userEmail, password)) ~> searchPath ~> check {
             assert(status == StatusCodes.OK, response.toString)
             responseToJsonLDDocument(response)
         }
@@ -103,7 +104,6 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
 
         val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
             case jsonLDObject: JsonLDObject if jsonLDObject.requireString(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri) == expectedValueIri => jsonLDObject
-            case other => throw AssertionException(s"Expected JSON-LD object representing a Knora value, found: $other")
         }
 
         if (matchingValues.isEmpty) {
@@ -117,11 +117,19 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
         matchingValues.head
     }
 
-    private def getResourceLastModificationDate(resourceIri: IRI): Option[Instant] = {
-        Get(s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> resourcesPath ~> check {
+    private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] = {
+        resource.maybeObject(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).map {
+            jsonLDObject =>
+                jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.validateAndEscapeIri) should ===(OntologyConstants.Xsd.DateTimeStamp)
+                jsonLDObject.requireString(JsonLDConstants.VALUE, stringFormatter.toInstant)
+        }
+    }
+
+    private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
+        Get(s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(BasicHttpCredentials(userEmail, password)) ~> resourcesPath ~> check {
             assert(status == StatusCodes.OK, response.toString)
             val resource: JsonLDDocument = responseToJsonLDDocument(response)
-            resource.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+            parseResourceLastModificationDate(resource)
         }
     }
 
@@ -141,15 +149,15 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
                          maybePreviousLastModDate: Option[Instant],
                          propertyIriForGravsearch: SmartIri,
                          propertyIriInResult: SmartIri,
-                         expectedValueIri: IRI): JsonLDObject = {
+                         expectedValueIri: IRI,
+                         userEmail: String): JsonLDObject = {
         val resource = getResourceWithValues(
             resourceIri = resourceIri,
-            propertyIrisForGravsearch = Seq(propertyIriForGravsearch)
+            propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+            userEmail = userEmail
         )
 
-        println(resource.toPrettyString)
-
-        val resourceLastModDate: Option[Instant] = resource.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+        val resourceLastModDate: Option[Instant] = parseResourceLastModificationDate(resource)
 
         checkLastModDate(
             resourceIri = resourceIri,
@@ -175,7 +183,7 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
             val resourceIri: IRI = "http://rdfh.ch/0001/a-thing"
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 4
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLdEntity =
                 s"""
@@ -206,7 +214,8 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
                     maybePreviousLastModDate = maybeResourceLastModDate,
                     propertyIriForGravsearch = propertyIri,
                     propertyIriInResult = propertyIri,
-                    expectedValueIri = intValueIri.get
+                    expectedValueIri = intValueIri.get,
+                    userEmail = anythingUserEmail
                 )
 
                 val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value
@@ -219,7 +228,7 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
             val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
             val customPermissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLdEntity =
                 s"""
@@ -251,7 +260,8 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
                     maybePreviousLastModDate = maybeResourceLastModDate,
                     propertyIriForGravsearch = propertyIri,
                     propertyIriInResult = propertyIri,
-                    expectedValueIri = intValueIri.get
+                    expectedValueIri = intValueIri.get,
+                    userEmail = anythingUserEmail
                 )
 
                 val intValueAsInt: Int = savedValue.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value

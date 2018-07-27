@@ -1,7 +1,8 @@
-@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
 @prefix incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/v2#> .
+@prefix knora-api: <http://api.knora.org/ontology/knora-api/v2#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://rdfh.ch/2a6221216701> a incunabula:book;
   incunabula:book_comment <http://rdfh.ch/2a6221216701/values/56c287fc9505>;
@@ -21,81 +22,133 @@
   incunabula:title <http://rdfh.ch/2a6221216701/values/5755b5489105>, <http://rdfh.ch/2a6221216701/values/942b620f9105>,
     <http://rdfh.ch/2a6221216701/values/d1010fd69005>;
   incunabula:url <http://rdfh.ch/2a6221216701/values/f89173afca2704>;
+  knora-api:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:creationDate "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser";
   rdfs:label "Reise ins Heilige Land" .
 
 <http://rdfh.ch/2a6221216701/values/56c287fc9505> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Katalogaufnahme anhand ISTC und v.d.Haegen" .
 
 <http://rdfh.ch/2a6221216701/values/7b4a9bf89305> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Van der Haegen I: 9,14" .
 
 <http://rdfh.ch/2a6221216701/values/3e74ee319405> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Goff M165" .
 
 <http://rdfh.ch/2a6221216701/values/019e416b9405> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "C 3833" .
 
 <http://rdfh.ch/2a6221216701/values/c4c794a49405> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Klebs 651.2" .
 
 <http://rdfh.ch/2a6221216701/values/87f1e7dd9405> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Schr 4799" .
 
 <http://rdfh.ch/2a6221216701/values/4a1b3b179505> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Schramm XXI p. 9 & 26" .
 
 <http://rdfh.ch/2a6221216701/values/0d458e509505> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "FairMur(G) 283" .
 
 <http://rdfh.ch/2a6221216701/values/d06ee1899505> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "IBP 3556" .
 
 <http://rdfh.ch/2a6221216701/values/939834c39505> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Borm 1751" .
 
 <http://rdfh.ch/2a6221216701/values/262655679205> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Basel UB, Sign: Aleph D III 13:1" .
 
 <http://rdfh.ch/2a6221216701/values/ac79fbd99205> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "deutsch von Otto von Diemeringen" .
 
 <http://rdfh.ch/2a6221216701/values/6fa34e139305> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Rubr. mit Init. J zu Beginn" .
 
 <http://rdfh.ch/2a6221216701/values/32cda14c9305> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Holzschnitte nicht koloriert" .
 
 <http://rdfh.ch/2a6221216701/values/f5f6f4859305> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Besitzervermerke: Kartause, H. Zscheckenbürlin" .
 
 <http://rdfh.ch/2a6221216701/values/b82048bf9305> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516" .
 
 <http://rdfh.ch/2a6221216701/values/e94fa8a09205> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Extent: 1 Bd.; Dimensions: f°" .
 
 <http://rdfh.ch/2a6221216701/values/63fc012e9205> a knora-api:DateValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
   knora-api:dateValueHasCalendar "JULIAN";
   knora-api:dateValueHasEndEra "CE";
   knora-api:dateValueHasEndYear 1481;
   knora-api:dateValueHasStartEra "CE";
   knora-api:dateValueHasStartYear 1481;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "JULIAN:1481 CE" .
 
 <http://rdfh.ch/2a6221216701/values/dda85bbb9105> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Bernhard Richel" .
 
 <http://rdfh.ch/2a6221216701/values/a0d2aef49105> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|V knora-base:ProjectMember,knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Basel" .
 
 <http://rdfh.ch/2a6221216701/values/d1010fd69005> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Reise ins Heilige Land" .
 
 <http://rdfh.ch/2a6221216701/values/942b620f9105> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Reysen und wanderschafften durch das Gelobte Land" .
 
 <http://rdfh.ch/2a6221216701/values/5755b5489105> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "Itinerarius" .
 
 <http://rdfh.ch/2a6221216701/values/f89173afca2704> a knora-api:TextValue;
+  knora-api:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+  knora-api:hasPermissions "CR knora-base:Creator|D knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser";
   knora-api:valueAsString "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320" .

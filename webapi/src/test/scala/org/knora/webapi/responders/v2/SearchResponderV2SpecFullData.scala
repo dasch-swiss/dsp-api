@@ -43,7 +43,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:46Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -71,7 +70,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -99,7 +97,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -127,7 +124,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:50Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -155,7 +151,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -183,7 +178,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -211,7 +205,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -239,7 +232,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -267,7 +259,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -295,7 +286,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -323,7 +313,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -351,7 +340,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -379,7 +367,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -407,7 +394,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -435,7 +421,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -463,7 +448,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -491,7 +475,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -519,7 +502,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -547,7 +529,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -575,7 +556,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -603,7 +583,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -631,7 +610,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -659,7 +637,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -687,7 +664,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:42Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -715,7 +691,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
                     attachedToUser = "http://rdfh.ch/users/b83acc5f05",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -1057,7 +1032,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0001",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -1382,7 +1356,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
                     attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0001",
                     deletionInfo = None
                 )
             )),
@@ -1448,7 +1421,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,
@@ -1476,7 +1448,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                     valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ))),
                 lastModificationDate = None,

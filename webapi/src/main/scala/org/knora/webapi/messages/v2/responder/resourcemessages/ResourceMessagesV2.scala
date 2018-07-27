@@ -263,18 +263,7 @@ case class ReadResourceV2(resourceIri: IRI,
             )
 
             val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
-                case Some(definedDeletionInfo) =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> JsonLDBoolean(true),
-                        OntologyConstants.KnoraApiV2WithValueObjects.DeleteDate -> JsonLDObject(
-                            Map(
-                                JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
-                                JsonLDConstants.VALUE -> JsonLDString(definedDeletionInfo.deleteDate.toString)
-                            )
-                        ),
-                        OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment -> JsonLDString(definedDeletionInfo.deleteComment)
-                    )
-
+                case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2WithValueObjects)
                 case None => Map.empty[IRI, JsonLDValue]
             }
 
@@ -361,6 +350,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
             fixedPrefixes = Map(
                 "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
                 "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
                 OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
             ),
             knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed

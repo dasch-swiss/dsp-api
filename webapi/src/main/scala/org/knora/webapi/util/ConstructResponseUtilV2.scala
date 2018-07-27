@@ -713,7 +713,6 @@ object ConstructResponseUtilV2 {
                         ReadValueV2(
                             valueIri = valObj.valueObjectIri,
                             attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
-                            attachedToProject = resourceAttachedToProject,
                             permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
                             valueCreationDate = valueCreationDate,
                             valueContent = valueContent,

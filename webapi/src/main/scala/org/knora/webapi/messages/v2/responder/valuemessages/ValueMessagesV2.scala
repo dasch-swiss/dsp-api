@@ -26,7 +26,6 @@ import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
@@ -39,6 +38,7 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
+import org.knora.webapi.{OntologyConstants, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -188,23 +188,41 @@ sealed trait IOValueV2 {
   * @param deleteComment the reason why the resource was deleted.
   */
 case class DeletionInfo(deleteDate: Instant,
-                        deleteComment: String)
+                        deleteComment: String) {
+    def toJsonLDFields(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue] = {
+        if (targetSchema != ApiV2WithValueObjects) {
+            throw AssertionException("DeletionInfo is available in JSON-LD only in the complex schema")
+        }
+
+        Map(
+            OntologyConstants.KnoraApiV2WithValueObjects.IsDeleted -> JsonLDBoolean(true),
+            OntologyConstants.KnoraApiV2WithValueObjects.DeleteDate -> JsonLDObject(
+                Map(
+                    JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Xsd.DateTimeStamp),
+                    JsonLDConstants.VALUE -> JsonLDString(deleteDate.toString)
+                )
+            ),
+            OntologyConstants.KnoraApiV2WithValueObjects.DeleteComment -> JsonLDString(deleteComment)
+        )
+    }
+}
 
 /**
   * The value of a Knora property read back from the triplestore.
   *
-  * @param valueIri          the IRI of the value.
-  * @param attachedToUser    the user that created the value.
-  * @param attachedToProject the project that the value's resource belongs to.
-  * @param permissions       the permissions that the value grants to user groups.
-  * @param valueContent      the content of the value.
-  * @param previousValueIri  the IRI of the previous version of this value.
-  * @param deletionInfo      if this value has been marked as deleted, provides the date when it was
-  *                          deleted and the reason why it was deleted.
+  * @param valueIri         the IRI of the value.
+  * @param attachedToUser   the user that created the value.
+  * @param permissions      the permissions that the value grants to user groups.
+  * @param valueContent     the content of the value.
+  * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
+  *                         here for testing.
+  * @param valueHasRefCount if this is a link value, its reference count.  Not returned in API responses, but needed
+  *                         here for testing.
+  * @param deletionInfo     if this value has been marked as deleted, provides the date when it was
+  *                         deleted and the reason why it was deleted.
   */
 case class ReadValueV2(valueIri: IRI,
                        attachedToUser: IRI,
-                       attachedToProject: IRI,
                        permissions: String,
                        valueCreationDate: Instant,
                        valueContent: ValueContentV2,
@@ -242,12 +260,21 @@ case class ReadValueV2(valueIri: IRI,
                 // In the complex schema, the value must be represented as a JSON-LD object.
                 valueContentAsJsonLD match {
                     case jsonLDObject: JsonLDObject =>
-                        // Add the value's IRI and type. TODO: add the value's other metadata.
-                        JsonLDObject(
-                            jsonLDObject.value +
-                                (JsonLDConstants.ID -> JsonLDString(valueIri)) +
-                                (JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString))
+                        // Add the value's metadata.
+
+                        val requiredMetadata = Map(
+                            JsonLDConstants.ID -> JsonLDString(valueIri),
+                            JsonLDConstants.TYPE -> JsonLDString(valueContent.valueType.toString),
+                            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
+                            OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions)
                         )
+
+                        val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+                            case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2WithValueObjects)
+                            case None => Map.empty[IRI, JsonLDValue]
+                        }
+
+                        JsonLDObject(jsonLDObject.value ++ requiredMetadata ++ deletionInfoAsJsonLD)
 
                     case other =>
                         throw AssertionException(s"Expected value $valueIri to be a represented as a JSON-LD object in the complex schema, but found $other")

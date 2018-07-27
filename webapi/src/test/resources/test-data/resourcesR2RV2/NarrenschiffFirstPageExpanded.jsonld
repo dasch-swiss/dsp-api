@@ -1,51 +1,94 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/7bbb8e59b703",
-    "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
-    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#origname" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/457707ecda0e",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "http://api.knora.org/ontology/knora-api/v2#valueAsString" : "IBB_1_002758921_0001.tif"
+  "@id" : "http://rdfh.ch/7bbb8e59b703",
+  "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+  "http://0.0.0.0:3333/ontology/0803/incunabula/v2#origname" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/457707ecda0e",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/fcf90d40da0e",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-      "http://api.knora.org/ontology/knora-api/v2#valueAsString" : "Vorsatzblatt, recto"
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString" : "IBB_1_002758921_0001.tif"
+  },
+  "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/fcf90d40da0e",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
-      "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-        "http://api.knora.org/ontology/knora-api/v2#hasIncomingLink" : [ ],
-        "http://www.w3.org/2000/01/rdf-schema#label" : "[Das] Narrenschiff (lat.)"
-      }
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "http://api.knora.org/ontology/knora-api/v2#valueAsString" : "Vorsatzblatt, recto"
+  },
+  "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#LinkValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
-      "http://api.knora.org/ontology/knora-api/v2#intValueAsInt" : 1
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "http://api.knora.org/ontology/knora-api/v2#linkValueHasTarget" : {
+      "@id" : "http://rdfh.ch/b6b5ff1eb703",
+      "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+      "http://api.knora.org/ontology/knora-api/v2#attachedToProject" : {
+        "@id" : "http://rdfh.ch/projects/0803"
+      },
+      "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "http://api.knora.org/ontology/knora-api/v2#creationDate" : {
+        "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      },
+      "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "http://www.w3.org/2000/01/rdf-schema#label" : "[Das] Narrenschiff (lat.)"
+    }
+  },
+  "http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#IntValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue" : [ {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename" : "incunabula_0000004159.jpg",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueIsPreview" : true,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX" : 88,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY" : 128,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-    }, {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/reps/22bc3f713f07",
-      "@type" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename" : "incunabula_0000004159.jp2",
-      "http://api.knora.org/ontology/knora-api/v2#fileValueIsPreview" : false,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX" : 3625,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY" : 5251,
-      "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-    } ],
-    "http://www.w3.org/2000/01/rdf-schema#label" : "Vorsatzblatt, recto"
-  }
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "http://api.knora.org/ontology/knora-api/v2#intValueAsInt" : 1
+  },
+  "http://api.knora.org/ontology/knora-api/v2#attachedToProject" : {
+    "@id" : "http://rdfh.ch/projects/0803"
+  },
+  "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+    "@id" : "http://rdfh.ch/users/91e19f1e01"
+  },
+  "http://api.knora.org/ontology/knora-api/v2#creationDate" : {
+    "@type" : "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+    "@value" : "2016-03-02T15:05:47Z"
+  },
+  "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue" : [ {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/22bc3f713f07",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg",
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename" : "incunabula_0000004159.jp2",
+    "http://api.knora.org/ontology/knora-api/v2#fileValueIsPreview" : false,
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX" : 3625,
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY" : 5251,
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+  }, {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
+    "@type" : "http://api.knora.org/ontology/knora-api/v2#StillImageFileValue",
+    "http://api.knora.org/ontology/knora-api/v2#attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "http://api.knora.org/ontology/knora-api/v2#fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg",
+    "http://api.knora.org/ontology/knora-api/v2#fileValueHasFilename" : "incunabula_0000004159.jpg",
+    "http://api.knora.org/ontology/knora-api/v2#fileValueIsPreview" : true,
+    "http://api.knora.org/ontology/knora-api/v2#hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimX" : 88,
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasDimY" : 128,
+    "http://api.knora.org/ontology/knora-api/v2#stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+  } ],
+  "http://www.w3.org/2000/01/rdf-schema#label" : "Vorsatzblatt, recto"
 }

@@ -35,7 +35,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
@@ -53,7 +52,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -70,7 +68,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -87,7 +84,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -104,7 +100,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -121,7 +116,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -138,7 +132,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -155,7 +148,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -172,7 +164,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -189,7 +180,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 )
             ),
@@ -207,7 +197,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(ReadValueV2(
@@ -224,7 +213,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(ReadValueV2(
@@ -241,7 +229,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:21Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(ReadValueV2(
@@ -258,7 +245,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
@@ -276,7 +262,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -293,7 +278,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -310,7 +294,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -327,7 +310,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -344,7 +326,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 )
             ),
@@ -362,7 +343,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(ReadValueV2(
@@ -379,7 +359,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(ReadValueV2(
@@ -398,7 +377,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                 valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                 attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                 previousValueIri = None,
-                attachedToProject = "http://rdfh.ch/projects/0803",
                 deletionInfo = None
             )),
             "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
@@ -416,7 +394,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 ),
                 ReadValueV2(
@@ -433,7 +410,6 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
                     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
                     previousValueIri = None,
-                    attachedToProject = "http://rdfh.ch/projects/0803",
                     deletionInfo = None
                 )
             )
