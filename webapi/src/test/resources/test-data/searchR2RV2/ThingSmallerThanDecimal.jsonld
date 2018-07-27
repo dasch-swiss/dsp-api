@@ -8,7 +8,10 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
       },
-      "knora-api:decimalValueAsDecimal" : "1.5",
+      "knora-api:decimalValueAsDecimal" : {
+        "@type" : "xsd:decimal",
+        "@value" : "1.5"
+      },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
     },
     "knora-api:attachedToProject" : {
@@ -32,7 +35,10 @@
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       },
-      "knora-api:decimalValueAsDecimal" : "2.1",
+      "knora-api:decimalValueAsDecimal" : {
+        "@type" : "xsd:decimal",
+        "@value" : "2.1"
+      },
       "knora-api:hasPermissions" : "V knora-base:UnknownUser|M knora-base:ProjectMember"
     },
     "knora-api:attachedToProject" : {

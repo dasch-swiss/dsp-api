@@ -8,7 +8,10 @@
       "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
-    "knora-api:uriValueAsUri" : "http://www.google.ch"
+    "knora-api:uriValueAsUri" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://www.google.ch"
+    }
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0001"

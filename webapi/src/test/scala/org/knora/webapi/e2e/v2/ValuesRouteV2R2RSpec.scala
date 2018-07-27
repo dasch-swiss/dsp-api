@@ -176,8 +176,8 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
 
         "create an integer value" in {
             val resourceIri: IRI = aThingIri
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 4
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue: Int = 4
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLdEntity =
@@ -220,9 +220,9 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
 
         "create an integer value with custom permissions" in {
             val resourceIri: IRI = aThingIri
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val intValue = 1
-            val customPermissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue: Int = 1
+            val customPermissions: String = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLDEntity =
@@ -267,9 +267,9 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
         }
 
         "create a text value without standoff" in {
-            val resourceIri = zeitglöckleinIri
-            val valueAsString = "Comment 1a"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val resourceIri: IRI = zeitglöckleinIri
+            val valueAsString: String = "Comment 1a"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
 
             val jsonLDEntity =
@@ -311,16 +311,16 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
         }
 
         "create a text value with standoff" in {
-            val resourceIri = aThingIri
+            val resourceIri: IRI = aThingIri
 
-            val textValueAsXml =
+            val textValueAsXml: String =
                 """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
                   |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
                   |</text>
                 """.stripMargin
 
-            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, anythingUserEmail)
 
             val jsonLDEntity =
@@ -365,10 +365,10 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
         }
 
         "create a text value with a comment" in {
-            val resourceIri = zeitglöckleinIri
-            val valueAsString = "this is a text value that has a comment"
-            val valueHasComment = "this is a comment"
-            val propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val resourceIri: IRI = zeitglöckleinIri
+            val valueAsString: String = "this is a text value that has a comment"
+            val valueHasComment: String = "this is a comment"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUserEmail)
 
             val jsonLDEntity =
@@ -409,6 +409,84 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
                 savedValueAsString should ===(valueAsString)
                 val savedValueHasComment: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ValueHasComment)
                 savedValueHasComment should ===(valueHasComment)
+            }
+        }
+
+        "not create an empty text value" in {
+            val resourceIri: IRI = zeitglöckleinIri
+            val valueAsString: String = ""
+
+            val jsonLDEntity =
+                s"""
+                   |{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "incunabula:book",
+                   |  "incunabula:book_comment" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:valueAsString" : "$valueAsString"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+                   |  }
+                   |}
+                """.stripMargin
+
+            Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.BadRequest, response.toString)
+            }
+        }
+
+        "create a decimal value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val decimalValueAsDecimal = BigDecimal(4.3)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""
+                   |{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasDecimal" : {
+                   |    "@type" : "knora-api:DecimalValue",
+                   |    "knora-api:decimalValueAsDecimal" : {
+                   |      "@type" : "xsd:decimal",
+                   |      "@value" : "$decimalValueAsDecimal"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}
+                """.stripMargin
+
+            Post("/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+                val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+                decimalValueIri.set(valueIri)
+                val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue.toSmartIri)
+
+                val savedValue: JsonLDObject = getValue(
+                    resourceIri = resourceIri,
+                    maybePreviousLastModDate = maybeResourceLastModDate,
+                    propertyIriForGravsearch = propertyIri,
+                    propertyIriInResult = propertyIri,
+                    expectedValueIri = decimalValueIri.get,
+                    userEmail = anythingUserEmail
+                )
+
+                val savedDecimalValueAsDecimal: BigDecimal = savedValue.requireDatatypeValueInObject(
+                    key = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
+                    expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+                    validationFun = stringFormatter.validateBigDecimal
+                )
+
+                savedDecimalValueAsDecimal should ===(decimalValueAsDecimal)
             }
         }
     }

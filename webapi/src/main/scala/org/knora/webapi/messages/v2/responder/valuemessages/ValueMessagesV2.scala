@@ -531,7 +531,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
                     value = valueHasString,
-                    datatype = OntologyConstants.KnoraApiV2Simple.Date
+                    datatype = OntologyConstants.KnoraApiV2Simple.Date.toSmartIri
                 )
 
             case ApiV2WithValueObjects =>
@@ -1094,15 +1094,16 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        val decimalValueAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
+            value = valueHasDecimal.toString,
+            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+        )
+
         targetSchema match {
-            case ApiV2Simple =>
-                JsonLDUtil.datatypeValueToJsonLDObject(
-                    value = valueHasDecimal.toString,
-                    datatype = OntologyConstants.Xsd.Decimal
-                )
+            case ApiV2Simple => decimalValueAsJsonLDObject
 
             case ApiV2WithValueObjects =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> JsonLDString(valueHasDecimal.toString)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal -> decimalValueAsJsonLDObject))
         }
     }
 
@@ -1145,7 +1146,11 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): DecimalValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal, stringFormatter.validateBigDecimal)
+        val decimalValueAsDecimal: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.DecimalValueAsDecimal,
+            expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+            validationFun = stringFormatter.validateBigDecimal
+        )
 
         DecimalValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1257,7 +1262,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
                     value = valueHasGeometry,
-                    datatype = OntologyConstants.KnoraApiV2Simple.Geom
+                    datatype = OntologyConstants.KnoraApiV2Simple.Geom.toSmartIri
                 )
 
             case ApiV2WithValueObjects =>
@@ -1307,7 +1312,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): GeomValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.toSparqlEncodedString)
+        val geometryValueAsGeometry: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry, stringFormatter.validateGeometryString)
 
         GeomValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1343,13 +1348,21 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
                     value = valueHasString,
-                    datatype = OntologyConstants.KnoraApiV2Simple.Interval
+                    datatype = OntologyConstants.KnoraApiV2Simple.Interval.toSmartIri
                 )
 
             case ApiV2WithValueObjects =>
                 JsonLDObject(Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart -> JsonLDString(valueHasIntervalStart.toString),
-                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd -> JsonLDString(valueHasIntervalEnd.toString)
+                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart ->
+                        JsonLDUtil.datatypeValueToJsonLDObject(
+                            value = valueHasIntervalStart.toString,
+                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                        ),
+                    OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd ->
+                        JsonLDUtil.datatypeValueToJsonLDObject(
+                            value = valueHasIntervalEnd.toString,
+                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                        )
                 ))
         }
     }
@@ -1396,8 +1409,17 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): IntervalValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val intervalValueHasStart: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart, stringFormatter.validateBigDecimal)
-        val intervalValueHasEnd: BigDecimal = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd, stringFormatter.validateBigDecimal)
+        val intervalValueHasStart: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
+            OntologyConstants.Xsd.Decimal.toSmartIri,
+            stringFormatter.validateBigDecimal
+        )
+
+        val intervalValueHasEnd: BigDecimal = jsonLDObject.requireDatatypeValueInObject(
+            OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
+            OntologyConstants.Xsd.Decimal.toSmartIri,
+            stringFormatter.validateBigDecimal
+        )
 
         IntervalValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1488,7 +1510,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val listValueAsListNode: IRI = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
+        val listValueAsListNode: IRI = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
 
         HierarchicalListValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1522,7 +1544,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
                     value = valueHasColor,
-                    datatype = OntologyConstants.KnoraApiV2Simple.Color
+                    datatype = OntologyConstants.KnoraApiV2Simple.Color.toSmartIri
                 )
 
             case ApiV2WithValueObjects =>
@@ -1601,15 +1623,16 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
+        val uriAsJsonLDObject = JsonLDUtil.datatypeValueToJsonLDObject(
+            value = valueHasUri,
+            datatype = OntologyConstants.Xsd.Uri.toSmartIri
+        )
+
         targetSchema match {
-            case ApiV2Simple =>
-                JsonLDUtil.datatypeValueToJsonLDObject(
-                    value = valueHasUri,
-                    datatype = OntologyConstants.Xsd.Uri
-                )
+            case ApiV2Simple => uriAsJsonLDObject
 
             case ApiV2WithValueObjects =>
-                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> JsonLDString(valueHasUri)))
+                JsonLDObject(Map(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri -> uriAsJsonLDObject))
         }
     }
 
@@ -1655,7 +1678,11 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): UriValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val uriValueAsUri: String = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri, stringFormatter.toSparqlEncodedString)
+        val uriValueAsUri: String = jsonLDObject.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
+            expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+            validationFun = stringFormatter.toSparqlEncodedString
+        )
 
         UriValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1689,7 +1716,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
             case ApiV2Simple =>
                 JsonLDUtil.datatypeValueToJsonLDObject(
                     value = valueHasGeonameCode,
-                    datatype = OntologyConstants.KnoraApiV2Simple.Geoname
+                    datatype = OntologyConstants.KnoraApiV2Simple.Geoname.toSmartIri
                 )
 
             case ApiV2WithValueObjects =>
@@ -1759,9 +1786,11 @@ sealed trait FileValueContentV2 {
     val originalMimeType: Option[String]
 
     protected def toJsonLDValueinSimpleSchema(imagePath: String): JsonLDObject = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         JsonLDUtil.datatypeValueToJsonLDObject(
             value = imagePath,
-            datatype = OntologyConstants.KnoraApiV2Simple.File
+            datatype = OntologyConstants.KnoraApiV2Simple.File.toSmartIri
         )
     }
 }
