@@ -12,15 +12,25 @@ connectInput in run := true
 
 lazy val webapi = (project in file(".")).
         configs(
+            IntegrationTest,
             FusekiTest,
             FusekiIntegrationTest,
-            GraphDBTest,
-            EmbeddedJenaTDBTest,
-            IntegrationTest
+            GraphDBSETest,
+            GraphDBSEIntegrationTest,
+            GraphDBFreeTest,
+            GraphDBFreeIntegrationTest,
+            EmbeddedJenaTDBTest
         ).
         settings(webApiCommonSettings:  _*).
         settings(inConfig(Test)(
             Defaults.testTasks ++ baseAssemblySettings
+        ): _*).
+        settings(inConfig(IntegrationTest)(
+            Defaults.itSettings ++ Seq(
+                fork := true,
+                javaOptions ++= javaIntegrationTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            ) ++ baseAssemblySettings
         ): _*).
         settings(inConfig(Gatling)( // add our settings to the gatling config
             Defaults.testTasks ++ Seq(
@@ -48,10 +58,31 @@ lazy val webapi = (project in file(".")).
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
-        settings(inConfig(GraphDBTest)(
+        settings(inConfig(GraphDBSETest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
-                javaOptions ++= javaGraphDBTestOptions,
+                javaOptions ++= javaGraphDBSETestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(GraphDBSEIntegrationTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaGraphDBSEIntegrationTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(GraphDBFreeTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaGraphDBFreeTestOptions,
+                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
+            )
+        ): _*).
+        settings(inConfig(GraphDBFreeIntegrationTest)(
+            Defaults.testTasks ++ Seq(
+                fork := true,
+                javaOptions ++= javaGraphDBFreeIntegrationTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
         ): _*).
@@ -61,13 +92,6 @@ lazy val webapi = (project in file(".")).
                 javaOptions ++= javaEmbeddedJenaTDBTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
-        ): _*).
-        settings(inConfig(IntegrationTest)(
-            Defaults.itSettings ++ Seq(
-                fork := true,
-                javaOptions ++= javaIntegrationTestOptions,
-                testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
-            ) ++ baseAssemblySettings
         ): _*).
         settings(
             resolvers ++= Seq(
@@ -215,20 +239,20 @@ lazy val library =
         val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
         val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
         val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
-        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
 
         // akka http
         val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
         val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
         val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
         val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
-        val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
 
         // testing
-        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.1"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
-        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.1"             % "test, fuseki, graphdb, tdb, it, fuseki-it"
+        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.1"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.1"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.3.0"
@@ -312,7 +336,13 @@ lazy val javaBaseTestOptions = Seq(
 )
 
 lazy val javaTestOptions = Seq(
-    "-Dconfig.resource=graphdb.conf"
+    "-Dconfig.resource=graphdb-se.conf"
+) ++ javaBaseTestOptions
+
+// The standard testing tasks are available, but must be prefixed with 'it:', e.g., 'it:test'
+// The test need to be stored in the 'it' (and not 'test') folder. The standard source hierarchy is used, e.g., 'src/it/scala'
+lazy val javaIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-se.conf"
 ) ++ javaBaseTestOptions
 
 lazy val FusekiTest = config("fuseki") extend(Test)
@@ -325,21 +355,29 @@ lazy val javaFusekiIntegrationTestOptions = Seq(
     "-Dconfig.resource=fuseki.conf"
 ) ++ javaBaseTestOptions
 
-lazy val GraphDBTest = config("graphdb") extend(Test)
-lazy val javaGraphDBTestOptions = Seq(
-    "-Dconfig.resource=graphdb.conf"
+lazy val GraphDBSETest = config("graphdb-se") extend(Test)
+lazy val javaGraphDBSETestOptions = Seq(
+    "-Dconfig.resource=graphdb-se.conf"
+) ++ javaBaseTestOptions
+
+lazy val GraphDBSEIntegrationTest = config("graphdb-se-it") extend(IntegrationTest)
+lazy val javaGraphDBSEIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-se.conf"
+) ++ javaBaseTestOptions
+
+lazy val GraphDBFreeTest = config("graphdb-free") extend(Test)
+lazy val javaGraphDBFreeTestOptions = Seq(
+    "-Dconfig.resource=graphdb-free.conf"
+) ++ javaBaseTestOptions
+
+lazy val GraphDBFreeIntegrationTest = config("graphdb-free-it") extend(IntegrationTest)
+lazy val javaGraphDBFreeIntegrationTestOptions = Seq(
+    "-Dconfig.resource=graphdb-free.conf"
 ) ++ javaBaseTestOptions
 
 lazy val EmbeddedJenaTDBTest = config("tdb") extend(Test)
 lazy val javaEmbeddedJenaTDBTestOptions = Seq(
     "-Dconfig.resource=jenatdb.conf"
-) ++ javaBaseTestOptions
-
-// The 'IntegrationTest' config does not need to be created here, as it is a built-in config!
-// The standard testing tasks are available, but must be prefixed with 'it:', e.g., 'it:test'
-// The test need to be stored in the 'it' (and not 'test') folder. The standard source hierarchy is used, e.g., 'src/it/scala'
-lazy val javaIntegrationTestOptions = Seq(
-    "-Dconfig.resource=graphdb.conf"
 ) ++ javaBaseTestOptions
 
 

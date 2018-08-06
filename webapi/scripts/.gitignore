@@ -1,3 +1,5 @@
 graphdb-se-knora-prod-repository-config.ttl
 graphdb-se-knora-test-repository-config.ttl
 graphdb-se-knora-test-unit-repository-config.ttl
+graphdb-free-knora-test-repository-config.ttl
+graphdb-free-knora-test-unit-repository-config.ttl
