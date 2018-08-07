@@ -199,7 +199,8 @@ lazy val webApiLibs = Seq(
     library.scallop,
     library.springSecurityCore,
     library.swaggerAkkaHttp,
-    library.xmlunitCore
+    library.xmlunitCore,
+    library.apacheHttpClient
 )
 
 lazy val library =
@@ -290,6 +291,8 @@ lazy val library =
 
         // swagger (api documentation)
         val swaggerAkkaHttp        = "com.github.swagger-akka-http" %% "swagger-akka-http"        % "0.14.0"
+
+        val apacheHttpClient       = "org.apache.httpcomponents"     % "httpclient"               % "4.5.5" exclude("commons-logging", "commons-logging")
     }
 
 lazy val javaRunOptions = Seq(

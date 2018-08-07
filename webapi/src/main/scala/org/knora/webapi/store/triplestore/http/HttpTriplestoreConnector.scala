@@ -20,15 +20,23 @@
 package org.knora.webapi.store.triplestore.http
 
 import java.io.StringReader
+import java.util
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
-import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.actor._
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
+import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
+import org.apache.http.client.AuthCache
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
+import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.entity.{ContentType, StringEntity}
+import org.apache.http.impl.auth.BasicScheme
+import org.apache.http.impl.client.{BasicAuthCache, BasicCredentialsProvider, CloseableHttpClient, HttpClients}
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
+import org.apache.http.{Consts, HttpHost, NameValuePair}
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
@@ -48,6 +56,11 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
+/*import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
+import akka.http.scaladsl.unmarshalling.Unmarshal*/
+
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
   * `application.conf`.
@@ -55,9 +68,13 @@ import scala.util.{Failure, Success, Try}
 class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // MIME type constants.
-    private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
+    /*private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
     private val mimeTypeTextTurtle = MediaType.text("turtle") // Turtle is always UTF-8
-    private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"
+    private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"*/
+    private val mimeTypeApplicationJson = "application/json"
+    private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
+    private val mimeTypeTextTurtle = "text/turtle"
+    private val mimeTypeApplicationSparqlUpdate = "application/sparql-update"
 
     private implicit val system: ActorSystem = context.system
     private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
@@ -66,39 +83,52 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val triplestoreType = settings.triplestoreType
 
     // Provides client HTTP connections.
-    private val http = Http(context.system)
+    /*private val http = Http(context.system)*/
 
     // Use HTTP basic authentication.
-    private val authorizationHeader = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
+    /*private val authorizationHeader = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))*/
 
+    private val targetHost: HttpHost = new HttpHost(s"${settings.triplestoreHost}", settings.triplestorePort, "http")
+
+    private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
+    credsProvider.setCredentials(new AuthScope(targetHost.getHostName, targetHost.getPort), new UsernamePasswordCredentials(settings.triplestoreUsername, settings.triplestorePassword))
+
+    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).build
+
+    private val queryPath: String = s"/repositories/${settings.triplestoreDatabaseName}"
+    private val updatePath: String = s"/repositories/${settings.triplestoreDatabaseName}/statements"
 
     // The path for SPARQL queries.
+    /*
     private val queryRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
+    */
 
     // The URI for SPARQL queries.
-    private val queryUri = Uri(
+    /*private val queryUri = Uri(
         scheme = "http",
         authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
         path = Uri.Path(queryRequestPath)
-    )
+    )*/
 
     // The path for SPARQL update operations.
+    /*
     private val updateRequestPath = triplestoreType match {
         case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }
+    */
 
     // The URI for SPARQL update operations.
-    private val updateUri = Uri(
+    /*private val updateUri = Uri(
         scheme = "http",
         authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
         path = Uri.Path(updateRequestPath)
-    )
+    )*/
 
     private val logDelimiter = "\n" + StringUtils.repeat('=', 80) + "\n"
 
@@ -107,7 +137,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
         case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
         case SparqlExtendedConstructRequest(sparql) => future2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
@@ -461,47 +491,32 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             // call endpoint returning all repositories
 
-            val scheme = if (settings.triplestoreUseHttps) {
-                "https"
-            } else {
-                "http"
+            val authCache: AuthCache = new BasicAuthCache
+            val basicAuth: BasicScheme = new BasicScheme
+            authCache.put(targetHost, basicAuth)
+
+            val context: HttpClientContext = HttpClientContext.create
+            context.setCredentialsProvider(credsProvider)
+            context.setAuthCache(authCache)
+
+            val httpGet = new HttpGet("/rest/repositories")
+            httpGet.addHeader("Accept", mimeTypeApplicationJson)
+
+            val responseStr = {
+                var maybeResponse: Option[CloseableHttpResponse] = None
+
+                try {
+                    maybeResponse = Some(httpClient.execute(targetHost, httpGet, context))
+                    EntityUtils.toString(maybeResponse.get.getEntity)
+                } finally {
+                    maybeResponse match {
+                        case Some(response) => response.close()
+                        case None => ()
+                    }
+                }
             }
 
-            val headers = List(
-                authorizationHeader,
-                Accept(MediaTypes.`application/json`)
-            )
-
-            val getRepositoriesUri: Uri = triplestoreType match {
-                case HTTP_GRAPH_DB_TS_TYPE => {
-                    Uri(
-                        scheme = scheme,
-                        authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
-                        path = Uri.Path("/rest/repositories")
-                    )
-                }
-                case _ => throw UnsuportedTriplestoreException("checkRepository only supports GraphDB.")
-            }
-
-            val getRepositoriesRequest: HttpRequest = HttpRequest(
-                method = HttpMethods.GET,
-                uri = getRepositoriesUri,
-                headers = headers
-            )
-
-            val jsonFuture = for {
-                response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
-                // _ = log.info("checkRepository - response: {}", response)
-
-                json: JsArray <- response match {
-                    case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
-                    case other => throw new Exception(other.toString())
-                }
-                // _ = log.info("checkRepository - json: {}", json.prettyPrint)
-
-            } yield json
-
-            val jsonArr: JsArray = Await.result(jsonFuture, 750.milliseconds)
+            val jsonArr = JsonParser(responseStr).asInstanceOf[JsArray]
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
@@ -519,13 +534,86 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeShouldBe."))
             }
         } catch {
-            case e: Exception => {
+            case e: Exception =>
                 // println("checkRepository - exception", e)
-                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
-            }
+                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = s"Triplestore not available: ${e.getMessage}"))
         }
     }
 
+    private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false): Future[String] = {
+
+        val authCache: AuthCache = new BasicAuthCache
+        val basicAuth: BasicScheme = new BasicScheme
+        authCache.put(targetHost, basicAuth)
+
+        val context: HttpClientContext = HttpClientContext.create
+        context.setCredentialsProvider(credsProvider)
+        context.setAuthCache(authCache)
+
+        val httpPost: HttpPost = if (isUpdate) {
+            // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
+            val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
+            val updateHttpPost = new HttpPost(updatePath)
+            updateHttpPost.setEntity(requestEntity)
+            updateHttpPost
+        } else {
+            // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
+            // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
+
+            val formParams = new util.ArrayList[NameValuePair]()
+
+            if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+                formParams.add(new BasicNameValuePair("infer", "true"))
+            }
+
+            formParams.add(new BasicNameValuePair("query", sparql))
+            val requestEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+            val queryHttpPost = new HttpPost(queryPath)
+            queryHttpPost.setEntity(requestEntity)
+
+            if (isConstruct) {
+                queryHttpPost.addHeader("Accept", mimeTypeTextTurtle)
+            } else {
+                queryHttpPost.addHeader("Accept", mimeTypeApplicationSparqlResultsJson)
+            }
+
+            queryHttpPost
+        }
+
+        val triplestoreResponseFuture = Future {
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            try {
+                maybeResponse = Some(httpClient.execute(targetHost, httpPost, context))
+
+                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case None => ""
+                }
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                if (statusCategory != 2) {
+                    throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+                }
+
+                responseEntityStr
+            } finally {
+                maybeResponse match {
+                    case Some(response) => response.close()
+                    case None => ()
+                }
+            }
+        }
+
+        triplestoreResponseFuture.recover {
+            case tre: TriplestoreResponseException => throw tre
+            case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
+        }
+    }
+
+    /*
     /**
       * Submits a SPARQL request to the triplestore and returns the response as a string.
       *
@@ -613,5 +701,5 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case tre: TriplestoreResponseException => throw tre
             case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
         }
-    }
+    }*/
 }
