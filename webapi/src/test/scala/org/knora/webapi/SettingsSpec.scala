@@ -25,8 +25,8 @@ object SettingsSpec {
     val config = ConfigFactory.parseString(
         """
         akka {
-            # akka.loglevel = "DEBUG"
-            # akka.stdout-loglevel = "DEBUG"
+            akka.loglevel = "DEBUG"
+            akka.stdout-loglevel = "DEBUG"
         }
         """.stripMargin)
 }

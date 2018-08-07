@@ -66,7 +66,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val triplestoreType = settings.triplestoreType
 
     // Provides client HTTP connections.
-    private val http = Http(context.system)
+    private val http = Http(system)
 
     // Use HTTP basic authentication.
     private val authorizationHeader = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
@@ -506,8 +506,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
-
-            println(triplestoreType)
 
             val idShouldBe = settings.triplestoreDatabaseName
             val sesameTypeShouldBe = triplestoreType match {
