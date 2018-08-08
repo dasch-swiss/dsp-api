@@ -49,7 +49,11 @@ These tests should be stored inside the `src/test` folder hierarchy.
 2)  Call the test from SBT:
 
 ```
-sbt:webapi> test // when using a GraphDB-SE or GraphDB-Free
+// when using a GraphDB-SE
+sbt:webapi> test
+
+// when using a GraphDB-Free
+sbt:webapi> GDBFree / test
 ```
 
 ## How to Write Integration Tests
@@ -73,3 +77,53 @@ accessing the `/admin/users`
 endpoint.
 
 @@snip[ExampleE2ESimSpec.scala](../../../../../webapi/src/test/scala/org/knora/webapi/e2e/ExampleE2ESimSpec.scala) { }
+
+
+## Custom SBT Test Configurations
+
+For convenience, there are a number of custom test configurations defined inside `WebapiBuild.sbt`. These can be used together with the
+built-in test tasks like `test`, `testOnly`, `testQuick`.
+
+For use with GraphDB-SE (using `test/resources/graphdb-se.conf`) running normal tests:
+
+```
+sbt:webapi> test
+sbt:webapi> GDBSE / test
+sbt:webapi> gdbse:test
+```
+
+For use with GraphDB-SE (using `it/resources/graphdb-se.conf`) running integration tests:
+
+```
+sbt:webapi> it:test
+sbt:webapi> GDBSEIt / test
+sbt:webapi> gdbse-it:test
+```
+
+For use with GraphDB-Free (using `test/resources/graphdb-free.conf`) running normal tests:
+
+```
+sbt:webapi> GDBFree / test
+sbt:webapi> gdbfree:test
+```
+
+For use with GraphDB-Free (using `it/resources/graphdb-free.conf`) running integration tests:
+
+```
+sbt:webapi> GDBFreeIt / test
+sbt:webapi> gdbfree-it:test
+```
+
+For use with Fuseki (using `test/resources/fuseki.conf`) running normal tests:
+
+```
+sbt:webapi> Fuseki / test
+sbt:webapi> fuseki:test
+```
+
+For use with Fuseki (using `it/resources/fuseki.conf`) running integration tests:
+
+```
+sbt:webapi> FusekiIt / test
+sbt:webapi> fuseki-it:test
+```

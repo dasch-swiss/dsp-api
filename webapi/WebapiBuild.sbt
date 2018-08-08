@@ -7,15 +7,24 @@ import sbt.librarymanagement.Resolver
 
 connectInput in run := true
 
-// Bring the sbt-aspectj settings into this build
-//aspectjSettings
+// custom test and it settings
+lazy val GDBSE = config("gdbse") extend Test
+lazy val GDBSEIt = config("gdbse-it") extend IntegrationTest
+lazy val GDBFree = config("gdbfree") extend Test
+lazy val GDBFreeIt = config("gdbfree-it") extend IntegrationTest
+lazy val FusekiTest = config("fuseki") extend Test
+lazy val FusekiIt = config("fuseki-it") extend IntegrationTest
+lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 
 lazy val webapi = (project in file(".")).
         configs(
-            GraphDBSETest,
-            GraphDBSEIt,
-            GraphDBFreeTest,
-            GraphDBFreeIt,
+            IntegrationTest,
+            Gatling,
+            GatlingIt,
+            GDBSE,
+            GDBSEIt,
+            GDBFree,
+            GDBFreeIt,
             FusekiTest,
             FusekiIt,
             EmbeddedJenaTDBTest
@@ -29,60 +38,83 @@ lazy val webapi = (project in file(".")).
         ).
         settings(
             inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),
-            inConfig(IntegrationTest)(Defaults.itSettings),
-            inConfig(Gatling)(Defaults.testTasks),
-            inConfig(GatlingIt)(Defaults.testTasks),
-            inConfig(GraphDBSETest)(Defaults.testTasks),
-            inConfig(GraphDBSEIt)(Defaults.testTasks),
-            inConfig(GraphDBFreeTest)(Defaults.testTasks),
-            inConfig(GraphDBFreeIt)(Defaults.testTasks),
-            inConfig(FusekiTest)(Defaults.testTasks),
-            inConfig(FusekiIt)(Defaults.testTasks),
-            inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks)
+            inConfig(IntegrationTest)(Defaults.testSettings),
+            inConfig(Gatling)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(GatlingIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(GDBSE)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(GDBSEIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(GDBFree)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(GDBFreeIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(FusekiTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(FusekiIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
+            inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value))
         ).
         settings(
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
+
             logLevel := Level.Info,
-            testOptions in Test += Tests.Argument("-oDF"), // show full stack traces and test case durations
+
             fork := true, // always fork
-            javaOptions in run := javaRunOptions,
-            javaOptions in Test ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in Test ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
-            javaOptions in Test ++= Seq("-Dconfig.trace=loads"), // prints out config locations
-            javaOptions in IntegrationTest := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in Gatling := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in GatlingIt := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in GraphDBSETest := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in GraphDBSEIt := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
-            javaOptions in GraphDBFreeTest := Seq("-Dconfig.resource=graphdb-free.conf") ++ javaTestOptions,
-            javaOptions in GraphDBFreeIt := Seq("-Dconfig.resource=graphdb-free.conf") ++ javaTestOptions,
-            javaOptions in FusekiTest := Seq("-Dconfig.resource=fuseki.conf") ++ javaTestOptions,
-            javaOptions in FusekiIt := Seq("-Dconfig.resource=fuseki.conf") ++ javaTestOptions,
-            javaOptions in EmbeddedJenaTDBTest := Seq("-Dconfig.resource=jenatdb.conf") ++ javaTestOptions,
-            javaOptions in reStart ++= resolvedJavaAgents.value map { resolved =>
+
+            cancelable in Global := true, // use Ctrl-c to stop current task and not quit SBT
+
+            run / javaOptions := javaRunOptions,
+
+            reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
                 "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
             },// allows sbt-javaagent to work with sbt-revolver
+            reStart / javaOptions ++= javaRunOptions,
+
             javaAgents += library.aspectJWeaver,
-            mainClass in (Compile, run) := Some("org.knora.webapi.Main"),
-            parallelExecution in Test := false,
+
+            Test / parallelExecution := false,
+            Test / javaOptions ++= Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+            // Test / javaOptions ++= Seq("-Dakka.log-config-on-start=on"), // prints out akka config
+            // Test / javaOptions ++= Seq("-Dconfig.trace=loads"), // prints out config locations
+            Test / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+
+            IntegrationTest / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+            IntegrationTest / testOptions += Tests.Argument("-oDF"), // show full stack traces and test case durations
+
+            Gatling / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+            Gatling / testOptions := Seq(),
+            GatlingIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+            GatlingIt / testOptions := Seq(),
+
+            GDBSE / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+            GDBSEIt / javaOptions := Seq("-Dconfig.resource=graphdb-se.conf") ++ javaTestOptions,
+
+            GDBFree / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ javaTestOptions,
+            GDBFreeIt / javaOptions := Seq("-Dconfig.resource=graphdb-free.conf") ++ javaTestOptions,
+
+            FusekiTest / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ javaTestOptions,
+            FusekiIt / javaOptions := Seq("-Dconfig.resource=fuseki.conf") ++ javaTestOptions,
+
+            EmbeddedJenaTDBTest / javaOptions := Seq("-Dconfig.resource=jenatdb.conf") ++ javaTestOptions,
+
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
-            publishArtifact in (Test, packageBin) := true,
-            publishArtifact in (IntegrationTest, packageBin) := true
+            Test / packageBin / publishArtifact := true,
+            IntegrationTest / packageBin / publishArtifact := true
         ).
-        settings( // enable deployment staging with `sbt stage`. uses fat jar assembly.
+        settings(
+            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
             // we specify the name for our fat jars (main, test, it)
-            assemblyJarName in assembly := s"assembly-${name.value}-main-${version.value}.jar",
-            assemblyJarName in (Test, assembly) := s"assembly-${name.value}-test-${version.value}.jar",
-            assemblyJarName in (IntegrationTest, assembly) := s"assembly-${name.value}-it-${version.value}.jar",
+            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
+            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
+            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
+
             // disable running of tests before fat jar assembly!
-            test in assembly := {},
+            assembly / test := {},
             // test in (Test, assembly) := {},
             // test in (IntegrationTest, assembly) := {},
+
             // need to use our custom merge strategy because of aop.xml (AspectJ)
-            assemblyMergeStrategy in assembly := customMergeStrategy,
+            assembly / assemblyMergeStrategy := customMergeStrategy,
+
             // Skip packageDoc task on stage
-            mappings in (Compile, packageDoc) := Seq(),
-            mappings in Universal := {
+            Compile / packageDoc / mappings := Seq(),
+
+            Universal / mappings := {
                 // removes all jar mappings in universal and appends the fat jar
                 // universalMappings: Seq[(File,String)]
                 val universalMappings = (mappings in Universal).value
@@ -94,7 +126,8 @@ lazy val webapi = (project in file(".")).
                 // add the fat jar
                 filtered :+ (fatJar -> ("lib/" + fatJar.getName))
             },
-            mappings in Universal ++= {
+
+            Universal / mappings ++= {
                 // copy the scripts folder
                 directory("scripts") ++
                 // copy the configuration files to config directory
@@ -104,16 +137,21 @@ lazy val webapi = (project in file(".")).
                 // copy the aspectj weaver jar
                 contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
+
             // the bash scripts classpath only needs the fat jar
             scriptClasspath := Seq( (assemblyJarName in assembly).value ),
+
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
+
             // add license
             licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+
             // need this here, so that the Manifest inside the jars has the correct main class set.
-            mainClass in Compile := Some("org.knora.webapi.Main"),
-            mainClass in Test := Some("org.scalatest.tools.Runner"),
-            mainClass in IntegrationTest := Some("org.scalatest.tools.Runner")
+            Compile / mainClass := Some("org.knora.webapi.Main"),
+            Compile / run / mainClass := Some("org.knora.webapi.Main"),
+            Test / mainClass := Some("org.scalatest.tools.Runner"),
+            IntegrationTest / mainClass := Some("org.scalatest.tools.Runner")
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
         enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
@@ -194,22 +232,22 @@ lazy val library =
         val akkaAgent              = "com.typesafe.akka"            %% "akka-agent"               % Version.akkaBase
         val akkaStream             = "com.typesafe.akka"            %% "akka-stream"              % Version.akkaBase
         val akkaSlf4j              = "com.typesafe.akka"            %% "akka-slf4j"               % Version.akkaBase
-        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
-        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val akkaTestkit            = "com.typesafe.akka"            %% "akka-testkit"             % Version.akkaBase    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val akkaStreamTestkit      = "com.typesafe.akka"            %% "akka-stream-testkit"      % Version.akkaBase    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
 
         // akka http
         val akkaHttp               = "com.typesafe.akka"            %% "akka-http"                % Version.akkaHttp
         val akkaHttpXml            = "com.typesafe.akka"            %% "akka-http-xml"            % Version.akkaHttp
         val akkaHttpSprayJson      = "com.typesafe.akka"            %% "akka-http-spray-json"     % Version.akkaHttp
         val akkaHttpJacksonJava    = "com.typesafe.akka"            %% "akka-http-jackson"        % Version.akkaHttp
-        val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val akkaHttpTestkit        = "com.typesafe.akka"            %% "akka-http-testkit"        % Version.akkaHttp    % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
 
         val typesafeConfig         = "com.typesafe"                  % "config"                   % "1.3.3"
 
         // testing
-        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
-        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.1"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
-        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.1"             % "test, it, graphdb-se, graphdb-se-it, graphdb-free, graphdb-free-it, tdb, fuseki, fuseki-it"
+        val scalaTest              = "org.scalatest"                %% "scalatest"                % "3.0.4"             % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val gatlingHighcharts      = "io.gatling.highcharts"         % "gatling-charts-highcharts"% "2.3.1"             % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
+        val gatlingTestFramework   = "io.gatling"                    % "gatling-test-framework"   % "2.3.1"             % "test, it, gdbse, gdbse-it, gdbfree, gdbfree-it, tdb, fuseki, fuseki-it"
 
         //CORS support
         val akkaHttpCors           = "ch.megard"                    %% "akka-http-cors"           % "0.3.0"
@@ -291,15 +329,6 @@ lazy val javaTestOptions = Seq(
     //"-XX:MaxGCPauseMillis=500",
     //"-XX:MaxMetaspaceSize=4096m"
 )
-
-lazy val GraphDBSETest = config("graphdb-se") extend Test
-lazy val GraphDBSEIt = config("graphdb-se-it") extend IntegrationTest
-lazy val GraphDBFreeTest = config("graphdb-free") extend Test
-lazy val GraphDBFreeIt = config("graphdb-free-it") extend IntegrationTest
-lazy val FusekiTest = config("fuseki") extend Test
-lazy val FusekiIt = config("fuseki-it") extend IntegrationTest
-lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
-
 
 // Create a new MergeStrategy for aop.xml files, as the aop.xml file is present in more than one package.
 // When we create a fat JAR (assembly task), then we need to resolve this conflict.

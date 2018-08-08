@@ -37,7 +37,8 @@ import scala.concurrent.duration._
 class SettingsImpl(config: Config) extends Extension {
 
     // print config
-    val printConfig: Boolean = config.getBoolean("app.print-config")
+    val printShortConfig: Boolean = config.getBoolean("app.print-short-config")
+    val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
 
     // used for communication inside the knora stack
     val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
