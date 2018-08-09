@@ -696,15 +696,16 @@ object JWTHelper {
       * @param longevity the token's longevity in days.
       * @return a [[String]] containg the JWT.
       */
-    def createToken(userIri: IRI, secretKey: String, longevity: Long): String = {
+    def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration): String = {
 
         // create required headers
         val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
 
+        // now in seconds
         val now: Long = System.currentTimeMillis() / 1000l
 
-        // calculate longevity (days)
-        val nowPlusLongevity: Long = now + longevity * 60 * 60 * 24
+        // calculate expiration time (seconds)
+        val nowPlusLongevity: Long = now + longevity.toSeconds
 
         val identifier: String = UUID.randomUUID().toString()
 
