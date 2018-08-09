@@ -31,11 +31,20 @@ import org.knora.webapi.{CoreSpec, TestProbeMaker}
  * normaly write in application.conf
  */
 object TriplestoreManagerActorSpec {
-    val configGraphDB = ConfigFactory.parseString(
+    val configGraphDBSE = ConfigFactory.parseString(
         """
         app {
             triplestore {
-                dbtype = "graphdb"
+                dbtype = "graphdb-se"
+            }
+        }
+        """.stripMargin)
+
+    val configGraphDBFree = ConfigFactory.parseString(
+        """
+        app {
+            triplestore {
+                dbtype = "graphdb-free"
             }
         }
         """.stripMargin)
@@ -91,7 +100,7 @@ object TriplestoreManagerActorSpec {
  *
  * to execute, type 'test' in sbt
  */
-class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configGraphDB) with ImplicitSender {
+class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configGraphDBSE) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
     val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
@@ -109,7 +118,12 @@ class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTes
     */
 
     "The 'TriplestoreManagerActor', depending on the configuration, " should {
-        "start 'GraphDB' " in {
+
+        "have correct dbtype set" in {
+            settings.triplestoreType should be ("graphdb-se")
+        }
+
+        "start 'HttpTriplestoreConnector' " in {
             mockEmbeddedStoreActorCorrect.isInstanceOf[TestProbe] should ===(true)
         }
 
@@ -121,7 +135,7 @@ class TriplestoreManagerActorSpec01 extends CoreSpec("TriplestoreManagerActorTes
 
 }
 
-class TriplestoreManagerActorSpec02 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configFuseki) with ImplicitSender {
+class TriplestoreManagerActorSpec02 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configGraphDBFree) with ImplicitSender {
 
     // here we start the actor under test with the TestProbeMaker trait
     val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
@@ -139,7 +153,47 @@ class TriplestoreManagerActorSpec02 extends CoreSpec("TriplestoreManagerActorTes
     */
 
     "The 'TriplestoreManagerActor', depending on the configuration, " should {
-        "start 'Fuseki' " in {
+
+        "have correct dbtype set" in {
+            settings.triplestoreType should be ("graphdb-free")
+        }
+
+        "start 'HttpTriplestoreConnector' " in {
+            mockEmbeddedStoreActorCorrect.isInstanceOf[TestProbe] should ===(true)
+        }
+
+        "not start 'EmbeddedJenaTDB' " in {
+            mockEmbeddedStoreActorWrong.isInstanceOf[TestProbe] should ===(false)
+        }
+    }
+
+
+}
+
+class TriplestoreManagerActorSpec03 extends CoreSpec("TriplestoreManagerActorTestSystem", TriplestoreManagerActorSpec.configFuseki) with ImplicitSender {
+
+    // here we start the actor under test with the TestProbeMaker trait
+    val actorUnderTest = TestActorRef(Props(new TriplestoreManager with TestProbeMaker), name = TRIPLESTORE_MANAGER_ACTOR_NAME)
+
+    // here we get the ActorRef to a subactor with the name 'triplestoreRouter' (ability provided by TestProbeMaker trait)
+    val mockEmbeddedStoreActorCorrect = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(HTTP_TRIPLESTORE_ACTOR_NAME, null)
+    val mockEmbeddedStoreActorWrong = actorUnderTest.underlyingActor.asInstanceOf[TestProbeMaker].probes.getOrElse(EMBEDDED_JENA_ACTOR_NAME, null)
+
+    /*
+    * Here are a few test which can be undertaken.
+    * We use ScalaTest (http://www.scalatest.org),
+    * the FlatSpec or WordSpec style of writing tests
+    * (http://www.scalatest.org/user_guide/selecting_a_style)
+    * depending on the need for verbosity in the test output
+    */
+
+    "The 'TriplestoreManagerActor', depending on the configuration, " should {
+
+        "have correct dbtype set" in {
+            settings.triplestoreType should be ("fuseki")
+        }
+
+        "start 'HttpTriplestoreConnector' " in {
             mockEmbeddedStoreActorCorrect.isInstanceOf[TestProbe] should ===(true)
         }
 
