@@ -30,11 +30,10 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswor
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.{ActorUtil, CacheUtil}
-import org.scalatest.{Assertion, PrivateMethodTester}
+import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Success, Try}
 
 object AuthenticatorSpec {
     val config = ConfigFactory.parseString(
