@@ -2,13 +2,13 @@
 
 if [ $# -eq 0 ]; then
     echo >&2 "Usage: jstackSeries <pid> [ <count> [ <delay> ] ]"
-    echo >&2 "    Defaults: count = 10, delay = 1 (seconds)"
+    echo >&2 "    Defaults: count = 720, delay = 10 (seconds)"
     exit 1
 fi
 
 pid=$1          # required
-count=${2:-10}  # defaults to 10 times
-delay=${3:-1} # defaults to 1 second
+count=${2:-720}  # defaults to 720 times (runs for 2 hours)
+delay=${3:-10} # defaults to 10 second
 
 while [ $count -gt 0 ]
 do
