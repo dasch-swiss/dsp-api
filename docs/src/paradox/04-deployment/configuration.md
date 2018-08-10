@@ -17,13 +17,12 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Deploying Knora
+# Configuration
 
-@@toc { depth=1 }
+All configuration for Knora is done in `application.conf`. Besides the Knora application
+specific configuration, there we can also find configuration for the underlying Akka library.
 
-@@@ index
+For optimal performance it is important to tune the configuration to the hardware used, mainly
+to the number of CPUs and cores per CPU.
 
-- [Getting Started with Knora](getting-started.md)
-- [Configuration](configuration.md)
-
-@@@
+The relevant sections for tuning are the 
