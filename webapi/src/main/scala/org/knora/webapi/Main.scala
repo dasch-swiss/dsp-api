@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import com.codahale.metrics.MetricRegistry
+import nl.grons.metrics4.scala.InstrumentedBuilder
 import org.knora.webapi.messages.app.appmessages._
 
 /**
@@ -89,4 +91,9 @@ object Main extends App with LiveCore with KnoraService {
         /* add the method for shutting down our application to the shutdown hook, so that we can clean up */
         sys.addShutdownHook(stopService())
     }
+}
+
+
+trait Instrumented extends InstrumentedBuilder {
+    val metricRegistry: MetricRegistry = Main.metricRegistry
 }

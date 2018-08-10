@@ -315,7 +315,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(FromConfig.props(Props[UsersResponderADM]), USERS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(FromConfig.props(Props[UsersResponderADMInstrumented]), USERS_ROUTER_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this

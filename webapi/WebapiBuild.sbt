@@ -191,6 +191,9 @@ lazy val webApiLibs = Seq(
     library.kamonJaeger,
     library.kamonDatadog,
     library.logbackClassic,
+    library.metrics4Scala,
+    library.metrics4Akka,
+    library.metrics4ScalaHdr,
     library.rdf4jRuntime,
     library.saxonHE,
     library.scalaArm,
@@ -210,6 +213,7 @@ lazy val library =
             val akkaBase = "2.5.13"
             val akkaHttp = "10.1.3"
             val jena = "3.4.0"
+            val metrics = "4.0.1"
         }
 
         // akka
@@ -255,6 +259,11 @@ lazy val library =
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
+        // metrics
+        val metrics4Scala          = "nl.grons"                     %% "metrics4-scala"           % Version.metrics
+        val metrics4Akka           = "nl.grons"                     %% "metrics4-akka_a24"        % Version.metrics
+        val metrics4ScalaHdr       = "nl.grons"                     %% "metrics4-scala-hdr"       % Version.metrics
+
         // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
         val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.1.1"
@@ -299,10 +308,14 @@ lazy val library =
 lazy val javaRunOptions = Seq(
     // "-showversion",
     "-Xms1G",
-    "-Xmx1G"
+    "-Xmx1G",
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
+    "-Dcom.sun.management.jmxremote",
+    "-Dcom.sun.management.jmxremote.port=1617",
+    "-Dcom.sun.management.jmxremote.authenticate=false",
+    "-Dcom.sun.management.jmxremote.ssl=false"
 )
 
 lazy val javaBaseTestOptions = Seq(

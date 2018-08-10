@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor._
 import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
@@ -28,11 +30,12 @@ import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.codahale.metrics.ConsoleReporter
 import kamon.Kamon
+import kamon.datadog.DatadogAgentReporter
 import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
-import kamon.datadog.DatadogAgentReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
@@ -137,6 +140,20 @@ trait KnoraService {
       * A user representing the Knora API server, used for initialisation on startup.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
+
+    /**
+      * The metric registry. Needs to be public.
+      */
+    val metricRegistry = {
+        val registry = new com.codahale.metrics.MetricRegistry()
+        ConsoleReporter.forRegistry(registry)
+                .convertRatesTo(TimeUnit.SECONDS)
+                .convertDurationsTo(TimeUnit.MILLISECONDS)
+                .build()
+                .start(1, TimeUnit.MINUTES)
+        registry
+    }
+
 
     /**
       * All routes composed together and CORS activated.
@@ -261,6 +278,12 @@ trait KnoraService {
             case value if value == AppState.Running => {
                 printWelcomeMsg()
                 printConfig()
+
+                // create metrics registry and reporter
+                val metricsRegistry = {
+
+                }
+
             }
             case value => {
                 // not in running state so call startup checks again
