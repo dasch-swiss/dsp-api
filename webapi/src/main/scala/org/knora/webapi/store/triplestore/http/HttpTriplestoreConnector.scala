@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
-import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveCounterActor, ReceiveExceptionMeterActor, ReceiveTimerActor}
+import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveTimerActor}
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
@@ -52,7 +52,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * Instrumented HttpTriplestoreConnector providing metric.
   */
-class HttpTriplestoreConnectorInstrumented extends HttpTriplestoreConnector with ActorInstrumentedLifeCycle with ReceiveCounterActor with ReceiveTimerActor with ReceiveExceptionMeterActor
+class HttpTriplestoreConnectorInstrumented extends HttpTriplestoreConnector with ActorInstrumentedLifeCycle with ReceiveTimerActor
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
