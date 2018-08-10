@@ -28,6 +28,7 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
+import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveCounterActor, ReceiveExceptionMeterActor, ReceiveTimerActor}
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
@@ -49,10 +50,15 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
+  * Instrumented HttpTriplestoreConnector providing metric.
+  */
+class HttpTriplestoreConnectorInstrumented extends HttpTriplestoreConnector with ActorInstrumentedLifeCycle with ReceiveCounterActor with ReceiveTimerActor with ReceiveExceptionMeterActor
+
+/**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
   * `application.conf`.
   */
-class HttpTriplestoreConnector extends Actor with ActorLogging {
+trait HttpTriplestoreConnector extends Actor with ActorLogging with Instrumented {
 
     // MIME type constants.
     private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8

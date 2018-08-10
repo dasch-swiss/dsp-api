@@ -42,7 +42,7 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import scala.concurrent.Future
 
 /**
-  * Instrumented UsersResponderADM providing metrics.
+  * Instrumented UsersResponderADM providing metric.
   */
 class UsersResponderADMInstrumented extends UsersResponderADM with ActorInstrumentedLifeCycle with ReceiveCounterActor with ReceiveTimerActor with ReceiveExceptionMeterActor
 

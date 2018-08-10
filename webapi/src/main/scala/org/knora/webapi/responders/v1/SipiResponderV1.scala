@@ -26,6 +26,7 @@ import akka.http.scaladsl.model.HttpEntity.Strict
 import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveCounterActor, ReceiveExceptionMeterActor, ReceiveTimerActor}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
@@ -41,11 +42,17 @@ import spray.json._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
+
+/**
+  * Instrumented SipiResponderV1 providing metric.
+  */
+class SipiResponderV1Instrumented extends SipiResponderV1 with ActorInstrumentedLifeCycle with ReceiveCounterActor with ReceiveTimerActor with ReceiveExceptionMeterActor
+
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
   * v1 format.
   */
-class SipiResponderV1 extends Responder {
+trait SipiResponderV1 extends Responder with Instrumented {
 
     implicit val materializer = ActorMaterializer()
 
