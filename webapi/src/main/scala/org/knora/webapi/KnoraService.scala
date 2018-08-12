@@ -232,7 +232,7 @@ trait KnoraService {
       */
     def applicationStateActorReady(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         try {
@@ -251,7 +251,7 @@ trait KnoraService {
       */
     def applicationStateRunning(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
@@ -269,7 +269,7 @@ trait KnoraService {
       */
     private def startupTaskRunner(withOntologies: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
@@ -301,7 +301,7 @@ trait KnoraService {
       */
     private def blockingFuture(): Future[Unit] = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val delay: Long = 1.second.toMillis
@@ -319,7 +319,7 @@ trait KnoraService {
       */
     private def startupChecks(withOntologies: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
@@ -349,7 +349,7 @@ trait KnoraService {
       */
     private def checkRepository(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
@@ -382,7 +382,7 @@ trait KnoraService {
       */
     private def loadOntologies(load: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         // load ontologies and set OntologiesReady state
@@ -402,7 +402,7 @@ trait KnoraService {
       */
     private def printWelcomeMsg(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         log.info("----------------------------------------------------------------")
@@ -422,7 +422,7 @@ trait KnoraService {
       */
     private def printConfig(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
@@ -453,7 +453,7 @@ trait KnoraService {
       */
     private def startReporters(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("knora-blocking-dispatcher")
+        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
