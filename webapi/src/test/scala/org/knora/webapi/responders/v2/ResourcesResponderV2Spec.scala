@@ -148,7 +148,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return a resource of type thing with text with standoff as TEI/XML" in {
+        "return a resource of type thing with text as TEI/XML" in {
 
             actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
 
@@ -174,7 +174,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case response: ResourceTEIGetResponseV2 =>
 
                     val expectedBody =
-                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch"/>markup.</p></body></text>""".stripMargin
+                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
 
                     // Compare the original XML with the regenerated XML.
                     val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
