@@ -22,7 +22,6 @@ package org.knora.webapi
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
@@ -100,7 +99,7 @@ trait LiveCore extends Core {
     /**
       * Provides the default global execution context
       */
-    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 }
 
 /**
@@ -232,8 +231,7 @@ trait KnoraService {
       */
     def applicationStateActorReady(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         try {
             Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
@@ -251,8 +249,7 @@ trait KnoraService {
       */
     def applicationStateRunning(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
@@ -269,8 +266,7 @@ trait KnoraService {
       */
     private def startupTaskRunner(withOntologies: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
@@ -301,8 +297,7 @@ trait KnoraService {
       */
     private def blockingFuture(): Future[Unit] = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val delay: Long = 1.second.toMillis
 
@@ -319,8 +314,7 @@ trait KnoraService {
       */
     private def startupChecks(withOntologies: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
@@ -349,8 +343,7 @@ trait KnoraService {
       */
     private def checkRepository(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
@@ -382,8 +375,7 @@ trait KnoraService {
       */
     private def loadOntologies(load: Boolean): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         // load ontologies and set OntologiesReady state
         applicationStateActor ! SetAppState(AppState.LoadingOntologies)
@@ -402,8 +394,7 @@ trait KnoraService {
       */
     private def printWelcomeMsg(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         log.info("----------------------------------------------------------------")
         log.info(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
@@ -422,8 +413,8 @@ trait KnoraService {
       */
     private def printConfig(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
+        // implicit val executor: ExecutionContext = blockingDispatcher
 
         val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
         if (printConfig) {
@@ -453,8 +444,7 @@ trait KnoraService {
       */
     private def startReporters(): Unit = {
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
+        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {

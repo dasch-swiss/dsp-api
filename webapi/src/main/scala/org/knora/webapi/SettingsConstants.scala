@@ -26,8 +26,16 @@ package org.knora.webapi
   */
 object SettingsConstants {
 
-    val EMBEDDED_JENA_TDB_TS_TYPE = "embedded-jena-tdb"
-    val EMBEDDED_GRAPH_DB_TS_TYPE = "embedded-jena-graphdb"
-    val HTTP_GRAPH_DB_TS_TYPE = "graphdb"
-    val HTTP_FUSEKI_TS_TYPE = "fuseki"
+    val EmbeddedJenaTdbTsType = "embedded-jena-tdb"
+    val EmbeddedGraphDbTsType = "embedded-jena-graphdb"
+    val HttpGraphDbTsType = "graphdb"
+    val HttpFusekiTsType = "fuseki"
+}
+
+object KnoraDispatchers {
+    val MyBlockingDispatcher = "my-blocking-dispatcher"
+    val MyHttpTriplestoreConnectorDispatcher = "my-httpTriplestoreConnector-dispatcher"
+    val MyV1Dispatcher = "my-v1-dispatcher"
+    val MyV2Dispatcher = "my-v2-dispatcher"
+    val MyAdminDispatcher = "my-admin-dispatcher"
 }
