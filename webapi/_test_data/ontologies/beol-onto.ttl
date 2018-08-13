@@ -317,7 +317,7 @@
                 rdfs:subPropertyOf knora-base:hasLinkTo ;
 
                 rdfs:label "erwähnte Person"@de ,
-                           "mentioned person"@en ;
+                           "Mentioned person"@en ;
 
                 rdfs:comment """erwähnte Person"""@de ,
                              """mentioned person"""@en ;
@@ -334,7 +334,7 @@
 :mentionsPersonValue rdf:type owl:ObjectProperty ;
 
                      rdfs:label "erwähnte Person"@de ,
-                                "mentioned person"@en ;
+                                "Mentioned person"@en ;
 
                      rdfs:comment """erwähnte Person"""@de ,
                                   """mentioned person"""@en ;
@@ -702,7 +702,7 @@
 :hasGivenName rdf:type owl:ObjectProperty ;
 
               rdfs:label "Vorname"@de ,
-                        "given name"@en ,
+                        "Given name"@en ,
                         "prénom"@fr ,
                         "nome di battesimo"@it ;
 
@@ -723,7 +723,7 @@
 :hasFamilyName rdf:type owl:ObjectProperty ;
 
                rdfs:label "Nachname"@de ,
-                        "family name"@en ,
+                        "Family name"@en ,
                         "nom de famille"@fr ,
                         "nome di famiglia"@it ;
 
@@ -763,7 +763,7 @@
 :hasAlternativeName rdf:type owl:ObjectProperty ;
 
                rdfs:label "Alternative-Name"@de ,
-                        "alternative name"@en ;
+                        "Alternative name"@en ;
 
                rdfs:comment """Represents alternative name."""@en ;
 
@@ -817,7 +817,7 @@
 :hasBirthDate rdf:type owl:ObjectProperty ;
 
               rdfs:label "Geburtsdatum"@de ,
-                         "date of birth"@en ;
+                         "Date of birth"@en ;
 
               rdfs:comment """Repräsentiert ein Geburtsdatum."""@de,
                            """Represents a date of birth."""@en ;
@@ -837,7 +837,7 @@
 :hasDeathDate rdf:type owl:ObjectProperty ;
 
               rdfs:label "Sterbedatum"@de ,
-                         "date of death"@en ;
+                         "Date of death"@en ;
 
               rdfs:comment """Repräsentiert ein Sterbedatum."""@de,
                            """Represents a date of death."""@en ;
@@ -1162,7 +1162,7 @@
 
 :hasSystemNumber rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "system number"@en ;
+                    rdfs:label "System number"@en ;
 
                     rdfs:comment """system number"""@en ;
 
