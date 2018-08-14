@@ -48,6 +48,7 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.io.StdIn
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
 import scala.util.{Failure, Success}
@@ -202,10 +203,12 @@ trait KnoraService {
       * Stops Knora.
       */
     def stopService(): Unit = {
+        log.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
         Kamon.stopAllReporters()
         system.terminate()
+        Await.result(system.whenTerminated, 30 seconds)
     }
 
     /**
