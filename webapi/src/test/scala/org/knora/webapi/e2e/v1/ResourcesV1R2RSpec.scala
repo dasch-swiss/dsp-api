@@ -81,7 +81,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     private val password = "test"
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout * 2)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -1592,6 +1592,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 responseStr should include("createdResources")
             }
         }
+
         "create a resource of type anything:Thing with textValue which has language" in {
 
             val params =

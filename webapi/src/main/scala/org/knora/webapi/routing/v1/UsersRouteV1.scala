@@ -29,7 +29,6 @@ import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
 
@@ -47,7 +46,7 @@ object UsersRouteV1 extends Authenticator {
 
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance

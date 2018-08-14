@@ -33,9 +33,34 @@ object SettingsConstants {
 }
 
 object KnoraDispatchers {
-    val MyBlockingDispatcher = "my-blocking-dispatcher"
-    val MyHttpTriplestoreConnectorDispatcher = "my-httpTriplestoreConnector-dispatcher"
-    val MyV1Dispatcher = "my-v1-dispatcher"
-    val MyV2Dispatcher = "my-v2-dispatcher"
-    val MyAdminDispatcher = "my-admin-dispatcher"
+
+    /**
+      * Ask, future, and blocking operations should run on this dispatcher
+      */
+    val KnoraAskDispatcher = "knora-ask-dispatcher"
+
+    /**
+      * The store actors should run on this dispatcher
+      */
+    val KnoraStoreDispatcher = "knora-store-dispatcher"
+
+    /**
+      * The sipi actors should run on this dispatcher
+      */
+    val KnoraSipiDispatcher = "knora-sipi-dispatcher"
+
+    /**
+      * The V1 actors should run on this dispatcher
+      */
+    val KnoraV1Dispatcher = "knora-v1-dispatcher"
+
+    /**
+      * The V2 actors should run on this dispatcher
+      */
+    val KnoraV2Dispatcher = "knora-v2-dispatcher"
+
+    /**
+      * The Admin actors should run on this dispatcher
+      */
+    val KnoraAdminDispatcher = "knora-admin-dispatcher"
 }

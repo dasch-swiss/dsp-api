@@ -33,7 +33,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 
@@ -49,6 +49,7 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
 
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))

@@ -25,7 +25,7 @@ import akka.routing.FromConfig
 import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.store._
 import org.knora.webapi.store.triplestore.embedded.JenaTDBActor
-import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnectorInstrumented
+import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.FakeTriplestore
 import org.knora.webapi.{ActorMaker, KnoraDispatchers, Settings, UnsuportedTriplestoreException}
 
@@ -60,8 +60,8 @@ class TriplestoreManager extends Actor with ActorLogging {
         log.debug("TriplestoreManagerActor: start with preStart")
 
         storeActorRef = settings.triplestoreType match {
-            case HttpGraphDbTsType => makeActor(FromConfig.props(Props[HttpTriplestoreConnectorInstrumented]).withDispatcher(KnoraDispatchers.MyHttpTriplestoreConnectorDispatcher), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case HttpFusekiTsType => makeActor(FromConfig.props(Props[HttpTriplestoreConnectorInstrumented]).withDispatcher(KnoraDispatchers.MyHttpTriplestoreConnectorDispatcher), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HttpGraphDbTsType => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraStoreDispatcher), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case HttpFusekiTsType => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraStoreDispatcher), name = HTTP_TRIPLESTORE_ACTOR_NAME)
             case EmbeddedJenaTdbTsType => makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }

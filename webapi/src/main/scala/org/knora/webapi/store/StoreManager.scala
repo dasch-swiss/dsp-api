@@ -23,7 +23,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.store.triplestore.TriplestoreManager
-import org.knora.webapi.{ActorMaker, LiveActorMaker, Settings, UnexpectedMessageException}
+import org.knora.webapi._
 
 /**
   * This actor receives messages for different stores, and forwards them to corresponding store manager. At the moment only triple stores are implemented,
@@ -42,7 +42,7 @@ class StoreManager extends Actor with ActorLogging {
 
     override def preStart = {
         log.debug("StoreManager: start with preStart")
-        triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker), TRIPLESTORE_MANAGER_ACTOR_NAME)
+        triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraStoreDispatcher), TRIPLESTORE_MANAGER_ACTOR_NAME)
         log.debug("StoreManager: finished with preStart")
     }
 

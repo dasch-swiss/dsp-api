@@ -24,9 +24,9 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -37,7 +37,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v2" / "authentication") {

@@ -92,8 +92,3 @@ object Main extends App with LiveCore with KnoraService {
         sys.addShutdownHook(stopService())
     }
 }
-
-
-trait Instrumented extends InstrumentedBuilder {
-    val metricRegistry: MetricRegistry = Main.metricRegistry
-}

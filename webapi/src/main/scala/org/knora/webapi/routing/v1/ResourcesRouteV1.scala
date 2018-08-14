@@ -26,7 +26,6 @@ import java.nio.file.Paths
 import java.util.UUID
 
 import akka.actor.ActorSystem
-import akka.dispatch.MessageDispatcher
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
@@ -63,7 +62,7 @@ import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
@@ -78,7 +77,7 @@ object ResourcesRouteV1 extends Authenticator {
 
         implicit val system: ActorSystem = _system
         implicit val materializer: ActorMaterializer = ActorMaterializer()
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

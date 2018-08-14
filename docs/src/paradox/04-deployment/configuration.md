@@ -25,4 +25,12 @@ specific configuration, there we can also find configuration for the underlying 
 For optimal performance it is important to tune the configuration to the hardware used, mainly
 to the number of CPUs and cores per CPU.
 
-The relevant sections for tuning are the 
+The relevant sections for tuning are:
+
+ - `akka.actor.deployment`
+ - `knora-ask-dispatcher`
+ - `knora-store-dispatcher`
+ - `knora-sipi-dispatcher`
+ - `knora-v1-dispatcher`
+ - `knora-v2-dispatcher`
+ - `knora-admin-dispatcher`

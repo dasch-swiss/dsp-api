@@ -51,7 +51,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
 
     StringFormatter.initForTest()
 

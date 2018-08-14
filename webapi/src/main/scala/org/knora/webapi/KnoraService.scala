@@ -99,7 +99,7 @@ trait LiveCore extends Core {
     /**
       * Provides the default global execution context
       */
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
 }
 
 /**
@@ -118,12 +118,12 @@ trait KnoraService {
     /**
       * The actor used for storing the application application wide variables in a thread safe manner.
       */
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
@@ -139,20 +139,6 @@ trait KnoraService {
       * A user representing the Knora API server, used for initialisation on startup.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
-
-    /**
-      * The metric registry. Needs to be public.
-      */
-    val metricRegistry = {
-        val registry = new com.codahale.metrics.MetricRegistry()
-        ConsoleReporter.forRegistry(registry)
-                .convertRatesTo(TimeUnit.SECONDS)
-                .convertDurationsTo(TimeUnit.MILLISECONDS)
-                .build()
-                .start(1, TimeUnit.MINUTES)
-        registry
-    }
-
 
     /**
       * All routes composed together and CORS activated.

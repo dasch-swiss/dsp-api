@@ -28,7 +28,6 @@ import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
-import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveTimerActor}
 import org.apache.commons.lang3.StringUtils
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
@@ -46,19 +45,14 @@ import spray.json._
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-
-/**
-  * Instrumented HttpTriplestoreConnector providing metric.
-  */
-class HttpTriplestoreConnectorInstrumented extends HttpTriplestoreConnector with ActorInstrumentedLifeCycle with ReceiveTimerActor
 
 /**
   * Submits SPARQL queries and updates to a triplestore over HTTP. Supports different triplestores, which can be configured in
   * `application.conf`.
   */
-trait HttpTriplestoreConnector extends Actor with ActorLogging with Instrumented {
+class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // MIME type constants.
     private val mimeTypeApplicationSparqlResultsJson = MediaType.applicationWithFixedCharset("sparql-results+json", HttpCharsets.`UTF-8`) // JSON is always UTF-8
@@ -66,9 +60,10 @@ trait HttpTriplestoreConnector extends Actor with ActorLogging with Instrumented
     private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"
 
     private implicit val system: ActorSystem = context.system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-    private implicit val materializer: ActorMaterializer = ActorMaterializer()
     private val settings = Settings(system)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    private implicit val materializer: ActorMaterializer = ActorMaterializer()
+
     private val triplestoreType = settings.triplestoreType
 
     // Provides client HTTP connections.

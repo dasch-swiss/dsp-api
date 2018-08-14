@@ -24,7 +24,6 @@ import java.util.UUID
 import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import nl.grons.metrics4.scala.{ActorInstrumentedLifeCycle, ReceiveTimerActor}
 import org.knora.webapi
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
@@ -42,14 +41,9 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 import scala.concurrent.Future
 
 /**
-  * Instrumented UsersResponderADM providing metric.
-  */
-class UsersResponderADMInstrumented extends UsersResponderADM with ActorInstrumentedLifeCycle with ReceiveTimerActor
-
-/**
   * Provides information about Knora users to other responders.
   */
-trait UsersResponderADM extends Responder with Instrumented {
+class UsersResponderADM extends Responder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

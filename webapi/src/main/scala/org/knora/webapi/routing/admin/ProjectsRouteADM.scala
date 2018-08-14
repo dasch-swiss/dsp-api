@@ -33,7 +33,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -46,7 +46,7 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
     private val urlValidator = new UrlValidator(schemes)
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager = system.actorSelection("/user/responderManager")
     val stringFormatter = StringFormatter.getGeneralInstance
