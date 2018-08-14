@@ -27,6 +27,7 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.{CoreSpec, SharedTestDataV1}
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.Try
 
 object JWTHelperSpec {
@@ -53,7 +54,7 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
         val secret = "123456"
 
         "create token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
+            val token = JWTHelper.createToken("userIri", secret, 1 day)
 
             val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
                 token,
@@ -69,11 +70,11 @@ class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSe
             decodedJwt.get.getClaim[Sub].map(_.value) should be(Some("userIri"))
         }
         "validate token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
+            val token = JWTHelper.createToken("userIri", secret, 1 day)
             JWTHelper.validateToken(token, secret) should be(true)
         }
         "extract user's IRI" in {
-            val token = JWTHelper.createToken("userIri", secret, 1)
+            val token = JWTHelper.createToken("userIri", secret, 1 day)
             JWTHelper.extractUserIriFromToken(token, secret) should be(Some("userIri"))
         }
     }

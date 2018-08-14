@@ -732,7 +732,7 @@
 :endPage rdf:type owl:ObjectProperty ;
 
                     rdfs:label "letzte Seite"@de ,
-                               "last Page"@en ,
+                               "Last Page"@en ,
                                "dernière page"@fr ,
                                "ultima pagina"@it ;
 
@@ -749,7 +749,7 @@
 :volumeSubtitle rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Untertitel des Bandes"@de ,
-                               "volume subtitle"@en ;
+                               "Volume subtitle"@en ;
 
                     rdfs:comment """Represents the subtitle of volume."""@en ;
 
@@ -1033,8 +1033,8 @@
 ###  http://www.knora.org/ontology/0802/biblio#webpageHasHrefTag
 :webpageHasHrefTag rdf:type owl:ObjectProperty ;
 
-                    rdfs:label "href tag"@de ,
-                               "href tag"@en ;
+                    rdfs:label "href Tag"@de ,
+                               "href Tag"@en ;
 
                     rdfs:comment """Represents a href attribute tag."""@en ;
 
@@ -1096,7 +1096,7 @@
 :translationHasTitle rdf:type owl:ObjectProperty ;
 
                     rdfs:label "Übersetzungstitle"@de ,
-                               "title of translation"@en ;
+                               "Title of translation"@en ;
 
                     rdfs:comment """Repräsentiert den Title einer Übersetzung."""@de,
                                """Represents the title of translation."""@en ;
@@ -1668,7 +1668,7 @@
                                     ] ;
 
                     rdfs:label "Serie Artikel"@de ,
-                               "collection Article"@en ;
+                               "Collection Article"@en ;
 
                     rdfs:comment "A resource representing a collection article"@en .
 

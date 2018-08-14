@@ -22,6 +22,7 @@ package org.knora.webapi
 import java.io.File
 import java.nio.file.{Files, Paths}
 
+import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import com.typesafe.config.{Config, ConfigValue}
 import org.knora.webapi.SettingsConstants._
@@ -171,7 +172,7 @@ class SettingsImpl(config: Config) extends Extension {
     val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 
     val jwtSecretKey: String = config.getString("app.jwt-secret-key")
-    val jwtLongevity: Long = config.getLong("app.jwt-longevity")
+    val jwtLongevity: FiniteDuration = getFiniteDuration("app.jwt-longevity", config)
 
     val fallbackLanguage: String = config.getString("user.default-language")
 
@@ -186,6 +187,12 @@ class SettingsImpl(config: Config) extends Extension {
     val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
     val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
     val dataDogReporter: Boolean = config.getBoolean("app.monitoring.datadog-reporter")
+
+    private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
+        case x: FiniteDuration ⇒ x
+        case _                 ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
+    }
+
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x
