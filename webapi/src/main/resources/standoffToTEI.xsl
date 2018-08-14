@@ -42,40 +42,40 @@
 
         http://www.knora.org/ontology/knora-base#StandoffLinkTag
 
-        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ref.html
 
     -->
     <xsl:template match="entity">
-        <ptr>
+        <ref>
             <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
-        </ptr>
-        <xsl:apply-templates/>
-    </xsl:template>
-
-    <!--
-
-        http://www.knora.org/ontology/standoff#StandoffHyperlinkTag
-
-        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
-    -->
-    <xsl:template match="ptr">
-        <ptr>
-            <xsl:attribute name="target"><xsl:value-of select="@target"/></xsl:attribute>
-        </ptr>
-        <xsl:apply-templates/>
+            <xsl:apply-templates/>
+        </ref>
     </xsl:template>
 
     <!--
 
         http://www.knora.org/ontology/knora-base#StandoffUriTag
 
-        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ptr.html
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ref.html
+    -->
+    <xsl:template match="ref">
+        <ref>
+            <xsl:attribute name="target"><xsl:value-of select="@target"/></xsl:attribute>
+            <xsl:apply-templates/>
+        </ref>
+    </xsl:template>
+
+    <!--
+
+        http://www.knora.org/ontology/standoff#StandoffHyperlinkTag
+
+        http://www.tei-c.org/release/doc/tei-p5-doc/en/html/ref-ref.html
     -->
     <xsl:template match="a">
-        <ptr>
+        <ref>
             <xsl:attribute name="target"><xsl:value-of select="@href"/></xsl:attribute>
-        </ptr>
-        <xsl:apply-templates/>
+            <xsl:apply-templates/>
+        </ref>
     </xsl:template>
 
     <!--
