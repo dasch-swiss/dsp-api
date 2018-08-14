@@ -189,7 +189,6 @@ lazy val webApiLibs = Seq(
     library.kamonPrometheus,
     library.kamonZipkin,
     library.kamonJaeger,
-    library.kamonDatadog,
     library.logbackClassic,
     library.rdf4jRuntime,
     library.saxonHE,
@@ -263,7 +262,6 @@ lazy val library =
         val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.1.1"
         val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
         val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.2"
-        val kamonDatadog           = "io.kamon"                     %% "kamon-datadog"            % "1.0.0"
         val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.9.1"
 
         // other

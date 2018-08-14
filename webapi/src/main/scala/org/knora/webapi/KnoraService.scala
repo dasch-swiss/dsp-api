@@ -28,6 +28,7 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import kamon.Kamon
+import kamon.datadog.DatadogAgentReporter
 import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
@@ -444,11 +445,6 @@ trait KnoraService {
         val jaegerReporter = Await.result(applicationStateActor ? GetJaegerReporterState(), 1.second).asInstanceOf[Boolean]
         if (jaegerReporter) {
             Kamon.addReporter(new JaegerReporter()) // tracing
-        }
-
-        val datadogReporter = Await.result(applicationStateActor ? GetDataDogReporterState(), 1.second).asInstanceOf[Boolean]
-        if (datadogReporter) {
-            Kamon.addReporter(new DatadogAgentReporter()) // tracing
         }
     }
 }

@@ -17,7 +17,6 @@ class ApplicationStateActor extends Actor with ActorLogging {
     private var prometheusReporterState = false
     private var zipkinReporterState = false
     private var jaegerReporterState = false
-    private var dataDogReporterState = false
     private var printConfigState = false
 
     def receive: PartialFunction[Any, Unit] = {
@@ -57,14 +56,6 @@ class ApplicationStateActor extends Actor with ActorLogging {
         case GetJaegerReporterState() => {
             log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
             sender ! (jaegerReporterState | settings.jaegerReporter)
-        }
-        case SetDataDogReporterState(value) => {
-            log.debug("ApplicationStateActor - SetDataDogReporterState - value: {}", value)
-            dataDogReporterState = value
-        }
-        case GetDataDogReporterState() => {
-            log.debug("ApplicationStateActor - GetDataDogReporterState - value: {}", dataDogReporterState)
-            sender ! (dataDogReporterState | settings.dataDogReporter)
         }
         case SetPrintConfigState(value) => {
             log.debug("ApplicationStateActor - SetPrintConfigState - value: {}", value)

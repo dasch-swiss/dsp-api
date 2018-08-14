@@ -52,9 +52,6 @@ object Main extends App with LiveCore with KnoraService {
     // starts zipkin monitoring reporter
     if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
 
-    // starts datadog monitoring reporter
-    if (arglist.contains("-d")) applicationStateActor ! SetDataDogReporterState(true)
-
     // print config on startup
     if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigState(true)
 
@@ -75,8 +72,6 @@ object Main extends App with LiveCore with KnoraService {
               |     -z                          Starts the Zipkin monitoring reporter.
               |
               |     -j                          Starts the Jaeger monitoring reporter.
-              |
-              |     -d                          Starts the DataDog monitoring reporter.
               |
               |     -c                          Print the configuration on startup.
               |
