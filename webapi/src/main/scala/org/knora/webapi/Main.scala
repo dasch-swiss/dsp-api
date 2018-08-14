@@ -19,8 +19,6 @@
 
 package org.knora.webapi
 
-import com.codahale.metrics.MetricRegistry
-import nl.grons.metrics4.scala.InstrumentedBuilder
 import org.knora.webapi.messages.app.appmessages._
 
 /**
