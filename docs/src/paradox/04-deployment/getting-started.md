@@ -52,19 +52,15 @@ To create a test repository called `knora-test` and load test data into
 it, go to `webapi/scripts` and run the script for the triplestore you
 have chosen.
 
-  -   - For GraphDB SE:
+  - For GraphDB SE:
 
-          - If you are running GraphDB directly from its installation
-            directory (using its `graphdb` script), run
-            `graphdb-se-local-init-knora-test.sh`.
-          - If you are running GraphDB from a Docker image, run
-            `graphdb-se-docker-init-knora-test.sh`.
+    - If you are running GraphDB directly from its installation
+      directory (using its `graphdb` script), run `graphdb-se-local-init-knora-test.sh`.
+    - If you are running GraphDB from a Docker image, run `graphdb-se-docker-init-knora-test.sh`.
 
-  -   - For GraphDB Free:
-
-          - Configuration is currently provided only for running GraphDB
-            Free in Docker. To create a test repository, run
-            `graphdb-free-init-knora-test.sh`
+  - For GraphDB Free:
+     - Configuration is currently provided only for running GraphDB
+       Free in Docker. To create a test repository, run `graphdb-free-init-knora-test.sh`
 
   - For Fuseki, run `fuseki-load-test-data.sh`.
 
@@ -103,7 +99,7 @@ inside the `knora/webapi` folder the following commands:
 
     $ sbt stage
     $ cd target/universal/stage
-    $ ./bin/webapi
+    $ ./bin/webapi -J-Xms1G J-Xmx1G
 
 ### Downloading and running Sipi
 

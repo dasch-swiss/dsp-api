@@ -191,9 +191,6 @@ lazy val webApiLibs = Seq(
     library.kamonJaeger,
     library.kamonDatadog,
     library.logbackClassic,
-    library.metrics4Scala,
-    library.metrics4Akka,
-    library.metrics4ScalaHdr,
     library.rdf4jRuntime,
     library.saxonHE,
     library.scalaArm,
@@ -258,11 +255,6 @@ lazy val library =
 
         // caching
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
-
-        // metrics
-        val metrics4Scala          = "nl.grons"                     %% "metrics4-scala"           % Version.metrics
-        val metrics4Akka           = "nl.grons"                     %% "metrics4-akka_a24"        % Version.metrics
-        val metrics4ScalaHdr       = "nl.grons"                     %% "metrics4-scala-hdr"       % Version.metrics
 
         // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
