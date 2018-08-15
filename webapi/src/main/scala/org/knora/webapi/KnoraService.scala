@@ -28,7 +28,6 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import kamon.Kamon
-import kamon.datadog.DatadogAgentReporter
 import kamon.jaeger.JaegerReporter
 import kamon.prometheus.PrometheusReporter
 import kamon.zipkin.ZipkinReporter
