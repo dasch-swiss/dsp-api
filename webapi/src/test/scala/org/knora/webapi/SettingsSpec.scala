@@ -25,8 +25,8 @@ object SettingsSpec {
     val config = ConfigFactory.parseString(
         """
         akka {
-            # akka.loglevel = "DEBUG"
-            # akka.stdout-loglevel = "DEBUG"
+            akka.loglevel = "DEBUG"
+            akka.stdout-loglevel = "DEBUG"
         }
         """.stripMargin)
 }
@@ -69,7 +69,6 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.prometheusReporter should be (false)
             settings.zipkinReporter should be (false)
             settings.jaegerReporter should be (false)
-            settings.dataDogReporter should be (false)
         }
     }
 }

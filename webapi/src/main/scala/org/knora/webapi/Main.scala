@@ -53,7 +53,7 @@ object Main extends App with LiveCore with KnoraService {
     if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
 
     // print config on startup
-    if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigState(true)
+    if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigExtendedState(true)
 
     if (arglist.contains("--help")) {
         println(

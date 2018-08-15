@@ -16,9 +16,9 @@ cat graphdb-drop-knora-test-unit-repository.ttl | $CONSOLE
 
 printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
-sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-se-knora-test-unit-repository-config.ttl.tmpl > graphdb-se-knora-test-unit-repository-config.ttl
+sed -e 's@PIE_FILE@'"/graphdb/KnoraRules.pie"'@' graphdb-free-knora-test-unit-repository-config.ttl.tmpl > graphdb-free-knora-test-unit-repository-config.ttl
 
-curl -X POST -H "Content-Type:text/turtle" -T graphdb-se-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
+curl -X POST -H "Content-Type:text/turtle" -T graphdb-free-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
 
 curl -X POST -H "Content-Type:text/turtle" -d "<http://www.knora.org/config-test-unit> a <http://www.openrdf.org/config/repository#RepositoryContext> ." $GRAPHDB/repositories/SYSTEM/statements
 

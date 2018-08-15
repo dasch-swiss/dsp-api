@@ -25,12 +25,10 @@ import java.nio.file.{Files, Paths}
 import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
 import com.typesafe.config.{Config, ConfigValue}
-import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-import akka.ConfigurationException
 
 /**
   * Reads application settings that come from `application.conf`.
@@ -38,7 +36,8 @@ import akka.ConfigurationException
 class SettingsImpl(config: Config) extends Extension {
 
     // print config
-    val printConfig: Boolean = config.getBoolean("app.print-config")
+    val printShortConfig: Boolean = config.getBoolean("app.print-short-config")
+    val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
 
     // used for communication inside the knora stack
     val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
@@ -125,40 +124,42 @@ class SettingsImpl(config: Config) extends Extension {
     val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
     val defaultIconSizeDimX: Int = config.getInt("app.gui.default-icon-size.dimX")
     val defaultIconSizeDimY: Int = config.getInt("app.gui.default-icon-size.dimY")
-    val triplestoreType: String = config.getString("app.triplestore.dbtype")
-    val triplestoreHost: String = config.getString("app.triplestore.host")
+
 
     val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
     val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
 
+    val triplestoreType: String = config.getString("app.triplestore.dbtype")
+    val triplestoreHost: String = config.getString("app.triplestore.host")
+
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
     val triplestorePort: Int = triplestoreType match {
-        case HttpGraphDbTsType => config.getInt("app.triplestore.graphdb.port")
-        case HttpFusekiTsType => config.getInt("app.triplestore.fuseki.port")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getInt("app.triplestore.graphdb.port")
+        case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
-        case HttpGraphDbTsType => config.getString("app.triplestore.graphdb.repository-name")
-        case HttpFusekiTsType => config.getString("app.triplestore.fuseki.repository-name")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.repository-name")
+        case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
-        case HttpGraphDbTsType => config.getString("app.triplestore.graphdb.username")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.username")
         case other => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
-        case HttpGraphDbTsType => config.getString("app.triplestore.graphdb.password")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.password")
         case other => ""
     }
 
     //used in the store package
     val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
-    val (fusekiTomcat, fusekiTomcatContext) = if (triplestoreType == HttpFusekiTsType) {
+    val (fusekiTomcat, fusekiTomcatContext) = if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         (config.getBoolean("app.triplestore.fuseki.tomcat"), config.getString("app.triplestore.fuseki.tomcat-context"))
     } else {
         (false, "")

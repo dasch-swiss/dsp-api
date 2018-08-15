@@ -21,9 +21,8 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.CoreSpec
-import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.{CoreSpec, TriplestoreTypes}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -139,7 +138,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val searchURI = if (tsType == HttpFusekiTsType || tsType == EmbeddedJenaTdbTsType) {
+    val searchURI = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
         "<http://jena.apache.org/text#query>"
     } else {
         //GraphDB
@@ -327,7 +326,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HttpGraphDbTsType => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
+                        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
                     }
                     expectMsgPF(timeout) {
@@ -342,7 +341,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             "execute the search with the lucene index for 'rdfs:label' properties" in {
                 within(1000.millis) {
                     tsType match {
-                        case HttpGraphDbTsType => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
+                        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
                         case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
                     }
                     expectMsgPF(timeout) {

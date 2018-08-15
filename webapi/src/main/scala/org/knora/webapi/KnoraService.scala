@@ -48,7 +48,6 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.io.StdIn
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
 import scala.util.{Failure, Success}
@@ -216,8 +215,6 @@ trait KnoraService {
       */
     def applicationStateActorReady(): Unit = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
         try {
             Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
             log.info("KnoraService - applicationStateActorReady")
@@ -234,8 +231,6 @@ trait KnoraService {
       */
     def applicationStateRunning(): Unit = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
         if (state != AppState.Running) {
@@ -251,18 +246,13 @@ trait KnoraService {
       */
     private def startupTaskRunner(withOntologies: Boolean): Unit = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
         val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
         state match {
             case value if value == AppState.Running => {
-                printWelcomeMsg()
-                printConfig()
 
-                // create metrics registry and reporter
-                val metricsRegistry = {
-
+                if (settings.printShortConfig | settings.printExtendedConfig) {
+                    printWelcomeMsg()
                 }
 
             }
@@ -282,8 +272,6 @@ trait KnoraService {
       */
     private def blockingFuture(): Future[Unit] = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
         val delay: Long = 1.second.toMillis
 
         Future {
@@ -298,8 +286,6 @@ trait KnoraService {
       * Executes startup tasks in the correct order and state.
       */
     private def startupChecks(withOntologies: Boolean): Unit = {
-
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
 
@@ -327,8 +313,6 @@ trait KnoraService {
       * Checks if repository is running and initialized
       */
     private def checkRepository(): Unit = {
-
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
@@ -360,8 +344,6 @@ trait KnoraService {
       */
     private def loadOntologies(load: Boolean): Unit = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
         // load ontologies and set OntologiesReady state
         applicationStateActor ! SetAppState(AppState.LoadingOntologies)
 
@@ -379,36 +361,27 @@ trait KnoraService {
       */
     private def printWelcomeMsg(): Unit = {
 
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
-
-        log.info("----------------------------------------------------------------")
-        log.info(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
-        log.info("----------------------------------------------------------------")
-
-        // get allowReloadOverHTTP value from application state actor
         val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+        val printExtendedConfig = Await.result(applicationStateActor ? GetPrintConfigExtendedState(), 1.second).asInstanceOf[Boolean]
+
+        println("")
+        println("================================================================")
+        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
+        println("----------------------------------------------------------------")
 
         if (allowReloadOverHTTP) {
-            log.info("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
+            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
+            println("----------------------------------------------------------------")
         }
-    }
 
-    /**
-      * Prints the configuration if the print config flag is set.
-      */
-    private def printConfig(): Unit = {
+        // which repository are we using
+        println(s"DB-Name: ${settings.triplestoreDatabaseName}")
+        println(s"DB-Type: ${settings.triplestoreType}")
+        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
 
-        // implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        // implicit val executor: ExecutionContext = blockingDispatcher
 
-        val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
-        if (printConfig) {
-            println("================================================================")
-            println("Server Configuration:")
+        if (printExtendedConfig) {
 
-            // which repository are we using
-            println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
-            println(s"Repository: ${settings.triplestoreDatabaseName}")
             println(s"DB User: ${settings.triplestoreUsername}")
             println(s"DB Password: ${settings.triplestorePassword}")
 
@@ -417,10 +390,10 @@ trait KnoraService {
             println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
             println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
             println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
-            println("================================================================")
-            println("")
         }
 
+        println("================================================================")
+        println("")
     }
 
     /**
@@ -428,8 +401,6 @@ trait KnoraService {
       * the application which we will use to look at the collected data.
       */
     private def startReporters(): Unit = {
-
-        // implicit val blockingDispatcher: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.MyBlockingDispatcher)
 
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {

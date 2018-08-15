@@ -57,13 +57,13 @@ class ApplicationStateActor extends Actor with ActorLogging {
             log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
             sender ! (jaegerReporterState | settings.jaegerReporter)
         }
-        case SetPrintConfigState(value) => {
-            log.debug("ApplicationStateActor - SetPrintConfigState - value: {}", value)
+        case SetPrintConfigExtendedState(value) => {
+            log.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
             printConfigState = value
         }
-        case GetPrintConfigState() => {
-            log.debug("ApplicationStateActor - GetPrintConfigState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printConfig)
+        case GetPrintConfigExtendedState() => {
+            log.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
+            sender ! (printConfigState | settings.printExtendedConfig)
         }
         case SetAppState(value: AppState) => {
             log.debug("ApplicationStateActor - SetAppState - value {}", value)
