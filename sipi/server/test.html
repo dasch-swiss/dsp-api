@@ -1,0 +1,37 @@
+<html>
+<head>
+    <title>TEST FOR JPEG</title>
+    <script>
+    Number.prototype.pad = function(size) {
+        var s = String(this);
+        while (s.length < (size || 2)) {s = "0" + s;}
+        return s;
+    }
+
+    function add_jpegs() {
+        var ele = document.getElementById("jpegs");
+        for (var i = 2; i <= 632; i++) {
+            var node = document.createElement("img");
+            var numstr = i.pad(10);
+            node.setAttribute("src", "http://localhost:1024/images/Incunabula_" + numstr + ".jpg/full/full/0/default.jpg");
+            ele.appendChild(node);
+        }
+    }
+
+    function add_j2ks() {
+        var ele = document.getElementById("jpegs");
+        for (var i = 2; i <= 632; i++) {
+            var node = document.createElement("img");
+            var numstr = i.pad(10);
+            node.setAttribute("src", "http://localhost:1024/images/Incunabula_" + numstr + ".jp2/100,100,400,400/,128/" + i + "/default.jpg");
+            ele.appendChild(node);
+        }
+    }
+    </script>
+</head>
+<body>
+    <input type="button" name="JPEG" value="JPEG" onClick="add_jpegs();"/><input type="button" name="J2K" value="J2K" onClick="add_j2ks();"/>
+    <div id="jpegs">
+    </div>
+</body>
+</html>

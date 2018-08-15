@@ -27,7 +27,7 @@ import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.apache.commons.validator.routines.UrlValidator
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 
@@ -41,7 +41,7 @@ class PermissionsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Log
     private val urlValidator = new UrlValidator(schemes)
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager = system.actorSelection("/user/responderManager")
 

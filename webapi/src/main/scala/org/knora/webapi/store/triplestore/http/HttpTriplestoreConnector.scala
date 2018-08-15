@@ -33,7 +33,6 @@ import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
-import org.knora.webapi.SettingsConstants.{HTTP_GRAPHDB_FREE_TS_TYPE, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
@@ -45,7 +44,7 @@ import spray.json._
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -60,9 +59,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val mimeTypeApplicationSparqlUpdate = MediaType.applicationWithFixedCharset("sparql-update", HttpCharsets.`UTF-8`) // SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly"
 
     private implicit val system: ActorSystem = context.system
-    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-    private implicit val materializer: ActorMaterializer = ActorMaterializer()
     private val settings = Settings(system)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    private implicit val materializer: ActorMaterializer = ActorMaterializer()
+
     private val triplestoreType = settings.triplestoreType
 
     // Provides client HTTP connections.
@@ -74,9 +74,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => s"/repositories/${settings.triplestoreDatabaseName}"
+        case TriplestoreTypes.HttpFuseki if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
+        case TriplestoreTypes.HttpFuseki if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
 
     // The URI for SPARQL queries.
@@ -88,9 +88,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
-        case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
-        case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => s"/repositories/${settings.triplestoreDatabaseName}/statements"
+        case TriplestoreTypes.HttpFuseki if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
+        case TriplestoreTypes.HttpFuseki if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }
 
     // The URI for SPARQL update operations.
@@ -350,7 +350,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- getTriplestoreHttpResponse(sparqlUpdate, isUpdate = true)
 
             // If we're using GraphDB, update the full-text search index.
-            _ = if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE | triplestoreType == HTTP_GRAPHDB_FREE_TS_TYPE) {
+            _ = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
@@ -381,10 +381,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         val resetTriplestoreResult = for {
 
             // drop old content
-            dropResult <- dropAllTriplestoreContent()
+            _ <- dropAllTriplestoreContent()
 
             // insert new content
-            insertResult <- insertDataIntoTriplestore(rdfDataObjects)
+            _ <- insertDataIntoTriplestore(rdfDataObjects)
 
             // any errors throwing exceptions until now are already covered so we can ACK the request
             result = ResetTriplestoreContentACK()
@@ -395,51 +395,68 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     private def dropAllTriplestoreContent(): Future[DropAllTriplestoreContentACK] = {
 
-        try {
-            log.debug("==>> Drop All Data Start")
-            val dropAllSparqlString =
-                """
-                    DROP ALL
-                """
-            Await.result(getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true), 180.seconds)
+        log.debug("==>> Drop All Data Start")
 
-            log.debug("==>> Drop All Data End")
-            Future.successful(DropAllTriplestoreContentACK())
-        } catch {
-            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute DROP ALL", e, log))
+        val dropAllSparqlString =
+            """
+                DROP ALL
+            """
+
+        val response: Future[DropAllTriplestoreContentACK] = for {
+            result: String <- getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true)
+            _ = log.debug(s"==>> Drop All Data End, Result: $result")
+        } yield DropAllTriplestoreContentACK()
+
+        response.recover {
+             case t: Exception => {
+                throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
+            }
         }
+
+        response
     }
 
+    /**
+      * Inserts the data referenced inside the `rdfDataObjects`.
+      * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
+      * @return [[InsertTriplestoreContentACK]]
+      */
     private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Future[InsertTriplestoreContentACK] = {
         try {
             log.debug("==>> Loading Data Start")
 
             val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
-            val defaultRdfDataObjectList = defaultRdfDataList.asScala.map {
+            val defaultRdfDataObjectList: Seq[RdfDataObject] = defaultRdfDataList.asScala.map {
                 config => RdfDataObjectFactory(config)
             }
 
-            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
+            val completeRdfDataObjectList: Seq[RdfDataObject] = defaultRdfDataObjectList ++ rdfDataObjects
 
-            for (elem <- completeRdfDataObjectList) {
+            // log.debug("==>> List of Graphs: {}", completeRdfDataObjectList.map(_.name))
 
-                GraphProtocolAccessor.post(elem.name, elem.path)
-
-                log.debug(s"added: ${elem.name}")
+            // inserting data synchronously
+            val result: Seq[StatusCode] = completeRdfDataObjectList.map { ele =>
+                val status: StatusCode = GraphProtocolAccessor.post(ele.name, ele.path)
+                log.debug(s"added: ${ele.name}. Status: $status")
+                status
             }
 
-            if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE | triplestoreType == HTTP_GRAPHDB_FREE_TS_TYPE) {
+            if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
                 /* need to update the lucene index */
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
                         INSERT DATA { luc:fullTextSearchIndex luc:updateIndex _:b1 . }
                     """
-                Await.result(getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true), 30.seconds)
+
+                for {
+                    result <- getTriplestoreHttpResponse(indexUpdateSparqlString, isUpdate = true)
+                    _ = log.debug(s"==>> Index update done, Result: $result")
+                } yield true
             }
 
-            log.debug("==>> Loading Data End")
-            Future.successful(InsertTriplestoreContentACK())
+            FastFuture.successful(InsertTriplestoreContentACK())
+
         } catch {
             case e: TriplestoreUnsupportedFeatureException => Future.failed(e)
             case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
@@ -457,7 +474,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         try {
 
-            log.debug("checkRepository entered")
+            // log.debug("checkRepository entered")
 
             // call endpoint returning all repositories
 
@@ -473,7 +490,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             )
 
             val getRepositoriesUri: Uri = triplestoreType match {
-                case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => {
+                case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => {
                     Uri(
                         scheme = scheme,
                         authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
@@ -509,8 +526,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             val idShouldBe = settings.triplestoreDatabaseName
             val sesameTypeShouldBe = triplestoreType match {
-                case HTTP_GRAPHDB_SE_TS_TYPE => "owlim:MonitorRepository"
-                case HTTP_GRAPHDB_FREE_TS_TYPE => "graphdb:FreeSailRepository"
+                case TriplestoreTypes.HttpGraphDBSE => "owlim:MonitorRepository"
+                case TriplestoreTypes.HttpGraphDBFree=> "graphdb:FreeSailRepository"
             }
 
             val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
@@ -554,7 +571,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
             // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
 
-            val maybeInfer = if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE) {
+            val maybeInfer = if (triplestoreType == TriplestoreTypes.HttpGraphDBSE | triplestoreType == TriplestoreTypes.HttpGraphDBFree) {
                 Some("infer" -> "true")
             } else {
                 None

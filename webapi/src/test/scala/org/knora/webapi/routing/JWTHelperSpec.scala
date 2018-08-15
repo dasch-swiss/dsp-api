@@ -41,7 +41,6 @@ object JWTHelperSpec {
 
 class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender {
 
-    implicit val executionContext = system.dispatcher
     implicit val timeout: Timeout = Duration(5, SECONDS)
 
     val rootUserProfileV1: UserProfileV1 = SharedTestDataV1.rootUser

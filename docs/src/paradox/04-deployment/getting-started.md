@@ -101,7 +101,7 @@ inside the `knora/webapi` folder the following commands:
 
     $ sbt stage
     $ cd target/universal/stage
-    $ ./bin/webapi
+    $ ./bin/webapi -J-Xms1G J-Xmx1G
 
 ### Downloading and running Sipi
 

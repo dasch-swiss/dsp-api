@@ -11,7 +11,7 @@ volumes:
 services:
 
   prometheus:
-    image: prom/prometheus:v2.2.0-rc.0
+    image: prom/prometheus:v2.3.2
     container_name: prometheus
     volumes:
       - ./prometheus/:/etc/prometheus/
@@ -31,9 +31,18 @@ services:
     labels:
       org.label-schema.group: "monitoring"
 
+  zipkin:
+    image: openzipkin/zipkin:2.10.2
+    container_name: zipkin
+    expose:
+      - 9411
+    networks:
+      - monitor-net
+    labels:
+      org.label-schema.group: "monitoring"
 
   nodeexporter:
-    image: prom/node-exporter:v0.15.2
+    image: prom/node-exporter:v0.16.0
     container_name: nodeexporter
     user: root
     privileged: true
@@ -54,7 +63,7 @@ services:
       org.label-schema.group: "monitoring"
 
   cadvisor:
-    image: google/cadvisor:v0.28.3
+    image: google/cadvisor:v0.30.0
     container_name: cadvisor
     volumes:
       - /:/rootfs:ro
@@ -71,14 +80,13 @@ services:
       org.label-schema.group: "monitoring"
 
   grafana:
-    image: grafana/grafana:4.6.3
+    image: grafana/grafana:5.2.1
     container_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./grafana/datasources:/etc/grafana/datasources
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
       - ./grafana/dashboards:/etc/grafana/dashboards
-      - ./grafana/setup.sh:/setup.sh
-    entrypoint: /setup.sh
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
@@ -96,7 +104,9 @@ services:
       container_name: caddy
       ports:
         - "3000:3000"
+        - "8080:8080"
         - "9090:9090"
+        - "9411:9411"
       volumes:
         - ./caddy/:/etc/caddy/
       environment:

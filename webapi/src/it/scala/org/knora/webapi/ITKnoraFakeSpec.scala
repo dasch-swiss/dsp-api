@@ -49,6 +49,7 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
 
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))

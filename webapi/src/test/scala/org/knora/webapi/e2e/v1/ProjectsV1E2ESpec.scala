@@ -53,22 +53,13 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
-    val rootEmail = SharedTestDataV1.rootUser.userData.email.get
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val projectIri = SharedTestDataV1.imagesProjectInfo.id
-    val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-    val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
-    val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
-
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
+    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
+    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val projectIri = SharedTestDataV1.imagesProjectInfo.id
+    private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
+    private val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
+    private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
 
     "The Projects Route ('v1/projects')" when {
 

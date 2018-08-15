@@ -30,7 +30,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import javax.imageio.ImageIO
-import org.knora.webapi.SettingsImpl
+import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 import org.knora.webapi.routing.Authenticator
 
 import scala.concurrent.ExecutionContextExecutor
@@ -42,7 +42,7 @@ object AssetsRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v1" / "assets" / Remaining) { assetId =>
