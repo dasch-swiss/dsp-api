@@ -38,7 +38,8 @@ import scala.concurrent.duration._
 class SettingsImpl(config: Config) extends Extension {
 
     // print config
-    val printConfig: Boolean = config.getBoolean("app.print-config")
+    val printShortConfig: Boolean = config.getBoolean("app.print-short-config")
+    val printExtendedConfig: Boolean = config.getBoolean("app.print-extended-config")
 
     // used for communication inside the knora stack
     val internalKnoraApiHost: String = config.getString("app.knora-api.internal-host")
@@ -105,33 +106,35 @@ class SettingsImpl(config: Config) extends Extension {
     val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
     val defaultIconSizeDimX: Int = config.getInt("app.gui.default-icon-size.dimX")
     val defaultIconSizeDimY: Int = config.getInt("app.gui.default-icon-size.dimY")
-    val triplestoreType: String = config.getString("app.triplestore.dbtype")
-    val triplestoreHost: String = config.getString("app.triplestore.host")
+
 
     val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
     val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
 
+    val triplestoreType: String = config.getString("app.triplestore.dbtype")
+    val triplestoreHost: String = config.getString("app.triplestore.host")
+
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
     val triplestorePort: Int = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
         case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
         case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.username")
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.username")
         case other => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => config.getString("app.triplestore.graphdb.password")
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.password")
         case other => ""
     }
 

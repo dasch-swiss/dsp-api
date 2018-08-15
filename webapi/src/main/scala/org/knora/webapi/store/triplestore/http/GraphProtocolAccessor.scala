@@ -99,7 +99,7 @@ object GraphProtocolAccessor {
 
         // HTTP paths for the SPARQL 1.1 Graph Store HTTP Protocol
         val requestPath = settings.triplestoreType match {
-            case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
+            case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/rdf-graphs/service"
             case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/data"
             case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/data"
             case ts_type => throw TriplestoreUnsupportedFeatureException(s"GraphProtocolAccessor does not support: $ts_type")

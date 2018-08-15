@@ -226,8 +226,11 @@ trait KnoraService {
 
         state match {
             case value if value == AppState.Running => {
-                printWelcomeMsg()
-                printConfig()
+
+                if (settings.printShortConfig | settings.printExtendedConfig) {
+                    printWelcomeMsg()
+                }
+
             }
             case value => {
                 // not in running state so call startup checks again
@@ -344,35 +347,27 @@ trait KnoraService {
         implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
         implicit val executor: ExecutionContext = blockingDispatcher
 
+        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
+        val printExtendedConfig = Await.result(applicationStateActor ? GetPrintConfigExtendedState(), 1.second).asInstanceOf[Boolean]
+
         println("")
-        println("----------------------------------------------------------------")
+        println("================================================================")
         println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
         println("----------------------------------------------------------------")
 
-        // get allowReloadOverHTTP value from application state actor
-        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
-
         if (allowReloadOverHTTP) {
             println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
+            println("----------------------------------------------------------------")
         }
-    }
 
-    /**
-      * Prints the configuration if the print config flag is set.
-      */
-    private def printConfig(): Unit = {
+        // which repository are we using
+        println(s"DB-Name: ${settings.triplestoreDatabaseName}")
+        println(s"DB-Type: ${settings.triplestoreType}")
+        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
 
-        implicit val blockingDispatcher: MessageDispatcher = system.dispatchers.lookup("my-blocking-dispatcher")
-        implicit val executor: ExecutionContext = blockingDispatcher
 
-        val printConfig = Await.result(applicationStateActor ? GetPrintConfigState(), 1.second).asInstanceOf[Boolean]
-        if (printConfig) {
-            println("================================================================")
-            println("Server Configuration:")
+        if (printExtendedConfig) {
 
-            // which repository are we using
-            println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
-            println(s"Repository: ${settings.triplestoreDatabaseName}")
             println(s"DB User: ${settings.triplestoreUsername}")
             println(s"DB Password: ${settings.triplestorePassword}")
 
@@ -381,10 +376,10 @@ trait KnoraService {
             println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
             println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
             println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
-            println("================================================================")
-            println("")
         }
 
+        println("================================================================")
+        println("")
     }
 
     /**
