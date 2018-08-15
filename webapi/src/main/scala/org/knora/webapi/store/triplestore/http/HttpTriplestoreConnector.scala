@@ -33,7 +33,7 @@ import org.eclipse.rdf4j
 import org.eclipse.rdf4j.model.Statement
 import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
-import org.knora.webapi.SettingsConstants._
+import org.knora.webapi.SettingsConstants.{HTTP_GRAPHDB_FREE_TS_TYPE, _}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
@@ -66,7 +66,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val triplestoreType = settings.triplestoreType
 
     // Provides client HTTP connections.
-    private val http = Http(context.system)
+    private val http = Http(system)
 
     // Use HTTP basic authentication.
     private val authorizationHeader = headers.Authorization(BasicHttpCredentials(settings.triplestoreUsername, settings.triplestorePassword))
@@ -74,7 +74,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL queries.
     private val queryRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/query"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/query"
     }
@@ -88,7 +88,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     // The path for SPARQL update operations.
     private val updateRequestPath = triplestoreType match {
-        case HTTP_GRAPH_DB_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
+        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => s"/repositories/${settings.triplestoreDatabaseName}/statements"
         case HTTP_FUSEKI_TS_TYPE if !settings.fusekiTomcat => s"/${settings.triplestoreDatabaseName}/update"
         case HTTP_FUSEKI_TS_TYPE if settings.fusekiTomcat => s"/${settings.fusekiTomcatContext}/${settings.triplestoreDatabaseName}/update"
     }
@@ -350,7 +350,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             _ <- getTriplestoreHttpResponse(sparqlUpdate, isUpdate = true)
 
             // If we're using GraphDB, update the full-text search index.
-            _ = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+            _ = if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE | triplestoreType == HTTP_GRAPHDB_FREE_TS_TYPE) {
                 val indexUpdateSparqlString =
                     """
                         PREFIX luc: <http://www.ontotext.com/owlim/lucene#>
@@ -428,7 +428,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 log.debug(s"added: ${elem.name}")
             }
 
-            if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+            if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE | triplestoreType == HTTP_GRAPHDB_FREE_TS_TYPE) {
                 /* need to update the lucene index */
                 val indexUpdateSparqlString =
                     """
@@ -473,7 +473,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             )
 
             val getRepositoriesUri: Uri = triplestoreType match {
-                case HTTP_GRAPH_DB_TS_TYPE => {
+                case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => {
                     Uri(
                         scheme = scheme,
                         authority = Uri.Authority(Uri.Host(settings.triplestoreHost), port = settings.triplestorePort),
@@ -508,7 +508,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val repositories: Seq[GraphDBRepository] = jsonArr.elements.map(_.convertTo[GraphDBRepository])
 
             val idShouldBe = settings.triplestoreDatabaseName
-            val sesameTypeShouldBe = "owlim:MonitorRepository"
+            val sesameTypeShouldBe = triplestoreType match {
+                case HTTP_GRAPHDB_SE_TS_TYPE => "owlim:MonitorRepository"
+                case HTTP_GRAPHDB_FREE_TS_TYPE => "graphdb:FreeSailRepository"
+            }
 
             val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
             if (neededRepo.length == 1) {
@@ -551,7 +554,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
             // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
 
-            val maybeInfer = if (triplestoreType == HTTP_GRAPH_DB_TS_TYPE) {
+            val maybeInfer = if (triplestoreType == HTTP_GRAPHDB_SE_TS_TYPE) {
                 Some("infer" -> "true")
             } else {
                 None

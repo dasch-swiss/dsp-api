@@ -5,16 +5,18 @@
 @prefix owlim: <http://www.ontotext.com/trree/owlim#>.
 
 [] a rep:Repository ;
-   rep:repositoryID "knora-test-unit" ;
-   rdfs:label "Knora unit test repository" ;
+   rep:repositoryID "knora-test" ;
+   rdfs:label "Knora test repository" ;
    rep:repositoryImpl [
      rep:repositoryType "graphdb:FreeSailRepository" ;
      sr:sailImpl [
-       # owlim:ruleset "owl-horst-optimized" ;
-       owlim:ruleset "/graphdb/KnoraRules.pie" ;
-       owlim:check-for-inconsistencies "true";
        sail:sailType "graphdb:FreeSail" ;
+       owlim:ruleset "PIE_FILE" ;
+       owlim:check-for-inconsistencies "true";
        owlim:base-URL "http://rdfh.ch/" ;
        owlim:repository-type "file-repository" ;
+       owlim:query-timeout "5" ;
+       owlim:throw-QueryEvaluationException-on-timeout "true";
+       owlim:query-limit-results "50000";
       ]
    ].
