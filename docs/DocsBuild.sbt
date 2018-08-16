@@ -1,7 +1,7 @@
 import scala.sys.process._
 
 // Define `Configuration` instances representing our different documentation trees
-val ParadoxSite = config("paradox")
+lazy val ParadoxSite = config("paradox")
 
 lazy val docs = (project in file(".")).
     configs(
@@ -16,7 +16,7 @@ lazy val docs = (project in file(".")).
     ).
     settings(
         // Set version string
-        version in ParadoxSite := "v1.6.0",
+        version in ParadoxSite := "v1.7.0",
 
         // Ghpages settings
         ghpagesNoJekyll := true,
