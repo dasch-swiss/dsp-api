@@ -7,6 +7,13 @@ import sbt.librarymanagement.Resolver
 
 connectInput in run := true
 
+lazy val webApiCommonSettings = Seq(
+    organization := "org.knora",
+    name := "webapi",
+    version := "1.7.0",
+    scalaVersion := "2.12.4"
+)
+
 // custom test and it settings
 lazy val GDBSE = config("gdbse") extend Test
 lazy val GDBSEIt = config("gdbse-it") extend IntegrationTest
@@ -159,12 +166,7 @@ lazy val webapi = (project in file(".")).
         enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
         enablePlugins(RevolverPlugin)
 
-lazy val webApiCommonSettings = Seq(
-    organization := "org.knora",
-    name := "webapi",
-    version := "1.6.0",
-    scalaVersion := "2.12.4"
-)
+
 
 lazy val webApiLibs = Seq(
     library.aspectJWeaver,
