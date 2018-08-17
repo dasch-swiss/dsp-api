@@ -629,6 +629,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val requestDuration = System.currentTimeMillis() - requestStartTime
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
+
+            _ = log.debug("getTriplestoreHttpResponse - responseString: {}", responseString)
+
         } yield responseString
 
         // If an exception was thrown during the connection to the triplestore, wrap it in
