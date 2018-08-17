@@ -506,19 +506,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 headers = headers
             )
 
+            log.info("checkRepository - getRepositoriesRequest: {}", getRepositoriesRequest)
+
             val jsonFuture = for {
                 response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
-                // _ = log.info("checkRepository - response: {}", response)
+                _ = log.info("checkRepository - response: {}", response)
 
                 json: JsArray <- response match {
                     case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
                     case other => throw new Exception(other.toString())
                 }
-                // _ = log.info("checkRepository - json: {}", json.prettyPrint)
+                _ = log.info("checkRepository - json: {}", json.prettyPrint)
 
             } yield json
 
-            val jsonArr: JsArray = Await.result(jsonFuture, 750.milliseconds)
+            val jsonArr: JsArray = Await.result(jsonFuture, 1.second)
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
