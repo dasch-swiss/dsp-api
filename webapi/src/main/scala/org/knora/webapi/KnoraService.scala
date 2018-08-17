@@ -261,7 +261,7 @@ trait KnoraService {
                 startupChecks(withOntologies)
 
                 // we should wait a bit before we call ourselves again
-                Await.result(blockingFuture(), 2.second)
+                Await.result(blockingFuture(), 3.second)
                 startupTaskRunner(withOntologies)
             }
         }
