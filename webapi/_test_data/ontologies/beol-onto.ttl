@@ -2178,14 +2178,6 @@
 
               rdfs:comment "represents a page break"@en .
 
-###  http://www.knora.org/ontology/0801/beol#StandoffHtmlTag
-:StandoffHtmlTag rdf:type owl:Class ;
-
-            rdfs:subClassOf knora-base:StandoffTag ;
-
-            rdfs:comment "represents a HTML tag in MediaWiki"@en .
-
-
 ###  http://www.knora.org/ontology/0801/beol#StandoffReferenceTag
 :StandoffReferenceTag  rdf:type owl:Class ;
 
