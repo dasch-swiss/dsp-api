@@ -520,7 +520,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
             } yield json
 
-            val jsonArr: JsArray = Await.result(jsonFuture, 1.second)
+            val jsonArr: JsArray = Await.result(jsonFuture, 2.second)
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
