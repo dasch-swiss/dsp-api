@@ -506,17 +506,17 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 headers = headers
             )
 
-            log.info("checkRepository - getRepositoriesRequest: {}", getRepositoriesRequest)
+            log.debug("checkRepository - getRepositoriesRequest: {}", getRepositoriesRequest)
 
             val jsonFuture = for {
                 response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
-                _ = log.info("checkRepository - response: {}", response)
+                _ = log.debug("checkRepository - response: {}", response)
 
                 json: JsArray <- response match {
                     case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
                     case other => throw new Exception(other.toString())
                 }
-                _ = log.info("checkRepository - json: {}", json.prettyPrint)
+                _ = log.debug("checkRepository - json: {}", json.prettyPrint)
 
             } yield json
 
@@ -601,6 +601,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 headers = headers
             )
         }
+
+        log.debug("getTriplestoreHttpResponse - request: {}", request)
 
         val triplestoreResponseFuture = for {
             // _ = println(request.toString())
