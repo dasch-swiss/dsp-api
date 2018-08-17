@@ -236,7 +236,7 @@ trait KnoraService {
         if (state != AppState.Running) {
             // not in running state so call startup checks again
             // we should wait a bit before we call ourselves again
-            Await.result(blockingFuture(), 2.second)
+            Await.result(blockingFuture(), 3.5.second)
             applicationStateRunning()
         }
     }
