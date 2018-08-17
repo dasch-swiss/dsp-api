@@ -28,6 +28,9 @@ try:
                       auth=('t.schweizer@unibas.ch', 'test'),
                       proxies={'http': 'http://localhost:3333'})
 
+
+    print(r.text)
+
     r.raise_for_status()
 
     result = r.json()

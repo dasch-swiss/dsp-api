@@ -44,6 +44,13 @@
         </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0801/beol#StandoffEntityTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>entityType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffEntityType</propertyIri>
+                </attribute>
+            </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffLinkTag</type>
                 <attributeName>ref</attributeName>
