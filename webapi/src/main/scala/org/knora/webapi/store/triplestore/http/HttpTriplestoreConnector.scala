@@ -630,7 +630,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
 
-            _ = log.debug("getTriplestoreHttpResponse - responseString: {}", responseString)
+            _ = log.debug("getTriplestoreHttpResponse - response (128 chars): {}", responseString.substring(0, 128))
 
         } yield responseString
 
