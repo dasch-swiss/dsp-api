@@ -19,14 +19,8 @@
 
 package org.knora.webapi.util.search.gravsearch
 
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.search._
@@ -41,23 +35,11 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
 
     private val searchParserV2Spec = new GravsearchParserSpec
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val timeout = 10.seconds
-
-    private val rdfDataObjects = List()
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
-        expectMsgType[SuccessResponseV2](10.seconds)
-    }
 
     "The type inspection utility" should {
         "remove the type annotations from a WHERE clause" in {

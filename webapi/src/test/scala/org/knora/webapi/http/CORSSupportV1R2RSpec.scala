@@ -25,12 +25,9 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.{`Access-Control-Allow-Methods`, _}
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.util.Timeout
 import org.knora.webapi.R2RSpec
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.routing.v1.ResourcesRouteV1
-
-import scala.concurrent.duration._
 
 /**
   * End-to-end test specification for testing [[CORSSupport]].
@@ -40,9 +37,7 @@ class CORSSupportV1R2RSpec extends R2RSpec {
     /* get the path of the route we want to test */
     private val sealedResourcesRoute = Route.seal(ResourcesRouteV1.knoraApiPath(system, settings, log))
 
-    /* set the timeout for the route test */
-    implicit val timeout: Timeout = 5.seconds
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     val exampleOrigin = HttpOrigin("http://example.com")
     val corsSettings = CORSSupport.corsSettings

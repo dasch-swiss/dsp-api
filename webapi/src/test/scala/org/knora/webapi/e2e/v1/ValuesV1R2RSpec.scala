@@ -21,23 +21,18 @@ package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
-import org.knora.webapi.responders.{ResponderManager, _}
 import org.knora.webapi.routing.v1.ValuesRouteV1
-import org.knora.webapi.store._
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
@@ -51,16 +46,11 @@ class ValuesV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
     private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
-    implicit val timeout: Timeout = settings.defaultRestoreTimeout
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     private val integerValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri
@@ -68,7 +58,7 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val textValueWithLangIri = new MutableTestIri
     private val boringComment = "This is a boring comment."
 
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
@@ -77,11 +67,6 @@ class ValuesV1R2RSpec extends R2RSpec {
     private val testPass = "test"
 
     private val mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
-
-    "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
-    }
 
     "The Values Endpoint" should {
         "add an integer value to a resource" in {

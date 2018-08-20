@@ -1,0 +1,14 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!67352ccc-d1b0-11e1-89ae-279075081939.jp2
+!DenyLeaves.jpg
+!Leaves.jpg
+!Leaves8.jpg
+!Leaves8.tif
+!Leaves-small-alpha.tif
+!Leaves-small-no-alpha.tif
+!load_test.jpx
+!RestrictLeaves.jpg
+!png_16bit.png

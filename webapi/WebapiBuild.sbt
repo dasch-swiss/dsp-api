@@ -7,6 +7,13 @@ import sbt.librarymanagement.Resolver
 
 connectInput in run := true
 
+lazy val webApiCommonSettings = Seq(
+    organization := "org.knora",
+    name := "webapi",
+    version := "1.7.0",
+    scalaVersion := "2.12.4"
+)
+
 // custom test and it settings
 lazy val GDBSE = config("gdbse") extend Test
 lazy val GDBSEIt = config("gdbse-it") extend IntegrationTest
@@ -159,12 +166,7 @@ lazy val webapi = (project in file(".")).
         enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
         enablePlugins(RevolverPlugin)
 
-lazy val webApiCommonSettings = Seq(
-    organization := "org.knora",
-    name := "webapi",
-    version := "1.6.0",
-    scalaVersion := "2.12.4"
-)
+
 
 lazy val webApiLibs = Seq(
     library.aspectJWeaver,
@@ -201,6 +203,7 @@ lazy val webApiLibs = Seq(
     library.jwt,
     library.kamonCore,
     library.kamonAkka,
+    library.kamonAkkaHttp,
     library.kamonPrometheus,
     library.kamonZipkin,
     library.kamonJaeger,
@@ -225,6 +228,7 @@ lazy val library =
             val akkaBase = "2.5.13"
             val akkaHttp = "10.1.3"
             val jena = "3.4.0"
+            val metrics = "4.0.1"
         }
 
         // akka
@@ -273,12 +277,13 @@ lazy val library =
         val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
 
         // monitoring
-        val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.0"
-        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.0.0"
-        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.0.0"
+        val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
+        val kamonAkka              = "io.kamon"                     %% "kamon-akka-2.5"           % "1.1.1"
+        val kamonAkkaHttp          = "io.kamon"                     %% "kamon-akka-http-2.5"      % "1.1.0"
+        val kamonPrometheus        = "io.kamon"                     %% "kamon-prometheus"         % "1.1.1"
         val kamonZipkin            = "io.kamon"                     %% "kamon-zipkin"             % "1.0.0"
-        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.1"
-        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.8.13"
+        val kamonJaeger            = "io.kamon"                     %% "kamon-jaeger"             % "1.0.2"
+        val aspectJWeaver          = "org.aspectj"                   % "aspectjweaver"            % "1.9.1"
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
@@ -314,10 +319,14 @@ lazy val library =
 lazy val javaRunOptions = Seq(
     // "-showversion",
     "-Xms1G",
-    "-Xmx1G"
+    "-Xmx1G",
     // "-verbose:gc",
     //"-XX:+UseG1GC",
     //"-XX:MaxGCPauseMillis=500"
+    "-Dcom.sun.management.jmxremote",
+    "-Dcom.sun.management.jmxremote.port=1617",
+    "-Dcom.sun.management.jmxremote.authenticate=false",
+    "-Dcom.sun.management.jmxremote.ssl=false"
 )
 
 lazy val javaTestOptions = Seq(

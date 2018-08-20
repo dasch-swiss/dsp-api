@@ -21,8 +21,6 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 
-import scala.concurrent.duration._
-
 
 object RejectingRouteE2ESpec {
     val config = ConfigFactory.parseString(
@@ -38,12 +36,9 @@ object RejectingRouteE2ESpec {
   */
 class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
-    private val rdfDataObjects = List()
-
 
     "The Rejecting Route" should {
 

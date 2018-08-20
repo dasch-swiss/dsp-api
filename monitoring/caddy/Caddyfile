@@ -25,3 +25,23 @@
     errors stderr
     tls off
 }
+
+:9411 {
+    proxy / zipkin:9411 {
+            transparent
+            websocket
+        }
+
+    errors stderr
+    tls off
+}
+
+:8080 {
+    proxy / cadvisor:8080 {
+            transparent
+            websocket
+        }
+
+    errors stderr
+    tls off
+}

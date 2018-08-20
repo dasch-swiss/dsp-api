@@ -17,21 +17,15 @@ package org.knora.webapi.other.v1
 
 import java.util.UUID
 
-import akka.actor.Props
-import akka.event.LoggingAdapter
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableUserADM
 
-import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
 
 object DrawingsGodsV1Spec {
@@ -47,26 +41,14 @@ object DrawingsGodsV1Spec {
   */
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
-    private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
     private val timeout = 5.seconds
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    private val rdfDataObjects: List[RdfDataObject] = List(
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/0105/drawings-gods"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods")
     )
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
 
     /**
       * issues:

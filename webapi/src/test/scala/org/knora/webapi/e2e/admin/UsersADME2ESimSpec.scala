@@ -20,7 +20,7 @@ class UsersADME2ESimSpec extends E2ESimSpec {
 
     // need to override this. before each test, the triplestore is automatically reloaded.
     // if you want more then the base data, then add here
-    override val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
+    override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
 
     val protocolBuilder = http.baseURL("http://localhost:3333")
 

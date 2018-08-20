@@ -53,8 +53,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
@@ -64,13 +62,6 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
     private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
     private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
     private val projectShortcodeEnc = java.net.URLEncoder.encode(projectShortcode, "utf-8")
-
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
 
     "The Projects Route ('admin/projects')" when {
 

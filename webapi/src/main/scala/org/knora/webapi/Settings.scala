@@ -20,17 +20,15 @@
 package org.knora.webapi
 
 import java.io.File
+import java.nio.file.{Files, Paths}
 
 import akka.ConfigurationException
 import akka.actor.{ActorSystem, ExtendedActorSystem, Extension, ExtensionId, ExtensionIdProvider}
-import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigValue}
-import org.knora.webapi.SettingsConstants._
 import org.knora.webapi.util.CacheUtil.KnoraCacheConfig
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
-
 
 /**
   * Reads application settings that come from `application.conf`.
@@ -59,6 +57,26 @@ class SettingsImpl(config: Config) extends Extension {
 
     val tmpDataDir: String = config.getString("app.tmp-datadir")
     val dataDir: String = config.getString("app.datadir")
+
+    // try to create the directories
+    if (!Files.exists(Paths.get(tmpDataDir))) {
+        try {
+            val _tmpDataDir = new File(tmpDataDir)
+            _tmpDataDir.mkdir()
+        } catch {
+            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
+        }
+    }
+
+    // try to create the directories
+    if (!Files.exists(Paths.get(dataDir))) {
+        try {
+            val _dataDir = new File(dataDir)
+            _dataDir.mkdir()
+        } catch {
+            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
+        }
+    }
 
     val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
         (mType: ConfigValue) => mType.unwrapped.toString
@@ -99,8 +117,8 @@ class SettingsImpl(config: Config) extends Extension {
                 cacheConfigMap("time-to-idle-seconds").asInstanceOf[Int])
     }.toVector
 
-    val defaultTimeout: Timeout = Timeout(config.getInt("app.default-timeout").seconds)
-    val defaultRestoreTimeout: Timeout = Timeout(config.getInt("app.default-restore-timeout").seconds)
+    val defaultTimeout: FiniteDuration = getFiniteDuration("app.default-timeout", config)
+
     val dumpMessages: Boolean = config.getBoolean("app.dump-messages")
     val showInternalErrors: Boolean = config.getBoolean("app.show-internal-errors")
     val maxResultsPerSearchResultPage: Int = config.getInt("app.max-results-per-search-result-page")
@@ -117,31 +135,31 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
     val triplestorePort: Int = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getInt("app.triplestore.graphdb.port")
-        case HTTP_FUSEKI_TS_TYPE => config.getInt("app.triplestore.fuseki.port")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getInt("app.triplestore.graphdb.port")
+        case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
         case other => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.repository-name")
-        case HTTP_FUSEKI_TS_TYPE => config.getString("app.triplestore.fuseki.repository-name")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.repository-name")
+        case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
         case other => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.username")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.username")
         case other => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
-        case HTTP_GRAPHDB_SE_TS_TYPE | HTTP_GRAPHDB_FREE_TS_TYPE => config.getString("app.triplestore.graphdb.password")
+        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.password")
         case other => ""
     }
 
     //used in the store package
     val tripleStoreConfig: Config = config.getConfig("app.triplestore")
 
-    val (fusekiTomcat, fusekiTomcatContext) = if (triplestoreType == HTTP_FUSEKI_TS_TYPE) {
+    val (fusekiTomcat, fusekiTomcatContext) = if (triplestoreType == TriplestoreTypes.HttpFuseki) {
         (config.getBoolean("app.triplestore.fuseki.tomcat"), config.getString("app.triplestore.fuseki.tomcat-context"))
     } else {
         (false, "")
@@ -169,7 +187,6 @@ class SettingsImpl(config: Config) extends Extension {
     val prometheusReporter: Boolean = config.getBoolean("app.monitoring.prometheus-reporter")
     val zipkinReporter: Boolean = config.getBoolean("app.monitoring.zipkin-reporter")
     val jaegerReporter: Boolean = config.getBoolean("app.monitoring.jaeger-reporter")
-
 
     private def getFiniteDuration(path: String, underlying: Config): FiniteDuration = Duration(underlying.getString(path)) match {
         case x: FiniteDuration ⇒ x
