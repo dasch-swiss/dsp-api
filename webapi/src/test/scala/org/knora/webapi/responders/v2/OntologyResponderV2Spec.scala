@@ -139,6 +139,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
@@ -247,7 +248,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -262,7 +265,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -277,7 +282,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -292,7 +299,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -307,7 +316,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -322,7 +333,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -337,7 +350,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -1787,6 +1802,86 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "not create a class anything:WildThing with a cardinality for anything:hasInterestingThing but without a cardinality for anything:hasInterestingThingValue" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objects = Seq(StringLiteralV2("wild thing", Some("en")))
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(Cardinality.MayHaveOne),
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a class anything:WildThing with a cardinality for anything:hasInterestingThingValue but without a cardinality for anything:hasInterestingThing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objects = Seq(StringLiteralV2("wild thing", Some("en")))
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasInterestingThingValue") -> KnoraCardinalityInfo(Cardinality.MayHaveOne),
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, and overriding the cardinality for anything:hasInteger" in {
             val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
 
@@ -2333,7 +2428,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-
         "not create a subclass of anything:Thing that has cardinality 0-n for anything:hasBoolean" in {
             val classIri = AnythingOntologyIri.makeEntityIri("WrongClass")
 
@@ -2374,6 +2468,100 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     if (printErrorMessages) println(msg.cause.getMessage)
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
+        }
+
+        "reject a request to delete a link value property directly" in {
+
+            val hasInterestingThingValue = AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = hasInterestingThingValue,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+        }
+
+        "delete a link property and automatically delete the corresponding link value property" in {
+
+            val linkPropIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
+
+            actorUnderTest ! DeletePropertyRequestV2(
+                propertyIri = linkPropIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+
+            // Check that both properties were deleted.
+
+            val linkPropGetRequest = PropertiesGetRequestV2(
+                propertyIris = Set(linkPropIri),
+                allLanguages = true,
+                requestingUser = anythingAdminUser
+            )
+
+            val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
+
+            val linkValuePropGetRequest = PropertiesGetRequestV2(
+                propertyIris = Set(linkValuePropIri),
+                allLanguages = true,
+                requestingUser = anythingAdminUser
+            )
+
+            responderManager ! linkPropGetRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            responderManager ! linkValuePropGetRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            // Reload the ontology cache and see if we get the same result.
+
+            responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
+            expectMsgType[SuccessResponseV2](10.seconds)
+
+            responderManager ! linkPropGetRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
+            responderManager ! linkValuePropGetRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+
         }
 
         "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
@@ -2669,7 +2857,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
 
         }
-
 
         "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
@@ -3009,7 +3196,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 
@@ -3082,7 +3271,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 

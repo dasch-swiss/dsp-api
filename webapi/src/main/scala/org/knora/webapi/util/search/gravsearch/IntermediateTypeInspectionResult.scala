@@ -22,7 +22,8 @@ package org.knora.webapi.util.search.gravsearch
 import org.knora.webapi.AssertionException
 
 /**
-  * Represents an intermediate result during type inspection.
+  * Represents an intermediate result during type inspection. This is different from [[GravsearchTypeInspectionResult]]
+  * in that an entity can have multiple types, which means that the entity has been used inconsistently.
   *
   * @param entities a map of Gravsearch entities to the types that were determined for them. If an entity
   *                 has more than one type, this means that it has been used with inconsistent types.
