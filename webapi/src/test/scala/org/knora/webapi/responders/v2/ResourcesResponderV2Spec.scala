@@ -50,12 +50,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV2]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
 
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -63,15 +61,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
-
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
-        expectMsgType[SuccessResponseV2](10.seconds)
-    }
 
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
@@ -152,7 +141,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "return a resource of type thing with text with standoff as TEI/XML" in {
+        "return a resource of type thing with text as TEI/XML" in {
 
             actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
 
@@ -178,7 +167,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case response: ResourceTEIGetResponseV2 =>
 
                     val expectedBody =
-                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ptr target="http://www.google.ch"/>markup.</p></body></text>""".stripMargin
+                        """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
 
                     // Compare the original XML with the regenerated XML.
                     val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()

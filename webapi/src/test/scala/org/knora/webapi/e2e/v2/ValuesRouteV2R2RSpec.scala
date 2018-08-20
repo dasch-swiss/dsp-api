@@ -29,14 +29,9 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV2.knoraApiPath(system, settings, log)
     private val searchPath = SearchRouteV2.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
-
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(15).second)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
-
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -63,7 +58,7 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
     private val linkValueIri = new MutableTestIri
 
 
-    val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")

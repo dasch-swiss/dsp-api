@@ -16,7 +16,7 @@ try:
     }
 
     # the name of the file to be submitted
-    filename = "BEOLstandoffToTEI.xsl"
+    filename = "standoffToTEI.xsl"
 
     # a tuple containing the file's name, its binaries and its mimetype
     file = {'file': (filename, open(filename, 'r'), "text/xml; charset=utf-8")} # use name "file"
@@ -64,7 +64,7 @@ try:
                                    auth=("t.schweizer@unibas.ch", "test"),
                                    proxies={'http': 'http://localhost:3333'})
 
-    #print(mappingRequest.text)
+    print(mappingRequest.text)
 
     mappingRequest.raise_for_status()
 
@@ -100,7 +100,7 @@ try:
     }
 
     # the name of the file to be submitted
-    filename = "BEOLHeaderXSLT.xsl"
+    filename = "header.xsl"
 
     # a tuple containing the file's name, its binaries and its mimetype
     file = {'file': (filename, open(filename, 'r'), "text/xml; charset=utf-8")} # use name "file"

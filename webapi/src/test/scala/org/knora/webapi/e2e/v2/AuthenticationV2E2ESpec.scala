@@ -28,7 +28,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -49,14 +48,9 @@ object AuthenticationV2E2ESpec {
   */
 class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
-
-    private val rdfDataObjects = List[RdfDataObject](
-        // RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        // RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
-    )
 
     private val rootIri = SharedTestDataADM.rootUser.id
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
@@ -67,12 +61,6 @@ class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) wi
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
 
     "The Authentication Route ('v2/authentication') with credentials supplied via URL parameters" should {
 

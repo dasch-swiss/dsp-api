@@ -25,7 +25,6 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -33,9 +32,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.{MutableTestIri, StringFormatter}
 
 import scala.concurrent.duration._
@@ -55,26 +51,12 @@ object ProjectsResponderADMSpec {
   */
 class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
 
-    private implicit val executionContext = system.dispatcher
-    private implicit val stringFormatter = StringFormatter.getGeneralInstance
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val timeout = 5.seconds
 
     private val rootUser= SharedTestDataADM.rootUser
 
     private val actorUnderTest = TestActorRef[ProjectsResponderADM]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val rdfDataObjects = List()
-
-    "Load test data" in {
-
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
 
     "The ProjectsResponderADM" when {
 

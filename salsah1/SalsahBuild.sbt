@@ -1,6 +1,13 @@
 import sbt._
 import NativePackagerHelper._
 
+lazy val salsahCommonSettings = Seq(
+    organization := "org.knora",
+    name := "salsah",
+    version := "1.7.0",
+    scalaVersion := "2.12.4"
+)
+
 lazy val salsah1 = (project in file(".")).
         configs(
             HeadlessTest
@@ -42,13 +49,6 @@ lazy val salsah1 = (project in file(".")).
             mainClass in Compile := Some("org.knora.salsah.Main")).
         settings(Revolver.settings: _*).
         enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
-
-lazy val salsahCommonSettings = Seq(
-    organization := "org.knora",
-    name := "salsah",
-    version := "1.6.0",
-    scalaVersion := "2.12.4"
-)
 
 lazy val javaRunOptions = Seq(
     // "-showversion",

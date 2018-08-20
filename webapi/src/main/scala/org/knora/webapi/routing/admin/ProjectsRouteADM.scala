@@ -33,7 +33,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ProjectsADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)

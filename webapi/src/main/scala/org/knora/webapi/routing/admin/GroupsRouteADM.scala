@@ -32,7 +32,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -45,7 +45,7 @@ import scala.concurrent.ExecutionContextExecutor
 class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with GroupsADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.knora.webapi.{E2ESpec, SharedTestDataADM, SharedTestDataV1}
-import spray.json._
+
 
 import scala.concurrent.duration._
 
@@ -46,13 +46,11 @@ object GroupsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
+class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJsonProtocol with SessionJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
     implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
-    private val rdfDataObjects = List.empty[RdfDataObject]
 
     private val rootEmail = SharedTestDataADM.rootUser.email
     private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
@@ -65,12 +63,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     private val groupNameEnc = java.net.URLEncoder.encode(groupName, "utf-8")
     private val projectIri = SharedTestDataADM.imagesReviewerGroup.project.id
     private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
 
     "The Groups Route ('admin/groups')" when {
         "used to query for group information" should {

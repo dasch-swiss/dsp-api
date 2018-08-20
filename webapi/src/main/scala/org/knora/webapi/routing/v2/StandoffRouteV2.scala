@@ -34,7 +34,7 @@ import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, SettingsImpl}
+import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -46,7 +46,7 @@ object StandoffRouteV2 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         implicit val materializer: ActorMaterializer = ActorMaterializer()

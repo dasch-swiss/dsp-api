@@ -51,7 +51,7 @@ trait Responder extends Actor with ActorLogging {
     /**
       * The application's default timeout for `ask` messages.
       */
-    protected implicit val timeout: Timeout = settings.defaultRestoreTimeout
+    protected implicit val timeout: Timeout = settings.defaultTimeout
 
     /**
       * The Akka actor system's execution context for futures.

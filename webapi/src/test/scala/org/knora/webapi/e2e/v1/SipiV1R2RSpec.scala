@@ -28,20 +28,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.responders._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.store._
-
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
 
 /**
@@ -56,34 +49,21 @@ class SipiV1R2RSpec extends R2RSpec {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-
-
-    private val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
-
-
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(new DurationInt(30).second)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
     private val incunabulaProjectAdminEmail = SharedTestDataV1.incunabulaProjectAdminUser.userData.email.get
     private val testPass = "test"
 
-    val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
-    "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 300.seconds)
-        Await.result(responderManager ? LoadOntologiesRequest(SharedTestDataADM.rootUser), 30.seconds)
-    }
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
 
     object RequestParams {
 

@@ -4,25 +4,19 @@ import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.ResetTriplestoreContent
-import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, LoadOntologiesRequestV2}
-import org.knora.webapi.responders._
+import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.routing.v2.OntologiesRouteV2
-import org.knora.webapi.store._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import spray.json._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContextExecutor
 
 object OntologyV2R2RSpec {
     private val imagesUserProfile = SharedTestDataADM.imagesUser01
@@ -50,18 +44,11 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
     private val ontologiesPath = OntologiesRouteV2.knoraApiPath(system, settings, log)
 
-    implicit private val timeout: Timeout = settings.defaultRestoreTimeout
-
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(new DurationInt(360).second)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
-
-    private val rdfDataObjects = List()
 
     // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
     // If false, the responses from the server are compared to the contents fo the expected response files.
@@ -160,11 +147,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         classDef.value(OntologyConstants.Rdfs.SubClassOf).asInstanceOf[JsonLDArray].value.collect {
             case obj: JsonLDObject if !obj.isIri => obj.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
         }.toSet
-    }
-
-    "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The Ontologies v2 Endpoint" should {

@@ -41,7 +41,7 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
     protected val settings = Settings(system)
     protected val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-    protected implicit val timeout: Timeout = settings.defaultRestoreTimeout
+    protected implicit val timeout: Timeout = settings.defaultTimeout
 
     /**
       * Given the WHERE clause from a parsed Gravsearch query, returns information about the types found

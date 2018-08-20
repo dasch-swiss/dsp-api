@@ -27,13 +27,13 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.knora.webapi.util.MutableTestIri
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.xml._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
@@ -53,7 +53,7 @@ object KnoraSipiIntegrationV1ITSpec {
   */
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
@@ -157,21 +157,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         } else {
             throw InvalidApiJsonException("expected client IRI for letter could not be found")
         }
-    }
-
-    // creates tmp directory if not found
-    createTmpFileDir()
-
-    "Check if Sipi is running" in {
-        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-    }
-
-    "Load test data" in {
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
     }
 
     "Knora and Sipi" should {

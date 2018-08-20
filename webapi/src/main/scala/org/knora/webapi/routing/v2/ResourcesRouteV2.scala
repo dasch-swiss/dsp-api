@@ -24,12 +24,12 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourceTEIGetRequestV2, ResourcesGetRequestV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.{BadRequestException, IRI, InternalSchema, SettingsImpl}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -123,12 +123,12 @@ object ResourcesRouteV2 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        path("v2" / "resources" / Segments) { (resIris: Seq[String]) =>
+        path("v2" / "resources" / Segments) { resIris: Seq[String] =>
             get {
                 requestContext => {
 
@@ -153,7 +153,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
                 }
             }
-        } ~ path("v2" / "resourcespreview" / Segments) { (resIris: Seq[String]) =>
+        } ~ path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
             get {
                 requestContext => {
                     if (resIris.size > settings.v2ResultsPerPage) throw BadRequestException(s"List of provided resource Iris exceeds limit of ${settings.v2ResultsPerPage}")
@@ -178,7 +178,7 @@ object ResourcesRouteV2 extends Authenticator {
                 }
             }
 
-        } ~ path("v2" / "tei" / Segment) { (resIri: String) =>
+        } ~ path("v2" / "tei" / Segment) { resIri: String =>
             get {
                 requestContext => {
 

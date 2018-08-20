@@ -55,7 +55,7 @@
     <!-- knora-base standoff tags should not be used directly (use standoff ontology tags instead) -->
     <mappingElement>
         <tag>
-            <name>ptr</name>
+            <name>ref</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
             <separatesWords>false</separatesWords>

@@ -26,10 +26,10 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
+import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -38,7 +38,7 @@ import scala.concurrent.ExecutionContextExecutor
 class PermissionsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 

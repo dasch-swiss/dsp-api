@@ -22,9 +22,7 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
-import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -35,8 +33,6 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
@@ -56,15 +52,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val anythingUser = SharedTestDataADM.anythingUser1
 
-    val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
     private val actorUnderTest = TestActorRef[ValuesResponderV2]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds

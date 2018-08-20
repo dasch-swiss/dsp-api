@@ -51,14 +51,11 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ListsResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
     // The default timeout for receiving reply messages from actors.
     implicit val timeout = 5.seconds
 
-    val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
@@ -3283,14 +3280,6 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
             )
         )
     )
-
-    "Load test data " in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
 
     "The Lists Responder V1" when {
 

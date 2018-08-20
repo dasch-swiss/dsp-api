@@ -28,7 +28,7 @@
     <logger name="akka" level="ERROR"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="net.sf.ehcache.config" level="ERROR"/>
-    <logger name="spray.can.server.HttpListener" level="ERROR"/>
+
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>

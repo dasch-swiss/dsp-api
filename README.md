@@ -69,7 +69,7 @@ Then in another terminal, create a test repository and load some test data into 
 
 ```
 $ cd webapi/scripts
-$ ./graphdb-free-init-knora-test.sh
+$ ./graphdb-free-docker-init-knora-test.sh
 ```
 
 Then go back to the webapi root directory and use SBT to start the API server:
@@ -78,6 +78,7 @@ Then go back to the webapi root directory and use SBT to start the API server:
 $ cd ..
 $ sbt
 > compile
+> set reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
 > reStart
 ```
 
@@ -101,7 +102,7 @@ $ ./graphdb-free-init-knora-test-unit.sh
 Then at the SBT prompt:
 
 ```
-> test
+> GDBFree / test
 ```
 
 ## How to Contribute

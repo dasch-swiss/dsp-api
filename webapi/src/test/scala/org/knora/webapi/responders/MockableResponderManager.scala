@@ -17,10 +17,9 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v1
+package org.knora.webapi.responders
 
 import akka.actor._
-import org.knora.webapi.responders._
 import org.knora.webapi.{ActorMaker, LiveActorMaker}
 
 /**
@@ -30,12 +29,12 @@ import org.knora.webapi.{ActorMaker, LiveActorMaker}
   * @param mockResponders a [[Map]] containing the mock responders to be used instead of the live ones.
   *                       The name of the actor (a constant from [[org.knora.webapi.responders]] is used as the key in the map.
   */
-class TestResponderManager(mockResponders: Map[String, ActorRef]) extends ResponderManager with LiveActorMaker {
+class MockableResponderManager(mockResponders: Map[String, ActorRef]) extends ResponderManager with LiveActorMaker {
     this: ActorMaker =>
 
     /**
       * Initialised to the value of the key [[SIPI_ROUTER_V1_ACTOR_NAME]] in `mockResponders` if provided, otherwise
       * the default Akka router provided by the base class for the Sipi responder.
       */
-    override val sipiRouterV1 = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouterV1)
+    override lazy val sipiRouterV1 = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouterV1)
 }

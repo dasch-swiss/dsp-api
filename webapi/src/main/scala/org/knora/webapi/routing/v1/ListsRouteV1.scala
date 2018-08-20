@@ -27,7 +27,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContextExecutor
 
@@ -38,7 +38,7 @@ object ListsRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance

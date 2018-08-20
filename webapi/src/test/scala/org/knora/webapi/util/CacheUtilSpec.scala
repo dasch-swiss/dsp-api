@@ -20,12 +20,12 @@
 package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{CoreSpec, SharedTestDataV1}
 
 object CacheUtilSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
         app {
 
@@ -35,10 +35,8 @@ object CacheUtilSpec {
 
 class CacheUtilSpec extends CoreSpec("CachingTestSystem") with ImplicitSender with Authenticator {
 
-    implicit val executionContext = system.dispatcher
-
-    val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-    val sessionId = System.currentTimeMillis().toString
+    private val cacheName = Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+    private val sessionId = System.currentTimeMillis().toString
 
     "Caching" should {
 
