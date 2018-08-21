@@ -1,0 +1,498 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix event: <http://www.knora.org/ontology/0047/event#>.
+@prefix human: <http://www.knora.org/ontology/0048/human#>.
+@prefix language: <http://www.knora.org/ontology/004F/language#>.
+@prefix concept: <http://www.knora.org/ontology/0044/concept#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix text-structure: <http://www.knora.org/ontology/005B/text-structure#>.
+@prefix infocar: <http://www.knora.org/ontology/004C/information-carrier#>.
+@prefix publish: <http://www.knora.org/ontology/0056/publishing#>.
+@prefix litera: <http://www.knora.org/ontology/0050/literature#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+
+@base <http://www.knora.org/ontology/005A/text-editing>.
+@prefix textedit: <http://www.knora.org/ontology/005A/text-editing#>.
+
+<http://www.knora.org/ontology/005A/text-editing>
+	a owl:Ontology;
+	dct:title "An ontology about text editing"@en;
+	dct:description """Formal description of text editing, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Roberta Padlina, tool coordinator, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en;
+#	rdfs:seeAlso <https://digitallatin.github.io/guidelines/LDLT-Guidelines.html>;
+
+	knora-base:attachedToProject <http://rdfh.ch/projects/005A>.
+
+#
+# CLASSES
+#
+
+textedit:Editor
+	a owl:Class;
+	rdfs:label "text editor"@en, "Text-Redakteur"@de;
+	rdfs:comment """Role of a person changing a text."""@en;
+	rdfs:subClassOf human:PersonCreator.
+
+textedit:Edition
+	a owl:Class;
+	rdfs:label "text edition"@en, "Text-Edition"@de;
+	rdfs:comment """Changed text as a result of editing."""@en;
+	rdfs:subClassOf text:Text. # human:CreationVersion
+
+textedit:Redactor
+	a owl:Class;
+	rdfs:label "redactor"@la, "redactor"@en, "Redactor"@de;
+	rdfs:comment """Editor assembling parts of texts to a new coherent text."""@en;
+	rdfs:subClassOf textedit:Editor.
+
+textedit:Glossator
+	a owl:Class;
+	rdfs:label "glossator"@la, "glossator"@en, "Glossator"@de;
+	rdfs:comment """Role of a person adding glosses to a text."""@en;
+	rdfs:subClassOf textedit:Editor.
+
+textedit:Abbreviator
+	a owl:Class;
+	rdfs:label "abbreviator"@en, "KurzfasserIn"@de, "abbreviator"@la;
+	rdfs:comment """Editor shortening a text."""@en;
+	rdfs:subClassOf textedit:Editor.
+
+textedit:Abbreviation # derivative?
+	a owl:Class;
+	rdfs:label "abbreviation"@en, "Kurzfassung"@de;
+	rdfs:comment """Shortened edition."""@en;
+	rdfs:subClassOf textedit:Edition.
+
+textedit:Paraphrase # derivative?
+	a owl:Class;
+	rdfs:label "paraphrase"@en, "Paraphrase"@de;
+	rdfs:comment """Edition restating a text clarifying its meaning."""@en;
+	rdfs:subClassOf textedit:Edition.
+
+textedit:LiteralExposition # derivative?
+	a owl:Class;
+	rdfs:label "literal exposition"@en, "wörtliche Auslegung"@de;
+	rdfs:comment """Edition providing background information on word level to a text in clarifying its meaning."""@en;
+	rdfs:subClassOf textedit:Edition.
+
+textedit:EclecticEdition
+	a owl:Class;
+	rdfs:label "eclectic edition"@en, "konstituierter Text"@de;
+#	text:hasSynonym "Lesetext"@de;
+	rdfs:comment """Plain text expression as endresult of a reproduction by the edition scientist."""@en;
+	rdfs:subClassOf textedit:Edition.
+
+textedit:DerivedTextExpression
+	a owl:Class;
+	rdfs:label "derived text expression"@en, "abgeleitete Text-Expression"@de;
+	rdfs:comment """Text expression derived from another text expression."""@en;
+	rdfs:subClassOf text:Expression, human:CreationDerivative, [
+		a owl:Restriction; owl:onProperty textedit:hasDiacriticalSign; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasPageIndicator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasPageNumberIndicator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:hasColumnIndicator; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+textedit:DiplomaticTranscription
+	a owl:Class;
+	rdfs:label "diplomatic transcription"@en, "diplomatische Umschrift"@de;
+	rdfs:comment """Transcription of a text with diacritical signs indicating visual textual properties to describe the textual state."""@en;
+#	skos:note """Only autographs or jurudical; without interpretation"""; # Lesehilfe
+	rdfs:subClassOf textedit:DerivedTextExpression, [
+		a owl:Restriction; owl:onProperty textedit:isDiplomaticTranscriptionOfTextOnPage; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:isDiplomaticTranscriptionOfTextOnPageValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# textedit:Diplomatic-InterpretativeTranscription
+
+textedit:CriticalEditor
+	a owl:Class;
+	rdfs:label "critical text editor"@en, "kritische Text-Redakteur"@de;
+	rdfs:comment """Role of a scientist editing a text expression in a critical scientific way."""@en;
+	rdfs:subClassOf human:Scientist, human:PersonCreator.
+
+textedit:CriticalEdition
+	a owl:Class;
+	rdfs:label "critical text edition"@en, "kritische Textedition"@de; #* kanonische Textfassung ?
+	rdfs:comment """Edition to which an editor added evidence and interpretation of a text creation and historical transmission, allowing readers to assess the editor's choice."""@en;
+	rdfs:subClassOf textedit:DerivedTextExpression.
+
+# textedit:Variorum subClassOf CriticalEdition
+
+textedit:GeneticEdition
+	a owl:Class;
+	rdfs:label "genetic edition"@en, "genetische Edition"@de, "édition génétique"@fr, "edizione genetica"@it;
+	rdfs:comment """Critical edition accounting for the modifications by the author."""@en;
+	rdfs:subClassOf textedit:CriticalEdition.
+
+textedit:Apparatus
+	a owl:Class;
+	rdfs:label "editing apparatus"@en, "Edierungsapparatus"@de, "apparatus editionis"@la;
+	rdfs:comment """Scientific compositional structure to analyse text along certain criteria in a critical edition."""@en;
+	rdfs:subClassOf text-structure:ScientificStructure, text-structure:CompositionalContentStructure, [
+		a owl:Restriction; owl:onProperty textedit:isApparatusOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:isApparatusOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# textedit:DoctrinalApparatus
+#	a owl:Class;
+#	rdfs:label "doctrinal apparatus"@en, "doktrinal Apparat"@de;
+#	rdfs:comment """Editing apparatus commmenting on the content of a text expression."""@en;
+#	rdfs:subClassOf textedit:Apparatus.
+
+textedit:ApparatusFontium
+	a owl:Class;
+	rdfs:label "apparatus fontium"@en, "Apparatus Fontium"@de, "apparatus fontium"@la;
+	rdfs:comment """Editing apparatus containing references to texts quoted or cited [?dif] by the author [of the original?] in the text of the critical edition."""@en;
+	rdfs:subClassOf textedit:Apparatus.
+
+textedit:CriticalApparatus # 1/expr
+	a owl:Class;
+	rdfs:label "critical apparatus"@en, "textkritischer Apparat"@de, "apparatus criticus"@la;
+	rdfs:comment """Editing apparatus to a critical text edition providing information of a textual version."""@en;
+	rdfs:subClassOf text-structure:ScientificStructure, text-structure:CompositionalContentStructure.
+
+textedit:Lemma
+	a owl:Class;
+	rdfs:label "lemma"@en, "Lemma"@de, "lemma"@it;
+	rdfs:comment """Part of a critical text edition to which a critical apparatus applies."""@en;
+	rdfs:subClassOf text-structure:ScientificStructure, [ # textedit:Reading ?
+		a owl:Restriction; owl:onProperty textedit:isLemmaOfApparatus; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty textedit:isLemmaOfApparatusValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+#* RLP: rdfs:comment """A word or phrase *or the absence thereof* judged by an editor to be authentic, accurate, and/or authoritative; making up the edited text of a critical edition."""@en; #* dif word - phrase
+
+# apparatus has format:
+# eg.
+# location of version in text
+# lemma: part of text in CA: Textstelle
+# symbol
+# source from which the edition took its reading
+# list of variants + source, set off with a comma: if frequently cited: abbreviated with a siglum
+
+textedit:Reading # superclass of lemma, variant
+	a owl:Class;
+	rdfs:label "reading"@en, "Textinterpretation"@de, "lezione"@it, "lectio"@la; #*
+	rdfs:comment """Reading of the text in one given witness."""@en; #* text? # spezifische Interpretation eines Textes
+	rdfs:subClassOf text:Expression. #*
+
+#* (oder Stichwort) ist in der Editionswissenschaft das Wort im Haupttext, auf welches sich die Anmerkung oder der textkritische Apparat eines Kommentars bezieht
+
+#* linguistics: morphology and lexicography, a lemma (plural lemmas or lemmata) is the canonical form
+#* morphology: study of words, how they are formed, and their relationship to other words in the same language
+#* lexikographisch: grundform eines Wortes
+
+textedit:Variant
+	a owl:Class;
+	rdfs:label "variant"@en, "Variant"@de, "variante"@it;
+	rdfs:comment """A word or phrase *or the absence thereof* judged by an editor to be unsatisfactory for linguistic and/or stylistic reasons, but of interest for establishing the text; varying from what the editor has judged to be the lemma."""@en;
+	rdfs:subClassOf textedit:Reading. #* -> part of OR unit of CA
+	  
+textedit:Emendation # not testified
+	a owl:Class;
+	rdfs:label "emendation"@en, "emendazione"@it;
+	rdfs:comment """A reading expressly proposed by some person (possibly the editor) and accepted by the editor into the main text of an edition."""@en;
+	rdfs:subClassOf textedit:Reading.
+	# OR
+	# rdfs:comment """A reading based on a conjecture and that is used to correct the text of an edition."""@en;
+	# then: rdfs:subClassOf textedit:Conjecture + restriction: is integrated in the main text of an edition.
+	# see:
+	# This distinction between "emendation” and "conjecture" supports the goal of these guidelines of drawing attention to editions as arguments. 
+	# The terms are used subjectively, with regard to a particular edition. Readers of an edition may agree or disagree about whether a particular reading emends the text, 
+	# but the editor's argument is that a reading either emends the text, in which case it is an emendation, or does not in which case it is a conjecture.
+
+textedit:Conjecture #* conjectural emendation
+	a owl:Class;
+	rdfs:label "conjecture"@en, "Konjektur"@de, "?"@it;
+	rdfs:comment """A reading expressly proposed  - possibly the editor [?] - *and determined by* an editor to be of interest in establishing the text, but not to be printed in the main text of the edition."""@en;
+	# rdfs:comment """A reading choosed by an editor after some reasoning or deduction, but which isn't attested in any of the manuscripts."""@en;
+	rdfs:subClassOf textedit:Reading.
+
+# OD: suggestion of a reading of a text not present in the original source
+
+#
+# PROPERTIES
+#
+
+textedit:hasEditor
+	a owl:ObjectProperty;
+	rdfs:label "has editor"@en, "hat Text-Redakteur"@de;
+	rdfs:comment """Relating a text to a person who edited it."""@en;
+	rdfs:domain text:Text;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:personHasRole; owl:someValuesFrom textedit:Editor]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint human:Person.
+
+textedit:hasEditorValue
+	a owl:ObjectProperty;
+	rdfs:label "has editor - statement"@en, "hat Text-Redakteur - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who edited it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasRedactor
+	a owl:ObjectProperty;
+	rdfs:label "has redactor"@en, "hat Redaktor"@de;
+	rdfs:comment """Relating a text to a person who redacted it."""@en;
+	rdfs:domain text:Text;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:personHasRole; owl:someValuesFrom textedit:Redactor]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint human:Person.
+
+textedit:hasRedactorValue
+	a owl:ObjectProperty;
+	rdfs:label "has redactor - statement"@en, "hat Redaktor - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who redacted it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasGlossator
+	a owl:ObjectProperty;
+	rdfs:label "has glossator"@en, "hat Glossator"@de;
+	rdfs:comment """Relating a text to a person who glossed it."""@en;
+	rdfs:domain text:Text;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:personHasRole; owl:someValuesFrom text:Glossator]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint human:Person.
+
+textedit:hasGlossatorValue
+	a owl:ObjectProperty;
+	rdfs:label "has glossator - statement"@en, "hat Glossator - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who glossed it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasAbbreviator
+	a owl:ObjectProperty;
+	rdfs:label "has abbreviator"@en, "hat Abkurzer"@de;
+	rdfs:comment """Relating a text to a person who abbreviated it."""@en;
+	rdfs:domain text:Text;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:personHasRole; owl:someValuesFrom text:Abbreviator]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint human:Person.
+
+textedit:hasAbbreviatorValue
+	a owl:ObjectProperty;
+	rdfs:label "has abbreviator - statement"@en, "hat Abkurzer - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and a person who abbreviated it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasEdition
+	a owl:ObjectProperty;
+	rdfs:label "has edition"@en, "hat Edition"@de;
+	rdfs:comment "Relating a text to an edition it has."@en;
+	rdfs:domain text:Text;
+	rdfs:range textedit:Edition;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint textedit:Edition.
+
+textedit:hasEditionValue
+	a owl:ObjectProperty;
+	rdfs:label "has edition - statement"@en, "hat Edition - Festlegung"@de;
+	rdfs:comment "Relating a text to a reification statement of the relation between the text and an edition thereof."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+#:hasEditedContent
+#	a owl:ObjectProperty;
+#	rdfs:label "has edited content"@en;
+#	rdfs:comment """Relating an edition to its content."""@en;
+#	rdfs:subPropertyOf language:hasContent;
+#	knora-base:subjectClassConstraint textedit:Edition;
+#	knora-base:objectClassConstraint knora-base:TextValue;
+#	salsah-gui:guiElement salsah-gui:Richtext.
+
+textedit:hasSameEditionAs
+	a owl:ObjectProperty;
+	rdfs:label "has same edition as"@en, "hat gleiche Edition als"@de;
+	rdfs:comment """Relating two texts with a same edition."""@en;
+	rdfs:domain text:Text;
+	rdfs:range textedit:Text;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint text:Text.
+
+textedit:hasSameEditionAsValue
+	a owl:ObjectProperty;
+	rdfs:label "has same edition as - statement"@en, "hat gleiche Edition als - Festlegung"@de;
+	rdfs:comment """Relating a text to a reification statement of the relation between the text and another one with a same edition."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Text;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasDerivedTextExpression
+	a owl:ObjectProperty;
+	rdfs:label "has derived text expression"@en, "hat abgeleitete Text-Expression"@de;
+	rdfs:comment "Relating a text expression to another one derived from it."@en;
+	rdfs:domain text:Expression;
+	rdfs:range textedit:DerivedTextExpression;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint textedit:DerivedTextExpression.
+
+textedit:hasDerivedTextExpressionValue
+	a owl:ObjectProperty;
+	rdfs:label "has derived text expression - statement"@en, "hat abgeleitete Text-Expression - Festlegung"@de;
+	rdfs:comment "Relating a text expression to a reification statement of the relation between the text expression and another one derived from it."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasDiplomaticTranscription
+	a owl:ObjectProperty;
+	rdfs:label "has diplomatic transcription"@en, "hat diplomatische Umschrift"@de;
+	rdfs:comment "Relating a text to a diplomatic transcription thereof."@en;
+	rdfs:subPropertyOf textedit:hasDerivedTextExpression;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint textedit:DiplomaticTranscription.
+
+textedit:hasDiplomaticTranscriptionValue
+	a owl:ObjectProperty;
+	rdfs:label "has diplomatic transcription - statement"@en, "hat diplomatische Umschrift - Festlegung"@de;
+	rdfs:comment "Relating a text to a reification statement of the relation between the text and a diplomatic transcription thereof."@en;
+	rdfs:subPropertyOf textedit:hasDerivedTextExpressionValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:isDiplomaticTranscriptionOfTextOnPage
+	a owl:ObjectProperty;
+	rdfs:label "is diplomatic transcription of text on page"@en, "ist diplomatische Umschrift des Textes auf Seite"@de;
+	rdfs:comment "Relating a diplomatic transcription to a page its source text is on."@en;
+	rdfs:domain textedit:DiplomaticTranscription;
+	rdfs:range infocar:Page;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint textedit:DiplomaticTranscription;
+	knora-base:objectClassConstraint infocar:Page.
+
+textedit:isDiplomaticTranscriptionOfTextOnPageValue
+	a owl:ObjectProperty;
+	rdfs:label "is diplomatic transcription of text on page - statement"@en, "ist diplomatische Umschrift des Textes auf Seite - Festlegung"@de;
+	rdfs:comment "Relating a diplomatic transcription to a reification statement of the relation between the diplomatic transcription and a page its source text is on."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint textedit:DiplomaticTranscription;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasCriticalEditor
+	a owl:ObjectProperty;
+	rdfs:label "has critical editor"@en, "hat kritische Text-Redakteur"@de;
+	rdfs:comment "Relating a text expression to a critical editor thereof."@en;
+	rdfs:domain text:Expression;
+#	rdfs:range [rdfs:subClassOf human:Person, [a owl:Restriction; owl:onProperty human:personHasRole; owl:someValuesFrom textedit:CriticalEditor]];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint human:Person.
+
+textedit:hasCriticalEditorValue
+	a owl:ObjectProperty;
+	rdfs:label "has critical editor - statement"@en, "hat kritische Text-Redakteur - Festlegung"@de;
+	rdfs:comment "Relating a text expression to a reification statement of the relation between the text expression and a critical editor thereof."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasCriticalEdition
+	a owl:ObjectProperty;
+	rdfs:label "has critical text edition"@en, "hat kritische Textedition"@de;
+	rdfs:comment "Relating a text expression to a critical edition thereof."@en;
+	rdfs:domain text:Expression;
+	rdfs:range textedit:CriticalEdition;
+	rdfs:subPropertyOf textedit:hasDerivedTextExpression;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint textedit:CriticalEdition.
+
+textedit:hasCriticalEditionValue
+	a owl:ObjectProperty;
+	rdfs:label "has critical text edition - statement"@en, "hat kritische Textedition - Festlegung"@de;
+	rdfs:comment "Relating a text expression to a reification statement of the relation between the text and a critical edition thereof."@en;
+	rdfs:subPropertyOf textedit:hasDerivedTextExpressionValue;
+	knora-base:subjectClassConstraint text:Expression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:hasDiacriticalSign
+	a owl:ObjectProperty;
+	rdfs:label "has diacritical sign"@en, "hat diakritisches Zeichen"@de;
+	rdfs:comment """Relating a derived text expression to a sign indicating a textual aspect of the original text."""@en;
+	rdfs:subPropertyOf language:hasContent;
+	knora-base:subjectClassConstraint textedit:DerivedTextExpression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+textedit:hasPageIndicator
+	a owl:ObjectProperty;
+	rdfs:label "has page indicator"@en, "hat Seite-Indikator"@de;
+	rdfs:comment """Relating a derived text expression to a diacritical sign that indicates where a page starts."""@en;
+	rdfs:subPropertyOf textedit:hasDiacriticalSign;
+	knora-base:subjectClassConstraint textedit:DerivedTextExpression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+textedit:hasPageNumberIndicator
+	a owl:ObjectProperty;
+	rdfs:label "has page number indicator"@en, "hat Seitennummer-Indikator"@de;
+	rdfs:comment """Relating a derived text expression to a diacritical sign that indicates the number of a page."""@en;
+	rdfs:subPropertyOf textedit:hasDiacriticalSign;
+	knora-base:subjectClassConstraint textedit:DerivedTextExpression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+textedit:hasColumnIndicator
+	a owl:ObjectProperty;
+	rdfs:label "has column indicator"@en, "hat Spalte-Indikator"@de;
+	rdfs:comment """Relating a derived text expression to a diacritical sign that indicates where on a page a column starts."""@en;
+	rdfs:subPropertyOf textedit:hasDiacriticalSign;
+	knora-base:subjectClassConstraint textedit:DerivedTextExpression;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+textedit:isApparatusOf
+	a owl:ObjectProperty;
+	rdfs:label "is apparatus of"@en, "ist Apparat von"@de;
+	rdfs:comment """Relating an editing apparatus to its critical edition."""@en;
+	rdfs:domain textedit:Apparatus;
+	rdfs:range textedit:CriticalEdition;
+	rdfs:subPropertyOf text-structure:isPartOfTextExpression;
+	knora-base:subjectClassConstraint textedit:Apparatus;
+	knora-base:objectClassConstraint textedit:CriticalEdition.
+
+textedit:isApparatusOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is apparatus of - statement"@en, "ist Apparat von - Festlegung"@de;
+	rdfs:comment """Relating a editing apparatus to a reification statement of the relation between the apparatus and its critical edition."""@en;
+	rdfs:subPropertyOf text-structure:isPartOfTextExpressionValue;
+	knora-base:subjectClassConstraint textedit:Apparatus;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+textedit:isLemmaOfApparatus
+	a owl:ObjectProperty;
+	rdfs:label "is lemma of apparatus"@en, "ist Lemma eines Apparates"@de;
+	rdfs:comment """Relating a lemma to its editing apparatus."""@en;
+	rdfs:domain textedit:Lemma;
+	rdfs:range textedit:Apparatus;
+	rdfs:subPropertyOf concept:isPartOf;
+	knora-base:subjectClassConstraint textedit:Lemma;
+	knora-base:objectClassConstraint textedit:Apparatus.
+
+textedit:isLemmaOfApparatusValue
+	a owl:ObjectProperty;
+	rdfs:label "is lemma of apparatus - statement"@en, "ist Lemma eines Apparates - Festlegung"@de;
+	rdfs:comment """Relating a lemma to a reification statement of the relation between the lemma and its editing apparatus."""@en;
+	rdfs:subPropertyOf concept:isPartOfValue;
+	knora-base:subjectClassConstraint textedit:Lemma;
+	knora-base:objectClassConstraint knora-base:LinkValue.

@@ -1,0 +1,55 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix agent: <http://www.knora.org/ontology/0040/agent#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+
+@base <http://www.knora.org/ontology/005F/test>.
+@prefix test: <http://www.knora.org/ontology/005F/test#>.
+
+<http://www.knora.org/ontology/005F/test>
+	a owl:Ontology;
+	
+	knora-base:attachedToProject <http://rdfh.ch/projects/005F>.
+
+#
+# CLASSES
+#
+
+test:ThisIsIt
+	a owl:Class;
+	rdfs:label "this is it"@en;
+	rdfs:comment """...."""@en;
+	rdfs:subClassOf agent:Agent, knora-base:Resource. #, [
+#		a owl:Restriction; owl:onProperty test:isPartOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty test:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+#test:ThisIsThat
+#	a owl:Class;
+#	rdfs:label "this is that"@en;
+#	rdfs:comment """...."""@en;
+#	rdfs:subClassOf agent:Agent.
+
+#
+# PROPERTIES
+#
+
+#test:isPartOf
+#	a owl:ObjectProperty;
+#	rdfs:label "is part of"@en;
+#	rdfs:comment """...."""@en;
+#	rdfs:subPropertyOf knora-base:hasLinkTo;
+#	knora-base:subjectClassConstraint test:ThisIsIt;
+#	knora-base:objectClassConstraint test:ThisIsThat.
+
+#test:isPartOfValue
+#	a owl:ObjectProperty;
+#	rdfs:label "is part of - statement"@en;
+#	rdfs:comment """...."""@en;
+#	rdfs:subPropertyOf knora-base:hasLinkToValue;
+#	knora-base:subjectClassConstraint test:ThisIsIt;
+#	knora-base:objectClassConstraint knora-base:LinkValue.

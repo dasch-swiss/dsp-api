@@ -1,0 +1,292 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix narespa: <http://sweet.jpl.nasa.gov/2.3/reprSpace.owl#>.
+@prefix naproti: <http://sweet.jpl.nasa.gov/2.3/propTime.owl#Time>.
+@prefix naprospadi: <http://sweet.jpl.nasa.gov/2.3/propSpaceDistance.owl#>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix physical: <http://www.knora.org/ontology/0055/physical-resource#>.
+@prefix human: <http://www.knora.org/ontology/0048/human#>.
+@prefix concept: <http://www.knora.org/ontology/0044/concept#>.
+@prefix org: <http://www.knora.org/ontology/0051/organization#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+
+@base <http://www.knora.org/ontology/0049/human-geography>.
+@prefix humgeo: <http://www.knora.org/ontology/0049/human-geography#>.
+
+<http://www.knora.org/ontology/0049/human-geography>
+	a owl:Ontology;
+	dct:title """Human Geography"""@en;
+	dct:description """Formal description of human geography, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en;
+	
+	knora-base:attachedToProject <http://rdfh.ch/projects/0049>.
+
+#
+# CLASSES
+#
+
+# humgeo:HumanGeography
+# humgeo:PoliticalGeography
+
+# http://sweet.jpl.nasa.gov/2.3/realm.owl#PlanetarySurface
+
+humgeo:Nation
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "nation"@en, "Nation"@de;
+	rdfs:comment """Stable political organization with a commonality e.g. ethnicity, language, culture, ."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+humgeo:Country
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "country"@en, "Land"@de;
+	rdfs:comment """Place of a nation."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:State
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "state"@en, "Staat"@de;
+	rdfs:comment """Political organization of a nation with an own government."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+humgeo:Monarchy #*
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "monarchy"@en, "Monarchie"@de;
+	rdfs:comment """State wherein one person or family governs."""@en;
+	rdfs:subClassOf humgeo:State.
+
+humgeo:Monarch
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "monarch"@en, "Monarch"@de, "monarque"@fr;
+	rdfs:comment """Role of a person being a sovereign head of state in a monarchy."""@en;
+	rdfs:subClassOf human:PersonRole.
+
+# king, queen
+
+humgeo:Empire
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "empire"@en, "Imperium"@de;
+	rdfs:comment """Group of nations with an overarching government."""@en;
+	rdfs:subClassOf org:PoliticalOrganization.
+
+# emperor, empress
+
+# humgeo:NationState: nation-state
+
+# humgeo:SovereignState
+
+# humgeo:FederatedState
+
+# humgeo:Government: exercises authority over a particular territory
+
+humgeo:Town
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "town"@en, "Ortschaft"@de;
+	rdfs:comment """Smallest place with political boundaries and an own government."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:Village
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "village"@en, "Dorf"@de;
+	rdfs:comment """Small place with political boundaries but without an own government."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:City
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "city"@en, "Stadt"@de;
+	rdfs:comment """Large town."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:District
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "district"@en, "Stadtviertel"@de;
+	rdfs:comment """Part of a city with own administration."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:Street
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "street"@en, "Strasse"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:Building
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "building"@en, "Gebäude"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf physical:EarthPlace.
+
+humgeo:PostalAddress #* more general? # comprises cidoc:E45_Address and cidoc:E51_Contact_Point: postal box
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0049/human-geography#>;
+	rdfs:label "postal address"@en, "Postanschrift"@de;
+	rdfs:comment """."""@en;
+	rdfs:subClassOf concept:SymbolicConcept, [
+		a owl:Restriction; owl:onProperty humgeo:hasAddressee; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty humgeo:hasStreetName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty humgeo:hasHouseNumber; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty humgeo:hasPostcode; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty humgeo:hasTownName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty humgeo:hasCountryName; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# domicile
+
+#
+# PROPERTIES
+#
+
+humgeo:hasDomicile
+	a owl:ObjectProperty;
+	rdfs:label "has domicile"@en, "hat Sitz"@de;
+	rdfs:comment """Relating a human agent - person or group - to a place of registered staying and contactability."""@en;
+	rdfs:domain human:Agent;
+	rdfs:range physical:Place;
+	rdfs:subPropertyOf physical:hasLocation;
+	knora-base:subjectClassConstraint human:Agent;
+	knora-base:objectClassConstraint physical:Place.
+
+humgeo:hasDomicileValue
+	a owl:ObjectProperty;
+	rdfs:label "has domicile - statement"@en, "hat Sitz - Festlegung"@de;
+	rdfs:comment """Relating a human agent - person or group - to a reification statement of the relation between the agent and a place of registered staying."""@en;
+	rdfs:subPropertyOf physical:hasLocationValue;
+	knora-base:subjectClassConstraint human:Agent;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+humgeo:hasPostalAddress
+	a owl:ObjectProperty;
+	rdfs:label "has postal address"@en, "hat Postanschrift"@de;
+	rdfs:comment """Relating someone or something to her/his/its postal address."""@en;
+	rdfs:domain rdfs:Resource;
+	rdfs:range humgeo:PostalAddress;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint humgeo:PostalAddress.
+
+humgeo:hasPostalAddressValue
+	a owl:ObjectProperty;
+	rdfs:label "has postal address - statement"@en, "hat Postanschrift - Festlegung"@de;
+	rdfs:comment """Relating someone or something to a reification statement of the relation between that someone or something and her/his/its postal address."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint knora-base:Resource;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+humgeo:hasReceiverPostalAddress
+	a owl:ObjectProperty;
+	rdfs:label "has receiver postal address"@en, "hat Empfänger-Postanschrift"@de;
+	rdfs:comment """Relating something being sent to the postal address of the receiver."""@en;
+	rdfs:domain physical:Matter;
+	rdfs:range humgeo:PostalAddress;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint physical:Matter;
+	knora-base:objectClassConstraint humgeo:PostalAddress.
+
+humgeo:hasReceiverPostalAddressValue
+	a owl:ObjectProperty;
+	rdfs:label "has receiver postal address - statement"@en, "hat Empfänger-Postanschrift - Festlegung"@de;
+	rdfs:comment """Relating something being sent to a reification statement of the relation between that something and the postal address of the receiver."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint physical:Matter;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+humgeo:hasReturnPostalAddress
+	a owl:ObjectProperty;
+	rdfs:label "has return postal address"@en, "hat Rücksendung-Postanschrift"@de;
+	rdfs:comment """Relating something being sent to the postal address for return."""@en;
+	rdfs:domain physical:Matter;
+	rdfs:range humgeo:PostalAddress;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint physical:Matter;
+	knora-base:objectClassConstraint humgeo:PostalAddress.
+
+humgeo:hasReturnPostalAddressValue
+	a owl:ObjectProperty;
+	rdfs:label "has sender postal address - statement"@en, "hat Rücksendung-Postanschrift - Festlegung"@de;
+	rdfs:comment """Relating something being sent to a reification statement of the relation between that something and the postal address of the sender."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint physical:Matter;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+humgeo:hasAddressee
+	a owl:ObjectProperty;
+	rdfs:label "has addressee"@en, "hat AdressatIn"@de;
+	rdfs:comment """Relating a postal address to an addressee."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+humgeo:hasStreetName
+	a owl:ObjectProperty;
+	rdfs:label "has street name"@en, "hat Strassenname"@de;
+	rdfs:comment """Relating a postal address to the name of the street."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+humgeo:hasHouseNumber
+	a owl:ObjectProperty;
+	rdfs:label "has house number"@en, "hat Hausnummer"@de;
+	rdfs:comment """Relating a postal address to the nummer of the house."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+humgeo:hasPostcode
+	a owl:ObjectProperty;
+	rdfs:label "has postcode"@en, "hat Postleitzahl"@de;
+#	text:hasSynonym "has zip code"@en;
+	rdfs:comment """Relating a postal address to its postcode."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+humgeo:hasTownName
+	a owl:ObjectProperty;
+	rdfs:label "has town name"@en, "hat Ortsname"@de;
+	rdfs:comment """Relating a postal address to its town name."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+humgeo:hasCountryName
+	a owl:ObjectProperty;
+	rdfs:label "has country name"@en, "hat Ländername"@de;
+	rdfs:comment """Relating a postal address to its country name."""@en;
+	rdfs:domain humgeo:PostalAddress;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint humgeo:PostalAddress;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.

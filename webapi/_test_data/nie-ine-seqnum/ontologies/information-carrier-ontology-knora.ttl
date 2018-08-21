@@ -1,0 +1,793 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix frbroo: <http://iflastandards.info/ns/fr/frbr/frbroo/>.
+@prefix physical: <http://www.knora.org/ontology/0055/physical-resource#>.
+@prefix event: <http://www.knora.org/ontology/0047/event#>.
+@prefix human: <http://www.knora.org/ontology/0048/human#>.
+@prefix concept: <http://www.knora.org/ontology/0044/concept#>.
+@prefix document: <http://www.knora.org/ontology/005C/document#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix device: <http://www.knora.org/ontology/0045/device#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+
+@base <http://www.knora.org/ontology/004C/information-carrier>.
+@prefix infocar: <http://www.knora.org/ontology/004C/information-carrier#>.
+
+<http://www.knora.org/ontology/004C/information-carrier>
+	a owl:Ontology;
+	dct:title "An ontology about information carrier"@en;
+	dct:description """Formal description of information carrier in broadest sense, general subclasses, related classes, and properties."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en;
+
+	knora-base:attachedToProject <http://rdfh.ch/projects/004C>.
+
+#
+# CLASSES
+#
+
+infocar:Carrier
+ 	a owl:Class;
+ 	rdfs:label "information carrier"@en,"Informationsträger"@de;
+ 	rdfs:comment """Carrier of information created by a person."""@en;
+	skos:note """Includes both F4_Manifestation_Singleton and F5_Item as declared in FRBROO."""@en;
+	rdfs:subClassOf human:PhysicalCreation, cidoc:E84_Information_Carrier, [
+		a owl:Restriction; owl:onProperty infocar:carrierHasDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasSender; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasSenderValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasReceiver; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasReceiverValue; owl:minCardinality "0"^^xsd:nonNegativeInteger]. #, [
+#		a owl:Restriction; owl:onProperty physical:isPartOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty physical:isPartOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty image:hasPhotoRepresentation; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty image:hasPhotoRepresentationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+#* infocar:Text OR physical as on carrier
+
+infocar:Leaf
+	a owl:Class;
+	rdfs:label "leaf"@en, "Blatt"@de;
+	rdfs:comment """Sheet of a writable substance, e.g. paper or parchment."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:isLeafOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isLeafOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# fold, Falte, cf. Gedicht Heinrich Heine
+
+infocar:Page
+	a owl:Class;
+	rdfs:label "page"@en, "Seite"@de;
+	rdfs:comment """One of the 2 surfaces of a leaf, e.g. a manuscript, or of a leaf of a book."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:isPageOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPageOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPageOfBook; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPageOfBookValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:pageHasNumber; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:Book
+	a owl:Class;
+	rdfs:label "book"@en, "Buch"@de;
+	rdfs:comment """Set of leafs, e.g. sheets of paper or parchment, binded together along one side, with a front and back cover."""@en;
+	rdfs:subClassOf infocar:Carrier.
+
+infocar:Binding
+	a owl:Class;
+	rdfs:label "binding"@en, "Einband"@de;
+	rdfs:comment """Material holding the leafs and covers of a book together."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:isBindingOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isBindingOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:Volume
+	a owl:Class;
+	rdfs:label "volume"@en, "Band"@de;
+	rdfs:comment """One of the books carrying an expression materialized in more than one book."""@en;
+	rdfs:subClassOf infocar:Book, [
+		a owl:Restriction; owl:onProperty infocar:volumeHasNumber; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:Printing
+	a owl:Class;
+	rdfs:label "printing"@en, "Drucken"@de;
+	rdfs:comment """Action of putting an expression on a carrier, e.g. with ink on paper."""@en;
+	rdfs:subClassOf human:Procedure, frbroo:F32_Carrier_Production_Event.
+
+infocar:Printer
+	a owl:Class;
+	rdfs:label "agent printer"@en, "Agent-Drucker"@de;
+	rdfs:comment """Role of a human agent, person or organization, printing an expression."""@en;
+	rdfs:subClassOf human:AgentRole.
+
+infocar:Print
+	a owl:Class;
+	rdfs:label "print"@en, "Druck"@de;
+	rdfs:comment """An expression printed on a carrier."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:hasPrinter; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasPrinterValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPartOfPrintRun; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPartOfPrintRunValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:PrintRun
+	a owl:Class;
+	rdfs:label "print run"@en, "Druckauflage"@de, "Tirage"@fr, "Tiratura"@it;
+	rdfs:comment """Collection of prints of the same expression, created at one time."""@en;
+	skos:note """When applicable, all the prints have the same ISBN, but a different bar code."""@en;
+	rdfs:subClassOf human:PhysicalCreation.
+
+infocar:FirstPrint
+	a owl:Class;
+	rdfs:label "first print"@en, "Erstdruck"@de;
+	rdfs:comment """Earliest print of an expression."""@en;
+	rdfs:subClassOf infocar:Print.
+
+infocar:Archive
+	a owl:Class;
+	rdfs:label "archive"@en, "Archiv"@de;
+	rdfs:comment """Collection of files ordered along a method."""@en;
+	rdfs:subClassOf human:PhysicalCreation, cidoc:E78_Collection.
+
+infocar:ArchiveElement
+	a owl:Class;
+	rdfs:label "archive element"@en, "Archiv-Element"@de;
+	rdfs:comment """Element of an archive, which can be a single file or a file group."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:isPartOfArchive; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPartOfArchiveValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasArchiveSignature; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:Nachlass
+	a owl:Class;
+	rdfs:label "nachlass"@en, "Nachlass"@de;
+	rdfs:comment """Collection of materialized expressions of a person as existing after the person's death and unpublished during life."""@en;
+	rdfs:subClassOf human:PhysicalCreation, cidoc:E78_Collection.
+
+infocar:NachlassElement
+	a owl:Class;
+	rdfs:label "nachlass element"@en, "Nachlass-Element"@de;
+	rdfs:comment """Element of a nachlass."""@en;
+	rdfs:subClassOf infocar:Carrier, [
+		a owl:Restriction; owl:onProperty infocar:isPartOfNachlass; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:isPartOfNachlassValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:WritingUtensil
+	a owl:Class;
+	rdfs:label "writing utensil"@en, "Schreibzeug"@de;
+	rdfs:comment """Object to write with."""@en;
+	rdfs:subClassOf human:PhysicalCreation.
+
+infocar:Pencil
+	a owl:Class;
+	rdfs:label "pencil"@en, "Bleistift"@de;
+	rdfs:comment """Elongated cylindrical(-like) object containing a thin rod of graphite for writing or drawing."""@en;
+	rdfs:subClassOf infocar:WritingUtensil.
+
+infocar:Pen
+	a owl:Class;
+	rdfs:label "pen"@en, "Tintenstift"@de;
+	rdfs:comment """Elongated cylindrical(-like) hollow object containing ink for writing or drawing."""@en;
+	rdfs:subClassOf infocar:WritingUtensil.
+
+infocar:FountainPen
+	a owl:Class;
+	rdfs:label "fountain pen"@en, "Füller"@de;
+	rdfs:comment """Pen with refillable reservoir for fluid ink for feeding a metal nib."""@en;
+	rdfs:subClassOf infocar:Pen.
+
+infocar:Typewriter
+	a owl:Class;
+	rdfs:label "typewriter"@en, "Schreibmaschine"@de;
+	rdfs:comment """Writing device with moving parts for letter printing."""@en; # mechanical or electronic 
+	rdfs:subClassOf infocar:WritingUtensil.
+
+infocar:Manuscript
+	a owl:Class;
+	rdfs:label "manuscript"@en, "Manuskript"@de;
+	rdfs:comment """Carrier with a handwritten text."""@en;
+	rdfs:subClassOf infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+infocar:NoteCarrier
+	a owl:Class;
+	rdfs:label "note carrier"@en,"Notizträger"@de;
+	rdfs:comment """Carrier whereon notes are written, e.g. a first registration of thoughts."""@en;
+	rdfs:subClassOf infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+infocar:Notebook
+	a owl:Class;
+	rdfs:label "notebook"@en,"Notizbuch"@de;
+	rdfs:comment """Book wherein notes are written."""@en;
+	rdfs:subClassOf infocar:Book, infocar:NoteCarrier.
+
+infocar:Typescript
+	a owl:Class;
+	rdfs:label "typescript"@en, "Typoskript"@de;
+	rdfs:comment """Carrier with a typewritten text."""@en;
+	rdfs:subClassOf infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+infocar:Transcription
+	a owl:Class;
+	rdfs:label "transcription"@en, "Abschrift"@de;
+	rdfs:comment """Carrier with a text copied by any method, e.g. handwriting, typewriting, machine copying, printing, digitizing."""@en;
+	rdfs:subClassOf human:Copy, infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+ # homonym: transcription: conversion from different manifestation, eg. from spoken or recorded sound to written
+
+infocar:ManualTranscription
+	a owl:Class;
+	rdfs:label "manual transcription"@en, "manuelle Abschrift"@de;
+	rdfs:comment """Carrier with a handwritten copy of a text."""@en;
+	rdfs:subClassOf infocar:Transcription, infocar:Manuscript.
+
+infocar:Diary
+	a owl:Class;
+	rdfs:label "diary"@en,"Tagebuch"@de;
+	rdfs:comment """information carrier with periodically, usually daily, described personal experiences and observations."""@en;
+	rdfs:subClassOf infocar:Carrier.
+
+infocar:PersonSender
+	a owl:Class;
+	rdfs:label "person sender"@en, "Person-Sender"@de;
+	rdfs:comment """Role of a person sending information on a carrier."""@en;
+	rdfs:subClassOf human:PersonSender.
+
+infocar:PersonReceiver
+	a owl:Class;
+	rdfs:label "person receiver"@en, "Person-Empfänger"@de;
+	rdfs:comment """Role of a person receiving information on carrier."""@en;
+	rdfs:subClassOf human:PersonReceiver.
+
+infocar:Letter
+	a owl:Class;
+	rdfs:label "letter"@en, "Brief"@de;
+	rdfs:comment """Written text, e.g. on a leaf, intended to be sent from (a) person(s) or (an) Organization(s) to another one, e.g. through a postal system."""@en;
+	rdfs:subClassOf infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+infocar:Postcard
+	a owl:Class;
+	rdfs:label "postcard"@en, "Postkarte"@de;
+	rdfs:comment """Card with one side, usually with a printed structure, used for writing a message, an address and applying a postage stamp, to be sent through a postal system."""@en;
+	rdfs:subClassOf infocar:Carrier, frbroo:F4_Manifestation_Singleton.
+
+infocar:Convolute
+	a owl:Class;
+	rdfs:label "convolute"@en, "Konvolut"@de;
+	rdfs:comment """information carriers, e.g. of drafts, manuscripts, typoscripts or prints, gathered as one."""@en;
+	rdfs:subClassOf human:PhysicalCreation, cidoc:E78_Collection, [
+		a owl:Restriction; owl:onProperty infocar:convoluteHasTitle; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:convoluteHasDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:convoluteHasSizeDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:convoluteHasOriginDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:convoluteHasContentRepresentation; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsEarlierStagesOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsEarlierStagesOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsEarlierStagesOfPublication; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsEarlierStagesOfPublicationValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsLaterStagesOf; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:containsLaterStagesOfValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hasCarrierCollectionDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:ElectronicCarrier #* data or information storage device
+	a owl:Class;
+	rdfs:label "electronic information carrier"@en,"elektronischer Informationsträger"@de;
+	rdfs:comment """Electronic machine carrying electronic information."""@en;
+	rdfs:subClassOf device:ElectronicMachine, infocar:Carrier.
+
+infocar:ElectronicBook
+	a owl:Class;
+	rdfs:label "electronic book"@en,"elektronisches Buch"@de;
+	rdfs:comment """Electronic information carrier with a text structure as in a book."""@en;
+	rdfs:subClassOf infocar:ElectronicCarrier.
+
+infocar:WebPage
+	a owl:Class;
+	rdfs:label "web page"@en, "Webseite"@de;
+	rdfs:comment """Electronic carrier page on the World Wide Web."""@en;
+	skos:note """Not necessarily published, i.e. made public."""@en;
+	rdfs:subClassOf infocar:ElectronicCarrier, [
+		a owl:Restriction; owl:onProperty infocar:webPageHasName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:webPageHasURL; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+infocar:Hyperlink # software
+	a owl:Class;
+	rdfs:label "hyperlink"@en,"Hyperlink"@de;
+	rdfs:comment """Link from a hypertext document structure to another location, activated by clicking on a highlighted word or image."""@en;
+	rdfs:subClassOf knora-base:Resource, [
+		a owl:Restriction; owl:onProperty infocar:hyperlinkHasName; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty infocar:hyperlinkHasURL; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+#
+# PROPERTIES
+#
+
+infocar:carrierHasDescription
+	a owl:ObjectProperty;
+	rdfs:label "has description"@en, "hat Beschreibung"@de;
+	rdfs:comment """Relating an information carrier to a description thereof."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Carrier;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:isOnCarrier
+	a owl:ObjectProperty;
+	rdfs:label "is on carrier"@en, "ist auf Träger"@de;
+	rdfs:comment "Relating information to a carrier it is on."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint concept:Information;
+	knora-base:objectClassConstraint infocar:Carrier.
+
+infocar:isOnCarrierValue
+	a owl:ObjectProperty;
+	rdfs:label "is on carrier - statement"@en, "ist auf Träger - Festlegung"@de;
+	rdfs:comment "Relating information to a reification statement of the relation between the information and a carrier it is on."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint concept:Information;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isOnElectronicCarrier
+	a owl:ObjectProperty;
+	rdfs:label "is on electronic carrier"@en, "ist auf elektronischen Träger"@de;
+	rdfs:comment "Relating information to an electronic carrier it is on."@en;
+	rdfs:subPropertyOf infocar:isOnCarrier;
+	knora-base:subjectClassConstraint concept:Information;
+	knora-base:objectClassConstraint infocar:ElectronicCarrier.
+
+infocar:isOnElectronicCarrierValue
+	a owl:ObjectProperty;
+	rdfs:label "is on electronic carrier - statement"@en, "ist auf elektronischen Träger - Festlegung"@de;
+	rdfs:comment "Relating information to a reification statement of the relation between the information and an electronic carrier it is on."@en;
+	rdfs:subPropertyOf infocar:isOnCarrierValue;
+	knora-base:subjectClassConstraint concept:Information;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isWrittenWith
+	a owl:ObjectProperty;
+	rdfs:label "is written with"@en, "ist geschrieben mit"@de;
+	rdfs:comment "Relating a text to a utensil it is written with."@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint text:WrittenText;
+	knora-base:objectClassConstraint infocar:WritingUtensil.
+
+infocar:isWrittenWithValue
+	a owl:ObjectProperty;
+	rdfs:label "is is written with - statement"@en, "ist geschrieben mit - Festlegung"@de;
+	rdfs:comment "Relating a text to a reification statement of the relation between the text and a utensil it is written with."@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint text:WrittenText;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isPageOf
+	a owl:ObjectProperty;
+	rdfs:label "is page of"@en, "ist Seite von"@de;
+	rdfs:comment """Relating a page to its leaf, single or in a book."""@en;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:Page;
+	knora-base:objectClassConstraint infocar:Leaf. # owl:disjointUnionOf (infocar:Leaf infocar:Book) # exclusive OR
+
+infocar:isPageOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is page of - statement"@en, "ist Seite von - Festlegung"@de;
+	rdfs:comment """Relating a page to a reification statement of the relation between the page and its leaf, single or in a book."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:Page;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isPageOfBook
+	a owl:ObjectProperty;
+	rdfs:label "is page of book"@en, "ist Seite eines Buchs"@de;
+	rdfs:comment """Relating a page to a book its leaf is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOf; # owl:propertyChainAxiom (infocar:isPageOf infocar:isLeafOf)
+	knora-base:subjectClassConstraint infocar:Page;
+	knora-base:objectClassConstraint infocar:Book.
+
+infocar:isPageOfBookValue
+	a owl:ObjectProperty;
+	rdfs:label "is page of book - statement"@en, "ist Seite eines Buchs - Festlegung"@de;
+	rdfs:comment """Relating a page to a reification statement of the relation between the page and a book its leaf is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:Page;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:pageHasNumber
+	a owl:ObjectProperty;
+	rdfs:label "page has number"@en, "Seite hat Nummer"@de;
+	rdfs:comment """Relating a page to a number it has."""@en;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint infocar:Page;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:isLeafOf
+	a owl:ObjectProperty;
+	rdfs:label "is leaf of"@en, "ist Blatt von"@de;
+	rdfs:comment """Relating a leaf to a book it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:Leaf;
+	knora-base:objectClassConstraint infocar:Book.
+
+infocar:isLeafOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is leaf of - statement"@en, "ist Blatt von - Festlegung"@de;
+	rdfs:comment """Relating a leaf to a reification statement of the relation between the leaf and a book it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:Leaf;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isBindingOf
+	a owl:ObjectProperty;
+	rdfs:label "is binding of"@en, "ist Einband von"@de;
+	rdfs:comment """Relating a binding to a book it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:Binding;
+	knora-base:objectClassConstraint infocar:Book.
+
+infocar:isBindingOfValue
+	a owl:ObjectProperty;
+	rdfs:label "is binding of - statement"@en, "ist Einband von - Festlegung"@de;
+	rdfs:comment """Relating a binding to a reification statement of the relation between the binding and a book it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:Binding;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:volumeHasNumber
+	a owl:ObjectProperty;
+	rdfs:label "volume has number"@en, "Band hat Nummer"@de;
+	rdfs:comment "Relating a volume to its sequence number."@en;
+	rdfs:domain infocar:Volume;
+	rdfs:range xsd:nonNegativeInteger;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint infocar:Volume;
+	knora-base:objectClassConstraint knora-base:IntValue.
+
+infocar:isInManuscript
+	a owl:ObjectProperty;
+	rdfs:label "is in manuscript"@en, "ist in Manuskript"@de;
+	rdfs:comment "Relating a handwritten text to the manuscript that carries it."@en;
+	rdfs:subPropertyOf infocar:isOnCarrier;
+	knora-base:subjectClassConstraint text:HandwrittenText;
+	knora-base:objectClassConstraint infocar:Manuscript.
+
+infocar:isInManuscriptValue
+	a owl:ObjectProperty;
+	rdfs:label "is in manuscript - statement"@en, "ist in Manuskript - Festlegung"@de;
+	rdfs:comment "Relating a handwritten text to a reification statement of the relation between the handwritten text and the manuscript that carries it."@en;
+	rdfs:subPropertyOf infocar:isOnCarrierValue;
+	knora-base:subjectClassConstraint text:HandwrittenText;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isInTypescript
+	a owl:ObjectProperty;
+	rdfs:label "is in typescript"@en, "ist in Typoskript"@de;
+	rdfs:comment "Relating a typewritten text to the typescript that carries it."@en;
+	rdfs:subPropertyOf infocar:isOnCarrier;
+	knora-base:subjectClassConstraint text:TypewrittenText;
+	knora-base:objectClassConstraint infocar:Typescript.
+
+infocar:isInTypescriptValue
+	a owl:ObjectProperty;
+	rdfs:label "is in typescript - statement"@en, "ist in Typoskript - Festlegung"@de;
+	rdfs:comment "Relating a typewritten text to a reification statement of the relation between the typewritten text and the typescript that carries it."@en;
+	rdfs:subPropertyOf infocar:isOnCarrierValue;
+	knora-base:subjectClassConstraint text:TypewrittenText;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isInDiary
+	a owl:ObjectProperty;
+	rdfs:label "is in diary"@en, "ist in Tagebuch"@de;
+	rdfs:comment """Relating a diary entry to a diary it is in."""@en;
+	rdfs:subPropertyOf infocar:isOnCarrier;
+	knora-base:subjectClassConstraint text:DiaryEntry;
+	knora-base:objectClassConstraint infocar:Diary.
+
+infocar:isInDiaryValue
+	a owl:ObjectProperty;
+	rdfs:label "is in diary - statement"@en, "ist in Tagebuch - Festlegung"@de;
+	rdfs:comment """Relating a diary entry to a reification statement of the relation between the diary entry and a diary it is in."""@en;
+	rdfs:subPropertyOf infocar:isOnCarrierValue;
+	knora-base:subjectClassConstraint text:DiaryEntry;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hasDiaryEnteringDate
+	a owl:ObjectProperty;
+	rdfs:label "has diary entering date"@en, "hat Tagebucheintragsdatum"@de;
+	rdfs:comment """Relating a diary entry to its date of entering in a diary."""@en;
+	rdfs:subPropertyOf human:creationHasDate;
+	knora-base:subjectClassConstraint text:DiaryEntry;
+	knora-base:objectClassConstraint knora-base:DateValue;
+	salsah-gui:guiElement salsah-gui:Date.
+
+infocar:isInLetter
+	a owl:ObjectProperty;
+	rdfs:label "is in letter"@en, "ist in Brief"@de;
+	rdfs:comment """Relating a letter expression to a letter it is in."""@en;
+	rdfs:subPropertyOf infocar:isOnCarrier;
+	knora-base:subjectClassConstraint text:LetterExpression;
+	knora-base:objectClassConstraint infocar:Letter.
+
+infocar:isInLetterValue
+	a owl:ObjectProperty;
+	rdfs:label "is in letter - statement"@en, "ist in Brief - Festlegung"@de;
+	rdfs:comment """Relating a letter expression to a reification statement of the relation between the letter expression and a letter it is in."""@en;
+	rdfs:subPropertyOf infocar:isOnCarrierValue;
+	knora-base:subjectClassConstraint text:LetterExpression;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hasSender
+	a owl:ObjectProperty;
+	rdfs:label "has sender"@en, "hat Absender"@de;
+	rdfs:comment """Relating an information carrier to a human agent - a person or a group - that sent it."""@en;
+	rdfs:domain infocar:Carrier;
+#	rdfs:range [rdfs:subClassOf human:Agent, [a owl:Restriction; owl:onProperty human:agentHasRole; owl:someValuesFrom infocar:Sender]];
+	rdfs:subPropertyOf physical:hasSender;
+	knora-base:subjectClassConstraint infocar:Carrier;
+	knora-base:objectClassConstraint human:Agent.
+
+infocar:hasSenderValue
+	a owl:ObjectProperty;
+	rdfs:label "has sender - statement"@en, "hat Absender - Festlegung"@de;
+	rdfs:comment """Relating an information carrier to a reification statement of the relation between that something and a human agent - a person or a group - that sent it."""@en;
+	rdfs:subPropertyOf physical:hasSenderValue;
+	knora-base:subjectClassConstraint infocar:Carrier;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hasReceiver
+	a owl:ObjectProperty;
+	rdfs:label "has receiver"@en, "hat Empfänger"@de;
+	rdfs:comment """Relating an information carrier to a human agent - a person or a group - that received it."""@en;
+	rdfs:domain infocar:Carrier;
+#	rdfs:range [rdfs:subClassOf human:Agent, [a owl:Restriction; owl:onProperty human:agentHasRole; owl:someValuesFrom infocar:Receiver]];
+	rdfs:subPropertyOf physical:hasReceiver;
+	knora-base:subjectClassConstraint infocar:Carrier;
+	knora-base:objectClassConstraint human:Agent.
+
+infocar:hasReceiverValue
+	a owl:ObjectProperty;
+	rdfs:label "has receiver - statement"@en, "hat Empfänger - Festlegung"@de;
+	rdfs:comment """Relating an information carrier to a reification statement of the relation between that something and a human agent - a person or a group - that received it."""@en;
+	rdfs:subPropertyOf physical:hasReceiverValue;
+	knora-base:subjectClassConstraint infocar:Carrier;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:convoluteHasTitle
+	a owl:ObjectProperty;
+	rdfs:label "convolute has title"@en, "Konvolut hat Titel"@de;
+	rdfs:comment """Relating a convolute to its titel."""@en;
+	rdfs:subPropertyOf text:hasTitle;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:convoluteHasDescription
+	a owl:ObjectProperty;
+	rdfs:label "convolute has description"@en, "Konvolut hat Beschreibung"@de;
+	rdfs:comment """Relating a convolute to a description thereof."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:convoluteHasSizeDescription
+	a owl:ObjectProperty;
+	rdfs:label "convolute has size description"@en, "Konvolutgrösse hat Beschreibung"@de;
+	rdfs:comment """Relating a convolute to a description of its size."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:convoluteHasOriginDescription
+	a owl:ObjectProperty;
+	rdfs:label "convolute has origin description"@en, "Konvolut hat Herkunftbeschreibung"@de;
+	rdfs:comment """Relating a text convolute to a description of its origin."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:convoluteHasContentRepresentation
+	a owl:ObjectProperty;
+	rdfs:label "convolute has content representation"@en, "Konvolut hat Inhaltrepräsentation"@de;
+	rdfs:comment """Relating a convolute to a description of its content representation."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:containsEarlierStagesOf
+	a owl:ObjectProperty; # , owl:TransitiveProperty;
+	rdfs:label "contains earlier stages of"@en, "enthält frühere Stufen von"@de;
+	rdfs:comment """Relating a convolute to another one whose information carriers bear later stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint infocar:Convolute.
+
+infocar:containsEarlierStagesOfValue
+	a owl:ObjectProperty;
+	rdfs:label "contains earlier stages of - statement"@en, "enthält frühere Stufen von - Festlegung"@de;
+	rdfs:comment """Relating a convolute to a reification statement of the relation between the convolute and another one whose information carriers bear later stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:containsEarlierStagesOfPublication
+	a owl:ObjectProperty; # , owl:TransitiveProperty;
+	rdfs:label "contains earlier stages of publication"@en, "enthält frühere Stufen von Publikation"@de;
+	rdfs:comment """Relating a convolute to another one whose information carriers bear later publication stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf infocar:containsEarlierStagesOf;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint infocar:Convolute.
+
+infocar:containsEarlierStagesOfPublicationValue
+	a owl:ObjectProperty;
+	rdfs:label "contains earlier stages of publication - statement"@en, "enthält frühere Stufen von Herausgabe - Festlegung"@de;
+	rdfs:comment """Relating a convolute to a reification statement of the relation between the convolute and another one whose information carriers bear later publication stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf infocar:containsEarlierStagesOfValue;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:containsLaterStagesOf
+	a owl:ObjectProperty; # , owl:TransitiveProperty;
+	rdfs:label "contains later stages of"@en, "enthält spätere Stufen von"@de;
+	rdfs:comment """Relating a convolute to another one whose information carriers bear earlier stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint infocar:Convolute.
+
+infocar:containsLaterStagesOfValue
+	a owl:ObjectProperty;
+	rdfs:label "contains later stages of - statement"@en, "enthält spätere Stufen von - Festlegung"@de;
+	rdfs:comment """Relating a convolute to a reification statement of the relation between the convolute and another one whose information carriers bear later stages of the texts on the carriers of the former."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hasCarrierCollectionDescription
+	a owl:ObjectProperty;
+	rdfs:label "has information carrier collection description"@en, "hat Textträgersammlung-Beschreibung"@de;
+	rdfs:comment """Relating a convolute to a description of an information carrier collection it contains."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint infocar:Convolute;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+infocar:hasPrinter
+	a owl:ObjectProperty;
+	rdfs:label "has printer"@en, "hat Drucker"@de;
+	rdfs:comment """Relating a print to its printer."""@en;
+	rdfs:domain infocar:Print;
+#	rdfs:range [rdfs:subClassOf human:Agent, [a owl:Restriction; owl:onProperty human:agentHasRole; owl:someValuesFrom infocar:Printer]];
+	rdfs:subPropertyOf human:hasCreator;
+	knora-base:subjectClassConstraint infocar:Print;
+	knora-base:objectClassConstraint human:Agent.
+
+infocar:hasPrinterValue
+	a owl:ObjectProperty;
+	rdfs:label "has printer - statement"@en, "hat Drucker - Festlegung"@de;
+	rdfs:comment """Relating a print to a reification statement of the relation between the print and its printer."""@en;
+	rdfs:subPropertyOf human:hasCreatorValue;
+	knora-base:subjectClassConstraint infocar:Print;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isPartOfPrintRun
+	a owl:ObjectProperty;
+	rdfs:label "is part of print run"@en, "ist Teil einer Druckauflage"@de;
+	rdfs:comment """Relating a print to the run it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:Print;
+	knora-base:objectClassConstraint infocar:PrintRun.
+
+infocar:isPartOfPrintRunValue
+	a owl:ObjectProperty;
+	rdfs:label "is part of print run - statement"@en, "ist Teil einer Druckauflage - Festlegung"@de;
+	rdfs:comment """Relating a print to a reification statement of the relation between the print and the run it is part of."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:Print;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:isPartOfArchive
+	a owl:ObjectProperty;
+	rdfs:label "is part of archive"@en, "ist Teil eines Archivs"@de;
+	rdfs:comment """Relating an element of an archive to the archive."""@en;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:ArchiveElement;
+	knora-base:objectClassConstraint infocar:Archive.
+
+infocar:isPartOfArchiveValue
+	a owl:ObjectProperty;
+	rdfs:label "is part of archive - statement"@en, "ist Teil eines Archivs - Festlegung"@de;
+	rdfs:comment """Relating an element of an archive to a reification statement of the relation between the element and the archive."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:ArchiveElement;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hasArchiveSignature
+	a owl:ObjectProperty;
+	rdfs:label "has archive signature"@en, "hat Archivsignatur"@de;
+	rdfs:comment """Relating an element of an archive to its signature as identifier."""@en;
+	rdfs:domain infocar:ArchiveElement;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasIdentifier;
+	knora-base:subjectClassConstraint infocar:ArchiveElement;
+	knora-base:objectClassConstraint knora-base:TextValue.
+
+infocar:isPartOfNachlass
+	a owl:ObjectProperty;
+	rdfs:label "is part of a nachlass"@en, "ist Teil eines Nachlasses"@de;
+	rdfs:comment """Relating an element of a nachlass to the nachlass."""@en;
+	rdfs:domain infocar:NachlassElement;
+	rdfs:range infocar:Nachlass;
+	rdfs:subPropertyOf physical:isPartOf;
+	knora-base:subjectClassConstraint infocar:NachlassElement;
+	knora-base:objectClassConstraint infocar:Nachlass.
+
+infocar:isPartOfNachlassValue
+	a owl:ObjectProperty;
+	rdfs:label "is part of a nachlass - statement"@en, "ist Teil eines Nachlasses - Festlegung"@de;
+	rdfs:comment """Relating an element of a nachlass to a reification statement of the relation between the element and the nachlass."""@en;
+	rdfs:subPropertyOf physical:isPartOfValue;
+	knora-base:subjectClassConstraint infocar:NachlassElement;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:webPageHasName
+	a owl:ObjectProperty;
+	rdfs:label "web page has name"@en, "Webseite hat Name"@de;
+	rdfs:comment """Relating a web page to a name it has."""@en;
+	rdfs:domain infocar:WebPage;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint infocar:WebPage;
+	knora-base:objectClassConstraint knora-base:TextValue.
+
+infocar:webPageHasURL
+	a owl:ObjectProperty;
+	rdfs:label "web page has URL"@en, "Webseite hat URL"@de;
+	rdfs:comment """Relating a web page to a URL it has."""@en;
+	rdfs:domain infocar:Hyperlink;
+	rdfs:range xsd:anyURI;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint infocar:WebPage;
+	knora-base:objectClassConstraint knora-base:UriValue.
+
+infocar:hasHyperlink
+	a owl:ObjectProperty;
+	rdfs:label "has hyperlink"@en, "hat Hyperlink"@de;
+	rdfs:comment """Relating a document structure to a hyperlink it has on an electronic carrier."""@en;
+	rdfs:domain document:Structure;
+	rdfs:range infocar:Hyperlink;
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint document:Structure;
+	knora-base:objectClassConstraint infocar:Hyperlink.
+
+infocar:hasHyperlinkValue
+	a owl:ObjectProperty;
+	rdfs:label "has hyperlink - statement"@en, "hat Hyperlink - Festlegung"@de;
+	rdfs:comment """Relating document structure to a reification statement of the relation between the document structure and a hyperlink it has on an electronic carrier."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint document:Structure;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+infocar:hyperlinkHasName
+	a owl:ObjectProperty;
+	rdfs:label "hyperlink has name"@en, "Hyperlink hat Name"@de;
+	rdfs:comment """Relating a hyperlink to a name it has."""@en;
+	rdfs:domain infocar:Hyperlink;
+	rdfs:range rdfs:Literal;
+	rdfs:subPropertyOf text:hasName;
+	knora-base:subjectClassConstraint infocar:Hyperlink;
+	knora-base:objectClassConstraint knora-base:TextValue.
+
+infocar:hyperlinkHasURL
+	a owl:ObjectProperty;
+	rdfs:label "hyperlink has URL"@en, "Hyperlink hat URL"@de;
+	rdfs:comment """Relating a hyperlink to a URL it has."""@en;
+	rdfs:domain infocar:Hyperlink;
+	rdfs:range xsd:anyURI;
+	rdfs:subPropertyOf knora-base:hasValue;
+	knora-base:subjectClassConstraint infocar:Hyperlink;
+	knora-base:objectClassConstraint knora-base:UriValue.

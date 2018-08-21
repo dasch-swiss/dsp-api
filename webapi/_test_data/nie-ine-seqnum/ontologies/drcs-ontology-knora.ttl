@@ -1,0 +1,104 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix human: <http://www.knora.org/ontology/0048/human#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix schola: <http://www.knora.org/ontology/0057/scholasticism#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#>.
+
+@base <http://www.knora.org/ontology/0046/drcs>.
+@prefix drcs: <http://www.knora.org/ontology/0046/drcs#>.
+
+<http://www.knora.org/ontology/0046/drcs>
+	a owl:Ontology;
+	dct:title "An ontology for the Digital Repertory of Commentaries on Peter Lombard’s Sentences"@en;
+	dct:description """Formal description of specific concepts in the scientific study of Commentaries on Peter Lombard's Sentences, as in the Digital Repertory of Commentaries on Peter Lombard’s Sentences (DRCS)."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE, University of Basel, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en;
+#	rdfs:seeAlso <https://de.wikipedia.org/wiki/Friedrich_Stegmüller>;
+
+	knora-base:attachedToProject <http://rdfh.ch/projects/0046>.
+
+#
+# CLASSES
+#
+
+drcs:Person
+	a owl:Class;
+	rdfs:label "person"@en, "Person"@de, "personne"@fr, "persona"@it;
+	rdfs:comment """Person as subject in the scientific study of Commentaries on Peter Lombard’s Sentences."""@en;
+	rdfs:subClassOf human:Person, [
+		a owl:Restriction; owl:onProperty drcs:hasStegmuellerPersonDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty human:hasName; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+# drcs:Scholastic
+#	a owl:Class;
+#	rdfs:label "scholastic"@en, "Scholastiker"@de;
+#	rdfs:comment """Scholastic as subject in the scientific study of Petrus Lombardus."""@en;
+#	rdfs:subClassOf schola:Scholastic #, [
+#		a owl:Restriction; owl:onProperty schola:hasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty schola:hasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty schola:hasReportatorRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty schola:hasReportatorRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+drcs:Commentary
+	a owl:Class;
+	rdfs:label "commentary"@en, "Kommentar"@de, "commentarius"@la;
+	rdfs:comment """Commentary on Peter Lombard’s Sentences."""@en;
+	rdfs:subClassOf schola:Commentary, [
+		a owl:Restriction; owl:onProperty drcs:hasStegmuellerCommentaryDescription; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty drcs:hasStegmuellerCode; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+	# owl:disjointUnioOf (schola:Lectura schola:LecturaRevisa schola:Reportatio schola:ReportatioApprobata schola:Ordinatio).
+
+#
+# PROPERTIES
+#
+
+drcs:hasStegmuellerPersonDescription
+ 	a owl:ObjectProperty;
+ 	rdfs:label "has Stegmüller's person description"@en;
+ 	rdfs:comment """Relating a person to a Stegmüller's description thereof."""@en;
+ 	rdfs:subPropertyOf human:hasDescription;
+ 	knora-base:subjectClassConstraint drcs:Person;
+ 	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+drcs:hasStegmuellerCommentaryDescription
+	a owl:ObjectProperty;
+	rdfs:label "has Stegmüller's commentary description"@en;
+	rdfs:comment """Relating a commentary on Petrus Lombardus' Sentences to a Stegmüller's description thereof."""@en;
+	rdfs:subPropertyOf text:hasDescription;
+	knora-base:subjectClassConstraint drcs:Commentary;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+drcs:hasStegmuellerCode
+	a owl:ObjectProperty;
+	rdfs:label "has Stegmüller's code"@en;
+	rdfs:comment """Relating a commentary on Petrus Lombardus' Sentences to a Stegmüller's code thereof."""@en;
+	rdfs:subPropertyOf text:hasText;
+	knora-base:subjectClassConstraint drcs:Commentary;
+	knora-base:objectClassConstraint knora-base:TextValue;
+	salsah-gui:guiElement salsah-gui:Richtext.
+
+# drcs:isPartOfCommentary
+#	a owl:ObjectProperty;
+#	rdfs:label "is part of commentary "@en, "ist Teil eines Kommentars"@de;
+#	rdfs:comment """Relating a scholastic text structure to a scholastic commentary it is part of."""@en;
+#	rdfs:domain schola:Structure;
+#	rdfs:range schola:Commentary;
+#	rdfs:subPropertyOf text-structure:isPartOfTextExpression;
+#	knora-base:subjectClassConstraint schola:Structure;
+#	knora-base:objectClassConstraint schola:Commentary.
+
+# drcs:isPartOfCommentaryValue
+#	a owl:ObjectProperty;
+#	rdfs:label "is part of commentary - statement"@en, "ist Teil eines Kommentars - Festlegung"@de;
+#	rdfs:comment """Relating a scholastic text structure to a statement as reification of the relation between the text and a commentary it is part of."""@en;
+#	rdfs:subPropertyOf text-structure:isPartOfTextExpressionValue;
+#	knora-base:subjectClassConstraint schola:Structure;
+#	knora-base:objectClassConstraint knora-base:LinkValue.

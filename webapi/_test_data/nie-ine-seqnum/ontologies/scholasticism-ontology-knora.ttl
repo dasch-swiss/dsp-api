@@ -1,0 +1,241 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix cidoc: <http://www.cidoc-crm.org/cidoc-crm/>.
+@prefix human: <http://www.knora.org/ontology/0048/human#>.
+@prefix concept: <http://www.knora.org/ontology/0044/concept#>.
+@prefix language: <http://www.knora.org/ontology/004F/language#>.
+@prefix text: <http://www.knora.org/ontology/0059/text#>.
+@prefix text-structure: <http://www.knora.org/ontology/005B/text-structure#>.
+@prefix textedit: <http://www.knora.org/ontology/005A/text-editing#>.
+@prefix ling: <http://www.knora.org/ontology/005D/linguistics#>.
+@prefix logic: <http://www.knora.org/ontology/005E/logic#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+
+@base <http://www.knora.org/ontology/0057/scholasticism>.
+@prefix schola: <http://www.knora.org/ontology/0057/scholasticism#>.
+
+<http://www.knora.org/ontology/0057/scholasticism>
+	a owl:Ontology;
+	dct:title "An ontology about Scholasticism"@en;
+	dct:description """Formal description of elements in Scholasticism."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE, University of Basel, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en;
+	dct:publisher "Basel University, Switzerland"@en;
+
+	knora-base:attachedToProject <http://rdfh.ch/projects/0057>.
+
+#
+# CLASSES
+#
+
+schola:Scholasticism
+	a owl:Class;
+	rdfs:label "scholasticism"@en, "Scholastik"@de;
+	rdfs:comment """Method of critical thought dominating theological and philosophical study in Western Christianity and teaching by academics or scholastics (schoolmen) of universities in Europe from about 1100 to 1700."""@en;
+	rdfs:subClassOf concept:ThoughtMethod. #*
+
+schola:Scholastic
+	a owl:Class;
+	rdfs:label "scholastic"@en, "ScholastikerIn"@de;
+	rdfs:comment """An adherent of Scholasticism."""@en;
+	skos:note """There are no female scholastics because women were not allowed to universities."""@en; # Can this be stated that absolute?
+	rdfs:subClassOf human:Person, [
+#		a owl:Restriction; owl:onProperty schola:hasRole; owl:someValuesFrom schola:Role], [
+		a owl:Restriction; owl:onProperty schola:hasRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty schola:hasRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger] #, [
+#		a owl:Restriction; owl:onProperty schola:hasReportatorRole; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty schola:hasReportatorRoleValue; owl:minCardinality "0"^^xsd:nonNegativeInteger]
+		.
+
+#* schola:Translator: SCO text:Translator: handwriting?
+
+schola:Role
+	a owl:Class;
+	rdfs:label "scholastic role"@en;
+	rdfs:comment """Role a scholastic has."""@en;
+	rdfs:subClassOf human:PersonRole.
+
+# schola:Complilator
+#	a owl:Class;
+#	rdfs:label "reportator"@la, "reportator"@en, "Reportator"@de;
+#	rdfs:comment """Role of a scholastic student registering the content of a lesson."""@en; #* also secretary of lecturer, RP
+#	rdfs:subClassOf schola:Role.
+
+schola:Reportator
+	a owl:Class;
+	rdfs:label "reportator"@la, "reportator"@en, "Reportator"@de;
+	rdfs:comment """Role of a scholastic student registering the content of a lesson."""@en; #* also secretary of lecturer, RP
+	rdfs:subClassOf schola:Role.
+
+# schola:Expression
+#	a owl:Class;
+#	rdfs:label "scholastic expression"@en, "scholastischer Expression"@de;
+#	rdfs:comment """Expression created by a scholastic."""@en;
+#	rdfs:subClassOf document:Expression.
+
+schola:Commentary
+	a owl:Class;
+	rdfs:label "scholastic commentary"@en, "scholastischer Kommentar"@de, "commentarius scholasticus"@la;
+	rdfs:comment """Commentary made by a scholastic."""@en;
+	rdfs:subClassOf text:Commentary. # , [
+#		a owl:Restriction; owl:onProperty schola:commentaryHasProcedure; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+#		a owl:Restriction; owl:onProperty schola:commentaryHasProcedureValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+schola:ProceduralCommentary
+	a owl:Class;
+	rdfs:label "procedural scholastic commentary"@en, "prozeduraler scholastischer Kommentar"@de;
+	rdfs:comment """Scholastic commentary as result of a creation procedure."""@en;
+	rdfs:subClassOf schola:Commentary.
+
+# schola:CommentingProcedure #* RLP: stage?
+#	a owl:Class;
+#	rdfs:label "scholastic commenting procedure"@en, "scholastische Kommentierungvorgehensweise"@de;
+#	rdfs:comment """Scholastic procedure to comment."""@en;
+#	rdfs:subClassOf event:Procedure. # event:Stage
+
+schola:LecturaCommentary
+	a owl:Class;
+	rdfs:label "lectura commentary"@en, "Lectura-Kommentar"@de, "lectura"@la;
+	rdfs:comment """Scholastic commentary on a text expression, as presented by its author in a lecture."""@en;
+	rdfs:subClassOf schola:ProceduralCommentary.
+
+schola:LecturaRevisaCommentary #* RLP: = Ordinatio? => for publication? ; after Lectura
+	a owl:Class;
+	rdfs:label "lectura revisa commentary"@en, "Lectura Revisa-Kommentar"@de, "lectura revisa"@la;
+	rdfs:comment """Scholastic commentary on a text expression, as revised by its author after its presentation in a lecture."""@en;
+	rdfs:subClassOf schola:ProceduralCommentary, [
+		a owl:Restriction; owl:onProperty schola:hasReportator; owl:minCardinality "0"^^xsd:nonNegativeInteger], [
+		a owl:Restriction; owl:onProperty schola:hasReportatorValue; owl:minCardinality "0"^^xsd:nonNegativeInteger].
+
+schola:ReportatioCommentary #* after LecturaRevisa
+	a owl:Class;
+	rdfs:label "reportatio commentary"@en, "Reportatio-Kommentar"@de, "reportatio"@la;
+	rdfs:comment """Scholastic commentary *on a text expression*, as recorded by a *student* in a lecture."""@en; #* RLP: "listener", "auditor" instead of "student"?
+	rdfs:subClassOf schola:ProceduralCommentary.
+
+schola:ReportatioApprobataCommentary #* after Reportatio
+	a owl:Class;
+	rdfs:label "reportatio approbata commentary"@en, "Reportatio Approbata-Kommentar"@de, "reportatio approbata"@la;
+	rdfs:comment """Scholastic commentary on a text expression as recorded by * and approved by the *lecturer OR author*."""@en;
+	rdfs:subClassOf schola:ProceduralCommentary.
+
+schola:OrdinatioCommentary #* after ReportatioApprobata
+	a owl:Class;
+	rdfs:label "ordinatio commentary"@en, "Ordinatio-Kommentar"@de, "ordinatio"@la;
+	rdfs:comment """Scholastic commentary on a text expression as composed for publication."""@en;
+	rdfs:subClassOf schola:ProceduralCommentary.
+
+schola:GlossCommentary
+	a owl:Class;
+	rdfs:label "gloss commentary"@en, "Glosse-Kommentar"@de;
+	rdfs:comment """Scholastic commentary containing glosses."""@en;
+	rdfs:subClassOf schola:Commentary. # hasGloss, hasDiscussion
+
+schola:VerseCommentary
+	a owl:Class;
+	rdfs:label "verse commentary"@en, "Vers-Kommentar"@de;
+	rdfs:comment """Scholastic commentary containing verses."""@en;
+	rdfs:subClassOf schola:Commentary. # hasVerse, hasDiscussion
+
+schola:TableCommentary #** only text?
+	a owl:Class;
+	rdfs:label "table commentary"@en, "Tabelle-Kommentar"@de;
+	rdfs:comment """Scholastic commentary containing a table."""@en;
+	rdfs:subClassOf schola:Commentary. # hasTable, hasDiscussion
+
+schola:QuaestioCommentary
+	a owl:Class;
+	rdfs:label "quaestio commentary"@en, "Quaestio-Kommentar"@de, "quaestio"@la;
+	rdfs:comment """Scholastic commentary containing questions."""@en; # initiated?
+	rdfs:subClassOf schola:Commentary. # hasQuestion, hasAnswer, hasDiscussion
+
+schola:ConclusioCommentary
+	a owl:Class;
+	rdfs:label "conclusio commentary"@en, "Conclusio-Kommentar"@de, "conclusio"@la;
+	rdfs:comment """Scholastic commentary containing conclusions."""@en;
+	rdfs:subClassOf schola:Commentary. # hasConclusion, hasDiscussion
+
+schola:SyllogismusCommentary
+	a owl:Class;
+	rdfs:label "syllogismus commentary"@en, "Syllogismus-Kommentar"@de, "syllogismus"@la;
+	rdfs:comment """Scholastic commentary containing syllogisms."""@en;
+	rdfs:subClassOf schola:Commentary. # hasSyllogism, hasDiscussion
+
+schola:AbbreviationCommentary
+	a owl:Class;
+	rdfs:label "abbreviation commentary"@en, "Kurzfassung-Kommentar"@de, "abbreviatio"@la;
+	rdfs:comment """Scholastic commentary as abbreviation."""@en;
+	rdfs:subClassOf schola:Commentary. # has textedit:Abbreviation
+
+schola:ParaphraseCommentary
+	a owl:Class;
+	rdfs:label "paraphrase commentary"@en, "Paraphrase-Kommentar"@de;
+	rdfs:comment """Scholastic commentary as paraphrase."""@en;
+	rdfs:subClassOf schola:Commentary. # has textedit:Paraphrase
+
+schola:LiteralExpositionCommentary
+	a owl:Class;
+	rdfs:label "literal exposition commentary"@en, "wörtliche Auslegung-Kommentar"@de;
+	rdfs:comment """Scholastic commentary as literal exposition."""@en;
+	rdfs:subClassOf schola:Commentary. # has textedit:LiteralExposition
+
+#
+# PROPERTIES
+#
+
+schola:hasRole
+	a owl:ObjectProperty;
+	rdfs:label "has role"@en, "hat Rolle"@de;
+	rdfs:comment """Relating a scholastic to a role he has."""@en;
+	rdfs:domain schola:Scholastic;
+	rdfs:range schola:Role;
+	rdfs:subPropertyOf human:personHasRole;
+	knora-base:subjectClassConstraint schola:Scholastic;
+	knora-base:objectClassConstraint schola:Role.
+
+schola:hasRoleValue
+	a owl:ObjectProperty;
+	rdfs:label "has role - statement"@en, "hat Rolle - Festlegung"@de;
+	rdfs:comment """Relating a scholastic to a statement as reification of the relation between the scholastic and a role he has."""@en;
+	rdfs:subPropertyOf human:personHasRoleValue;
+	knora-base:subjectClassConstraint schola:Scholastic;
+	knora-base:objectClassConstraint knora-base:LinkValue.
+
+# schola:hasReportatorRole
+#	a owl:ObjectProperty;
+#	rdfs:label "has reportator role"@en, "hat Reportator Rolle"@de;
+#	rdfs:comment """Relating a scholastic to a reportator role he has."""@en;
+#	rdfs:domain schola:Scholastic;
+#	rdfs:range schola:Reportator;  
+#	rdfs:subPropertyOf schola:hasRole;
+#	knora-base:subjectClassConstraint schola:Scholastic;
+#	knora-base:objectClassConstraint schola:Reportator.
+
+# schola:hasReportatorRoleValue
+#	a owl:ObjectProperty;
+#	rdfs:label "has reportator role - statement"@en, "hat Reportator Rolle - Festlegung"@de;
+#	rdfs:comment """Relating a scholastic to a statement as reification of the relation between the scholastic and a reportator role he has."""@en;
+#	rdfs:subPropertyOf schola:hasRoleValue;
+#	knora-base:subjectClassConstraint schola:Scholastic;
+#	knora-base:objectClassConstraint knora-base:LinkValue.
+
+ schola:hasReportator
+	a owl:ObjectProperty;
+	rdfs:label "has reportator"@en, "hat Reportator"@de;
+	rdfs:comment """Relating a scholastic comment of a lecture to a scholastic who reported it."""@en;
+	rdfs:domain schola:LecturaRevisaCommentary;
+#	rdfs:range [rdfs:subClassOf schola:Scholastic, [a owl:Restriction; owl:onProperty schola:hasRole; owl:someValuesFrom schola:Reportator];
+	rdfs:subPropertyOf knora-base:hasLinkTo;
+	knora-base:subjectClassConstraint schola:LecturaRevisaCommentary;
+	knora-base:objectClassConstraint schola:Scholastic.
+
+schola:hasReportatorValue
+	a owl:ObjectProperty;
+	rdfs:label "has reportator - statement"@en, "hat Reportator - Festlegung"@de;
+	rdfs:comment """Relating a scholastic lecture to a statement as reification of the relation between the lecture and a scholastic who reported it."""@en;
+	rdfs:subPropertyOf knora-base:hasLinkToValue;
+	knora-base:subjectClassConstraint schola:LecturaRevisaCommentary;
+	knora-base:objectClassConstraint knora-base:LinkValue.

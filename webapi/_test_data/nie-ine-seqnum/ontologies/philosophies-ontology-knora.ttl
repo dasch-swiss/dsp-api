@@ -1,0 +1,61 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+@prefix skos: <http://www.w3.org/2004/02/skos/core#>.
+@prefix dct: <http://purl.org/dc/terms/>.
+@prefix philo: <http://www.knora.org/ontology/0053/philosophy#>.
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#>.
+
+@base <http://www.knora.org/ontology/0052/philosophies>.
+@prefix philos: <http://www.knora.org/ontology/0052/philosophies#>.
+
+<http://www.knora.org/ontology/0052/philosophies>
+	a owl:Ontology;
+	dct:title "An ontology about philosophies"@en;
+	dct:description """Formal description of philosophies, general subclasses, related classes, properties, and instances."""@en;
+	dct:creator "Hans Cools, MD, knowledge engineer, ontologist, software developer, NIE-INE, Basel University, Switzerland"@en;
+	dct:contributor "Prof. Dr. Ueli Zahnd, Faculty of Theology, University of Basel, Switzerland"@en, "Gabriel Müller, Faculty of Theology, University of Basel, Switzerland"@en;
+
+	knora-base:attachedToProject <http://rdfh.ch/projects/0052>.
+
+#
+# INSTANCES
+#
+
+philos:Albertism
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0052/philosophies#>;
+	rdfs:label "Albertism"@en;
+	rdfs:comment """Theological ideas of Albertus Magnus, 13th-century German Scholastic philosopher."""@en; #*
+	rdfs:subClassOf philo:Philosophy. # :Theology
+
+philos:Humanism
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0052/philosophies#>;
+	rdfs:label "Humanism"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+philos:Nominalism #** existing?
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0052/philosophies#>;
+	rdfs:label "Nominalism"@en;
+	rdfs:comment """Phylosophy stating that only individual things exist, denying the existence of universals and abstract objects."""@en;
+	rdfs:subClassOf philo:Metaphysics.
+
+philos:Scotism
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0052/philosophies#>;
+	rdfs:label "Scotism"@en;
+	rdfs:comment """."""@en; #*
+	rdfs:subClassOf philo:Philosophy.
+
+philos:Thomism
+	a owl:Class;
+	#rdfs:isDefinedBy <http://www.knora.org/ontology/0052/philosophies#>;
+	rdfs:label "Thomism"@en;
+	rdfs:comment """Phylosophy base on the work of Thomas Aquinas (1225 - 1274-O3-O7)."""@en;
+	rdfs:subClassOf philo:Philosophy. # :Theology
+
+#* Averroes?
+#* Augustinus? - Augustinianism - Augustine of Hippo

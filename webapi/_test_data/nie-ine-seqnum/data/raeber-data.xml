@@ -1,0 +1,1059 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<knoraXmlImport:resources xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0040-agent="http://api.knora.org/ontology/0040/agent/xml-import/v1#" xmlns:p0044-concept="http://api.knora.org/ontology/0044/concept/xml-import/v1#" xmlns:p0045-device="http://api.knora.org/ontology/0045/device/xml-import/v1#" xmlns:p0047-event="http://api.knora.org/ontology/0047/event/xml-import/v1#" xmlns:p0048-human="http://api.knora.org/ontology/0048/human/xml-import/v1#" xmlns:p0049-human-geography="http://api.knora.org/ontology/0049/human-geography/xml-import/v1#" xmlns:p004C-information-carrier="http://api.knora.org/ontology/004C/information-carrier/xml-import/v1#" xmlns:p004D-kuno-raeber="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#" xmlns:p004F-language="http://api.knora.org/ontology/004F/language/xml-import/v1#" xmlns:p0050-literature="http://api.knora.org/ontology/0050/literature/xml-import/v1#" xmlns:p0051-organization="http://api.knora.org/ontology/0051/organization/xml-import/v1#" xmlns:p0055-physical-resource="http://api.knora.org/ontology/0055/physical-resource/xml-import/v1#" xmlns:p0056-publishing="http://api.knora.org/ontology/0056/publishing/xml-import/v1#" xmlns:p0059-text="http://api.knora.org/ontology/0059/text/xml-import/v1#" xmlns:p005A-text-editing="http://api.knora.org/ontology/005A/text-editing/xml-import/v1#" xmlns:p005B-text-structure="http://api.knora.org/ontology/005B/text-structure/xml-import/v1#" xmlns:p005C-document="http://api.knora.org/ontology/005C/document/xml-import/v1#" xmlns:p005D-linguistics="http://api.knora.org/ontology/005D/linguistics/xml-import/v1#" xmlns:pontology-knora-base="http://api.knora.org/ontology/ontology/knora-base/xml-import/v1#" xmlns="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#">
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00009">
+    <knoraXmlImport:label>Reduktionen 1981</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Bändchen, 120 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">101 Gedichte, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=505:reduktionen-vorwort"&gt;Vorwort&lt;/a&gt;, Umschlagstexte (U1, U4), Verlagswerbung</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Reduktionen 1981</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00031"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:containsLaterStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00043"/>
+    </p004D-kuno-raeber:containsLaterStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1981-06</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Ebner, Ulm</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Rogner's Edition bei Ullstein, Ullstein GmbH, Frankfurt am Main/Berlin/Wien (Juni 1981)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;»Reduktionen« / Gedichte&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">reduktionen</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="600" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1259:reduktionen-kommentar&amp;amp;Itemid=176" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PoemManuscriptConvolute id="Raeber.Convolute-00012">
+    <knoraXmlImport:label>Manuskripte 1979</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-08-20--1979-11-01"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte, Abbildungen, Diplomatische Umschriften</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">378 Manuskripte und 11 Typoskripte zu 107 Gedichten (5 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">Nr. 1-77: grüne Mappe EG 79 I; Nr. 78-87: blaue Mappe: &lt;span class="zitat"&gt;Kuno Raeber / REDUKTIONEN / Gedichte&lt;/span&gt; (Typoskripte)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">77 Dossiers (darunter 9 Sammeldossiers), 259 beschriebene Seiten</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Manuskripte 1979</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02 (Schachtel 41)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format), z. T. Typoskript-Makulatur; schwarze Tinte</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00048"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00043"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00031"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">manuskripte-1979</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="600" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6348:manuskripte-1979-kommentar" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemManuscriptConvolute>
+  <p004D-kuno-raeber:PoemPostcardConvolute id="Raeber.Convolute-00014">
+    <knoraXmlImport:label>Karten 1984</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1984-03-12--1984-03-27"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00029"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00030"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte, Abbildungen, Diplomatische Umschriften unter Verwendung der Abbildungen aus Werke, Bd. 7, S. 372-391 (mit freundlicher Genehmigung des scaneg Verlags, München)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Handschriften zu 10 Gedichten (9 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">Privatbesitz des Empfängers Jörg Trobitius</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">10 Karten</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Karten 1984</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Kunstkarten, auf der Rückseite mit je einem datierten Widmungs-Gedicht beschrieben. Die Karten 4-8 und 10 enthalten zusätzlich eine zeichnerische Skizze (v.a. Kopf-Medaillons).</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00026"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">karten-1984</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemPostcardConvolute>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00016">
+    <knoraXmlImport:label>FLUSSUFER 1963</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Bändchen mit festem, braunem Karton und Schutzumschlag, 64 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">53 Gedichte, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6322:flussufer-vorwort"&gt;Vorwort&lt;/a&gt;, Anzeige Raeber-Publikationen&lt;br/&gt;Im Inhaltsverzeichnis 3 Zeiträume unterschieden:&lt;br/&gt;- &lt;em&gt;Gedichte 1960&lt;/em&gt; (S. 7-13; 7 Gedichte)&lt;br/&gt;- &lt;em&gt;Gedichte 1961&lt;/em&gt; (S. 14-24; 11 Gedichte)&lt;br/&gt;- &lt;em&gt;Gedichte 1962&lt;/em&gt; (S. 25-59; 35 Gedichte)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">FLUSSUFER 1963</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1963</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Poeschel &amp; Schulz-Schomburgk, Eschwege/Werra</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Claassen Verlag, Hamburg (1963)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;FLUSSUFER / Gedichte&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">flussufer</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6202:flussufer-kommentar&amp;amp;Itemid=232" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00017">
+    <knoraXmlImport:label>Die verwandelten Schiffe 1957</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschüre mit Zeichnung auf vorderem Umschlag, 64 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">49 Gedichte; Klappentext (&lt;cite class="titel"&gt;Das Gedicht heute&lt;/cite&gt;) von Raeber</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Die verwandelten Schiffe 1957</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1957</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Wiking Druckerei GmbH, Darmstadt</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Hermann Luchterhand Verlag, Darmstadt, Berlin-Frohnau, Neuwied (1957)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;Die verwandelten Schiffe / GEDICHTE&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">die-verwandelten-schiffe</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1258:die-verwandelten-schiffe-kommentar&amp;amp;Itemid=232" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PolyAuthorPublicationConvolute id="Raeber.Convolute-00024">
+    <knoraXmlImport:label>Verstreutes</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Unselbständig publizierte Gedichte und Gedichtgruppen (Verstreutes)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Verstreutes</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">verstreutes</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PolyAuthorPublicationConvolute>
+  <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00026">
+    <knoraXmlImport:label>Notizbuch 1980-88</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1980-12-07--1988-08-27"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Rotbraunes Notizbuch</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00030"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Entwürfe zu 125 Gedichten (168 Fassungen, 31 Endfassungen); mit den Zyklen:&lt;br/&gt;&lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=90:beschwoerung-des-todes-i&amp;amp;Itemid=315"&gt;&lt;span class="titel"&gt;Beschwörung des Todes I-XXIX&lt;/span&gt;&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1177:new-york-i&amp;amp;Itemid=315"&gt;New York I-VI&lt;/a&gt;, &lt;span class="titel"&gt;&lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1207:rom-i&amp;amp;Itemid=315"&gt;Rom I-IX&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1224:escorial-i&amp;amp;Itemid=315"&gt;Escorial I-III&lt;/a&gt;&lt;/span&gt;, &lt;span class="titel"&gt;&lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1243:beschwoerung-andere-abteilung-i&amp;amp;Itemid=315"&gt;Beschwörung – Andere Abteilung I-XIII&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=1246:durchgang-i&amp;amp;Itemid=315"&gt;Durchgang I-XI&lt;/a&gt;&lt;/span&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">212 beschriebene Seiten (+ U2/U3); Bll von Raeber numeriert, ab S. 106 leer</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Notizbuch 1980-88</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-h/02 (Schachtel 29)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00059"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00060"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">notizbuch-1980-1988</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6347:notizbuch-1980-88-kommentar" target="_blank"&gt;Beschreibung&lt;/a&gt;; vgl. auch das Typoskript &lt;a data-mediabox-height="400" data-mediabox-width="800" href="index.php/component/k2/item/3885-abgewandt-zugewandt-zur-entstehung?Itemid=232" target="_blank"&gt;Zur Entstehung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemNotebook>
+  <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00027">
+    <knoraXmlImport:label>Notizbuch 1979-82</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-08-21--1982-09-28"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Blaues Notizbuch, grau-schwarze Tinte</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00029"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Entwürfe zu 47 Mundartgedichten (49 Fassungen, 1 Endfassung)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">102 beschriebene Seiten (+ U2/U3), hinterer Teil leer</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Notizbuch 1979-82</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-h/01 (Schachtel 29)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00059"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00060"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">notizbuch-1979-1982</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">Enthält alle Mundartgedichte von &lt;span class="titel"&gt;Abgewandt Zugewandt&lt;/span&gt; außer &lt;span class="titel"&gt;Lozärn 1&lt;/span&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemNotebook>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00029">
+    <knoraXmlImport:label>Alemannische Gedichte 1985</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Kartoniertes Bändchen mit Umschlag-Porträt, Spaltentexte, 128 Ss;&lt;br/&gt;S. 5-61 &lt;span class="titel"&gt;Hochdeutsche Gedichte&lt;/span&gt;; S. 63-102 &lt;a class="titel" href="index.php?option=com_k2&amp;amp;view=itemlist&amp;amp;task=category&amp;amp;id=30:hochdeutsche-gedichte&amp;amp;Itemid=138"&gt;Hochdeutsche Gedichte&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">36 Mundart-Gedichte (+ 52 hochdeutsche Gedichte + Essay)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Abgewandt Zugewandt 1985 – Alemannische Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00059"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00027"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1985</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Benziger AG, Einsiedeln</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Ammann Verlag AG, Zürich (1985)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;Abgewandt Zugewandt / Neue Gedichte / Hochdeutsch und Luzerner Alemannisch / Mit einem Nachwort über das schweizerische Sprachdilemma&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">abgewandt-zugewandt-alemannische-gedichte</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="600" href="index.php/component/k2/item/3953-abgewandt-zugewandt-kommentar?Itemid=294" target="_blank"&gt;Beschreibung&lt;/a&gt;; zur Entstehung der Publikation vgl. Raebers Typoskript &lt;a class="jcepopup titel" data-mediabox-height="400" data-mediabox-width="800" href="index.php/component/k2/item/3885-abgewandt-zugewandt-zur-entstehung?Itemid=232" target="_blank"&gt;Zur Entstehung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00030">
+    <knoraXmlImport:label>Hochdeutsche Gedichte 1985</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Bändchen mit Umschlag-Porträt, Spaltentexten, 128 Ss;&lt;br/&gt;S. 5-61 &lt;span class="titel"&gt;Hochdeutsche Gedichte&lt;/span&gt;; S. 63-102 &lt;a class="titel" href="index.php?option=com_k2&amp;amp;view=itemlist&amp;amp;task=category&amp;amp;id=29:alemannische-gedichte&amp;amp;Itemid=137"&gt;Alemannische Gedichte&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">52 hochdeutsche Gedichte (+ 36 Mundart-Gedichte + Essay); darunter 5 Zyklen:&lt;br/&gt;&lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=25:beschwoerung-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Beschwörung&lt;/span&gt; I-V&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=130:new-york-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;New York&lt;/span&gt; I-VI&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=136:rom-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Rom&lt;/span&gt; I-IX&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=145:escorial-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Escorial&lt;/span&gt; I-III&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=148:frankfurt-am-main-i-der-adler&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Frankfurt am Main&lt;/span&gt; I-II&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Abgewandt Zugewandt 1985 – Hochdeutsche Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00059"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00026"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1985</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Benziger AG, Einsiedeln</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Ammann Verlag AG, Zürich (1985)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;Abgewandt Zugewandt / Neue Gedichte / Hochdeutsch und Luzerner Alemannisch / Mit einem Nachwort über das schweizerische Sprachdilemma&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">abgewandt-zugewandt-hochdeutsche-gedichte</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="600" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=3953:abgewandt-zugewandt-kommentar&amp;amp;Itemid=294" target="_blank"&gt;Beschreibung&lt;/a&gt;; vgl. auch Raebers Typoskript &lt;a class="jcepopup titel" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=3885:abgewandt-zugewandt-zur-entstehung&amp;amp;Itemid=232" target="_blank"&gt;Zur Entstehung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00031">
+    <knoraXmlImport:label>Notizbuch 1979</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-06-01--1979-08-19"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Entwürfe zu 110 Gedichten (145 Fassungen, 5 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Entwürfe zu 110 Gedichten (145 Fassungen, 5 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">142 beschriebene Seiten (+ U2, U3)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Notizbuch 1979</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/01 (Schachtel 29)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00043"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">notizbuch-1979</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=4379:notizbuch-1979-kommentar&amp;amp;Itemid=232" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemNotebook>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00033">
+    <knoraXmlImport:label>GEDICHTE 1960</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Oktavbändchen, gelber Umschlag, 56 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">46 Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">GEDICHTE 1960</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1960</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">Poeschel &amp; Schulz-Schomburgk, Eschwege</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Claassen Verlag GmbH, Hamburg (1960)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;GEDICHTE&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">gedichte</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=5761:gedichte-kommentar&amp;amp;Itemid=232" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00037">
+    <knoraXmlImport:label>GESICHT IM MITTAG 1950</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Heft von 16 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">14 Gedichte ohne Titel</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">GESICHT IM MITTAG 1950</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0056-publishing__hasDate knoraType="date_value">GREGORIAN:1950</p004D-kuno-raeber:p0056-publishing__hasDate>
+    <p004D-kuno-raeber:p0056-publishing__hasPrinterDescription knoraType="richtext_value">H. Jaunin S. A., Lausanne</p004D-kuno-raeber:p0056-publishing__hasPrinterDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublisherDescription knoraType="richtext_value">Vineta-Verlag AG, Basel (1950)</p004D-kuno-raeber:p0056-publishing__hasPublisherDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasTitle knoraType="richtext_value">&lt;span class="titel"&gt;KUNO RÄBER / GESICHT IM MITTAG&lt;/span&gt;</p004D-kuno-raeber:p0056-publishing__hasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">gesicht-im-mittag</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=3671:gesicht-im-mittag-kommentar" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PrintedPoemBookPublication>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00043">
+    <knoraXmlImport:label>Typoskripte 1979</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte; Raebers Blattnumerierung wird unter der Rubrik "Seite/Blatt" aufgeführt</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Typoskripte zu 101 Gedichten (101 Fassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">Grüne Mappe G 79</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">209 Bll (A4)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Typoskripte 1979</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/03 (Schachtel 41)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format)</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00031"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">typoskripte-1979</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="600" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6410:typoskripte-1979-kommentar" target="_blank"&gt;Beschreibung&lt;/a&gt;; &lt;a class="jcepopup" data-mediabox-width="800" href="images/typos/typos1979_inhalt.jpg" target="_blank"&gt;Gedichtliste&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00048">
+    <knoraXmlImport:label>Typoskripte 1979-spez</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte, Abbildungen, Diplomatische Umschriften</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Typoskripte zu 10 Gedichten (10 temporäre Reinschriften)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">10  Dossiers, 10 beschriebene Seiten</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Typoskripte 1979-spez</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02 (Schachtel 41), als Dossiers Nr. 78-87 an Manuskripte 1979 angehängt</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format)</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00027"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">typoskripte-1979-spez</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:PoemManuscriptConvolute id="Raeber.Convolute-00059">
+    <knoraXmlImport:label>Manuskripte 1979-83</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-08-21--1983-03-08"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00029"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00030"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte, Abbildungen, Diplomatische Umschriften; Reihenfolge entsprechend Datum und Zusammengehörigkeit modifiziert</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">359 Manuskripte und 5 Typoskripte zu 131 Gedichten, Hochdeutsch + Mundart (41 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">Nr. 1-58: Mappe EG 81-82-83; Nr. 59-121: Mappe EG 82-83</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">121 Dossiers, 369 beschriebene Seiten</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Manuskripte 1979-83</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-h/03 (Schachtel 42)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format), z. T. Typoskript-Makulatur; schwarze Tinte (spitze Feder)</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+      <p004D-kuno-raeber:PoemTypescriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00060"/>
+    </p004D-kuno-raeber:containsEarlierStagesOfTypescriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00027"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00026"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">manuskripte-1979-1983</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">&lt;a class="jcepopup" data-mediabox-height="400" data-mediabox-width="800" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6349:manuskripte-1979-83-kommentar" target="_blank"&gt;Beschreibung&lt;/a&gt;</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemManuscriptConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvoluteWithImage id="Raeber.Convolute-00060">
+    <knoraXmlImport:label>Typoskripte 1983</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00029"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+      <p004C-information-carrier:Convolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00030"/>
+    </p004D-kuno-raeber:p004C-information-carrier__containsEarlierStagesOfPublication>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Edierte Texte, Korrekturvermerke</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Typoskripte (Druckvorlage) zu 88 Gedichten + Nachwort (Essay); &lt;a class="jcepopup" data-mediabox-width="800" href="images/typos/typos_1983/verzeichnis.jpg" target="_blank"&gt;Inhaltsverzeichnis&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">Roter Umschlag: &lt;span class="zitat"&gt;Abgewandt Zugewandt / (Druckmanuskript) / (116 SS.) / Kuno Raeber, Ainwillerstrasse 1, D-8000 München 40 / Tel 004989 /39 3351&lt;/span&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">14 Dossiers (232 Bll)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Typoskripte 1983</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-h/07 (Schachtel 44)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format)</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00059"/>
+    </p004D-kuno-raeber:containsLaterStagesOfManuscriptConvolute>
+    <p004D-kuno-raeber:containsLaterStagesOfNotebook>
+      <p004D-kuno-raeber:PoemNotebook knoraType="link_value" linkType="ref" target="Raeber.Convolute-00027"/>
+    </p004D-kuno-raeber:containsLaterStagesOfNotebook>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">typoskripte-1983</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasComment knoraType="richtext_value">Durchschläge (z.T. Kopien) mit Satzauszeichnungen; Titelei vom Verlag; oben Paginierung durch Raeber (3-116). Besonderheit: diphtongiertes "ië" bei den Mundartgedichten als überschriebenes "iö" dargestellt, z. t. mit Bleistift (Setzer) zu "ie" korrigiert (vgl. v.a. bei SCHTROOSS); auch Verdeutlichungen mit Bleistift.&lt;br/&gt;Eine &lt;span class="unterstrichen"&gt;KOPIE&lt;/span&gt; des Druckmanuskripts (A-5-h/06), die Raeber bei sich behielt, enthält einige zusätzliche Korrekturen (vgl. Text-DETAILS).&lt;br/&gt; (&lt;a class="jcepopup" data-mediabox-height="500" data-mediabox-width="600" href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=3953:abgewandt-zugewandt-kommentar&amp;amp;Itemid=232" target="_blank"&gt;Umfassende Beschreibung&lt;/a&gt;)</p004D-kuno-raeber:p0059-text__hasComment>
+  </p004D-kuno-raeber:PoemTypescriptConvoluteWithImage>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00080">
+    <knoraXmlImport:label>Typoskripte 1943-46</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1943-07-16--1946-05-24"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Konstituierte Texte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Entwürfe zu 20 Gedichten (16 Endfassungen)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription knoraType="richtext_value">gräulich-grüne Mappe: &lt;span class="zitat"&gt;(Gedichte 1944/45)&lt;/span&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasOriginDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">43 Bll</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Typoskripte 1943-46</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-b/01 (Schachtel 30)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription knoraType="richtext_value">Einzelblätter (A4-Format)</p004D-kuno-raeber:p004C-information-carrier__hasCarrierCollectionDescription>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">typoskripte-1943-1946</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00099">
+    <knoraXmlImport:label>Register</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Register</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">register</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00103">
+    <knoraXmlImport:label>Hilfe</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Hilfe</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">hilfe</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:DiaryConvolute id="Raeber.Convolute-00113">
+    <knoraXmlImport:label>Tagebuch</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__hasCreating>
+      <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1948--1991"/>
+    </p004D-kuno-raeber:p0048-human__hasCreating>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Textkonstitution ohne Verzeichnung der Korrekturen</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Tagebuchauszüge zur Poetik und zu einzelnen Gedichten</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription knoraType="richtext_value">Ausgewählte Textstellen aus ca. 20 Tagebuch-Heften</p004D-kuno-raeber:p004C-information-carrier__convoluteHasSizeDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Tagebuch</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">C-2-a/01 …, C-2-c/01 … (Schachtel 77-79)</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">tagebuch</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:DiaryConvolute>
+  <p004D-kuno-raeber:LetterConvolute id="Raeber.Convolute-00114">
+    <knoraXmlImport:label>Briefe</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation knoraType="richtext_value">Textkonstitution ohne Verzeichnung der Korrekturen</p004D-kuno-raeber:p004C-information-carrier__convoluteHasContentRepresentation>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Briefstellen zur Gedichtproduktion</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Briefe</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">Vgl. Angabe bei den einzelnen Texten</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">briefe</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:LetterConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00115">
+    <knoraXmlImport:label>Typoskripte divers</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">Typoskripte aus verschiedenen Dossiers außerhalb der normalen archivalischen Zuordnung&lt;br/&gt;z. T. Makulatur, auf der Rückseite als Manuskripte verwendet</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Typoskripte divers</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">typoskripte-divers</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p004D-kuno-raeber:PoemTypescriptConvolute id="Raeber.Convolute-00116">
+    <knoraXmlImport:label>pdf</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">pdf</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">pdf</p004D-kuno-raeber:p0059-text__hasAlias>
+  </p004D-kuno-raeber:PoemTypescriptConvolute>
+  <p0048-human:Creating id="Raeber.Creation.Period-1943-07-16--1946-05-24">
+    <knoraXmlImport:label>Creation_Period-1943-07-16--1946-05-24</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1946-05-24</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1943-07-16</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1948--1991">
+    <knoraXmlImport:label>Creation_Period-1948--1991</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1991</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1948</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1979">
+    <knoraXmlImport:label>Creation_Period-1979</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1979</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1979</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1979-06-01--1979-08-19">
+    <knoraXmlImport:label>Creation_Period-1979-06-01--1979-08-19</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1979-08-19</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1979-06-01</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1979-08-20--1979-11-01">
+    <knoraXmlImport:label>Creation_Period-1979-08-20--1979-11-01</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1979-11-01</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1979-08-20</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1979-08-21--1982-09-28">
+    <knoraXmlImport:label>Creation_Period-1979-08-21--1982-09-28</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1982-09-28</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1979-08-21</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1979-08-21--1983-03-08">
+    <knoraXmlImport:label>Creation_Period-1979-08-21--1983-03-08</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1983-03-08</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1979-08-21</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1980-12-07--1988-08-27">
+    <knoraXmlImport:label>Creation_Period-1980-12-07--1988-08-27</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1988-08-27</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1980-12-07</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p0048-human:Creating id="Raeber.Creation.Period-1984-03-12--1984-03-27">
+    <knoraXmlImport:label>Creation_Period-1984-03-12--1984-03-27</knoraXmlImport:label>
+    <p0048-human:p0047-event__hasEndDate knoraType="date_value">GREGORIAN:1984-03-27</p0048-human:p0047-event__hasEndDate>
+    <p0048-human:p0047-event__hasStartDate knoraType="date_value">GREGORIAN:1984-03-12</p0048-human:p0047-event__hasStartDate>
+  </p0048-human:Creating>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00001">
+    <knoraXmlImport:label>Derived text expression - Worte</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00002">
+    <knoraXmlImport:label>Derived text expression - Mittag</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00003">
+    <knoraXmlImport:label>Derived text expression - Insel</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00004">
+    <knoraXmlImport:label>Derived text expression - Baum</knoraXmlImport:label>
+    <p005A-text-editing:p0059-text__hasLineNumber knoraType="richtext_value">05</p005A-text-editing:p0059-text__hasLineNumber>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00005">
+    <knoraXmlImport:label>Derived text expression - Kiesel (A)</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00006">
+    <knoraXmlImport:label>Derived text expression - Kiesel</knoraXmlImport:label>
+    <p005A-text-editing:p0059-text__hasLineNumber knoraType="richtext_value">05</p005A-text-editing:p0059-text__hasLineNumber>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00008">
+    <knoraXmlImport:label>Derived text expression - Wolke (A)</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00009">
+    <knoraXmlImport:label>Derived text expression - Baum (A)</knoraXmlImport:label>
+    <p005A-text-editing:p0059-text__hasLineNumber knoraType="richtext_value">05</p005A-text-editing:p0059-text__hasLineNumber>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00010">
+    <knoraXmlImport:label>Derived text expression - Wort (A)</knoraXmlImport:label>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p005A-text-editing:DerivedTextExpression id="Raeber.DerivedTextExpression-00012">
+    <knoraXmlImport:label>Derived text expression - Sonnenuhr (A)</knoraXmlImport:label>
+    <p005A-text-editing:p0059-text__hasLineNumber knoraType="richtext_value">05</p005A-text-editing:p0059-text__hasLineNumber>
+    <p005A-text-editing:hasColumnIndicator knoraType="richtext_value">||</p005A-text-editing:hasColumnIndicator>
+    <p005A-text-editing:hasPageIndicator knoraType="richtext_value">//</p005A-text-editing:hasPageIndicator>
+  </p005A-text-editing:DerivedTextExpression>
+  <p004D-kuno-raeber:DiplomaticTranscription id="Raeber.DiplomaticTranscription-00005_00">
+    <knoraXmlImport:label>abc</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004F-language__hasContent knoraType="richtext_value">&lt;h4&gt;Kiesel &lt;span class="markierung einruecken_120"&gt;A&lt;/span&gt;&lt;/h4&gt;&lt;p&gt;Brechungen, &lt;span class="einfuegung"&gt;Spitzen&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span class="streichung"&gt;Splitter&lt;/span&gt; allüberall. Doch &lt;span class="streichung"&gt;die Bäche&lt;/span&gt; am Ende&lt;/p&gt;&lt;p&gt;die Bäche Gestreichel&lt;/p&gt;&lt;p&gt;weich über seidige Kiesel.&lt;/p&gt;</p004D-kuno-raeber:p004F-language__hasContent>
+    <p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+      <p004C-information-carrier:Page knoraType="link_value" linkType="ref" target="Raeber.Page-137268ac857b97bcfc136c129619d55a"/>
+    </p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">0</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:DiplomaticTranscription>
+  <p004D-kuno-raeber:DiplomaticTranscription id="Raeber.DiplomaticTranscription-00008_00">
+    <knoraXmlImport:label>abc</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004F-language__hasContent knoraType="richtext_value">&lt;p&gt; &lt;/p&gt;&lt;h4&gt;Wolke &lt;span class="markierung einruecken_30"&gt;A&lt;/span&gt;&lt;/h4&gt;&lt;p&gt;Nur eine Wolke. &lt;span class="streichung"&gt;Der Mond&lt;/span&gt; &lt;span class="einfuegung"&gt;Aber&lt;/span&gt;&lt;span class="markierung einruecken_30"&gt;&lt;/span&gt;&lt;/p&gt; &lt;p class="streichung"&gt;donnernd hindurch.&lt;/p&gt; &lt;p class="streichung"&gt;diesseits geborsten&lt;/p&gt;&lt;p&gt;ohne lämmerweidenden Schimmer&lt;/p&gt;&lt;p&gt;diesseits der Mond,&lt;/p&gt;&lt;p&gt;geborsten und farblos.&lt;/p&gt;</p004D-kuno-raeber:p004F-language__hasContent>
+    <p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+      <p004C-information-carrier:Page knoraType="link_value" linkType="ref" target="Raeber.Page-720176e41e3a7c8d005f32b0dece479c"/>
+    </p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">0</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:DiplomaticTranscription>
+  <p004D-kuno-raeber:DiplomaticTranscription id="Raeber.DiplomaticTranscription-00009_00">
+    <knoraXmlImport:label>abc</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004F-language__hasContent knoraType="richtext_value">&lt;h4&gt;Baum &lt;span class="einruecken_200 markierung"&gt;A&lt;/span&gt;&lt;/h4&gt;&lt;p&gt;Durch die Zweige &lt;span class="streichung"&gt;d&lt;/span&gt;&lt;span class="ueberschrieben streichung"&gt;ie&lt;/span&gt;&lt;span class="ersetzung streichung"&gt;er&lt;/span&gt; &lt;span class="streichung_doppel streichung"&gt;Trauer&lt;/span&gt;&lt;span class="streichung"&gt; Abend&lt;/span&gt; schaut es&lt;/p&gt;&lt;p&gt;&lt;span class="einfuegung"&gt;dunkel hervor. Die &lt;/span&gt;&lt;br/&gt;&lt;span class="streichung"&gt;hervor. Die &lt;/span&gt;&lt;/p&gt;&lt;p&gt;sinkenden Lider. Aber &lt;span class="streichung"&gt;die Tropfen&lt;/span&gt; was von den Blättern&lt;/p&gt;&lt;p&gt;herabtropft herab auf die Wimpern&lt;/p&gt;&lt;p&gt;ein Lächeln.&lt;/p&gt;&lt;p&gt; &lt;/p&gt;</p004D-kuno-raeber:p004F-language__hasContent>
+    <p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+      <p004C-information-carrier:Page knoraType="link_value" linkType="ref" target="Raeber.Page-86d6af260f42df3be3ad8cb5fad96541"/>
+    </p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">0</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:DiplomaticTranscription>
+  <p004D-kuno-raeber:DiplomaticTranscription id="Raeber.DiplomaticTranscription-00010_00">
+    <knoraXmlImport:label>abc</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004F-language__hasContent knoraType="richtext_value">&lt;p&gt; &lt;/p&gt;&lt;h4&gt;Wort &lt;span class="markierung einruecken_120"&gt;A&lt;/span&gt;&lt;/h4&gt;&lt;p&gt;&lt;span class="einfuegung"&gt;Oben Herum-&lt;/span&gt;&lt;br/&gt;&lt;span class="streichung schicht1"&gt;Herum- &lt;/span&gt;&lt;/p&gt; &lt;p class="streichung schicht1"&gt;tappen im Tang. Aber unten&lt;/p&gt;&lt;p&gt;fahren im Tang. Aber unten&lt;/p&gt;&lt;p&gt;ein Lauern, bis es&lt;/p&gt;&lt;p&gt;heraufsticht.&lt;/p&gt;</p004D-kuno-raeber:p004F-language__hasContent>
+    <p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+      <p004C-information-carrier:Page knoraType="link_value" linkType="ref" target="Raeber.Page-89e1a3e675059cf52af4177a03a4ad0f"/>
+    </p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">0</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:DiplomaticTranscription>
+  <p004D-kuno-raeber:DiplomaticTranscription id="Raeber.DiplomaticTranscription-00012_00">
+    <knoraXmlImport:label>abc</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004F-language__hasContent knoraType="richtext_value">&lt;p&gt; &lt;/p&gt;&lt;h4&gt;Sonnenuhr &lt;span class="markierung einruecken_120"&gt;A&lt;/span&gt;&lt;/h4&gt; &lt;p class="schicht1"&gt;Die erste verletzt &lt;span class="einfuegung"&gt;.&lt;/span&gt; &lt;span class="streichung"&gt;und die zweite&lt;/span&gt;&lt;/p&gt; &lt;p class="streichung schicht1"&gt;verletzt wieder.&lt;/p&gt; &lt;p class="streichung schicht1"&gt;die dritte verletzt wieder.&lt;/p&gt;&lt;p&gt;Und die zweite, die dritte&lt;/p&gt;&lt;p&gt;verletzt wieder. Aber du wirst&lt;/p&gt;&lt;p&gt;ehe die letzte&lt;/p&gt;&lt;p&gt;&lt;span class="zeile"&gt;05 &lt;/span&gt;tötet&lt;/p&gt;&lt;p&gt;den Duft von der heissen&lt;/p&gt;&lt;p&gt;Mauer pflücken, du wirst die Blüten in Eile&lt;/p&gt;&lt;p&gt;pflücken,&lt;/p&gt;&lt;p&gt;ehe die letzte.&lt;/p&gt; &lt;p class="diplom_datum"&gt;23.8.79&lt;/p&gt;</p004D-kuno-raeber:p004F-language__hasContent>
+    <p004D-kuno-raeber:p0059-text__hasLineNumber knoraType="richtext_value">05</p004D-kuno-raeber:p0059-text__hasLineNumber>
+    <p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+      <p004C-information-carrier:Page knoraType="link_value" linkType="ref" target="Raeber.Page-f3d41854199de41a2cc69ee379c7c145"/>
+    </p004D-kuno-raeber:p005A-text-editing__isDiplomaticTranscriptionOfTextOnPage>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">0</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:DiplomaticTranscription>
+  <p004D-kuno-raeber:Page id="Raeber.Page-137268ac857b97bcfc136c129619d55a">
+    <knoraXmlImport:label>Page - A-5-g_02_005</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+      <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+    <p004D-kuno-raeber:p004C-information-carrier__pageHasNumber knoraType="richtext_value">Blatt 01</p004D-kuno-raeber:p004C-information-carrier__pageHasNumber>
+  </p004D-kuno-raeber:Page>
+  <p004D-kuno-raeber:Page id="Raeber.Page-720176e41e3a7c8d005f32b0dece479c">
+    <knoraXmlImport:label>Page - A-5-g_02_082</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+      <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+    <p004D-kuno-raeber:p004C-information-carrier__pageHasNumber knoraType="richtext_value">Blatt 01</p004D-kuno-raeber:p004C-information-carrier__pageHasNumber>
+  </p004D-kuno-raeber:Page>
+  <p004D-kuno-raeber:Page id="Raeber.Page-86d6af260f42df3be3ad8cb5fad96541">
+    <knoraXmlImport:label>Page - A-5-g_02_001</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+      <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+    <p004D-kuno-raeber:p004C-information-carrier__pageHasNumber knoraType="richtext_value">Blatt 01</p004D-kuno-raeber:p004C-information-carrier__pageHasNumber>
+  </p004D-kuno-raeber:Page>
+  <p004D-kuno-raeber:Page id="Raeber.Page-89e1a3e675059cf52af4177a03a4ad0f">
+    <knoraXmlImport:label>Page - A-5-g_02_008</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+      <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+    <p004D-kuno-raeber:p004C-information-carrier__pageHasNumber knoraType="richtext_value">Blatt 01</p004D-kuno-raeber:p004C-information-carrier__pageHasNumber>
+  </p004D-kuno-raeber:Page>
+  <p004D-kuno-raeber:Page id="Raeber.Page-f3d41854199de41a2cc69ee379c7c145">
+    <knoraXmlImport:label>Page - A-5-g_02_019</knoraXmlImport:label>
+    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+      <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
+    <p004D-kuno-raeber:p004C-information-carrier__pageHasNumber knoraType="richtext_value">Blatt 01</p004D-kuno-raeber:p004C-information-carrier__pageHasNumber>
+  </p004D-kuno-raeber:Page>
+  <p0048-human:Person id="Raeber.Person-Franz_Josef_Goertz">
+    <knoraXmlImport:label>Franz Josef Görtz</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Görtz</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Franz Josef</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Franz Josef Görtz</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-G._Holland">
+    <knoraXmlImport:label>G. Holland</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Holland</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">G.</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">G. Holland</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Hans_Altenhein">
+    <knoraXmlImport:label>Hans Altenhein</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Altenhein</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Hans</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Hans Altenhein</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Hans_Paeschke">
+    <knoraXmlImport:label>Hans Paeschke</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Paeschke</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Hans</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Hans Paeschke</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Hans_Rudolf_Hilty">
+    <knoraXmlImport:label>Hans Rudolf Hilty</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Hilty</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Hans Rudolf</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Hans Rudolf Hilty</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Hilde_Claassen">
+    <knoraXmlImport:label>Hilde Claassen</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Claassen</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Hilde</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Hilde Claassen</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Horst_Bienek">
+    <knoraXmlImport:label>Horst Bienek</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Bienek</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Horst</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Horst Bienek</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Kuno_Raeber">
+    <knoraXmlImport:label>Kuno Raeber</knoraXmlImport:label>
+    <p0048-human:hasBirthdate knoraType="date_value">GREGORIAN:1922-03-20</p0048-human:hasBirthdate>
+    <p0048-human:hasDeathDate knoraType="date_value">GREGORIAN:1992-01-28</p0048-human:hasDeathDate>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Raeber</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Kuno</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Kuno Raeber</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Markus_Kutter">
+    <knoraXmlImport:label>Markus Kutter</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Kutter</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Markus</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Markus Kutter</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Max_Rychner">
+    <knoraXmlImport:label>Max Rychner</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Rychner</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Max</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Max Rychner</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Nico_Zachmann">
+    <knoraXmlImport:label>Nico Zachmann</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Zachmann</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Nico</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Nico Zachmann</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Paul_Huber">
+    <knoraXmlImport:label>Paul Huber</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Huber</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Paul</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Paul Huber</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Peter_Schneider">
+    <knoraXmlImport:label>Peter Schneider</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Schneider</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Peter</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Peter Schneider</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Redaktion_Deutsche_Rundschau">
+    <knoraXmlImport:label>Redaktion Deutsche Rundschau</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Deutsche Rundschau</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Redaktion</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Redaktion Deutsche Rundschau</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Robert_Konrad">
+    <knoraXmlImport:label>Robert Konrad</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Konrad</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Robert</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Robert Konrad</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Urs_Graf">
+    <knoraXmlImport:label>Urs Graf</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Graf</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Urs</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Urs Graf</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Walter_Hoellerer">
+    <knoraXmlImport:label>Walter Höllerer</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Höllerer</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Walter</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Walter Höllerer</p0048-human:hasName>
+  </p0048-human:Person>
+  <p0048-human:Person id="Raeber.Person-Willi_Schmid">
+    <knoraXmlImport:label>Willi Schmid</knoraXmlImport:label>
+    <p0048-human:hasFamilyName knoraType="richtext_value">Schmid</p0048-human:hasFamilyName>
+    <p0048-human:hasGivenName knoraType="richtext_value">Willi</p0048-human:hasGivenName>
+    <p0048-human:hasName knoraType="richtext_value">Willi Schmid</p0048-human:hasName>
+  </p0048-human:Person>
+  <p004D-kuno-raeber:PublicationPoem id="Raeber.Poem-00001">
+    <knoraXmlImport:label>Worte</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1981-06-30</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2015-02-15</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">true</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Worte</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">Bd.1, 191</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublicationNumber knoraType="int_value">001</p004D-kuno-raeber:p0056-publishing__hasPublicationNumber>
+    <p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">worte</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">11</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00001"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">1</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:PublicationPoem>
+  <p004D-kuno-raeber:PublicationPoem id="Raeber.Poem-00002">
+    <knoraXmlImport:label>Mittag</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1981-06-30</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2015-02-15</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">true</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Mittag</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">Bd.1, 192</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublicationNumber knoraType="int_value">002</p004D-kuno-raeber:p0056-publishing__hasPublicationNumber>
+    <p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">mittag</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">12</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00002"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">2</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:PublicationPoem>
+  <p004D-kuno-raeber:PublicationPoem id="Raeber.Poem-00003">
+    <knoraXmlImport:label>Insel</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1981-06-30</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2015-05-29</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">true</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Insel</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">Bd.1, 193</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublicationNumber knoraType="int_value">003</p004D-kuno-raeber:p0056-publishing__hasPublicationNumber>
+    <p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">insel</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">13</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00003"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">3</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:PublicationPoem>
+  <p004D-kuno-raeber:PublicationPoem id="Raeber.Poem-00004">
+    <knoraXmlImport:label>Baum</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1981-06-30</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2015-02-15</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">true</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Baum</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">Bd.1, 194</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublicationNumber knoraType="int_value">004</p004D-kuno-raeber:p0056-publishing__hasPublicationNumber>
+    <p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">baum</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">14</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00004"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">4</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:PublicationPoem>
+  <p004D-kuno-raeber:HandwrittenPoem id="Raeber.Poem-00005">
+    <knoraXmlImport:label>Kiesel (A)</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1979-08-20</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2017-11-20</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+      <p004C-information-carrier:Manuscript knoraType="link_value" linkType="ref" target="Raeber.PoemManuscript-6a1c3c68f45cdc081668a48a46fa2cac"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">false</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Kiesel (A)</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">kiesel-a</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">01  (oben)</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p0059-text__hasSpecialDescription knoraType="richtext_value">&lt;p&gt;Zusammen mit (B) und C); Datierung von (C); verso: Typoskript↑ (&lt;span class="titel"&gt;Das Ei&lt;/span&gt;, S. 174; durchdrückender Filzstift)&lt;/p&gt;</p004D-kuno-raeber:p0059-text__hasSpecialDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00005"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">9</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:HandwrittenPoem>
+  <p004D-kuno-raeber:PublicationPoem id="Raeber.Poem-00006">
+    <knoraXmlImport:label>Kiesel</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1981-06-30</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2016-03-20</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">true</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Kiesel</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">Bd.1, 265</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0056-publishing__hasPublicationNumber knoraType="int_value">075</p004D-kuno-raeber:p0056-publishing__hasPublicationNumber>
+    <p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__isPublishedIn>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">kiesel</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">85</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00006"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">75</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:PublicationPoem>
+  <p004D-kuno-raeber:HandwrittenPoem id="Raeber.Poem-00008">
+    <knoraXmlImport:label>Wolke (A)</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1979-08-20</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2017-09-11</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+      <p004C-information-carrier:Manuscript knoraType="link_value" linkType="ref" target="Raeber.PoemManuscript-2a5fceb5e8f9fb6f06c9107f0f289631"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">false</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Wolke (A)</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription knoraType="richtext_value">344</p004D-kuno-raeber:p0056-publishing__hasNachlassPublicationDescription>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">wolke-a</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">01 (oben)</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p0059-text__hasSpecialDescription knoraType="richtext_value">&lt;p&gt;Zusammen mit (B) und (C); verso: Typoskript (Briefanfang)&lt;/p&gt;</p004D-kuno-raeber:p0059-text__hasSpecialDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00008"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">97</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:HandwrittenPoem>
+  <p004D-kuno-raeber:HandwrittenPoem id="Raeber.Poem-00009">
+    <knoraXmlImport:label>Baum (A)</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1979-08-20</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2017-11-20</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+      <p004C-information-carrier:Manuscript knoraType="link_value" linkType="ref" target="Raeber.PoemManuscript-5f015678c336e49d0fc1a6ff449c6af0"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">false</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Baum (A)</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">baum-a</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">01 (oben)</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p0059-text__hasSpecialDescription knoraType="richtext_value">&lt;p&gt;Zusammen mit (B); Datierung nach (B)&lt;br /&gt;Verso: Typoskript (Briefanschrift: &lt;span class="zitat"&gt;Geschäftsstelle der Luzerner Literaturförderungskommission / Herrn Dr. Robert Kaufmann / Stadthaus / 6002 Luzern&lt;/span&gt;)&lt;/p&gt;</p004D-kuno-raeber:p0059-text__hasSpecialDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00009"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">1</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:HandwrittenPoem>
+  <p004D-kuno-raeber:HandwrittenPoem id="Raeber.Poem-00010">
+    <knoraXmlImport:label>Wort (A)</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1979-08-20</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2017-11-20</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+      <p004C-information-carrier:Manuscript knoraType="link_value" linkType="ref" target="Raeber.PoemManuscript-93e0393acf8eb98413b20d8209da7b2c"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">false</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Wort (A)</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">wort-a</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">01 (oben)</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p0059-text__hasSpecialDescription knoraType="richtext_value">&lt;p&gt;Zusammen mit (B) und (C) + Mundartfassungen (A)-(E); Datierung von (C);&lt;br /&gt;verso: Typoskript↑ (&lt;span class="titel"&gt;Der Anschlag, S. 65&lt;/span&gt;)&lt;/p&gt;</p004D-kuno-raeber:p0059-text__hasSpecialDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00010"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">14</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:HandwrittenPoem>
+  <p004D-kuno-raeber:HandwrittenPoem id="Raeber.Poem-00012">
+    <knoraXmlImport:label>Sonnenuhr (A)</knoraXmlImport:label>
+    <p004D-kuno-raeber:p0048-human__creationHasDate knoraType="date_value">GREGORIAN:1979-08-23</p004D-kuno-raeber:p0048-human__creationHasDate>
+    <p004D-kuno-raeber:p0048-human__hasModificationDate knoraType="date_value">GREGORIAN:2017-11-20</p004D-kuno-raeber:p0048-human__hasModificationDate>
+    <p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+      <p004C-information-carrier:Manuscript knoraType="link_value" linkType="ref" target="Raeber.PoemManuscript-aaceca80a6a33a71a55bfbdc0b075368"/>
+    </p004D-kuno-raeber:p004C-information-carrier__isInManuscript>
+    <p004D-kuno-raeber:hasStrophe knoraType="boolean_value">false</p004D-kuno-raeber:hasStrophe>
+    <p004D-kuno-raeber:isFinalVersion knoraType="boolean_value">false</p004D-kuno-raeber:isFinalVersion>
+    <p004D-kuno-raeber:isInSwissGerman knoraType="boolean_value">false</p004D-kuno-raeber:isInSwissGerman>
+    <p004D-kuno-raeber:isPartOfCycle knoraType="boolean_value">false</p004D-kuno-raeber:isPartOfCycle>
+    <p004D-kuno-raeber:poemHasTitle knoraType="richtext_value">Sonnenuhr (A)</p004D-kuno-raeber:poemHasTitle>
+    <p004D-kuno-raeber:p0050-literature__hasPoet>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0050-literature__hasPoet>
+    <p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+      <p0056-publishing:Publication knoraType="link_value" linkType="ref" target="Raeber.Convolute-00009"/>
+    </p004D-kuno-raeber:p0056-publishing__hasLastAuthorizedPublication>
+    <p004D-kuno-raeber:p0059-text__hasAlias knoraType="richtext_value">sonnenuhr-a</p004D-kuno-raeber:p0059-text__hasAlias>
+    <p004D-kuno-raeber:p0059-text__hasAuthor>
+      <p0048-human:Person knoraType="link_value" linkType="ref" target="Raeber.Person-Raeber"/>
+    </p004D-kuno-raeber:p0059-text__hasAuthor>
+    <p004D-kuno-raeber:p0059-text__hasPageNumberDescription knoraType="richtext_value">01</p004D-kuno-raeber:p0059-text__hasPageNumberDescription>
+    <p004D-kuno-raeber:p0059-text__hasSpecialDescription knoraType="richtext_value">&lt;p&gt;Verso: Typoskript (Titel: &lt;span class="titel"&gt;KUNO RAEBER / DAS EI / Roman&lt;/span&gt;)&lt;/p&gt;</p004D-kuno-raeber:p0059-text__hasSpecialDescription>
+    <p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+      <p005A-text-editing:DerivedTextExpression knoraType="link_value" linkType="ref" target="Raeber.DerivedTextExpression-00012"/>
+    </p004D-kuno-raeber:p005A-text-editing__hasDerivedTextExpression>
+    <p004D-kuno-raeber:knoraXmlImport__seqnum knoraType="int_value">32</p004D-kuno-raeber:knoraXmlImport__seqnum>
+  </p004D-kuno-raeber:HandwrittenPoem>
+  <p004D-kuno-raeber:PoemManuscript id="Raeber.PoemManuscript-2a5fceb5e8f9fb6f06c9107f0f289631">
+    <knoraXmlImport:label>PoemManuscript - A-5-g/02_021</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02_021</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:isPartOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:isPartOfManuscriptConvolute>
+  </p004D-kuno-raeber:PoemManuscript>
+  <p004D-kuno-raeber:PoemManuscript id="Raeber.PoemManuscript-5f015678c336e49d0fc1a6ff449c6af0">
+    <knoraXmlImport:label>PoemManuscript - A-5-g/02_001</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02_001</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:isPartOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:isPartOfManuscriptConvolute>
+  </p004D-kuno-raeber:PoemManuscript>
+  <p004D-kuno-raeber:PoemManuscript id="Raeber.PoemManuscript-6a1c3c68f45cdc081668a48a46fa2cac">
+    <knoraXmlImport:label>PoemManuscript - A-5-g/02_003</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02_003</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:isPartOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:isPartOfManuscriptConvolute>
+  </p004D-kuno-raeber:PoemManuscript>
+  <p004D-kuno-raeber:PoemManuscript id="Raeber.PoemManuscript-93e0393acf8eb98413b20d8209da7b2c">
+    <knoraXmlImport:label>PoemManuscript - A-5-g/02_004</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02_004</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:isPartOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:isPartOfManuscriptConvolute>
+  </p004D-kuno-raeber:PoemManuscript>
+  <p004D-kuno-raeber:PoemManuscript id="Raeber.PoemManuscript-aaceca80a6a33a71a55bfbdc0b075368">
+    <knoraXmlImport:label>PoemManuscript - A-5-g/02_007</knoraXmlImport:label>
+    <p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature knoraType="richtext_value">A-5-g/02_007</p004D-kuno-raeber:p004C-information-carrier__hasArchiveSignature>
+    <p004D-kuno-raeber:isPartOfManuscriptConvolute>
+      <p004D-kuno-raeber:PoemManuscriptConvolute knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
+    </p004D-kuno-raeber:isPartOfManuscriptConvolute>
+  </p004D-kuno-raeber:PoemManuscript>
+  <p005B-text-structure:FreeVerse id="Raeber.PoemStructure-00005">
+    <knoraXmlImport:label>FreeVerse</knoraXmlImport:label>
+    <p005B-text-structure:isPartOfTextExpression>
+      <p0059-text:Expression knoraType="link_value" linkType="ref" target="Raeber.Poem-00005"/>
+    </p005B-text-structure:isPartOfTextExpression>
+  </p005B-text-structure:FreeVerse>
+  <p005B-text-structure:FreeVerse id="Raeber.PoemStructure-00008">
+    <knoraXmlImport:label>FreeVerse</knoraXmlImport:label>
+    <p005B-text-structure:isPartOfTextExpression>
+      <p0059-text:Expression knoraType="link_value" linkType="ref" target="Raeber.Poem-00008"/>
+    </p005B-text-structure:isPartOfTextExpression>
+  </p005B-text-structure:FreeVerse>
+  <p005B-text-structure:FreeVerse id="Raeber.PoemStructure-00009">
+    <knoraXmlImport:label>FreeVerse</knoraXmlImport:label>
+    <p005B-text-structure:isPartOfTextExpression>
+      <p0059-text:Expression knoraType="link_value" linkType="ref" target="Raeber.Poem-00009"/>
+    </p005B-text-structure:isPartOfTextExpression>
+  </p005B-text-structure:FreeVerse>
+  <p005B-text-structure:FreeVerse id="Raeber.PoemStructure-00010">
+    <knoraXmlImport:label>FreeVerse</knoraXmlImport:label>
+    <p005B-text-structure:isPartOfTextExpression>
+      <p0059-text:Expression knoraType="link_value" linkType="ref" target="Raeber.Poem-00010"/>
+    </p005B-text-structure:isPartOfTextExpression>
+  </p005B-text-structure:FreeVerse>
+  <p005B-text-structure:FreeVerse id="Raeber.PoemStructure-00012">
+    <knoraXmlImport:label>FreeVerse</knoraXmlImport:label>
+    <p005B-text-structure:isPartOfTextExpression>
+      <p0059-text:Expression knoraType="link_value" linkType="ref" target="Raeber.Poem-00012"/>
+    </p005B-text-structure:isPartOfTextExpression>
+  </p005B-text-structure:FreeVerse>
+  <p004C-information-carrier:Pen id="Raeber.WritingUtensil-Pen">
+    <knoraXmlImport:label>Pen</knoraXmlImport:label>
+  </p004C-information-carrier:Pen>
+  <p004C-information-carrier:Pencil id="Raeber.WritingUtensil-Pencil">
+    <knoraXmlImport:label>Pencil</knoraXmlImport:label>
+  </p004C-information-carrier:Pencil>
+  <p004C-information-carrier:Typewriter id="Raeber.WritingUtensil-Typewriter">
+    <knoraXmlImport:label>Typewriter</knoraXmlImport:label>
+  </p004C-information-carrier:Typewriter>
+  <p004C-information-carrier:WritingUtensil id="Raeber.WritingUtensil-WritingUtensil">
+    <knoraXmlImport:label>WritingUtensil</knoraXmlImport:label>
+  </p004C-information-carrier:WritingUtensil>
+</knoraXmlImport:resources>

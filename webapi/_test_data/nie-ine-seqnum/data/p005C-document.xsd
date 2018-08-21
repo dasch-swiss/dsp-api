@@ -1,0 +1,900 @@
+<xs:schema 
+vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/005C/document/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0061-mathematics="http://api.knora.org/ontology/0061/mathematics/xml-import/v1#" xmlns:p005D-linguistics="http://api.knora.org/ontology/005D/linguistics/xml-import/v1#" xmlns:p005B-text-structure="http://api.knora.org/ontology/005B/text-structure/xml-import/v1#" xmlns:p005A-text-editing="http://api.knora.org/ontology/005A/text-editing/xml-import/v1#" xmlns:p0059-text="http://api.knora.org/ontology/0059/text/xml-import/v1#" xmlns:p0056-publishing="http://api.knora.org/ontology/0056/publishing/xml-import/v1#" xmlns:p0055-physical-resource="http://api.knora.org/ontology/0055/physical-resource/xml-import/v1#" xmlns:p0054-physical-geography="http://api.knora.org/ontology/0054/physical-geography/xml-import/v1#" xmlns:p0051-organization="http://api.knora.org/ontology/0051/organization/xml-import/v1#" xmlns:p0050-literature="http://api.knora.org/ontology/0050/literature/xml-import/v1#" xmlns:p004F-language="http://api.knora.org/ontology/004F/language/xml-import/v1#" xmlns:p004D-kuno-raeber="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#" xmlns:p004C-information-carrier="http://api.knora.org/ontology/004C/information-carrier/xml-import/v1#" xmlns:p0049-human-geography="http://api.knora.org/ontology/0049/human-geography/xml-import/v1#" xmlns:p0048-human="http://api.knora.org/ontology/0048/human/xml-import/v1#" xmlns:p0047-event="http://api.knora.org/ontology/0047/event/xml-import/v1#" xmlns:p0045-device="http://api.knora.org/ontology/0045/device/xml-import/v1#" xmlns:p0044-concept="http://api.knora.org/ontology/0044/concept/xml-import/v1#" xmlns:p0040-agent="http://api.knora.org/ontology/0040/agent/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/005C/document/xml-import/v1#">
+    <xs:import schemaLocation="p0040-agent.xsd" namespace="http://api.knora.org/ontology/0040/agent/xml-import/v1#"/>
+    <xs:import schemaLocation="p0044-concept.xsd" namespace="http://api.knora.org/ontology/0044/concept/xml-import/v1#"/>
+    <xs:import schemaLocation="p0045-device.xsd" namespace="http://api.knora.org/ontology/0045/device/xml-import/v1#"/>
+    <xs:import schemaLocation="p0047-event.xsd" namespace="http://api.knora.org/ontology/0047/event/xml-import/v1#"/>
+    <xs:import schemaLocation="p0048-human.xsd" namespace="http://api.knora.org/ontology/0048/human/xml-import/v1#"/>
+    <xs:import schemaLocation="p0049-human-geography.xsd" namespace="http://api.knora.org/ontology/0049/human-geography/xml-import/v1#"/>
+    <xs:import schemaLocation="p004C-information-carrier.xsd" namespace="http://api.knora.org/ontology/004C/information-carrier/xml-import/v1#"/>
+    <xs:import schemaLocation="p004D-kuno-raeber.xsd" namespace="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#"/>
+    <xs:import schemaLocation="p004F-language.xsd" namespace="http://api.knora.org/ontology/004F/language/xml-import/v1#"/>
+    <xs:import schemaLocation="p0050-literature.xsd" namespace="http://api.knora.org/ontology/0050/literature/xml-import/v1#"/>
+    <xs:import schemaLocation="p0051-organization.xsd" namespace="http://api.knora.org/ontology/0051/organization/xml-import/v1#"/>
+    <xs:import schemaLocation="p0054-physical-geography.xsd" namespace="http://api.knora.org/ontology/0054/physical-geography/xml-import/v1#"/>
+    <xs:import schemaLocation="p0055-physical-resource.xsd" namespace="http://api.knora.org/ontology/0055/physical-resource/xml-import/v1#"/>
+    <xs:import schemaLocation="p0056-publishing.xsd" namespace="http://api.knora.org/ontology/0056/publishing/xml-import/v1#"/>
+    <xs:import schemaLocation="p0059-text.xsd" namespace="http://api.knora.org/ontology/0059/text/xml-import/v1#"/>
+    <xs:import schemaLocation="p005A-text-editing.xsd" namespace="http://api.knora.org/ontology/005A/text-editing/xml-import/v1#"/>
+    <xs:import schemaLocation="p005B-text-structure.xsd" namespace="http://api.knora.org/ontology/005B/text-structure/xml-import/v1#"/>
+    <xs:import schemaLocation="p005D-linguistics.xsd" namespace="http://api.knora.org/ontology/005D/linguistics/xml-import/v1#"/>
+    <xs:import schemaLocation="p0061-mathematics.xsd" namespace="http://api.knora.org/ontology/0061/mathematics/xml-import/v1#"/>
+    <xs:import schemaLocation="knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#"/>
+    <xs:element name="Catalogue">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p0056-publishing:ElectronicPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasElectronicPublication"/>
+                        <xs:element type="p0056-publishing:FirstPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasFirstPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastAuthorizedPublication"/>
+                        <xs:element type="p0056-publishing:LastPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastPublication"/>
+                        <xs:element type="p0056-publishing:NachlassPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublicationDescription"/>
+                        <xs:element type="p0056-publishing:PolyAuthorPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPolyAuthorPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublication"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublicationNumber"/>
+                        <xs:element type="p0056-publishing:Publishing_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishing"/>
+                        <xs:element type="p0056-publishing:PublishingState_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishingState"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedRepublication"/>
+                        <xs:element type="p0056-publishing:WebPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasWebPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="expressionHasTitle"/>
+                        <xs:element type="Cycle_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isExpressionOfCycle"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Catalogue_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Catalogue"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Column">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Page_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isColumnOfPage"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Column_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Column"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="ContentStructure">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="ContentStructure_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="ContentStructure"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Cycle">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Cycle_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Cycle"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Dictionary">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p0056-publishing:ElectronicPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasElectronicPublication"/>
+                        <xs:element type="p0056-publishing:FirstPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasFirstPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastAuthorizedPublication"/>
+                        <xs:element type="p0056-publishing:LastPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastPublication"/>
+                        <xs:element type="p0056-publishing:NachlassPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublicationDescription"/>
+                        <xs:element type="p0056-publishing:PolyAuthorPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPolyAuthorPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublication"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublicationNumber"/>
+                        <xs:element type="p0056-publishing:Publishing_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishing"/>
+                        <xs:element type="p0056-publishing:PublishingState_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishingState"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedRepublication"/>
+                        <xs:element type="p0056-publishing:WebPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasWebPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="expressionHasTitle"/>
+                        <xs:element type="Cycle_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isExpressionOfCycle"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Dictionary_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Dictionary"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Document">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Document_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Document"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Element">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Element_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Element"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="EndnoteReferenceIdentifier">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasLiteral"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="p005B-text-structure:EndnoteIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteIdentifier"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="EndnoteReferenceIdentifier_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="EndnoteReferenceIdentifier"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="EndnoteReferenceNumber">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasLiteral"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="p005B-text-structure:EndnoteNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteNumber"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="EndnoteReferenceNumber_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="EndnoteReferenceNumber"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Expression">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p0056-publishing:ElectronicPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasElectronicPublication"/>
+                        <xs:element type="p0056-publishing:FirstPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasFirstPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastAuthorizedPublication"/>
+                        <xs:element type="p0056-publishing:LastPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastPublication"/>
+                        <xs:element type="p0056-publishing:NachlassPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublicationDescription"/>
+                        <xs:element type="p0056-publishing:PolyAuthorPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPolyAuthorPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublication"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublicationNumber"/>
+                        <xs:element type="p0056-publishing:Publishing_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishing"/>
+                        <xs:element type="p0056-publishing:PublishingState_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishingState"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedRepublication"/>
+                        <xs:element type="p0056-publishing:WebPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasWebPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="expressionHasTitle"/>
+                        <xs:element type="Cycle_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isExpressionOfCycle"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Expression_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Expression"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="FootnoteReferenceIdentifier">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasLiteral"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="p005B-text-structure:FootnoteIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteIdentifier"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="FootnoteReferenceIdentifier_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="FootnoteReferenceIdentifier"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="FootnoteReferenceNumber">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasLiteral"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="p005B-text-structure:FootnoteNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteNumber"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="FootnoteReferenceNumber_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="FootnoteReferenceNumber"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="HypertextDocument">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="p0044-concept:SymbolicConcept_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__isPartOf"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="HypertextDocument_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="HypertextDocument"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="HypertextElement">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                        <xs:element type="HypertextDocument_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfHypertextDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="HypertextElement_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="HypertextElement"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="HypertextStructure">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                        <xs:element type="HypertextDocument_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfHypertextDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="HypertextStructure_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="HypertextStructure"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Layout">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Layout_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Layout"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Marginal">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Marginal_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Marginal"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Page">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Page_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isColumnOfPage"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPageOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Page_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Page"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Reference">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Reference_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Reference"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="ScientificExpression">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p0056-publishing:ElectronicPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasElectronicPublication"/>
+                        <xs:element type="p0056-publishing:FirstPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasFirstPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastAuthorizedPublication"/>
+                        <xs:element type="p0056-publishing:LastPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastPublication"/>
+                        <xs:element type="p0056-publishing:NachlassPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublicationDescription"/>
+                        <xs:element type="p0056-publishing:PolyAuthorPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPolyAuthorPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublication"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublicationNumber"/>
+                        <xs:element type="p0056-publishing:Publishing_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishing"/>
+                        <xs:element type="p0056-publishing:PublishingState_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishingState"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedRepublication"/>
+                        <xs:element type="p0056-publishing:WebPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasWebPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="expressionHasTitle"/>
+                        <xs:element type="Cycle_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isExpressionOfCycle"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="ScientificExpression_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="ScientificExpression"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Structure">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Structure_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Structure"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="Table">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                        <xs:element type="Column_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isTableOfColumn"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="Table_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="Table"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="TitlePage">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p004C-information-carrier:Hyperlink_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__hasHyperlink"/>
+                        <xs:element type="p004C-information-carrier:Carrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnCarrier"/>
+                        <xs:element 
+                        type="p004C-information-carrier:ElectronicCarrier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p004C-information-carrier__isOnElectronicCarrier">
+</xs:element>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasDescription"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="EndnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceIdentifier"/>
+                        <xs:element type="EndnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasEndnoteReferenceNumber"/>
+                        <xs:element type="FootnoteReferenceIdentifier_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceIdentifier"/>
+                        <xs:element type="FootnoteReferenceNumber_linkValueType" maxOccurs="unbounded" minOccurs="0" name="hasFootnoteReferenceNumber"/>
+                        <xs:element type="Page_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isColumnOfPage"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isElementOfDocument"/>
+                        <xs:element type="Document_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isPageOfDocument"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="TitlePage_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="TitlePage"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:element name="VulgarizedScientificExpression">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="knoraXmlImport:resourceType">
+                    <xs:sequence>
+                        <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
+                        <xs:element type="p0040-agent:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0040-agent__hasUser"/>
+                        <xs:element type="knoraXmlImport:Resource_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0044-concept__hasContentSubject"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__creationHasDate"/>
+                        <xs:element type="p0048-human:Person_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasAuthor"/>
+                        <xs:element type="p0048-human:Creating_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreating"/>
+                        <xs:element type="p0048-human:Agent_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasCreator"/>
+                        <xs:element type="knoraXmlImport:dateValueType" maxOccurs="unbounded" minOccurs="0" name="p0048-human__hasModificationDate"/>
+                        <xs:element type="p0056-publishing:ElectronicPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasElectronicPublication"/>
+                        <xs:element type="p0056-publishing:FirstPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasFirstPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastAuthorizedPublication"/>
+                        <xs:element type="p0056-publishing:LastPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasLastPublication"/>
+                        <xs:element type="p0056-publishing:NachlassPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasNachlassPublicationDescription"/>
+                        <xs:element type="p0056-publishing:PolyAuthorPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPolyAuthorPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublication"/>
+                        <xs:element type="knoraXmlImport:intValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublicationNumber"/>
+                        <xs:element type="p0056-publishing:Publishing_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishing"/>
+                        <xs:element type="p0056-publishing:PublishingState_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasPublishingState"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedPublication"/>
+                        <xs:element type="p0056-publishing:Publication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasUnauthorizedRepublication"/>
+                        <xs:element type="p0056-publishing:WebPublication_linkValueType" maxOccurs="unbounded" minOccurs="0" name="p0056-publishing__hasWebPublication"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasAlias"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasIdentifier"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="p0059-text__hasPreferredName"/>
+                        <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="expressionHasTitle"/>
+                        <xs:element type="Cycle_linkValueType" maxOccurs="unbounded" minOccurs="0" name="isExpressionOfCycle"/>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="VulgarizedScientificExpression_linkValueType">
+        <xs:sequence>
+            <xs:element type="knoraXmlImport:linkValueType" name="VulgarizedScientificExpression"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>
