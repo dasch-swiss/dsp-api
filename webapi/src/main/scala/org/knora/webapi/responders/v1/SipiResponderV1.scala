@@ -38,8 +38,9 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.util.Try
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -47,7 +48,7 @@ import scala.concurrent.duration._
   */
 class SipiResponderV1 extends Responder {
 
-    implicit val materializer = ActorMaterializer()
+    implicit private val materializer: ActorMaterializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -57,10 +58,10 @@ class SipiResponderV1 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: PartialFunction[Any, Unit] = {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
-        case convertPathRequest: SipiResponderConversionPathRequestV1 => future2Message(sender(), convertPathV1(convertPathRequest), log)
-        case convertFileRequest: SipiResponderConversionFileRequestV1 => future2Message(sender(), convertFileV1(convertFileRequest), log)
+        case convertPathRequest: SipiResponderConversionPathRequestV1 => try2message(sender(), convertPathV1(convertPathRequest), log)
+        case convertFileRequest: SipiResponderConversionFileRequestV1 => try2message(sender(), convertFileV1(convertFileRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -87,7 +88,7 @@ class SipiResponderV1 extends Responder {
 
             // check that only one file value was found (by grouping by file value IRI)
             groupedByResourceIri = rows.groupBy {
-                (row: VariableResultsRow) =>
+                row: VariableResultsRow =>
                     row.rowMap("fileValue")
             }
             _ = if (groupedByResourceIri.size > 1) throw InconsistentTriplestoreDataException(s"filename $filename is referred to from more than one file value")
@@ -112,7 +113,7 @@ class SipiResponderV1 extends Responder {
       * @param conversionRequest the information about the file (uploaded by Knora).
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
-    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Future[SipiResponderConversionResponseV1] = {
+    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Try[SipiResponderConversionResponseV1] = {
         val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
@@ -126,7 +127,7 @@ class SipiResponderV1 extends Responder {
       * @param conversionRequest the information about the file (managed by Sipi).
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
-    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Future[SipiResponderConversionResponseV1] = {
+    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Try[SipiResponderConversionResponseV1] = {
         val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
 
         callSipiConvertRoute(url, conversionRequest)
@@ -141,7 +142,7 @@ class SipiResponderV1 extends Responder {
       * @param conversionRequest the message holding the information to make the request.
       * @return a [[SipiResponderConversionResponseV1]].
       */
-    private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Future[SipiResponderConversionResponseV1] = {
+    private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Try[SipiResponderConversionResponseV1] = {
 
         val conversionResultFuture: Future[HttpResponse] = for {
             request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
@@ -167,45 +168,64 @@ class SipiResponderV1 extends Responder {
                 throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
         }
 
+        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
+        // than the value of akka.actor.deployment./responderManager/sipiRouterV1.nr-of-instances
+        Await.ready(recoveredConversionResultFuture, timeout.duration)
+        val conversionResultTry: Try[HttpResponse] = recoveredConversionResultFuture.value.get
+
         for {
-            conversionResultResponse <- recoveredConversionResultFuture
+            conversionResultResponse: HttpResponse <- conversionResultTry
 
             httpStatusCode: StatusCode = conversionResultResponse.status
             statusInt: Int = httpStatusCode.intValue / 100
 
             /* get json from response body */
             responseAsJson: JsValue <- statusInt match {
-                case 2 => conversionResultResponse.entity.toStrict(5.seconds).map(
-                    (strict: Strict) =>
-                        try {
-                            strict.data.decodeString("UTF-8").parseJson
-                        } catch {
-                            // the Sipi response message could not be parsed correctly
-                            case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
+                case 2 | 4 | 5 =>
+                    val strictEntityFuture: Future[Strict] = conversionResultResponse.entity.toStrict(5.seconds)
+                    Await.ready(strictEntityFuture, 5.seconds)
+                    val strictEntityTry = strictEntityFuture.value.get
 
-                            case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
-                        }
-                ) // returns a Future(Map(...))
-                case 4 =>
-                    // Bad Request: it is the user's responsibility
-                    val errMessage: Future[SipiErrorConversionResponse] = conversionResultResponse.entity.toStrict(5.seconds).map(
-                        (strict: Strict) =>
-                            try {
-                                strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
-                            } catch {
-                                // the Sipi error message could not be parsed correctly
-                                case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+                    statusInt match {
+                        case 2 =>
+                            // Success
 
-                                case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
+                            strictEntityTry.map {
+                                strict: Strict =>
+                                    try {
+                                        strict.data.decodeString("UTF-8").parseJson
+                                    } catch {
+                                        // the Sipi response message could not be parsed correctly
+                                        case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
+
+                                        case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
+                                    }
                             }
-                    )
 
-                    // most probably the user sent invalid data which caused a Sipi error
-                    errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
-                case 5 =>
-                    // Internal Server Error: not the user's fault
-                    val errString: Future[String] = conversionResultResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-                    errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
+                        case 4 =>
+                            // Bad Request: it is the user's responsibility
+
+                            val errMessage: Try[SipiErrorConversionResponse] = strictEntityTry.map {
+                                strict: Strict =>
+                                    try {
+                                        strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
+                                    } catch {
+                                        // the Sipi error message could not be parsed correctly
+                                        case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
+
+                                        case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
+                                    }
+                            }
+
+                            // most probably the user sent invalid data which caused a Sipi error
+                            errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
+
+                        case 5 =>
+                            // Internal Server Error: not the user's fault
+                            val errString: Try[String] = strictEntityTry.map(_.data.decodeString("UTF-8"))
+                            errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
+                    }
+
                 case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
             }
 

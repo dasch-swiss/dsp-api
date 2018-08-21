@@ -2,7 +2,7 @@
 <knoraXmlImport:resources xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0040-agent="http://api.knora.org/ontology/0040/agent/xml-import/v1#" xmlns:p0044-concept="http://api.knora.org/ontology/0044/concept/xml-import/v1#" xmlns:p0045-device="http://api.knora.org/ontology/0045/device/xml-import/v1#" xmlns:p0047-event="http://api.knora.org/ontology/0047/event/xml-import/v1#" xmlns:p0048-human="http://api.knora.org/ontology/0048/human/xml-import/v1#" xmlns:p0049-human-geography="http://api.knora.org/ontology/0049/human-geography/xml-import/v1#" xmlns:p004C-information-carrier="http://api.knora.org/ontology/004C/information-carrier/xml-import/v1#" xmlns:p004D-kuno-raeber="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#" xmlns:p004F-language="http://api.knora.org/ontology/004F/language/xml-import/v1#" xmlns:p0050-literature="http://api.knora.org/ontology/0050/literature/xml-import/v1#" xmlns:p0051-organization="http://api.knora.org/ontology/0051/organization/xml-import/v1#" xmlns:p0055-physical-resource="http://api.knora.org/ontology/0055/physical-resource/xml-import/v1#" xmlns:p0056-publishing="http://api.knora.org/ontology/0056/publishing/xml-import/v1#" xmlns:p0059-text="http://api.knora.org/ontology/0059/text/xml-import/v1#" xmlns:p005A-text-editing="http://api.knora.org/ontology/005A/text-editing/xml-import/v1#" xmlns:p005B-text-structure="http://api.knora.org/ontology/005B/text-structure/xml-import/v1#" xmlns:p005C-document="http://api.knora.org/ontology/005C/document/xml-import/v1#" xmlns:p005D-linguistics="http://api.knora.org/ontology/005D/linguistics/xml-import/v1#" xmlns:pontology-knora-base="http://api.knora.org/ontology/ontology/knora-base/xml-import/v1#" xmlns="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#">
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00009">
     <knoraXmlImport:label>Reduktionen 1981</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Bändchen, 120 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">101 Gedichte, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=505:reduktionen-vorwort"&gt;Vorwort&lt;/a&gt;, Umschlagstexte (U1, U4), Verlagswerbung</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Reduktionen 1981</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -51,7 +51,7 @@
   </p004D-kuno-raeber:PoemManuscriptConvolute>
   <p004D-kuno-raeber:PoemPostcardConvolute id="Raeber.Convolute-00014">
     <knoraXmlImport:label>Karten 1984</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p0048-human__hasCreating>
       <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1984-03-12--1984-03-27"/>
     </p004D-kuno-raeber:p0048-human__hasCreating>
@@ -74,7 +74,7 @@
   </p004D-kuno-raeber:PoemPostcardConvolute>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00016">
     <knoraXmlImport:label>FLUSSUFER 1963</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Bändchen mit festem, braunem Karton und Schutzumschlag, 64 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">53 Gedichte, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=6322:flussufer-vorwort"&gt;Vorwort&lt;/a&gt;, Anzeige Raeber-Publikationen&lt;br/&gt;Im Inhaltsverzeichnis 3 Zeiträume unterschieden:&lt;br/&gt;- &lt;em&gt;Gedichte 1960&lt;/em&gt; (S. 7-13; 7 Gedichte)&lt;br/&gt;- &lt;em&gt;Gedichte 1961&lt;/em&gt; (S. 14-24; 11 Gedichte)&lt;br/&gt;- &lt;em&gt;Gedichte 1962&lt;/em&gt; (S. 25-59; 35 Gedichte)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">FLUSSUFER 1963</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -87,7 +87,7 @@
   </p004D-kuno-raeber:PrintedPoemBookPublication>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00017">
     <knoraXmlImport:label>Die verwandelten Schiffe 1957</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschüre mit Zeichnung auf vorderem Umschlag, 64 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">49 Gedichte; Klappentext (&lt;cite class="titel"&gt;Das Gedicht heute&lt;/cite&gt;) von Raeber</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Die verwandelten Schiffe 1957</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -106,7 +106,7 @@
   </p004D-kuno-raeber:PolyAuthorPublicationConvolute>
   <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00026">
     <knoraXmlImport:label>Notizbuch 1980-88</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p0048-human__hasCreating>
       <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1980-12-07--1988-08-27"/>
     </p004D-kuno-raeber:p0048-human__hasCreating>
@@ -129,7 +129,7 @@
   </p004D-kuno-raeber:PoemNotebook>
   <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00027">
     <knoraXmlImport:label>Notizbuch 1979-82</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p0048-human__hasCreating>
       <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-08-21--1982-09-28"/>
     </p004D-kuno-raeber:p0048-human__hasCreating>
@@ -152,7 +152,7 @@
   </p004D-kuno-raeber:PoemNotebook>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00029">
     <knoraXmlImport:label>Alemannische Gedichte 1985</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Kartoniertes Bändchen mit Umschlag-Porträt, Spaltentexte, 128 Ss;&lt;br/&gt;S. 5-61 &lt;span class="titel"&gt;Hochdeutsche Gedichte&lt;/span&gt;; S. 63-102 &lt;a class="titel" href="index.php?option=com_k2&amp;amp;view=itemlist&amp;amp;task=category&amp;amp;id=30:hochdeutsche-gedichte&amp;amp;Itemid=138"&gt;Hochdeutsche Gedichte&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">36 Mundart-Gedichte (+ 52 hochdeutsche Gedichte + Essay)</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Abgewandt Zugewandt 1985 – Alemannische Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -171,7 +171,7 @@
   </p004D-kuno-raeber:PrintedPoemBookPublication>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00030">
     <knoraXmlImport:label>Hochdeutsche Gedichte 1985</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Bändchen mit Umschlag-Porträt, Spaltentexten, 128 Ss;&lt;br/&gt;S. 5-61 &lt;span class="titel"&gt;Hochdeutsche Gedichte&lt;/span&gt;; S. 63-102 &lt;a class="titel" href="index.php?option=com_k2&amp;amp;view=itemlist&amp;amp;task=category&amp;amp;id=29:alemannische-gedichte&amp;amp;Itemid=137"&gt;Alemannische Gedichte&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">52 hochdeutsche Gedichte (+ 36 Mundart-Gedichte + Essay); darunter 5 Zyklen:&lt;br/&gt;&lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=25:beschwoerung-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Beschwörung&lt;/span&gt; I-V&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=130:new-york-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;New York&lt;/span&gt; I-VI&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=136:rom-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Rom&lt;/span&gt; I-IX&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=145:escorial-i&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Escorial&lt;/span&gt; I-III&lt;/a&gt;, &lt;a href="index.php?option=com_k2&amp;amp;view=item&amp;amp;id=148:frankfurt-am-main-i-der-adler&amp;amp;Itemid=138"&gt;&lt;span class="titel"&gt;Frankfurt am Main&lt;/span&gt; I-II&lt;/a&gt;</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">Abgewandt Zugewandt 1985 – Hochdeutsche Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -190,7 +190,7 @@
   </p004D-kuno-raeber:PrintedPoemBookPublication>
   <p004D-kuno-raeber:PoemNotebook id="Raeber.Convolute-00031">
     <knoraXmlImport:label>Notizbuch 1979</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p0048-human__hasCreating>
       <p0048-human:Creating knoraType="link_value" linkType="ref" target="Raeber.Creation.Period-1979-06-01--1979-08-19"/>
     </p004D-kuno-raeber:p0048-human__hasCreating>
@@ -213,7 +213,7 @@
   </p004D-kuno-raeber:PoemNotebook>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00033">
     <knoraXmlImport:label>GEDICHTE 1960</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Broschiertes Oktavbändchen, gelber Umschlag, 56 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">46 Gedichte</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">GEDICHTE 1960</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -226,7 +226,7 @@
   </p004D-kuno-raeber:PrintedPoemBookPublication>
   <p004D-kuno-raeber:PrintedPoemBookPublication id="Raeber.Convolute-00037">
     <knoraXmlImport:label>GESICHT IM MITTAG 1950</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription knoraType="richtext_value">Heft von 16 Ss</p004D-kuno-raeber:p004C-information-carrier__carrierHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription knoraType="richtext_value">14 Gedichte ohne Titel</p004D-kuno-raeber:p004C-information-carrier__convoluteHasDescription>
     <p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle knoraType="richtext_value">GESICHT IM MITTAG 1950</p004D-kuno-raeber:p004C-information-carrier__convoluteHasTitle>
@@ -535,7 +535,7 @@
   </p004D-kuno-raeber:DiplomaticTranscription>
   <p004D-kuno-raeber:Page id="Raeber.Page-137268ac857b97bcfc136c129619d55a">
     <knoraXmlImport:label>Page - A-5-g_02_005</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
       <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
     </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
@@ -543,7 +543,7 @@
   </p004D-kuno-raeber:Page>
   <p004D-kuno-raeber:Page id="Raeber.Page-720176e41e3a7c8d005f32b0dece479c">
     <knoraXmlImport:label>Page - A-5-g_02_082</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
       <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
     </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
@@ -551,7 +551,7 @@
   </p004D-kuno-raeber:Page>
   <p004D-kuno-raeber:Page id="Raeber.Page-86d6af260f42df3be3ad8cb5fad96541">
     <knoraXmlImport:label>Page - A-5-g_02_001</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
       <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
     </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
@@ -559,7 +559,7 @@
   </p004D-kuno-raeber:Page>
   <p004D-kuno-raeber:Page id="Raeber.Page-89e1a3e675059cf52af4177a03a4ad0f">
     <knoraXmlImport:label>Page - A-5-g_02_008</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
       <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
     </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
@@ -567,7 +567,7 @@
   </p004D-kuno-raeber:Page>
   <p004D-kuno-raeber:Page id="Raeber.Page-f3d41854199de41a2cc69ee379c7c145">
     <knoraXmlImport:label>Page - A-5-g_02_019</knoraXmlImport:label>
-    <knoraXmlImport:file mimetype="image/jpeg" path="/Users/raeber/data/images/space.png"/>
+    <knoraXmlImport:file mimetype="image/png" path="/Users/raeber/data/images/space.png"/>
     <p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>
       <p004C-information-carrier:Book knoraType="link_value" linkType="ref" target="Raeber.Convolute-00012"/>
     </p004D-kuno-raeber:p004C-information-carrier__isPageOfBook>

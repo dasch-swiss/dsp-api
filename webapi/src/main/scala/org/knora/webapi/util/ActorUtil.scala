@@ -26,7 +26,7 @@ import org.knora.webapi._
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object ActorUtil {
 
@@ -62,6 +62,23 @@ object ActorUtil {
       */
     def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
         future.onComplete {
+            tryObj: Try[ReplyT] => try2message(
+                sender = sender,
+                tryObj = tryObj,
+                log = log
+            )
+        }
+    }
+
+    /**
+      * Like `future2Message`, but takes a `Try` instead of a `Future`.
+      *
+      * @param sender the actor that made the request in the `ask` pattern.
+      * @param tryObj a [[Try]] that will provide the result of the sender's request.
+      * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
+      */
+    def try2message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
+        tryObj match {
             case Success(result) => sender ! result
 
             case Failure(e) => e match {
