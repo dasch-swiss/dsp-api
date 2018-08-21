@@ -18,6 +18,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.KnoraSystemInstances
 
 @**
  * Gets all admin members of a project, given the project's IRI, shortname, and/or shortcode.
@@ -59,4 +60,6 @@ WHERE {
     ?s knora-base:isInProjectAdminGroup ?project .
 
     ?s rdf:type knora-base:User .
+
+    FILTER(!(?s = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))
 }

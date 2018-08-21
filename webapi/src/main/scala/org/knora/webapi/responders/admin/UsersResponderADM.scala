@@ -92,6 +92,8 @@ class UsersResponderADM extends Responder {
 
         //log.debug("usersGetV1")
 
+        // ToDO: need to have certain permissions to allow access
+
         for {
             sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
@@ -1126,6 +1128,10 @@ class UsersResponderADM extends Responder {
         // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
         /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
+
+        if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+        }
 
         if (userUpdatePayload.email.nonEmpty) {
             // changing email address, so we need to invalidate the cached profile under this email

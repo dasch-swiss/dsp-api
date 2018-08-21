@@ -18,6 +18,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.KnoraSystemInstances
 
 @**
  * Updates an existing user with the provided values.
@@ -193,4 +194,6 @@ WHERE {
     optional {?user knora-base:isInGroup ?currentGroups .}
 
     ?user knora-base:isInSystemAdminGroup ?currentIsInSystemAdminGroup .
+
+    FILTER(!(?user = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))
 }
