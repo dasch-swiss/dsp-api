@@ -86,49 +86,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
-        /*
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-*/
-
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/data/admin-data.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/data/permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/agent-ontology-knora.ttl", name = "http://www.knora.org/ontology/0040/agent"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/atharvaveda-ontology-knora.ttl", name = "http://www.knora.org/ontology/0041/atharvaveda"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/catholic-orders-ontology-knora.ttl", name = "http://www.knora.org/ontology/0042/catholic-orders"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/catholic-organization-ontology-knora.ttl", name = "http://www.knora.org/ontology/0043/catholic-organization"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/concept-ontology-knora.ttl", name = "http://www.knora.org/ontology/0044/concept"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/delille-ontology-knora.ttl", name = "http://www.knora.org/ontology/0060/delille"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/device-ontology-knora.ttl", name = "http://www.knora.org/ontology/0045/device"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/document-ontology-knora.ttl", name = "http://www.knora.org/ontology/005C/document"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/drcs-ontology-knora.ttl", name = "http://www.knora.org/ontology/0046/drcs"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/event-ontology-knora.ttl", name = "http://www.knora.org/ontology/0047/event"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/human-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/0049/human-geography"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/human-ontology-knora.ttl", name = "http://www.knora.org/ontology/0048/human"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/image-ontology-knora.ttl", name = "http://www.knora.org/ontology/004A/image"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/indology-ontology-knora.ttl", name = "http://www.knora.org/ontology/004B/indology"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/information-carrier-ontology-knora.ttl", name = "http://www.knora.org/ontology/004C/information-carrier"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/kuno-raeber-gui-ontology-knora.ttl", name = "http://www.knora.org/ontology/004E/kuno-raeber-gui"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/kuno-raeber-ontology-knora.ttl", name = "http://www.knora.org/ontology/004D/kuno-raeber"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/language-ontology-knora.ttl", name = "http://www.knora.org/ontology/004F/language"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/linguistics-ontology-knora.ttl", name = "http://www.knora.org/ontology/005D/linguistics"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/literature-ontology-knora.ttl", name = "http://www.knora.org/ontology/0050/literature"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/logic-ontology-knora.ttl", name = "http://www.knora.org/ontology/005E/logic"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/mathematics-ontology-knora.ttl", name = "http://www.knora.org/ontology/0061/mathematics"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/meyer-ontology-knora.ttl", name = "http://www.knora.org/ontology/0062/meyer"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/organization-ontology-knora.ttl", name = "http://www.knora.org/ontology/0051/organization"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/philosophies-ontology-knora.ttl", name = "http://www.knora.org/ontology/0052/philosophies"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/philosophy-ontology-knora.ttl", name = "http://www.knora.org/ontology/0053/philosophy"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/physical-geography-ontology-knora.ttl", name = "http://www.knora.org/ontology/0054/physical-geography"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/physical-resource-ontology-knora.ttl", name = "http://www.knora.org/ontology/0055/physical-resource"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/publishing-ontology-knora.ttl", name = "http://www.knora.org/ontology/0056/publishing"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/scholasticism-ontology-knora.ttl", name = "http://www.knora.org/ontology/0057/scholasticism"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/teaching-ontology-knora.ttl", name = "http://www.knora.org/ontology/0058/teaching"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/test-ontology-knora.ttl", name = "http://www.knora.org/ontology/005F/test"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/text-editing-ontology-knora.ttl", name = "http://www.knora.org/ontology/005A/text-editing"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/text-ontology-knora.ttl", name = "http://www.knora.org/ontology/0059/text"),
-        RdfDataObject(path = "_test_data/nie-ine-seqnum/ontologies/text-structure-ontology-knora.ttl", name = "http://www.knora.org/ontology/005B/text-structure")
     )
 
     private val firstThingIri = new MutableTestIri
@@ -268,7 +228,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     }
 
 
-    "The Resources Endpoint" should { /*
+    "The Resources Endpoint" should {
         "provide a HTML representation of the resource properties " in {
             /* Incunabula resources*/
 
@@ -1522,20 +1482,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
             }
         }
-*/
-        "import data from #971" in {
-            val xmlImport = FileUtil.readTextFile(new java.io.File("_test_data/nie-ine-seqnum/data/raeber-data.xml"))
-
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
-
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
-        }
-
-        /*
 
         "create 10,000 anything:Thing resources with random contents" in {
             def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
@@ -1732,6 +1678,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }
+
         "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
 
             val xml =
@@ -1759,6 +1706,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 standoffLangDingIri.set(resId)
             }
         }
+
         "get the Resource with standoff and language and check its textValue" in {
 
             Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
@@ -1781,10 +1729,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
 
-
             }
 
-        } */
+        }
 
 
     }
