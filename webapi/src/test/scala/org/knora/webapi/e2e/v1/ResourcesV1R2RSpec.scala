@@ -1437,6 +1437,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "use a knora-base property directly in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:ThingWithSeqnum id="thing_with_seqnum">
+                   |        <knoraXmlImport:label>Thing with seqnum</knoraXmlImport:label>
+                   |        <p0001-anything:knoraXmlImport__seqnum knoraType="int_value">3</p0001-anything:knoraXmlImport__seqnum>
+                   |    </p0001-anything:ThingWithSeqnum>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+            }
+        }
+
         "serve a Zip file containing XML schemas for validating an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0802/biblio", "UTF-8")
 
