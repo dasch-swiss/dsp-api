@@ -24,7 +24,7 @@
                 <!-- no period, day precision -->
                 <date>
                     <xsl:attribute name="when">
-                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>
+                        <xsl:value-of select="format-number($input/knora-api:dateValueHasStartYear/text(), '0000')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartMonth/text(), '00')"/>-<xsl:value-of select="format-number($input/knora-api:dateValueHasStartDay/text(), '00')"/>
                     </xsl:attribute>
                 </date>
 

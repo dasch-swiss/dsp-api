@@ -119,6 +119,10 @@ try:
 
     print("&mappingIri=" + urllib.parse.quote_plus("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping") + "&gravsearchTemplateIri=" + urllib.parse.quote_plus(g.json()['res_id']) + "&teiHeaderXSLTIri=" + urllib.parse.quote_plus(h.json()['res_id']))
 
+    print("textProp "  + "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText")
+    print("mappingIRI: " + "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLTEIMapping")
+    print("gravsearchTemplateIri: " + g.json()['res_id'])
+    print("teiHeaderXSLTIri " + h.json()['res_id'])
 
 
 
