@@ -780,7 +780,7 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                   |      <correspDesc ref="${letterIri.get}">
                   |         <correspAction type="sent">
                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer, Johann Jacob</persName>
-                  |            <date when="1703-06-06"/>
+                  |            <date when="1703-06-10"/>
                   |         </correspAction>
                   |         <correspAction type="received">
                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann, Jacob</persName>
