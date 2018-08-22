@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
+import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import resource._
@@ -81,7 +81,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     private val password = "test"
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout * 2)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout * 2)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
@@ -292,15 +292,15 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             val params =
                 s"""
-                  |{
-                  |    "restype_id": "$IMAGES_ONTOLOGY_IRI#person",
-                  |    "label": "Testperson",
-                  |    "project_id": "$IMAGES_PROJECT_IRI",
-                  |    "properties": {
-                  |        "$IMAGES_ONTOLOGY_IRI#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "$IMAGES_ONTOLOGY_IRI#firstname": [{"richtext_value":{"utf8str":"Name"}}]
-                  |    }
-                  |}
+                   |{
+                   |    "restype_id": "$IMAGES_ONTOLOGY_IRI#person",
+                   |    "label": "Testperson",
+                   |    "project_id": "$IMAGES_PROJECT_IRI",
+                   |    "properties": {
+                   |        "$IMAGES_ONTOLOGY_IRI#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+                   |        "$IMAGES_ONTOLOGY_IRI#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+                   |    }
+                   |}
                 """.stripMargin
 
             Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPath ~> check {
@@ -1437,6 +1437,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
         }
 
+        "use a knora-base property directly in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:ThingWithSeqnum id="thing_with_seqnum">
+                   |        <knoraXmlImport:label>Thing with seqnum</knoraXmlImport:label>
+                   |        <p0001-anything:knoraXmlImport__seqnum knoraType="int_value">3</p0001-anything:knoraXmlImport__seqnum>
+                   |    </p0001-anything:ThingWithSeqnum>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+            }
+        }
+
         "serve a Zip file containing XML schemas for validating an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0802/biblio", "UTF-8")
 
@@ -1678,6 +1701,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }
+
         "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
 
             val xml =
@@ -1705,6 +1729,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 standoffLangDingIri.set(resId)
             }
         }
+
         "get the Resource with standoff and language and check its textValue" in {
 
             Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
@@ -1725,7 +1750,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     case _ => throw InvalidApiJsonException("'lang' is not a JsString")
 
                 }
-
 
 
             }
