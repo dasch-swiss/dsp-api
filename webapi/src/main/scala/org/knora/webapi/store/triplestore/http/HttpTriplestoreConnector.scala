@@ -44,7 +44,7 @@ import spray.json._
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -634,18 +634,22 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
         }
 
-        val awaitTimeout = if (isUpdate) {
+        val awaitTimeout: FiniteDuration = if (isUpdate) {
             // An update for a bulk import could take a while.
-            15.minutes
+            settings.triplestoreUpdateTimeout
         } else {
             // But reading data should be quick.
-            10.seconds
+            settings.triplestoreQueryTimeout
         }
 
         // Block until the triplestore responds, to ensure that the number of concurrent connections to the
         // triplestore will never be greater than the value of
         // akka.actor.deployment./storeManager/triplestoreManager/httpTriplestoreRouter.nr-of-instances
-        Await.ready(recoveredTriplestoreResponseFuture, awaitTimeout)
-        recoveredTriplestoreResponseFuture.value.get
+        try {
+            Await.ready(recoveredTriplestoreResponseFuture, awaitTimeout)
+            recoveredTriplestoreResponseFuture.value.get
+        } catch {
+            case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to triplestore timed out after $awaitTimeout", timeoutEx, log))
+        }
     }
 }

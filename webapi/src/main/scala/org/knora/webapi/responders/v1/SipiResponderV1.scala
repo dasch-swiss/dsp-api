@@ -38,9 +38,9 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Failure, Try}
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -170,8 +170,12 @@ class SipiResponderV1 extends Responder {
 
         // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
         // than the value of akka.actor.deployment./responderManager/sipiRouterV1.nr-of-instances
-        Await.ready(recoveredConversionResultFuture, timeout.duration)
-        val conversionResultTry: Try[HttpResponse] = recoveredConversionResultFuture.value.get
+        val conversionResultTry: Try[HttpResponse] = try {
+            Await.ready(recoveredConversionResultFuture, settings.sipiTimeout)
+            recoveredConversionResultFuture.value.get
+        } catch {
+            case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to Sipi timed out after ${settings.sipiTimeout}", timeoutEx, log))
+        }
 
         for {
             conversionResultResponse: HttpResponse <- conversionResultTry
