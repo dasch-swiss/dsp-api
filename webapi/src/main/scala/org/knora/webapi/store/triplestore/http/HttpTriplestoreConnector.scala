@@ -36,7 +36,7 @@ import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
-import org.knora.webapi.util.ActorUtil.future2Message
+import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
 import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
@@ -44,7 +44,7 @@ import spray.json._
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -107,17 +107,17 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
-        case SparqlSelectRequest(sparql) => future2Message(sender(), sparqlHttpSelect(sparql), log)
-        case SparqlConstructRequest(sparql) => future2Message(sender(), sparqlHttpConstruct(sparql), log)
-        case SparqlExtendedConstructRequest(sparql) => future2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
-        case SparqlUpdateRequest(sparql) => future2Message(sender(), sparqlHttpUpdate(sparql), log)
-        case SparqlAskRequest(sparql) => future2Message(sender(), sparqlHttpAsk(sparql), log)
-        case ResetTriplestoreContent(rdfDataObjects) => future2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
-        case DropAllTriplestoreContent() => future2Message(sender(), dropAllTriplestoreContent(), log)
-        case InsertTriplestoreContent(rdfDataObjects) => future2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
+    def receive: PartialFunction[Any, Unit] = {
+        case SparqlSelectRequest(sparql) => try2message(sender(), sparqlHttpSelect(sparql), log)
+        case SparqlConstructRequest(sparql) => try2message(sender(), sparqlHttpConstruct(sparql), log)
+        case SparqlExtendedConstructRequest(sparql) => try2message(sender(), sparqlHttpExtendedConstruct(sparql), log)
+        case SparqlUpdateRequest(sparql) => try2message(sender(), sparqlHttpUpdate(sparql), log)
+        case SparqlAskRequest(sparql) => try2message(sender(), sparqlHttpAsk(sparql), log)
+        case ResetTriplestoreContent(rdfDataObjects) => try2message(sender(), resetTripleStoreContent(rdfDataObjects), log)
+        case DropAllTriplestoreContent() => try2message(sender(), dropAllTriplestoreContent(), log)
+        case InsertTriplestoreContent(rdfDataObjects) => try2message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckRepositoryRequest() => future2Message(sender(), checkRepository(), log)
+        case CheckRepositoryRequest() => try2message(sender(), checkRepository(), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 
@@ -127,19 +127,19 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param sparql the SPARQL SELECT query string.
       * @return a [[SparqlSelectResponse]].
       */
-    private def sparqlHttpSelect(sparql: String): Future[SparqlSelectResponse] = {
+    private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResponse] = {
         // println(sparql)
 
-        def parseJsonResponse(sparql: String, resultStr: String): Future[SparqlSelectResponse] = {
+        def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResponse] = {
             val parseTry = Try {
                 resultStr.parseJson.convertTo[SparqlSelectResponse]
             }
 
             parseTry match {
-                case Success(parsed) => Future.successful(parsed)
+                case Success(parsed) => Success(parsed)
                 case Failure(e) =>
                     log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$resultStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
-                    Future.failed(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
+                    Failure(TriplestoreResponseException("Couldn't parse JSON from triplestore", e, log))
             }
         }
 
@@ -147,7 +147,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Are we using the fake triplestore?
             resultStr <- if (settings.useFakeTriplestore) {
                 // Yes: get the response from it.
-                Future(FakeTriplestore.data(sparql))
+                Try(FakeTriplestore.data(sparql))
             } else {
                 // No: get the response from the real triplestore over HTTP.
                 getTriplestoreHttpResponse(sparql, isUpdate = false)
@@ -173,7 +173,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param sparql the SPARQL CONSTRUCT query string.
       * @return a [[SparqlConstructResponse]]
       */
-    private def sparqlHttpConstruct(sparql: String): Future[SparqlConstructResponse] = {
+    private def sparqlHttpConstruct(sparql: String): Try[SparqlConstructResponse] = {
         // println(logDelimiter + sparql)
 
         /**
@@ -211,7 +211,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
         }
 
-        def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlConstructResponse] = {
+        def parseTurtleResponse(sparql: String, turtleStr: String): Try[SparqlConstructResponse] = {
             val parseTry = Try {
                 val turtleParser = new TurtleParser()
                 val handler = new ConstructResponseTurtleHandler
@@ -221,10 +221,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
 
             parseTry match {
-                case Success(parsed) => Future.successful(parsed)
+                case Success(parsed) => Success(parsed)
                 case Failure(e) =>
                     log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
-                    Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+                    Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
             }
         }
 
@@ -240,7 +240,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param sparql the SPARQL CONSTRUCT query string.
       * @return a [[SparqlExtendedConstructResponse]]
       */
-    private def sparqlHttpExtendedConstruct(sparql: String): Future[SparqlExtendedConstructResponse] = {
+    private def sparqlHttpExtendedConstruct(sparql: String): Try[SparqlExtendedConstructResponse] = {
 
         // println(logDelimiter + sparql)
 
@@ -313,7 +313,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
         }
 
-        def parseTurtleResponse(sparql: String, turtleStr: String): Future[SparqlExtendedConstructResponse] = {
+        def parseTurtleResponse(sparql: String, turtleStr: String): Try[SparqlExtendedConstructResponse] = {
             val parseTry = Try {
                 val turtleParser = new TurtleParser()
                 val handler = new ConstructResponseTurtleHandler
@@ -323,10 +323,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
 
             parseTry match {
-                case Success(parsed) => Future.successful(parsed)
+                case Success(parsed) => Success(parsed)
                 case Failure(e) =>
                     log.error(e, s"Couldn't parse response from triplestore:$logDelimiter$turtleStr${logDelimiter}in response to SPARQL query:$logDelimiter$sparql")
-                    Future.failed(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
+                    Failure(TriplestoreResponseException("Couldn't parse Turtle from triplestore", e, log))
             }
         }
 
@@ -342,7 +342,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param sparqlUpdate the SPARQL update.
       * @return a [[SparqlUpdateResponse]].
       */
-    private def sparqlHttpUpdate(sparqlUpdate: String): Future[SparqlUpdateResponse] = {
+    private def sparqlHttpUpdate(sparqlUpdate: String): Try[SparqlUpdateResponse] = {
         // println(logDelimiter + sparqlUpdate)
 
         for {
@@ -367,7 +367,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param sparql the SPARQL ASK query.
       * @return a [[SparqlAskResponse]].
       */
-    def sparqlHttpAsk(sparql: String): Future[SparqlAskResponse] = {
+    def sparqlHttpAsk(sparql: String): Try[SparqlAskResponse] = {
         for {
             resultString <- getTriplestoreHttpResponse(sparql, isUpdate = false)
             _ = log.debug("sparqlHttpAsk - resultString: {}", resultString)
@@ -376,7 +376,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         } yield SparqlAskResponse(result)
     }
 
-    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentACK] = {
+    private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Try[ResetTriplestoreContentACK] = {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
 
@@ -393,7 +393,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         resetTriplestoreResult
     }
 
-    private def dropAllTriplestoreContent(): Future[DropAllTriplestoreContentACK] = {
+    private def dropAllTriplestoreContent(): Try[DropAllTriplestoreContentACK] = {
 
         log.debug("==>> Drop All Data Start")
 
@@ -402,7 +402,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 DROP ALL
             """
 
-        val response: Future[DropAllTriplestoreContentACK] = for {
+        val response: Try[DropAllTriplestoreContentACK] = for {
             result: String <- getTriplestoreHttpResponse(dropAllSparqlString, isUpdate = true)
             _ = log.debug(s"==>> Drop All Data End, Result: $result")
         } yield DropAllTriplestoreContentACK()
@@ -421,7 +421,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
       * @return [[InsertTriplestoreContentACK]]
       */
-    private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Future[InsertTriplestoreContentACK] = {
+    private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): Try[InsertTriplestoreContentACK] = {
         try {
             log.debug("==>> Loading Data Start")
 
@@ -455,11 +455,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 } yield true
             }
 
-            FastFuture.successful(InsertTriplestoreContentACK())
+            Success(InsertTriplestoreContentACK())
 
         } catch {
-            case e: TriplestoreUnsupportedFeatureException => Future.failed(e)
-            case e: Exception => Future.failed(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
+            case e: TriplestoreUnsupportedFeatureException => Failure(e)
+            case e: Exception => Failure(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
 
     }
@@ -467,7 +467,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     /**
       * Checks connection to the triplestore.
       */
-    private def checkRepository(): Future[CheckRepositoryResponse] = {
+    private def checkRepository(): Try[CheckRepositoryResponse] = {
 
         // needs to be a local import or other things don't work (spray json black magic)
         import org.knora.webapi.messages.store.triplestoremessages.GraphDBJsonProtocol._
@@ -533,15 +533,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             val neededRepo = repositories.filter(_.id == idShouldBe).filter(_.sesameType == sesameTypeShouldBe)
             if (neededRepo.length == 1) {
                 // everything looks good
-                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceAvailable, msg = "Triplestore is available."))
             } else {
                 // none of the available repositories meet our requirements
-                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeShouldBe."))
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.NotInitialized, msg = s"None of the available repositories meet our requirements of id: $idShouldBe, sesameType: $sesameTypeShouldBe."))
             }
         } catch {
             case e: Exception => {
                 // println("checkRepository - exception", e)
-                FastFuture.successful(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
+                Success(CheckRepositoryResponse(repositoryStatus = RepositoryStatus.ServiceUnavailable, msg = "Triplestore not available."))
             }
         }
     }
@@ -554,7 +554,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * @param isConstruct `true` if this is a CONSTRUCT request.
       * @return the triplestore's response.
       */
-    private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false): Future[String] = {
+    private def getTriplestoreHttpResponse(sparql: String, isUpdate: Boolean, isConstruct: Boolean = false): Try[String] = {
         val request = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
 
@@ -600,7 +600,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             )
         }
 
-        val triplestoreResponseFuture = for {
+        val triplestoreResponseFuture: Future[String] = for {
             // _ = println(request.toString())
 
             requestStartTime: Long <- FastFuture.successful {
@@ -629,9 +629,27 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
         // If an exception was thrown during the connection to the triplestore, wrap it in
         // a TriplestoreConnectionException.
-        triplestoreResponseFuture.recover {
+        val recoveredTriplestoreResponseFuture: Future[String] = triplestoreResponseFuture.recover {
             case tre: TriplestoreResponseException => throw tre
             case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
+        }
+
+        val awaitTimeout: FiniteDuration = if (isUpdate) {
+            // An update for a bulk import could take a while.
+            settings.triplestoreUpdateTimeout
+        } else {
+            // But reading data should be quick.
+            settings.triplestoreQueryTimeout
+        }
+
+        // Block until the triplestore responds, to ensure that the number of concurrent connections to the
+        // triplestore will never be greater than the value of
+        // akka.actor.deployment./storeManager/triplestoreManager/httpTriplestoreRouter.nr-of-instances
+        try {
+            Await.ready(recoveredTriplestoreResponseFuture, awaitTimeout)
+            recoveredTriplestoreResponseFuture.value.get
+        } catch {
+            case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to triplestore timed out after $awaitTimeout", timeoutEx, log))
         }
     }
 }
