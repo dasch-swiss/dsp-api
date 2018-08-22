@@ -87,6 +87,8 @@ class SettingsImpl(config: Config) extends Extension {
     val internalSipiPort: Int = config.getInt("app.sipi.internal-port")
     val internalSipiBaseUrl: String = internalSipiProtocol + "://" + internalSipiHost + (if (internalSipiPort != 80) ":" + internalSipiPort else "")
 
+    val sipiTimeout: FiniteDuration = getFiniteDuration("app.sipi.timeout", config)
+
     val externalSipiProtocol: String = config.getString("app.sipi.external-protocol")
     val externalSipiHost: String = config.getString("app.sipi.external-host")
     val externalSipiPort: Int = config.getInt("app.sipi.external-port")
@@ -131,6 +133,9 @@ class SettingsImpl(config: Config) extends Extension {
 
     val triplestoreType: String = config.getString("app.triplestore.dbtype")
     val triplestoreHost: String = config.getString("app.triplestore.host")
+
+    val triplestoreQueryTimeout: FiniteDuration = getFiniteDuration("app.triplestore.query-timeout", config)
+    val triplestoreUpdateTimeout: FiniteDuration = getFiniteDuration("app.triplestore.update-timeout", config)
 
     val triplestoreUseHttps: Boolean = config.getBoolean("app.triplestore.use-https")
 
