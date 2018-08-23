@@ -58,8 +58,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraStoreDispatcher), name = STORE_MANAGER_ACTOR_NAME)
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 

@@ -95,7 +95,7 @@ trait LiveCore extends Core {
     /**
       * Provides the default global execution context
       */
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 }
 
 /**
@@ -114,12 +114,12 @@ trait KnoraService {
     /**
       * The actor used for storing the application application wide variables in a thread safe manner.
       */
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.

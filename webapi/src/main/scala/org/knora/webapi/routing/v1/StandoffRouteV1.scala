@@ -47,7 +47,7 @@ object StandoffRouteV1 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val materializer: ActorMaterializer = ActorMaterializer()
         val stringFormatter = StringFormatter.getGeneralInstance

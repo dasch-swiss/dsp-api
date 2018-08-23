@@ -21,12 +21,12 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
 import akka.util.Timeout
-import org.knora.webapi.Settings
 import org.knora.webapi.app._
 import org.knora.webapi.store._
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{KnoraDispatchers, Settings}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 /**
@@ -56,7 +56,7 @@ trait Responder extends Actor with ActorLogging {
     /**
       * The Akka actor system's execution context for futures.
       */
-    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     /**
       * A reference to the application state actor.

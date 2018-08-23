@@ -38,7 +38,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
-import scala.concurrent.{Await, Future, TimeoutException}
+import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
 
@@ -48,6 +48,7 @@ import scala.util.{Failure, Try}
   */
 class SipiResponderV1 extends Responder {
 
+    implicit override val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraSipiDispatcher)
     implicit private val materializer: ActorMaterializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.

@@ -60,7 +60,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     private implicit val system: ActorSystem = context.system
     private val settings = Settings(system)
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
     private implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     private val triplestoreType = settings.triplestoreType

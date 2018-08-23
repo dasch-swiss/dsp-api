@@ -44,7 +44,7 @@ import scala.concurrent.ExecutionContextExecutor
 class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ListADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
