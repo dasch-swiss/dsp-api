@@ -32,7 +32,7 @@
             <pattern>[%level] %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>logs/console.log</File>
         <encoder>
             <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
@@ -40,7 +40,7 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
         </rollingPolicy>
-    </appender>
+    </appender>-->
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
@@ -127,6 +127,6 @@
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
-        <appender-ref ref="R"/>
+        <!--<appender-ref ref="R"/>-->
     </root>
 </configuration>

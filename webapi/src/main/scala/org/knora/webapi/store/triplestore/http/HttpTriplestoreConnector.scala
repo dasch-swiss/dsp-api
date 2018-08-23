@@ -630,8 +630,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
 
-            _ = log.debug("getTriplestoreHttpResponse - response (128 chars): {}", responseString.substring(0, 128))
-
         } yield responseString
 
         // If an exception was thrown during the connection to the triplestore, wrap it in
@@ -654,7 +652,15 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         // akka.actor.deployment./storeManager/triplestoreManager/httpTriplestoreRouter.nr-of-instances
         try {
             Await.ready(recoveredTriplestoreResponseFuture, awaitTimeout)
-            recoveredTriplestoreResponseFuture.value.get
+            val response: Try[String] = recoveredTriplestoreResponseFuture.value.get
+
+            val shortenedResponse: String = if (response.get.size > 128) {
+                response.get.substring(0, 128)
+            } else {
+                response.get
+            }
+            log.debug("getTriplestoreHttpResponse - response (128 chars): {}", shortenedResponse)
+            response
         } catch {
             case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to triplestore timed out after $awaitTimeout", timeoutEx, log))
         }
