@@ -618,6 +618,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send the HTTP request.
             response <- http.singleRequest(request)
 
+            _ = log.debug("getTriplestoreHttpResponse - response: {}", response)
+
             // Convert the HTTP response body to a string.
             responseString <- response.entity.toStrict(20.seconds).map(_.data.decodeString("UTF-8"))
 
@@ -652,15 +654,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         // akka.actor.deployment./storeManager/triplestoreManager/httpTriplestoreRouter.nr-of-instances
         try {
             Await.ready(recoveredTriplestoreResponseFuture, awaitTimeout)
-            val response: Try[String] = recoveredTriplestoreResponseFuture.value.get
-
-            val shortenedResponse: String = if (response.get.size > 128) {
-                response.get.substring(0, 128)
-            } else {
-                response.get
-            }
-            log.debug("getTriplestoreHttpResponse - response (128 chars): {}", shortenedResponse)
-            response
+            recoveredTriplestoreResponseFuture.value.get
         } catch {
             case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to triplestore timed out after $awaitTimeout", timeoutEx, log))
         }
