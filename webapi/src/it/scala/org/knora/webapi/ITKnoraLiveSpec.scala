@@ -108,12 +108,13 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
 
+        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
+
         //log.debug("REQUEST: {}", request)
         //log.debug("RESPONSE: {}", response.toString())
 
-        val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 5.seconds)
+        val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
 
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
         responseBodyStr
     }
 
@@ -146,7 +147,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         response.entity.discardBytes()
     }
 
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 4999 milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 5999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }

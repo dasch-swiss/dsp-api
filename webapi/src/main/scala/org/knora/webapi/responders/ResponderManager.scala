@@ -22,7 +22,6 @@ package org.knora.webapi.responders
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi.{ActorMaker, KnoraDispatchers}
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -49,8 +48,9 @@ import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
+import org.knora.webapi.{ActorMaker, KnoraDispatchers}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
@@ -66,7 +66,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * The Akka actor system's execution context for futures.
       */
-    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular

@@ -31,7 +31,7 @@ import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with StoresADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
 
     def knoraApiPath = Route {

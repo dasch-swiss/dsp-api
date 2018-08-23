@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{Authenticati
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 /**
   * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
@@ -37,7 +37,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
 
         path("v2" / "authentication") {

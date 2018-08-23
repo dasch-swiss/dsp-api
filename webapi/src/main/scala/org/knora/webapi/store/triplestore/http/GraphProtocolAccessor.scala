@@ -32,7 +32,7 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi._
 import org.slf4j.LoggerFactory
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext}
 
 
 /**
@@ -83,7 +83,7 @@ object GraphProtocolAccessor {
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
-        implicit val executionContext: ExecutionContextExecutor = _system.dispatcher
+        implicit val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
 
         log.debug("GraphProtocolAccessor - execute started")
 

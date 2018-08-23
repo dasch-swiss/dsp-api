@@ -35,7 +35,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContext
 
 /**
   * Provides a spray-routing function for API routes that deal with users.
@@ -46,7 +46,7 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutor}
 class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with TracingDirectives {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
