@@ -97,7 +97,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the [[SipiResponderV1]] actor pool.
       */
-    protected final def makeDefaultSipiRouterV1: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV1]).withDispatcher(KnoraDispatchers.KnoraSipiDispatcher), SIPI_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultSipiRouterV1: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV1]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SIPI_ROUTER_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this

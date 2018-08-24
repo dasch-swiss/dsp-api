@@ -37,6 +37,11 @@ object TriplestoreTypes {
 object KnoraDispatchers {
 
     /**
+      * All normal actors should run on this dispatcher (non-blocking)
+      */
+    val KnoraActorDispatcher = "knora-actor-dispatcher"
+
+    /**
       * Ask, future, and blocking operations should run on this dispatcher
       */
     val KnoraBlockingDispatcher = "knora-blocking-dispatcher"
@@ -51,8 +56,5 @@ object KnoraDispatchers {
       */
     val KnoraSipiDispatcher = "knora-sipi-dispatcher"
 
-    /**
-      * All normal actors should run on this dispatcher (non-blocking)
-      */
-    val KnoraActorDispatcher = "knora-actor-dispatcher"
+
 }

@@ -42,7 +42,7 @@ class StoreManager extends Actor with ActorLogging {
 
     override def preStart = {
         log.debug("StoreManager: start with preStart")
-        triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraStoreDispatcher), TRIPLESTORE_MANAGER_ACTOR_NAME)
+        triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TRIPLESTORE_MANAGER_ACTOR_NAME)
         log.debug("StoreManager: finished with preStart")
     }
 
