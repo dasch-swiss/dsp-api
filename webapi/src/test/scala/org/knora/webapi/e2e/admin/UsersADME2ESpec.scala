@@ -32,7 +32,7 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM, SharedTestDataV1}
+import org.knora.webapi._
 
 import scala.concurrent.duration._
 
@@ -301,6 +301,65 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 // log.debug(jsonResult)
 
             }
+
+            "not allow changing the system user" in {
+
+                val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Put(baseApiUrl + s"/admin/users/" + systemUserIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow changing the anonymous user" in {
+
+                val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Put(baseApiUrl + s"/admin/users/" + anonymousUserIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow deleting the system user" in {
+                val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Delete(baseApiUrl + s"/admin/users/" + systemUserIriEncoded) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow deleting the anonymous user" in {
+                val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
+
+                val request = Delete(baseApiUrl + s"/admin/users/" + anonymousUserIriEncoded) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
         }
 
         "used to query project memberships" should {

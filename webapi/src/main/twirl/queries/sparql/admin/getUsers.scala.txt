@@ -18,6 +18,8 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.KnoraSystemInstances
+
 
 @**
  * Gets all information about a single or all user.
@@ -50,4 +52,6 @@ WHERE {
 
     ?s rdf:type knora-base:User .
     ?s ?p ?o .
+
+    FILTER(!(?s = IRI("@KnoraSystemInstances.Users.AnonymousUser.id") || ?s = IRI("@KnoraSystemInstances.Users.SystemUser.id")))
 }
