@@ -506,19 +506,21 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 headers = headers
             )
 
+            log.debug("checkRepository - getRepositoriesRequest: {}", getRepositoriesRequest)
+
             val jsonFuture = for {
                 response: HttpMessage <- Http().singleRequest(getRepositoriesRequest)
-                // _ = log.info("checkRepository - response: {}", response)
+                _ = log.debug("checkRepository - response: {}", response)
 
                 json: JsArray <- response match {
                     case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[JsArray]
                     case other => throw new Exception(other.toString())
                 }
-                // _ = log.info("checkRepository - json: {}", json.prettyPrint)
+                _ = log.debug("checkRepository - json: {}", json.prettyPrint)
 
             } yield json
 
-            val jsonArr: JsArray = Await.result(jsonFuture, 750.milliseconds)
+            val jsonArr: JsArray = Await.result(jsonFuture, 2.second)
 
             // parse json and check if the repository defined in 'application.conf' is present and correctly defined
 
@@ -600,6 +602,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             )
         }
 
+        log.debug("getTriplestoreHttpResponse - request: {}", request)
+
         val triplestoreResponseFuture: Future[String] = for {
             // _ = println(request.toString())
 
@@ -614,6 +618,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             // Send the HTTP request.
             response <- http.singleRequest(request)
 
+            _ = log.debug("getTriplestoreHttpResponse - response: {}", response)
+
             // Convert the HTTP response body to a string.
             responseString <- response.entity.toStrict(20.seconds).map(_.data.decodeString("UTF-8"))
 
@@ -625,6 +631,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val requestDuration = System.currentTimeMillis() - requestStartTime
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
+
         } yield responseString
 
         // If an exception was thrown during the connection to the triplestore, wrap it in

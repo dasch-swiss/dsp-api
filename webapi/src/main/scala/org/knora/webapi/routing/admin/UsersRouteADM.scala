@@ -156,6 +156,10 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
 
                             val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
+                            if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
+                                throw BadRequestException("Changes to built-in users are not allowed.")
+                            }
+
                             /* the api request is already checked at time of creation. see case class. */
 
                             val requestMessage = for {
@@ -207,6 +211,10 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     /* delete a user identified by iri */
                     requestContext => {
                         val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+
+                        if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
+                            throw BadRequestException("Changes to built-in users are not allowed.")
+                        }
 
                         /* update existing user's status to false */
                         val requestMessage = for {

@@ -72,7 +72,16 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (21)
+                response.users.size should be (19)
+            }
+
+            "not return the system and anonymous users" in {
+                actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
+                val response = expectMsgType[UsersGetResponseADM](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (19)
+                response.users.count(_.id == KnoraSystemInstances.Users.AnonymousUser.id) should be (0)
+                response.users.count(_.id == KnoraSystemInstances.Users.SystemUser.id) should be (0)
             }
         }
 
@@ -98,7 +107,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
             }
 
-            "return 'NotFoundException' when the user is unknown " in {
+            "return 'NotFoundException' when the user is unknown" in {
                 actorUnderTest ! UserGetRequestADM(
                     maybeIri = Some("http://rdfh.ch/users/notexisting"),
                     maybeEmail = None,
@@ -456,6 +465,30 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
+            }
+
+            "return 'BadRequest' if system user is requested to change" in {
+
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = KnoraSystemInstances.Users.SystemUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
+            }
+
+            "return 'BadRequest' if anonymous user is requested to change" in {
+
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = KnoraSystemInstances.Users.AnonymousUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {
