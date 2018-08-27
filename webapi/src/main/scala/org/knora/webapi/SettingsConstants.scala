@@ -42,19 +42,7 @@ object KnoraDispatchers {
     val KnoraActorDispatcher = "knora-actor-dispatcher"
 
     /**
-      * Ask, future, and blocking operations should run on this dispatcher
+      * All blocking operations should run on this dispatcher (blocking)
       */
     val KnoraBlockingDispatcher = "knora-blocking-dispatcher"
-
-    /**
-      * The store pool actors should run on this dispatcher (blocking)
-      */
-    val KnoraStoreDispatcher = "knora-store-dispatcher"
-
-    /**
-      * The sipi pool actors should run on this dispatcher (blocking)
-      */
-    val KnoraSipiDispatcher = "knora-sipi-dispatcher"
-
-
 }

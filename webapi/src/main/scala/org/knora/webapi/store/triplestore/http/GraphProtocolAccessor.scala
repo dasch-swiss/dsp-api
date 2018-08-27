@@ -83,7 +83,7 @@ object GraphProtocolAccessor {
 
         val log = akka.event.Logging(_system, this.getClass)
         val settings = Settings(_system)
-        implicit val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
+        implicit val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
         log.debug("GraphProtocolAccessor - execute started")
 

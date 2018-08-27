@@ -42,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with StoresADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
 
     def knoraApiPath = Route {
