@@ -19,4 +19,5 @@
    - incunabula: `0803`
    - dokubib: `0804`
    - ubkvp: `0805` // University of Basel Kings Valley Project
+   - lhtt: `0806` // Living Histories of Theban Tombs
    - webern: `08AE`
