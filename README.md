@@ -172,7 +172,7 @@ feature (resources route): add route for resource creation
 
 ```
 
-## Acknoledgments
+## Acknowledgments
 
 ![](https://www.yourkit.com/images/yklogo.png)
 
