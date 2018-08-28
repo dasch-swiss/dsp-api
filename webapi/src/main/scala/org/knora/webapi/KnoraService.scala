@@ -237,7 +237,7 @@ trait KnoraService {
         if (state != AppState.Running) {
             // not in running state so call startup checks again
             // we should wait a bit before we call ourselves again
-            Await.result(blockingFuture(), 2.second)
+            Await.result(blockingFuture(), 3.5.second)
             applicationStateRunning()
         }
     }
@@ -262,7 +262,7 @@ trait KnoraService {
                 startupChecks(withOntologies)
 
                 // we should wait a bit before we call ourselves again
-                Await.result(blockingFuture(), 2.second)
+                Await.result(blockingFuture(), 3.5.seconds)
                 startupTaskRunner(withOntologies)
             }
         }
@@ -273,7 +273,7 @@ trait KnoraService {
       */
     private def blockingFuture(): Future[Unit] = {
 
-        val delay: Long = 1.second.toMillis
+        val delay: Long = 3.second.toMillis
 
         Future {
             // uses the good "blocking dispatcher" that we configured,
@@ -315,7 +315,7 @@ trait KnoraService {
       */
     private def checkRepository(): Unit = {
 
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 1.seconds).asInstanceOf[CheckRepositoryResponse]
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 2.5.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
             applicationStateActor ! SetAppState(AppState.RepositoryReady)
             log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)

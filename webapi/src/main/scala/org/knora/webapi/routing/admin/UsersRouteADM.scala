@@ -49,19 +49,19 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* return all users */
-    def getUsers = path("admin" / "users") {
+    def getUsers: Route = path("admin" / "users") {
         get {
             operationName("admin-get-users") {
                 requestContext =>
-                    val requestMessage = for {
+                    val requestMessage: Future[UsersGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield UsersGetRequestADM(requestingUser = requestingUser)
 
@@ -85,12 +85,12 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         new ApiResponse(code = 500, message = "Internal server error")
     ))
     /* create a new user */
-    def postUser = path("admin" / "users") {
+    def postUser: Route = path("admin" / "users") {
         post {
             operationName("admin-create-user") {
                 entity(as[CreateUserApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestMessage = for {
+                        val requestMessage: Future[UserCreateRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield UserCreateRequestADM(
                             createRequest = apiRequest,
@@ -123,10 +123,10 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     def getUser: Route = path("admin" / "users" / Segment) { value =>
         get {
             operationName("admin-get-user") {
-                parameters("identifier" ? "iri") { identifier: String =>
+                parameters("identifier" ? "iri") { (identifier: String) =>
                     requestContext =>
                         /* check if email or iri was supplied */
-                        val requestMessage = for {
+                        val requestMessage: Future[UserGetRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield if (identifier == "email") {
                             UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
@@ -157,9 +157,13 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
 
                         val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
+                        if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
+                            throw BadRequestException("Changes to built-in users are not allowed.")
+                        }
+
                         /* the api request is already checked at time of creation. see case class. */
 
-                        val requestMessage: Future[UsersResponderRequestADM with Product with Serializable] = for {
+                        val requestMessage: Future[UsersResponderRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield if (apiRequest.requesterPassword.isDefined && apiRequest.newPassword.isDefined) {
                             /* update existing user's password */
@@ -208,6 +212,10 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     /* delete a user identified by iri */
                     requestContext => {
                         val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+
+                        if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
+                            throw BadRequestException("Changes to built-in users are not allowed.")
+                        }
 
                         /* update existing user's status to false */
                         val requestMessage: Future[UserChangeStatusRequestADM] = for {

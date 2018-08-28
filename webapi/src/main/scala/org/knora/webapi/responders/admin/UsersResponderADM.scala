@@ -92,6 +92,8 @@ class UsersResponderADM extends Responder {
 
         //log.debug("usersGetV1")
 
+        // ToDO: need to have certain permissions to allow access (#961)
+
         for {
             sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
@@ -152,6 +154,8 @@ class UsersResponderADM extends Responder {
       */
     private def userGetADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
         // log.debug(s"userGetADM: maybeUserIri: {}, maybeUserEmail: {}, userInformationType: {}, requestingUser: {}", maybeUserIri, maybeUserEmail, userInformationType, requestingUser )
+
+        // ToDO: need to have certain permissions to allow access (#961)
 
         val userFromCache = if (maybeUserIri.nonEmpty) {
             CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserIri.get)
@@ -1126,6 +1130,10 @@ class UsersResponderADM extends Responder {
         // log.debug("updateUserV1 - userUpdatePayload: {}", userUpdatePayload)
 
         /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
+
+        if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+        }
 
         if (userUpdatePayload.email.nonEmpty) {
             // changing email address, so we need to invalidate the cached profile under this email

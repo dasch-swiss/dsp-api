@@ -10,7 +10,7 @@ connectInput in run := true
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "1.7.0",
+    version := "1.7.1",
     scalaVersion := "2.12.4"
 )
 
