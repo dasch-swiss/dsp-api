@@ -468,7 +468,6 @@ class OntologyV2R2RSpec extends R2RSpec {
             """.stripMargin
 
             val expectedProperties: Set[SmartIri] = Set(
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri,
@@ -491,7 +490,6 @@ class OntologyV2R2RSpec extends R2RSpec {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri,
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri,
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
