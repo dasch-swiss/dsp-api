@@ -1475,6 +1475,8 @@ this simplified example:
 -   If it's a standoff class, none of its cardinalities may be on Knora
     resource properties, and all its base classes with Knora IRIs must
     also be standoff classes.
+-   A class cannot have a cardinality on property P as well as a cardinality
+    on a subproperty of P.
 
 ### Restrictions on properties
 
