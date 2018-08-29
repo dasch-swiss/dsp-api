@@ -86,7 +86,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 
@@ -139,6 +141,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
@@ -152,7 +155,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[NotFoundException] should ===(true)
             }
         }
 
@@ -165,7 +170,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 
@@ -247,7 +254,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -262,7 +271,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -277,7 +288,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -292,7 +305,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -307,7 +322,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -322,7 +339,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -337,7 +356,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
         }
@@ -397,7 +418,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 
@@ -1647,7 +1670,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
 
         }
@@ -1704,7 +1729,9 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
 
         }
@@ -1787,6 +1814,49 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
+        "not allow a user to create a class with cardinalities both on property P and on a subproperty of P" in {
+
+            val classIri = AnythingOntologyIri.makeEntityIri("InvalidThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objects = Seq(StringLiteralV2("invalid thing", Some("en")))
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objects = Seq(StringLiteralV2("A thing that is invalid", Some("en")))
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasOtherThing") -> KnoraCardinalityInfo(Cardinality.MustHaveOne),
+                    AnythingOntologyIri.makeEntityIri("hasBlueThing") -> KnoraCardinalityInfo(cardinality = Cardinality.MustHaveOne)
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+        }
+
         "create a class anything:WildThing that is a subclass of anything:Thing, with a direct cardinality for anything:hasName, overriding the cardinality for anything:hasInteger" in {
             val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
 
@@ -1825,7 +1895,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
                 "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
@@ -1836,7 +1905,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
                 "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
@@ -3389,6 +3457,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not load a project-specific ontology containing an owl:TransitiveProperty" in {
             val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/transitive-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+        "not load a project-specific ontology with a class that has cardinalities both on property P and on a subproperty of P" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-inherits-prop-and-subprop-onto.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)
