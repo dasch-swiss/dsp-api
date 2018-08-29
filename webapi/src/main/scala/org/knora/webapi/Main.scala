@@ -44,16 +44,16 @@ object Main extends App with LiveCore with KnoraService {
     if (arglist.contains("-r")) applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
     // starts prometheus monitoring reporter
-    if (arglist.contains("-p")) applicationStateActor ! SetPrometheusReporterState(true)
+    // if (arglist.contains("-p")) applicationStateActor ! SetPrometheusReporterState(true)
 
     // starts zipkin monitoring reporter
-    if (arglist.contains("-z")) applicationStateActor ! SetZipkinReporterState(true)
+    // if (arglist.contains("-z")) applicationStateActor ! SetZipkinReporterState(true)
 
     // starts zipkin monitoring reporter
-    if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
+    // if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
 
     // print config on startup
-    if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigExtendedState(true)
+    // if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigExtendedState(true)
 
     if (arglist.contains("--help")) {
         println(

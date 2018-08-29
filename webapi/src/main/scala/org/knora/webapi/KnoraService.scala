@@ -27,10 +27,6 @@ import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import kamon.Kamon
-import kamon.jaeger.JaegerReporter
-import kamon.prometheus.PrometheusReporter
-import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
@@ -205,7 +201,7 @@ trait KnoraService {
         log.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
-        Kamon.stopAllReporters()
+        // Kamon.stopAllReporters()
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
     }
@@ -402,6 +398,7 @@ trait KnoraService {
       */
     private def startReporters(): Unit = {
 
+        /*
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {
             Kamon.addReporter(new PrometheusReporter()) // metrics
@@ -416,5 +413,6 @@ trait KnoraService {
         if (jaegerReporter) {
             Kamon.addReporter(new JaegerReporter()) // tracing
         }
+        */
     }
 }
