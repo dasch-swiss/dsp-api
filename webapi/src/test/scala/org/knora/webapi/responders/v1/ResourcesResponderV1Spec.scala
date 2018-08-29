@@ -1464,13 +1464,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         }
 
-        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+        "not create an anything:BlueThing with property anything:hasBlueThing pointing to an anything:Thing" in {
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0001/a-thing")))
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
                 label = "Test Thing",
                 projectIri = "http://rdfh.ch/projects/0001",
                 values = valuesToBeCreated,
