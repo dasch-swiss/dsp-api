@@ -294,6 +294,7 @@ class OntologyResponderV2 extends Responder {
             classCardinalitiesWithInheritance = classCardinalitiesWithInheritance,
             directSubClassOfRelations = directSubClassOfRelations,
             allSubClassOfRelations = allSubClassOfRelations,
+            allSubPropertyOfRelations = allSubPropertyOfRelations,
             allPropertyDefs = allPropertyDefs,
             allKnoraResourceProps = allKnoraResourceProps,
             allLinkProps = allLinkProps,
@@ -497,6 +498,7 @@ class OntologyResponderV2 extends Responder {
       *                                          [[OwlCardinalityInfo]] objects.
       * @param directSubClassOfRelations         a map of class IRIs to their immediate base classes.
       * @param allSubClassOfRelations            a map of class IRIs to all their base classes.
+      * @param allSubPropertyOfRelations         a map of property IRIs to all their base properties.
       * @param allPropertyDefs                   a map of property IRIs to property definitions.
       * @param allKnoraResourceProps             a set of the IRIs of all Knora resource properties.
       * @param allLinkProps                      a set of the IRIs of all link properties.
@@ -509,6 +511,7 @@ class OntologyResponderV2 extends Responder {
                                    classCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, OwlCardinalityInfo]],
                                    directSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                    allSubClassOfRelations: Map[SmartIri, Set[SmartIri]],
+                                   allSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                    allPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
                                    allKnoraResourceProps: Set[SmartIri],
                                    allLinkProps: Set[SmartIri],
@@ -580,6 +583,20 @@ class OntologyResponderV2 extends Responder {
 
                     if (cardinalitiesOnMissingProps.nonEmpty) {
                         throw InconsistentTriplestoreDataException(s"Class $classIri has one or more cardinalities on undefined properties: ${cardinalitiesOnMissingProps.mkString(", ")}")
+                    }
+
+                    // It cannot have cardinalities both on property P and on a subproperty of P.
+
+                    val maybePropertyAndSubproperty: Option[(SmartIri, SmartIri)] = findPropertyAndSubproperty(
+                        propertyIris = allPropertyIrisForCardinalitiesInClass,
+                        subPropertyOfRelations = allSubPropertyOfRelations
+                    )
+
+                    maybePropertyAndSubproperty match {
+                        case Some((basePropertyIri, propertyIri)) =>
+                            throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $basePropertyIri and on its subproperty $propertyIri")
+
+                        case None => ()
                     }
 
                     if (isKnoraResourceClass) {
@@ -1804,7 +1821,7 @@ class OntologyResponderV2 extends Responder {
         val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
             propertyIri =>
                 if (!isKnoraResourceProperty(propertyIri, cacheData) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue) {
-                    throw NotFoundException(s"Invalid property for cardinality: ${propertyIri.toOntologySchema(ApiV2WithValueObjects)}")
+                    throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
                 }
 
                 cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
@@ -1878,7 +1895,44 @@ class OntologyResponderV2 extends Responder {
             errorFun = { msg: String => throw BadRequestException(msg) }
         )
 
+        // It cannot have cardinalities both on property P and on a subproperty of P.
+
+        val maybePropertyAndSubproperty: Option[(SmartIri, SmartIri)] = findPropertyAndSubproperty(
+            propertyIris = cardinalitiesForClassWithInheritance.keySet,
+            subPropertyOfRelations = cacheData.subPropertyOfRelations
+        )
+
+        maybePropertyAndSubproperty match {
+            case Some((basePropertyIri, propertyIri)) =>
+                throw BadRequestException(s"Class <${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+
+            case None => ()
+        }
+
         cardinalitiesForClassWithInheritance
+    }
+
+    /**
+      * Given a set of property IRIs, determines whether the set contains a property P and a subproperty of P.
+      *
+      * @param propertyIris           the set of property IRIs.
+      * @param subPropertyOfRelations all the subproperty relations in the triplestore.
+      * @return a property and its subproperty, if found.
+      */
+    private def findPropertyAndSubproperty(propertyIris: Set[SmartIri], subPropertyOfRelations: Map[SmartIri, Set[SmartIri]]): Option[(SmartIri, SmartIri)] = {
+        propertyIris.flatMap {
+            propertyIri =>
+                val maybeBasePropertyIri: Option[SmartIri] = (propertyIris - propertyIri).find {
+                    otherPropertyIri =>
+                        subPropertyOfRelations.get(propertyIri).exists {
+                            baseProperties: Set[SmartIri] => baseProperties.contains(otherPropertyIri)
+                        }
+                }
+
+                maybeBasePropertyIri.map {
+                    basePropertyIri => (basePropertyIri, propertyIri)
+                }
+        }.headOption
     }
 
     /**
