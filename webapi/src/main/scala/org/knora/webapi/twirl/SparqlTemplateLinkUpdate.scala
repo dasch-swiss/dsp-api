@@ -20,6 +20,7 @@
 package org.knora.webapi.twirl
 
 import org.knora.webapi.IRI
+import org.knora.webapi.util.SmartIri
 
 /**
   * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
@@ -45,7 +46,7 @@ import org.knora.webapi.IRI
   * @param newLinkValuePermissions the literal that should be the object of the `hasPermissions` property of
   *                                the new `LinkValue`.
   */
-case class SparqlTemplateLinkUpdate(linkPropertyIri: IRI,
+case class SparqlTemplateLinkUpdate(linkPropertyIri: SmartIri,
                                     directLinkExists: Boolean,
                                     insertDirectLink: Boolean,
                                     deleteDirectLink: Boolean,

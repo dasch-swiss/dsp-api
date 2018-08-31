@@ -21,9 +21,9 @@ package org.knora.webapi.util.jsonld
 
 import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
-import org.knora.webapi._
 
 
 /**
@@ -55,8 +55,7 @@ sealed trait JsonLDValue extends Ordered[JsonLDValue] {
 }
 
 /**
-  * Represents a string value in a JSON-LD document. Note: this type should also be used for xsd:decimal, to
-  * ensure that precision is not lost. See [[http://ontology2.com/the-book/decimal-the-missing-datatype.html]].
+  * Represents a string value in a JSON-LD document.
   *
   * @param value the underlying string.
   */
@@ -127,21 +126,65 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         value.keySet == Set(JsonLDConstants.VALUE, JsonLDConstants.LANGUAGE)
     }
 
+    /**
+      * Returns `true` if this JSON-LD object represents a datatype value.
+      */
+    def isDatatypeValue: Boolean = {
+        value.keySet == Set(JsonLDConstants.TYPE, JsonLDConstants.VALUE)
+    }
 
     /**
       * Converts an IRI value from its JSON-LD object value representation, validating it using the specified validation
       * function.
       *
+      * @param validationFun the validation function.
+      * @tparam T the type returned by the validation function.
       * @return the return value of the validation function.
       */
     def toIri[T](validationFun: (String, => Nothing) => T): T = {
         if (isIri) {
-            value.values.head match {
-                case iriJsonLDString: JsonLDString => validationFun(iriJsonLDString.value, throw BadRequestException(s"Invalid IRI: ${iriJsonLDString.value}"))
-                case other => throw BadRequestException(s"Expected an IRI: $other")
-            }
+            val id: IRI = requireString(JsonLDConstants.ID)
+            validationFun(id, throw BadRequestException(s"Invalid IRI: $id"))
         } else {
             throw BadRequestException(s"This JSON-LD object does not represent an IRI: $this")
+        }
+    }
+
+    /**
+      * Converts a datatype value from its JSON-LD object value representation, validating it using the specified validation
+      * function.
+      *
+      * @param expectedDatatype the IRI of the expected datatype.
+      * @param validationFun the validation function.
+      * @tparam T the type returned by the validation function.
+      * @return the return value of the validation function.
+      */
+    def toDatatypeValueLiteral[T](expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T = {
+        if (isDatatypeValue) {
+            val datatype: IRI = requireString(JsonLDConstants.TYPE)
+
+            if (datatype != expectedDatatype.toString) {
+                throw BadRequestException(s"Expected datatype value of type <$expectedDatatype>, found <$datatype>")
+            }
+
+            val value: String = requireString(JsonLDConstants.VALUE)
+            validationFun(value, throw BadRequestException(s"Invalid datatype value literal: $value"))
+        } else {
+            throw BadRequestException(s"This JSON-LD object does not represent a datatype value: $this")
+        }
+    }
+
+    /**
+      * Gets a required string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a string.
+      *
+      * @param key the key of the required value.
+      * @return the value.
+      */
+    def requireString(key: String): String = {
+        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
+            case JsonLDString(str) => str
+            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
         }
     }
 
@@ -158,9 +201,21 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @tparam T the type of the validation function's return value.
       * @return the return value of the validation function.
       */
-    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = {
-        value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+    def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = {
+        val str: String = requireString(key)
+        validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
+    }
+
+    /**
+      * Gets an optional string value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a string.
+      *
+      * @param key the key of the optional value.
+      * @return the value, or `None` if not found.
+      */
+    def maybeString(key: String): Option[String] = {
+        value.get(key).map {
+            case JsonLDString(str) => str
             case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
         }
     }
@@ -178,10 +233,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @tparam T the type of the validation function's return value.
       * @return the return value of the validation function, or `None` if the value was not present.
       */
-    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
-        value.get(key).map {
-            case JsonLDString(str) => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
-            case other => throw BadRequestException(s"Invalid $key: $other (string expected)")
+    def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
+        maybeString(key).map {
+            str => validationFun(str, throw BadRequestException(s"Invalid $key: $str"))
         }
     }
 
@@ -213,6 +267,39 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       */
     def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = {
         maybeObject(key).map(_.toIri(validationFun))
+    }
+
+    /**
+      * Gets a required datatype value (contained in a JSON-LD object) of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property is not found or if its value is not a JSON-LD object.
+      * Then parses the object's literal value with the specified validation function (see [[org.knora.webapi.util.StringFormatter]]
+      * for examples of such functions), throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key the key of the required value.
+      * @param expectedDatatype the IRI of the expected datatype.
+      * @tparam T the type of the validation function's return value.
+      * @return the validated literal value.
+      */
+    def requireDatatypeValueInObject[T](key: String, expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T = {
+        requireObject(key).toDatatypeValueLiteral(expectedDatatype, validationFun)
+    }
+
+    /**
+      * Gets an optional datatype value (contained in a JSON-LD object) value of a property of this JSON-LD object, throwing
+      * [[BadRequestException]] if the property's value is not a JSON-LD object. Parses the object's literal value with the
+      * specified validation function (see [[org.knora.webapi.util.StringFormatter]] for examples of such functions),
+      * throwing [[BadRequestException]] if the validation fails.
+      *
+      * @param key           the key of the optional value.
+      * @param expectedDatatype the IRI of the expected datatype.
+      * @param validationFun a validation function that takes two arguments: the string to be validated, and a function
+      *                      that throws an exception if the string is invalid. The function's return value is the
+      *                      validated string, possibly converted to another type T.
+      * @tparam T the type of the validation function's return value.
+      * @return the return value of the validation function, or `None` if the value was not present.
+      */
+    def maybeDatatypeValueInObject[T](key: String, expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): Option[T] = {
+        maybeObject(key).map(_.toDatatypeValueLiteral(expectedDatatype, validationFun))
     }
 
     /**
@@ -352,13 +439,13 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     def toObjsWithLang: Seq[StringLiteralV2] = {
         value.map {
             case obj: JsonLDObject =>
-                val lang = obj.requireString(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
+                val lang = obj.requireStringWithValidation(JsonLDConstants.LANGUAGE, stringFormatter.toSparqlEncodedString)
 
                 if (!LanguageCodes.SupportedLanguageCodes(lang)) {
                     throw BadRequestException(s"Unsupported language code: $lang")
                 }
 
-                val text = obj.requireString(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
+                val text = obj.requireStringWithValidation(JsonLDConstants.VALUE, stringFormatter.toSparqlEncodedString)
                 StringLiteralV2(text, Some(lang))
 
             case other => throw BadRequestException(s"Expected JSON-LD object: $other")
@@ -374,16 +461,26 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
   * @param body    the body of the JSON-LD document.
   * @param context the context of the JSON-LD document.
   */
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
+case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue])) {
     /**
       * A convenience function that calls `body.requireString`.
       */
-    def requireString[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireString(key, validationFun)
+    def requireString(key: String): String = body.requireString(key)
+
+    /**
+      * A convenience function that calls `body.requireStringWithValidation`.
+      */
+    def requireStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): T = body.requireStringWithValidation(key, validationFun)
 
     /**
       * A convenience function that calls `body.maybeString`.
       */
-    def maybeString[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeString(key, validationFun)
+    def maybeString(key: String): Option[String] = body.maybeString(key)
+
+    /**
+      * A convenience function that calls `body.maybeStringWithValidation`.
+      */
+    def maybeStringWithValidation[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeStringWithValidation(key, validationFun)
 
     /**
       * A convenience function that calls `body.requireIriInObject`.
@@ -394,6 +491,26 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject) {
       * A convenience function that calls `body.maybeIriInObject`.
       */
     def maybeIriInObject[T](key: String, validationFun: (String, => Nothing) => T): Option[T] = body.maybeIriInObject(key, validationFun)
+
+    /**
+      * A convenience function that calls `body.requireDatatypeValueInObject`.
+      */
+    def requireDatatypeValueInObject[T](key: String, expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): T =
+        body.requireDatatypeValueInObject(
+            key = key,
+            expectedDatatype = expectedDatatype,
+            validationFun = validationFun
+        )
+
+    /**
+      * A convenience function that calls `body.maybeDatatypeValueInObject`.
+      */
+    def maybeDatatypeValueInObject[T](key: String, expectedDatatype: SmartIri, validationFun: (String, => Nothing) => T): Option[T] =
+        body.maybeDatatypeValueInObject(
+            key = key,
+            expectedDatatype = expectedDatatype,
+            validationFun = validationFun
+        )
 
     /**
       * A convenience function that calls `body.requireObject`.
@@ -557,12 +674,13 @@ object JsonLDUtil {
       * predicates.
       *
       * @param value a predicate value.
+      * @param datatype the datatype.
       * @return a JSON-LD object containing `@value` and `@type` predicates.
       */
-    def datatypeValueToJsonLDObject(value: String, datatype: IRI): JsonLDObject = {
+    def datatypeValueToJsonLDObject(value: String, datatype: SmartIri): JsonLDObject = {
         JsonLDObject(Map(
             JsonLDConstants.VALUE -> JsonLDString(value),
-            JsonLDConstants.TYPE -> JsonLDString(datatype)
+            JsonLDConstants.TYPE -> JsonLDString(datatype.toString)
         ))
     }
 

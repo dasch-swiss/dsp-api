@@ -362,6 +362,15 @@ object OntologyConstants {
         val SystemAdmin: IRI = KnoraBasePrefixExpansion + "SystemAdmin"
         val ProjectAdmin: IRI = KnoraBasePrefixExpansion + "ProjectAdmin"
 
+        val BuiltInGroups: Set[IRI] = Set(
+            UnknownUser,
+            KnownUser,
+            ProjectMember,
+            Creator,
+            SystemAdmin,
+            ProjectAdmin
+        )
+
         /* Institution */
         val Institution: IRI = KnoraBasePrefixExpansion + "Institution"
         val InstitutionDescription: IRI = KnoraBasePrefixExpansion + "institutionDescription"
@@ -674,6 +683,7 @@ object OntologyConstants {
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
+        val ValueHasComment: IRI = KnoraApiV2PrefixExpansion + "valueHasComment"
 
         val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
         val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
@@ -682,6 +692,9 @@ object OntologyConstants {
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
+        val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
+        val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"

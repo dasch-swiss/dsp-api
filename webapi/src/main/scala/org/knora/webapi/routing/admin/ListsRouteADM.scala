@@ -29,11 +29,12 @@ import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi._
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -46,7 +47,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def knoraApiPath: Route = {
@@ -59,7 +60,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     requestContext =>
                         val projectIri = stringFormatter.toOptionalIri(maybeProjectIri, throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
 
-                        val requestMessage = for {
+                        val requestMessage: Future[ListsGetRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield ListsGetRequestADM(projectIri, requestingUser)
 
@@ -76,7 +77,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 /* create a list */
                 entity(as[CreateListApiRequestADM]) { apiRequest =>
                     requestContext =>
-                        val requestMessage = for {
+                        val requestMessage: Future[ListCreateRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield ListCreateRequestADM(
                             createListRequest = apiRequest,
@@ -100,7 +101,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = for {
+                    val requestMessage: Future[ListGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ListGetRequestADM(listIri, requestingUser)
 
@@ -129,7 +130,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = for {
+                    val requestMessage: Future[ListInfoGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ListInfoGetRequestADM(listIri, requestingUser)
 
@@ -147,7 +148,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     requestContext =>
                         val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                        val requestMessage = for {
+                        val requestMessage: Future[ListInfoChangeRequestADM] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield ListInfoChangeRequestADM(
                             listIri = listIri,
@@ -172,7 +173,7 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 requestContext =>
                     val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage = for {
+                    val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ListNodeInfoGetRequestADM(listIri, requestingUser)
 

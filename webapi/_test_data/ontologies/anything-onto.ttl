@@ -505,19 +505,19 @@
                          owl:onProperty :hasColor ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                          salsah-gui:guiOrder "10"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasGeometry ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasGeoname ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
                       ] ;
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeometry ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
-                      #] ,
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeoname ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
-                      #] ;
 
       knora-base:resourceIcon "thing.png" ;
 

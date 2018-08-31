@@ -1,57 +1,101 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/7bbb8e59b703",
-    "@type" : "incunabula:page",
-    "incunabula:origname" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/457707ecda0e",
-      "@type" : "knora-api:TextValue",
-      "knora-api:valueAsString" : "IBB_1_002758921_0001.tif"
+  "@id" : "http://rdfh.ch/7bbb8e59b703",
+  "@type" : "incunabula:page",
+  "incunabula:origname" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/457707ecda0e",
+    "@type" : "knora-api:TextValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
-    "incunabula:pagenum" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/fcf90d40da0e",
-      "@type" : "knora-api:TextValue",
-      "knora-api:valueAsString" : "Vorsatzblatt, recto"
-    },
-    "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
-      "@type" : "knora-api:LinkValue",
-      "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
-        "@type" : "incunabula:book",
-        "knora-api:hasIncomingLink" : [ ],
-        "rdfs:label" : "[Das] Narrenschiff (lat.)"
-      }
-    },
-    "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
-      "@type" : "knora-api:IntValue",
-      "knora-api:intValueAsInt" : 1
-    },
-    "knora-api:hasStillImageFileValue" : [ {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
-      "@type" : "knora-api:StillImageFileValue",
-      "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg",
-      "knora-api:fileValueHasFilename" : "incunabula_0000004159.jpg",
-      "knora-api:fileValueIsPreview" : true,
-      "knora-api:stillImageFileValueHasDimX" : 88,
-      "knora-api:stillImageFileValueHasDimY" : 128,
-      "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-    }, {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/reps/22bc3f713f07",
-      "@type" : "knora-api:StillImageFileValue",
-      "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg",
-      "knora-api:fileValueHasFilename" : "incunabula_0000004159.jp2",
-      "knora-api:fileValueIsPreview" : false,
-      "knora-api:stillImageFileValueHasDimX" : 3625,
-      "knora-api:stillImageFileValueHasDimY" : 5251,
-      "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
-    } ],
-    "rdfs:label" : "Vorsatzblatt, recto"
+    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:valueAsString" : "IBB_1_002758921_0001.tif"
   },
+  "incunabula:pagenum" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/fcf90d40da0e",
+    "@type" : "knora-api:TextValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+    "knora-api:valueAsString" : "Vorsatzblatt, recto"
+  },
+  "incunabula:partOfValue" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
+    "@type" : "knora-api:LinkValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:linkValueHasTarget" : {
+      "@id" : "http://rdfh.ch/b6b5ff1eb703",
+      "@type" : "incunabula:book",
+      "knora-api:attachedToProject" : {
+        "@id" : "http://rdfh.ch/projects/0803"
+      },
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:creationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:47Z"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "rdfs:label" : "[Das] Narrenschiff (lat.)"
+    }
+  },
+  "incunabula:seqnum" : {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
+    "@type" : "knora-api:IntValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:intValueAsInt" : 1
+  },
+  "knora-api:attachedToProject" : {
+    "@id" : "http://rdfh.ch/projects/0803"
+  },
+  "knora-api:attachedToUser" : {
+    "@id" : "http://rdfh.ch/users/91e19f1e01"
+  },
+  "knora-api:creationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2016-03-02T15:05:47Z"
+  },
+  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+  "knora-api:hasStillImageFileValue" : [ {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/22bc3f713f07",
+    "@type" : "knora-api:StillImageFileValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jp2/full/3625,5251/0/default.jpg",
+    "knora-api:fileValueHasFilename" : "incunabula_0000004159.jp2",
+    "knora-api:fileValueIsPreview" : false,
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:stillImageFileValueHasDimX" : 3625,
+    "knora-api:stillImageFileValueHasDimY" : 5251,
+    "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+  }, {
+    "@id" : "http://rdfh.ch/7bbb8e59b703/reps/6396ec373f07",
+    "@type" : "knora-api:StillImageFileValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:fileValueAsUrl" : "http://localhost:1024/knora/incunabula_0000004159.jpg/full/88,128/0/default.jpg",
+    "knora-api:fileValueHasFilename" : "incunabula_0000004159.jpg",
+    "knora-api:fileValueIsPreview" : true,
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+    "knora-api:stillImageFileValueHasDimX" : 88,
+    "knora-api:stillImageFileValueHasDimY" : 128,
+    "knora-api:stillImageFileValueHasIIIFBaseUrl" : "http://localhost:1024/knora"
+  } ],
+  "rdfs:label" : "Vorsatzblatt, recto",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

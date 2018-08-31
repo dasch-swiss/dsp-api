@@ -5,8 +5,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/1967a9933401/values/4530b04dc704",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:18Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Itinerarius sive peregrinarius Beatissime Virginis Marie"
   }, {
     "@id" : "http://rdfh.ch/21abac2162",
@@ -14,8 +29,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/21abac2162/values/f76660458201",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Lob der Glieder Mariens"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:14Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Lob der Glieder Mariens"
   }, {
     "@id" : "http://rdfh.ch/2a6221216701",
@@ -23,16 +53,39 @@
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/2a6221216701/values/d1010fd69005",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Reise ins Heilige Land"
     }, {
       "@id" : "http://rdfh.ch/2a6221216701/values/942b620f9105",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Reysen und wanderschafften durch das Gelobte Land"
     }, {
       "@id" : "http://rdfh.ch/2a6221216701/values/5755b5489105",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius"
     } ],
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:21Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Reise ins Heilige Land"
   }, {
     "@id" : "http://rdfh.ch/3341c4984004",
@@ -40,8 +93,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/3341c4984004/values/dfa708e5f310",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Die wunderbare Meerfahrt des hl. Brandan"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:53Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Die wunderbare Meerfahrt des hl. Brandan"
   }, {
     "@id" : "http://rdfh.ch/41d01bd9fb",
@@ -49,8 +117,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/41d01bd9fb/values/be3d3542e603",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:15Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "walfart oder bilgerschafft der aller seligisten Jungfrouwen Marie inhaltend alle staat jrs lebens"
   }, {
     "@id" : "http://rdfh.ch/5e77e98d2603",
@@ -58,8 +141,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/5e77e98d2603/values/249d08e18c0c",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (dt.)"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:39Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (dt.)"
   }, {
     "@id" : "http://rdfh.ch/6fad5b8c1e03",
@@ -67,8 +165,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/6fad5b8c1e03/values/75b26eee670c",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Passio sancti Meynrhadi martyris et heremite"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:38Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Passio sancti Meynrhadi martyris et heremite"
   }, {
     "@id" : "http://rdfh.ch/861b5644b302",
@@ -76,8 +189,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/861b5644b302/values/c44c551dbb0a",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Quadragesimale de filio prodigo"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:34Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Quadragesimale de filio prodigo"
   }, {
     "@id" : "http://rdfh.ch/8be1b7cf7103",
@@ -85,12 +213,31 @@
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/8be1b7cf7103/values/463b6498b70d",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
     }, {
       "@id" : "http://rdfh.ch/8be1b7cf7103/values/0965b7d1b70d",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:43Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/9311a421b501",
@@ -98,8 +245,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/9311a421b501/values/2083143ecd06",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Bereitung zu dem Heiligen Sakrament"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:24Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Bereitung zu dem Heiligen Sakrament"
   }, {
     "@id" : "http://rdfh.ch/939baf3f2a02",
@@ -107,8 +269,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/939baf3f2a02/values/5cdee1519c08",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Postilla super epistolas et evangelia"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:30Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Postilla super epistolas et evangelia"
   }, {
     "@id" : "http://rdfh.ch/9935159f67",
@@ -116,8 +293,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/9935159f67/values/e6e02fe39801",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:14Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
   }, {
     "@id" : "http://rdfh.ch/b6b5ff1eb703",
@@ -125,12 +317,31 @@
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/b6b5ff1eb703/values/e6d1cf0dcf0e",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
     }, {
       "@id" : "http://rdfh.ch/b6b5ff1eb703/values/a9fb2247cf0e",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:47Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
     "@id" : "http://rdfh.ch/c3f913666f",
@@ -138,12 +349,31 @@
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/c3f913666f/values/8ab7aa3cb801",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "De generatione Christi"
     }, {
       "@id" : "http://rdfh.ch/c3f913666f/values/4de1fd75b801",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae"
     } ],
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:15Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "De generatione Christi"
   }, {
     "@id" : "http://rdfh.ch/cf0892760104",
@@ -151,8 +381,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/cf0892760104/values/2c651175fc0f",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Geschichte von der schönen Melusine"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:51Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Geschichte von der schönen Melusine"
   }, {
     "@id" : "http://rdfh.ch/de6d83112e04",
@@ -160,8 +405,23 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/de6d83112e04/values/d6f61a91ab10",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:53Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
     "@id" : "http://rdfh.ch/e41ab5695c",
@@ -169,12 +429,31 @@
     "incunabula:title" : [ {
       "@id" : "http://rdfh.ch/e41ab5695c/values/391cf1886a01",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Orationes"
     }, {
       "@id" : "http://rdfh.ch/e41ab5695c/values/fc4544c26a01",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Sant Brigitten gebettly"
     } ],
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:14Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Orationes"
   }, {
     "@id" : "http://rdfh.ch/ff17e5ef9601",
@@ -182,14 +461,30 @@
     "incunabula:title" : {
       "@id" : "http://rdfh.ch/ff17e5ef9601/values/9ccf75bd5006",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Horologium devotionis circa vitam Christi"
     },
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:23Z"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   } ],
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

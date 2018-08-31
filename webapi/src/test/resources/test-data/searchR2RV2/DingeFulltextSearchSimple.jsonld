@@ -1,14 +1,13 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/0001/a-thing-with-text-values",
-    "@type" : "anything:Thing",
-    "anything:hasText" : [ "Ich liebe die Dinge, sie sind alles für mich.", "Na ja, die Dinge sind OK." ],
-    "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen"
-  },
+  "@id" : "http://rdfh.ch/0001/a-thing-with-text-values",
+  "@type" : "anything:Thing",
+  "anything:hasText" : [ "Ich liebe die Dinge, sie sind alles für mich.", "Na ja, die Dinge sind OK." ],
+  "rdfs:label" : "Ein Ding für jemanden, dem die Dinge gefallen",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
   }
 }

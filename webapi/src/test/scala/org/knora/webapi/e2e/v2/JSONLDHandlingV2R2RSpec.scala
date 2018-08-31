@@ -48,7 +48,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     private val resourcesPath = ResourcesRouteV2.knoraApiPath(system, settings, log)
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 

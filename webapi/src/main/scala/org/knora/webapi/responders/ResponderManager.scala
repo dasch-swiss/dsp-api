@@ -45,6 +45,7 @@ import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMa
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
@@ -203,6 +204,11 @@ class ResponderManager extends Actor with ActorLogging {
     protected final def makeDefaultResourcesRouterV2: ActorRef = makeActor(FromConfig.props(Props[ResourcesResponderV2]).withDispatcher(KnoraDispatchers.KnoraV2Dispatcher), RESOURCES_ROUTER_V2_ACTOR_NAME)
 
     /**
+      * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV2]].
+      */
+    protected final def makeDefaultValuesRouterV2: ActorRef = makeActor(FromConfig.props(Props[ValuesResponderV2]), VALUES_ROUTER_V2_ACTOR_NAME)
+
+    /**
       * Constructs the default Akka routing actor that routes messages to [[PersistentMapResponderV2]].
       */
     protected final def makeDefaultPersistentMapRouterV2: ActorRef = makeActor(FromConfig.props(Props[PersistentMapResponderV2]).withDispatcher(KnoraDispatchers.KnoraV2Dispatcher), PERSISTENT_MAP_ROUTER_V2_ACTOR_NAME)
@@ -234,6 +240,12 @@ class ResponderManager extends Actor with ActorLogging {
       * member to substitute a custom actor instead of the default resources responder.
       */
     protected val resourcesRouterV2: ActorRef = makeDefaultResourcesRouterV2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default resources responder.
+      */
+    protected val valuesRouterV2: ActorRef = makeDefaultValuesRouterV2
 
     /**
       * The Akka routing actor that should receive messages addressed to the persistent map responder. Subclasses can override this
@@ -310,7 +322,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Store responder.
       */
-    protected val storeRouterV1: ActorRef = makeDefaultStoreRouterADM
+    protected val storeRouterADM: ActorRef = makeDefaultStoreRouterADM
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
@@ -341,6 +353,7 @@ class ResponderManager extends Actor with ActorLogging {
         case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => ontologiesRouterV2.forward(ontologiesResponderRequestV2)
         case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
+        case valuesResponderRequestV2: ValuesResponderRequestV2 => valuesRouterV2.forward(valuesResponderRequestV2)
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => standoffRouterV2.forward(standoffResponderRequestV2)
         case listsResponderRequestV2: ListsResponderRequestV2 => listsRouterV2.forward(listsResponderRequestV2)
@@ -350,7 +363,7 @@ class ResponderManager extends Actor with ActorLogging {
         case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
-        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterV1.forward(storeResponderRequestADM)
+        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterADM.forward(storeResponderRequestADM)
         case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)

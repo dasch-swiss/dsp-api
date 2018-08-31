@@ -758,12 +758,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
 
             val letterResponseBodyFuture: Future[String] = letterTEIResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-            val letterResponseBodyXML = Await.result(letterResponseBodyFuture, 5.seconds)
+            val letterResponseBodyXML: String = Await.result(letterResponseBodyFuture, 5.seconds)
 
             val xmlExpected =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                  |                <teiHeader>
+                  |<teiHeader>
                   |   <fileDesc>
                   |      <titleStmt>
                   |         <title>Testletter</title>
@@ -789,11 +789,10 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                   |   </profileDesc>
                   |</teiHeader>
                   |
-                  |                <text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
+                  |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
                   |</TEI>
                   |
                 """.stripMargin
-
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()
 

@@ -21,8 +21,13 @@ package org.knora.webapi.messages.v2.responder
 
 import java.util.UUID
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.jsonld.JsonLDDocument
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A tagging trait for messages that can be sent to Knora API v2 responders.
@@ -38,12 +43,18 @@ trait KnoraJsonLDRequestReaderV2[C] {
     /**
       * Converts JSON-LD input into a case class instance.
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser    the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a case class instance representing the input.
       */
     def fromJsonLD(jsonLDDocument: JsonLDDocument,
                    apiRequestID: UUID,
-                   requestingUser: UserADM): C
+                   requestingUser: UserADM,
+                   responderManager: ActorSelection,
+                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

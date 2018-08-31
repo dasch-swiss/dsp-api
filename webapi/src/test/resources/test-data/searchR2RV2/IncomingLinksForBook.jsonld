@@ -1,21 +1,46 @@
 {
-  "@graph" : {
-    "@id" : "http://rdfh.ch/881405205304",
-    "@type" : "knora-api:LinkObj",
-    "knora-api:hasLinkToValue" : {
-      "@id" : "http://rdfh.ch/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
-      "@type" : "knora-api:LinkValue",
-      "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/8be1b7cf7103",
-        "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
-        "rdfs:label" : "[Das] Narrenschiff (lat.)"
-      }
-    },
-    "rdfs:label" : "Lateinische Übersetzung"
+  "@id" : "http://rdfh.ch/881405205304",
+  "@type" : "knora-api:LinkObj",
+  "knora-api:attachedToProject" : {
+    "@id" : "http://rdfh.ch/projects/0803"
   },
+  "knora-api:attachedToUser" : {
+    "@id" : "http://rdfh.ch/users/91e19f1e01"
+  },
+  "knora-api:creationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2016-03-02T15:05:54Z"
+  },
+  "knora-api:hasLinkToValue" : {
+    "@id" : "http://rdfh.ch/881405205304/values/9a126ec9-9387-4cc5-b565-0029a7344bf0",
+    "@type" : "knora-api:LinkValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
+    "knora-api:linkValueHasTarget" : {
+      "@id" : "http://rdfh.ch/8be1b7cf7103",
+      "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
+      "knora-api:attachedToProject" : {
+        "@id" : "http://rdfh.ch/projects/0803"
+      },
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:creationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2016-03-02T15:05:43Z"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
+      "rdfs:label" : "[Das] Narrenschiff (lat.)"
+    }
+  },
+  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
+  "rdfs:label" : "Lateinische Übersetzung",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
   }
 }

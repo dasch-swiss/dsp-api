@@ -20,7 +20,9 @@
 package org.knora.webapi.util
 
 import java.text.ParseException
-import java.time.Instant
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -31,11 +33,13 @@ import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.util.DateUtilV2.KnoraEraV2
 import org.knora.webapi.util.JavaUtil.Optional
-import spray.json.JsonParser
+import spray.json._
 
 import scala.util.control.Exception._
 import scala.util.matching.Regex
@@ -434,8 +438,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * `errorFun`.
       *
       * @param allowedSchema the schema to be allowed.
-      * @param errorFun a function that throws an exception. It will be called if the IRI has a different schema
-      *                 to the one specified.
+      * @param errorFun      a function that throws an exception. It will be called if the IRI has a different schema
+      *                      to the one specified.
       * @return the same IRI
       */
     def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri
@@ -1434,6 +1438,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Encodes a string for use in JSON.
+      *
+      * @param s the string to be encoded.
+      * @return the encoded string.
+      */
+    def toJsonEncodedString(s: String): String = {
+        JsString(s).compactPrint
+    }
+
+    /**
       * Parses an object of `salsah-gui:guiAttributeDefinition`.
       *
       * @param s        the string to be parsed.
@@ -1556,9 +1570,17 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toInstant(s: String, errorFun: => Nothing): Instant = {
         try {
+            // Try parsing it as an ISO 8601 date in UTC.
             Instant.parse(s)
         } catch {
-            case _: Exception => errorFun
+            case _: Exception =>
+                // Try parsing it as an ISO 8601 date with an offset.
+                try {
+                    val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+                    Instant.from(creationAccessor)
+                } catch {
+                    case _: Exception => errorFun
+                }
         }
     }
 
@@ -1614,6 +1636,35 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Validates the era in a date.
+      *
+      * @param s        a string representing an era.
+      * @param errorFun a function that throws an exception. It will be called if the era is invalid.
+      * @return a [[org.knora.webapi.util.DateUtilV2.KnoraEraV2.Value]] representing the era.
+      */
+    def validateEra(s: String, errorFun: => Nothing): KnoraEraV2.Value = {
+        s match {
+            case StringFormatter.Era_BCE | StringFormatter.Era_BC => KnoraEraV2.BCE
+            case StringFormatter.Era_CE | StringFormatter.Era_AD => KnoraEraV2.CE
+            case _ => errorFun
+        }
+    }
+
+    /**
+      * Validates the calendar name in a date.
+      *
+      * @param s        a string representing a calendar.
+      * @param errorFun a function that throws an exception. It will be called if the calendar is invalid.
+      * @return a [[KnoraCalendarV1.Value]] representing the calendar.
+      */
+    def validateCalendar(s: String, errorFun: => Nothing): KnoraCalendarV1.Value = {
+        KnoraCalendarV1.valueMap.get(s) match {
+            case Some(value) => value
+            case None => errorFun
+        }
+    }
+
+    /**
       * Checks that a string contains a valid boolean value.
       *
       * @param s        a string containing a boolean value.
@@ -1661,6 +1712,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     def optionStringToBoolean(maybe: Option[String], errorFun: => Nothing): Boolean = {
         try {
             maybe.exists(_.toBoolean)
+        } catch {
+            case _: IllegalArgumentException => errorFun
+        }
+    }
+
+    /**
+      * Converts a string to a boolean.
+      *
+      * @param s        the string to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+      *                 as a boolean value.
+      * @return a Boolean.
+      */
+    def toBoolean(s: String, errorFun: => Nothing): Boolean = {
+        try {
+            s.toBoolean
         } catch {
             case _: IllegalArgumentException => errorFun
         }

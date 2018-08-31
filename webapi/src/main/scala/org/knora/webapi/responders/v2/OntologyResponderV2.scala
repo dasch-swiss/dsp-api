@@ -77,7 +77,7 @@ class OntologyResponderV2 extends Responder {
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                          propertiesUsedInStandoffCardinalities: Set[SmartIri])
 
-    def receive = {
+    override def receive: Receive = {
         case LoadOntologiesRequestV2(requestingUser) => future2Message(sender(), loadOntologies(requestingUser), log)
         case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => future2Message(sender(), getEntityInfoResponseV2(classIris, propertyIris, requestingUser), log)
         case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser), log)
@@ -532,18 +532,33 @@ class OntologyResponderV2 extends Responder {
                 val fileValuePropsInClass = allPropertyIrisForCardinalitiesInClass.filter(allFileValueProps)
 
                 // Make sure there is a link value property for each link property.
+
                 val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
+
                 if (missingLinkValueProps.nonEmpty) {
                     throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.mkString(", ")}")
                 }
 
                 // Make sure there is a link property for each link value property.
+
                 val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
+
                 if (missingLinkProps.nonEmpty) {
                     throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.mkString(", ")}")
                 }
 
-                // Make maps of the class's direct and inherited cardinalities.
+                // Make sure that the cardinality for each link property is the same as the cardinality for the corresponding link value property.
+                for (linkProp <- linkPropsInClass) {
+                    val linkValueProp: SmartIri = linkProp.fromLinkPropToLinkValueProp
+                    val linkPropCardinality: OwlCardinalityInfo = allOwlCardinalitiesForClass(linkProp)
+                    val linkValuePropCardinality: OwlCardinalityInfo = allOwlCardinalitiesForClass(linkValueProp)
+
+                    if (!linkPropCardinality.equalsWithoutGuiOrder(linkValuePropCardinality)) {
+                        throw InconsistentTriplestoreDataException(s"In class $classIri, the cardinality for $linkProp is different from the cardinality for $linkValueProp")
+                    }
+                }
+
+                // The class's direct cardinalities.
 
                 val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = directClassCardinalities(classIri).map {
                     case (propertyIri, owlCardinalityInfo) =>
@@ -599,6 +614,20 @@ class OntologyResponderV2 extends Responder {
                                     throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $invalidProp, which is not allowed")
                                 }
                         }
+
+                        // A cardinality on a property with a boolean object must be 1 or 0-1.
+
+                        val invalidCardinalitiesOnBooleanProps: Set[SmartIri] = directCardinalities.filter {
+                            case (propertyIri, knoraCardinalityInfo) =>
+                                val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))
+                                propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
+                                    !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
+                        }.keySet
+
+                        if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
+                            throw InconsistentTriplestoreDataException(s"Class $classIri has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps.mkString(", ")}")
+                        }
+
 
                         // All its base classes with Knora IRIs must also be resource classes.
                         for (baseClass <- classDef.subClassOf) {
@@ -1789,11 +1818,32 @@ class OntologyResponderV2 extends Responder {
                                                cacheData: OntologyCacheData): Map[SmartIri, KnoraCardinalityInfo] = {
         // If the class has cardinalities, check that the properties are already defined as Knora properties.
 
-        internalClassDef.directCardinalities.keySet.foreach {
+        val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
             propertyIri =>
                 if (!isKnoraResourceProperty(propertyIri, cacheData) || propertyIri.toString == OntologyConstants.KnoraBase.ResourceProperty || propertyIri.toString == OntologyConstants.KnoraBase.HasValue) {
                     throw NotFoundException(s"Invalid property for cardinality: <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
                 }
+
+                cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
+        }
+
+        val linkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkProp).map(_.entityInfoContent.propertyIri)
+        val linkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkValueProp).map(_.entityInfoContent.propertyIri)
+
+        // Make sure there is a link value property for each link property.
+
+        val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
+
+        if (missingLinkValueProps.nonEmpty) {
+            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}")
+        }
+
+        // Make sure there is a link property for each link value property.
+
+        val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
+
+        if (missingLinkProps.nonEmpty) {
+            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}")
         }
 
         // Get the cardinalities that the class can inherit.
@@ -1969,17 +2019,11 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class isn't used in data, and that it has no subclasses.
 
-                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
-                    triplestore = settings.triplestoreType,
+                _ <- isEntityUsed(
                     entityIri = internalClassIri,
+                    errorFun = throw BadRequestException(s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"),
                     ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-                ).toString()
-
-                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
-
-                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass")
-                }
+                )
 
                 // Make an updated class definition.
 
@@ -2132,17 +2176,11 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class isn't used in data, and that it has no subclasses.
 
-                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
-                    triplestore = settings.triplestoreType,
+                _ <- isEntityUsed(
                     entityIri = internalClassIri,
+                    errorFun = throw BadRequestException(s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"),
                     ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-                ).toString()
-
-                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
-
-                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass")
-                }
+                )
 
                 // Make an updated class definition.
 
@@ -2287,16 +2325,10 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the class isn't used in data or ontologies.
 
-                isClassUsedSparql = queries.sparql.v2.txt.isEntityUsed(
-                    triplestore = settings.triplestoreType,
-                    entityIri = internalClassIri
-                ).toString()
-
-                isClassUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isClassUsedSparql)).mapTo[SparqlSelectResponse]
-
-                _ = if (isClassUsedResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies")
-                }
+                _ <- isEntityUsed(
+                    entityIri = internalClassIri,
+                    errorFun = throw BadRequestException(s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies")
+                )
 
                 // Delete the class from the triplestore.
 
@@ -2365,7 +2397,7 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
-      * Deletes a property.
+      * Deletes a property. If the property is a link property, the corresponding link value property is also deleted.
       *
       * @param deletePropertyRequest the request to delete the property.
       * @return a [[ReadOntologyMetadataV2]].
@@ -2384,25 +2416,36 @@ class OntologyResponderV2 extends Responder {
                 // Check that the property exists.
 
                 ontology = cacheData.ontologies(internalOntologyIri)
+                propertyDef: ReadPropertyInfoV2 = ontology.properties.getOrElse(internalPropertyIri, throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} does not exist"))
 
-                _ = if (!ontology.properties.contains(internalPropertyIri)) {
-                    throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} does not exist")
+                _ = if (propertyDef.isLinkValueProp) {
+                    throw BadRequestException(s"A link value property cannot be deleted directly; delete the corresponding link property instead")
+                }
+
+                maybeInternalLinkValuePropertyIri: Option[SmartIri] = if (propertyDef.isLinkProp) {
+                    Some(internalPropertyIri.fromLinkPropToLinkValueProp)
+                } else {
+                    None
                 }
 
                 // Check that the property isn't used in data or ontologies.
 
-                isPropertyUsedSparql = queries.sparql.v2.txt.isEntityUsed(
-                    triplestore = settings.triplestoreType,
-                    entityIri = internalPropertyIri
-                ).toString()
+                _ <- isEntityUsed(
+                    entityIri = internalPropertyIri,
+                    errorFun = throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies")
+                )
 
-                isPropertyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPropertyUsedSparql)).mapTo[SparqlSelectResponse]
+                _ <- maybeInternalLinkValuePropertyIri match {
+                    case Some(internalLinkValuePropertyIri) =>
+                        isEntityUsed(
+                            entityIri = internalLinkValuePropertyIri,
+                            errorFun = throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri.toOntologySchema(ApiV2WithValueObjects)}, is used in data or ontologies")
+                        )
 
-                _ = if (isPropertyUsedResponse.results.bindings.nonEmpty) {
-                    throw BadRequestException(s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies")
+                    case None => FastFuture.successful(())
                 }
 
-                // Delete the class from the triplestore.
+                // Delete the property from the triplestore.
 
                 currentTime: Instant = Instant.now
 
@@ -2411,6 +2454,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     propertyIri = internalPropertyIri,
+                    maybeLinkValuePropertyIri = maybeInternalLinkValuePropertyIri,
                     lastModificationDate = deletePropertyRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
@@ -2423,14 +2467,16 @@ class OntologyResponderV2 extends Responder {
 
                 // Update the cache.
 
+                propertiesToRemoveFromCache = Set(internalPropertyIri) ++ maybeInternalLinkValuePropertyIri
+
                 updatedOntology = ontology.copy(
                     ontologyMetadata = ontology.ontologyMetadata.copy(
                         lastModificationDate = Some(currentTime)
                     ),
-                    properties = ontology.properties - internalPropertyIri
+                    properties = ontology.properties -- propertiesToRemoveFromCache
                 )
 
-                updatedSubPropertyOfRelations = cacheData.subPropertyOfRelations - internalPropertyIri
+                updatedSubPropertyOfRelations = cacheData.subPropertyOfRelations -- propertiesToRemoveFromCache
 
                 _ = storeCacheData(cacheData.copy(
                     ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
@@ -3089,6 +3135,29 @@ class OntologyResponderV2 extends Responder {
                 )
             )
         } yield taskResult
+    }
+
+    /**
+      * Checks whether an entity is used in the triplestore.
+      *
+      * @param entityIri              the IRI of the entity.
+      * @param errorFun               a function that throws an exception. It will be called if the entity is used.
+      * @param ignoreKnoraConstraints if true, ignores the use of the entity in Knora subject or object constraints.
+      */
+    private def isEntityUsed(entityIri: SmartIri, errorFun: => Nothing, ignoreKnoraConstraints: Boolean = false): Future[Unit] = {
+        for {
+            isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
+                triplestore = settings.triplestoreType,
+                entityIri = entityIri,
+                ignoreKnoraConstraints = ignoreKnoraConstraints
+            ).toString())
+
+            isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
+
+            _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
+                errorFun
+            }
+        } yield ()
     }
 
     /**

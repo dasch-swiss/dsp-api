@@ -38,7 +38,7 @@ import scala.concurrent.Future
 class PersistentMapResponderV2 extends Responder {
     private val knoraIdUtil = new KnoraIdUtil
 
-    def receive: PartialFunction[Any, Unit] = {
+    override def receive: Receive = {
         case mapEntryGetRequest: PersistentMapEntryGetRequestV2 => future2Message(sender(), getPersistentMapEntryV2(mapEntryGetRequest), log)
         case mapGetRequest: PersistentMapGetRequestV2 => future2Message(sender(), getPersistentMapV2(mapGetRequest), log)
         case mapEntryPutRequest: PersistentMapEntryPutRequestV2 => future2Message(sender, putPersistentMapEntryV2(mapEntryPutRequest), log)
