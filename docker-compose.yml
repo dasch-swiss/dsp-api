@@ -25,8 +25,8 @@ services:
     - /tmp:/tmp
     - ${PWD}/sipi/config:/sipi/config
     - ${PWD}/sipi/scripts:/sipi/scripts
-    - ${PWD}/sipi/images:/sipi/images
-    - ${PWD}/sipi/server:/sipi/server
+    - ${PWD}/sipi/images:/sipi/images:delegated
+    - ${PWD}/sipi/server:/sipi/server:delegated
     networks:
     - knora-net
     extra_hosts:
@@ -42,9 +42,9 @@ services:
     - "10001:10001"
     volumes:
     - /tmp:/tmp
-    - ${HOME}/.sbt:/root/.sbt
-    - ${HOME}/.ivy2:/root/.ivy2
-    - ${PWD}:/src
+    - ${HOME}/.sbt:/root/.sbt:delegated
+    - ${HOME}/.ivy2:/root/.ivy2:delegated
+    - ${PWD}:/src:delegated
     networks:
     - knora-net
     environment:
