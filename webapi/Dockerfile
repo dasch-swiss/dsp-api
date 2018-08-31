@@ -27,10 +27,17 @@ FROM openjdk:8-jre-alpine
 ## need bash for the webapi start script
 RUN apk add --no-cache bash
 
+## install yourkit profiler
+RUN apk add --no-cache libc6-compat
+RUN wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && \
+    unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && \
+    rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip
+
 ## get the packaged webapi from the build stage
 COPY --from=build-stage /webapi /webapi
 
 # Expose the webapi default port
 EXPOSE 3333
+EXPOSE 10001
 
-CMD ["/webapi/bin/webapi"]
+CMD ["/webapi/bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"]

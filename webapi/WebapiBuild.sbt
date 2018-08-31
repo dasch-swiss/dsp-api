@@ -104,35 +104,35 @@ lazy val webapi = (project in file(".")).
             IntegrationTest / packageBin / publishArtifact := true
         ).
         settings(
-            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
-            // we specify the name for our fat jars (main, test, it)
-            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
-            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
-            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
-
-            // disable running of tests before fat jar assembly!
-            assembly / test := {},
-            // test in (Test, assembly) := {},
-            // test in (IntegrationTest, assembly) := {},
-
-            // need to use our custom merge strategy because of aop.xml (AspectJ)
-            assembly / assemblyMergeStrategy := customMergeStrategy,
-
-            // Skip packageDoc task on stage
+//            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
+//            // we specify the name for our fat jars (main, test, it)
+//            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
+//            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
+//            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
+//
+//            // disable running of tests before fat jar assembly!
+//            assembly / test := {},
+//            // test in (Test, assembly) := {},
+//            // test in (IntegrationTest, assembly) := {},
+//
+//            // need to use our custom merge strategy because of aop.xml (AspectJ)
+//            assembly / assemblyMergeStrategy := customMergeStrategy,
+//
+//            // Skip packageDoc task on stage
             Compile / packageDoc / mappings := Seq(),
-
-            Universal / mappings := {
-                // removes all jar mappings in universal and appends the fat jar
-                // universalMappings: Seq[(File,String)]
-                val universalMappings = (mappings in Universal).value
-                val fatJar = (assembly in Compile).value
-                // removing means filtering
-                val filtered = universalMappings filter {
-                    case (file, name) =>  ! name.endsWith(".jar")
-                }
-                // add the fat jar
-                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
-            },
+//
+//            Universal / mappings := {
+//                // removes all jar mappings in universal and appends the fat jar
+//                // universalMappings: Seq[(File,String)]
+//                val universalMappings = (mappings in Universal).value
+//                val fatJar = (assembly in Compile).value
+//                // removing means filtering
+//                val filtered = universalMappings filter {
+//                    case (file, name) =>  ! name.endsWith(".jar")
+//                }
+//                // add the fat jar
+//                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
+//            },
 
             Universal / mappings ++= {
                 // copy the scripts folder
@@ -140,13 +140,13 @@ lazy val webapi = (project in file(".")).
                 // copy the configuration files to config directory
                 contentOf("configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _) ++
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
-                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
+//                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
 
             // the bash scripts classpath only needs the fat jar
-            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
+//            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
 
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
@@ -326,7 +326,8 @@ lazy val javaRunOptions = Seq(
     "-Dcom.sun.management.jmxremote",
     "-Dcom.sun.management.jmxremote.port=1617",
     "-Dcom.sun.management.jmxremote.authenticate=false",
-    "-Dcom.sun.management.jmxremote.ssl=false"
+    "-Dcom.sun.management.jmxremote.ssl=false",
+    //"-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
 )
 
 lazy val javaTestOptions = Seq(
