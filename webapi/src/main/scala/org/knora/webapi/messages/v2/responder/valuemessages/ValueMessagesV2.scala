@@ -26,6 +26,7 @@ import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
@@ -38,7 +39,6 @@ import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.{OntologyConstants, _}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -58,6 +58,7 @@ sealed trait ValuesResponderRequestV2 extends KnoraRequestV2
 case class CreateValueRequestV2(createValue: CreateValueV2,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
+
 
 /**
   * Constructs [[CreateValueRequestV2]] instances based on JSON-LD input.
@@ -84,63 +85,31 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri <- Future(jsonLDDocument.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr))
-
-            _ = if (!resourceIri.isKnoraDataIri) {
-                throw BadRequestException(s"Invalid resource IRI: $resourceIri")
-            }
+            resourceIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
 
             // Get the resource class.
-            resourceClassIri = jsonLDDocument.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            resourceClassIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
 
-            _ = if (!(resourceClassIri.isKnoraEntityIri && resourceClassIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                throw BadRequestException(s"Invalid resource class IRI: $resourceClassIri")
-            }
-
-            // Ensure that only one value is being submitted.
-
-            resourceProps: Map[IRI, JsonLDValue] = jsonLDDocument.body.value - JsonLDConstants.ID - JsonLDConstants.TYPE
-
-            _ = if (resourceProps.isEmpty) {
-                throw BadRequestException("No value submitted")
-            }
-
-            _ = if (resourceProps.size > 1) {
-                throw BadRequestException(s"Only one value can be created per request using this route")
-            }
-
-            // Get the resource property that points to the new value, and the value to be created.
-
-            createValue: CreateValueV2 <- resourceProps.head match {
-                case (key: IRI, jsonLDValue: JsonLDValue) =>
-                    val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
-
-                    if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                        throw BadRequestException(s"Invalid property IRI: $propertyIri")
-                    }
-
-                    jsonLDValue match {
-                        case jsonLDObject: JsonLDObject =>
-                            for {
-                                valueContent: ValueContentV2 <-
-                                    ValueContentV2.fromJsonLDObject(
-                                        jsonLDObject = jsonLDObject,
-                                        requestingUser = requestingUser,
-                                        responderManager = responderManager,
-                                        log = log
-                                    )
-
-                                maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
-                            } yield CreateValueV2(
-                                resourceIri = resourceIri.toString,
-                                resourceClassIri = resourceClassIri,
-                                propertyIri = propertyIri,
-                                valueContent = valueContent,
-                                permissions = maybePermissions
+            // Get the resource property and the value to be created.
+            createValue: CreateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
+                case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                    for {
+                        valueContent: ValueContentV2 <-
+                            ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
                             )
 
-                        case _ => throw BadRequestException(s"Invalid value for $propertyIri")
-                    }
+                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                    } yield CreateValueV2(
+                        resourceIri = resourceIri.toString,
+                        resourceClassIri = resourceClassIri,
+                        propertyIri = propertyIri,
+                        valueContent = valueContent,
+                        permissions = maybePermissions
+                    )
             }
         } yield CreateValueRequestV2(
             createValue = createValue,
@@ -160,6 +129,102 @@ case class CreateValueResponseV2(valueIri: IRI,
     override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         if (targetSchema != ApiV2WithValueObjects) {
             throw AssertionException(s"CreateValueResponseV2 can only be returned in the complex schema")
+        }
+
+        JsonLDDocument(
+            body = JsonLDObject(
+                Map(
+                    JsonLDConstants.ID -> JsonLDString(valueIri),
+                    JsonLDConstants.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2WithValueObjects).toString)
+                )
+            )
+        )
+    }
+}
+
+/**
+  * Requests an update to a value, i.e. the creation of a new version of an existing value.
+  *
+  * @param updateValue    an [[UpdateValueV2]] representing the new version of the value. A successful response will be
+  *                       an [[UpdateValueResponseV2]].
+  * @param requestingUser the user making the request.
+  * @param apiRequestID   the API request ID.
+  */
+case class UpdateValueRequestV2(updateValue: UpdateValueV2,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID) extends ValuesResponderRequestV2
+
+/**
+  * Constructs [[UpdateValueRequestV2]] instances based on JSON-LD input.
+  */
+object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueRequestV2] {
+    /**
+      * Converts JSON-LD input to a [[CreateValueRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        for {
+            // Get the IRI of the resource that the value is to be created in.
+            resourceIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
+
+            // Get the resource class.
+            resourceClassIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
+
+            // Get the resource property and the new value version.
+            updateValue: UpdateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
+                case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
+                    for {
+                        valueContent: ValueContentV2 <-
+                            ValueContentV2.fromJsonLDObject(
+                                jsonLDObject = jsonLDObject,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+
+                        valueIri = ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDObject)
+                        maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                    } yield UpdateValueV2(
+                        resourceIri = resourceIri.toString,
+                        resourceClassIri = resourceClassIri,
+                        propertyIri = propertyIri,
+                        valueIri = valueIri.toString,
+                        valueContent = valueContent,
+                        permissions = maybePermissions
+                    )
+            }
+        } yield UpdateValueRequestV2(
+            updateValue = updateValue,
+            apiRequestID = apiRequestID,
+            requestingUser = requestingUser
+        )
+    }
+}
+
+/**
+  * Represents a successful response to an [[UpdateValueRequestV2]].
+  *
+  * @param valueIri the IRI of the value version that was created.
+  */
+case class UpdateValueResponseV2(valueIri: IRI,
+                                 valueType: SmartIri) extends KnoraResponseV2 {
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        if (targetSchema != ApiV2WithValueObjects) {
+            throw AssertionException(s"UpdateValueResponseV2 can only be returned in the complex schema")
         }
 
         JsonLDDocument(
@@ -307,10 +372,19 @@ case class CreateValueV2(resourceIri: IRI,
 /**
   * A new version of a value of a Knora property to be created.
   *
-  * @param valueIri     the IRI of the value to be updated.
-  * @param valueContent the content of the new version of the value.
+  * @param resourceIri      the resource that the current value version is attached to.
+  * @param resourceClassIri the resource class that the client believes the resource belongs to.
+  * @param propertyIri      the property that the client believes points to the value. If the value is a link value,
+  *                         this must be a link value property.
+  * @param valueIri         the IRI of the value to be updated.
+  * @param valueContent     the content of the new version of the value.
   */
-case class UpdateValueV2(valueIri: IRI, valueContent: ValueContentV2) extends IOValueV2
+case class UpdateValueV2(resourceIri: IRI,
+                         resourceClassIri: SmartIri,
+                         propertyIri: SmartIri,
+                         valueIri: IRI,
+                         valueContent: ValueContentV2,
+                         permissions: Option[String] = None) extends IOValueV2
 
 /**
   * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
@@ -375,12 +449,12 @@ sealed trait ValueContentV2 extends KnoraContentV2[ValueContentV2] {
     def wouldDuplicateOtherValue(that: ValueContentV2): Boolean
 
     /**
-      * Returns `true` if this [[UpdateValueV2]] would be redundant as a new version of an existing value. This means
+      * Returns `true` if this [[ValueContentV2]] would be redundant as a new version of an existing value. This means
       * that if resource `R` has property `P` with value `V1`, and `V2` would duplicate `V1`, we should not add `V2`
       * as a new version of `V1`. It does not necessarily mean that `V1 == V2`.
       *
       * @param currentVersion the current version of the value, as read from the triplestore.
-      * @return `true` if this [[UpdateValueV2]] would duplicate `currentVersion`.
+      * @return `true` if this [[ValueContentV2]] would duplicate `currentVersion`.
       */
     def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean
 }
@@ -2055,5 +2129,81 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         // TODO
         throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
+    }
+}
+
+/**
+  * Utility functions for value updates.
+  */
+object ValueUpdateJsonLDUtil {
+    /**
+      * Given a JSON-LD object, validates its `@id` as a Knora data IRI.
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return a validated Knora data IRI.
+      */
+    def getIDAsKnoraDataIri(jsonLDObject: JsonLDObject): SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val dataIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+
+        if (!dataIri.isKnoraDataIri) {
+            throw BadRequestException(s"Invalid Knora data IRI: $dataIri")
+        }
+
+        dataIri
+    }
+
+    /**
+      * Given a JSON-LD object, validates its `@type` as a Knora type IRI in the API v2 complex schema.
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return a validated Knora type IRI.
+      */
+    def getTypeAsKnoraTypeIri(jsonLDObject: JsonLDObject): SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val typeIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+
+        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+            throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
+        }
+
+        typeIri
+    }
+
+    /**
+      * Given a JSON-LD object representing a resource, ensures that it contains a single Knora property with
+      * a single value.
+      *
+      * @param jsonLDObject the JSON-LD object.
+      * @return the property IRI and the value.
+      */
+    def getResourcePropertyValue(jsonLDObject: JsonLDObject): (SmartIri, JsonLDObject) = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val resourceProps: Map[IRI, JsonLDValue] = jsonLDObject.value - JsonLDConstants.ID - JsonLDConstants.TYPE
+
+        if (resourceProps.isEmpty) {
+            throw BadRequestException("No value submitted")
+        }
+
+        if (resourceProps.size > 1) {
+            throw BadRequestException(s"Only one value can be submitted per request using this route")
+        }
+
+        resourceProps.head match {
+            case (key: IRI, jsonLDValue: JsonLDValue) =>
+                val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
+
+                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                    throw BadRequestException(s"Invalid property IRI: $propertyIri")
+                }
+
+                jsonLDValue match {
+                    case jsonLDObject: JsonLDObject => propertyIri -> jsonLDObject
+                    case _ => throw BadRequestException(s"Invalid value for $propertyIri")
+                }
+        }
     }
 }
