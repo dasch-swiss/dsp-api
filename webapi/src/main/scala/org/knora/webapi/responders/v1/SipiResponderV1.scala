@@ -234,6 +234,9 @@ class SipiResponderV1 extends Responder {
                 case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
             }
 
+            // do cleanup after strict (in memory) access
+            _ = conversionResultResponse.discardEntityBytes()
+
             // get file type from Sipi response
             fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype

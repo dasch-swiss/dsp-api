@@ -632,6 +632,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
 
+            // do cleanup after strict (in memory) access
+            _ = response.discardEntityBytes()
+
         } yield responseString
 
         // If an exception was thrown during the connection to the triplestore, wrap it in
