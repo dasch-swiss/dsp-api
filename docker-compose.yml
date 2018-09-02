@@ -9,11 +9,12 @@ services:
     volumes:
     - ${PWD}/webapi/scripts/KnoraRules.pie:/graphdb/KnoraRules.pie
     - ${PWD}/triplestores/graphdb/GRAPHDB_SE.license:/graphdb/GRAPHDB_SE.license
+    - ${PWD}/triplestores/graphdb/home:/opt/graphdb/home:delegated
     networks:
     - knora-net
     environment:
     - GDB_HEAP_SIZE=2G
-    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license
+    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
     command: ["/graphdb/bin/graphdb"]
     container_name: graphdb
 
@@ -25,8 +26,8 @@ services:
     - /tmp:/tmp
     - ${PWD}/sipi/config:/sipi/config
     - ${PWD}/sipi/scripts:/sipi/scripts
-    - ${PWD}/sipi/images:/sipi/images
-    - ${PWD}/sipi/server:/sipi/server
+    - ${PWD}/sipi/images:/sipi/images:delegated
+    - ${PWD}/sipi/server:/sipi/server:delegated
     networks:
     - knora-net
     extra_hosts:
@@ -42,9 +43,9 @@ services:
     - "10001:10001"
     volumes:
     - /tmp:/tmp
-    - ${HOME}/.sbt:/root/.sbt
-    - ${HOME}/.ivy2:/root/.ivy2
-    - ${PWD}:/src
+    - ${HOME}/.sbt:/root/.sbt:delegated
+    - ${HOME}/.ivy2:/root/.ivy2:delegated
+    - ${PWD}:/src:delegated
     networks:
     - knora-net
     environment:
