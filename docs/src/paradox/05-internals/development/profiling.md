@@ -17,20 +17,14 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Development
+# Profiling Knora
 
-@@toc { depth=1 }
+Profiling can be done with YourKit or VisualVM.
 
-@@@ index
+## YourKit:
 
-- [Overview](overview.md)
-- [Starting Fuseki 3](fuseki.md)
-- [Starting GraphDB](graphdb.md)
-- [Build Process](build-process.md)
-- [Setup IntelliJ for development of Knora](intellij-config.md)
-- [Testing](testing.md)
-- [Docker Cheat Sheet](docker-cheat-sheet.md)
-- [Monitoring Knora](monitoring.md)
-- [Profiling Knora](profiling.md)
+Start `webapi` from the `knora/webapi/target/universal/stage` directory with the following command:
 
-@@@
+```
+$ ./bin/webapi -J-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib -J-Xms1G -J-Xmx1G
+```
