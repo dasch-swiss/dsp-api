@@ -546,6 +546,25 @@
         </standoffClass>
     </mappingElement>
 
+    <mappingElement>
+        <tag>
+            <name>font</name>
+            <class>noClass</class>
+            <namespace>noNamespace</namespace>
+            <separatesWords>false</separatesWords>
+        </tag>
+        <standoffClass>
+            <classIri>http://www.knora.org/ontology/0801/beol#StandoffFontTag</classIri>
+            <attributes>
+                <attribute>
+                    <attributeName>fontType</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffFontType</propertyIri>
+                </attribute>
+            </attributes>
+        </standoffClass>
+    </mappingElement>
+
 
 
 
