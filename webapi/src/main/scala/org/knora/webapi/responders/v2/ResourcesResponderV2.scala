@@ -27,10 +27,10 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourcesGetRequestV2, ResourcesPreviewGetRequestV2, _}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
-import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
@@ -45,7 +45,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    def receive = {
+    override def receive: Receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
@@ -79,13 +79,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse, requestingUser = requestingUser)
 
             // check if all the requested resources were returned
-            requestedButMissing = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
+            requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
 
             _ = if (requestedButMissing.nonEmpty) {
                 throw NotFoundException(
                     s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
                         maybe you do not have the right to see all of them or some are marked as deleted.
-                        Missing: ${requestedButMissing.mkString(", ")}""".stripMargin)
+                        Missing: ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}""".stripMargin)
 
             }
         } yield queryResultsSeparated
@@ -157,7 +157,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
             gravsearchFileValue: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
-                case Some(resource: ReadResourceV2) if resource.resourceClass.toString == OntologyConstants.KnoraBase.TextRepresentation =>
+                case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
                             case value: ReadValueV2 => value.valueContent match {
@@ -257,7 +257,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 case Some(valObjs: Seq[ReadValueV2]) if valObjs.size == 1 =>
                     // make sure that the property has one instance and that it is of type TextValue and that is has standoff (markup)
                     valObjs.head.valueContent match {
-                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoff.nonEmpty =>
+                        case textValWithStandoff: TextValueContentV2 if textValWithStandoff.standoffAndMapping.nonEmpty =>
                             textValWithStandoff
 
                         case _ => throw BadRequestException(s"$textProperty to be of type ${OntologyConstants.KnoraBase.TextValue} with standoff (markup)")
@@ -356,7 +356,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             bodyTextValue: TextValueContentV2 = getTextValueFromReadResourceSeq(resource)
 
             // the ext value is expected to have standoff markup
-            _ = if (bodyTextValue.standoff.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
+            _ = if (bodyTextValue.standoffAndMapping.isEmpty) throw BadRequestException(s"Property $textProperty of $resourceIri is expected to have standoff markup")
 
             // get all the metadata but the text property for the TEI header
             headerResource = resource.resources.head.copy(
@@ -366,7 +366,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the XSL transformation for the TEI header
             headerXSLT: Option[String] <- if (headerXSLTIri.nonEmpty) {
                 for {
-                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                    xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(headerXSLTIri.get, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
                 } yield Some(xslTransformation.xslt)
             } else {
                 Future(None)
@@ -384,7 +384,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // get mapping to convert standoff markup to TEI/XML
-            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, userProfile = requestingUser)).mapTo[GetMappingResponseV2]
+            teiMapping: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingToBeApplied, requestingUser = requestingUser)).mapTo[GetMappingResponseV2]
 
             // get XSLT from mapping for the TEI body
             bodyXslt: String <- teiMapping.mappingIri match {
@@ -403,7 +403,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     case Some(xslTransformationIri) =>
                         // get XSLT for the TEI body.
                         for {
-                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, userProfile = requestingUser)).mapTo[GetXSLTransformationResponseV2]
+                            xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(xslTransformationIri, requestingUser = requestingUser)).mapTo[GetXSLTransformationResponseV2]
                         } yield xslTransformation.xslt
 
 
@@ -420,7 +420,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 body = TEIBody(
                     bodyInfo = bodyTextValue,
                     bodyXSLT = bodyXslt,
-                    TEIMapping = teiMapping.mapping
+                    teiMapping = teiMapping.mapping
                 )
             )
 

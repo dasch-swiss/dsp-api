@@ -4,6 +4,9 @@
   "beol:creationDate" : {
     "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ",
     "@type" : "knora-api:DateValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+    },
     "knora-api:dateValueHasCalendar" : "GREGORIAN",
     "knora-api:dateValueHasEndDay" : 4,
     "knora-api:dateValueHasEndEra" : "CE",
@@ -13,22 +16,50 @@
     "knora-api:dateValueHasStartEra" : "CE",
     "knora-api:dateValueHasStartMonth" : 6,
     "knora-api:dateValueHasStartYear" : 2018,
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:valueAsString" : "GREGORIAN:2018-06-04 CE"
   },
   "beol:hasRecipientValue" : {
     "@id" : "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/DVqPKuBBSIauVqjUC7bNvA",
     "@type" : "knora-api:LinkValue",
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+    },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "knora-api:linkValueHasTarget" : {
       "@id" : "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA",
       "@type" : "beol:person",
+      "knora-api:attachedToProject" : {
+        "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+      },
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+      },
+      "knora-api:creationDate" : {
+        "@type" : "xsd:dateTimeStamp",
+        "@value" : "2018-06-04T08:55:34.086Z"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
       "rdfs:label" : "Testperson1"
     }
   },
+  "knora-api:attachedToProject" : {
+    "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+  },
+  "knora-api:attachedToUser" : {
+    "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+  },
+  "knora-api:creationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2018-06-04T08:56:33.879Z"
+  },
+  "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
   "rdfs:label" : "Testbrief1",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#"
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }

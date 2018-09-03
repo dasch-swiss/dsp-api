@@ -24,6 +24,18 @@ incunabula:Sideband a owl:Class;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
       salsah-gui:guiOrder 0;
       owl:cardinality 1;
       owl:onProperty incunabula:sbTitle
@@ -39,6 +51,14 @@ incunabula:Sideband a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
@@ -59,14 +79,6 @@ incunabula:Sideband a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasStillImageFileValue
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:lastModificationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
     ] .
 
 incunabula:sbTitle a owl:ObjectProperty;
@@ -119,6 +131,14 @@ incunabula:book a owl:Class;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
@@ -133,6 +153,10 @@ incunabula:book a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -343,6 +367,14 @@ incunabula:page a owl:Class;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
@@ -361,6 +393,10 @@ incunabula:page a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasStillImageFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;
@@ -476,6 +512,14 @@ incunabula:misc a owl:Class;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
@@ -490,6 +534,10 @@ incunabula:misc a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkToValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;

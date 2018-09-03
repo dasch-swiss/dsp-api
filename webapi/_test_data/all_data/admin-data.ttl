@@ -374,6 +374,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:isInProject <http://rdfh.ch/projects/0001> ;
+  knora-base:isInGroup <http://rdfh.ch/groups/0001/thing-searcher> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/AnythingAdminUser> a knora-base:User ;
@@ -398,6 +399,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:status "true"^^xsd:boolean ;
   knora-base:isInProject <http://rdfh.ch/projects/0001> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0001/thing-searcher> rdf:type knora-base:UserGroup ;
+  knora-base:groupName "Thing searcher"^^xsd:string ;
+  knora-base:groupDescription "A group for thing searchers."^^xsd:string ;
+  knora-base:belongsToProject <http://rdfh.ch/projects/0001> ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "true"^^xsd:boolean .
+
 
 ###################################
 # DOKUBIB                         #

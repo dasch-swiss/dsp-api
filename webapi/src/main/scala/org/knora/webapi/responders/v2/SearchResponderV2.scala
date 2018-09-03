@@ -26,7 +26,6 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.ResponderWithStandoffV2
 import org.knora.webapi.responders.v2.SearchResponderV2Constants.GravsearchConstants
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
@@ -143,7 +142,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
     // A Gravsearch type inspection runner.
     private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(system = system)
 
-    def receive = {
+    override def receive: Receive = {
         case FullTextSearchCountRequestV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchCountV2(searchValue, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
         case FulltextSearchRequestV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser) => future2Message(sender(), fulltextSearchV2(searchValue, offset, limitToProject, limitToResourceClass, limitToStandoffClass, requestingUser), log)
         case GravsearchCountRequestV2(query, requestingUser) => future2Message(sender(), gravsearchCountV2(inputQuery = query, requestingUser = requestingUser), log)

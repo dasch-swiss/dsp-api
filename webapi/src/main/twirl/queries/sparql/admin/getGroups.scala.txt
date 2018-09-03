@@ -20,7 +20,7 @@
 @import org.knora.webapi._
 
 @**
- * Gets information about a single or all projects.
+ * Gets information about a single or all groups.
  *
  * @param triplestore the name of the triplestore being used.
  * @param maybeIri the IRI of the group.
@@ -38,16 +38,21 @@ CONSTRUCT { ?s ?p ?o }
 }
 WHERE {
 
-    @if(maybeIri.nonEmpty) {
-      BIND(IRI("@maybeIri") as ?s)
+    @maybeIri match {
+        case Some(iri) => {
+            BIND(IRI("@iri") as ?s)
+            FILTER(isIri(?s))
+        }
+
+        case None => {}
     }
 
     ?s rdf:type knora-base:UserGroup .
     ?s ?p ?o .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>) .
-    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>) .
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#UnknownUser>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#KnownUser>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#Creator>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectMember>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#ProjectAdmin>)
+    FILTER (?s != <http://www.knora.org/ontology/knora-base#SystemAdmin>)
 }

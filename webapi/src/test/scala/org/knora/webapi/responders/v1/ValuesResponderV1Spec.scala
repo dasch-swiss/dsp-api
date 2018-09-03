@@ -1277,8 +1277,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "create a link between two resources" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val lastModBeforeUpdate = getLastModificationDate(resourceIri)
+
             val createValueRequest = CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/cb1a74e3e2f6",
+                resourceIri = resourceIri,
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
                     targetResourceIri = zeitglöckleinIri
@@ -1300,7 +1303,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/cb1a74e3e2f6",
+                subjectIri = resourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -1314,6 +1317,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(resourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "not create a duplicate link" in {

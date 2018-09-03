@@ -141,7 +141,7 @@ trait KnoraService {
       */
     private val apiRoutes: Route = CORS(
         new HealthRoute(system, settings).knoraApiPath ~
-        new RejectingRoute(system, settings).knoraApiPath() ~
+            new RejectingRoute(system, settings).knoraApiPath() ~
             ResourcesRouteV1.knoraApiPath(system, settings, log) ~
             ValuesRouteV1.knoraApiPath(system, settings, log) ~
             SipiRouteV1.knoraApiPath(system, settings, log) ~
@@ -157,6 +157,7 @@ trait KnoraService {
             OntologiesRouteV2.knoraApiPath(system, settings, log) ~
             SearchRouteV2.knoraApiPath(system, settings, log) ~
             ResourcesRouteV2.knoraApiPath(system, settings, log) ~
+            ValuesRouteV2.knoraApiPath(system, settings, log) ~
             StandoffRouteV2.knoraApiPath(system, settings, log) ~
             ListsRouteV2.knoraApiPath(system, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
@@ -166,8 +167,8 @@ trait KnoraService {
             new ProjectsRouteADM(system, settings, log).knoraApiPath ~
             new StoreRouteADM(system, settings, log).knoraApiPath ~
             new UsersRouteADM(system, settings, log).knoraApiPath ~
-            new SwaggerApiDocsRoute(system, settings, log).knoraApiPath
-        , settings,
+            new SwaggerApiDocsRoute(system, settings, log).knoraApiPath,
+        settings,
         log
     )
 

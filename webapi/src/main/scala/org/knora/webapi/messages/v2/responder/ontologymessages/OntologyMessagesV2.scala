@@ -23,6 +23,9 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 import java.util.UUID
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -33,6 +36,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -68,13 +73,39 @@ case class CreateOntologyRequestV2(ontologyName: String,
   * Constructs instances of [[CreateOntologyRequestV2]] based on JSON-LD requests.
   */
 object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntologyRequestV2] {
+    /**
+      * Converts JSON-LD input into a [[CreateOntologyRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a [[CreateOntologyRequestV2]] representing the input.
+      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            requestingUser: UserADM): CreateOntologyRequestV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): CreateOntologyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val ontologyName: String = jsonLDDocument.requireString(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
-        val label: String = jsonLDDocument.requireString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
+        val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         CreateOntologyRequestV2(
@@ -312,14 +343,32 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
     /**
       * Converts a JSON-LD request to a [[CreatePropertyRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a [[CreatePropertyRequestV2]] representing the input.
       */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            requestingUser: UserADM): CreatePropertyRequestV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): CreatePropertyRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the property definition and the ontology's last modification date from the JSON-LD.
@@ -385,12 +434,30 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     /**
       * Converts a JSON-LD request to a [[CreateClassRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a [[CreateClassRequestV2]] representing the input.
       */
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateClassRequestV2 = {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): CreateClassRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Get the class definition and the ontology's last modification date from the JSON-LD.
@@ -432,16 +499,37 @@ case class AddCardinalitiesToClassRequestV2(classInfoContent: ClassInfoContentV2
                                             apiRequestID: UUID,
                                             requestingUser: UserADM) extends OntologiesResponderRequestV2
 
+/**
+  * Constructs instances of [[AddCardinalitiesToClassRequestV2]] based on JSON-LD input.
+  */
 object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCardinalitiesToClassRequestV2] {
     /**
       * Converts JSON-LD input into an [[AddCardinalitiesToClassRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return an [[AddCardinalitiesToClassRequestV2]] representing the input.
       */
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): AddCardinalitiesToClassRequestV2 = {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): AddCardinalitiesToClassRequestV2 = {
         // Get the class definition and the ontology's last modification date from the JSON-LD.
 
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
@@ -477,16 +565,36 @@ case class ChangeCardinalitiesRequestV2(classInfoContent: ClassInfoContentV2,
                                         apiRequestID: UUID,
                                         requestingUser: UserADM) extends OntologiesResponderRequestV2
 
+/**
+  * Constructs instances of [[ChangeCardinalitiesRequestV2]] based on JSON-LD input.
+  */
 object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCardinalitiesRequestV2] {
     /**
       * Converts JSON-LD input into a [[ChangeCardinalitiesRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a [[ChangeCardinalitiesRequestV2]] representing the input.
       */
-    override def fromJsonLD(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): ChangeCardinalitiesRequestV2 = {
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection, log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument, apiRequestID: UUID, requestingUser: UserADM): ChangeCardinalitiesRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
         val classInfoContent = classUpdateInfo.classInfoContent
@@ -560,7 +668,7 @@ case class ChangePropertyLabelsOrCommentsRequestV2(propertyIri: SmartIri,
                                                    requestingUser: UserADM) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
 
 /**
-  * Can convert a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
+  * Constructs instances of [[ChangePropertyLabelsOrCommentsRequestV2]] based on JSON-LD input.
   */
 object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangePropertyLabelsOrCommentsRequestV2] {
 
@@ -568,14 +676,32 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
     /**
       * Converts a JSON-LD request to a [[ChangePropertyLabelsOrCommentsRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
       */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            requestingUser: UserADM): ChangePropertyLabelsOrCommentsRequestV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): ChangePropertyLabelsOrCommentsRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
         val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
@@ -613,20 +739,38 @@ case class ChangeClassLabelsOrCommentsRequestV2(classIri: SmartIri,
                                                 requestingUser: UserADM) extends OntologiesResponderRequestV2 with ChangeLabelsOrCommentsRequest
 
 /**
-  * Can convert a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
+  * Constructs instances of [[ChangeClassLabelsOrCommentsRequestV2]] based on JSON-LD input.
   */
 object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeClassLabelsOrCommentsRequestV2] {
     /**
       * Converts a JSON-LD request to a [[ChangeClassLabelsOrCommentsRequestV2]].
       *
-      * @param jsonLDDocument the JSON-LD input.
-      * @param apiRequestID   the UUID of the API request.
-      * @param requestingUser the user making the request.
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
       * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
       */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            requestingUser: UserADM): ChangeClassLabelsOrCommentsRequestV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): ChangeClassLabelsOrCommentsRequestV2 = {
         val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
         val classInfoContent = classUpdateInfo.classInfoContent
@@ -665,9 +809,35 @@ case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
   * Constructs instances of [[ChangeOntologyMetadataRequestV2]] based on JSON-LD requests.
   */
 object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeOntologyMetadataRequestV2] {
+    /**
+      * Converts a JSON-LD request to a [[ChangeOntologyMetadataRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a [[ChangeClassLabelsOrCommentsRequestV2]] representing the input.
+      */
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
-                            requestingUser: UserADM): ChangeOntologyMetadataRequestV2 = {
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] = {
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                apiRequestID = apiRequestID,
+                requestingUser = requestingUser
+            )
+        }
+    }
+
+    private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                               apiRequestID: UUID,
+                               requestingUser: UserADM): ChangeOntologyMetadataRequestV2 = {
         val inputOntologyV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
         val inputMetadata = inputOntologyV2.ontologyMetadata
         val ontologyIri = inputMetadata.ontologyIri
@@ -815,11 +985,11 @@ case class OntologyEntitiesGetRequestV2(ontologyIri: SmartIri, allLanguages: Boo
 /**
   * Requests the entity definitions for the given class IRIs. A successful response will be a [[ReadOntologyV2]].
   *
-  * @param resourceClassIris the IRIs of the classes to be queried.
-  * @param allLanguages      true if information in all available languages should be returned.
-  * @param requestingUser    the user making the request.
+  * @param classIris      the IRIs of the classes to be queried.
+  * @param allLanguages   true if information in all available languages should be returned.
+  * @param requestingUser the user making the request.
   */
-case class ClassesGetRequestV2(resourceClassIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class ClassesGetRequestV2(classIris: Set[SmartIri], allLanguages: Boolean, requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
   * Requests the definitions of the specified properties. A successful response will be a [[ReadOntologyV2]].
@@ -1159,7 +1329,7 @@ object InputOntologyV2 {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val ontologyObj = jsonLDDocument.body
-        val externalOntologyIri: SmartIri = ontologyObj.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val externalOntologyIri: SmartIri = ontologyObj.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
 
         if (!(externalOntologyIri.isKnoraApiV2DefinitionIri && externalOntologyIri.isKnoraOntologyIri)) {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
@@ -1167,11 +1337,11 @@ object InputOntologyV2 {
 
         val projectIri = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val ontologyLabel = ontologyObj.maybeString(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyLabel = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
-            ontologyObj.maybeString(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
-                orElse(ontologyObj.maybeString(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant))
+            ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
+                orElse(ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant))
 
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
@@ -1187,7 +1357,7 @@ object InputOntologyV2 {
                 // Make a list of (entity definition, entity type IRI)
                 val entitiesWithTypes: Seq[(JsonLDObject, SmartIri)] = graph.value.map {
                     case jsonLDObj: JsonLDObject =>
-                        val entityType = jsonLDObj.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                        val entityType = jsonLDObj.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
                         (jsonLDObj, entityType)
 
                     case _ => throw BadRequestException("@graph must contain only JSON-LD objects")
@@ -1398,6 +1568,10 @@ object Cardinality extends Enumeration {
         }
 
         override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
+
+        def equalsWithoutGuiOrder(that: OwlCardinalityInfo): Boolean = {
+            owlCardinalityIri == that.owlCardinalityIri && owlCardinalityValue == that.owlCardinalityValue
+        }
     }
 
     /**
@@ -1690,7 +1864,7 @@ object EntityInfoContentV2 {
     def predicatesFromJsonLDObject(jsonLDObject: JsonLDObject): Map[SmartIri, PredicateInfoV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val entityType: SmartIri = jsonLDObject.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+        val entityType: SmartIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
         val rdfType: (SmartIri, PredicateInfoV2) = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
@@ -2386,7 +2560,7 @@ object ClassInfoContentV2 {
     def fromJsonLDObject(jsonLDClassDef: JsonLDObject, ignoreExtraData: Boolean): ClassInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val classIri: SmartIri = jsonLDClassDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val classIri: SmartIri = jsonLDClassDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = classIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid class IRI: $classIri"))
 
         // TODO: handle custom datatypes.
@@ -2436,7 +2610,7 @@ object ClassInfoContentV2 {
                                 throw BadRequestException(s"A cardinality in the definition of $classIri contains one or more invalid predicates: ${extraRestrictionPredicates.mkString(", ")}")
                             }
 
-                            val cardinalityType = restriction.requireString(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+                            val cardinalityType = restriction.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
 
                             if (cardinalityType != OntologyConstants.Owl.Restriction.toSmartIri) {
                                 throw BadRequestException(s"A cardinality must be expressed as an owl:Restriction, but this type was found: $cardinalityType")
@@ -2620,7 +2794,7 @@ object PropertyInfoContentV2 {
     def fromJsonLDObject(jsonLDPropertyDef: JsonLDObject, ignoreExtraData: Boolean): PropertyInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val propertyIri: SmartIri = jsonLDPropertyDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val propertyIri: SmartIri = jsonLDPropertyDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = propertyIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid property IRI: $propertyIri"))
 
         if (!ignoreExtraData) {
@@ -2699,7 +2873,7 @@ object IndividualInfoContentV2 {
     def fromJsonLDObject(jsonLDIndividualDef: JsonLDObject): IndividualInfoContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val individualIri: SmartIri = jsonLDIndividualDef.requireString(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+        val individualIri: SmartIri = jsonLDIndividualDef.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
         val ontologySchema: OntologySchema = individualIri.getOntologySchema.getOrElse(throw BadRequestException(s"Invalid named individual IRI: $individualIri"))
 
         IndividualInfoContentV2(

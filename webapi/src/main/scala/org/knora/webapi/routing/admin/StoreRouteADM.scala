@@ -27,6 +27,7 @@ import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
@@ -43,10 +44,9 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraStoreDispatcher)
-    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
     def knoraApiPath = Route {
-
         path("admin" / "store") {
             get {
                 requestContext =>
@@ -57,13 +57,11 @@ class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     // TODO: Implement some simple return
                     requestContext.complete("Hello World")
             }
-        } ~
-        path("admin" / "store" / "ResetTriplestoreContent") {
+        } ~ path("admin" / "store" / "ResetTriplestoreContent") {
             post {
                 /* ResetTriplestoreContent */
                 entity(as[Seq[RdfDataObject]]) { apiRequest =>
                     requestContext =>
-
                         val requestMessage = Future.successful(ResetTriplestoreContentRequestADM(apiRequest))
 
                         RouteUtilADM.runJsonRoute(

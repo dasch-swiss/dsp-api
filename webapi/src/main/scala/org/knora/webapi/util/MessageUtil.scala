@@ -14,6 +14,10 @@ import scala.reflect.runtime.{universe => ru}
   * Utility functions for working with Akka messages.
   */
 object MessageUtil {
+
+    // Set of case class field names to skip.
+    private val fieldsToSkip = Set("stringFormatter", "base64Decoder", "knoraIdUtil", "standoffLinkTagTargetResourceIris")
+
     /**
       * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
       * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
@@ -85,7 +89,7 @@ object MessageUtil {
 
                 val fieldMap: Map[String, Any] = (Map[String, Any]() /: caseClass.getClass.getDeclaredFields) {
                     (acc, field) =>
-                        if (field.getName == "stringFormatter" || field.getName == "MODULE$") { // ridiculous hack
+                        if (field.getName.contains("$") || fieldsToSkip.contains(field.getName.trim)) { // ridiculous hack
                             acc
                         } else {
                             field.setAccessible(true)
@@ -108,14 +112,21 @@ object MessageUtil {
 
                 val objClass = obj.getClass
                 val objClassName = objClass.getSimpleName
+
                 val runtimeMirror: ru.Mirror = ru.runtimeMirror(objClass.getClassLoader)
                 val instanceMirror = runtimeMirror.reflect(obj)
                 val objType: ru.Type = runtimeMirror.classSymbol(objClass).toType
 
-                val members: Iterable[String] = objType.members.filter(!_.isMethod).map {
+                val members: Iterable[String] = objType.members.filter(member => !member.isMethod).map {
                     member =>
                         val memberName = member.name.toString.trim
-                        val fieldMirror = instanceMirror.reflectField(member.asTerm)
+
+                        val fieldMirror = try {
+                            instanceMirror.reflectField(member.asTerm)
+                        } catch {
+                            case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
+                        }
+
                         val memberValue = fieldMirror.get
                         val memberValueString = toSource(memberValue)
                         s"$memberName = $memberValueString"

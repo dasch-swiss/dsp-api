@@ -48,7 +48,7 @@ class ResourcesResponseCheckerV2Spec extends CoreSpec() {
             }
         }
 
-        "throw an exception when comparing a full response to a full response with a different numbder of values for a property" in {
+        "throw an exception when comparing a full response to a full response with a different number of values for a property" in {
             assertThrows[AssertionError] {
                 compareReadResourcesSequenceV2Response(expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise, received = resourcesResponderCheckerV2SpecFullData.expectedFullResourceResponseForReiseWrong)
             }

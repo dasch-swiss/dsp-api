@@ -23,14 +23,14 @@ import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
-import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.listsmessages.{ListGetRequestV2, NodeGetRequestV2}
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi._
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
   * Provides a function for API routes that deal with lists and nodes.
@@ -42,15 +42,14 @@ object ListsRouteV2 extends Authenticator {
         implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         path("v2" / "lists" / Segment) { lIri: String =>
             get {
 
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val requestMessage = for {
+                    val requestMessage: Future[ListGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                         listIri: IRI = stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
                     } yield ListGetRequestV2(listIri, requestingUser)
@@ -71,7 +70,7 @@ object ListsRouteV2 extends Authenticator {
 
                 /* return a list (a graph with all list nodes) */
                 requestContext =>
-                    val requestMessage = for {
+                    val requestMessage: Future[NodeGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                         nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
                     } yield NodeGetRequestV2(nodeIri, requestingUser)

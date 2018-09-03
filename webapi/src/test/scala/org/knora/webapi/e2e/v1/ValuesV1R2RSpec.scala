@@ -25,7 +25,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
@@ -33,14 +32,12 @@ import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import spray.json._
 
-import scala.concurrent.duration._
-
 /**
   * Tests the values route.
   */
 class ValuesV1R2RSpec extends R2RSpec {
 
-    override def testConfigSource =
+    override def testConfigSource: String =
         """
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
@@ -48,9 +45,7 @@ class ValuesV1R2RSpec extends R2RSpec {
 
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
-    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
-
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
     private val integerValueIri = new MutableTestIri
     private val textValueIri = new MutableTestIri

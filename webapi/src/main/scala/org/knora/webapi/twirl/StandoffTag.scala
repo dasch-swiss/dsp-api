@@ -171,4 +171,3 @@ case class StandoffTagV2(standoffTagClassIri: IRI,
                          attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2])
 
 
-

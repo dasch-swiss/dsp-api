@@ -211,7 +211,7 @@ object RouteUtilV1 {
         for {
 
             // get the mapping directly from v2 responder directly (to avoid useless back and forth conversions between v2 and v1 message formats)
-            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, userProfile = userProfile)).mapTo[GetMappingResponseV2]
+            mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(mappingIri = mappingIri, requestingUser = userProfile)).mapTo[GetMappingResponseV2]
 
             textWithStandoffTagV1 = StandoffTagUtilV2.convertXMLtoStandoffTagV2(
                 xml = xml,
