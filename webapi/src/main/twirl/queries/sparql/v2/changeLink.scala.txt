@@ -1,0 +1,234 @@
+@*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v1.responder.valuemessages._
+
+@**
+ * Deletes an existing link between two resources and replaces it with a link to a different target resource.
+ *
+ * @param dataNamedGraph the named graph in which the project stores its data.
+ * @param triplestore the name of the triplestore being used.
+ * @param linkSourceIri the resource that is the source of the links.
+ * @param linkUpdateForCurrentLink a [[SparqlTemplateLinkUpdate]] specifying how to update the current link.
+ * @param linkUpdateForNewLink a [[SparqlTemplateLinkUpdate]] specifying how to update the new link.
+ * @param maybeComment an optional comment on the new link value.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
+ *
+ * To find out whether the update succeeded, the application must query the changed links.
+ *@
+@(dataNamedGraph: IRI,
+  triplestore: String,
+  linkSourceIri: IRI,
+  linkUpdateForCurrentLink: SparqlTemplateLinkUpdate,
+  linkUpdateForNewLink: SparqlTemplateLinkUpdate,
+  maybeComment: Option[String],
+  currentTime: String)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+
+DELETE {
+    GRAPH ?dataNamedGraph {
+        @* Delete the link source's last modification date so we can update it. *@
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+
+        @* Delete the current direct link. *@
+        @if(linkUpdateForCurrentLink.deleteDirectLink) {
+            ?linkSource ?linkProperty ?linkTargetForCurrentLink .
+        } else {
+            @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.deleteDirectLink must be true in this SPARQL template"); ()}
+        }
+
+        @* Detach the current link's LinkValue from the link source. *@
+        @if(linkUpdateForCurrentLink.linkValueExists) {
+            ?linkSource ?linkValueProperty ?currentLinkValueForCurrentLink .
+        } else {
+            @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkValueExists must be true in this SPARQL template"); ()}
+        }
+    }
+}
+INSERT {
+    GRAPH ?dataNamedGraph {
+        @* Insert a new version of the LinkValue for the current link. *@
+        ?newLinkValueForCurrentLink rdf:type knora-base:LinkValue ;
+            rdf:subject ?linkSource ;
+            rdf:predicate ?linkProperty ;
+            rdf:object ?linkTargetForCurrentLink ;
+            knora-base:valueHasString "@linkUpdateForCurrentLink.linkTargetIri"^^xsd:string ;
+            knora-base:valueHasRefCount @linkUpdateForCurrentLink.newReferenceCount ;
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp ;
+            knora-base:previousValue ?currentLinkValueForCurrentLink ;
+            @if(linkUpdateForCurrentLink.newReferenceCount == 0) {
+                knora-base:deleteDate "@currentTime"^^xsd:dateTimeStamp ;
+                knora-base:isDeleted true .
+            } else {
+                @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.newReferenceCount must be 0 in this SPARQL template"); ()}
+            }
+
+        ?newLinkValueForCurrentLink knora-base:attachedToUser <@linkUpdateForCurrentLink.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdateForCurrentLink.newLinkValuePermissions"^^xsd:string .
+
+        @* Attach the new LinkValue to its containing resource. *@
+        ?linkSource ?linkValueProperty ?newLinkValueForCurrentLink .
+
+        @* Insert the new direct link. *@
+        ?linkSource ?linkProperty ?linkTargetForNewLink .
+
+        @* Insert a LinkValue for the new link. *@
+        ?newLinkValueForNewLink rdf:type knora-base:LinkValue ;
+            rdf:subject ?linkSource ;
+            rdf:predicate ?linkProperty ;
+            rdf:object ?linkTargetForNewLink ;
+            knora-base:valueHasString "@linkUpdateForNewLink.linkTargetIri"^^xsd:string ;
+
+            @maybeComment match {
+                case Some(comment) => {
+                    knora-base:valueHasComment """@comment""" ;
+                }
+
+                case None => {}
+            }
+            knora-base:valueHasRefCount @linkUpdateForNewLink.newReferenceCount ;
+            knora-base:valueHasOrder ?order ;
+            knora-base:isDeleted false ;
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        ?newLinkValueForNewLink knora-base:attachedToUser <@linkUpdateForNewLink.newLinkValueCreator> ;
+            knora-base:hasPermissions "@linkUpdateForNewLink.newLinkValuePermissions"^^xsd:string .
+
+        @* Attach the new LinkValue to its containing resource. *@
+        ?linkSource ?linkValueProperty ?newLinkValueForNewLink .
+
+        @* Update the link source's last modification date. *@
+        ?linkSource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    @if(linkUpdateForCurrentLink.linkPropertyIri != linkUpdateForNewLink.linkPropertyIri) {
+        @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkPropertyIri <${linkUpdateForCurrentLink.linkPropertyIri}> must be equal to linkUpdateForNewLink.linkPropertyIri <${linkUpdateForNewLink.linkPropertyIri}> in this SPARQL template"); ()}
+    }
+
+    BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
+    BIND(IRI("@linkSourceIri") AS ?linkSource)
+    BIND(IRI("@linkUpdateForCurrentLink.linkPropertyIri") AS ?linkProperty)
+    BIND(IRI("@{linkUpdateForCurrentLink.linkPropertyIri}Value") AS ?linkValueProperty)
+    BIND(IRI("@linkUpdateForCurrentLink.linkTargetIri") AS ?linkTargetForCurrentLink)
+    BIND(IRI("@linkUpdateForNewLink.linkTargetIri") AS ?linkTargetForNewLink)
+    BIND(IRI("@linkUpdateForCurrentLink.newLinkValueIri") AS ?newLinkValueForCurrentLink)
+    BIND(IRI("@linkUpdateForNewLink.newLinkValueIri") AS ?newLinkValueForNewLink)
+
+    @* Do nothing if the link source isn't a knora-base:Resource. *@
+
+    ?linkSource rdf:type ?linkSourceClass .
+    ?linkSourceClass rdfs:subClassOf* knora-base:Resource .
+
+    @* Do nothing if the link source is marked as deleted. *@
+
+    ?linkSource knora-base:isDeleted false .
+
+    @* Make sure the current direct link exists between the two resources. *@
+
+    @if(linkUpdateForCurrentLink.directLinkExists) {
+        ?linkSource ?linkProperty ?linkTargetForCurrentLink .
+    } else {
+        @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.directLinkExists must be true in this SPARQL template"); ()}
+    }
+
+    @*
+
+    Make sure a knora-base:LinkValue exists describing the current direct link, and has the correct reference count.
+
+    *@
+
+    @if(linkUpdateForCurrentLink.linkValueExists) {
+        ?linkSource ?linkValueProperty ?currentLinkValueForCurrentLink .
+        ?currentLinkValueForCurrentLink rdf:type knora-base:LinkValue ;
+            rdf:subject ?linkSource ;
+            rdf:predicate ?linkProperty ;
+            rdf:object ?linkTargetForCurrentLink ;
+            knora-base:valueHasRefCount @linkUpdateForCurrentLink.currentReferenceCount ;
+            knora-base:isDeleted false .
+
+        OPTIONAL {
+            ?currentLinkValueForCurrentLink knora-base:valueHasOrder ?order .
+        }
+    } else {
+        @{throw SparqlGenerationException(s"linkUpdateForCurrentLink.linkValueExists must be true in this SPARQL template"); ()}
+    }
+
+    @*
+
+    Do nothing if a direct link already exists between the source resource and the new target resource, or if a corresponding
+    LinkValue exists.
+
+    *@
+
+    @if(linkUpdateForNewLink.directLinkExists) {
+        @{throw SparqlGenerationException(s"linkUpdateForNewLink.directLinkExists must be false in this SPARQL template"); ()}
+    }
+
+    FILTER NOT EXISTS {
+        ?linkSource ?linkProperty ?linkTargetForNewLink .
+    }
+
+    @if(linkUpdateForNewLink.linkValueExists) {
+        @{throw SparqlGenerationException(s"linkUpdateForNewLink.linkValueExists must be false in this SPARQL template"); ()}
+    }
+
+    FILTER NOT EXISTS {
+        ?linkSource ?linkValueProperty ?currentLinkValueForNewLink .
+        ?currentLinkValueForNewLink rdf:type knora-base:LinkValue ;
+            rdf:subject ?linkSource ;
+            rdf:predicate ?linkProperty ;
+            rdf:object ?linkTargetForNewLink ;
+            knora-base:isDeleted false .
+    }
+
+    @*
+
+    Do nothing if we were asked to insert a direct link to a target that doesn't exist, is marked as deleted,
+    isn't a knora-base:Resource, or belongs to the wrong OWL class for the link property.
+
+    *@
+
+    @if(linkUpdateForNewLink.insertDirectLink) {
+        ?linkTargetForNewLink rdf:type ?linkTargetClass ;
+            knora-base:isDeleted false .
+        ?linkTargetClass rdfs:subClassOf* knora-base:Resource .
+        ?linkProperty knora-base:objectClassConstraint ?expectedTargetClass .
+        ?linkTargetClass rdfs:subClassOf* ?expectedTargetClass .
+    } else {
+        @{throw SparqlGenerationException(s"linkUpdateForNewLink.insertDirectLink must be true in this SPARQL template"); ()}
+    }
+
+    @* Get the link source's last modification date, if it has one, so we can update it. *@
+
+    OPTIONAL {
+        ?linkSource knora-base:lastModificationDate ?linkSourceLastModificationDate .
+    }
+}

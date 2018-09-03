@@ -85,10 +85,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
+            resourceIri: SmartIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
 
             // Get the resource class.
-            resourceClassIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
+            resourceClassIri: SmartIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
 
             // Get the resource property and the value to be created.
             createValue: CreateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
@@ -179,10 +179,10 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
+            resourceIri: SmartIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
 
             // Get the resource class.
-            resourceClassIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
+            resourceClassIri: SmartIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
 
             // Get the resource property and the new value version.
             updateValue: UpdateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
