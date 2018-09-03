@@ -33,6 +33,7 @@ import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.listsmessages
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
@@ -114,10 +115,34 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     )
             } ~
             put {
-                /* update list */
+                /* update existing list node (either root or child) */
                 throw NotImplementedException("Method not implemented.")
                 ???
             } ~
+            post {
+                /* add node to existing list node. the existing list node can be either the root or a child */
+                entity(as[CreateChildNodeApiRequestADM]) { apiRequest =>
+                    requestContext =>
+                        val listNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                        val requestMessage: Future[ListNodeCreateRequestADM] = for {
+                            requestingUser <- getUserADM(requestContext)
+                        } yield ListNodeCreateRequestADM(
+                            parentNodeIri = listNodeIri,
+                            createChildNodeRequest = apiRequest,
+                            requestingUser = requestingUser,
+                            apiRequestID = UUID.randomUUID()
+                        )
+
+                        RouteUtilADM.runJsonRoute(
+                            requestMessage,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log
+                        )
+                }
+            }
             delete {
                 /* delete (deactivate) list */
                 throw NotImplementedException("Method not implemented.")

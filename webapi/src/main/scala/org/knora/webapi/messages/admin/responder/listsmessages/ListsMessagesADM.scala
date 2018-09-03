@@ -68,6 +68,51 @@ case class CreateListApiRequestADM(projectIri: IRI,
 }
 
 /**
+  * Represents an API request payload that asks the Knora API server to create a new child list node which will be
+  * attached to the list node identified by the supplied listNodeIri, where the list node to which a child list node
+  * is added can be either a root list node or a child list node. At least one label needs to be supplied. If other
+  * child nodes exist, the newly created list node will be appended to the end.
+  *
+  * @param parentNodeIri
+  * @param labels
+  * @param comments
+  */
+case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
+                                        projectIri: IRI,
+                                        labels: Seq[StringLiteralV2],
+                                        comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
+
+    private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+
+    if (parentNodeIri.isEmpty) {
+        // println(this)
+        throw BadRequestException(LIST_NODE_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraListIriStr(parentNodeIri)) {
+        // println(this)
+        throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
+    }
+
+    if (projectIri.isEmpty) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+    }
+
+    if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+        // println(this)
+        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+    }
+
+    if (labels.isEmpty) {
+        // println(this)
+        throw BadRequestException(LABEL_MISSING_ERROR)
+    }
+
+    def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
+}
+
+/**
   * Represents an API request payload that asks the Knora API server to update an existing list's basic information.
   *
   * @param listIri    the IRI of the list to change.
@@ -187,6 +232,19 @@ case class ListInfoChangeRequestADM(listIri: IRI,
                                     requestingUser: UserADM,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
+/**
+  * Request the creation of a new list node.
+  *
+  * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
+  * @param createChildNodeRequest the new node information.
+  * @param requestingUser         the user making the request.
+  * @param apiRequestID           the ID of the API request.
+  */
+case class ListNodeCreateRequestADM(parentNodeIri: IRI,
+                                    createChildNodeRequest: CreateChildNodeApiRequestADM,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID) extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -286,7 +344,7 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
     /**
       * Gets the label in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if label is not available in user's preferred language.
       * @return the label in the preferred language.
       */
@@ -297,7 +355,7 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
     /**
       * Gets the comment in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if comment is not available in user's preferred language.
       * @return the comment in the preferred language.
       */
@@ -310,14 +368,29 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
 /**
   * Represents basic information about a list node, the information which is found in the list's child node.
   *
-  * @param id       the IRI of the list.
-  * @param name     the name of the list node.
-  * @param labels   the labels of the node in all available languages.
-  * @param comments the comments attached to the node in all available languages.
-  * @param position the position of the node among its siblings (optional).
-  * @param rootNode the Iri of the root node, if this is not the root node.
+  * @param id          the IRI of the list.
+  * @param name        the name of the list node.
+  * @param labels      the labels of the node in all available languages.
+  * @param comments    the comments attached to the node in all available languages.
+  * @param position    the position of the node among its siblings (optional).
+  * @param hasRootNode the Iri of the root node, if this is not the root node.
   */
-case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int], rootNode: Option[IRI]) {
+case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int], hasRootNode: Option[IRI], isRootNode: Boolean) {
+
+    // some plausibility checks
+
+    // either isRootNode or hasRootNode
+    if (isRootNode && hasRootNode.nonEmpty) {
+        throw BadRequestException("A node can be either a root or child of a root node.")
+    } else if (!isRootNode && hasRootNode.isEmpty) {
+        throw BadRequestException("A node needs to be either a root or child of a root node.")
+    }
+
+    // root node does not have a position
+    if (isRootNode && position.nonEmpty) {
+        throw BadRequestException("A root node does not have position.")
+    }
+
     /**
       * Sorts the whole hierarchy.
       *
@@ -330,14 +403,15 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
             labels = labels.sortByStringValue,
             comments = comments.sortByStringValue,
             position = position,
-            rootNode = rootNode
+            hasRootNode = hasRootNode,
+            isRootNode = isRootNode
         )
     }
 
     /**
       * Gets the label in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if label is not available in user's preferred language.
       * @return the label in the preferred language.
       */
@@ -348,7 +422,7 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
     /**
       * Gets the comment in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if comment is not available in user's preferred language.
       * @return the comment in the preferred language.
       */
@@ -367,7 +441,21 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
   * @param children the list node's child nodes.
   * @param position the position of the node among its siblings (optional).
   */
-case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListNodeADM], position: Option[Int]) {
+case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListNodeADM], position: Option[Int], hasRootNode: Option[IRI], isRootNode: Boolean) {
+
+    // some plausibility checks
+
+    // either isRootNode or hasRootNode
+    if (isRootNode && hasRootNode.nonEmpty) {
+        throw BadRequestException("A node can be either a root or child of a root node.")
+    } else if (!isRootNode && hasRootNode.isEmpty) {
+        throw BadRequestException("A node needs to be either a root or child of a root node.")
+    }
+
+    // root node does not have a position
+    if (isRootNode && position.nonEmpty) {
+        throw BadRequestException("A root node does not have position.")
+    }
 
     /**
       * Sorts the whole hierarchy.
@@ -381,14 +469,16 @@ case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSeque
             labels = labels.sortByStringValue,
             comments = comments.sortByStringValue,
             children = children.sortBy(_.id).map(_.sorted),
-            position = position
+            position = position,
+            hasRootNode = hasRootNode,
+            isRootNode = isRootNode
         )
     }
 
     /**
       * Gets the label in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if label is not available in user's preferred language.
       * @return the label in the preferred language.
       */
@@ -399,7 +489,7 @@ case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSeque
     /**
       * Gets the comment in the user's preferred language.
       *
-      * @param userLang the user's preferred language.
+      * @param userLang     the user's preferred language.
       * @param fallbackLang language to use if comment is not available in user's preferred language.
       * @return the comment in the preferred language.
       */
@@ -480,7 +570,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 "name" -> nodeInfo.name.toJson,
                 "labels" -> JsArray(nodeInfo.labels.stringLiterals.map(_.toJson)),
                 "comments" -> JsArray(nodeInfo.comments.stringLiterals.map(_.toJson)),
-                "position" -> nodeInfo.position.toJson
+                "position" -> nodeInfo.position.toJson,
+                "hasRootNode" -> nodeInfo.hasRootNode.toJson,
+                "isRootNode" -> nodeInfo.isRootNode.toJson
             )
         }
 
@@ -510,13 +602,22 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
             val position = fields.get("position").map(_.convertTo[Int])
 
+            val hasRootNode = fields.get("hasRootNode").map(_.convertTo[String])
+
+            val maybeIsRootNode: Option[Boolean] = fields.get("isRootNode").map(_.convertTo[Boolean])
+            val isRootNode = maybeIsRootNode match {
+                case Some(boolValue) => boolValue
+                case None => false
+            }
+
             ListNodeInfoADM(
                 id = id,
                 name = name,
                 labels = StringLiteralSequenceV2(labels.toVector),
                 comments = StringLiteralSequenceV2(comments.toVector),
                 position = position,
-                rootNode = None
+                hasRootNode = hasRootNode,
+                isRootNode = isRootNode
             )
 
         }
@@ -536,7 +637,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 "labels" -> JsArray(node.labels.stringLiterals.map(_.toJson)),
                 "comments" -> JsArray(node.comments.stringLiterals.map(_.toJson)),
                 "children" -> JsArray(node.children.map(write).toVector),
-                "position" -> node.position.toJson
+                "position" -> node.position.toJson,
+                "hasRootNode" -> node.hasRootNode.toJson,
+                "isRootNode" -> node.isRootNode.toJson
             )
         }
 
@@ -572,13 +675,23 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
             val position = fields.get("position").map(_.convertTo[Int])
 
+            val hasRootNode = fields.get("hasRootNode").map(_.convertTo[String])
+
+            val maybeIsRootNode: Option[Boolean] = fields.get("isRootNode").map(_.convertTo[Boolean])
+            val isRootNode = maybeIsRootNode match {
+                case Some(boolValue) => boolValue
+                case None => false
+            }
+
             ListNodeADM(
                 id = id,
                 name = name,
                 labels = StringLiteralSequenceV2(labels.toVector),
                 comments = StringLiteralSequenceV2(comments.toVector),
                 children = children,
-                position = position
+                position = position,
+                hasRootNode = hasRootNode,
+                isRootNode = isRootNode
             )
 
         }
@@ -624,6 +737,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "listNodeIri", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")

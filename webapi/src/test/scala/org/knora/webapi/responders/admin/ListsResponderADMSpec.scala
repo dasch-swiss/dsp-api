@@ -21,18 +21,14 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedTestDataV1._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, StringLiteralV2}
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.responders._
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
@@ -169,6 +165,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         "used to modify lists" should {
 
             val newListIri = new MutableTestIri
+            val firstChildIri = new MutableTestIri
+            val secondChildIri = new MutableTestIri
+            val thirdChildIri = new MutableTestIri
 
             "create a list" in {
                 actorUnderTest ! ListCreateRequestADM(
@@ -276,13 +275,123 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
                 expectMsg(Failure(ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)))
             }
 
-            "add flat nodes" ignore {
+            "add child to list - to the root node" in {
+                actorUnderTest ! ListNodeCreateRequestADM(
+                    parentNodeIri = newListIri.get,
+                    createChildNodeRequest = CreateListNodeApiRequestADM(
+                        listNodeIri = newListIri.get,
+                        labels = Seq(StringLiteralV2(value = "Neuer Child Liste Node Value", language = Some("de"))),
+                        comments = Seq(StringLiteralV2(value = "Neuer Child Liste Node Comment", language = Some("de")))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
 
+                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = nodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "Neuer Child Liste Node Value", language = Some("de"))))
+
+
+                // check comments
+                val comments = nodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "Neuer Child Liste Node Comment", language = Some("de"))))
+
+                // check position
+                val position = nodeInfo.position
+                position.nonEmpty should be (true)
+                position.get should be (0)
+
+                // check root node
+                val rootNode = nodeInfo.hasRootNode
+                rootNode.nonEmpty should be (true)
+                rootNode.get should be (newListIri.get)
+
+                firstChildIri.set(nodeInfo.id)
             }
 
-            "add hierarchical nodes" ignore {
+            "add second child to list - to the root node" in {
+                actorUnderTest ! ListNodeCreateRequestADM(
+                    parentNodeIri = newListIri.get,
+                    createChildNodeRequest = CreateListNodeApiRequestADM(
+                        listNodeIri = newListIri.get,
+                        labels = Seq(StringLiteralV2(value = "Neuer Zweiter Child Liste Node Value", language = Some("de"))),
+                        comments = Seq(StringLiteralV2(value = "Neuer Zweiter Child Liste Node Comment", language = Some("de")))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
 
+                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = nodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "Neuer Zweiter Child Liste Node Value", language = Some("de"))))
+
+
+                // check comments
+                val comments = nodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "Neuer Zweiter Child Liste Node Comment", language = Some("de"))))
+
+                // check position
+                val position = nodeInfo.position
+                position.nonEmpty should be (true)
+                position.get should be (1)
+
+                // check root node
+                val rootNode = nodeInfo.hasRootNode
+                rootNode.nonEmpty should be (true)
+                rootNode.get should be (newListIri.get)
+
+                secondChildIri.set(nodeInfo.id)
             }
+
+            "add child to second child node" in {
+                actorUnderTest ! ListNodeCreateRequestADM(
+                    parentNodeIri = secondChildIri.get,
+                    createChildNodeRequest = CreateListNodeApiRequestADM(
+                        listNodeIri = newListIri.get,
+                        labels = Seq(StringLiteralV2(value = "Neuer Dritter Child Liste Node Value", language = Some("de"))),
+                        comments = Seq(StringLiteralV2(value = "Neuer Dritter Child Liste Node Comment", language = Some("de")))
+                    ),
+                    requestingUser = SharedTestDataADM.imagesUser01,
+                    apiRequestID = UUID.randomUUID
+                )
+
+                val received: ListNodeInfoGetResponseADM = expectMsgType[ListNodeInfoGetResponseADM](timeout)
+                val nodeInfo = received.nodeinfo
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = nodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "Neuer Dritter Child Liste Node Value", language = Some("de"))))
+
+
+                // check comments
+                val comments = nodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "Neuer Dritter Child Liste Node Comment", language = Some("de"))))
+
+                // check position
+                val position = nodeInfo.position
+                position.nonEmpty should be (true)
+                position.get should be (0)
+
+                // check root node
+                val rootNode = nodeInfo.hasRootNode
+                rootNode.nonEmpty should be (true)
+                rootNode.get should be (newListIri.get)
+
+                thirdChildIri.set(nodeInfo.id)
+            }
+
 
             "change node order" ignore {
 

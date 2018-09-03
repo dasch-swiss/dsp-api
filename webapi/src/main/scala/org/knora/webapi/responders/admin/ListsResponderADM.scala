@@ -41,6 +41,8 @@ object ListsResponderADM {
 
     val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
     val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
+    val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."
+    val LIST_NODE_IRI_INVALID_ERROR = "List node IRI is invalid."
     val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
     val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
     val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
@@ -63,11 +65,12 @@ class ListsResponderADM extends Responder {
     def receive: PartialFunction[Any, Unit] = {
         case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetRequestADM(projectIri, requestingUser), log)
         case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetRequestADM(listIri, requestingUser), log)
-        case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetAdminRequest(listIri, requestingUser), log)
-        case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetAdminRequest(listIri, requestingUser), log)
+        case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetRequestADM(listIri, requestingUser), log)
+        case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetRequestADM(listIri, requestingUser), log)
         case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
         case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
         case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
+        case ListNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => future2Message(sender(), listNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) , log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -200,7 +203,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListInfoGetResponseADM]].
       */
-    def listInfoGetAdminRequest(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
+    def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -240,13 +243,14 @@ class ListsResponderADM extends Responder {
     }
 
     /**
-      * Retrieves information about a single (child) node.
+      * Retrieves information about a single node (without information about children). The single node can be the
+      * lists root node or child node
       *
-      * @param nodeIri the Iri if the child node to be queried.
+      * @param nodeIri the Iri if the list node to be queried.
       * @param requestingUser the user making the request.
-      * @return a [[ListNodeInfoGetResponseADM]].
+      * @return a optional [[ListNodeInfoADM]].
       */
-    def listNodeInfoGetAdminRequest(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+    def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -257,43 +261,67 @@ class ListsResponderADM extends Responder {
 
             listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            _ = if (listNodeResponse.statements.isEmpty) {
-                throw NotFoundException(s"List node not found: $nodeIri")
+            maybeListNodeInfo = if (listNodeResponse.statements.isEmpty) {
+
+                // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
+                val statements = listNodeResponse.statements
+
+                // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
+
+                val nodeinfo: ListNodeInfoADM = statements.head match {
+                    case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+
+                        val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                        val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
+                        val hasRootNodeOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.HasRootNode) match {
+                            case Some(iris: Seq[LiteralV2]) =>
+                                iris.headOption match {
+                                    case Some(iri: IriLiteralV2) => Some(iri.value)
+                                    case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                }
+                            case None => None
+                        }
+
+                        val isRootNode: Boolean = propsMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
+
+                        ListNodeInfoADM (
+                            id = nodeIri.toString,
+                            name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                            labels = StringLiteralSequenceV2(labels.toVector),
+                            comments = StringLiteralSequenceV2(comments.toVector),
+                            position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value),
+                            hasRootNode = hasRootNodeOption,
+                            isRootNode = isRootNode
+                        )
+                }
+                Some(nodeinfo)
+            } else {
+                None
             }
 
-            // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-            statements = listNodeResponse.statements
+            // _ = log.debug(s"listNodeInfoGetADM - node: {}", MessageUtil.toSource(maybeListNodeInfo))
 
-            // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
+        } yield maybeListNodeInfo
 
-            nodeinfo: ListNodeInfoADM = statements.head match {
-                case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+    }
 
-                    val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-                    val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-
-                    val rootNodeOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.HasRootNode) match {
-                        case Some(iris: Seq[LiteralV2]) =>
-                            iris.headOption match {
-                                case Some(iri: IriLiteralV2) => Some(iri.value)
-                                case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
-                            }
-                        case None => None
-                    }
-
-                    ListNodeInfoADM (
-                        id = nodeIri.toString,
-                        name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                        labels = StringLiteralSequenceV2(labels.toVector),
-                        comments = StringLiteralSequenceV2(comments.toVector),
-                        position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value),
-                        rootNode = rootNodeOption
-                    )
+    /**
+      * Retrieves information about a single node (without information about children). The single node can be the
+      * lists root node or child node
+      *
+      * @param nodeIri the Iri if the list node to be queried.
+      * @param requestingUser the user making the request.
+      * @return a [[ListNodeInfoGetResponseADM]].
+      */
+    def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+        for {
+            maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
+            result = maybeListNodeInfoADM match {
+                case Some(nodeInfo) => ListNodeInfoGetResponseADM(nodeinfo = nodeInfo)
+                case None => throw NotFoundException(s"List node '$nodeIri' not found")
             }
-
-            // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
-
-        } yield ListNodeInfoGetResponseADM(nodeinfo = nodeinfo)
+        } yield result
     }
 
 
@@ -340,7 +368,7 @@ class ListsResponderADM extends Responder {
                 The information about the parent node is repeated in each row.
                 Therefore, we can just access the first row for all the information about the parent.
 
-                node                                      position	   nodeName   label         child
+                node                               position	    nodeName   label         child
 
                 http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a665b90cd
                 http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/4238eabcc
@@ -354,6 +382,10 @@ class ListsResponderADM extends Responder {
              */
 
             val firstRowMap = childRows.head.rowMap
+
+            val hasRootNodeOption: Option[IRI] = firstRowMap.get(OntologyConstants.KnoraBase.HasRootNode)
+
+            val isRootNode: Boolean = firstRowMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
 
             ListNodeADM(
                 id = nodeIri,
@@ -371,7 +403,9 @@ class ListsResponderADM extends Responder {
                     // Recursively get the child nodes.
                     childRows.map(childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
                 },
-                position = firstRowMap.get("position").map(_.toInt)
+                position = firstRowMap.get("position").map(_.toInt),
+                hasRootNode = hasRootNodeOption,
+                isRootNode = isRootNode
             )
         }
 
@@ -437,7 +471,9 @@ class ListsResponderADM extends Responder {
                 },
                 comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
                 children = Seq.empty[ListNodeADM],
-                position = None
+                position = None,
+                hasRootNode = None,
+                isRootNode = false
             )
 
             // Add it to the path.
@@ -458,7 +494,7 @@ class ListsResponderADM extends Responder {
         // TODO: Rewrite using a construct sparql query
         for {
             nodePathQuery <- Future {
-                queries.sparql.v2.txt.getNodePath(
+                queries.sparql.admin.txt.getNodePath(
                     triplestore = settings.triplestoreType,
                     queryNodeIri = queryNodeIri,
                     preferredLanguage = requestingUser.lang,
@@ -568,6 +604,18 @@ class ListsResponderADM extends Responder {
         } yield taskResult
     }
 
+    /**
+      * Changes basic list information stored in the list's root node.
+      *
+      * @param listIri the list's IRI.
+      * @param changeListRequest the new list information.
+      * @param requestingUser the user that is making the request.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ListInfoGetResponseADM]]
+      * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+      * @throws BadRequestException in the case when the project IRI is missing or invalid.
+      * @throws UpdateNotPerformedException in the case something else went wrong, and the change could not be performed.
+      */
     private def listInfoChangeRequest(listIri: IRI, changeListRequest: ChangeListInfoApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListInfoGetResponseADM] = {
 
         /**
@@ -645,6 +693,87 @@ class ListsResponderADM extends Responder {
         } yield taskResult
     }
 
+
+    /**
+      * Creates a new list node and appends it to an existing list node.
+      *
+      * @param listNodeIri the existing list node to which we want to append.
+      * @param createListNodeRequest the new list node's information.
+      * @param requestingUser the user making the request.
+      * @param apiRequestID the unique api request ID.
+      * @return a [[ListNodeInfoGetResponseADM]]
+      */
+    private def listNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
+
+        /**
+          * The actual task run with an IRI lock.
+          */
+        def listNodeCreateTask(createListNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+
+            // check if the requesting user is allowed to perform operation
+            _ <- Future(
+                if (!requestingUser.permissions.isProjectAdmin(createChildNodeRequest.projectIri) && !requestingUser.permissions.isSystemAdmin) {
+                    // not project or a system admin
+                    // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+                    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+                }
+            )
+
+            _ = if (!parentNodeIri.equals(createListNodeRequest.parentNodeIri)) throw BadRequestException("List node IRI in path and payload don't match.")
+
+            /* Verify that the list node exists. */
+            maybeListNode <- listNodeGetADM(listNodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            nodeInfo: ListNodeInfoADM = maybeListNodeInfo match {
+                case Some(info) => info
+                case None => throw BadRequestException(s"List node '$listNodeIri' not found.")
+            }
+
+            /* Verify that the project exists. */
+            maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createChildNodeRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
+            project: ProjectADM = maybeProject match {
+                case Some(project: ProjectADM) => project
+                case None => throw BadRequestException(s"Project '${createChildNodeRequest.projectIri}' not found.")
+            }
+
+            maybeShortcode = project.shortcode
+            dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
+
+            listIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+
+            // Create the new list
+            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+                dataNamedGraph = dataNamedGraph,
+                triplestore = settings.triplestoreType,
+                listIri = listIri,
+                projectIri = project.id,
+                listClassIri = OntologyConstants.KnoraBase.ListNode,
+                maybeLabels = createListRequest.labels,
+                maybeComments = createListRequest.comments
+            ).toString
+            // _ = log.debug("listCreateRequestADM - createNewListSparqlString: {}", createNewListSparqlString)
+            createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
+
+
+            // Verify that the list was created.
+            maybeNewListADM <- listGetADM(listIri, KnoraSystemInstances.Users.SystemUser)
+            newListADM = maybeNewListADM.getOrElse(throw UpdateNotPerformedException(s"List $listIri was not created. Please report this as a possible bug."))
+
+            // _ = log.debug(s"listCreateRequestADM - newListADM: $newListADM")
+
+        } yield ListGetResponseADM(list = newListADM)
+
+
+
+        for {
+            // run list creation with an global IRI lock
+            taskResult <- IriLocker.runWithIriLock(
+                apiRequestID,
+                LISTS_GLOBAL_LOCK_IRI,
+                () => listNodeCreateTask(createListNodeRequest, requestingUser, apiRequestID)
+            )
+        } yield taskResult
+
+    }
 
     ////////////////////
     // Helper Methods //

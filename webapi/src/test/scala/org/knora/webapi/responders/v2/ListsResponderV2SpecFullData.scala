@@ -90,7 +90,7 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
                 language = Some("en")
             ))),
             position = Some(1),
-            rootNode = Some("http://rdfh.ch/lists/0001/treeList"),
+            hasRootNode = Some("http://rdfh.ch/lists/0001/treeList"),
             comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
         ),
         userLang = "de",

@@ -195,7 +195,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
             case None => Map.empty[IRI, JsonLDInt]
         }
 
-        val rootNode = node.rootNode match {
+        val rootNode = node.hasRootNode match {
             case Some(rNode: IRI) =>
                 Map(
                     OntologyConstants.KnoraBase.HasRootNode.toSmartIri.toOntologySchema(ApiV2WithValueObjects).toString -> JsonLDUtil.iriToJsonLDObject(rNode)

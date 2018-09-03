@@ -45,7 +45,7 @@ object SharedListsTestDataADM {
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
         comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         position = Some(0),
-        rootNode = Some("http://rdfh.ch/lists/00FF/d19af9ab")
+        hasRootNode = Some("http://rdfh.ch/lists/00FF/d19af9ab")
     )
 
     val seasonListNodes: Seq[ListNodeADM] = Seq(
