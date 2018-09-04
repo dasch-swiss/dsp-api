@@ -598,8 +598,8 @@ case class UserADM(id: IRI,
 
             val v1Groups: Seq[IRI] = groups.map(_.id)
 
-            val projectesWithoutSystemProject = projects.filter(_.id != OntologyConstants.KnoraBase.SystemProject)
-            val projectInfosV1 = projectesWithoutSystemProject.map(_.asProjectInfoV1)
+            val projectesWithoutBuiltinProjects = projects.filter(_.id != OntologyConstants.KnoraBase.SystemProject).filter(_.id != OntologyConstants.KnoraBase.SharedOntologiesProject)
+            val projectInfosV1 = projectesWithoutBuiltinProjects.map(_.asProjectInfoV1)
             val projects_info_v1: Map[IRI, ProjectInfoV1] = projectInfosV1.map(_.id).zip(projectInfosV1).toMap[IRI, ProjectInfoV1]
 
             UserProfileV1(

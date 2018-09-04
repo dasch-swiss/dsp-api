@@ -469,6 +469,7 @@ object OntologyConstants {
         val ForProperty: IRI = KnoraBasePrefixExpansion + "forProperty"
 
         val SystemProject: IRI = KnoraBasePrefixExpansion + "SystemProject"
+        val SharedOntologiesProject: IRI = KnoraBasePrefixExpansion + "SharedOntologiesProject"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,

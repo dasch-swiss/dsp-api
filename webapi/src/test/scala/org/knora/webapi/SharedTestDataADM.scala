@@ -161,6 +161,22 @@ object SharedTestDataADM {
         selfjoin = false
     )
 
+    val SharedOntologiesProjectIri: IRI = OntologyConstants.KnoraBase.SharedOntologiesProject // built-in project
+
+    /* represents the full project info of the Knora System project */
+    def sharedOntologiesProject = ProjectADM(
+        id = OntologyConstants.KnoraBase.SharedOntologiesProject,
+        shortname = "SharedOntologiesProject",
+        shortcode = "0000",
+        longname = Some("Knora Shared Ontologies Project"),
+        description = Seq(StringLiteralV2(value = "Knora Shared Ontologies Project", language = Some("en"))),
+        keywords = Seq.empty[String],
+        logo = None,
+        ontologies = Seq.empty[IRI],
+        status = true,
+        selfjoin = false
+    )
+
 
     /** ***********************************/
     /** Images Demo Project Admin Data  **/

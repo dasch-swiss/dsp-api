@@ -733,7 +733,17 @@
             :projectShortcode "FFFF" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project"@en ;
-            :projectOntology <http://www.knora.org/ontology/knora-base> ;
+            :status "true"^^xsd:boolean ;
+            :hasSelfJoinEnabled "false"^^xsd:boolean .
+
+
+### http://www.knora.org/ontology/knora-base#SharedOntologiesProject
+:SharedOntologiesProject rdf:type :knoraProject ;
+            rdfs:comment "A built-in project representing Shared Ontologies."@en ;
+            :projectShortname "SharedOntologiesProject" ;
+            :projectShortcode "0000" ;
+            :projectLongname "Knora Shared Ontologies Project" ;
+            :projectDescription "Knora Shared Ontologies Project"@en ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .
 
