@@ -464,14 +464,6 @@ class ValuesResponderV2 extends Responder {
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
 
-                // Check that the user has permission to modify the resource.
-
-                _ = checkResourcePermission(
-                    resourceInfo = resourceInfo,
-                    permissionNeeded = ModifyPermission,
-                    requestingUser = updateValueRequest.requestingUser
-                )
-
                 // Check that the resource has the rdf:type that the client thinks it has.
 
                 _ = if (resourceInfo.resourceClassIri != updateValueRequest.updateValue.resourceClassIri.toOntologySchema(InternalSchema)) {
@@ -482,10 +474,19 @@ class ValuesResponderV2 extends Responder {
 
                 maybeCurrentValue: Option[ReadValueV2] = resourceInfo.values.get(submittedInternalPropertyIri).flatMap(_.find(_.valueIri == updateValueRequest.updateValue.valueIri))
 
+                // Check that the user has permission to modify the value.
+
                 currentValue: ReadValueV2 = maybeCurrentValue match {
                     case Some(value) => value
                     case None => throw BadRequestException(s"Resource <${updateValueRequest.updateValue.resourceIri}> does not have value <${updateValueRequest.updateValue.valueIri}> as an object of property <${updateValueRequest.updateValue.propertyIri}>")
                 }
+
+                _ = checkValuePermission(
+                    resourceInfo = resourceInfo,
+                    valueInfo = currentValue,
+                    permissionNeeded = ModifyPermission,
+                    requestingUser = updateValueRequest.requestingUser
+                )
 
                 // Check that the current value and the submitted value have the same type.
                 _ = if (currentValue.valueContent.valueType != submittedInternalValueContent.valueType) {
@@ -517,11 +518,23 @@ class ValuesResponderV2 extends Responder {
                     throw DuplicateValueException()
                 }
 
-                // If this is a text value, check that the resources pointed to by any standoff link tags exist
-                // and that the user has permission to see them.
-
                 _ <- submittedInternalValueContent match {
-                    case textValueContent: TextValueContentV2 => checkStandoffLinkTargets(textValueContent, updateValueRequest.requestingUser)
+                    case textValueContent: TextValueContentV2 =>
+                        // This is a text value. Check that the resources pointed to by any standoff link tags exist
+                        // and that the user has permission to see them.
+                        checkStandoffLinkTargets(textValueContent, updateValueRequest.requestingUser)
+
+                    case _: LinkValueContentV2 =>
+                        // We're updating a link. This means deleting an existing link and creating a new one, so
+                        // check that the user has permission to modify the resource.
+                        Future {
+                            checkResourcePermission(
+                                resourceInfo = resourceInfo,
+                                permissionNeeded = ModifyPermission,
+                                requestingUser = updateValueRequest.requestingUser
+                            )
+                        }
+
                     case _ => FastFuture.successful(())
                 }
 
@@ -987,7 +1000,7 @@ class ValuesResponderV2 extends Responder {
     /**
       * Checks that a user has the specified permission on a resource.
       *
-      * @param resourceInfo   the resource to be modified.
+      * @param resourceInfo   the resource to be updated.
       * @param requestingUser the requesting user.
       */
     private def checkResourcePermission(resourceInfo: ReadResourceV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
@@ -1008,6 +1021,33 @@ class ValuesResponderV2 extends Responder {
             throw ForbiddenException(s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>")
         }
     }
+
+    /**
+      * Checks that a user has the specified permission on a value.
+      *
+      * @param resourceInfo   the resource containing the value.
+      * @param valueInfo      the value to be updated.
+      * @param requestingUser the requesting user.
+      */
+    private def checkValuePermission(resourceInfo: ReadResourceV2, valueInfo: ReadValueV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
+        val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+            entityIri = valueInfo.valueIri,
+            entityCreator = valueInfo.attachedToUser,
+            entityProject = resourceInfo.attachedToProject,
+            entityPermissionLiteral = valueInfo.permissions,
+            requestingUser = requestingUser
+        )
+
+        val hasRequiredPermission: Boolean = maybeUserPermission match {
+            case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
+            case None => false
+        }
+
+        if (!hasRequiredPermission) {
+            throw ForbiddenException(s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>")
+        }
+    }
+
 
     /**
       * Checks that a link value points to a resource with the correct type for the link property's object class constraint.
