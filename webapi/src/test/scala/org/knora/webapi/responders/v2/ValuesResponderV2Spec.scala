@@ -65,7 +65,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
-    private val commentValueIri = new MutableTestIri
+    private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
+    private val zeitglöckleinCommentWithStandoffIri = new MutableTestIri
+    private val zeitglöckleinCommentWithCommentIri = new MutableTestIri
+    private val zeitglöckleinSecondCommentWithStandoffIri = new MutableTestIri
+    private val lobComment1Iri = new MutableTestIri
+    private val lobComment2Iri = new MutableTestIri
     private val decimalValueIri = new MutableTestIri
     private val dateValueIri = new MutableTestIri
     private val booleanValueIri = new MutableTestIri
@@ -81,6 +86,25 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         StandoffTagV2(
             standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
             startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 1
+        )
+    )
+
+    private val sampleStandoffModified: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+            startPosition = 1,
             endPosition = 7,
             uuid = UUID.randomUUID().toString,
             originalXMLID = None,
@@ -437,7 +461,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -447,7 +471,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
+                expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
                 requestingUser = incunabulaUser
             )
 
@@ -502,7 +526,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -512,7 +536,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
+                expectedValueIri = zeitglöckleinCommentWithCommentIri.get,
                 requestingUser = incunabulaUser
             )
 
@@ -526,7 +550,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create a text value with standoff" in {
-
             val valueHasString = "Comment 1aa"
 
             val standoffAndMapping = Some(StandoffAndMapping(
@@ -554,7 +577,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -564,7 +587,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 maybePreviousLastModDate = maybeResourceLastModDate,
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get,
+                expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
                 requestingUser = incunabulaUser
             )
 
@@ -577,11 +600,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "not create a duplicate text value with standoff" in {
+        "not create a duplicate text value with standoff (even if the standoff is different)" in {
             val valueHasString = "Comment 1aa"
 
             val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoff,
+                standoff = sampleStandoffModified,
                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                 mapping = standardMapping.get
             ))
@@ -1534,7 +1557,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => lobComment1Iri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -1554,7 +1577,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
                 resource = updatedResource,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get
+                expectedValueIri = lobComment1Iri.get
             )
 
             textValueFromTriplestore.valueContent match {
@@ -1626,7 +1649,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => commentValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 => lobComment2Iri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -1646,7 +1669,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val textValueFromTriplestore: ReadValueV2 = getValueFromResource(
                 resource = updatedResource,
                 propertyIriInResult = propertyIri,
-                expectedValueIri = commentValueIri.get
+                expectedValueIri = lobComment2Iri.get
             )
 
             textValueFromTriplestore.valueContent match {
@@ -1917,5 +1940,316 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
+
+        "update a text value (without submitting standoff)" in {
+            val valueHasString = "This updated comment has no standoff"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TextValueContentV2 => savedValue.valueHasString should ===(valueHasString)
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+        "update a text value (submitting standoff)" in {
+            val valueHasString = "Comment 1ab"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoff,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = zeitglöckleinCommentWithStandoffIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TextValueContentV2 =>
+                    savedValue.valueHasString should ===(valueHasString)
+                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+
+        "not update a text value, duplicating an existing text value (without submitting standoff)" in {
+            val valueHasString = "this is a text value that has a comment"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "create a second text value with standoff" in {
+            val valueHasString = "Comment 1ac"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoff,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TextValueContentV2 =>
+                    savedValue.valueHasString should ===(valueHasString)
+                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a text value, duplicating an existing text value (submitting standoff)" in {
+            val valueHasString = "Comment 1ac"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoff,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a text value, changing only the standoff" in {
+            val valueHasString = "Comment 1ac"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoffModified,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = zeitglöckleinSecondCommentWithStandoffIri.get,
+                requestingUser = incunabulaUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: TextValueContentV2 =>
+                    savedValue.valueHasString should ===(valueHasString)
+                    savedValue.standoffAndMapping should ===(standoffAndMapping)
+
+                case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a text value so it differs only from an existing value in that it has different standoff" in {
+            val valueHasString = "Comment 1ac"
+
+            val standoffAndMapping = Some(StandoffAndMapping(
+                standoff = sampleStandoffModified,
+                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                mapping = standardMapping.get
+            ))
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString,
+                        standoffAndMapping = standoffAndMapping
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "not update a text value without changing it (without submitting standoff)" in {
+            val valueHasString = "This updated comment has no standoff"
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = zeitglöckleinCommentWithoutStandoffIri.get,
+                    valueContent = TextValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasString = valueHasString
+                    )
+                ),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
     }
 }
