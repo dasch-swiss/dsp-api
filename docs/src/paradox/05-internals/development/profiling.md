@@ -19,12 +19,19 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Profiling Knora
 
-Profiling can be done with YourKit or VisualVM.
+To run Knora with profiling, we first need to build the application. Please run the following from the `webapi` folder:
 
-## YourKit:
+```
+$ sbt stage
+```
+
+## Profiling with [YourKit](http://yourkit.com):
 
 Start `webapi` from the `knora/webapi/target/universal/stage` directory with the following command:
 
 ```
 $ ./bin/webapi -J-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib -J-Xms1G -J-Xmx1G
 ```
+
+
+Now start the YourKit Profiler and connect to the `Main` process.

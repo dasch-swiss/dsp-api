@@ -53,7 +53,7 @@ services:
     - KNORA_SIPI_HOST=sipi
     command: [
       "sh", "-c",
-      "cd webapi && sbt stage && cd target/universal/stage && ./bin/webapi -J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all -J-Xms1G J-Xmx1G"
+      "cd webapi && sbt clean && sbt stage && cd target/universal/stage && ./bin/webapi -J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all -J-Xms1G J-Xmx1G"
     ]
     container_name: webapi
 
