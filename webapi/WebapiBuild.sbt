@@ -274,7 +274,7 @@ lazy val library =
         val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
         // caching
-        val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
+        val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.3"
 
         // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
