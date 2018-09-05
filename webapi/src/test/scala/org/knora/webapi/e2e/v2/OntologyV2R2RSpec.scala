@@ -684,6 +684,210 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
         }
 
+        "create a property anything:hasOtherNothing with knora-api:objectType anything:Nothing" in {
+            val params =
+                s"""
+                   |{
+                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "@graph" : [ {
+                   |    "@id" : "anything:hasOtherNothing",
+                   |    "@type" : "owl:ObjectProperty",
+                   |    "knora-api:subjectType" : {
+                   |      "@id" : "anything:Nothing"
+                   |    },
+                   |    "knora-api:objectType" : {
+                   |      "@id" : "anything:Nothing"
+                   |    },
+                   |    "rdfs:comment" : {
+                   |      "@language" : "en",
+                   |      "@value" : "Refers to the other Nothing of a Nothing"
+                   |    },
+                   |    "rdfs:label" : {
+                   |      "@language" : "en",
+                   |      "@value" : "has nothingness"
+                   |    },
+                   |    "rdfs:subPropertyOf" : {
+                   |      "@id" : "knora-api:hasLinkTo"
+                   |    }
+                   |  } ],
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+            Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                responseAsInput.properties should ===(paramsAsInput.properties)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "add a cardinality for the property anything:hasOtherNothing to the class anything:Nothing" in {
+            val params =
+                s"""
+                   |{
+                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "$anythingLastModDate",
+                   |  "@graph" : [ {
+                   |    "@id" : "anything:Nothing",
+                   |    "@type" : "owl:Class",
+                   |    "rdfs:subClassOf" : {
+                   |      "@type": "owl:Restriction",
+                   |      "owl:maxCardinality" : 1,
+                   |      "owl:onProperty" : {
+                   |        "@id" : "anything:hasOtherNothing"
+                   |      }
+                   |    }
+                   |  } ],
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing".toSmartIri,
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothingValue".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
+            )
+
+            // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+            val paramsWithAddedLinkValueCardinality = paramsAsInput.copy(
+                classes = paramsAsInput.classes.map {
+                    case (classIri, classDef) =>
+                        val hasOtherNothingValueCardinality = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothingValue".toSmartIri ->
+                            classDef.directCardinalities("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing".toSmartIri)
+
+                        classIri -> classDef.copy(
+                            directCardinalities = classDef.directCardinalities + hasOtherNothingValueCardinality
+                        )
+                }
+            )
+
+            Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                responseAsInput.classes.head._2.directCardinalities should ===(paramsWithAddedLinkValueCardinality.classes.head._2.directCardinalities)
+
+                // Check that cardinalities were inherited from knora-api:Resource.
+                getPropertyIrisFromResourceClassResponse(responseJsonDoc) should ===(expectedProperties)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "remove the cardinality for the property anything:hasOtherNothing from the class anything:Nothing" in {
+            val params =
+                s"""
+                   |{
+                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "$anythingLastModDate" ,
+                   |  "@graph" : [ {
+                   |    "@id" : "anything:Nothing",
+                   |    "@type" : "owl:Class"
+                   |  } ],
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            val expectedProperties: Set[SmartIri] = Set(
+                "http://api.knora.org/ontology/knora-api/v2#attachedToUser".toSmartIri,
+                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#lastModificationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#creationDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#hasPermissions".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#attachedToProject".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#isDeleted".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteDate".toSmartIri,
+                "http://api.knora.org/ontology/knora-api/v2#deleteComment".toSmartIri
+            )
+
+            Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                responseAsInput.classes.head._2.directCardinalities.isEmpty should ===(true)
+
+                // Check that cardinalities were inherited from knora-api:Resource.
+                getPropertyIrisFromResourceClassResponse(responseJsonDoc) should ===(expectedProperties)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "delete the property anything:hasOtherNothing" in {
+            val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
+            val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
+
+            Delete(s"/v2/ontologies/properties/$propertySegment?lastModificationDate=$lastModificationDate") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+                responseJsonDoc.requireStringWithValidation("@id", stringFormatter.toSmartIriWithErr) should ===("http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri)
+                val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+                assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
         "create a property anything:hasNothingness with knora-api:subjectType anything:Nothing" in {
             val params =
                 s"""

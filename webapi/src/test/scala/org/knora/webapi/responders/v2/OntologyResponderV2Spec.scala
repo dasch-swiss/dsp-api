@@ -1857,47 +1857,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         }
 
-        "not create a class anything:WildThing with a cardinality for anything:hasInterestingThing but without a cardinality for anything:hasInterestingThingValue" in {
-            val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
-
-            val classInfoContent = ClassInfoContentV2(
-                classIri = classIri,
-                predicates = Map(
-                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-                    ),
-                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        objects = Seq(StringLiteralV2("wild thing", Some("en")))
-                    ),
-                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
-                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
-                    )
-                ),
-                directCardinalities = Map(
-                    AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
-                ),
-                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
-                ontologySchema = ApiV2WithValueObjects
-            )
-
-            actorUnderTest ! CreateClassRequestV2(
-                classInfoContent = classInfoContent,
-                lastModificationDate = anythingLastModDate,
-                apiRequestID = UUID.randomUUID,
-                requestingUser = anythingAdminUser
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    if (printErrorMessages) println(msg.cause.getMessage)
-                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
-            }
-        }
-
-        "not create a class anything:WildThing with a cardinality for anything:hasInterestingThingValue but without a cardinality for anything:hasInterestingThing" in {
+        "not allow the user to submit a direct cardinality on anything:hasInterestingThingValue" in {
             val classIri = AnythingOntologyIri.makeEntityIri("WildThing")
 
             val classInfoContent = ClassInfoContentV2(
@@ -1934,6 +1894,73 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure =>
                     if (printErrorMessages) println(msg.cause.getMessage)
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a class anything:CardinalityThing cardinalities on anything:hasInterestingThing and anything:hasInterestingThingValue" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
+
+            val classInfoContent = ClassInfoContentV2(
+                classIri = classIri,
+                predicates = Map(
+                    OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+                        objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+                    ),
+                    OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+                        objects = Seq(StringLiteralV2("thing with cardinalities", Some("en")))
+                    ),
+                    OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+                        predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+                        objects = Seq(StringLiteralV2("A thing that has cardinalities", Some("en")))
+                    )
+                ),
+                directCardinalities = Map(
+                    AnythingOntologyIri.makeEntityIri("hasInterestingThing") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+                ),
+                subClassOf = Set(AnythingOntologyIri.makeEntityIri("Thing")),
+                ontologySchema = ApiV2WithValueObjects
+            )
+
+            actorUnderTest ! CreateClassRequestV2(
+                classInfoContent = classInfoContent,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyV2 =>
+                    val externalOntology = msg.toOntologySchema(ApiV2WithValueObjects)
+                    assert(externalOntology.classes.size == 1)
+                    val readClassInfo = externalOntology.classes(classIri)
+                    Set(AnythingOntologyIri.makeEntityIri("hasInterestingThing"), AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")).subsetOf(readClassInfo.allResourcePropertyCardinalities.keySet) should ===(true)
+
+                    val metadata = externalOntology.ontologyMetadata
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "delete the class anything:CardinalityThing" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
+
+            actorUnderTest ! DeleteClassRequestV2(
+                classIri = classIri,
+                lastModificationDate = anythingLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = anythingAdminUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: ReadOntologyMetadataV2 =>
+                    assert(msg.ontologies.size == 1)
+                    val metadata = msg.ontologies.head
+                    val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+                    assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+                    anythingLastModDate = newAnythingLastModDate
             }
         }
 
