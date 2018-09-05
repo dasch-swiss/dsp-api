@@ -86,6 +86,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
@@ -1503,6 +1504,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
                 assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
+            }
+        }
+
+        "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
+
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+                val zippedFilenames = collection.mutable.Set.empty[String]
+
+                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+                    var zipEntry: ZipEntry = null
+
+                    while ( {
+                        zipEntry = zipInputStream.getNextEntry
+                        zipEntry != null
+                    }) {
+                        zippedFilenames.add(zipEntry.getName)
+                    }
+                }
+
+                assert(zippedFilenames == Set("p0001-empty-thing.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
             }
         }
 
