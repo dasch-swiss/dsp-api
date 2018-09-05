@@ -15,9 +15,7 @@ COPY . /src
 ## generate deployment packaging
 RUN \
   cd /src && \
-  sbt stage && \
-  mkdir /webapi && \
-  cp -r /src/target/universal/stage/* /webapi
+  sbt stage
 
 ##################################
 ## starting second stage
@@ -34,7 +32,7 @@ RUN wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-do
     rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip
 
 ## get the packaged webapi from the build stage
-COPY --from=build-stage /webapi /webapi
+COPY --from=build-stage /src/target/universal/stage /webapi
 
 # Expose the webapi default port
 EXPOSE 3333
