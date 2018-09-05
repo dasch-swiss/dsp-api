@@ -1694,7 +1694,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Check that the cardinalities are valid, and add any inherited cardinalities.
 
-                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                (internalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = internalClassDef,
                     allBaseClassIris = allBaseClassIris,
                     cacheData = cacheData
@@ -1702,16 +1702,16 @@ class OntologyResponderV2 extends Responder {
 
                 // Prepare to update the ontology cache, undoing the SPARQL-escaping of the input.
 
-                unescapedInputClassDef = internalClassDef.unescape
-
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
                 inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
-                    case (propertyIri, _) => internalClassDef.directCardinalities.contains(propertyIri)
+                    case (propertyIri, _) => internalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
                 }
 
+                unescapedClassDefWithLinkValueProps = internalClassDefWithLinkValueProps.unescape
+
                 readClassInfo = ReadClassInfoV2(
-                    entityInfoContent = unescapedInputClassDef,
+                    entityInfoContent = unescapedClassDefWithLinkValueProps,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -1729,7 +1729,7 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
-                    classDef = internalClassDef,
+                    classDef = internalClassDefWithLinkValueProps,
                     lastModificationDate = createClassRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
@@ -1744,8 +1744,8 @@ class OntologyResponderV2 extends Responder {
 
                 loadedClassDef <- loadClassDefinition(internalClassIri)
 
-                _ = if (loadedClassDef != unescapedInputClassDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedInputClassDef, but $loadedClassDef was saved")
+                _ = if (loadedClassDef != unescapedClassDefWithLinkValueProps) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
@@ -1805,17 +1805,17 @@ class OntologyResponderV2 extends Responder {
 
     /**
       * Before creating a new class or adding cardinalities to an existing class, checks the validity of the
-      * cardinalities directly defined on the class.
+      * cardinalities directly defined on the class. Adds link value properties for the corresponding
+      * link properties.
       *
       * @param internalClassDef the internal definition of the class.
       * @param allBaseClassIris the IRIs of all the class's base classes, including the class itself.
       * @param cacheData        the ontology cache.
-      * @return the result of combining the class's directly defined cardinalities with its inherited ones,
-      *         and letting directly defined cardinalities override inherited ones.
+      * @return the updated class definition, and the cardinalities resulting from inheritance.
       */
     private def checkCardinalitiesBeforeAdding(internalClassDef: ClassInfoContentV2,
                                                allBaseClassIris: Set[SmartIri],
-                                               cacheData: OntologyCacheData): Map[SmartIri, KnoraCardinalityInfo] = {
+                                               cacheData: OntologyCacheData): (ClassInfoContentV2, Map[SmartIri, KnoraCardinalityInfo]) = {
         // If the class has cardinalities, check that the properties are already defined as Knora properties.
 
         val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
@@ -1830,32 +1830,38 @@ class OntologyResponderV2 extends Responder {
         val linkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkProp).map(_.entityInfoContent.propertyIri)
         val linkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkValueProp).map(_.entityInfoContent.propertyIri)
 
-        // Make sure there is a link value property for each link property.
+        // Don't allow link value prop cardinalities to be included in the request.
 
-        val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
-
-        if (missingLinkValueProps.nonEmpty) {
-            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}")
+        if (linkValuePropsInClass.nonEmpty) {
+            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link value properties: ${linkValuePropsInClass.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically.")
         }
 
-        // Make sure there is a link property for each link value property.
+        // Add a link value prop cardinality for each link prop cardinality.
 
-        val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
+        val linkValuePropCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = linkPropsInClass.map {
+            linkPropIri =>
+                val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
 
-        if (missingLinkProps.nonEmpty) {
-            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}")
-        }
+                // Ensure that the link value prop exists.
+                cacheData.ontologies(linkValuePropIri.getOntologyFromEntity).properties.getOrElse(linkValuePropIri, throw NotFoundException(s"Link value property <$linkValuePropIri> not found"))
+
+                linkValuePropIri -> internalClassDef.directCardinalities(linkPropIri)
+        }.toMap
+
+        val classDefWithLinkValueProps = internalClassDef.copy(
+            directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
+        )
 
         // Get the cardinalities that the class can inherit.
 
-        val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = internalClassDef.subClassOf.flatMap {
+        val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = classDefWithLinkValueProps.subClassOf.flatMap {
             baseClassIri => cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
         }.toMap
 
         // Check that the cardinalities directly defined on the class are compatible with any inheritable
         // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
 
-        val thisClassKnoraCardinalities = internalClassDef.directCardinalities.map {
+        val thisClassKnoraCardinalities = classDefWithLinkValueProps.directCardinalities.map {
             case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
         }
 
@@ -1888,7 +1894,7 @@ class OntologyResponderV2 extends Responder {
         }.toMap
 
         checkSubjectClassConstraintsViaCardinalities(
-            internalClassDef = internalClassDef,
+            internalClassDef = classDefWithLinkValueProps,
             allBaseClassIris = allBaseClassIris,
             allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
             errorSchema = ApiV2WithValueObjects,
@@ -1904,12 +1910,12 @@ class OntologyResponderV2 extends Responder {
 
         maybePropertyAndSubproperty match {
             case Some((basePropertyIri, propertyIri)) =>
-                throw BadRequestException(s"Class <${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                throw BadRequestException(s"Class <${classDefWithLinkValueProps.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
 
             case None => ()
         }
 
-        cardinalitiesForClassWithInheritance
+        (classDefWithLinkValueProps, cardinalitiesForClassWithInheritance)
     }
 
     /**
@@ -2037,7 +2043,7 @@ class OntologyResponderV2 extends Responder {
                     baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
                 } + internalClassIri
 
-                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
                     cacheData = cacheData
@@ -2049,11 +2055,11 @@ class OntologyResponderV2 extends Responder {
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
                 inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
-                    case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
+                    case (propertyIri, _) => newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
                 }
 
                 readClassInfo = ReadClassInfoV2(
-                    entityInfoContent = newInternalClassDef,
+                    entityInfoContent = newInternalClassDefWithLinkValueProps,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2072,7 +2078,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     classIri = internalClassIri,
-                    cardinalitiesToAdd = internalClassDef.directCardinalities,
+                    cardinalitiesToAdd = newInternalClassDefWithLinkValueProps.directCardinalities,
                     lastModificationDate = addCardinalitiesRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
@@ -2087,8 +2093,8 @@ class OntologyResponderV2 extends Responder {
 
                 loadedClassDef <- loadClassDefinition(internalClassIri)
 
-                _ = if (loadedClassDef != newInternalClassDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDef, but $loadedClassDef was saved")
+                _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
@@ -2194,7 +2200,7 @@ class OntologyResponderV2 extends Responder {
                     baseClassIri => cacheData.subClassOfRelations.getOrElse(baseClassIri, Set.empty[SmartIri])
                 } + internalClassIri
 
-                cardinalitiesForClassWithInheritance = checkCardinalitiesBeforeAdding(
+                (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
                     cacheData = cacheData
@@ -2206,11 +2212,11 @@ class OntologyResponderV2 extends Responder {
                 propertyIrisOfAllCardinalitiesForClass = cardinalitiesForClassWithInheritance.keySet
 
                 inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = cardinalitiesForClassWithInheritance.filterNot {
-                    case (propertyIri, _) => newInternalClassDef.directCardinalities.contains(propertyIri)
+                    case (propertyIri, _) => newInternalClassDefWithLinkValueProps.directCardinalities.contains(propertyIri)
                 }
 
                 readClassInfo = ReadClassInfoV2(
-                    entityInfoContent = newInternalClassDef,
+                    entityInfoContent = newInternalClassDefWithLinkValueProps,
                     isResourceClass = true,
                     canBeInstantiated = true,
                     inheritedCardinalities = inheritedCardinalities,
@@ -2229,7 +2235,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     classIri = internalClassIri,
-                    newCardinalities = internalClassDef.directCardinalities,
+                    newCardinalities = newInternalClassDefWithLinkValueProps.directCardinalities,
                     lastModificationDate = changeCardinalitiesRequest.lastModificationDate,
                     currentTime = currentTime
                 ).toString()
@@ -2244,8 +2250,8 @@ class OntologyResponderV2 extends Responder {
 
                 loadedClassDef <- loadClassDefinition(internalClassIri)
 
-                _ = if (loadedClassDef != newInternalClassDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDef, but $loadedClassDef was saved")
+                _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
+                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
