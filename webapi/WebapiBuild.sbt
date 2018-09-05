@@ -194,6 +194,7 @@ lazy val webApiLibs = Seq(
     library.gatlingTestFramework,
     library.gwtServlet,
     library.jacksonScala,
+    library.jaxbApi,
     library.jsonldJava,
     library.jodd,
     library.jodaTime,
@@ -305,7 +306,7 @@ lazy val library =
         val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.0"
         val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
-
+        
         // provides akka jackson (json) support
         val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.21.0"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
@@ -314,6 +315,9 @@ lazy val library =
 
         // swagger (api documentation)
         val swaggerAkkaHttp        = "com.github.swagger-akka-http" %% "swagger-akka-http"        % "0.14.0"
+
+        // Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
+        val jaxbApi                = "javax.xml.bind"                % "jaxb-api"                 % "2.2.12"
     }
 
 lazy val javaRunOptions = Seq(
