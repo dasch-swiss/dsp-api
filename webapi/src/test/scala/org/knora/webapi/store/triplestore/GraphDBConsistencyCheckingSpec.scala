@@ -2538,7 +2538,7 @@ object GraphDBConsistencyCheckingSpec {
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/wrongTargetClass") AS ?resource0)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass0)
+          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label0)
@@ -2609,7 +2609,7 @@ object GraphDBConsistencyCheckingSpec {
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/twoLabels") AS ?resource)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)

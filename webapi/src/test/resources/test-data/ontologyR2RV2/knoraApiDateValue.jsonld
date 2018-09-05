@@ -81,9 +81,30 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteComment"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasPermissions"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:isDeleted"
       }
     }, {
       "@type" : "owl:Restriction",

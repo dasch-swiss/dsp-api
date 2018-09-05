@@ -1364,6 +1364,9 @@ following example from `knora-base`:
           owl:minCardinality "1"^^xsd:nonNegativeInteger ] .
 ```
 
+The cardinality of a link property must be the same as the cardinality
+of the corresponding link value property.
+
 Each `owl:Restriction` may have the predicate `salsah-gui:guiOrder` to
 indicate the order in which properties should be displayed in a GUI
 (see @ref:[The SALSAH GUI Ontology](salsah-gui.md)).
@@ -1465,6 +1468,10 @@ this simplified example:
     in the triplestore.
 -   Within the cardinalities of a class, there must be a link value
     property for each link property and vice versa.
+-   The cardinality of a link property must be the same as the cardinality
+    of the corresponding link value property.
+-   A cardinality on a property with a boolean value must be
+    `owl:cardinality 1` or `owl:maxCardinality 1`.
 -   Each class must be a subclass of all the classes that are subject
     class constraints of the properties in its cardinalities.
 -   If it's a resource class, all its directly defined cardinalities
@@ -1475,6 +1482,8 @@ this simplified example:
 -   If it's a standoff class, none of its cardinalities may be on Knora
     resource properties, and all its base classes with Knora IRIs must
     also be standoff classes.
+-   A class cannot have a cardinality on property P as well as a cardinality
+    on a subproperty of P.
 
 ### Restrictions on properties
 

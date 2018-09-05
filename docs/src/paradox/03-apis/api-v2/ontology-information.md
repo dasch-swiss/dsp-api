@@ -1087,6 +1087,10 @@ one language, either as an object or as an array of objects.
 
 At least one base class must be provided.
 
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
 
@@ -1219,6 +1223,10 @@ At least one base property must be provided, which can be
 subproperties, with the exception of file properties (subproperties of
 `knora-api:hasFileValue`) and link value properties (subproperties of
 `knora-api:hasLinkToValue`).
+
+If the property is a link property, the corresponding link value property
+(see @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
+will automatically be created.
 
 The property definition must specify its `knora-api:objectType`. If the
 new property is a subproperty of `knora-api:hasValue`, its
@@ -1357,6 +1365,10 @@ to the supported combinations given in
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
 
@@ -1407,6 +1419,10 @@ to the supported combinations given in
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+@ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
 
@@ -1421,6 +1437,10 @@ HTTP DELETE to http://host/v2/ontologies/properties/PROPERTY_IRI?lastModificatio
 
 The property IRI and the ontology's last modification date must be
 URL-encoded.
+
+If the property is a link property, the corresponding link value property
+(see @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources))
+will automatically be deleted.
 
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.

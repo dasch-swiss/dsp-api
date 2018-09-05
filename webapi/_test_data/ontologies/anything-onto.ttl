@@ -508,28 +508,16 @@
                       ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasBlueThing ;
+                         owl:onProperty :hasGeometry ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger
+                         salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                       ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasBlueThingValue ;
+                         owl:onProperty :hasGeoname ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+                         salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
                       ] ;
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeometry ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
-                      #] ,
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeoname ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
-                      #] ;
 
       knora-base:resourceIcon "thing.png" ;
 
@@ -545,7 +533,19 @@
 
 :BlueThing rdf:type owl:Class ;
 
-      rdfs:subClassOf :Thing ;
+      rdfs:subClassOf :Thing ,
+      [
+         rdf:type owl:Restriction ;
+         owl:onProperty :hasBlueThing ;
+         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+         salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger
+      ] ,
+      [
+         rdf:type owl:Restriction ;
+         owl:onProperty :hasBlueThingValue ;
+         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+         salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+      ] ;
 
       rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
 

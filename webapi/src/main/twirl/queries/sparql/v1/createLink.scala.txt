@@ -53,7 +53,7 @@ DELETE {
 } INSERT {
     GRAPH ?dataNamedGraph {
         @* Update the link source's last modification date. *@
-        ?resource knora-base:lastModificationDate ?currentTime .
+        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
 
         @{
             queries.sparql.v1.txt.generateInsertStatementsForCreateLink(resourceIri = resourceIri,

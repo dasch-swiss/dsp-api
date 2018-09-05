@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.responders.admin.GroupsResponderADM
 import org.knora.webapi.{BadRequestException, IRI}
-import spray.json.{DefaultJsonProtocol, JsonFormat, RootJsonFormat}
+import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -47,7 +47,7 @@ case class CreateGroupApiRequestADM(name: String,
                                     status: Boolean,
                                     selfjoin: Boolean) extends GroupsADMJsonProtocol {
 
-    def toJsValue = createGroupApiRequestADMFormat.write(this)
+    def toJsValue: JsValue = createGroupApiRequestADMFormat.write(this)
 }
 
 /**
@@ -63,7 +63,7 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
                                     status: Option[Boolean] = None,
                                     selfjoin: Option[Boolean] = None) extends GroupsADMJsonProtocol {
 
-    val parametersCount = List(
+    private val parametersCount = List(
         name,
         description,
         status,
@@ -74,7 +74,7 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
     if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
 
-    def toJsValue = changeGroupApiRequestADMFormat.write(this)
+    def toJsValue: JsValue = changeGroupApiRequestADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,8 +103,8 @@ case class GroupsGetADM(requestingUser: UserADM) extends GroupsResponderRequestA
 case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
-  * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
-  * names inside a project, it is required to supply the name of the project in conjunction with the shortname.
+  * Get everything about a single group identified through its IRI. A successful response will be
+  * an [[Option[GroupADM] ]], which will be `None` if the group was not found.
   *
   * @param groupIri   IRI of the group.
   * @param requestingUser the user initiating the request.
@@ -112,13 +112,22 @@ case class GroupsGetRequestADM(requestingUser: UserADM) extends GroupsResponderR
 case class GroupGetADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
-  * Get everything about a single group identified through it's IRI or shortname. Because it is only required to have unique
-  * names inside a project, it is required to supply the name of the project in conjunction with the shortname.
+  * Get everything about a single group identified through its IRI. The response will be a
+  * [[GroupGetResponseADM]], or an error if the group was not found.
   *
   * @param groupIri   IRI of the group.
   * @param requestingUser the user initiating the request.
   */
 case class GroupGetRequestADM(groupIri: IRI, requestingUser: UserADM) extends GroupsResponderRequestADM
+
+/**
+  * Get everything about a multiple groups identified by their IRIs. The response will be a
+  * [[Set[GroupGetResponseADM] ]], or an error if one or more groups was not found.
+  *
+  * @param groupIris the IRIs of the groups being requested.
+  * @param requestingUser the user initiating the request.
+  */
+case class MultipleGroupsGetRequestADM(groupIris: Set[IRI], requestingUser: UserADM) extends GroupsResponderRequestADM
 
 /**
   * Returns all members of the group identified by iri.

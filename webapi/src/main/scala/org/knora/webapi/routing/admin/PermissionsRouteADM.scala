@@ -19,15 +19,15 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
-import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
@@ -37,13 +37,10 @@ import scala.concurrent.ExecutionContext
 @Path("/admin/permissions")
 class PermissionsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
 
-    private val schemes = Array("http", "https")
-    private val urlValidator = new UrlValidator(schemes)
-
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager = system.actorSelection("/user/responderManager")
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
     def knoraApiPath: Route = {
 

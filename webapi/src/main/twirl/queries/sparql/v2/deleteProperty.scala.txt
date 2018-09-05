@@ -29,6 +29,8 @@
  * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
  * @param ontologyIri the IRI of the ontology containing the property.
  * @param propertyIri the IRI of the property to be deleted.
+ * @param maybeLinkValuePropertyIri if propertyIri refers to a link property, the IRI of the corresponding link value
+ *        property, which will also be deleted.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
@@ -36,6 +38,7 @@
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   propertyIri: SmartIri,
+  maybeLinkValuePropertyIri: Option[SmartIri],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -49,6 +52,18 @@ DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
         ?property ?propertyPred ?propertyObj .
+
+        @maybeLinkValuePropertyIri match {
+
+            case Some(linkValuePropertyIri) => {
+
+                <@linkValuePropertyIri> ?linkValuePropertyPred ?linkValuePropertyObj .
+
+            }
+
+            case None => {}
+
+        }
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
@@ -73,6 +88,23 @@ WHERE {
 
         FILTER NOT EXISTS {
             ?s ?p ?property .
+        }
+
+        @maybeLinkValuePropertyIri match {
+
+            case Some(linkValuePropertyIri) => {
+
+                <@linkValuePropertyIri> rdf:type owl:ObjectProperty ;
+                    ?linkValuePropertyPred ?linkValuePropertyObj .
+
+                FILTER NOT EXISTS {
+                    ?q ?r <@linkValuePropertyIri> .
+                }
+
+            }
+
+            case None => {}
+
         }
     }
 }

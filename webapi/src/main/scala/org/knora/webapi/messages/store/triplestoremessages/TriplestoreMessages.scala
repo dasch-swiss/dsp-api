@@ -146,7 +146,7 @@ case class SparqlExtendedConstructResponse(statements: Map[SubjectV2, Map[IRI, S
 case class SparqlUpdateRequest(sparql: String) extends TriplestoreRequest
 
 /**
-  * Indicates that the requested SPARQL Update was executed and returned no errors..
+  * Indicates that the requested SPARQL Update was executed and returned no errors.
   */
 case class SparqlUpdateResponse()
 

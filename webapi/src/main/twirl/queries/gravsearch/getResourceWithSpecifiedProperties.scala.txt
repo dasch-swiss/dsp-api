@@ -1,0 +1,51 @@
+@*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi._
+@import org.knora.webapi.util.SmartIri
+
+@*
+ * Constructs a Gravsearch query that gets the metadata of a resource along with the values, if any, of the specified
+ * properties.
+ *
+ * @param resourceIri the IRI of the resource.
+ * @param propertyIris the IRIs of the properties to be queried.
+ *@
+@(resourceIri: IRI,
+  propertyIris: Seq[SmartIri])
+
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+  ?resource knora-api:isMainResource true .
+
+  @for((propertyIri, index) <- propertyIris.zipWithIndex) {
+    ?resource <@propertyIri> ?propertyObj@index .
+  }
+} WHERE {
+  BIND(<@resourceIri> AS ?resource)
+
+  ?resource a knora-api:Resource .
+
+  @for((propertyIri, index) <- propertyIris.zipWithIndex) {
+    OPTIONAL {
+      ?resource <@propertyIri> ?propertyObj@index .
+    }
+  }
+}

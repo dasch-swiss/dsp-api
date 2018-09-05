@@ -38,12 +38,17 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 CONSTRUCT {
     # include this inferred information in the results, needed to identify resources
     ?resource a knora-base:Resource ;
+        knora-base:isDeleted false ;
         knora-base:isMainResource true ;
         knora-base:attachedToProject ?resourceProject ;
         rdfs:label ?label ;
         a ?resourceType ;
         knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions .
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:creationDate ?creationDate ;
+        knora-base:lastModificationDate ?lastModificationDate ;
+        knora-base:deleteDate ?deleteDate ;
+        knora-base:deleteComment ?deleteComment .
 
     # include this inferred information in the results, needed to identify value properties
     ?resource knora-base:hasValue ?valueObject ;
@@ -57,11 +62,16 @@ CONSTRUCT {
         ?resourceLinkProperty ?referredResource .
 
     ?referredResource a knora-base:Resource ;
+        knora-base:isDeleted false ;
         rdfs:label ?referredResourceLabel ;
         a ?referredResourceType ;
         knora-base:attachedToUser ?referredResourceCreator ;
         knora-base:hasPermissions ?referredResourcePermissions ;
-        knora-base:attachedToProject ?referredResourceProject .
+        knora-base:attachedToProject ?referredResourceProject  ;
+        knora-base:creationDate ?referredResourceCreationDate ;
+        knora-base:lastModificationDate ?referredResourceLastModificationDate ;
+        knora-base:deleteDate ?referredResourceDeleteDate ;
+        knora-base:deleteComment ?referredResourceDeleteComment .
 
     ?valueObject knora-base:valueHasListNode  ?listNode .
     ?listNode rdfs:label ?listNodeLabel .
@@ -71,16 +81,24 @@ CONSTRUCT {
 
     ?resource rdf:type knora-base:Resource ;
         knora-base:isDeleted false ;
-        knora-base:attachedToProject ?resourceProject .
-
-    ?resource rdfs:label ?label .
+        knora-base:attachedToProject ?resourceProject ;
+        knora-base:attachedToUser ?resourceCreator ;
+        knora-base:hasPermissions ?resourcePermissions ;
+        knora-base:creationDate ?creationDate ;
+        rdfs:label ?label .
 
     GRAPH <http://www.ontotext.com/explicit> {
         ?resource a ?resourceType .
     }
 
-    ?resource knora-base:attachedToUser ?resourceCreator ;
-            knora-base:hasPermissions ?resourcePermissions .
+    OPTIONAL {
+        ?resource knora-base:lastModificationDate ?lastModificationDate .
+    }
+
+    OPTIONAL {
+        ?resource knora-base:deleteDate ?deleteDate ;
+            knora-base:deleteComment ?deleteComment .
+    }
 
     @* Check if this a full resource requests *@
     @if(preview == false) {
@@ -116,18 +134,26 @@ CONSTRUCT {
                 ?resource knora-base:hasLinkTo ?referredResource .
 
                 ?referredResource a knora-base:Resource ;
-                    knora-base:isDeleted false .
+                    knora-base:isDeleted false ;
+                    rdfs:label ?referredResourceLabel ;
+                    knora-base:attachedToUser ?referredResourceCreator ;
+                    knora-base:hasPermissions ?referredResourcePermissions ;
+                    knora-base:attachedToProject ?referredResourceProject ;
+                    knora-base:creationDate ?referredResourceCreationDate .
 
                 GRAPH <http://www.ontotext.com/explicit> {
                     ?resource ?resourceLinkProperty ?referredResource .
-
-                    ?referredResource rdfs:label ?referredResourceLabel ;
-                        a ?referredResourceType ;
-                        knora-base:attachedToUser ?referredResourceCreator ;
-                        knora-base:hasPermissions ?referredResourcePermissions ;
-                        knora-base:attachedToProject ?referredResourceProject .
+                    ?referredResource a ?referredResourceType .
                 }
 
+                OPTIONAL {
+                    ?referredResource knora-base:lastModificationDate ?referredResourceLastModificationDate .
+                }
+
+                OPTIONAL {
+                    ?referredResource knora-base:deleteDate ?referredResourceDeleteDate ;
+                        knora-base:deleteComment ?referredResourceDeleteComment .
+                }
             }
         }
     }

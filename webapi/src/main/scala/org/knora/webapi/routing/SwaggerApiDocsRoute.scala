@@ -58,7 +58,7 @@ class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: Log
         List(Scheme.HTTP)
     }
 
-    override val host = settings.externalKnoraApiHostPort //the url of your api, not swagger's json endpoint
+    override val host: String = settings.externalKnoraApiHostPort //the url of your api, not swagger's json endpoint
     override val basePath = "/"    //the basePath for the API you are exposing
     override val apiDocsPath = "api-docs" //where you want the swagger-json endpoint exposed
     override val info = Info(version = "1.3.0") //provides license and other description details

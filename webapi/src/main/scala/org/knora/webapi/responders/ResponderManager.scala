@@ -44,6 +44,7 @@ import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMa
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
+import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
@@ -108,7 +109,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
       */
-    protected final def makeDefaultStandoffRouterV1: ActorRef = makeActor(Props[StandoffResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultStandoffRouterV1: ActorRef = makeActor(Props[StandoffResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
@@ -119,7 +120,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
       */
-    protected final def makeDefaultUsersRouterV1: ActorRef = makeActor(Props[UsersResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultUsersRouterV1: ActorRef = makeActor(Props[UsersResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
@@ -130,7 +131,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
       */
-    protected final def makeDefaultListsRouterV1: ActorRef = makeActor(Props[ListsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultListsRouterV1: ActorRef = makeActor(Props[ListsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -141,7 +142,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
       */
-    protected final def makeDefaultSearchRouterV1: ActorRef = makeActor(Props[SearchResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultSearchRouterV1: ActorRef = makeActor(Props[SearchResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
@@ -152,7 +153,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
       */
-    protected final def makeDefaultOntologyRouterV1: ActorRef = makeActor(Props[OntologyResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultOntologyRouterV1: ActorRef = makeActor(Props[OntologyResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
@@ -163,7 +164,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
       */
-    protected final def makeDefaultProjectsRouterV1: ActorRef = makeActor(Props[ProjectsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultProjectsRouterV1: ActorRef = makeActor(Props[ProjectsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
@@ -174,7 +175,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[CkanResponderV1]].
       */
-    protected final def makeDefaultCkanRouterV1: ActorRef = makeActor(Props[CkanResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), CKAN_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultCkanRouterV1: ActorRef = makeActor(Props[CkanResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), CKAN_V1_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Ckan responder. Subclasses can override this
@@ -190,32 +191,37 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV2]].
       */
-    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(Props[OntologyResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(Props[OntologyResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV2]].
       */
-    protected final def makeDefaultSearchRouterV2: ActorRef = makeActor(Props[SearchResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultSearchRouterV2: ActorRef = makeActor(Props[SearchResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV2]].
       */
-    protected final def makeDefaultResourcesRouterV2: ActorRef = makeActor(Props[ResourcesResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RESOURCES_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultResourcesRouterV2: ActorRef = makeActor(Props[ResourcesResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RESOURCES_V2_ACTOR_NAME)
+
+    /**
+      * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV2]].
+      */
+    protected final def makeDefaultValuesRouterV2: ActorRef = makeActor(Props[ValuesResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), VALUES_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[PersistentMapResponderV2]].
       */
-    protected final def makeDefaultPersistentMapRouterV2: ActorRef = makeActor(Props[PersistentMapResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERSISTENT_MAP_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultPersistentMapRouterV2: ActorRef = makeActor(Props[PersistentMapResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERSISTENT_MAP_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV2]].
       */
-    protected final def makeDefaultStandoffRouterV2: ActorRef = makeActor(Props[StandoffResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultStandoffRouterV2: ActorRef = makeActor(Props[StandoffResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_V2_ACTOR_NAME)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV2]].
       */
-    protected final def makeDefaultListsRouterV2: ActorRef = makeActor(Props[ListsResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_ROUTER_V2_ACTOR_NAME)
+    protected final def makeDefaultListsRouterV2: ActorRef = makeActor(Props[ListsResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_V2_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
@@ -234,6 +240,12 @@ class ResponderManager extends Actor with ActorLogging {
       * member to substitute a custom actor instead of the default resources responder.
       */
     protected val resourcesRouterV2: ActorRef = makeDefaultResourcesRouterV2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default resources responder.
+      */
+    protected val valuesRouterV2: ActorRef = makeDefaultValuesRouterV2
 
     /**
       * The Akka routing actor that should receive messages addressed to the persistent map responder. Subclasses can override this
@@ -260,7 +272,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[GroupsResponderADM]].
       */
-    protected final def makeDefaultGroupsRouterADM: ActorRef = makeActor(Props[GroupsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), GROUPS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultGroupsRouterADM: ActorRef = makeActor(Props[GroupsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), GROUPS_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the groups responder. Subclasses can override this
@@ -271,7 +283,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderADM]].
       */
-    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(Props[ListsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(Props[ListsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
@@ -282,7 +294,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderADM]].
       */
-    protected final def makeDefaultPermissionsRouterADM: ActorRef = makeActor(Props[PermissionsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERMISSIONS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultPermissionsRouterADM: ActorRef = makeActor(Props[PermissionsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERMISSIONS_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
@@ -293,7 +305,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderADM]].
       */
-    protected final def makeDefaultProjectsRouterADM: ActorRef = makeActor(Props[ProjectsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultProjectsRouterADM: ActorRef = makeActor(Props[ProjectsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
@@ -304,18 +316,18 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[StoresResponderADM]].
       */
-    protected final def makeDefaultStoreRouterADM: ActorRef = makeActor(Props[StoresResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STORE_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultStoreRouterADM: ActorRef = makeActor(Props[StoresResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STORE_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Store responder.
       */
-    protected val storeRouterV1: ActorRef = makeDefaultStoreRouterADM
+    protected val storeRouterADM: ActorRef = makeDefaultStoreRouterADM
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(Props[UsersResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_ROUTER_ADM_ACTOR_NAME)
+    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(Props[UsersResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_ADM_ACTOR_NAME)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
@@ -341,6 +353,7 @@ class ResponderManager extends Actor with ActorLogging {
         case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => ontologiesRouterV2.forward(ontologiesResponderRequestV2)
         case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
         case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
+        case valuesResponderRequestV2: ValuesResponderRequestV2 => valuesRouterV2.forward(valuesResponderRequestV2)
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => standoffRouterV2.forward(standoffResponderRequestV2)
         case listsResponderRequestV2: ListsResponderRequestV2 => listsRouterV2.forward(listsResponderRequestV2)
@@ -350,7 +363,7 @@ class ResponderManager extends Actor with ActorLogging {
         case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
-        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterV1.forward(storeResponderRequestADM)
+        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterADM.forward(storeResponderRequestADM)
         case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)

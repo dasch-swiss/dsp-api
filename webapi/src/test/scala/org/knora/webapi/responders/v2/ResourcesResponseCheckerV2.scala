@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.v2
 
 import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.SmartIri
 
 object ResourcesResponseCheckerV2 {
@@ -41,7 +42,7 @@ object ResourcesResponseCheckerV2 {
                 // compare resource information
                 assert(expectedResource.resourceIri == receivedResource.resourceIri, "resource Iri does not match")
                 assert(expectedResource.label == receivedResource.label, "label does not match")
-                assert(expectedResource.resourceClass == receivedResource.resourceClass, "resource class does not match")
+                assert(expectedResource.resourceClassIri == receivedResource.resourceClassIri, "resource class does not match")
 
                 // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
                 // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]

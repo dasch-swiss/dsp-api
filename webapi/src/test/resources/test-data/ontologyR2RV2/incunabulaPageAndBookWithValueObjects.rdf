@@ -18,129 +18,147 @@
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Diese Resource-Klasse beschreibt ein Buch</rdfs:comment>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Book</rdfs:label>
 	<rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b0"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b1"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b2"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b3"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b4"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b5"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b6"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b7"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b8"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b9"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b10"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b11"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b12"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b13"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b14"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b15"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b16"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b17"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b18"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b19"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b20"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b0"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b1"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b2"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b3"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b4"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b5"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b6"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b7"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b8"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b9"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b10"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b11"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b12"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b13"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b14"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b15"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b16"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b17"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b18"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b19"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b20"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b21"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b22"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b23"/>
 </owl:Class>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b0">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b0">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b1">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b1">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b2">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b2">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b3">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b3">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b4">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b5">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b4">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b6">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b5">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b7">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b6">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b8">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b7">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b9">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b10">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b8">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b11">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b9">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b12">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#title"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b10">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b13">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b11">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b14">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasAuthor"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b12">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b15">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#publisher"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b13">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b16">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">4</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b14">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b17">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b15">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b18">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b16">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b19">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#location"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b17">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b20">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#url"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b18">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b21">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">9</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#physical_desc"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b19">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b22">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#note"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b20">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b23">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment"/>
@@ -152,141 +170,159 @@
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A page is a part of a book</rdfs:comment>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Page</rdfs:label>
 	<rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b21"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b22"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b23"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b24"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b25"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b26"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b27"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b28"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b29"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b30"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b31"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b32"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b33"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b34"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b35"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b36"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b37"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b38"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b39"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b40"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b41"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b42"/>
-	<rdfs:subClassOf rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b43"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b24"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b25"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b26"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b27"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b28"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b29"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b30"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b31"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b32"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b33"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b34"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b35"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b36"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b37"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b38"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b39"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b40"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b41"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b42"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b43"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b44"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b45"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b46"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b47"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b48"/>
+	<rdfs:subClassOf rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b49"/>
 </owl:Class>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b21">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b24">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b22">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b25">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b23">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b26">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b24">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b27">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b28">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b29">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLink"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b25">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b30">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b26">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b31">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b27">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b32">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b28">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b33">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStillImageFileValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b29">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b34">
+	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
+	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
+	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+</owl:Restriction>
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b35">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b30">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b36">
 	<knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isInherited>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b31">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b37">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b32">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b38">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#description"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b33">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b39">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</salsah-gui:guiOrder>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOf"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b34">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b40">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">2</salsah-gui:guiOrder>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b35">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b41">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">3</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#seqnum"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b36">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b42">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">5</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#citation"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b37">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b43">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">6</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#page_comment"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b38">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b44">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">7</salsah-gui:guiOrder>
 	<owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:cardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#origname"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b39">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b45">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSideband"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b40">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b46">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasLeftSidebandValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b41">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b47">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSideband"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b42">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b48">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">11</salsah-gui:guiOrder>
 	<owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1</owl:maxCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#hasRightSidebandValue"/>
 </owl:Restriction>
-<owl:Restriction rdf:nodeID="genid-a495f24a940241f797069754a3f93bfb-b43">
+<owl:Restriction rdf:nodeID="genid-845812b92eaa417cb070d861f9ddc7cd-b49">
 	<salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">12</salsah-gui:guiOrder>
 	<owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">0</owl:minCardinality>
 	<owl:onProperty rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/v2#transcription"/>

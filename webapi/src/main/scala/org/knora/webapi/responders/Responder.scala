@@ -30,7 +30,7 @@ import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 /**
-  * A trait providing values that are commonly used in Knora API v1 responders.
+  * A trait providing values that are commonly used in Knora responders.
   */
 trait Responder extends Actor with ActorLogging {
     /**
