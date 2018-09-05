@@ -1087,8 +1087,8 @@ one language, either as an object or as an array of objects.
 
 At least one base class must be provided.
 
-For each cardinality for a link property, there must also be a cardinality for
-the corresponding link value property, and vice versa (see
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
 @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
@@ -1365,8 +1365,8 @@ to the supported combinations given in
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
-For each cardinality for a link property, there must also be a cardinality for
-the corresponding link value property, and vice versa (see
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
 @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
@@ -1419,8 +1419,8 @@ to the supported combinations given in
 `OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
 unquoted integer.)
 
-For each cardinality for a link property, there must also be a cardinality for
-the corresponding link value property, and vice versa (see
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
 @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
 
 A successful response will be a JSON-LD document providing the new class
