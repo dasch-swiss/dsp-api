@@ -1,7 +1,7 @@
 ##################################
 ## first stage does the building
 ##################################
-FROM dhlabbasel/sbt-ivy2-cache as build-stage
+FROM dhlabbasel/scala-sbt as build-stage
 
 MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
 
@@ -20,7 +20,7 @@ RUN \
 ##################################
 ## starting second stage
 ##################################
-FROM openjdk:8-jre-alpine
+FROM openjdk:10-jre-alpine
 
 ## need bash for the webapi start script
 RUN apk add --no-cache bash
