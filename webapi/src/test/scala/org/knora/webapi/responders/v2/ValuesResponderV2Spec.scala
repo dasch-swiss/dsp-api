@@ -636,8 +636,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
-            val valueHasDecimal = 4.3
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val valueHasDecimal = BigDecimal("4.3")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -677,7 +677,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create a duplicate decimal value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
-            val valueHasDecimal = 4.3
+            val valueHasDecimal = BigDecimal("4.3")
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -703,7 +703,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
@@ -787,7 +787,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val valueHasBoolean = true
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -830,7 +830,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -898,7 +898,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
             val valueHasIntervalEnd = BigDecimal("3.4")
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -971,7 +971,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1034,13 +1034,37 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not create a list value referring to a nonexistent list node" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent"
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "create a color value" in {
             // Add the value.
 
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3333"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1109,7 +1133,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://www.knora.org"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1178,7 +1202,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2661604"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -2251,5 +2275,456 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "update a decimal value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val valueHasDecimal = BigDecimal("3.1415926")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = decimalValueIri.get,
+                    valueContent = DecimalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasDecimal = valueHasDecimal
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => decimalValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = decimalValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: DecimalValueContentV2 => savedValue.valueHasDecimal should ===(valueHasDecimal)
+                case _ => throw AssertionException(s"Expected decimal value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a decimal value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
+            val valueHasDecimal = BigDecimal("3.1415926")
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = decimalValueIri.get,
+                    valueContent = DecimalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasDecimal = valueHasDecimal
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a date value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            val submittedValueContent = DateValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasStartJDN = 2264908,
+                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasEndJDN = 2265272,
+                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+            )
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = dateValueIri.get,
+                    valueContent = submittedValueContent
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => dateValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = dateValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: DateValueContentV2 =>
+                    savedValue.valueHasCalendar should ===(submittedValueContent.valueHasCalendar)
+                    savedValue.valueHasStartJDN should ===(submittedValueContent.valueHasStartJDN)
+                    savedValue.valueHasStartPrecision should ===(submittedValueContent.valueHasStartPrecision)
+                    savedValue.valueHasEndJDN should ===(submittedValueContent.valueHasEndJDN)
+                    savedValue.valueHasEndPrecision should ===(submittedValueContent.valueHasEndPrecision)
+
+                case _ => throw AssertionException(s"Expected date value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a date value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
+
+            val submittedValueContent = DateValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasStartJDN = 2264908,
+                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasEndJDN = 2265272,
+                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+            )
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = dateValueIri.get,
+                    valueContent = submittedValueContent
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a boolean value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+            val valueHasBoolean = false
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = booleanValueIri.get,
+                    valueContent = BooleanValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasBoolean = valueHasBoolean
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => booleanValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = booleanValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: BooleanValueContentV2 => savedValue.valueHasBoolean should ===(valueHasBoolean)
+                case _ => throw AssertionException(s"Expected boolean value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a boolean value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+            val valueHasBoolean = false
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = booleanValueIri.get,
+                    valueContent = BooleanValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasBoolean = valueHasBoolean
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a geometry value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val valueHasGeometry = """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = geometryValueIri.get,
+                    valueContent = GeomValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeometry = valueHasGeometry
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => geometryValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = geometryValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: GeomValueContentV2 => savedValue.valueHasGeometry should ===(valueHasGeometry)
+                case _ => throw AssertionException(s"Expected geometry value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a geometry value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val valueHasGeometry = """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = geometryValueIri.get,
+                    valueContent = GeomValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasGeometry = valueHasGeometry
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update an interval value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val valueHasIntervalStart = BigDecimal("1.23")
+            val valueHasIntervalEnd = BigDecimal("3.45")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intervalValueIri.get,
+                    valueContent = IntervalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasIntervalStart = valueHasIntervalStart,
+                        valueHasIntervalEnd = valueHasIntervalEnd
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => intervalValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intervalValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: IntervalValueContentV2 =>
+                    savedValue.valueHasIntervalStart should ===(valueHasIntervalStart)
+                    savedValue.valueHasIntervalEnd should ===(valueHasIntervalEnd)
+
+                case _ => throw AssertionException(s"Expected interval value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update an interval value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val valueHasIntervalStart = BigDecimal("1.23")
+            val valueHasIntervalEnd = BigDecimal("3.45")
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intervalValueIri.get,
+                    valueContent = IntervalValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasIntervalStart = valueHasIntervalStart,
+                        valueHasIntervalEnd = valueHasIntervalEnd
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a list value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/treeList02"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = listValueIri.get,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => listValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = listValueIri.get,
+                requestingUser = anythingUser
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: HierarchicalListValueContentV2 =>
+                    savedValue.valueHasListNode should ===(valueHasListNode)
+
+                case _ => throw AssertionException(s"Expected list value, got $valueFromTriplestore")
+            }
+        }
+
+        "not update a list value without changing it" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/treeList02"
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = listValueIri.get,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "not update a list value with the IRI of a nonexistent list node" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent"
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = listValueIri.get,
+                    valueContent = HierarchicalListValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasListNode = valueHasListNode
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
     }
 }

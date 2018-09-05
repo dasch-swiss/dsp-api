@@ -139,6 +139,13 @@ class ValuesResponderV2 extends Responder {
                     requestingUser = createValueRequest.requestingUser
                 )
 
+                // If this is a list value, check that it points to a real list node.
+
+                _ <- submittedInternalValueContent match {
+                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case _ => FastFuture.successful(())
+                }
+
                 // Check that the resource class's cardinality for the submitted property allows another value to be added
                 // for that property.
 
@@ -501,6 +508,13 @@ class ValuesResponderV2 extends Responder {
                     valueContent = submittedInternalValueContent,
                     requestingUser = updateValueRequest.requestingUser
                 )
+
+                // If this is a list value, check that it points to a real list node.
+
+                _ <- submittedInternalValueContent match {
+                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case _ => FastFuture.successful(())
+                }
 
                 // Check that the updated value would not duplicate the current value version.
 
@@ -1377,6 +1391,23 @@ class ValuesResponderV2 extends Responder {
                 // We didn't find the LinkValue. This shouldn't happen.
                 throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
         }
+    }
+
+    /**
+      * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+      *
+      * @param listNodeIri the IRI of the list node.
+      */
+    def checkListNodeExists(listNodeIri: IRI): Future[Unit] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+
+            checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+
+            _ = if (!checkListNodeExistsResponse.result) {
+                throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
+            }
+        } yield ()
     }
 
     /**

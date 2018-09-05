@@ -198,6 +198,20 @@ WHERE {
 
     ?currentValue knora-base:isDeleted false .
 
+    @* If this is a list value, make sure the list node that it points to exists and is a ListNode. *@
+
+    @value match {
+
+        case listValue: HierarchicalListValueContentV2 => {
+
+            <@{listValue.valueHasListNode}> a knora-base:ListNode .
+
+        }
+
+        case _ => {}
+
+    }
+
     @*
 
     Check the state of any LinkValues to be updated for resource references.
