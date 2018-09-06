@@ -9,7 +9,6 @@ ENV LANG="en_US.UTF-8"
 ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
 
 ## copy source code
-RUN mkdir /src
 COPY . /src
 
 ## generate deployment packaging
@@ -20,13 +19,13 @@ RUN \
 ##################################
 ## starting second stage
 ##################################
-FROM openjdk:10-jre-alpine
+FROM openjdk:10-jre-slim
 
 ## need bash for the webapi start script
-RUN apk add --no-cache bash
+# RUN apk add --no-cache bash
 
 ## install yourkit profiler
-RUN apk add --no-cache libc6-compat
+# RUN apk add --no-cache libc6-compat
 RUN wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && \
     unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && \
     rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip
