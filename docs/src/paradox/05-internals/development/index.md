@@ -32,5 +32,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Docker Cheat Sheet](docker-cheat-sheet.md)
 - [Monitoring Knora](monitoring.md)
 - [Profiling Knora](profiling.md)
+- [Starting the Knora Stack inside Docker Container](docker-compose.md)
 
 @@@

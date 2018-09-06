@@ -1,15 +1,22 @@
+# Please define the following environment variables:
+# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file
+# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data
+#
+# - KNORA_GDB_IMAGE - is defined in the .env file in this directory. If you would like to use GraphDB-Free, then
+# set environment variable with something like KNORA_GDB_IMAGE=dhlabbasel/graphdb-free:8.3.1
+
 version: '3'
 
 services:
 
   graphdb:
-    image: ontotext/graphdb:8.5.0-se
+    image: ${KNORA_GDB_IMAGE}
     ports:
     - "7200:7200"
     volumes:
+    - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
+    - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
     - ${PWD}/webapi/scripts/KnoraRules.pie:/graphdb/KnoraRules.pie
-    - ${PWD}/triplestores/graphdb/GRAPHDB_SE.license:/graphdb/GRAPHDB_SE.license
-    - ${PWD}/triplestores/graphdb/home:/opt/graphdb/home:delegated
     networks:
     - knora-net
     environment:
