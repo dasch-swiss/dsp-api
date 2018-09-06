@@ -17,8 +17,10 @@ RUN \
 # starting second stage
 FROM openjdk:10-jre-slim
 
-## need bash for the webapi start script
-# RUN apk add --no-cache bash
+ENV LANG="en_US.UTF-8"
+ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
+ENV KNORA_SALSAH1_DEPLOYED=true
+ENV KNORA_SALSAH1_WORKDIR=/salsah
 
 ## get the packaged webapi from the build stage
 COPY --from=build-stage /src/target/universal/stage /salsah
@@ -26,4 +28,4 @@ COPY --from=build-stage /src/target/universal/stage /salsah
 # Expose the salsah default port
 EXPOSE 3335
 
-CMD ["/salsah/bin/salsah"]
+ENTRYPOINT ["/salsah/bin/salsah"]
