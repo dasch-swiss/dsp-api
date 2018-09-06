@@ -59,9 +59,9 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     def getUsers: Route = path("admin" / "users") {
         get {
             requestContext =>
-                    val requestMessage: Future[UsersGetRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield UsersGetRequestADM(requestingUser = requestingUser)
+                val requestMessage: Future[UsersGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield UsersGetRequestADM(requestingUser = requestingUser)
 
                 RouteUtilADM.runJsonRoute(
                     requestMessage,
@@ -70,6 +70,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     responderManager,
                     log
                 )
+        }
     }
 
     @ApiOperation(value = "Add new user", nickname = "addUser", httpMethod = "POST", response = classOf[UserOperationResponseADM])
@@ -93,13 +94,14 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                         apiRequestID = UUID.randomUUID()
                     )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 
@@ -115,7 +117,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     /* return a single user identified by iri or email */
     def getUser: Route = path("admin" / "users" / Segment) { value =>
         get {
-            parameters("identifier" ? "iri") { (identifier: String) =>
+            parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     /* check if email or iri was supplied */
                     val requestMessage: Future[UserGetRequestADM] = for {
@@ -127,13 +129,14 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                         UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
                     }
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessage,
-                    requestContext,
-                    settings,
-                    responderManager,
-                    log
-                )
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 
