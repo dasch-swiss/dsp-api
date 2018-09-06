@@ -141,6 +141,11 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
     #    # start built-in salsah1 browser tests
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
+    # testing docker images
+    - stage: test
+      script:
+        - docker build $TRAVIS_BUILD_DIR/webapi/
+        - docker build $TRAVIS_BUILD_DIR/salsah1/
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
