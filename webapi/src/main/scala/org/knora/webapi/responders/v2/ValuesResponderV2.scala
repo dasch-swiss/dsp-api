@@ -1209,8 +1209,8 @@ class ValuesResponderV2 extends Responder {
 
         val resourceInfo = readResourcesSequence.resources.head
 
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
-            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <$requestedResourceIri> and/or the values of the specified property")
+        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
+            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
         }
 
         resourceInfo
