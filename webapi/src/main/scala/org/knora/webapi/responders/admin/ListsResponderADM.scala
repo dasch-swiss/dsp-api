@@ -102,24 +102,19 @@ class ListsResponderADM extends Responder {
             // Seq(subjectIri, (objectIri -> Seq(stringWithOptionalLand))
             statements = listsResponse.statements.toList
 
-            lists: Seq[ListADM] = statements.map {
+            lists: Seq[ListNodeInfoADM] = statements.map {
                 case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     val name: Option[String] = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value)
                     val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
 
-                    val info: ListRootNodeInfoADM = ListRootNodeInfoADM(
+                    ListRootNodeInfoADM(
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         name = name,
                         labels = StringLiteralSequenceV2(labels.toVector),
                         comments = StringLiteralSequenceV2(comments.toVector)
-                    )
-
-                    ListADM(
-                        listinfo = info,
-                        children = Seq.empty[ListChildNodeADM]
                     )
             }
 
@@ -151,8 +146,8 @@ class ListsResponderADM extends Responder {
             maybeList: Option[ListADM] <- if (listInfoResponse.statements.nonEmpty) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListNodeADM] <- getChildren(rootNodeIri, shallow = false, requestingUser)
-
+                    children: Seq[ListNodeADM] <- getChildren(rootNodeIri, shallow = false, KnoraSystemInstances.Users.SystemUser)
+                    info: ListNodeInfoADM <- listNodeInfoGetADM(rootNodeIri, KnoraSystemInstances.Users.SystemUser)
                     // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
                     // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
