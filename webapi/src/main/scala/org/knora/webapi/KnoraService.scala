@@ -27,10 +27,6 @@ import akka.http.scaladsl.server.Route
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import kamon.Kamon
-import kamon.jaeger.JaegerReporter
-import kamon.prometheus.PrometheusReporter
-import kamon.zipkin.ZipkinReporter
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
@@ -95,7 +91,7 @@ trait LiveCore extends Core {
     /**
       * Provides the default global execution context
       */
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 }
 
 /**
@@ -114,17 +110,17 @@ trait KnoraService {
     /**
       * The actor used for storing the application application wide variables in a thread safe manner.
       */
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraAskDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
 
     /**
       * Timeout definition
@@ -206,7 +202,7 @@ trait KnoraService {
         log.info("KnoraService - Shutting down.")
         Http().shutdownAllConnectionPools()
         CacheUtil.removeAllCaches()
-        Kamon.stopAllReporters()
+        // Kamon.stopAllReporters()
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
     }
@@ -403,6 +399,7 @@ trait KnoraService {
       */
     private def startReporters(): Unit = {
 
+        /*
         val prometheusReporter = Await.result(applicationStateActor ? GetPrometheusReporterState(), 1.second).asInstanceOf[Boolean]
         if (prometheusReporter) {
             Kamon.addReporter(new PrometheusReporter()) // metrics
@@ -417,5 +414,6 @@ trait KnoraService {
         if (jaegerReporter) {
             Kamon.addReporter(new JaegerReporter()) // tracing
         }
+        */
     }
 }

@@ -159,6 +159,9 @@ class StandoffResponderV2 extends Responder {
 
                     messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
 
+                    // do cleanup after strict (in memory) access
+                    _ = sipiResponseRecovered.discardEntityBytes()
+
                     _ = if (httpStatusCode != StatusCodes.OK) {
                         throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
                     }

@@ -28,14 +28,13 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.listsmessages
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
@@ -46,7 +45,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ListADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
