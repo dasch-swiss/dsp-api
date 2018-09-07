@@ -33,7 +33,7 @@ import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
 
 object CoreSpec {
@@ -63,7 +63,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     // can be overridden in individual spec
     lazy val rdfDataObjects = Seq.empty[RdfDataObject]
 
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContext = system.dispatcher
 
     // needs to be initialized early on
     StringFormatter.initForTest()
