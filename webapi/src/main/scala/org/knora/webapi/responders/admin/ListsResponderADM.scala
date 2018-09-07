@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -104,19 +105,21 @@ class ListsResponderADM extends Responder {
             lists: Seq[ListADM] = statements.map {
                 case (listIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
+                    val name: Option[String] = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value)
                     val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
                     val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
 
-                    val info = ListInfoADM(
+                    val info: ListRootNodeInfoADM = ListRootNodeInfoADM(
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
+                        name = name,
                         labels = StringLiteralSequenceV2(labels.toVector),
                         comments = StringLiteralSequenceV2(comments.toVector)
                     )
 
                     ListADM(
                         listinfo = info,
-                        children = Seq.empty[ListNodeADM]
+                        children = Seq.empty[ListChildNodeADM]
                     )
             }
 
@@ -148,7 +151,7 @@ class ListsResponderADM extends Responder {
             maybeList: Option[ListADM] <- if (listInfoResponse.statements.nonEmpty) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListNodeADM] <- listGetChildren(rootNodeIri, requestingUser)
+                    children: Seq[ListNodeADM] <- getChildren(rootNodeIri, shallow = false, requestingUser)
 
                     // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
@@ -271,8 +274,17 @@ class ListsResponderADM extends Responder {
                 val nodeinfo: ListNodeInfoADM = statements.head match {
                     case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
-                        val labels = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-                        val comments = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                        val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                        val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
+                        val attachedToProjectOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject) match {
+                            case Some(iris: Seq[LiteralV2]) =>
+                                iris.headOption match {
+                                    case Some(iri: IriLiteralV2) => Some(iri.value)
+                                    case other => throw InconsistentTriplestoreDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                }
+                            case None => None
+                        }
 
                         val hasRootNodeOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.HasRootNode) match {
                             case Some(iris: Seq[LiteralV2]) =>
@@ -285,15 +297,26 @@ class ListsResponderADM extends Responder {
 
                         val isRootNode: Boolean = propsMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
 
-                        ListNodeInfoADM (
-                            id = nodeIri.toString,
-                            name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                            labels = StringLiteralSequenceV2(labels.toVector),
-                            comments = StringLiteralSequenceV2(comments.toVector),
-                            position = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value),
-                            hasRootNode = hasRootNodeOption,
-                            isRootNode = isRootNode
-                        )
+                        val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
+
+                        if (isRootNode) {
+                            ListRootNodeInfoADM(
+                                id = nodeIri.toString,
+                                projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
+                                name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                                labels = StringLiteralSequenceV2(labels.toVector),
+                                comments = StringLiteralSequenceV2(comments.toVector)
+                            )
+                        } else {
+                            ListChildNodeInfoADM (
+                                id = nodeIri.toString,
+                                name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                                labels = StringLiteralSequenceV2(labels.toVector),
+                                comments = StringLiteralSequenceV2(comments.toVector),
+                                position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
+                                hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri."))
+                            )
+                        }
                 }
                 Some(nodeinfo)
             } else {
@@ -310,7 +333,7 @@ class ListsResponderADM extends Responder {
       * Retrieves information about a single node (without information about children). The single node can be the
       * lists root node or child node
       *
-      * @param nodeIri the Iri if the list node to be queried.
+      * @param nodeIri the IRI of the list node to be queried.
       * @param requestingUser the user making the request.
       * @return a [[ListNodeInfoGetResponseADM]].
       */
@@ -326,117 +349,168 @@ class ListsResponderADM extends Responder {
 
 
     /**
-      * Retrieves a list from the triplestore and returns it as a sequence of child nodes.
+      * Retrieves a complete node including children. The node can be the lists root node or child node.
       *
-      * @param rootNodeIri the Iri of the root node of the list to be queried.
+      * @param nodeIri the IRI of the list node to be queried.
       * @param requestingUser the user making the request.
-      * @return a sequence of [[ListNodeADM]].
+      * @return a optional [[ListNodeADM]]
       */
-    private def listGetChildren(rootNodeIri: IRI, requestingUser: UserADM): Future[Seq[ListNodeADM]] = {
+    private def listNodeGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
+        for {
+            // this query will give us only the information about the root node.
+            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
+                triplestore = settings.triplestoreType,
+                nodeIri = nodeIri
+            ).toString())
 
-        /**
-          * Compares the `position`-values of two nodes
-          *
-          * @param list1 node in a list
-          * @param list2 node in the same list
-          * @return true if the `position` of list1 is lower than the one of list2
-          */
-        def orderNodes(list1: ListNodeADM, list2: ListNodeADM): Boolean = {
-            if (list1.position.nonEmpty && list2.position.nonEmpty) {
-                list1.position.get < list2.position.get
+            listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+
+            // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
+
+            maybeListNode: Option[ListNodeADM] <- if (listInfoResponse.statements.nonEmpty) {
+                for {
+                    // here we know that the list exists and it is fine if children is an empty list
+                    children: Seq[ListChildNodeADM] <- getChildren(nodeIri, shallow = false, requestingUser)
+
+                    // _ = log.debug(s"listGetADM - children count: {}", children.size)
+
+                    // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
+                    statements = listInfoResponse.statements
+
+                    node: ListNodeADM = statements.head match {
+                        case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+
+                            val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+                            val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+
+                            val attachedToProjectOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.AttachedToProject) match {
+                                case Some(iris: Seq[LiteralV2]) =>
+                                    iris.headOption match {
+                                        case Some(iri: IriLiteralV2) => Some(iri.value)
+                                        case other => throw InconsistentTriplestoreDataException(s"Expected attached to project Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                    }
+                                case None => None
+                            }
+
+                            val hasRootNodeOption: Option[IRI] = propsMap.get(OntologyConstants.KnoraBase.HasRootNode) match {
+                                case Some(iris: Seq[LiteralV2]) =>
+                                    iris.headOption match {
+                                        case Some(iri: IriLiteralV2) => Some(iri.value)
+                                        case other => throw InconsistentTriplestoreDataException(s"Expected root node Iri as an IriLiteralV2 for list node $nodeIri, but got $other")
+                                    }
+                                case None => None
+                            }
+
+                            val isRootNode: Boolean = propsMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
+
+                            val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
+
+                            if (isRootNode) {
+                                ListRootNodeADM(
+                                    id = nodeIri.toString,
+                                    projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
+                                    name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                                    labels = StringLiteralSequenceV2(labels.toVector),
+                                    comments = StringLiteralSequenceV2(comments.toVector),
+                                    children = children
+                                )
+                            } else {
+                                ListChildNodeADM (
+                                    id = nodeIri.toString,
+                                    name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
+                                    labels = StringLiteralSequenceV2(labels.toVector),
+                                    comments = StringLiteralSequenceV2(comments.toVector),
+                                    position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
+                                    hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri.")),
+                                    children = children
+                                )
+                            }
+                    }
+
+                    // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
+                } yield Some(node)
             } else {
-                true
+                FastFuture.successful(None)
             }
-        }
+
+        } yield maybeListNode
+    }
+
+
+    /**
+      * Retrieves the child nodes from the triplestore. If shallow is true, then only the immediate children will be
+      * returned, otherwise all children and their children's children will be returned.
+      *
+      * @param nodeIri the IRI of the node for which children are to be returned.
+      * @param shallow denotes if all children or only the immediate children will be returned.
+      * @param requestingUser the user making the request.
+      * @return a sequence of [[ListChildNodeADM]].
+      */
+    private def getChildren(ofNodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Seq[ListChildNodeADM]] = {
 
         /**
-          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListNodeADM]].
+          * This function recursively transforms SPARQL query results representing a hierarchical list into a [[ListChildNodeADM]].
           *
           * @param nodeIri          the IRI of the node to be created.
           * @param groupedByNodeIri a [[Map]] in which each key is the IRI of a node in the hierarchical list, and each value is a [[Seq]]
           *                         of SPARQL query results representing that node's children.
-          * @return a [[ListNodeADM]].
+          * @return a [[ListChildNodeADM]].
           */
-        def createListChildNode(nodeIri: IRI, groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]], level: Int): ListNodeADM = {
+        def createChildNode(nodeIri: IRI, statements: Seq[(SubjectV2, Map[IRI, Seq[LiteralV2]])]): ListChildNodeADM = {
 
-            val childRows = groupedByNodeIri(nodeIri)
+            val propsMap: Map[IRI, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(nodeIri)).head._2
 
-            /*
-                childRows has the following structure:
+            val hasRootNode: IRI = propsMap.getOrElse(OntologyConstants.KnoraBase.HasRootNode, throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri.")).head.toString
 
-                For each child of the parent node (represented by nodeIri), there is a row that provides the child's IRI.
-                The information about the parent node is repeated in each row.
-                Therefore, we can just access the first row for all the information about the parent.
+            val nameOption = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value)
 
-                node                               position	    nodeName   label         child
+            val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
+            val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
 
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a665b90cd
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/4238eabcc
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/a94bb71cc
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/db6b61e4cc
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/749fb41dcd
-                http://rdfh.ch/lists/10d16738cc    3            4          VOLKSKUNDE    http://rdfh.ch/lists/dd3757cd
+            val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
+            val position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri."))
 
-                In any case, childRows has at least one element (we know that at least one entry exists for a node without children).
+            val children: Seq[ListChildNodeADM] = propsMap.get(OntologyConstants.KnoraBase.HasSubListNode) match {
+                case Some(iris: Seq[LiteralV2]) => iris.map {
+                    iri => createChildNode(iri.toString, statements)
+                }
+                case None => Seq.empty[ListChildNodeADM]
+            }
 
-             */
-
-            val firstRowMap = childRows.head.rowMap
-
-            val hasRootNodeOption: Option[IRI] = firstRowMap.get(OntologyConstants.KnoraBase.HasRootNode)
-
-            val isRootNode: Boolean = firstRowMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
-
-            ListNodeADM(
+            ListChildNodeADM(
                 id = nodeIri,
-                name = firstRowMap.get("nodeName"),
-                labels = if (firstRowMap.get("label").nonEmpty) {
-                    StringLiteralSequenceV2(Vector(StringLiteralV2(firstRowMap.get("label").get)))
-                } else {
-                    StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
-                },
-                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                children = if (firstRowMap.get("child").isEmpty) {
-                    // If this node has no children, childRows will just contain one row with no value for "child".
-                    Seq.empty[ListNodeADM]
-                } else {
-                    // Recursively get the child nodes.
-                    childRows.map(childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, level + 1)).sortWith(orderNodes)
-                },
-                position = firstRowMap.get("position").map(_.toInt),
-                hasRootNode = hasRootNodeOption,
-                isRootNode = isRootNode
+                name = nameOption,
+                labels = StringLiteralSequenceV2(labels.toVector),
+                comments = StringLiteralSequenceV2(comments.toVector),
+                children = children.map(_.sorted),
+                position = position,
+                hasRootNode = hasRootNode
             )
         }
 
-        // TODO: Rewrite using a construct sparql query
         for {
-            listQuery <- Future {
-                queries.sparql.admin.txt.getList(
+            nodeChildrenQuery <- Future {
+                queries.sparql.admin.txt.getListNodeWithChildren(
                     triplestore = settings.triplestoreType,
-                    rootNodeIri = rootNodeIri,
-                    preferredLanguage = requestingUser.lang,
-                    fallbackLanguage = settings.fallbackLanguage
+                    startNodeIri = ofNodeIri
                 ).toString()
             }
-            listQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(listQuery)).mapTo[SparqlSelectResponse]
+            nodeWithChildrenResponse: SparqlSelectResponse <- (storeManager ? SparqlExtendedConstructRequest(nodeChildrenQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            // Group the results to map each node to the SPARQL query results representing its children.
-            groupedByNodeIri: Map[IRI, Seq[VariableResultsRow]] = listQueryResponse.results.bindings.groupBy(row => row.rowMap("node"))
+            statements: Seq[(SubjectV2, Map[IRI, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
-            rootNodeChildren = groupedByNodeIri.getOrElse(rootNodeIri, Seq.empty[VariableResultsRow])
+            startNodePropsMap: Map[IRI, Seq[LiteralV2]] = statements.filter(_._1 == IriSubjectV2(ofNodeIri)).head._2
 
-            children: Seq[ListNodeADM] = if (rootNodeChildren.head.rowMap.get("child").isEmpty) {
-                // The root node has no children, so we return an empty list.
-                Seq.empty[ListNodeADM]
-            } else {
-                // Process each child of the root node.
-                rootNodeChildren.map {
-                    childRow => createListChildNode(childRow.rowMap("child"), groupedByNodeIri, 0)
-                }.sortWith(orderNodes)
+            children: Seq[ListChildNodeADM] = startNodePropsMap.get(OntologyConstants.KnoraBase.HasSubListNode) match {
+                case Some(iris: Seq[LiteralV2]) => iris.map {
+                    iri => createChildNode(iri.toString, statements)
+                }
+                case None => Seq.empty[ListChildNodeADM]
             }
 
-        } yield children
+            sortedChildren = children.sortBy(_.position) map (_.sorted)
+
+        } yield sortedChildren
     }
 
     /**
@@ -456,12 +530,12 @@ class ListsResponderADM extends Responder {
           * @return the complete path to `node`.
           */
         @tailrec
-        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[ListNodeADM]): Seq[ListNodeADM] = {
+        def makePath(node: IRI, nodeMap: Map[IRI, Map[String, String]], parentMap: Map[IRI, IRI], path: Seq[NodePathElementADM]): Seq[NodePathElementADM] = {
             // Get the details of the node.
             val nodeData = nodeMap(node)
 
             // Construct a NodePathElementV2 containing those details.
-            val pathElement = ListNodeADM(
+            val pathElement = NodePathElementADM (
                 id = nodeData("node"),
                 name = nodeData.get("nodeName"),
                 labels = if (nodeData.contains("label")) {
@@ -469,11 +543,7 @@ class ListsResponderADM extends Responder {
                 } else {
                     StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
                 },
-                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                children = Seq.empty[ListNodeADM],
-                position = None,
-                hasRootNode = None,
-                isRootNode = false
+                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
             )
 
             // Add it to the path.
@@ -530,7 +600,7 @@ class ListsResponderADM extends Responder {
                         case None => acc
                     }
             }
-        } yield NodePathGetResponseADM(nodelist = makePath(queryNodeIri, nodeMap, parentMap, Nil))
+        } yield NodePathGetResponseADM(elements = makePath(queryNodeIri, nodeMap, parentMap, Nil))
     }
 
 

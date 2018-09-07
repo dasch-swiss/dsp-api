@@ -23,6 +23,7 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import com.sun.xml.internal.ws.encoding.soap
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -251,9 +252,9 @@ case class ListNodeCreateRequestADM(parentNodeIri: IRI,
 /**
   * Represents a sequence of list info nodes.
   *
-  * @param lists a [[ListADM]] sequence.
+  * @param lists a [[ListRootNodeInfoADM]] sequence.
   */
-case class ListsGetResponseADM(lists: Seq[ListADM]) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListsGetResponseADM(lists: Seq[ListNodeInfoADM]) extends KnoraResponseADM with ListADMJsonProtocol {
     def toJsValue = listsGetResponseADMFormat.write(this)
 }
 
@@ -295,7 +296,7 @@ case class ListNodeInfoGetResponseADM(nodeinfo: ListNodeInfoADM) extends KnoraRe
   *
   * @param nodelist a list of the nodes composing the path from the list's root node up to and including the specified node.
   */
-case class NodePathGetResponseADM(nodelist: Seq[ListNodeADM]) extends KnoraResponseADM with ListADMJsonProtocol {
+case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue = nodePathGetResponseADMFormat.write(this)
 }
@@ -304,7 +305,7 @@ case class NodePathGetResponseADM(nodelist: Seq[ListNodeADM]) extends KnoraRespo
 // Components of messages
 
 
-case class ListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
+case class ListADM(listinfo: ListNodeInfoADM, children: Seq[ListNodeADM]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -313,7 +314,7 @@ case class ListADM(listinfo: ListInfoADM, children: Seq[ListNodeADM]) {
     def sorted: ListADM = {
         ListADM(
             listinfo = listinfo,
-            children = children.sortBy(_.id)
+            children = children map (_.sorted)
         )
     }
 }
@@ -366,7 +367,7 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
 }
 
 /**
-  * Represents basic information about a list node, the information which is found in the list's child node.
+  * Represents basic information about a list node, the information which is found in the list's root or child node.
   *
   * @param id          the IRI of the list.
   * @param name        the name of the list node.
@@ -375,38 +376,92 @@ case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2
   * @param position    the position of the node among its siblings (optional).
   * @param hasRootNode the Iri of the root node, if this is not the root node.
   */
-case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Option[Int], hasRootNode: Option[IRI], isRootNode: Boolean) {
-
-    // some plausibility checks
-
-    // either isRootNode or hasRootNode
-    if (isRootNode && hasRootNode.nonEmpty) {
-        throw BadRequestException("A node can be either a root or child of a root node.")
-    } else if (!isRootNode && hasRootNode.isEmpty) {
-        throw BadRequestException("A node needs to be either a root or child of a root node.")
-    }
-
-    // root node does not have a position
-    if (isRootNode && position.nonEmpty) {
-        throw BadRequestException("A root node does not have position.")
-    }
+abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) {
 
     /**
       * Sorts the whole hierarchy.
       *
       * @return a sorted [[ListNodeInfoADM]].
       */
-    def sorted: ListNodeInfoADM = {
-        ListNodeInfoADM(
+    def sorted: ListNodeInfoADM
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
+    }
+}
+
+case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) extends ListNodeInfoADM(id, name, labels, comments) {
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListRootNodeInfoADM]].
+      */
+    def sorted: ListRootNodeInfoADM = {
+        ListRootNodeInfoADM(
+            id = id,
+            projectIri = projectIri,
+            name = name,
+            labels = labels.sortByStringValue,
+            comments = comments.sortByStringValue
+        )
+    }
+}
+
+case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI) extends ListNodeInfoADM(id, name, labels, comments) {
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListChildNodeInfoADM]].
+      */
+    def sorted: ListChildNodeInfoADM = {
+        ListChildNodeInfoADM(
             id = id,
             name = name,
             labels = labels.sortByStringValue,
             comments = comments.sortByStringValue,
             position = position,
-            hasRootNode = hasRootNode,
-            isRootNode = isRootNode
+            hasRootNode = hasRootNode
         )
     }
+}
+
+/**
+  * Represents a hierarchical list node.
+  *
+  * @param id       the IRI of the list node.
+  * @param name     the name of the list node.
+  * @param labels   the label(s) of the list node.
+  * @param comments the comment(s) attached to the list in a specific language (if language tags are used) .
+  * @param children the list node's child nodes.
+  */
+abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) {
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListNodeADM]].
+      */
+    def sorted: ListNodeADM
 
     /**
       * Gets the label in the user's preferred language.
@@ -432,72 +487,75 @@ case class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralS
 }
 
 /**
-  * Represents a hierarchical list node.
+  * Represents a hierarchical list root node.
   *
-  * @param id       the IRI of the list node.
-  * @param name     the name of the list node.
-  * @param labels   the label(s) of the list node.
-  * @param comments the comment(s) attached to the list in a specific language (if language tags are used) .
-  * @param children the list node's child nodes.
-  * @param position the position of the node among its siblings (optional).
+  * @param id         the IRI of the list node.
+  * @param projectIri the IRI of the project the list belongs to.
+  * @param name       the name of the list node.
+  * @param labels     the label(s) of the list node.
+  * @param comments   the comment(s) attached to the list in a specific language (if language tags are used) .
+  * @param children   the list node's child nodes.
   */
-case class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListNodeADM], position: Option[Int], hasRootNode: Option[IRI], isRootNode: Boolean) {
-
-    // some plausibility checks
-
-    // either isRootNode or hasRootNode
-    if (isRootNode && hasRootNode.nonEmpty) {
-        throw BadRequestException("A node can be either a root or child of a root node.")
-    } else if (!isRootNode && hasRootNode.isEmpty) {
-        throw BadRequestException("A node needs to be either a root or child of a root node.")
-    }
-
-    // root node does not have a position
-    if (isRootNode && position.nonEmpty) {
-        throw BadRequestException("A root node does not have position.")
-    }
+case class ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
 
     /**
       * Sorts the whole hierarchy.
       *
       * @return a sorted [[ListNodeADM]].
       */
-    def sorted: ListNodeADM = {
-        ListNodeADM(
+    def sorted: ListRootNodeADM = {
+        ListRootNodeADM(
+            id = id,
+            projectIri = projectIri,
+            name = name,
+            labels = labels.sortByStringValue,
+            comments = comments.sortByStringValue,
+            children = children.sortBy(_.position) map (_.sorted)
+        )
+    }
+}
+
+/**
+  * Represents a hierarchical list child node.
+  *
+  * @param id          the IRI of the list node.
+  * @param name        the name of the list node.
+  * @param labels      the label(s) of the list node.
+  * @param comments    the comment(s) attached to the list in a specific language (if language tags are used) .
+  * @param children    the list node's child nodes.
+  * @param position    the position of the node among its siblings.
+  * @param hasRootNode the root node of the list.
+  */
+case class ListChildNodeADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI, children: Seq[ListChildNodeADM]) extends ListNodeADM(id, name, labels, comments, children) {
+
+
+    /**
+      * Sorts the whole hierarchy.
+      *
+      * @return a sorted [[ListNodeADM]].
+      */
+    def sorted: ListChildNodeADM = {
+        ListChildNodeADM(
             id = id,
             name = name,
             labels = labels.sortByStringValue,
             comments = comments.sortByStringValue,
-            children = children.sortBy(_.id).map(_.sorted),
             position = position,
             hasRootNode = hasRootNode,
-            isRootNode = isRootNode
+            children = children.sortBy(_.position) map (_.sorted)
         )
-    }
-
-    /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
-    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        labels.getPreferredLanguage(userLang, fallbackLang)
-    }
-
-    /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
-    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
+/**
+  * Represents an element of a node path.
+  *
+  * @param id       the IRI of the node path element.
+  * @param name     the optional name of the node path element.
+  * @param labels   the label(s) of the node path element.
+  * @param comments the comment(s) of the node path element.
+  */
+case class NodePathElementADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -565,15 +623,29 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @return a [[JsValue]].
           */
         def write(nodeInfo: ListNodeInfoADM): JsValue = {
-            JsObject(
-                "id" -> nodeInfo.id.toJson,
-                "name" -> nodeInfo.name.toJson,
-                "labels" -> JsArray(nodeInfo.labels.stringLiterals.map(_.toJson)),
-                "comments" -> JsArray(nodeInfo.comments.stringLiterals.map(_.toJson)),
-                "position" -> nodeInfo.position.toJson,
-                "hasRootNode" -> nodeInfo.hasRootNode.toJson,
-                "isRootNode" -> nodeInfo.isRootNode.toJson
-            )
+
+            nodeInfo match {
+                case root: ListRootNodeInfoADM => {
+                    JsObject(
+                        "id" -> root.id.toJson,
+                        "projectIri" -> root.projectIri.toJson,
+                        "name" -> root.name.toJson,
+                        "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+                        "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+                        "isRootNode" -> true.toJson
+                    )
+                }
+                case child: ListChildNodeInfoADM => {
+                    JsObject(
+                        "id" -> child.id.toJson,
+                        "name" -> child.name.toJson,
+                        "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+                        "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+                        "position" -> child.position.toJson,
+                        "hasRootNode" -> child.hasRootNode.toJson
+                    )
+                }
+            }
         }
 
         /**
@@ -600,28 +672,40 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
             }
 
-            val position = fields.get("position").map(_.convertTo[Int])
+            val maybePosition: Option[Int] = fields.get("position").map(_.convertTo[Int])
 
-            val hasRootNode = fields.get("hasRootNode").map(_.convertTo[String])
+            val maybeHasRootNode: Option[IRI] = fields.get("hasRootNode").map(_.convertTo[String])
 
             val maybeIsRootNode: Option[Boolean] = fields.get("isRootNode").map(_.convertTo[Boolean])
+
             val isRootNode = maybeIsRootNode match {
                 case Some(boolValue) => boolValue
                 case None => false
             }
 
-            ListNodeInfoADM(
-                id = id,
-                name = name,
-                labels = StringLiteralSequenceV2(labels.toVector),
-                comments = StringLiteralSequenceV2(comments.toVector),
-                position = position,
-                hasRootNode = hasRootNode,
-                isRootNode = isRootNode
-            )
+            val maybeProjectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[IRI])
 
+            if (isRootNode) {
+                ListRootNodeInfoADM(
+                    id = id,
+                    projectIri = maybeProjectIri.getOrElse(throw DeserializationException("The project IRI is not defined.")),
+                    name = name,
+                    labels = StringLiteralSequenceV2(labels.toVector),
+                    comments = StringLiteralSequenceV2(comments.toVector)
+                )
+            } else {
+                ListChildNodeInfoADM(
+                    id = id,
+                    name = name,
+                    labels = StringLiteralSequenceV2(labels.toVector),
+                    comments = StringLiteralSequenceV2(comments.toVector),
+                    position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
+                    hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined."))
+                )
+            }
         }
     }
+
 
     implicit object ListNodeFormat extends JsonFormat[ListNodeADM] {
         /**
@@ -631,16 +715,31 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           * @return a [[JsValue]].
           */
         def write(node: ListNodeADM): JsValue = {
-            JsObject(
-                "id" -> node.id.toJson,
-                "name" -> node.name.toJson,
-                "labels" -> JsArray(node.labels.stringLiterals.map(_.toJson)),
-                "comments" -> JsArray(node.comments.stringLiterals.map(_.toJson)),
-                "children" -> JsArray(node.children.map(write).toVector),
-                "position" -> node.position.toJson,
-                "hasRootNode" -> node.hasRootNode.toJson,
-                "isRootNode" -> node.isRootNode.toJson
-            )
+
+            node match {
+                case root: ListRootNodeADM => {
+                    JsObject(
+                        "id" -> root.id.toJson,
+                        "projectIri" -> root.projectIri.toJson,
+                        "name" -> root.name.toJson,
+                        "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+                        "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+                        "isRootNode" -> true.toJson,
+                        "children" -> JsArray(root.children.map(write).toVector)
+                    )
+                }
+                case child: ListChildNodeADM => {
+                    JsObject(
+                        "id" -> child.id.toJson,
+                        "name" -> child.name.toJson,
+                        "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+                        "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+                        "position" -> child.position.toJson,
+                        "hasRootNode" -> child.hasRootNode.toJson,
+                        "children" -> JsArray(child.children.map(write).toVector)
+                    )
+                }
+            }
         }
 
         /**
@@ -667,31 +766,95 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
                 case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
             }
 
-            val children: Seq[ListNodeADM] = fields.get("children") match {
-                case Some(JsArray(values)) => values.map(read)
-                case None => Seq.empty[ListNodeADM]
+            val children: Seq[ListChildNodeADM] = fields.get("children") match {
+                case Some(JsArray(values)) => values.map(read).map(_.asInstanceOf[ListChildNodeADM])
+                case None => Seq.empty[ListChildNodeADM]
                 case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
             }
 
-            val position = fields.get("position").map(_.convertTo[Int])
+            val maybePosition: Option[Int] = fields.get("position").map(_.convertTo[Int])
 
-            val hasRootNode = fields.get("hasRootNode").map(_.convertTo[String])
+            val maybeHasRootNode: Option[IRI] = fields.get("hasRootNode").map(_.convertTo[String])
 
             val maybeIsRootNode: Option[Boolean] = fields.get("isRootNode").map(_.convertTo[Boolean])
+
             val isRootNode = maybeIsRootNode match {
                 case Some(boolValue) => boolValue
                 case None => false
             }
 
-            ListNodeADM(
+            val maybeProjectIri: Option[IRI] = fields.get("projectIri").map(_.convertTo[IRI])
+
+            if (isRootNode) {
+                ListRootNodeADM(
+                    id = id,
+                    projectIri = maybeProjectIri.getOrElse(throw DeserializationException("The project IRI is not defined.")),
+                    name = name,
+                    labels = StringLiteralSequenceV2(labels.toVector),
+                    comments = StringLiteralSequenceV2(comments.toVector),
+                    children = children
+                )
+            } else {
+                ListChildNodeADM(
+                    id = id,
+                    name = name,
+                    labels = StringLiteralSequenceV2(labels.toVector),
+                    comments = StringLiteralSequenceV2(comments.toVector),
+                    position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
+                    hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
+                    children = children
+                )
+            }
+        }
+    }
+
+
+    implicit object NodePathElementFormat extends JsonFormat[NodePathElementADM] {
+        /**
+          * Converts a [[NodePathElementADM]] to a [[JsValue]].
+          *
+          * @param nodeInfo a [[NodePathElementADM]].
+          * @return a [[JsValue]].
+          */
+        def write(element: NodePathElementADM): JsValue = {
+
+            JsObject(
+                "id" -> element.id.toJson,
+                "name" -> element.name.toJson,
+                "labels" -> JsArray(element.labels.stringLiterals.map(_.toJson)),
+                "comments" -> JsArray(element.comments.stringLiterals.map(_.toJson))
+            )
+        }
+
+        /**
+          * Converts a [[JsValue]] to a [[ListNodeInfoADM]].
+          *
+          * @param value a [[JsValue]].
+          * @return a [[ListNodeInfoADM]].
+          */
+        def read(value: JsValue): NodePathElementADM = {
+
+            val fields = value.asJsObject.fields
+
+            val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
+            val name = fields.get("name").map(_.convertTo[String])
+            val labels = fields.get("labels") match {
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
+                case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
+            }
+
+            val comments = fields.get("comments") match {
+                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
+                case None => Seq.empty[StringLiteralV2]
+                case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
+            }
+
+            NodePathElementADM(
                 id = id,
                 name = name,
                 labels = StringLiteralSequenceV2(labels.toVector),
-                comments = StringLiteralSequenceV2(comments.toVector),
-                children = children,
-                position = position,
-                hasRootNode = hasRootNode,
-                isRootNode = isRootNode
+                comments = StringLiteralSequenceV2(comments.toVector)
             )
 
         }
@@ -721,10 +884,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
             val fields = value.asJsObject.fields
 
-            val listinfo = fields.getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing.")).convertTo[ListInfoADM]
-            val children = fields.get("children") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[ListNodeADM])
-                case None => Seq.empty[ListNodeADM]
+            val listinfo: ListRootNodeInfoADM = fields.getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing.")).convertTo[ListInfoADM].asInstanceOf[ListRootNodeInfoADM]
+            val children: Seq[ListChildNodeADM] = fields.get("children") match {
+                case Some(JsArray(values)) => values.map(_.convertTo[ListNodeADM].asInstanceOf[ListChildNodeADM])
+                case None => Seq.empty[ListChildNodeADM]
                 case _ => throw DeserializationException("The expected field 'children' is in the wrong format.")
             }
 
@@ -737,9 +900,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "listNodeIri", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
-    implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "nodelist")
+    implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
     implicit val listGetResponseADMFormat: RootJsonFormat[ListGetResponseADM] = jsonFormat(ListGetResponseADM, "list")
     implicit val listInfoGetResponseADMFormat: RootJsonFormat[ListInfoGetResponseADM] = jsonFormat(ListInfoGetResponseADM, "listinfo")
