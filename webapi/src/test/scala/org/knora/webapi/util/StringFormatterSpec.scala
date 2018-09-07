@@ -392,6 +392,136 @@ class StringFormatterSpec extends CoreSpec() {
             assert(externalEntityIri.toString == "http://www.w3.org/2001/XMLSchema#string" && !externalEntityIri.isKnoraIri)
         }
 
+        "convert http://www.knora.org/ontology/shared/example to http://api.knora.org/ontology/shared/example/simple/v2" in {
+            val internalOntologyIri = "http://www.knora.org/ontology/shared/example".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.isSharedKnoraDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("shared"))
+
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2Simple)
+            externalOntologyIri.toString should ===("http://api.knora.org/ontology/shared/example/simple/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.isSharedKnoraDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://www.knora.org/ontology/shared/example#Person to http://api.knora.org/ontology/shared/example/simple/v2#Person" in {
+            val internalEntityIri = "http://www.knora.org/ontology/shared/example#Person".toSmartIri
+            assert(internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.isSharedKnoraDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("shared"))
+
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+            externalEntityIri.toString should ===("http://api.knora.org/ontology/shared/example/simple/v2#Person")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.isSharedKnoraDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://www.knora.org/ontology/shared/example to http://api.knora.org/ontology/shared/example/v2" in {
+            val internalOntologyIri = "http://www.knora.org/ontology/shared/example".toSmartIri
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.isSharedKnoraDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("shared"))
+
+            val externalOntologyIri = internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)
+            externalOntologyIri.toString should ===("http://api.knora.org/ontology/shared/example/v2")
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.isSharedKnoraDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://www.knora.org/ontology/shared/example#Person to http://api.knora.org/ontology/shared/example/v2#Person" in {
+            val internalEntityIri = "http://www.knora.org/ontology/shared/example#Person".toSmartIri
+            assert(internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.isSharedKnoraDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("shared"))
+
+            val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2WithValueObjects)
+            externalEntityIri.toString should ===("http://api.knora.org/ontology/shared/example/v2#Person")
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalEntityIri.isKnoraApiV2EntityIri &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.isSharedKnoraDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://api.knora.org/ontology/shared/example/simple/v2 to http://www.knora.org/ontology/shared/example" in {
+            val externalOntologyIri = "http://api.knora.org/ontology/shared/example/simple/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2Simple) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.isSharedKnoraDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("shared"))
+
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/shared/example")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.isSharedKnoraDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://api.knora.org/ontology/shared/example/simple/v2#Person to http://www.knora.org/ontology/shared/example#Person" in {
+            val externalEntityIri = "http://api.knora.org/ontology/shared/example/simple/v2#Person".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2Simple) &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.isSharedKnoraDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("shared"))
+
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/shared/example#Person")
+            assert(internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.isSharedKnoraDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://api.knora.org/ontology/shared/example/v2 to http://www.knora.org/ontology/shared/example" in {
+            val externalOntologyIri = "http://api.knora.org/ontology/shared/example/v2".toSmartIri
+            assert(externalOntologyIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                externalOntologyIri.isKnoraOntologyIri &&
+                !externalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                externalOntologyIri.isSharedKnoraDefinitionIri &&
+                externalOntologyIri.getProjectCode.contains("shared"))
+
+            val internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+            internalOntologyIri.toString should ===("http://www.knora.org/ontology/shared/example")
+            assert(internalOntologyIri.getOntologySchema.contains(InternalSchema) &&
+                internalOntologyIri.isKnoraOntologyIri &&
+                !internalOntologyIri.isKnoraBuiltInDefinitionIri &&
+                internalOntologyIri.isSharedKnoraDefinitionIri &&
+                internalOntologyIri.getProjectCode.contains("shared"))
+        }
+
+        "convert http://api.knora.org/ontology/shared/example/v2#Person to http://www.knora.org/ontology/shared/example#Person" in {
+            val externalEntityIri = "http://api.knora.org/ontology/shared/example/v2#Person".toSmartIri
+            assert(externalEntityIri.getOntologySchema.contains(ApiV2WithValueObjects) &&
+                !externalEntityIri.isKnoraBuiltInDefinitionIri &&
+                externalEntityIri.isSharedKnoraDefinitionIri &&
+                externalEntityIri.getProjectCode.contains("shared"))
+
+            val internalEntityIri = externalEntityIri.toOntologySchema(InternalSchema)
+            internalEntityIri.toString should ===("http://www.knora.org/ontology/shared/example#Person")
+            assert(internalEntityIri.isKnoraInternalEntityIri &&
+                !internalEntityIri.isKnoraBuiltInDefinitionIri &&
+                internalEntityIri.isSharedKnoraDefinitionIri &&
+                internalEntityIri.getProjectCode.contains("shared"))
+        }
+
         "not change http://www.w3.org/2001/XMLSchema#string when converting to InternalSchema" in {
             val externalEntityIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
             assert(!externalEntityIri.isKnoraIri)
@@ -591,6 +721,12 @@ class StringFormatterSpec extends CoreSpec() {
             }
         }
 
+        "reject http://0.0.0.0:3333/ontology/shared/example/v2 (shared project code with local hostname in ontology IRI)" in {
+            assertThrows[AssertionException] {
+                "http://0.0.0.0:3333/ontology/shared/example/v2".toSmartIriWithErr(throw AssertionException(s"Invalid IRI"))
+            }
+        }
+
         "enable pattern matching with SmartIri" in {
             val input: SmartIri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri
 
@@ -651,6 +787,7 @@ class StringFormatterSpec extends CoreSpec() {
             stringFormatter.validateProjectShortcode("00FF", throw AssertionException("not valid")) should be("00FF")
             stringFormatter.validateProjectShortcode("00ff", throw AssertionException("not valid")) should be("00FF")
             stringFormatter.validateProjectShortcode("12aF", throw AssertionException("not valid")) should be("12AF")
+            stringFormatter.validateProjectShortcode("shared", throw AssertionException("not valid")) should be("shared")
 
             an[AssertionException] should be thrownBy {
                 stringFormatter.validateProjectShortcode("000", throw AssertionException("not valid"))

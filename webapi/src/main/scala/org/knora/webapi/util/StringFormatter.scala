@@ -369,6 +369,11 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraBuiltInDefinitionIri: Boolean
 
     /**
+      * Returns `true` if this IRI belongs to a shared ontology.
+      */
+    def isSharedKnoraDefinitionIri: Boolean
+
+    /**
       * Returns `true` if this is an internal Knora ontology or entity IRI.
       *
       * @return
@@ -539,6 +544,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // The hostname used in built-in Knora API v2 IRIs.
     private val BuiltInKnoraApiHostname = "api.knora.org"
+
+    // The project code of shared ontologies.
+    private val SharedProjectCode = "shared"
 
     // The strings that Knora data IRIs can start with.
     private val DataIriStarts: Set[String] = Set(
@@ -823,8 +831,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                             validateProjectSpecificOntologyName(ontologyName, errorFun)
                         }
 
-                        if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
-                            (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
+                        // If the IRI has the hostname for project-specific ontologies, it can't refer to a built-in or shared ontology.
+                        if (hasProjectSpecificHostname && (hasBuiltInOntologyName || projectCode.contains(SharedProjectCode))) {
+                            errorFun
+                        }
+
+                        // If the IRI has the hostname for built-in ontologies, it must refer to a built-in or shared ontology.
+                        if (hostname == BuiltInKnoraApiHostname && !(hasBuiltInOntologyName || projectCode.contains(SharedProjectCode))) {
                             errorFun
                         }
 
@@ -856,6 +869,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         override def isKnoraDataIri: Boolean = iriInfo.iriType == KnoraDataIri
 
         override def isKnoraDefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri
+
+        override def isSharedKnoraDefinitionIri: Boolean = isKnoraDefinitionIri && iriInfo.projectCode.contains(SharedProjectCode)
 
         override def isKnoraInternalDefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologySchema.contains(InternalSchema)
 
@@ -944,7 +959,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             val prefix = new StringBuilder
 
             iriInfo.projectCode match {
-                case Some(id) => prefix.append('p').append(id).append('-')
+                case Some(id) =>
+                    if (id != SharedProjectCode) {
+                        prefix.append('p')
+                    }
+
+                    prefix.append(id).append('-')
+
                 case None => ()
             }
 
@@ -1072,6 +1093,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
             val convertedIriStr: IRI = if (isKnoraBuiltInDefinitionIri) {
                 OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(ontologyName) + versionSegment
+            } else if (isSharedKnoraDefinitionIri) {
+                OntologyConstants.KnoraApi.ApiOntologyStart + SharedProjectCode + '/' + ontologyName + versionSegment
             } else {
                 val projectSpecificApiV2OntologyStart = MaybeProjectSpecificApiV2OntologyStart match {
                     case Some(ontologyStart) => ontologyStart
@@ -2000,17 +2023,20 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
+      * Given the project shortcode, checks if it is in a valid format, and converts it to upper case (unless it is
+      * `shared`, in which case it stays lower case).
       *
       * @param shortcode the project's shortcode.
-      * @return the shortcode in upper case.
+      * @return the shortcode in upper case (unless it is `shared`, in which case it stays lower case).
       */
     def validateProjectShortcode(shortcode: String, errorFun: => Nothing): String = {
-        ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
-            case Some(value) => value
-            case None => errorFun
+        if (shortcode == SharedProjectCode) {
+            shortcode
+        } else {
+            ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
+                case Some(value) => value
+                case None => errorFun
+            }
         }
     }
-
-
 }
