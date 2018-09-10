@@ -636,10 +636,10 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
             NamedGraphV1( // BIBLIO
                 active = true,
                 uri = SharedOntologyTestDataADM.BIBLIO_ONTOLOGY_IRI,
-                project_id = SharedTestDataV1.biblioProjectInfo.id,
-                description = SharedTestDataV1.biblioProjectInfo.description.get,
-                longname = SharedTestDataV1.biblioProjectInfo.longname.get,
-                shortname = SharedTestDataV1.biblioProjectInfo.shortname,
+                project_id = SharedTestDataV1.beolProjectInfo.id,
+                description = SharedTestDataV1.beolProjectInfo.description.get,
+                longname = SharedTestDataV1.beolProjectInfo.longname.get,
+                shortname = SharedTestDataV1.beolProjectInfo.shortname,
                 id = SharedOntologyTestDataADM.BIBLIO_ONTOLOGY_IRI
             ),
             NamedGraphV1( // Images

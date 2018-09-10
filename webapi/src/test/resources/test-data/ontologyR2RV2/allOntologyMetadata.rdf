@@ -21,8 +21,8 @@
 	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The BEOL ontology</rdfs:label>
 </owl:Ontology>
-<owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0802/biblio/v2">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"/>
+<owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0801/biblio/v2">
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The Biblio ontology</rdfs:label>
 </owl:Ontology>
 <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0803/incunabula/v2">
