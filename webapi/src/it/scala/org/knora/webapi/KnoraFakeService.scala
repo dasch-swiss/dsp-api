@@ -40,7 +40,7 @@ trait KnoraFakeService {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
     /**
       * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)

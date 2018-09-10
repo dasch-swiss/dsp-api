@@ -41,8 +41,8 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### For developing and testing the API server
 
-* Linux or Mac OS X
-* [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* Linux or macOS (with some caveats)
+* [Java Development Kit 10](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html)
 * [SBT](http://www.scala-sbt.org/)
 
 [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is recommended. Support for
