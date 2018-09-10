@@ -741,7 +741,7 @@
 :SharedOntologiesProject rdf:type :knoraProject ;
             rdfs:comment "A built-in project representing Shared Ontologies."@en ;
             :projectShortname "SharedOntologiesProject" ;
-            :projectShortcode "0000" ;
+            :projectShortcode "shared" ;
             :projectLongname "Knora Shared Ontologies Project" ;
             :projectDescription "Knora Shared Ontologies Project"@en ;
             :status "true"^^xsd:boolean ;
