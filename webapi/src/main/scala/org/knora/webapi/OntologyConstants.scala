@@ -86,6 +86,7 @@ object OntologyConstants {
           * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
           */
         val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
+            Ontology,
             Class,
             Restriction
         )
@@ -148,6 +149,7 @@ object OntologyConstants {
         val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
         val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
 
+        val IsShared: IRI = KnoraBasePrefixExpansion + "isShared"
         val CanBeInstantiated: IRI = KnoraBasePrefixExpansion + "canBeInstantiated"
         val IsEditable: IRI = KnoraBasePrefixExpansion + "isEditable"
 
@@ -666,6 +668,8 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
 
+        val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
+
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
@@ -877,6 +881,8 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
         val Error: IRI = KnoraApiV2PrefixExpansion + "error"
+
+        val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 

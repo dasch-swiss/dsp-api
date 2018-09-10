@@ -8,6 +8,7 @@
 
 <http://0.0.0.0:3333/ontology/0803/incunabula/v2> a owl:Ontology;
   knora-api:attachedToProject <http://rdfh.ch/projects/0803>;
+  knora-api:isShared false;
   rdfs:label "The incunabula ontology" .
 
 incunabula:pubdate a owl:ObjectProperty;

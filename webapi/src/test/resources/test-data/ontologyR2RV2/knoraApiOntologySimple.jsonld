@@ -929,6 +929,17 @@
       "@id" : "knora-api:hasLinkTo"
     }
   }, {
+    "@id" : "knora-api:isShared",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Ontology"
+    },
+    "rdfs:comment" : "Indicates whether an ontology is shared",
+    "rdfs:label" : "is shared"
+  }, {
     "@id" : "knora-api:lastModificationDate",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
@@ -986,6 +997,7 @@
   } ],
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",
+  "knora-api:isShared" : true,
   "rdfs:label" : "The knora-api ontology in the simple schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

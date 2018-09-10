@@ -30,6 +30,8 @@
 
     rdfs:label "The Knora base ontology"@en ;
 
+    :isShared true ;
+
     :attachedToProject :SystemProject .
 
 
@@ -39,6 +41,20 @@
 #    Properties
 #
 #################################################################
+
+
+:isShared rdf:type owl:ObjectProperty ;
+
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+          rdfs:label "is shared"@en ;
+
+          rdfs:comment "Indicates whether an ontology is shared"@en ;
+
+          :subjectClassConstraint owl:Ontology ;
+
+          :objectDatatypeConstraint xsd:boolean .
+
 
 ### http://www.knora.org/ontology/knora-base#isMainResource
 

@@ -413,6 +413,10 @@ class OntologyResponderV2 extends Responder {
         storeCacheData(ontologyCacheData)
     }
 
+    private def checkReferencesBetweenOntologies(ontologyCacheData: OntologyCacheData): Unit = {
+
+    }
+
     /**
       * Given a list of ontology graphs, finds the IRIs of all subjects whose `rdf:type` is contained in a given set of types.
       *
@@ -474,12 +478,14 @@ class OntologyResponderV2 extends Responder {
                 }.toMap
 
                 val projectIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
+                val isShared = stringFormatter.optionStringToBoolean(ontologyMetadataMap.get(OntologyConstants.KnoraBase.IsShared), throw InconsistentTriplestoreDataException(s"Could not parse the value of knora-base:isShared in $ontologyIri"))
                 val ontologyLabel = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
                 val lastModificationDate = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.toInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
 
                 ontologySmartIri -> OntologyMetadataV2(
                     ontologyIri = ontologySmartIri,
                     projectIri = Some(projectIri),
+                    isShared = isShared,
                     label = Some(ontologyLabel),
                     lastModificationDate = lastModificationDate
                 )
@@ -1420,7 +1426,8 @@ class OntologyResponderV2 extends Responder {
                                 }
                         }
 
-                        val projectIris = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
+                        val projectIris: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
+                        val isSharedVals: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.IsShared, Seq.empty[String])
                         val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
                         val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
 
@@ -1428,6 +1435,14 @@ class OntologyResponderV2 extends Responder {
                             throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject")
                         } else {
                             projectIris.head.toSmartIri
+                        }
+
+                        val isShared = if (isSharedVals.isEmpty) {
+                            false
+                        } else if (isSharedVals.size > 1) {
+                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one value for knora-base:isShared")
+                        } else {
+                            stringFormatter.toBoolean(isSharedVals.head, throw InconsistentTriplestoreDataException(s"Could not parse value of knora-base:isShared in ontology $internalOntologyIri"))
                         }
 
                         val label: String = if (labels.size > 1) {
@@ -1450,6 +1465,7 @@ class OntologyResponderV2 extends Responder {
                         Some(OntologyMetadataV2(
                             ontologyIri = internalOntologyIri,
                             projectIri = Some(projectIri),
+                            isShared = isShared,
                             label = Some(label),
                             lastModificationDate = lastModificationDate
                         ))
@@ -1487,6 +1503,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     projectIri = createOntologyRequest.projectIri,
+                    isShared = createOntologyRequest.isShared,
                     ontologyLabel = createOntologyRequest.label,
                     currentTime = currentTime
                 ).toString
@@ -1498,6 +1515,7 @@ class OntologyResponderV2 extends Responder {
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
                     projectIri = Some(createOntologyRequest.projectIri),
+                    isShared = createOntologyRequest.isShared,
                     label = Some(createOntologyRequest.label),
                     lastModificationDate = Some(currentTime)
                 ).unescape
@@ -1571,6 +1589,11 @@ class OntologyResponderV2 extends Responder {
                 // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
                 _ <- checkOntologyLastModificationDateBeforeUpdate(internalOntologyIri = internalOntologyIri, expectedLastModificationDate = changeOntologyMetadataRequest.lastModificationDate)
 
+                // Don't allow a shared ontology to be made project-specific.
+                _ = if (cacheData.ontologies(internalOntologyIri).ontologyMetadata.isShared && !changeOntologyMetadataRequest.isShared) {
+                    throw BadRequestException(s"A shared ontology cannot be made project-specific")
+                }
+
                 // Update the metadata.
 
                 currentTime: Instant = Instant.now
@@ -1579,6 +1602,7 @@ class OntologyResponderV2 extends Responder {
                     triplestore = settings.triplestoreType,
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
+                    isShared = changeOntologyMetadataRequest.isShared,
                     newLabel = changeOntologyMetadataRequest.label,
                     lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
                     currentTime = currentTime
@@ -1591,6 +1615,7 @@ class OntologyResponderV2 extends Responder {
                 unescapedNewMetadata = OntologyMetadataV2(
                     ontologyIri = internalOntologyIri,
                     projectIri = Some(projectIri),
+                    isShared = changeOntologyMetadataRequest.isShared,
                     label = Some(changeOntologyMetadataRequest.label),
                     lastModificationDate = Some(currentTime)
                 ).unescape

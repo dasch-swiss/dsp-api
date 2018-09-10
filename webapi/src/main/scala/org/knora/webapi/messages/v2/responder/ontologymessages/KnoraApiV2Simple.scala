@@ -35,6 +35,7 @@ object KnoraApiV2Simple {
     val OntologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
+        isShared = true,
         label = Some("The knora-api ontology in the simple schema")
     )
 

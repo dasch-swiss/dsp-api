@@ -65,6 +65,7 @@ case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesRe
   */
 case class CreateOntologyRequestV2(ontologyName: String,
                                    projectIri: SmartIri,
+                                   isShared: Boolean = false,
                                    label: String,
                                    apiRequestID: UUID,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
@@ -107,10 +108,12 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
         val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
             projectIri = projectIri,
+            isShared = isShared,
             label = label,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
@@ -801,6 +804,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   */
 case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
                                            label: String,
+                                           isShared: Boolean = false,
                                            lastModificationDate: Instant,
                                            apiRequestID: UUID,
                                            requestingUser: UserADM) extends OntologiesResponderRequestV2
@@ -842,11 +846,13 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
         val inputMetadata = inputOntologyV2.ontologyMetadata
         val ontologyIri = inputMetadata.ontologyIri
         val label = inputMetadata.label.getOrElse(throw BadRequestException(s"No rdfs:label submitted"))
+        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
         val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(throw BadRequestException("No knora-api:lastModificationDate submitted"))
 
         ChangeOntologyMetadataRequestV2(
             ontologyIri = ontologyIri,
             label = label,
+            isShared = isShared,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
@@ -1335,9 +1341,11 @@ object InputOntologyV2 {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val projectIri = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val ontologyLabel = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val isShared: Boolean = ontologyObj.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
+
+        val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
             ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
@@ -1346,6 +1354,7 @@ object InputOntologyV2 {
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
             projectIri = projectIri,
+            isShared = isShared,
             label = ontologyLabel,
             lastModificationDate = lastModificationDate
         )
@@ -2913,11 +2922,13 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   *
   * @param ontologyIri          the IRI of the ontology.
   * @param projectIri           the IRI of the project that the ontology belongs to.
+  * @param isShared             `true` if this is a shared ontology.
   * @param label                the label of the ontology, if any.
   * @param lastModificationDate the ontology's last modification date, if any.
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
                               projectIri: Option[SmartIri] = None,
+                              isShared: Boolean = false,
                               label: Option[String] = None,
                               lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
@@ -2960,6 +2971,12 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             None
         }
 
+        val isSharedProp = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.IsShared
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.IsShared
+        }
+        val isSharedStatement: (IRI, JsonLDBoolean) = isSharedProp -> JsonLDBoolean(isShared)
+
         val labelStatement: Option[(IRI, JsonLDString)] = label.map {
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
@@ -2976,6 +2993,6 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
-        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement
+        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement + isSharedStatement
     }
 }

@@ -33,6 +33,7 @@
 @(triplestore: String,
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
+  isShared: Boolean,
   newLabel: String,
   lastModificationDate: Instant,
   currentTime: Instant)
@@ -46,11 +47,13 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 DELETE {
     GRAPH ?ontologyNamedGraph {
         ?ontology rdfs:label ?oldLabel ;
+            knora-base:isShared ?oldIsShared ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
     }
 } INSERT {
     GRAPH ?ontologyNamedGraph {
         ?ontology rdfs:label """@newLabel"""^^xsd:string ;
+            knora-base:isShared @isShared ;
             knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }
 }
@@ -66,5 +69,9 @@ WHERE {
         ?ontology rdf:type owl:Ontology ;
             rdfs:label ?oldLabel ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTimeStamp .
+
+        OPTIONAL {
+            ?ontology knora-base:isShared ?oldIsShared .
+        }
     }
 }

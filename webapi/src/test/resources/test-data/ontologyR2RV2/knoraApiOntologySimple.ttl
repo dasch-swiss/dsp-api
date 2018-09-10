@@ -5,6 +5,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://api.knora.org/ontology/knora-api/simple/v2> a owl:Ontology;
+  knora-api:isShared true;
   rdfs:label "The knora-api ontology in the simple schema" .
 
 knora-api:Annotation a owl:Class;
@@ -509,6 +510,12 @@ knora-api:isPartOf a owl:ObjectProperty;
   rdfs:comment "Indicates that this resource is part of another resource";
   rdfs:label "is part of";
   rdfs:subPropertyOf knora-api:hasLinkTo .
+
+knora-api:isShared a owl:ObjectProperty;
+  knora-api:objectType xsd:boolean;
+  knora-api:subjectType owl:Ontology;
+  rdfs:comment "Indicates whether an ontology is shared";
+  rdfs:label "is shared" .
 
 knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";

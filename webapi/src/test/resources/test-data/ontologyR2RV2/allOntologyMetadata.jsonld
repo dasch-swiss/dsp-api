@@ -5,6 +5,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
+    "knora-api:isShared" : false,
     "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z",
     "rdfs:label" : "The anything ontology"
   }, {
@@ -13,6 +14,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The something ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
@@ -20,6 +22,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/00FF"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The images demo ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/0801/beol/v2",
@@ -27,6 +30,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The BEOL ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/0802/biblio/v2",
@@ -34,6 +38,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The Biblio ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
@@ -41,6 +46,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The incunabula ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/0804/dokubib/v2",
@@ -48,6 +54,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0804"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The dokubib ontology"
   }, {
     "@id" : "http://0.0.0.0:3333/ontology/08AE/webern/v2",
@@ -55,6 +62,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/08AE"
     },
+    "knora-api:isShared" : false,
     "rdfs:label" : "The Anton Webern project ontology"
   }, {
     "@id" : "http://api.knora.org/ontology/knora-api/v2",
@@ -62,6 +70,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isShared" : true,
     "rdfs:label" : "The knora-api ontology in the complex schema"
   }, {
     "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
@@ -69,6 +78,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isShared" : true,
     "rdfs:label" : "The salsah-gui ontology"
   }, {
     "@id" : "http://api.knora.org/ontology/standoff/v2",
@@ -76,6 +86,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isShared" : true,
     "rdfs:label" : "The standoff ontology"
   } ],
   "@context" : {

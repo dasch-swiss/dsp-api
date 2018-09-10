@@ -4778,6 +4778,17 @@
     "rdfs:comment" : "Indicates whether class is a subclass of Resource.",
     "rdfs:label" : "is resource class"
   }, {
+    "@id" : "knora-api:isShared",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "owl:Ontology"
+    },
+    "rdfs:comment" : "Indicates whether an ontology is shared",
+    "rdfs:label" : "is shared"
+  }, {
     "@id" : "knora-api:isStandoffClass",
     "@type" : "owl:AnnotationProperty",
     "knora-api:objectType" : {
@@ -5262,6 +5273,7 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
   },
+  "knora-api:isShared" : true,
   "rdfs:label" : "The knora-api ontology in the complex schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
