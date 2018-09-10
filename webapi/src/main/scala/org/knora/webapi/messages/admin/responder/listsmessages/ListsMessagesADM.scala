@@ -80,6 +80,7 @@ case class CreateListApiRequestADM(projectIri: IRI,
   */
 case class CreateChildNodeApiRequestADM(parentNodeIri: IRI,
                                         projectIri: IRI,
+                                        name: Option[String],
                                         labels: Seq[StringLiteralV2],
                                         comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
@@ -274,7 +275,7 @@ case class ListGetResponseADM(list: ListADM) extends KnoraResponseADM with ListA
   *
   * @param listinfo the basic information about a list.
   */
-case class ListInfoGetResponseADM(listinfo: ListInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
+case class ListInfoGetResponseADM(listinfo: ListRootNodeInfoADM) extends KnoraResponseADM with ListADMJsonProtocol {
 
     def toJsValue: JsValue = listInfoGetResponseADMFormat.write(this)
 }
@@ -305,7 +306,7 @@ case class NodePathGetResponseADM(elements: Seq[NodePathElementADM]) extends Kno
 // Components of messages
 
 
-case class ListADM(listinfo: ListNodeInfoADM, children: Seq[ListNodeADM]) {
+case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM]) {
     /**
       * Sorts the whole hierarchy.
       *
@@ -314,7 +315,7 @@ case class ListADM(listinfo: ListNodeInfoADM, children: Seq[ListNodeADM]) {
     def sorted: ListADM = {
         ListADM(
             listinfo = listinfo,
-            children = children map (_.sorted)
+            children = children.sortBy(_.position) map (_.sorted)
         )
     }
 }
@@ -615,6 +616,30 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
+    implicit object ListRootNodeInfoFormat extends JsonFormat[ListRootNodeInfoADM] {
+
+        def write(node:ListRootNodeInfoADM): JsValue = {
+            ListNodeInfoFormat.write(node)
+        }
+
+        def read(value: JsValue): ListRootNodeInfoADM = {
+            ListNodeInfoFormat.read(value).asInstanceOf[ListRootNodeInfoADM]
+        }
+
+    }
+
+    implicit object ListChildNodeInfoFormat extends JsonFormat[ListChildNodeInfoADM] {
+
+        def write(node:ListChildNodeInfoADM): JsValue = {
+            ListNodeInfoFormat.write(node)
+        }
+
+        def read(value: JsValue): ListChildNodeInfoADM = {
+            ListNodeInfoFormat.read(value).asInstanceOf[ListChildNodeInfoADM]
+        }
+
+    }
+
     implicit object ListNodeInfoFormat extends JsonFormat[ListNodeInfoADM] {
         /**
           * Converts a [[ListNodeInfoADM]] to a [[JsValue]].
@@ -706,6 +731,30 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
         }
     }
 
+
+    implicit object ListRootNodeFormat extends JsonFormat[ListRootNodeADM] {
+
+        def write(node:ListRootNodeADM): JsValue = {
+            ListNodeFormat.write(node)
+        }
+
+        def read(value: JsValue): ListRootNodeADM = {
+            ListNodeFormat.read(value).asInstanceOf[ListRootNodeADM]
+        }
+
+    }
+
+    implicit object ListChildNodeFormat extends JsonFormat[ListChildNodeADM] {
+
+        def write(node:ListChildNodeADM): JsValue = {
+            ListNodeFormat.write(node)
+        }
+
+        def read(value: JsValue): ListChildNodeADM = {
+            ListNodeFormat.read(value).asInstanceOf[ListChildNodeADM]
+        }
+
+    }
 
     implicit object ListNodeFormat extends JsonFormat[ListNodeADM] {
         /**

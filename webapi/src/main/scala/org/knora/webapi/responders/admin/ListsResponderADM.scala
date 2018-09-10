@@ -134,40 +134,24 @@ class ListsResponderADM extends Responder {
 
         for {
             // this query will give us only the information about the root node.
-            sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
-                triplestore = settings.triplestoreType,
-                nodeIri = rootNodeIri
-            ).toString())
-
-            listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
+            exists <- listRootNodeByIriExists(rootNodeIri)
 
             // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
 
-            maybeList: Option[ListADM] <- if (listInfoResponse.statements.nonEmpty) {
+            maybeList: Option[ListADM] <- if (exists) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListNodeADM] <- getChildren(rootNodeIri, shallow = false, KnoraSystemInstances.Users.SystemUser)
-                    info: ListNodeInfoADM <- listNodeInfoGetADM(rootNodeIri, KnoraSystemInstances.Users.SystemUser)
-                    // _ = log.debug(s"listGetADM - children count: {}", children.size)
+                    children: Seq[ListChildNodeADM] <- getChildren(rootNodeIri, shallow = false, KnoraSystemInstances.Users.SystemUser)
 
-                    // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-                    statements = listInfoResponse.statements
-                    listinfo = statements.head match {
-                        case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
+                    maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri, KnoraSystemInstances.Users.SystemUser)
 
-                            val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-                            val comments: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
-
-                            ListInfoADM(
-                                id = nodeIri.toString,
-                                projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
-                                labels = StringLiteralSequenceV2(labels.toVector),
-                                comments = StringLiteralSequenceV2(comments.toVector)
-                            )
+                    rootNodeInfo = maybeRootNodeInfo match {
+                        case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
+                        case Some(info: ListChildNodeInfoADM) => throw InconsistentTriplestoreDataException("A child node info was found, although we are expecting a root node info. Please report this as a possible bug.")
+                        case None => throw InconsistentTriplestoreDataException("No info about list node found, although list node should exist. Please report this as a possible bug.")
                     }
 
-                    list = ListADM(listinfo = listinfo, children = children)
-                    // _ = log.debug(s"listGetADM - list: {}", MessageUtil.toSource(list))
+                    list = ListADM(listinfo = rootNodeInfo, children = children)
                 } yield Some(list)
             } else {
                 FastFuture.successful(None)
@@ -347,10 +331,11 @@ class ListsResponderADM extends Responder {
       * Retrieves a complete node including children. The node can be the lists root node or child node.
       *
       * @param nodeIri the IRI of the list node to be queried.
+      * @param shallow  denotes if all children or only the immediate children will be returned.
       * @param requestingUser the user making the request.
       * @return a optional [[ListNodeADM]]
       */
-    private def listNodeGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
+    private def listNodeGetADM(nodeIri: IRI, shallow: Boolean, requestingUser: UserADM): Future[Option[ListNodeADM]] = {
         for {
             // this query will give us only the information about the root node.
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
@@ -365,7 +350,7 @@ class ListsResponderADM extends Responder {
             maybeListNode: Option[ListNodeADM] <- if (listInfoResponse.statements.nonEmpty) {
                 for {
                     // here we know that the list exists and it is fine if children is an empty list
-                    children: Seq[ListChildNodeADM] <- getChildren(nodeIri, shallow = false, requestingUser)
+                    children: Seq[ListChildNodeADM] <- getChildren(nodeIri, shallow, requestingUser)
 
                     // _ = log.debug(s"listGetADM - children count: {}", children.size)
 
@@ -466,8 +451,17 @@ class ListsResponderADM extends Responder {
             val position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri."))
 
             val children: Seq[ListChildNodeADM] = propsMap.get(OntologyConstants.KnoraBase.HasSubListNode) match {
-                case Some(iris: Seq[LiteralV2]) => iris.map {
-                    iri => createChildNode(iri.toString, statements)
+                case Some(iris: Seq[LiteralV2]) => {
+
+                    if (!shallow) {
+                        // if not shallow then get the children of this node
+                        iris.map {
+                            iri => createChildNode(iri.toString, statements)
+                        }
+                    } else {
+                        // if shallow, then we don't need the children
+                        Seq.empty[ListChildNodeADM]
+                    }
                 }
                 case None => Seq.empty[ListChildNodeADM]
             }
@@ -490,7 +484,7 @@ class ListsResponderADM extends Responder {
                     startNodeIri = ofNodeIri
                 ).toString()
             }
-            nodeWithChildrenResponse: SparqlSelectResponse <- (storeManager ? SparqlExtendedConstructRequest(nodeChildrenQuery)).mapTo[SparqlExtendedConstructResponse]
+            nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(nodeChildrenQuery)).mapTo[SparqlExtendedConstructResponse]
 
             statements: Seq[(SubjectV2, Map[IRI, Seq[LiteralV2]])] = nodeWithChildrenResponse.statements.toList
 
@@ -786,30 +780,41 @@ class ListsResponderADM extends Responder {
 
             _ = if (!parentNodeIri.equals(createListNodeRequest.parentNodeIri)) throw BadRequestException("List node IRI in path and payload don't match.")
 
-            /* Verify that the list node exists. */
-            maybeListNode <- listNodeGetADM(listNodeIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
-            nodeInfo: ListNodeInfoADM = maybeListNodeInfo match {
-                case Some(info) => info
-                case None => throw BadRequestException(s"List node '$listNodeIri' not found.")
+            /* Verify that the list node exists by retrieving the whole node including children (need for position calculation) */
+            maybeParentListNode <- listNodeGetADM(parentNodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            (parentListNode, children) = maybeParentListNode match {
+                case Some(node: ListRootNodeADM) => (node.asInstanceOf[ListRootNodeADM], node.children)
+                case Some(node: ListChildNodeADM) => (node.asInstanceOf[ListChildNodeADM], node.children)
+                case None => throw BadRequestException(s"List node '$parentNodeIri' not found.")
             }
 
-            /* Verify that the project exists. */
+            position: Int = children.size - 1
+
+            /* get the root node, depending on the type of the parent */
+            rootNode = parentListNode match {
+                case root: ListRootNodeADM => root.id
+                case child: ListChildNodeADM => child.hasRootNode
+            }
+
+            /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
             maybeProject <- (responderManager ? ProjectGetADM(maybeIri = Some(createChildNodeRequest.projectIri), maybeShortname = None, maybeShortcode = None, KnoraSystemInstances.Users.SystemUser)).mapTo[Option[ProjectADM]]
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createChildNodeRequest.projectIri}' not found.")
             }
 
-            maybeShortcode = project.shortcode
+            // calculate the data named graph
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
-            listIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
+            // calculate the new node's IRI
+            maybeShortcode = project.shortcode
+            newListNodeIri = knoraIdUtil.makeRandomListIri(maybeShortcode)
 
-            // Create the new list
-            createNewListSparqlString = queries.sparql.admin.txt.createNewList(
+            // Create the new list node
+            createNewListSparqlString = queries.sparql.admin.txt.createNewListChildNode(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
-                listIri = listIri,
+                nodeIri = newListNodeIri,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
                 maybeLabels = createListRequest.labels,
@@ -855,8 +860,59 @@ class ListsResponderADM extends Responder {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
 
-            checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-            result = checkProjectExistsResponse.result
+            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = askResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if a list node identified by IRI exists and is a root node.
+      *
+      * @param listNodeIri the IRI of the project.
+      * @return a [[Boolean]].
+      */
+    def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = askResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if a list node identified by IRI exists.
+      *
+      * @param listNodeIri the IRI of the project.
+      * @return a [[Boolean]].
+      */
+    def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = askResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if a list node identified by name exists.
+      *
+      * @param projectIri the IRI of the project.
+      * @return a [[Boolean]].
+      */
+    def listNodeByNameExists(name: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
+            //_ = log.debug("projectExists - query: {}", askString)
+
+            askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = askResponse.result
 
         } yield result
     }
