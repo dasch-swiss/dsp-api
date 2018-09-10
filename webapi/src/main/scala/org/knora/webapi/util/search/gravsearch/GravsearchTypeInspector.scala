@@ -21,12 +21,12 @@ package org.knora.webapi.util.search.gravsearch
 
 import akka.actor.{ActorSelection, ActorSystem}
 import akka.util.Timeout
-import org.knora.webapi.Settings
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.search._
+import org.knora.webapi.{KnoraDispatchers, Settings}
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An trait whose implementations can get type information from a parsed Gravsearch query in different ways.
@@ -40,7 +40,7 @@ abstract class GravsearchTypeInspector(protected val nextInspector: Option[Gravs
                                        protected val system: ActorSystem) {
     protected val settings = Settings(system)
     protected val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     protected implicit val timeout: Timeout = settings.defaultTimeout
 
     /**

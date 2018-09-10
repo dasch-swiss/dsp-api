@@ -60,7 +60,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     private implicit val system: ActorSystem = context.system
     private val settings = Settings(system)
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraAskDispatcher)
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     private implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     private val triplestoreType = settings.triplestoreType
@@ -631,6 +631,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 val requestDuration = System.currentTimeMillis() - requestStartTime
                 log.debug(s"${logDelimiter}Query took $requestDuration millis:\n\n$sparql$logDelimiter")
             }
+
+            // do cleanup after strict (in memory) access
+            _ = response.discardEntityBytes()
 
         } yield responseString
 

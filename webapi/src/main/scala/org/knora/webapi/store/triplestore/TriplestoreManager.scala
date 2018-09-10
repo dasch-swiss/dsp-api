@@ -59,8 +59,7 @@ class TriplestoreManager extends Actor with ActorLogging {
         log.debug("TriplestoreManagerActor: start with preStart")
 
         storeActorRef = settings.triplestoreType match {
-            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
-            case TriplestoreTypes.HttpFuseki => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]), name = HTTP_TRIPLESTORE_ACTOR_NAME)
+            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = HTTP_TRIPLESTORE_ACTOR_NAME)
             case TriplestoreTypes.EmbeddedJenaTdb=> makeActor(Props[JenaTDBActor], name = EMBEDDED_JENA_ACTOR_NAME)
             case unknownType => throw UnsuportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
         }

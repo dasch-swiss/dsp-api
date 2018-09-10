@@ -104,35 +104,35 @@ lazy val webapi = (project in file(".")).
             IntegrationTest / packageBin / publishArtifact := true
         ).
         settings(
-            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
-            // we specify the name for our fat jars (main, test, it)
-            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
-            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
-            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
-
-            // disable running of tests before fat jar assembly!
-            assembly / test := {},
-            // test in (Test, assembly) := {},
-            // test in (IntegrationTest, assembly) := {},
-
-            // need to use our custom merge strategy because of aop.xml (AspectJ)
-            assembly / assemblyMergeStrategy := customMergeStrategy,
-
-            // Skip packageDoc task on stage
+//            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
+//            // we specify the name for our fat jars (main, test, it)
+//            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
+//            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
+//            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
+//
+//            // disable running of tests before fat jar assembly!
+//            assembly / test := {},
+//            // test in (Test, assembly) := {},
+//            // test in (IntegrationTest, assembly) := {},
+//
+//            // need to use our custom merge strategy because of aop.xml (AspectJ)
+//            assembly / assemblyMergeStrategy := customMergeStrategy,
+//
+//            // Skip packageDoc task on stage
             Compile / packageDoc / mappings := Seq(),
-
-            Universal / mappings := {
-                // removes all jar mappings in universal and appends the fat jar
-                // universalMappings: Seq[(File,String)]
-                val universalMappings = (mappings in Universal).value
-                val fatJar = (assembly in Compile).value
-                // removing means filtering
-                val filtered = universalMappings filter {
-                    case (file, name) =>  ! name.endsWith(".jar")
-                }
-                // add the fat jar
-                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
-            },
+//
+//            Universal / mappings := {
+//                // removes all jar mappings in universal and appends the fat jar
+//                // universalMappings: Seq[(File,String)]
+//                val universalMappings = (mappings in Universal).value
+//                val fatJar = (assembly in Compile).value
+//                // removing means filtering
+//                val filtered = universalMappings filter {
+//                    case (file, name) =>  ! name.endsWith(".jar")
+//                }
+//                // add the fat jar
+//                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
+//            },
 
             Universal / mappings ++= {
                 // copy the scripts folder
@@ -140,13 +140,13 @@ lazy val webapi = (project in file(".")).
                 // copy the configuration files to config directory
                 contentOf("configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _) ++
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
-                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
+//                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
 
             // the bash scripts classpath only needs the fat jar
-            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
+//            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
 
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
@@ -194,6 +194,7 @@ lazy val webApiLibs = Seq(
     library.gatlingTestFramework,
     library.gwtServlet,
     library.jacksonScala,
+    library.jaxbApi,
     library.jsonldJava,
     library.jodd,
     library.jodaTime,
@@ -201,12 +202,12 @@ lazy val webApiLibs = Seq(
     library.jenaLibs,
     library.jenaText,
     library.jwt,
-    library.kamonCore,
-    library.kamonAkka,
-    library.kamonAkkaHttp,
-    library.kamonPrometheus,
-    library.kamonZipkin,
-    library.kamonJaeger,
+    //library.kamonCore,
+    //library.kamonAkka,
+    //library.kamonAkkaHttp,
+    //library.kamonPrometheus,
+    //library.kamonZipkin,
+    //library.kamonJaeger,
     library.logbackClassic,
     library.rdf4jRuntime,
     library.saxonHE,
@@ -274,7 +275,7 @@ lazy val library =
         val jwt                    = "io.igl"                       %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
 
         // caching
-        val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.0"
+        val ehcache                = "net.sf.ehcache"                % "ehcache"                  % "2.10.3"
 
         // monitoring
         val kamonCore              = "io.kamon"                     %% "kamon-core"               % "1.1.3"
@@ -305,7 +306,7 @@ lazy val library =
         val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.0"
         val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
-
+        
         // provides akka jackson (json) support
         val akkaHttpCirce          = "de.heikoseeberger"            %% "akka-http-circe"          % "1.21.0"
         val jacksonScala           = "com.fasterxml.jackson.module" %% "jackson-module-scala"     % "2.9.4"
@@ -314,6 +315,9 @@ lazy val library =
 
         // swagger (api documentation)
         val swaggerAkkaHttp        = "com.github.swagger-akka-http" %% "swagger-akka-http"        % "0.14.0"
+
+        // Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
+        val jaxbApi                = "javax.xml.bind"                % "jaxb-api"                 % "2.2.12"
     }
 
 lazy val javaRunOptions = Seq(
@@ -326,7 +330,8 @@ lazy val javaRunOptions = Seq(
     "-Dcom.sun.management.jmxremote",
     "-Dcom.sun.management.jmxremote.port=1617",
     "-Dcom.sun.management.jmxremote.authenticate=false",
-    "-Dcom.sun.management.jmxremote.ssl=false"
+    "-Dcom.sun.management.jmxremote.ssl=false",
+    //"-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib"
 )
 
 lazy val javaTestOptions = Seq(
