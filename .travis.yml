@@ -13,7 +13,7 @@ scala:
   - 2.12.1
 
 jdk:
-  - openjdk8
+  - openjdk10
 
 services:
   - docker
@@ -55,6 +55,8 @@ jobs:
     # test sbt compile and stage
     - stage: compile and stage
       script:
+        - rm -rf $HOME/.sbt
+        - rm -rf $HOME/.ivy2
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt compile stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -139,6 +141,11 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
     #    # start built-in salsah1 browser tests
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
+    # testing docker images
+    - stage: test
+      script:
+        - docker build $TRAVIS_BUILD_DIR/webapi/
+        - docker build $TRAVIS_BUILD_DIR/salsah1/
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged

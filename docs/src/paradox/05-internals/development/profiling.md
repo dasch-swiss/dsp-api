@@ -17,21 +17,21 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Development
+# Profiling Knora
 
-@@toc { depth=1 }
+To run Knora with profiling, we first need to build the application. Please run the following from the `webapi` folder:
 
-@@@ index
+```
+$ sbt stage
+```
 
-- [Overview](overview.md)
-- [Starting Fuseki 3](fuseki.md)
-- [Starting GraphDB](graphdb.md)
-- [Build Process](build-process.md)
-- [Setup IntelliJ for development of Knora](intellij-config.md)
-- [Testing](testing.md)
-- [Docker Cheat Sheet](docker-cheat-sheet.md)
-- [Monitoring Knora](monitoring.md)
-- [Profiling Knora](profiling.md)
-- [Starting the Knora Stack inside Docker Container](docker-compose.md)
+## Profiling with [YourKit](http://yourkit.com):
 
-@@@
+Start `webapi` from the `knora/webapi/target/universal/stage` directory with the following command:
+
+```
+$ ./bin/webapi -J-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib -J-Xms1G -J-Xmx1G
+```
+
+
+Now start the YourKit Profiler and connect to the `Main` process.
