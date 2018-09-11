@@ -1728,7 +1728,7 @@ class OntologyResponderV2 extends Responder {
 
                 // Don't allow a shared ontology to be made project-specific.
                 _ = if (cacheData.ontologies(internalOntologyIri).ontologyMetadata.isShared && !changeOntologyMetadataRequest.isShared) {
-                    throw BadRequestException(s"A shared ontology cannot be made project-specific")
+                    throw BadRequestException(s"A shared ontology cannot be unshared")
                 }
 
                 // Update the metadata.
@@ -2191,11 +2191,6 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"The cardinalities of ${addCardinalitiesRequest.classInfoContent.classIri} already include the following property or properties: ${redundantCardinalities.mkString(", ")}")
                 }
 
-                // If the class is in a shared ontology, don't allow cardinalities to be added.
-                _ = if (cacheData.ontologies(internalOntologyIri).ontologyMetadata.isShared) {
-                    throw BadRequestException("Cardinalities cannot be added to a class defined in a shared ontology")
-                }
-
                 // Check that the class isn't used in data, and that it has no subclasses.
 
                 _ <- isEntityUsed(
@@ -2344,11 +2339,6 @@ class OntologyResponderV2 extends Responder {
                     internalOntologyIri = internalOntologyIri,
                     expectedLastModificationDate = changeCardinalitiesRequest.lastModificationDate
                 )
-
-                // Don't change the cardinalities in a class defined in a shared ontology.
-                _ = if (cacheData.ontologies(internalOntologyIri).ontologyMetadata.isShared) {
-                    throw BadRequestException("Cardinalities cannot be replaced in a class defined in a shared ontology")
-                }
 
                 // Check that the class's rdf:type is owl:Class.
 
