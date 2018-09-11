@@ -76,8 +76,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val anythingAdmin = SharedTestDataADM.anythingAdminUser
     private val anythingAdminEmail = anythingAdmin.email
 
-    private val biblioUser = SharedTestDataADM.biblioUser
-    private val biblioUserEmail = biblioUser.email
+    private val beolUser = SharedTestDataADM.beolUser
+    private val beolUserEmail = beolUser.email
 
     private val password = "test"
 
@@ -86,6 +86,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
@@ -1252,10 +1253,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "create resources from an XML import" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
-                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
+                   |    xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                    |    <p0801-beol:person id="abel">
@@ -1269,36 +1270,36 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
                    |        <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
                    |    </p0801-beol:person>
-                   |    <p0802-biblio:Journal id="math_intelligencer">
+                   |    <p0801-biblio:Journal id="math_intelligencer">
                    |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-                   |        <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
-                   |    </p0802-biblio:Journal>
-                   |    <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <p0801-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0801-biblio:hasName>
+                   |    </p0801-biblio:Journal>
+                   |    <p0801-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
                    |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-                   |        </p0802-biblio:p0801-beol__comment>
-                   |        <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
-                   |        <p0802-biblio:isPartOfJournal>
-                   |            <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-                   |        </p0802-biblio:isPartOfJournal>
-                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
-                   |        <p0802-biblio:publicationHasAuthor>
+                   |        </p0801-biblio:p0801-beol__comment>
+                   |        <p0801-biblio:endPage knoraType="richtext_value">73</p0801-biblio:endPage>
+                   |        <p0801-biblio:isPartOfJournal>
+                   |            <p0801-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+                   |        </p0801-biblio:isPartOfJournal>
+                   |        <p0801-biblio:journalVolume knoraType="richtext_value">27</p0801-biblio:journalVolume>
+                   |        <p0801-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
-                   |        </p0802-biblio:publicationHasAuthor>
-                   |        <p0802-biblio:publicationHasAuthor>
+                   |        </p0801-biblio:publicationHasAuthor>
+                   |        <p0801-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-                   |        </p0802-biblio:publicationHasAuthor>
-                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</p0802-biblio:publicationHasDate>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
-                   |        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
-                   |    </p0802-biblio:JournalArticle>
+                   |        </p0801-biblio:publicationHasAuthor>
+                   |        <p0801-biblio:publicationHasDate knoraType="date_value">GREGORIAN:500 BC:400 BC</p0801-biblio:publicationHasDate>
+                   |        <p0801-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 16th and 17th Centuries</p0801-biblio:publicationHasTitle>
+                   |        <p0801-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0801-biblio:publicationHasTitle>
+                   |        <p0801-biblio:startPage knoraType="richtext_value">48</p0801-biblio:startPage>
+                   |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 val responseStr: String = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1313,10 +1314,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "reject XML import data that fails schema validation" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
-                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
+                   |    xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
                    |    <p0801-beol:person id="abel">
@@ -1329,36 +1330,36 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
                    |        <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
                    |    </p0801-beol:person>
-                   |    <p0802-biblio:Journal id="math_intelligencer">
+                   |    <p0801-biblio:Journal id="math_intelligencer">
                    |        <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-                   |        <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
-                   |    </p0802-biblio:Journal>
-                   |    <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+                   |        <p0801-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0801-biblio:hasName>
+                   |    </p0801-biblio:Journal>
+                   |    <p0801-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
                    |        <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-                   |        </p0802-biblio:p0801-beol__comment>
-                   |        <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
-                   |        <p0802-biblio:isPartOfJournal>
-                   |            <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-                   |        </p0802-biblio:isPartOfJournal>
-                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
-                   |        <p0802-biblio:publicationHasAuthor>
+                   |        </p0801-biblio:p0801-beol__comment>
+                   |        <p0801-biblio:endPage knoraType="richtext_value">73</p0801-biblio:endPage>
+                   |        <p0801-biblio:isPartOfJournal>
+                   |            <p0801-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+                   |        </p0801-biblio:isPartOfJournal>
+                   |        <p0801-biblio:journalVolume knoraType="richtext_value">27</p0801-biblio:journalVolume>
+                   |        <p0801-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
-                   |        </p0802-biblio:publicationHasAuthor>
-                   |        <p0802-biblio:publicationHasAuthor>
+                   |        </p0801-biblio:publicationHasAuthor>
+                   |        <p0801-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-                   |        </p0802-biblio:publicationHasAuthor>
-                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</p0802-biblio:publicationHasDate>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
-                   |        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
-                   |    </p0802-biblio:JournalArticle>
+                   |        </p0801-biblio:publicationHasAuthor>
+                   |        <p0801-biblio:publicationHasDate knoraType="date_value">GREGORIAN:19foo76</p0801-biblio:publicationHasDate>
+                   |        <p0801-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0801-biblio:publicationHasTitle>
+                   |        <p0801-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0801-biblio:publicationHasTitle>
+                   |        <p0801-biblio:startPage knoraType="richtext_value">48</p0801-biblio:startPage>
+                   |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 assert(status == StatusCodes.BadRequest, response.toString)
                 val responseStr = responseAs[String]
                 responseStr should include("org.xml.sax.SAXParseException")
@@ -1369,34 +1370,34 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "refer to existing resources in an XML import" in {
             val xmlImport =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
-                   |    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
+                   |    xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
                    |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <p0802-biblio:JournalArticle id="strings_in_the_18th_century">
+                   |    <p0801-biblio:JournalArticle id="strings_in_the_18th_century">
                    |        <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-                   |        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
+                   |        <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="$mappingIri">
                    |            <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="${mathIntelligencerIri.get}">Math Intelligencer</a>.</text>
-                   |        </p0802-biblio:p0801-beol__comment>
-                   |        <p0802-biblio:endPage knoraType="richtext_value">76</p0802-biblio:endPage>
-                   |        <p0802-biblio:isPartOfJournal>
-                   |            <p0802-biblio:Journal knoraType="link_value" linkType="iri" target="${mathIntelligencerIri.get}"/>
-                   |        </p0802-biblio:isPartOfJournal>
-                   |        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
-                   |        <p0802-biblio:publicationHasAuthor>
+                   |        </p0801-biblio:p0801-beol__comment>
+                   |        <p0801-biblio:endPage knoraType="richtext_value">76</p0801-biblio:endPage>
+                   |        <p0801-biblio:isPartOfJournal>
+                   |            <p0801-biblio:Journal knoraType="link_value" linkType="iri" target="${mathIntelligencerIri.get}"/>
+                   |        </p0801-biblio:isPartOfJournal>
+                   |        <p0801-biblio:journalVolume knoraType="richtext_value">27</p0801-biblio:journalVolume>
+                   |        <p0801-biblio:publicationHasAuthor>
                    |            <p0801-beol:person knoraType="link_value" linkType="iri" target="${abelAuthorIri.get}"/>
-                   |        </p0802-biblio:publicationHasAuthor>
-                   |        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0802-biblio:publicationHasDate>
-                   |        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0802-biblio:publicationHasTitle>
-                   |        <p0802-biblio:startPage knoraType="richtext_value">52</p0802-biblio:startPage>
-                   |    </p0802-biblio:JournalArticle>
+                   |        </p0801-biblio:publicationHasAuthor>
+                   |        <p0801-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0801-biblio:publicationHasDate>
+                   |        <p0801-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0801-biblio:publicationHasTitle>
+                   |        <p0801-biblio:startPage knoraType="richtext_value">52</p0801-biblio:startPage>
+                   |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ", "UTF-8")
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")
@@ -1461,9 +1462,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
         }
 
         "serve a Zip file containing XML schemas for validating an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0802/biblio", "UTF-8")
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0801/biblio", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
@@ -1479,14 +1480,14 @@ class ResourcesV1R2RSpec extends R2RSpec {
                     }
                 }
 
-                assert(zippedFilenames == Set("p0801-beol.xsd", "p0802-biblio.xsd", "knoraXmlImport.xsd"))
+                assert(zippedFilenames == Set("p0801-beol.xsd", "p0801-biblio.xsd", "knoraXmlImport.xsd"))
             }
         }
 
         "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/something", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
@@ -1503,6 +1504,29 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 }
 
                 assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
+            }
+        }
+
+        "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
+            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
+
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
+                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+                val zippedFilenames = collection.mutable.Set.empty[String]
+
+                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+                    var zipEntry: ZipEntry = null
+
+                    while ( {
+                        zipEntry = zipInputStream.getNextEntry
+                        zipEntry != null
+                    }) {
+                        zippedFilenames.add(zipEntry.getName)
+                    }
+                }
+
+                assert(zippedFilenames == Set("p0001-empty-thing.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
             }
         }
 

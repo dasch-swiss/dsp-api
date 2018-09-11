@@ -1,5 +1,5 @@
 <xs:schema 
-vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/0802/biblio/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#">
+vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/0801/biblio/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#">
     <xs:import schemaLocation="p0801-beol.xsd" namespace="http://api.knora.org/ontology/0801/beol/xml-import/v1#"/>
     <xs:import schemaLocation="../../../../../src/main/resources/knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#"/>
     <xs:element name="Article">
