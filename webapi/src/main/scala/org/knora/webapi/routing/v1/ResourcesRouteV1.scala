@@ -381,6 +381,15 @@ object ResourcesRouteV1 extends Authenticator {
                         userProfile = userProfile
                     )).mapTo[EntityInfoGetResponseV1]
 
+                    // Look at the base classes of all the resource classes in the initial ontology. Make a set of
+                    // the ontologies containing the definitions of those classes, not including including the initial ontology itself
+                    // or any other ontologies we've already looked at.
+                    ontologyIrisFromBaseClasses: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
+                        case (acc, (resourceClassIri, resourceClassInfo)) =>
+                            val subClassOfOntologies: Set[IRI] = resourceClassInfo.subClassOf.map(_.toSmartIri).filter(_.isKnoraDefinitionIri).map(_.getOntologyFromEntity.toString)
+                            acc ++ subClassOfOntologies
+                    } -- intermediateResults.keySet - initialOntologyIri
+
                     // Look at the properties that have cardinalities in the resource classes in the initial ontology.
                     // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
                     // or any other ontologies we've already looked at.
@@ -405,7 +414,7 @@ object ResourcesRouteV1 extends Authenticator {
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.
-                    referencedOntologies: Set[IRI] = ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
+                    referencedOntologies: Set[IRI] = ontologyIrisFromBaseClasses ++ ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
 
                     // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
                     lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(FastFuture.successful(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))) {
