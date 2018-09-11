@@ -167,7 +167,7 @@ object SharedTestDataADM {
     def sharedOntologiesProject = ProjectADM(
         id = OntologyConstants.KnoraBase.SharedOntologiesProject,
         shortname = "SharedOntologiesProject",
-        shortcode = "0000",
+        shortcode = "shared",
         longname = Some("Knora Shared Ontologies Project"),
         description = Seq(StringLiteralV2(value = "Knora Shared Ontologies Project", language = Some("en"))),
         keywords = Seq.empty[String],
