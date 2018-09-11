@@ -351,6 +351,11 @@ class ClassInfoV1(classInfoV2: ReadClassInfoV2) extends EntityInfoV1 {
       */
     def resourceClassIri: IRI = classInfoV2.entityInfoContent.classIri.toString
 
+    /**
+      * Returns the IRIs of all the base classes of the resource class.
+      */
+    def subClassOf: Set[IRI] = classInfoV2.entityInfoContent.subClassOf.map(_.toString)
+
     def allCardinalities: Map[IRI, KnoraCardinalityInfo] = {
         classInfoV2.allCardinalities.map {
             case (smartIri, cardinality) => smartIri.toString -> cardinality
