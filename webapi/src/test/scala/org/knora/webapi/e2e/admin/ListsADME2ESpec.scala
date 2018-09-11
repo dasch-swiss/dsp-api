@@ -98,8 +98,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
     private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
 
-    private val bigListInfo: ListInfoADM = SharedListsTestDataADM.bigListInfo
-    private val bigListNodes: Seq[ListNodeADM] = SharedListsTestDataADM.bigListNodes
+    private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+    private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
     "The Lists Route ('/admin/lists')" when {
 
@@ -148,15 +148,15 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
             "return basic list information" in {
-                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F00FF%2F73d0ec0302") ~> addCredentials(rootCreds.basicHttpCredentials)
+                val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList") ~> addCredentials(rootCreds.basicHttpCredentials)
                 val response: HttpResponse = singleAwaitingRequest(request)
                 // log.debug(s"response: ${response.toString}")
 
                 response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfoADM]
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                val expectedListInfo: ListInfoADM = SharedListsTestDataADM.bigListInfo
+                val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
 
                 receivedListInfo.sorted should be (expectedListInfo.sorted)
             }
@@ -169,8 +169,8 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 response.status should be(StatusCodes.OK)
 
                 val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
-                receivedList.listinfo.sorted should be (bigListInfo.sorted)
-                receivedList.children.map(_.sorted) should be (bigListNodes.map(_.sorted))
+                receivedList.listinfo.sorted should be (treeListInfo.sorted)
+                receivedList.children.map(_.sorted) should be (treeListNodes.map(_.sorted))
             }
         }
 
@@ -298,7 +298,7 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
                 // log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListInfoADM]
+                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
                 receivedListInfo.projectIri should be (IMAGES_PROJECT_IRI)
 

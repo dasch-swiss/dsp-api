@@ -23,7 +23,7 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import com.sun.xml.internal.ws.encoding.soap
+import org.apache.jena.sparql.function.library.leviathan.root
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -321,53 +321,6 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
 }
 
 /**
-  * Represents basic information about a list, the information stored in the list's root node.
-  *
-  * @param id         the IRI of the list.
-  * @param projectIri the IRI of the project this list belongs to.
-  * @param labels     the labels of the list in all available languages.
-  * @param comments   the comments attached to the list in all available languages.
-  */
-case class ListInfoADM(id: IRI, projectIri: IRI, labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) {
-    /**
-      * Sorts the whole hierarchy.
-      *
-      * @return a sorted [[ListInfoADM]].
-      */
-    def sorted: ListInfoADM = {
-        ListInfoADM(
-            id = id,
-            projectIri = projectIri,
-            labels = labels.sortByStringValue,
-            comments = comments.sortByStringValue
-        )
-    }
-
-    /**
-      * Gets the label in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if label is not available in user's preferred language.
-      * @return the label in the preferred language.
-      */
-    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        labels.getPreferredLanguage(userLang, fallbackLang)
-    }
-
-    /**
-      * Gets the comment in the user's preferred language.
-      *
-      * @param userLang     the user's preferred language.
-      * @param fallbackLang language to use if comment is not available in user's preferred language.
-      * @return the comment in the preferred language.
-      */
-    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        comments.getPreferredLanguage(userLang, fallbackLang)
-    }
-
-}
-
-/**
   * Represents basic information about a list node, the information which is found in the list's root or child node.
   *
   * @param id          the IRI of the list.
@@ -566,56 +519,6 @@ case class NodePathElementADM(id: IRI, name: Option[String], labels: StringLiter
   */
 trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
 
-    implicit object ListInfoADMFormat extends JsonFormat[ListInfoADM] {
-        /**
-          * Converts a [[ListInfoADM]] to a [[JsValue]].
-          *
-          * @param nodeInfo a [[ListInfoADM]].
-          * @return a [[JsValue]].
-          */
-        def write(nodeInfo: ListInfoADM): JsValue = {
-            JsObject(
-                "id" -> nodeInfo.id.toJson,
-                "projectIri" -> nodeInfo.projectIri.toJson,
-                "labels" -> JsArray(nodeInfo.labels.stringLiterals.map(_.toJson)),
-                "comments" -> JsArray(nodeInfo.comments.stringLiterals.map(_.toJson))
-            )
-        }
-
-        /**
-          * Converts a [[JsValue]] to a [[ListInfoADM]].
-          *
-          * @param value a [[JsValue]].
-          * @return a [[ListInfoADM]].
-          */
-        def read(value: JsValue): ListInfoADM = {
-
-            val fields = value.asJsObject.fields
-
-            val id = fields.getOrElse("id", throw DeserializationException("The expected field 'id' is missing.")).convertTo[String]
-            val projectIri: IRI = fields.getOrElse("projectIri", throw DeserializationException("The expected field 'projectIri' is missing.")).convertTo[String]
-            val labels = fields.get("labels") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
-                case None => Seq.empty[StringLiteralV2]
-                case _ => throw DeserializationException("The expected field 'labels' is in the wrong format.")
-            }
-            val comments = fields.get("comments") match {
-                case Some(JsArray(values)) => values.map(_.convertTo[StringLiteralV2])
-                case None => Seq.empty[StringLiteralV2]
-                case _ => throw DeserializationException("The expected field 'comments' is in the wrong format.")
-            }
-
-            ListInfoADM(
-                id = id,
-                projectIri = projectIri,
-                labels = StringLiteralSequenceV2(labels.toVector),
-                comments = StringLiteralSequenceV2(comments.toVector)
-            )
-
-        }
-    }
-
-
     implicit object ListRootNodeInfoFormat extends JsonFormat[ListRootNodeInfoADM] {
 
         def write(node:ListRootNodeInfoADM): JsValue = {
@@ -649,26 +552,51 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           */
         def write(nodeInfo: ListNodeInfoADM): JsValue = {
 
+
             nodeInfo match {
                 case root: ListRootNodeInfoADM => {
-                    JsObject(
-                        "id" -> root.id.toJson,
-                        "projectIri" -> root.projectIri.toJson,
-                        "name" -> root.name.toJson,
-                        "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
-                        "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
-                        "isRootNode" -> true.toJson
-                    )
+
+                    if (root.name.nonEmpty) {
+                        JsObject(
+                            "id" -> root.id.toJson,
+                            "projectIri" -> root.projectIri.toJson,
+                            "name" -> root.name.toJson,
+                            "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+                            "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+                            "isRootNode" -> true.toJson
+                        )
+                    } else {
+                        JsObject(
+                            "id" -> root.id.toJson,
+                            "projectIri" -> root.projectIri.toJson,
+                            "labels" -> JsArray(root.labels.stringLiterals.map(_.toJson)),
+                            "comments" -> JsArray(root.comments.stringLiterals.map(_.toJson)),
+                            "isRootNode" -> true.toJson
+                        )
+                    }
+
+
                 }
                 case child: ListChildNodeInfoADM => {
-                    JsObject(
-                        "id" -> child.id.toJson,
-                        "name" -> child.name.toJson,
-                        "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-                        "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
-                        "position" -> child.position.toJson,
-                        "hasRootNode" -> child.hasRootNode.toJson
-                    )
+
+                    if (child.name.nonEmpty) {
+                        JsObject(
+                            "id" -> child.id.toJson,
+                            "name" -> child.name.toJson,
+                            "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+                            "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+                            "position" -> child.position.toJson,
+                            "hasRootNode" -> child.hasRootNode.toJson
+                        )
+                    } else {
+                        JsObject(
+                            "id" -> child.id.toJson,
+                            "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
+                            "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+                            "position" -> child.position.toJson,
+                            "hasRootNode" -> child.hasRootNode.toJson
+                        )
+                    }
                 }
             }
         }
@@ -933,7 +861,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
             val fields = value.asJsObject.fields
 
-            val listinfo: ListRootNodeInfoADM = fields.getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing.")).convertTo[ListInfoADM].asInstanceOf[ListRootNodeInfoADM]
+            val listinfo: ListRootNodeInfoADM = fields.getOrElse("listinfo", throw DeserializationException("The expected field 'listinfo' is missing.")).convertTo[ListRootNodeInfoADM]
             val children: Seq[ListChildNodeADM] = fields.get("children") match {
                 case Some(JsArray(values)) => values.map(_.convertTo[ListNodeADM].asInstanceOf[ListChildNodeADM])
                 case None => Seq.empty[ListChildNodeADM]
@@ -949,7 +877,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
 
 
     implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
-    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "labels", "comments")
+    implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")
     implicit val listsGetResponseADMFormat: RootJsonFormat[ListsGetResponseADM] = jsonFormat(ListsGetResponseADM, "lists")
