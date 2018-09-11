@@ -1,6 +1,6 @@
 <xs:schema 
-vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/0801/beol/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/0801/beol/xml-import/v1#">
-    <xs:import schemaLocation="p0802-biblio.xsd" namespace="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"/>
+vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/0801/beol/xml-import/v1#" elementFormDefault="qualified" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning" xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://api.knora.org/ontology/0801/beol/xml-import/v1#">
+    <xs:import schemaLocation="p0801-biblio.xsd" namespace="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"/>
     <xs:import schemaLocation="../../../../../src/main/resources/knoraXmlImport.xsd" namespace="http://api.knora.org/ontology/knoraXmlImport/v1#"/>
     <xs:element name="Archive">
         <xs:complexType>
@@ -199,7 +199,7 @@ vc:minVersion="1.0" targetNamespace="http://api.knora.org/ontology/0801/beol/xml
                 <xs:extension base="knoraXmlImport:resourceType">
                     <xs:sequence>
                         <xs:element maxOccurs="1" minOccurs="1" ref="knoraXmlImport:label"/>
-                        <xs:element type="p0802-biblio:EditedBook_linkValueType" maxOccurs="unbounded" minOccurs="1" name="isPublishedIn"/>
+                        <xs:element type="p0801-biblio:EditedBook_linkValueType" maxOccurs="unbounded" minOccurs="1" name="isPublishedIn"/>
                         <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publishedLetterEndPage"/>
                         <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publishedLetterHasSeqnum"/>
                         <xs:element type="knoraXmlImport:richtextValueType" maxOccurs="unbounded" minOccurs="0" name="publishedLetterStartPage"/>

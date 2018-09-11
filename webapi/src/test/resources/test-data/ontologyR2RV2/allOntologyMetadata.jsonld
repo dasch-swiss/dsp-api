@@ -33,10 +33,10 @@
     "knora-api:isShared" : false,
     "rdfs:label" : "The BEOL ontology"
   }, {
-    "@id" : "http://0.0.0.0:3333/ontology/0802/biblio/v2",
+    "@id" : "http://0.0.0.0:3333/ontology/0801/biblio/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
+      "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
     },
     "knora-api:isShared" : false,
     "rdfs:label" : "The Biblio ontology"

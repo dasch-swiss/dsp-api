@@ -514,42 +514,22 @@ object SharedTestDataADM {
         status = true,
         selfjoin = false
     )
-
-
-    /** **********************************/
-    /** BIBLIO                         **/
-    /** **********************************/
-
-    val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
-
-    def biblioProject = ProjectADM(
-        id = BIBLIO_PROJECT_IRI,
-        shortname = "biblio",
-        shortcode = "0802",
-        longname = Some("Bibliography"),
-        description = Seq(StringLiteralV2(value = "Bibliography", language = None)),
-        keywords = Seq.empty[String],
-        logo = None,
-        ontologies = Seq("http://www.knora.org/ontology/0802/biblio"),
-        status = true,
-        selfjoin = false
-    )
-
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def biblioUser = UserADM(
-        id = "http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw",
-        email = "biblio@example.com",
+    def beolUser = UserADM(
+        id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
+        email = "beol@example.com",
         password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
         token = None,
-        givenName = "biblio",
-        familyName = "biblio",
+        givenName = "BEOL",
+        familyName = "BEOL",
         status = true,
         lang = "en",
         groups = Seq.empty[GroupADM],
-        projects = Seq(biblioProject),
+        projects = Seq(beolProject),
         sessionId = None,
         permissions = PermissionsDataADM()
     )
+
 
     /** **********************************/
     /** DOKUBIB                        **/

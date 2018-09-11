@@ -23,8 +23,8 @@
   knora-api:isShared false;
   rdfs:label "The BEOL ontology" .
 
-<http://0.0.0.0:3333/ontology/0802/biblio/v2> a owl:Ontology;
-  knora-api:attachedToProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ>;
+<http://0.0.0.0:3333/ontology/0801/biblio/v2> a owl:Ontology;
+  knora-api:attachedToProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF>;
   knora-api:isShared false;
   rdfs:label "The Biblio ontology" .
 

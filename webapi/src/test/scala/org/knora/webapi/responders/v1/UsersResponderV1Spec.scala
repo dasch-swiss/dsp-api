@@ -72,7 +72,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 val response = expectMsgType[UsersGetResponseV1](timeout)
                 // println(response.users)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (21)
+                response.users.size should be (20)
             }
         }
 
