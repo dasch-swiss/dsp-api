@@ -1510,7 +1510,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
         "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
             val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(biblioUserEmail, password)) ~> resourcesPath ~> check {
+            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPath ~> check {
                 val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
                 val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
                 val zippedFilenames = collection.mutable.Set.empty[String]
