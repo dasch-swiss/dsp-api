@@ -49,7 +49,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val actorUnderTest = TestActorRef[OntologyResponderV2]
 
-    private val exampleSharedOntology = RdfDataObject(path = "_test_data/ontologies/example-shared.ttl", name = "http://www.knora.org/ontology/shared/example-shared")
+    private val exampleSharedOntology = RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
     private val anythingData = RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
     // The default timeout for receiving reply messages from actors.
@@ -58,8 +58,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val fooIri = new MutableTestIri
     private var fooLastModDate: Instant = Instant.now
 
-    private val ExampleSharedOntologyIri = "http://api.knora.org/ontology/shared/example-shared/v2".toSmartIri
-    private var exampleSharedLastModDate: Instant = Instant.now
+    private val chairIri = new MutableTestIri
+    private var chairLastModDate: Instant = Instant.now
+
+    private val ExampleSharedOntologyIri = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
     private val IncunabulaOntologyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.now
@@ -365,6 +367,92 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
 
+        }
+
+        "not create an ontology called 'shared'" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "shared",
+                projectIri = imagesProjectIri,
+                label = "The invalid shared ontology",
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+
+        }
+
+        "not create a shared ontology in the wrong project" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "misplaced",
+                projectIri = imagesProjectIri,
+                isShared = true,
+                label = "The invalid shared ontology",
+                apiRequestID = UUID.randomUUID,
+                requestingUser = imagesUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a non-shared ontology in the shared ontologies project" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "misplaced",
+                projectIri = OntologyConstants.KnoraBase.SharedOntologiesProject.toSmartIri,
+                label = "The invalid non-shared ontology",
+                apiRequestID = UUID.randomUUID,
+                requestingUser = SharedTestDataADM.superUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "create a shared ontology" in {
+            actorUnderTest ! CreateOntologyRequestV2(
+                ontologyName = "chair",
+                projectIri = OntologyConstants.KnoraBase.SharedOntologiesProject.toSmartIri,
+                isShared = true,
+                label = "a chaired ontology",
+                apiRequestID = UUID.randomUUID,
+                requestingUser = SharedTestDataADM.superUser
+            )
+
+            val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+            assert(response.ontologies.size == 1)
+            val metadata = response.ontologies.head
+            assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
+            chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2WithValueObjects).toString)
+            chairLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+        }
+
+        "not allow a shared ontology to be made unshared" in {
+            val newLabel = "The modified chaired ontology"
+
+            actorUnderTest ! ChangeOntologyMetadataRequestV2(
+                ontologyIri = chairIri.get.toSmartIri,
+                label = newLabel,
+                lastModificationDate = chairLastModDate,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = SharedTestDataADM.superUser
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    if (printErrorMessages) println(msg.cause.getMessage)
+                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
         }
 
         "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
@@ -3618,8 +3706,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a class anything:AnySharedThing1 as a subclass of example-shared:SharedThing" in {
-            val classIri = AnythingOntologyIri.makeEntityIri("AnySharedThing1")
+        "create a class anything:AnyBox1 as a subclass of example-box:Box" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("AnyBox1")
 
             val classInfoContent = ClassInfoContentV2(
                 classIri = classIri,
@@ -3630,14 +3718,14 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        objects = Seq(StringLiteralV2("any shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("any box", Some("en")))
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        objects = Seq(StringLiteralV2("Represents any shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("Represents any box", Some("en")))
                     )
                 ),
-                subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("SharedThing")),
+                subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
                 ontologySchema = ApiV2WithValueObjects
             )
 
@@ -3662,8 +3750,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "delete the class anything:AnySharedThing1" in {
-            val classIri = AnythingOntologyIri.makeEntityIri("AnySharedThing1")
+        "delete the class anything:AnyBox1" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("AnyBox1")
 
             actorUnderTest ! DeleteClassRequestV2(
                 classIri = classIri,
@@ -3682,8 +3770,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a class anything:AnySharedThing2 with a cardinality on example-shared:hasSharedName" in {
-            val classIri = AnythingOntologyIri.makeEntityIri("AnySharedThing2")
+        "create a class anything:AnyBox2 with a cardinality on example-box:hasName" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("AnyBox2")
 
             val classInfoContent = ClassInfoContentV2(
                 classIri = classIri,
@@ -3694,15 +3782,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        objects = Seq(StringLiteralV2("any shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("any box", Some("en")))
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        objects = Seq(StringLiteralV2("Represents any shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("Represents any box", Some("en")))
                     )
                 ),
-                subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("SharedThing")),
-                directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasSharedName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
+                subClassOf = Set(ExampleSharedOntologyIri.makeEntityIri("Box")),
+                directCardinalities = Map(ExampleSharedOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
                 ontologySchema = ApiV2WithValueObjects
             )
 
@@ -3727,8 +3815,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "delete the class anything:AnySharedThing2" in {
-            val classIri = AnythingOntologyIri.makeEntityIri("AnySharedThing2")
+        "delete the class anything:AnyBox2" in {
+            val classIri = AnythingOntologyIri.makeEntityIri("AnyBox2")
 
             actorUnderTest ! DeleteClassRequestV2(
                 classIri = classIri,
@@ -3747,8 +3835,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a property anything:hasAnySharedName with base property example-shared:hasSharedName" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnySharedName")
+        "create a property anything:hasAnyName with base property example-box:hasName" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnyName")
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
@@ -3770,7 +3858,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                         objects = Seq(StringLiteralV2("Represents a shared name", Some("en")))
                     )
                 ),
-                subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasSharedName")),
+                subPropertyOf = Set(ExampleSharedOntologyIri.makeEntityIri("hasName")),
                 ontologySchema = ApiV2WithValueObjects
             )
 
@@ -3795,8 +3883,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "delete the property anything:hasAnySharedName" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnySharedName")
+        "delete the property anything:hasAnyName" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnyName")
 
             actorUnderTest ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,
@@ -3815,8 +3903,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a property anything:sharedThingHasBoolean with subject type example-shared:SharedThing" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("sharedThingHasBoolean")
+        "create a property anything:BoxHasBoolean with subject type example-box:Box" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("BoxHasBoolean")
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
@@ -3827,7 +3915,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.SubjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("SharedThing")))
+                        objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
@@ -3867,8 +3955,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "delete the property anything:sharedThingHasBoolean" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("sharedThingHasBoolean")
+        "delete the property anything:BoxHasBoolean" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("BoxHasBoolean")
 
             actorUnderTest ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,
@@ -3887,8 +3975,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "create a property anything:hasSharedThing with object type example-shared:SharedThing" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("hasSharedThing")
+        "create a property anything:hasBox with object type example-box:Box" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasBox")
 
             val propertyInfoContent = PropertyInfoContentV2(
                 propertyIri = propertyIri,
@@ -3899,15 +3987,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.KnoraApiV2WithValueObjects.ObjectType.toSmartIri,
-                        objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("SharedThing")))
+                        objects = Seq(SmartIriLiteralV2(ExampleSharedOntologyIri.makeEntityIri("Box")))
                     ),
                     OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-                        objects = Seq(StringLiteralV2("has shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("has box", Some("en")))
                     ),
                     OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
                         predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-                        objects = Seq(StringLiteralV2("Has a shared thing", Some("en")))
+                        objects = Seq(StringLiteralV2("Has a box", Some("en")))
                     )
                 ),
                 subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri),
@@ -3935,8 +4023,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
-        "delete the property anything:hasSharedThing" in {
-            val propertyIri = AnythingOntologyIri.makeEntityIri("hasSharedThing")
+        "delete the property anything:hasBox" in {
+            val propertyIri = AnythingOntologyIri.makeEntityIri("hasBox")
 
             actorUnderTest ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,

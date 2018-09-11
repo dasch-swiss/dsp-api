@@ -1631,6 +1631,11 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraBase.SharedOntologiesProject}>")
                 }
 
+                // If it's in the shared ontologies project, make sure it's a shared ontology.
+                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraBase.SharedOntologiesProject && !createOntologyRequest.isShared) {
+                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraBase.SharedOntologiesProject}> must be shared")
+                }
+
                 // Create the ontology.
 
                 currentTime: Instant = Instant.now

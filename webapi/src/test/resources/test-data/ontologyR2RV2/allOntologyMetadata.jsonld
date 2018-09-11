@@ -81,6 +81,15 @@
     "knora-api:isShared" : true,
     "rdfs:label" : "The salsah-gui ontology"
   }, {
+    "@id" : "http://api.knora.org/ontology/shared/example-box/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://www.knora.org/ontology/knora-base#SharedOntologiesProject"
+    },
+    "knora-api:isShared" : true,
+    "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",
+    "rdfs:label" : "An example of a shared ontology"
+  }, {
     "@id" : "http://api.knora.org/ontology/standoff/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {

@@ -7,24 +7,24 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 
-@base <http://www.knora.org/ontology/shared/example-shared> .
+@base <http://www.knora.org/ontology/shared/example-box> .
 
 # An example of a shared ontology.
 
-@prefix : <http://www.knora.org/ontology/shared/example-shared#> .
+@prefix : <http://www.knora.org/ontology/shared/example-box#> .
 
-<http://www.knora.org/ontology/shared/example-shared> rdf:type owl:Ontology ;
+<http://www.knora.org/ontology/shared/example-box> rdf:type owl:Ontology ;
     rdfs:label "An example of a shared ontology" ;
     knora-base:isShared true ;
     knora-base:attachedToProject <http://www.knora.org/ontology/knora-base#SharedOntologiesProject> ;
     knora-base:lastModificationDate "2018-09-10T14:53:00.000Z"^^xsd:dateTimeStamp .
 
-:SharedThing rdf:type owl:Class ;
+:Box rdf:type owl:Class ;
 
       rdfs:subClassOf knora-base:Resource ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasSharedName ;
+                         owl:onProperty :hasName ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
                       ] ;
@@ -36,27 +36,11 @@
       rdfs:comment """A shared thing."""@en .
 
 
-:hasSharedName rdf:type owl:ObjectProperty ;
+:hasName rdf:type owl:ObjectProperty ;
 
 	rdfs:label "has name"@en ;
 
 	rdfs:comment """Has name."""@en ;
-
-	rdfs:subPropertyOf knora-base:hasValue ;
-
-	knora-base:objectClassConstraint knora-base:TextValue ;
-
-  salsah-gui:guiElement salsah-gui:SimpleText ;
-
-  salsah-gui:guiAttribute "size=80" ,
-                          "maxlength=255" .
-
-
-:hasSharedDescription rdf:type owl:ObjectProperty ;
-
-	rdfs:label "has description"@en ;
-
-	rdfs:comment """Has description."""@en ;
 
 	rdfs:subPropertyOf knora-base:hasValue ;
 

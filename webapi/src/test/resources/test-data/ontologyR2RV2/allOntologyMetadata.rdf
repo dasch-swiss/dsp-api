@@ -55,6 +55,12 @@
 	<knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isShared>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The salsah-gui ontology</rdfs:label>
 </owl:Ontology>
+<owl:Ontology rdf:about="http://api.knora.org/ontology/shared/example-box/v2">
+	<knora-api:attachedToProject rdf:resource="http://www.knora.org/ontology/knora-base#SharedOntologiesProject"/>
+	<knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isShared>
+	<knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#string">2018-09-10T14:53:00Z</knora-api:lastModificationDate>
+	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">An example of a shared ontology</rdfs:label>
+</owl:Ontology>
 <owl:Ontology rdf:about="http://api.knora.org/ontology/standoff/v2">
 	<knora-api:attachedToProject rdf:resource="http://www.knora.org/ontology/knora-base#SystemProject"/>
 	<knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isShared>

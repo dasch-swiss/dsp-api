@@ -572,7 +572,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val versionSegmentWords = Set("simple", "v2")
 
     // Reserved words that cannot be used in project-specific ontology names.
-    private val reservedIriWords = Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema") ++ versionSegmentWords
+    private val reservedIriWords = Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]

@@ -9,6 +9,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.ontologymessages.InputOntologyV2
 import org.knora.webapi.routing.v2.OntologiesRouteV2
 import org.knora.webapi.util.IriConversions._
@@ -25,6 +26,9 @@ object OntologyV2R2RSpec {
 
     private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
     private val anythingUsername = anythingUserProfile.email
+
+    private val superUserProfile = SharedTestDataADM.superUser
+    private val superUsername = superUserProfile.email
 
     private val password = "test"
 }
@@ -53,6 +57,10 @@ class OntologyV2R2RSpec extends R2RSpec {
     // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
     // If false, the responses from the server are compared to the contents fo the expected response files.
     private val writeGetTestResponses = false
+
+    override lazy val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
+    )
 
     /**
       * Represents an HTTP GET test that requests ontology information.
@@ -105,6 +113,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     private val incunabulaWithValueObjectsPubDateSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate", "UTF-8")
     private val incunabulaWithValueObjectsPageSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#page", "UTF-8")
     private val incunabulaWithValueObjectsBookSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book", "UTF-8")
+    private val boxOntologyWithValueObjectsSegment = URLEncoder.encode("http://api.knora.org/ontology/shared/example-box/v2", "UTF-8")
 
     // The URLs and expected response files for each HTTP GET test.
     private val httpGetTests = Seq(
@@ -124,7 +133,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         HttpGetTest(s"/v2/ontologies/properties/$knoraApiWithValueObjectsHasColorSegment", "knoraApiWithValueObjectsHasColor"),
         HttpGetTest(s"/v2/ontologies/properties/$incunabulaSimplePubdateSegment", "incunabulaSimplePubDate"),
         HttpGetTest(s"/v2/ontologies/properties/$incunabulaWithValueObjectsPubDateSegment", "incunabulaWithValueObjectsPubDate"),
-        HttpGetTest(s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment", "incunabulaPageAndBookWithValueObjects")
+        HttpGetTest(s"/v2/ontologies/classes/$incunabulaWithValueObjectsPageSegment/$incunabulaWithValueObjectsBookSegment", "incunabulaPageAndBookWithValueObjects"),
+        HttpGetTest(s"/v2/ontologies/allentities/$boxOntologyWithValueObjectsSegment", "boxOntologyWithValueObjects")
     )
 
     // The media types that will be used in HTTP Accept headers in HTTP GET tests.
@@ -139,7 +149,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
     private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
-    private var secondAnythingLastModDate: Instant = Instant.now
+
+    private val uselessIri = new MutableTestIri
+    private var uselessLastModDate: Instant = Instant.now
 
     private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
         val classDef = responseJsonDoc.body.requireArray("@graph").value.head.asInstanceOf[JsonLDObject]
@@ -362,7 +374,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
 
@@ -412,7 +424,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.properties.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.properties.head._2.predicates.head._2.objects)
 
@@ -626,7 +638,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(paramsAsInput.classes.head._2.predicates.head._2.objects)
 
@@ -673,7 +685,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.classes.head._2.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(paramsAsInput.classes.head._2.predicates.head._2.objects)
 
@@ -730,7 +742,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
@@ -934,7 +946,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
@@ -1056,7 +1068,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                 assert(status == StatusCodes.OK, response.toString)
                 val responseJsonDoc = responseToJsonLDDocument(response)
 
-                // Comvert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
                 val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
                 responseAsInput.properties should ===(paramsAsInput.properties)
 
@@ -1225,6 +1237,90 @@ class OntologyV2R2RSpec extends R2RSpec {
                 val newAnythingLastModDate = responseJsonDoc.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
                 assert(newAnythingLastModDate.isAfter(anythingLastModDate))
                 anythingLastModDate = newAnythingLastModDate
+            }
+        }
+
+        "create a shared ontology and put a property in it" in {
+            val label = "The useless ontology"
+
+            val createOntologyJson =
+                s"""
+                   |{
+                   |    "knora-api:ontologyName": "useless",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "${OntologyConstants.KnoraBase.SharedOntologiesProject}"
+                   |    },
+                   |    "knora-api:isShared": true,
+                   |    "rdfs:label": "$label",
+                   |    "@context": {
+                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+                   |        "knora-api": "${OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion}"
+                   |    }
+                   |}
+                """.stripMargin
+
+            Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, createOntologyJson)) ~> addCredentials(BasicHttpCredentials(superUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+                val metadata = responseJsonDoc.body
+                val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+                assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
+                uselessIri.set(ontologyIri)
+                assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
+                val lastModDate = Instant.parse(metadata.value(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate).asInstanceOf[JsonLDString].value)
+                uselessLastModDate = lastModDate
+            }
+
+            val createPropertyJson =
+                s"""
+                   |{
+                   |  "@id" : "${uselessIri.get}",
+                   |  "@type" : "owl:Ontology",
+                   |  "knora-api:lastModificationDate" : "$uselessLastModDate",
+                   |  "@graph" : [ {
+                   |    "@id" : "useless:hasSharedName",
+                   |    "@type" : "owl:ObjectProperty",
+                   |    "knora-api:objectType" : {
+                   |      "@id" : "knora-api:TextValue"
+                   |    },
+                   |    "rdfs:comment" : {
+                   |      "@language" : "en",
+                   |      "@value" : "Represents a name"
+                   |    },
+                   |    "rdfs:label" : {
+                   |      "@language" : "en",
+                   |      "@value" : "has shared name"
+                   |    },
+                   |    "rdfs:subPropertyOf" : {
+                   |      "@id" : "knora-api:hasValue"
+                   |    }
+                   |  } ],
+                   |  "@context" : {
+                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "owl" : "http://www.w3.org/2002/07/owl#",
+                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "useless" : "${uselessIri.get}#"
+                   |  }
+                   |}
+            """.stripMargin
+
+            // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(createPropertyJson)).unescape
+
+            Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, createPropertyJson)) ~> addCredentials(BasicHttpCredentials(superUsername, password)) ~> ontologiesPath ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseJsonDoc = responseToJsonLDDocument(response)
+
+                // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+                val responseAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(responseJsonDoc, ignoreExtraData = true).unescape
+                responseAsInput.properties should ===(paramsAsInput.properties)
+
+                // Check that the ontology's last modification date was updated.
+                val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+                assert(newAnythingLastModDate.isAfter(uselessLastModDate))
+                uselessLastModDate = newAnythingLastModDate
             }
         }
     }
