@@ -409,8 +409,8 @@ class OntologyResponderV2 extends Responder {
                 }
         }
 
-        // Check references between ontologies. TODO: enable this when #992 is fixed.
-        // checkReferencesBetweenOntologies(ontologyCacheData)
+        // Check references between ontologies.
+        checkReferencesBetweenOntologies(ontologyCacheData)
 
         // Update the cache.
         storeCacheData(ontologyCacheData)

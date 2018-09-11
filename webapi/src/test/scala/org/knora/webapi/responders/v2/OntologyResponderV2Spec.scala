@@ -4253,9 +4253,46 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
         }
 
-        "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" ignore { // TODO: #992
+        "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" in {
             val invalidOnto = List(RdfDataObject(
                 path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-cardinality.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+        "not load a project-specific ontology containing a class with a base class defined in a non-shared ontology in another project" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/class-with-non-shared-base-class.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+        "not load a project-specific ontology containing a property with a base property defined in a non-shared ontology in another project" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-base-prop.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+
+        "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-scc.ttl", name = "http://www.knora.org/ontology/invalid"
+            ))
+
+            customLoadTestData(invalidOnto)
+            expectMsgType[akka.actor.Status.Failure](timeout).cause.isInstanceOf[InconsistentTriplestoreDataException] should ===(true)
+        }
+
+        "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
+            val invalidOnto = List(RdfDataObject(
+                path = "_test_data/responders.v2.OntologyResponderV2Spec/prop-with-non-shared-occ.ttl", name = "http://www.knora.org/ontology/invalid"
             ))
 
             customLoadTestData(invalidOnto)

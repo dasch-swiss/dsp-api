@@ -8,25 +8,27 @@
 @prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
 @base <http://www.knora.org/ontology/invalid> .
 
-# An ontology that has a class with a cardinality on a property defined in a non-shared ontology in another project.
+# An ontology that has a property whose object class constraint is defined in a non-shared ontology in another project.
 
 @prefix : <http://www.knora.org/ontology/invalid#> .
 <http://www.knora.org/ontology/invalid> rdf:type owl:Ontology ;
     rdfs:label "The invalid ontology" ;
     knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
 
-:InvalidThing rdf:type owl:Class ;
 
-      rdfs:subClassOf knora-base:Resource ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty incunabula:description ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                      ] ;
+:hasIncunabulaBook rdf:type owl:ObjectProperty ;
 
-      knora-base:resourceIcon "thing.png" ;
+               rdfs:subPropertyOf knora-base:hasLinkTo ;
 
-      rdfs:label "Invalid Thing"@en ;
+               rdfs:label "has incunabula book"@en ;
 
-      rdfs:comment """An invalid thing"""@de .
+               knora-base:objectClassConstraint incunabula:book .
+
+
+:hasIncunabulaBookValue rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+              rdfs:label "has incunabula book"@en ;
+
+              knora-base:objectClassConstraint knora-base:LinkValue .

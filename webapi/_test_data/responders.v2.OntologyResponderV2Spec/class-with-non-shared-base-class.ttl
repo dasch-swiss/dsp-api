@@ -8,7 +8,7 @@
 @prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
 @base <http://www.knora.org/ontology/invalid> .
 
-# An ontology that has a class with a cardinality on a property defined in a non-shared ontology in another project.
+# An ontology that has a class whose base class is defined in a non-shared ontology in another project.
 
 @prefix : <http://www.knora.org/ontology/invalid#> .
 <http://www.knora.org/ontology/invalid> rdf:type owl:Ontology ;
@@ -17,13 +17,7 @@
 
 :InvalidThing rdf:type owl:Class ;
 
-      rdfs:subClassOf knora-base:Resource ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty incunabula:description ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                      ] ;
+      rdfs:subClassOf incunabula:book ;
 
       knora-base:resourceIcon "thing.png" ;
 
