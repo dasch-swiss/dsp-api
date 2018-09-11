@@ -429,10 +429,10 @@ class StringFormatterSpec extends CoreSpec() {
         }
 
         "validate import namespace with project shortcode" in {
-            val defaultNamespace = "http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+            val defaultNamespace = "http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
             stringFormatter.xmlImportNamespaceToInternalOntologyIriV1(
                 defaultNamespace, throw AssertionException("Invalid XML import namespace")
-            ).toString should be ("http://www.knora.org/ontology/0802/biblio")
+            ).toString should be ("http://www.knora.org/ontology/0801/biblio")
         }
 
         "validate internal ontology path" in {
@@ -642,7 +642,6 @@ class StringFormatterSpec extends CoreSpec() {
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.anythingProject) should be (SharedOntologyTestDataADM.ANYTHING_DATA_IRI)
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.imagesProject) should be (SharedOntologyTestDataADM.IMAGES_DATA_IRI)
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.beolProject) should be (SharedOntologyTestDataADM.BEOL_DATA_IRI)
-            stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.biblioProject) should be (SharedOntologyTestDataADM.BIBLIO_DATA_IRI)
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.incunabulaProject) should be (SharedOntologyTestDataADM.INCUNABULA_DATA_IRI)
             stringFormatter.projectDataNamedGraphV2(SharedTestDataADM.dokubibProject) should be (SharedOntologyTestDataADM.DOKUBIB_DATA_IRI)
         }

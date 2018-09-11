@@ -72,14 +72,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (19)
+                response.users.size should be (18)
             }
 
             "not return the system and anonymous users" in {
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (19)
+                response.users.size should be (18)
                 response.users.count(_.id == KnoraSystemInstances.Users.AnonymousUser.id) should be (0)
                 response.users.count(_.id == KnoraSystemInstances.Users.SystemUser.id) should be (0)
             }
