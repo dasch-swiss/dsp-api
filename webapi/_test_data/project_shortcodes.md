@@ -1,14 +1,14 @@
 ### An overview of project `shortcodes` in use. Every project needs to have a unique shortcode assigned.
 
+   - shared: `shared`
 
 #### Default range - `0000` - `00FF`
 
-   - shared: `0000`
    - anything: `0001`
    - images: `00FF`
    - system: `FFFF`
 
-   
+
 #### Lausanne range - `0100` to `07FF`
 
    - drawings gods: `0106`
