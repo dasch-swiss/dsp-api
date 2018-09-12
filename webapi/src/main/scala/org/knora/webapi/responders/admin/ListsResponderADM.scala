@@ -70,7 +70,7 @@ class ListsResponderADM extends Responder {
         case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
         case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
         case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
-        case ListNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => future2Message(sender(), listNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) , log)
+        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => future2Message(sender(), listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) , log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -369,7 +369,15 @@ class ListsResponderADM extends Responder {
                                 case None => None
                             }
 
-                            val isRootNode: Boolean = propsMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
+                            val isRootNode: Boolean = propsMap.get(OntologyConstants.KnoraBase.IsRootNode) match {
+                                case Some(values: Seq[LiteralV2]) =>
+                                    values.headOption match {
+                                        case Some(value: BooleanLiteralV2) => value.value
+                                        case Some(other) => throw InconsistentTriplestoreDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
+                                        case None => false
+                                    }
+                                case None => false
+                            }
 
                             val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
 
@@ -614,6 +622,12 @@ class ListsResponderADM extends Responder {
                 case None => throw BadRequestException(s"Project '${createListRequest.projectIri}' not found.")
             }
 
+            /* verify that the list node name is unique for the project */
+            projectUniqueNodeName <- listNodeNameIsProjectUnique(createListRequest.projectIri, createListRequest.name)
+            _ = if (!projectUniqueNodeName) {
+                throw BadRequestException(s"The node name ${createListRequest.name.get} is already by a list inside the project ${createListRequest.projectIri}.")
+            }
+
             maybeShortcode = project.shortcode
             dataNamedGraph = stringFormatter.projectDataNamedGraphV2(project)
 
@@ -626,6 +640,7 @@ class ListsResponderADM extends Responder {
                 listIri = listIri,
                 projectIri = project.id,
                 listClassIri = OntologyConstants.KnoraBase.ListNode,
+                maybeName = createListRequest.name,
                 maybeLabels = createListRequest.labels,
                 maybeComments = createListRequest.comments
             ).toString
@@ -750,12 +765,12 @@ class ListsResponderADM extends Responder {
       * @param apiRequestID the unique api request ID.
       * @return a [[ListNodeInfoGetResponseADM]]
       */
-    private def listNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
+    private def listChildNodeCreateRequestADM(parentNodeIri: IRI, createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[ListNodeInfoGetResponseADM] = {
 
         /**
           * The actual task run with an IRI lock.
           */
-        def listNodeCreateTask(createListNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
+        def listChildNodeCreateTask(createChildNodeRequest: CreateChildNodeApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
 
             // check if the requesting user is allowed to perform operation
             _ <- Future(
@@ -766,7 +781,7 @@ class ListsResponderADM extends Responder {
                 }
             )
 
-            _ = if (!parentNodeIri.equals(createListNodeRequest.parentNodeIri)) throw BadRequestException("List node IRI in path and payload don't match.")
+            _ = if (!parentNodeIri.equals(createChildNodeRequest.parentNodeIri)) throw BadRequestException("List node IRI in path and payload don't match.")
 
             /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
             maybeParentListNode <- listNodeGetADM(parentNodeIri, shallow = true, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -780,7 +795,7 @@ class ListsResponderADM extends Responder {
             position: Int = if(children.isEmpty) {
                 0
             } else {
-                children.size -1
+                children.size
             }
 
             /* get the root node, depending on the type of the parent */
@@ -794,6 +809,12 @@ class ListsResponderADM extends Responder {
             project: ProjectADM = maybeProject match {
                 case Some(project: ProjectADM) => project
                 case None => throw BadRequestException(s"Project '${createChildNodeRequest.projectIri}' not found.")
+            }
+
+            /* verify that the list node name is unique for the project */
+            projectUniqueNodeName <- listNodeNameIsProjectUnique(createChildNodeRequest.projectIri, createChildNodeRequest.name)
+            _ = if (!projectUniqueNodeName) {
+                throw BadRequestException(s"The node name ${createChildNodeRequest.name.get} is already by a list inside the project ${createChildNodeRequest.projectIri}.")
             }
 
             // calculate the data named graph
@@ -834,7 +855,7 @@ class ListsResponderADM extends Responder {
             taskResult <- IriLocker.runWithIriLock(
                 apiRequestID,
                 LISTS_GLOBAL_LOCK_IRI,
-                () => listNodeCreateTask(createChildNodeRequest, requestingUser, apiRequestID)
+                () => listChildNodeCreateTask(createChildNodeRequest, requestingUser, apiRequestID)
             )
         } yield taskResult
 
@@ -853,7 +874,7 @@ class ListsResponderADM extends Responder {
     def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
-            //_ = log.debug("projectExists - query: {}", askString)
+            //_ = log.debug("projectByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
@@ -870,7 +891,7 @@ class ListsResponderADM extends Responder {
     def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
-            //_ = log.debug("projectExists - query: {}", askString)
+            // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
@@ -887,7 +908,7 @@ class ListsResponderADM extends Responder {
     def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
-            //_ = log.debug("projectExists - query: {}", askString)
+            //_ = log.debug("listNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
@@ -904,11 +925,35 @@ class ListsResponderADM extends Responder {
     def listNodeByNameExists(name: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
-            //_ = log.debug("projectExists - query: {}", askString)
+            //_ = log.debug("listNodeByNameExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
             result = askResponse.result
 
         } yield result
+    }
+
+    /**
+      * Helper method for checking if a list node name is not used in any list inside a project. Returns a 'TRUE' if the
+      * name is NOT used inside any list of this project.
+      *
+      * @param rootNodeIri the list's root node.
+      * @param listNodeName the list node name.
+      * @return a [[Boolean]].
+      */
+    def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
+        listNodeName match {
+            case Some(name) => {
+                for {
+                    askString <- Future(queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
+                    //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
+
+                    askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+                    result = askResponse.result
+
+                } yield !result
+            }
+            case None => FastFuture.successful(true)
+        }
     }
 }

@@ -136,9 +136,9 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                 requestContext =>
                     val parentNodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-                    val requestMessage: Future[ListNodeCreateRequestADM] = for {
+                    val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield ListNodeCreateRequestADM(
+                    } yield ListChildNodeCreateRequestADM(
                         parentNodeIri = parentNodeIri,
                         createChildNodeRequest = apiRequest,
                         requestingUser = requestingUser,

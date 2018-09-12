@@ -60,7 +60,7 @@ INSERT {
 
         ?nodeIri knora-base:hasRootNode ?rootNodeIri .
 
-        ?nodeIri knora-base:listNodePosition "@position"^^xsd:number .
+        ?nodeIri knora-base:listNodePosition "@position"^^xsd:integer .
 
         @if(maybeName.nonEmpty) {
             ?nodeIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
@@ -106,10 +106,7 @@ WHERE {
     BIND(IRI("@nodeIri") AS ?nodeIri)
     BIND(IRI("@parentNodeIri") AS ?parentNodeIri)
     BIND(IRI("@rootNodeIri") AS ?rootNodeIri)
+    BIND(IRI("@listClassIri") AS ?listClassIri)
 
     FILTER NOT EXISTS { ?nodeIri rdf:type ?listClassIri . }
-
-    @if(maybeName.nonEmpty) {
-        FILTER NOT EXISTS { ?nodeIri knora-base:listNodeName "@maybeName.get"^^xsd:string }
-    }
 }

@@ -175,10 +175,12 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
         }
 
-        /*
         "used to modify list information" should {
 
             val newListIri = new MutableTestIri
+            val firstChildIri = new MutableTestIri
+            val secondChildIri = new MutableTestIri
+            val thirdChildIri = new MutableTestIri
 
             "create a list" in {
 
@@ -384,6 +386,154 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
 
             }
 
+            "add child to list - to the root node" in {
+
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val params =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${newListIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "first",
+                       |    "labels": [{ "value": "New First Child List Node Value", "language": "en"}],
+                       |    "comments": [{ "value": "New First Child List Node Comment", "language": "en"}]
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // println(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+
+                // check correct node info
+                val childNodeInfo = received match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+
+                // check position
+                val position = childNodeInfo.position
+                position should be (0)
+
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be (newListIri.get)
+
+                firstChildIri.set(childNodeInfo.id)
+            }
+
+            "add second child to list - to the root node" in {
+
+                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+                val params =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${newListIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "second",
+                       |    "labels": [{ "value": "New Second Child List Node Value", "language": "en"}],
+                       |    "comments": [{ "value": "New Second Child List Node Comment", "language": "en"}]
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // println(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+
+                // check correct node info
+                val childNodeInfo = received match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+
+                // check position
+                val position = childNodeInfo.position
+                position should be (1)
+
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be (newListIri.get)
+
+                secondChildIri.set(childNodeInfo.id)
+
+            }
+
+            "add child to second child node" in {
+
+                val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
+
+                val params =
+                    s"""
+                       |{
+                       |    "parentNodeIri": "${secondChildIri.get}",
+                       |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                       |    "name": "third",
+                       |    "labels": [{ "value": "New Third Child List Node Value", "language": "en"}],
+                       |    "comments": [{ "value": "New Third Child List Node Comment", "language": "en"}]
+                       |}
+                """.stripMargin
+
+                val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(images01UserCreds.basicHttpCredentials)
+                val response: HttpResponse = singleAwaitingRequest(request)
+                // println(s"response: ${response.toString}")
+                response.status should be(StatusCodes.OK)
+
+                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+
+                // check correct node info
+                val childNodeInfo = received match {
+                    case info: ListChildNodeInfoADM => info
+                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+                }
+
+                // check labels
+                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+                labels.size should be (1)
+                labels.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+
+                // check comments
+                val comments = childNodeInfo.comments.stringLiterals
+                comments.size should be (1)
+                comments.sorted should be (Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+
+                // check position
+                val position = childNodeInfo.position
+                position should be (0)
+
+                // check has root node
+                val rootNode = childNodeInfo.hasRootNode
+                rootNode should be (newListIri.get)
+
+                thirdChildIri.set(childNodeInfo.id)
+            }
+
             "add flat nodes" ignore {
 
             }
@@ -401,6 +551,5 @@ class ListsADME2ESpec extends E2ESpec(ListsADME2ESpec.config) with SessionJsonPr
             }
 
         }
-        */
     }
 }

@@ -44,6 +44,7 @@ import spray.json.{DefaultJsonProtocol, JsArray, JsObject, JsValue, JsonFormat, 
   * @param comments   the list's comments.
   */
 case class CreateListApiRequestADM(projectIri: IRI,
+                                   name: Option[String],
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2]) extends ListADMJsonProtocol {
 
@@ -234,17 +235,17 @@ case class ListInfoChangeRequestADM(listIri: IRI,
                                     apiRequestID: UUID) extends ListsResponderRequestADM
 
 /**
-  * Request the creation of a new list node.
+  * Request the creation of a new list (child) node.
   *
   * @param parentNodeIri          the IRI of the list node to which we want to attach the newly created node.
   * @param createChildNodeRequest the new node information.
   * @param requestingUser         the user making the request.
   * @param apiRequestID           the ID of the API request.
   */
-case class ListNodeCreateRequestADM(parentNodeIri: IRI,
-                                    createChildNodeRequest: CreateChildNodeApiRequestADM,
-                                    requestingUser: UserADM,
-                                    apiRequestID: UUID) extends ListsResponderRequestADM
+case class ListChildNodeCreateRequestADM(parentNodeIri: IRI,
+                                         createChildNodeRequest: CreateChildNodeApiRequestADM,
+                                         requestingUser: UserADM,
+                                         apiRequestID: UUID) extends ListsResponderRequestADM
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
@@ -957,7 +958,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
 
 
-    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "labels", "comments")
+    implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] = jsonFormat(CreateListApiRequestADM, "projectIri", "name", "labels", "comments")
     implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateChildNodeApiRequestADM] = jsonFormat(CreateChildNodeApiRequestADM, "parentNodeIri", "projectIri", "name", "labels", "comments")
     implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeListInfoApiRequestADM] = jsonFormat(ChangeListInfoApiRequestADM, "listIri", "projectIri", "labels", "comments")
     implicit val nodePathGetResponseADMFormat: RootJsonFormat[NodePathGetResponseADM] = jsonFormat(NodePathGetResponseADM, "elements")

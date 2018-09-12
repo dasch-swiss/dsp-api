@@ -46,5 +46,5 @@ WHERE {
 
     ?node rdf:type knora-base:ListNode .
 
-    ?node ?p ?o
+    ?node ?p ?o .
 }
