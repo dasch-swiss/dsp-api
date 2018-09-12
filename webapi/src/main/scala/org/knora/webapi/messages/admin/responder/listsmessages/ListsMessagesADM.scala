@@ -23,7 +23,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import org.apache.jena.sparql.function.library.leviathan.root
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -346,9 +345,7 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
       * @param fallbackLang language to use if label is not available in user's preferred language.
       * @return the label in the preferred language.
       */
-    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        labels.getPreferredLanguage(userLang, fallbackLang)
-    }
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 
     /**
       * Gets the comment in the user's preferred language.
@@ -357,9 +354,8 @@ abstract class ListNodeInfoADM(id: IRI, name: Option[String], labels: StringLite
       * @param fallbackLang language to use if comment is not available in user's preferred language.
       * @return the comment in the preferred language.
       */
-    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        comments.getPreferredLanguage(userLang, fallbackLang)
-    }
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
+
 }
 
 case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2) extends ListNodeInfoADM(id, name, labels, comments) {
@@ -378,6 +374,29 @@ case class ListRootNodeInfoADM(id: IRI, projectIri: IRI, name: Option[String], l
             comments = comments.sortByStringValue
         )
     }
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
+    }
+
 }
 
 case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLiteralSequenceV2, comments: StringLiteralSequenceV2, position: Int, hasRootNode: IRI) extends ListNodeInfoADM(id, name, labels, comments) {
@@ -396,6 +415,28 @@ case class ListChildNodeInfoADM(id: IRI, name: Option[String], labels: StringLit
             position = position,
             hasRootNode = hasRootNode
         )
+    }
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
@@ -424,9 +465,7 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
       * @param fallbackLang language to use if label is not available in user's preferred language.
       * @return the label in the preferred language.
       */
-    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        labels.getPreferredLanguage(userLang, fallbackLang)
-    }
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 
     /**
       * Gets the comment in the user's preferred language.
@@ -435,9 +474,7 @@ abstract class ListNodeADM(id: IRI, name: Option[String], labels: StringLiteralS
       * @param fallbackLang language to use if comment is not available in user's preferred language.
       * @return the comment in the preferred language.
       */
-    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
-        comments.getPreferredLanguage(userLang, fallbackLang)
-    }
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String]
 }
 
 /**
@@ -466,6 +503,28 @@ case class ListRootNodeADM(id: IRI, projectIri: IRI, name: Option[String], label
             comments = comments.sortByStringValue,
             children = children.sortBy(_.position) map (_.sorted)
         )
+    }
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 
@@ -498,6 +557,28 @@ case class ListChildNodeADM(id: IRI, name: Option[String], labels: StringLiteral
             hasRootNode = hasRootNode,
             children = children.sortBy(_.position) map (_.sorted)
         )
+    }
+
+    /**
+      * Gets the label in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if label is not available in user's preferred language.
+      * @return the label in the preferred language.
+      */
+    def getLabelInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        labels.getPreferredLanguage(userLang, fallbackLang)
+    }
+
+    /**
+      * Gets the comment in the user's preferred language.
+      *
+      * @param userLang     the user's preferred language.
+      * @param fallbackLang language to use if comment is not available in user's preferred language.
+      * @return the comment in the preferred language.
+      */
+    def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] = {
+        comments.getPreferredLanguage(userLang, fallbackLang)
     }
 }
 

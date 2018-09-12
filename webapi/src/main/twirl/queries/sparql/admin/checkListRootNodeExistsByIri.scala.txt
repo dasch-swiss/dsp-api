@@ -32,7 +32,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 ASK {
     BIND(IRI("@listNodeIri") AS ?node)
 
-    ?node rdf:type knora-base:ListNode
-    ?node knora-base:isRootNode "true"^^xsd:boolean
+    ?node rdf:type knora-base:ListNode .
+    ?node knora-base:isRootNode "true"^^xsd:boolean .
 }
 

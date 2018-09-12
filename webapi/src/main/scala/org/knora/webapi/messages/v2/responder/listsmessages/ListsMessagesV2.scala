@@ -71,7 +71,7 @@ trait ListResponderResponseV2 {
 /**
   * Represents a response to a [[ListGetRequestV2]].
   *
-  * @param list     the list the are to be returned.
+  * @param list     the list to be returned.
   * @param userLang the user's preferred language.
   * @param fallbackLang the fallback language if the preferred language is not available.
   */
@@ -80,8 +80,6 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-
 
         /**
           * Given a [[ListNodeADM]], constructs a [[JsonLDObject]].
@@ -121,7 +119,7 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
             )
         }
 
-        val listinfo = list.listinfo.asInstanceOf[ListRootNodeInfoADM]
+        val listinfo = list.listinfo
 
         val label: Map[IRI, JsonLDString] = makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, listinfo.labels, userLang, fallbackLang)
 

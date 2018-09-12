@@ -21,7 +21,7 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.{BadRequestException, SharedTestDataADM}
+import org.knora.webapi.{BadRequestException, SharedListsTestDataADM, SharedTestDataADM}
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
@@ -96,32 +96,18 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
         "work for a 'ListADM'" in {
 
-            val listInfo = ListRootNodeInfoADM (
-                id = "http://rdfh.ch/lists/73d0ec0302",
-                projectIri = "http://rdfh.ch/projects/00FF",
-                name = None,
-                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
-                comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
-            )
+            val listInfo = SharedListsTestDataADM.treeListInfo
 
-            val listNode: ListChildNodeADM = ListChildNodeADM(
-                id = "http://rdfh.ch/lists/00FF/526f26ed04",
-                name = Some("sommer"),
-                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                children = Seq.empty[ListChildNodeADM],
-                position = 0,
-                hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
-            )
+            val children = SharedListsTestDataADM.treeListChildNodes
 
-            val json = ListADM(listInfo, Seq(listNode)).toJson.compactPrint
+            val json = ListADM(listInfo, children).toJson.compactPrint
 
             // json should be ("")
 
             val converted: ListADM = json.parseJson.convertTo[ListADM]
 
             converted.listinfo should be(listInfo)
-            converted.children.head should be(listNode)
+            converted.children should be(children)
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when project IRI is empty" in {

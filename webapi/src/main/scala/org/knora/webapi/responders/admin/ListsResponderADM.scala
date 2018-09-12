@@ -135,7 +135,7 @@ class ListsResponderADM extends Responder {
             // this query will give us only the information about the root node.
             exists <- listRootNodeByIriExists(rootNodeIri)
 
-            // _ = log.debug(s"listGetADM - statements: {}", MessageUtil.toSource(listInfoResponse.statements))
+            // _ = log.debug(s"listGetADM - exists: {}", exists)
 
             maybeList: Option[ListADM] <- if (exists) {
                 for {
@@ -143,6 +143,8 @@ class ListsResponderADM extends Responder {
                     children: Seq[ListChildNodeADM] <- getChildren(rootNodeIri, shallow = false, KnoraSystemInstances.Users.SystemUser)
 
                     maybeRootNodeInfo <- listNodeInfoGetADM(rootNodeIri, KnoraSystemInstances.Users.SystemUser)
+
+                    // _ = log.debug(s"listGetADM - maybeRootNodeInfo: {}", maybeRootNodeInfo)
 
                     rootNodeInfo = maybeRootNodeInfo match {
                         case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
@@ -188,7 +190,7 @@ class ListsResponderADM extends Responder {
         for {
             listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
 
-            _ = println(listNodeInfo)
+            // _ = log.debug(s"listInfoGetRequestADM - listNodeInfo: {}", listNodeInfo)
 
             listRootNodeInfo = listNodeInfo match {
                 case Some(value: ListRootNodeInfoADM) => value
@@ -196,7 +198,7 @@ class ListsResponderADM extends Responder {
                 case Some(_) | None => throw NotFoundException(s"List $listIri not found.")
             }
 
-            // _ = log.debug(s"listNodeInfoGetRequestV2 - node: {}", MessageUtil.toSource(node))
+            // _ = log.debug(s"listInfoGetRequestADM - node: {}", MessageUtil.toSource(node))
 
         } yield ListInfoGetResponseADM(listinfo = listRootNodeInfo)
     }
@@ -216,18 +218,19 @@ class ListsResponderADM extends Responder {
                 nodeIri = nodeIri
             ).toString())
 
-            _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
+            // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
 
             listNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
 
-            maybeListNodeInfo = if (listNodeResponse.statements.isEmpty) {
+            statements: Map[SubjectV2, Map[IRI, Seq[LiteralV2]]] = listNodeResponse.statements
+
+            // _ = log.debug(s"listNodeInfoGetADM - statements: {}", statements)
+
+            maybeListNodeInfo = if (statements.nonEmpty) {
 
                 // Map(subjectIri -> (objectIri -> Seq(stringWithOptionalLand))
-                val statements = listNodeResponse.statements
 
-                // _ = log.debug(s"listNodeInfoGetRequestV2 - statements: {}", MessageUtil.toSource(statements))
-
-                val nodeinfo: ListNodeInfoADM = statements.head match {
+                val nodeInfo: ListNodeInfoADM = statements.head match {
                     case (nodeIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                         val labels: Seq[StringLiteralV2] = propsMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[StringLiteralV2]).map(_.asInstanceOf[StringLiteralV2])
@@ -251,7 +254,15 @@ class ListsResponderADM extends Responder {
                             case None => None
                         }
 
-                        val isRootNode: Boolean = propsMap.getOrElse(OntologyConstants.KnoraBase.IsRootNode, false).asInstanceOf[Boolean]
+                        val isRootNode: Boolean = propsMap.get(OntologyConstants.KnoraBase.IsRootNode) match {
+                            case Some(values: Seq[LiteralV2]) =>
+                                values.headOption match {
+                                    case Some(value: BooleanLiteralV2) => value.value
+                                    case Some(other) => throw InconsistentTriplestoreDataException(s"Expected isRootNode as an BooleanLiteralV2 for list node $nodeIri, but got $other")
+                                    case None => false
+                                }
+                            case None => false
+                        }
 
                         val positionOption: Option[Int] = propsMap.get(OntologyConstants.KnoraBase.ListNodePosition).map(_.head.asInstanceOf[IntLiteralV2].value)
 
@@ -274,12 +285,12 @@ class ListsResponderADM extends Responder {
                             )
                         }
                 }
-                Some(nodeinfo)
+                Some(nodeInfo)
             } else {
                 None
             }
 
-            // _ = log.debug(s"listNodeInfoGetADM - node: {}", MessageUtil.toSource(maybeListNodeInfo))
+            // _ = log.debug(s"listNodeInfoGetADM - maybeListNodeInfo: {}", maybeListNodeInfo)
 
         } yield maybeListNodeInfo
 
