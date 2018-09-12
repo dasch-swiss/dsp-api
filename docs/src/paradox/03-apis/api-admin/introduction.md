@@ -76,7 +76,7 @@ documentation purposes. To try it out, run webapi and open
 http://host/api-docs/swagger.json in <http://petstore.swagger.io> .
 Alternatively, the documentation can be looked at by using
 [ReDoc](https://github.com/Rebilly/ReDoc), which is provided in
-`knora/docs/redoc/index.html`.
+`knora/docs/redoc/index.html` and is published under <https://docs.knora.org/api-admin/index.html>.
 
 ## Admin API Endpoints
 

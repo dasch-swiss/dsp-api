@@ -26,7 +26,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import io.swagger.annotations.Api
+import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
@@ -50,6 +50,10 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
     /* return all lists optionally filtered by project */
     def getLists: Route = path("admin" / "lists") {
         get {
@@ -73,6 +77,14 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         }
     }
 
+    @ApiOperation(value = "Add new list", nickname = "addList", httpMethod = "POST", response = classOf[ListGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"list\" to create", required = true,
+            dataTypeClass = classOf[CreateListApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
     /* create a new list (root node) */
     def postList: Route = path("admin" / "lists") {
         post {
@@ -98,6 +110,11 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         }
     }
 
+    @Path("/{IRI}")
+    @ApiOperation(value = "Get a list", nickname = "getlist", httpMethod = "GET", response = classOf[ListGetResponseADM])
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
     /* get a list */
     def getList: Route = path("admin" / "lists" / Segment) { iri =>
         get {
@@ -119,16 +136,57 @@ class ListsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         }
     }
 
-    /* update list*/
+    @Path("/{IRI}")
+    @ApiOperation(value = "Update basic list information", nickname = "putList", httpMethod = "PUT", response = classOf[ListInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"list\" to update", required = true,
+            dataTypeClass = classOf[ChangeListInfoApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    /**
+      * update list
+      */
     def putList: Route = path("admin" / "lists" / Segment) { iri =>
         put {
             /* update existing list node (either root or child) */
-            throw NotImplementedException("Method not implemented.")
-            ???
+            entity(as[ChangeListInfoApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val listIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+                    val requestMessage: Future[ListInfoChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield ListInfoChangeRequestADM(
+                        listIri = listIri,
+                        changeListRequest = apiRequest,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log
+                    )
+            }
         }
     }
 
-    /* create a new child node */
+    @Path("/{IRI}")
+    @ApiOperation(value = "Add new child node", nickname = "addListChildNode", httpMethod = "POST", response = classOf[ListNodeInfoGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node\" to create", required = true,
+            dataTypeClass = classOf[CreateChildNodeApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    /**
+      * create a new child node
+      */
     def postListChildNode: Route = path("admin" / "lists" / Segment) { iri =>
         post {
             /* add node to existing list node. the existing list node can be either the root or a child */
