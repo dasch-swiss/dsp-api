@@ -971,13 +971,22 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
 case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
-  * Requests metadata about ontologies.
+  * Requests metadata about ontologies by project.
   *
   * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
   *                       about all ontologies is returned.
   * @param requestingUser the user making the request.
   */
-case class OntologyMetadataGetRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+
+/**
+  * Requests metadata about ontologies by ontology IRI.
+  *
+  * @param ontologyIris    the IRIs of the ontologies to be queried. If this set is empty, information
+  *                       about all ontologies is returned.
+  * @param requestingUser the user making the request.
+  */
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
   * Requests entity definitions for the given ontology.

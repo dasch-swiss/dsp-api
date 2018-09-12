@@ -89,7 +89,8 @@ class OntologyResponderV2 extends Responder {
         case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser), log)
         case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser), log)
         case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser), log)
-        case OntologyMetadataGetRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
+        case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
+        case OntologyMetadataGetByIriRequestV2(ontologyIris, requestingUser) => future2Message(sender(), getOntologyMetadataByIriV2(ontologyIris, requestingUser), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
@@ -1407,6 +1408,36 @@ class OntologyResponderV2 extends Responder {
                 cacheData.ontologies.values.filter {
                     ontology => projectIris.contains(ontology.ontologyMetadata.projectIri.get)
                 }.map {
+                    ontology => ontology.ontologyMetadata
+                }.toSet
+            }
+        } yield ReadOntologyMetadataV2(
+            ontologies = ontologyMetadata
+        )
+    }
+
+    /**
+      * Gets the metadata describing the specified ontologies, or all ontologies.
+      *
+      * @param ontologyIris    the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
+      * @param requestingUser the user making the request.
+      * @return a [[ReadOntologyMetadataV2]].
+      */
+    private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri], requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
+        for {
+            cacheData <- getCacheData
+            returnAllOntologies: Boolean = ontologyIris.isEmpty
+
+            ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
+                cacheData.ontologies.values.map(_.ontologyMetadata).toSet
+            } else {
+                val missingOntologies = ontologyIris -- cacheData.ontologies.keySet
+
+                if (missingOntologies.nonEmpty) {
+                    throw BadRequestException(s"One or more requested ontologies were not found: ${missingOntologies.mkString(", ")}")
+                }
+
+                cacheData.ontologies.filterKeys(ontologyIris).values.map {
                     ontology => ontology.ontologyMetadata
                 }.toSet
             }

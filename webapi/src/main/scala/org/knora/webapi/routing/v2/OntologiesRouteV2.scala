@@ -102,9 +102,9 @@ object OntologiesRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val requestMessageFuture: Future[OntologyMetadataGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield OntologyMetadataGetRequestV2(requestingUser = requestingUser)
+                    } yield OntologyMetadataGetByProjectRequestV2(requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageFuture,
@@ -147,10 +147,10 @@ object OntologiesRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val requestMessageFuture: Future[OntologyMetadataGetRequestV2] = for {
+                    val requestMessageFuture: Future[OntologyMetadataGetByProjectRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                         validatedProjectIris = projectIris.map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri"))).toSet
-                    } yield OntologyMetadataGetRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
+                    } yield OntologyMetadataGetByProjectRequestV2(projectIris = validatedProjectIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
                         requestMessageFuture,

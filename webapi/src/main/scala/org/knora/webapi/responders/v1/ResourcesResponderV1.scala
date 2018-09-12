@@ -34,13 +34,14 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util._
+import org.knora.webapi.util.IriConversions._
 
 import scala.collection.immutable
 import scala.concurrent.Future
@@ -1266,6 +1267,16 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.SharedOntologiesProject) {
+                throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+            }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
@@ -1285,6 +1296,19 @@ class ResourcesResponderV1 extends Responder {
             // Get ontology information about all the resource classes and properties used in the request.
 
             resourceClasses: Set[IRI] = resourcesToCreate.map(_.resourceTypeIri).toSet
+
+            // Ensure that none of the resource classes is from a non-shared ontology in another project.
+
+            resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, userProfile)).mapTo[ReadOntologyMetadataV2]
+
+            _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
+                val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
+
+                if (resourceProjectIri != ontologyProjectIri && !ontologyMetadata.isShared) {
+                    throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared")
+                }
+            }
 
             resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = resourceClasses,
@@ -1896,20 +1920,39 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.SharedOntologiesProject) {
+                throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+            }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
+            resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(Set(resourceClassOntologyIri), userProfile)).mapTo[ReadOntologyMetadataV2]
+            ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
+
+            _ = if (resourceProjectIri != ontologyProjectIri && !ontologyMetadata.isShared) {
+                throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
+            }
+
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
             resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)) {
-                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
+            _ = if (!userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), resourceProjectIri, None)) {
+                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $resourceProjectIri")
             }
 
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => createResourceAndCheck(resourceClassIri,
-                    projectIri,
+                    resourceProjectIri,
                     label,
                     resourceIri,
                     values,

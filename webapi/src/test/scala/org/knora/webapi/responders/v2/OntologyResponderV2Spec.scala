@@ -194,7 +194,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 requestingUser = imagesUser
             )
 
@@ -206,7 +206,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
             expectMsgType[SuccessResponseV2](10.seconds)
 
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 requestingUser = imagesUser
             )
 
@@ -215,7 +215,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
@@ -457,7 +457,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingNonAdminUser
             )
@@ -518,7 +518,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
@@ -603,7 +603,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
 
-            actorUnderTest ! OntologyMetadataGetRequestV2(
+            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
