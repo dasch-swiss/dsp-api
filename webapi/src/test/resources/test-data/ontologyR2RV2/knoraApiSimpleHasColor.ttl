@@ -5,7 +5,6 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://api.knora.org/ontology/knora-api/simple/v2> a owl:Ontology;
-  knora-api:isShared true;
   rdfs:label "The knora-api ontology in the simple schema" .
 
 knora-api:hasColor a owl:DatatypeProperty;

@@ -471,7 +471,7 @@ object OntologyConstants {
         val ForProperty: IRI = KnoraBasePrefixExpansion + "forProperty"
 
         val SystemProject: IRI = KnoraBasePrefixExpansion + "SystemProject"
-        val SharedOntologiesProject: IRI = KnoraBasePrefixExpansion + "SharedOntologiesProject"
+        val DefaultSharedOntologiesProject: IRI = KnoraBasePrefixExpansion + "DefaultSharedOntologiesProject"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
@@ -669,6 +669,7 @@ object OntologyConstants {
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
 
         val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
+        val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
@@ -881,8 +882,6 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
         val Error: IRI = KnoraApiV2PrefixExpansion + "error"
-
-        val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
 
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
 

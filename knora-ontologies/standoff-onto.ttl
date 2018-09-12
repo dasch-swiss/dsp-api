@@ -29,8 +29,6 @@
 
 <http://www.knora.org/ontology/standoff> rdf:type owl:Ontology ;
 
-    knora-base:isShared true ;
-
     rdfs:label "The standoff ontology"@en ;
 
     knora-base:attachedToProject knora-base:SystemProject .

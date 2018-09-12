@@ -15,8 +15,7 @@
 
 <http://www.knora.org/ontology/shared/example-box> rdf:type owl:Ontology ;
     rdfs:label "An example of a shared ontology" ;
-    knora-base:isShared true ;
-    knora-base:attachedToProject <http://www.knora.org/ontology/knora-base#SharedOntologiesProject> ;
+    knora-base:attachedToProject <http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject> ;
     knora-base:lastModificationDate "2018-09-10T14:53:00.000Z"^^xsd:dateTimeStamp .
 
 :Box rdf:type owl:Class ;

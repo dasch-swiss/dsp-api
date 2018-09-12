@@ -122,7 +122,7 @@
   "@id" : "http://api.knora.org/ontology/shared/example-box/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://www.knora.org/ontology/knora-base#SharedOntologiesProject"
+    "@id" : "http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject"
   },
   "knora-api:isShared" : true,
   "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",

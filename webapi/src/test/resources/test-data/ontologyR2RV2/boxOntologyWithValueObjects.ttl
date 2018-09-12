@@ -7,7 +7,7 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <http://api.knora.org/ontology/shared/example-box/v2> a owl:Ontology;
-  knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SharedOntologiesProject>;
+  knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject>;
   knora-api:isShared true;
   knora-api:lastModificationDate "2018-09-10T14:53:00Z";
   rdfs:label "An example of a shared ontology" .

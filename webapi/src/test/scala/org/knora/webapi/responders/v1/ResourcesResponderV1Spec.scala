@@ -1463,11 +1463,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "not create a resource in the shared ontologies project" in {
+        "not create a resource in the default shared ontologies project" in {
             actorUnderTest ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/shared/example-box#Box",
                 label = "Test Resource",
-                projectIri = OntologyConstants.KnoraBase.SharedOntologiesProject,
+                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject,
                 values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
                 file = None,
                 userProfile = SharedTestDataADM.superUser,

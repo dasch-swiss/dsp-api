@@ -804,7 +804,6 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   */
 case class ChangeOntologyMetadataRequestV2(ontologyIri: SmartIri,
                                            label: String,
-                                           isShared: Boolean = false,
                                            lastModificationDate: Instant,
                                            apiRequestID: UUID,
                                            requestingUser: UserADM) extends OntologiesResponderRequestV2
@@ -846,13 +845,11 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
         val inputMetadata = inputOntologyV2.ontologyMetadata
         val ontologyIri = inputMetadata.ontologyIri
         val label = inputMetadata.label.getOrElse(throw BadRequestException(s"No rdfs:label submitted"))
-        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
         val lastModificationDate = inputMetadata.lastModificationDate.getOrElse(throw BadRequestException("No knora-api:lastModificationDate submitted"))
 
         ChangeOntologyMetadataRequestV2(
             ontologyIri = ontologyIri,
             label = label,
-            isShared = isShared,
             lastModificationDate = lastModificationDate,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
@@ -1352,8 +1349,6 @@ object InputOntologyV2 {
 
         val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val isShared: Boolean = ontologyObj.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
-
         val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
@@ -1363,7 +1358,6 @@ object InputOntologyV2 {
         val ontologyMetadata = OntologyMetadataV2(
             ontologyIri = externalOntologyIri,
             projectIri = projectIri,
-            isShared = isShared,
             label = ontologyLabel,
             lastModificationDate = lastModificationDate
         )
@@ -2937,7 +2931,6 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   */
 case class OntologyMetadataV2(ontologyIri: SmartIri,
                               projectIri: Option[SmartIri] = None,
-                              isShared: Boolean = false,
                               label: Option[String] = None,
                               lastModificationDate: Option[Instant] = None) extends KnoraContentV2[OntologyMetadataV2] {
     override def toOntologySchema(targetSchema: OntologySchema): OntologyMetadataV2 = {
@@ -2980,11 +2973,17 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             None
         }
 
-        val isSharedProp = targetSchema match {
-            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.IsShared
-            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.IsShared
+        val isSharedStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsShared -> JsonLDBoolean(true))
+        } else {
+            None
         }
-        val isSharedStatement: (IRI, JsonLDBoolean) = isSharedProp -> JsonLDBoolean(isShared)
+
+        val isBuiltInStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraBuiltInDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsBuiltIn -> JsonLDBoolean(true))
+        } else {
+            None
+        }
 
         val labelStatement: Option[(IRI, JsonLDString)] = label.map {
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
@@ -3002,6 +3001,6 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
-        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement + isSharedStatement
+        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement ++ isSharedStatement ++ isBuiltInStatement
     }
 }

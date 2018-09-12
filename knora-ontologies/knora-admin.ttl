@@ -738,11 +738,11 @@
 
 
 ### http://www.knora.org/ontology/knora-base#SharedOntologiesProject
-:SharedOntologiesProject rdf:type :knoraProject ;
-            rdfs:comment "A built-in project representing Shared Ontologies."@en ;
-            :projectShortname "SharedOntologiesProject" ;
-            :projectShortcode "shared" ;
-            :projectLongname "Knora Shared Ontologies Project" ;
+:DefaultSharedOntologiesProject rdf:type :knoraProject ;
+            rdfs:comment "The default project for shared ontologies."@en ;
+            :projectShortname "DefaultSharedOntologiesProject" ;
+            :projectShortcode "0000" ;
+            :projectLongname "Knora Default Shared Ontologies Project" ;
             :projectDescription "Knora Shared Ontologies Project"@en ;
             :status "true"^^xsd:boolean ;
             :hasSelfJoinEnabled "false"^^xsd:boolean .

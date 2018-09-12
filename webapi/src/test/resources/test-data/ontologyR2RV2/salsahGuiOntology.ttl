@@ -7,7 +7,7 @@
 
 <http://api.knora.org/ontology/salsah-gui/v2> a owl:Ontology;
   knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
-  knora-api:isShared true;
+  knora-api:isBuiltIn true;
   rdfs:label "The salsah-gui ontology" .
 
 salsah-gui:Checkbox a salsah-gui:Guielement, owl:NamedIndividual .

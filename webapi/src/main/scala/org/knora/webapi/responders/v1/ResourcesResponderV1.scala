@@ -1271,7 +1271,7 @@ class ResourcesResponderV1 extends Responder {
 
             resourceProjectIri: IRI = projectInfoResponse.project_info.id
 
-            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.SharedOntologiesProject) {
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
             }
 
@@ -1305,7 +1305,7 @@ class ResourcesResponderV1 extends Responder {
             _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
                 val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
 
-                if (resourceProjectIri != ontologyProjectIri && !ontologyMetadata.isShared) {
+                if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
                     throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared")
                 }
             }
@@ -1924,7 +1924,7 @@ class ResourcesResponderV1 extends Responder {
 
             resourceProjectIri: IRI = projectInfoResponse.project_info.id
 
-            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.SharedOntologiesProject) {
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
                 throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
             }
 
@@ -1935,7 +1935,7 @@ class ResourcesResponderV1 extends Responder {
             ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
             ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
 
-            _ = if (resourceProjectIri != ontologyProjectIri && !ontologyMetadata.isShared) {
+            _ = if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
                 throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
             }
 
@@ -1970,7 +1970,7 @@ class ResourcesResponderV1 extends Responder {
                 sipiConversionRequest match {
                     case Some(conversionRequest) =>
                         conversionRequest match {
-                            case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
                                 // a tmp file has been created by the resources route (non GUI-case), delete it
                                 FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                             case _ => ()

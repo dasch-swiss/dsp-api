@@ -406,7 +406,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not create a non-shared ontology in the shared ontologies project" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "misplaced",
-                projectIri = OntologyConstants.KnoraBase.SharedOntologiesProject.toSmartIri,
+                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
                 label = "The invalid non-shared ontology",
                 apiRequestID = UUID.randomUUID,
                 requestingUser = SharedTestDataADM.superUser
@@ -422,7 +422,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "create a shared ontology" in {
             actorUnderTest ! CreateOntologyRequestV2(
                 ontologyName = "chair",
-                projectIri = OntologyConstants.KnoraBase.SharedOntologiesProject.toSmartIri,
+                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
                 isShared = true,
                 label = "a chaired ontology",
                 apiRequestID = UUID.randomUUID,
@@ -435,24 +435,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(metadata.ontologyIri.toString == "http://www.knora.org/ontology/shared/chair")
             chairIri.set(metadata.ontologyIri.toOntologySchema(ApiV2WithValueObjects).toString)
             chairLastModDate = metadata.lastModificationDate.getOrElse(throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
-        }
-
-        "not allow a shared ontology to be made unshared" in {
-            val newLabel = "The modified chaired ontology"
-
-            actorUnderTest ! ChangeOntologyMetadataRequestV2(
-                ontologyIri = chairIri.get.toSmartIri,
-                label = newLabel,
-                lastModificationDate = chairLastModDate,
-                apiRequestID = UUID.randomUUID,
-                requestingUser = SharedTestDataADM.superUser
-            )
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure =>
-                    if (printErrorMessages) println(msg.cause.getMessage)
-                    msg.cause.isInstanceOf[BadRequestException] should ===(true)
-            }
         }
 
         "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {

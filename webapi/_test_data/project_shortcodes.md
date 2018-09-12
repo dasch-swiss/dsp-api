@@ -1,9 +1,8 @@
 ### An overview of project `shortcodes` in use. Every project needs to have a unique shortcode assigned.
 
-   - shared: `shared`
-
 #### Default range - `0000` - `00FF`
 
+   - default shared ontologies project: `0000`
    - anything: `0001`
    - images: `00FF`
    - system: `FFFF`

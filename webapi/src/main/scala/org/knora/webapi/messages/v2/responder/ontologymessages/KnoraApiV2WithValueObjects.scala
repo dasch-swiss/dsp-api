@@ -35,7 +35,6 @@ object KnoraApiV2WithValueObjects {
     val OntologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
-        isShared = true,
         label = Some("The knora-api ontology in the complex schema")
     )
 
@@ -60,6 +59,46 @@ object KnoraApiV2WithValueObjects {
             )
         ),
         objectType = Some(OntologyConstants.Xsd.String)
+    )
+
+    private val IsShared: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsShared,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is shared",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether an ontology can be shared by multiple projects"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
+    )
+
+    private val IsBuiltIn: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.IsBuiltIn,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "is shared",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates whether an ontology is built into Knora"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
     private val IsEditable: ReadPropertyInfoV2 = makeProperty(
@@ -1374,6 +1413,8 @@ object KnoraApiV2WithValueObjects {
           */
         val KnoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
             Result,
+            IsShared,
+            IsBuiltIn,
             IsResourceClass,
             IsStandoffClass,
             IsValueClass,

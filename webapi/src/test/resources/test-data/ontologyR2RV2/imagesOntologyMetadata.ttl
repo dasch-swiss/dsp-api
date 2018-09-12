@@ -4,5 +4,4 @@
 
 <http://0.0.0.0:3333/ontology/00FF/images/v2> a owl:Ontology;
   knora-api:attachedToProject <http://rdfh.ch/projects/00FF>;
-  knora-api:isShared false;
   rdfs:label "The images demo ontology" .

@@ -8,7 +8,7 @@
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
 <owl:Ontology rdf:about="http://api.knora.org/ontology/salsah-gui/v2">
 	<knora-api:attachedToProject rdf:resource="http://www.knora.org/ontology/knora-base#SystemProject"/>
-	<knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isShared>
+	<knora-api:isBuiltIn rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isBuiltIn>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The salsah-gui ontology</rdfs:label>
 </owl:Ontology>
 <salsah-gui:Guielement rdf:about="http://api.knora.org/ontology/salsah-gui/v2#Checkbox">

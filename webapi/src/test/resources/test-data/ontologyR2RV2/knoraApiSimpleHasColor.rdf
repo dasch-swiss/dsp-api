@@ -6,7 +6,6 @@
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
 <owl:Ontology rdf:about="http://api.knora.org/ontology/knora-api/simple/v2">
-	<knora-api:isShared rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean">true</knora-api:isShared>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The knora-api ontology in the simple schema</rdfs:label>
 </owl:Ontology>
 <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasColor">
