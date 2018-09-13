@@ -1458,6 +1458,10 @@ this simplified example:
 
 ## Summary of Restrictions on Project-Specific Ontologies
 
+An ontology can refer to a Knora ontology in another project only if the other
+ontology is built-in or shared
+(see @ref:[Shared Ontologies](../03-apis/api-v2/knora-iris.md#shared-ontologies)).
+
 ### Restrictions on Classes
 
 -   Each class must be a subclass of either `kb:Resource` or
