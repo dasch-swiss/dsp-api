@@ -5,7 +5,6 @@
  1. Update the version number in `webapi/WebapiBuild.sbt`, `salsah1/SalsahBuild.sbt`, `docs/DocsBuild.sbt`.
  1. Remove the `(not released yet)` text in the title of the release notes.
  1. Create a new page with the next version number including the `(not released yet)` text and add page to TOC.
- 1. Update links in the new page to point to correct release tag and milestone.
  1. On Github - Create new milestone
  1. On Github - Move any open issues from current release milestone to the next release milestone and so on.
  1. On Github - Close current milestone.
