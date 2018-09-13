@@ -33,6 +33,7 @@
   ontologyNamedGraphIri: SmartIri,
   ontologyIri: SmartIri,
   projectIri: SmartIri,
+  isShared: Boolean,
   ontologyLabel: String,
   currentTime: Instant)
 
@@ -46,6 +47,7 @@ INSERT {
     GRAPH ?ontologyNamedGraph {
         ?ontology rdf:type owl:Ontology ;
             knora-base:attachedToProject ?project ;
+            knora-base:isShared @isShared ;
             rdfs:label """@ontologyLabel"""^^xsd:string ;
             knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
     }

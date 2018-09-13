@@ -29,10 +29,10 @@
     },
     "rdfs:label" : "The BEOL ontology"
   }, {
-    "@id" : "http://0.0.0.0:3333/ontology/0802/biblio/v2",
+    "@id" : "http://0.0.0.0:3333/ontology/0801/biblio/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
+      "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
     },
     "rdfs:label" : "The Biblio ontology"
   }, {
@@ -62,6 +62,7 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isBuiltIn" : true,
     "rdfs:label" : "The knora-api ontology in the complex schema"
   }, {
     "@id" : "http://api.knora.org/ontology/salsah-gui/v2",
@@ -69,13 +70,24 @@
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isBuiltIn" : true,
     "rdfs:label" : "The salsah-gui ontology"
+  }, {
+    "@id" : "http://api.knora.org/ontology/shared/example-box/v2",
+    "@type" : "owl:Ontology",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject"
+    },
+    "knora-api:isShared" : true,
+    "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",
+    "rdfs:label" : "An example of a shared ontology"
   }, {
     "@id" : "http://api.knora.org/ontology/standoff/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {
       "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
     },
+    "knora-api:isBuiltIn" : true,
     "rdfs:label" : "The standoff ontology"
   } ],
   "@context" : {

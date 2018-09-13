@@ -7,6 +7,7 @@
 
 <http://api.knora.org/ontology/standoff/v2> a owl:Ontology;
   knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
+  knora-api:isBuiltIn true;
   rdfs:label "The standoff ontology" .
 
 standoff:StandoffBlockquoteTag a owl:Class;

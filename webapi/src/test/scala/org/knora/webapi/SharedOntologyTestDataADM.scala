@@ -36,8 +36,8 @@ object SharedOntologyTestDataADM {
     val BEOL_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0801/beol"
 
     // biblio
-    val BIBLIO_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0802/biblio"
-    val BIBLIO_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0802/biblio"
+    val BIBLIO_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0801/biblio"
+    val BIBLIO_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0801/biblio"
 
     // incunabula
     val INCUNABULA_ONTOLOGY_IRI: IRI =  OntologyConstants.KnoraInternal.InternalOntologyStart + "/0803/incunabula"

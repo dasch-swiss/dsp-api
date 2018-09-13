@@ -38,8 +38,8 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.PermissionUtilADM
 import spray.json._
 
-import scala.concurrent.{Await, Future, TimeoutException}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
 import scala.util.{Failure, Try}
 
 /**
@@ -48,6 +48,7 @@ import scala.util.{Failure, Try}
   */
 class SipiResponderV1 extends Responder {
 
+    implicit override val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit private val materializer: ActorMaterializer = ActorMaterializer()
 
     // Converts SPARQL query results to ApiValueV1 objects.
@@ -232,6 +233,9 @@ class SipiResponderV1 extends Responder {
 
                 case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
             }
+
+            // do cleanup after strict (in memory) access
+            _ = conversionResultResponse.discardEntityBytes()
 
             // get file type from Sipi response
             fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {

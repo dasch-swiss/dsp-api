@@ -452,7 +452,10 @@
 
 <http://rdfh.ch/lists/0001/treeList> a knora-base:ListNode ;
 	knora-base:isRootNode true ;
+	knora-base:listNodeName "treelistroot" ;
 	rdfs:label "Tree list root"@en ;
+	rdfs:label "Listenwurzel"@de ;
+	rdfs:comment "Anything Tree List"@en ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	knora-base:hasSubListNode <http://rdfh.ch/lists/0001/treeList01> , <http://rdfh.ch/lists/0001/treeList02> , <http://rdfh.ch/lists/0001/treeList03> .
 

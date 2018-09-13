@@ -65,6 +65,7 @@ case class LoadOntologiesRequestV2(requestingUser: UserADM) extends OntologiesRe
   */
 case class CreateOntologyRequestV2(ontologyName: String,
                                    projectIri: SmartIri,
+                                   isShared: Boolean = false,
                                    label: String,
                                    apiRequestID: UUID,
                                    requestingUser: UserADM) extends OntologiesResponderRequestV2
@@ -107,10 +108,12 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
         val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
             projectIri = projectIri,
+            isShared = isShared,
             label = label,
             apiRequestID = apiRequestID,
             requestingUser = requestingUser
@@ -965,13 +968,22 @@ case class SubClassesGetResponseV2(subClasses: Seq[SubClassInfoV2])
 case class OntologyKnoraEntityIrisGetRequestV2(ontologyIri: SmartIri, requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
-  * Requests metadata about ontologies.
+  * Requests metadata about ontologies by project.
   *
   * @param projectIris    the IRIs of the projects for which ontologies should be returned. If this set is empty, information
   *                       about all ontologies is returned.
   * @param requestingUser the user making the request.
   */
-case class OntologyMetadataGetRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
+
+/**
+  * Requests metadata about ontologies by ontology IRI.
+  *
+  * @param ontologyIris    the IRIs of the ontologies to be queried. If this set is empty, information
+  *                       about all ontologies is returned.
+  * @param requestingUser the user making the request.
+  */
+case class OntologyMetadataGetByIriRequestV2(ontologyIris: Set[SmartIri] = Set.empty[SmartIri], requestingUser: UserADM) extends OntologiesResponderRequestV2
 
 /**
   * Requests entity definitions for the given ontology.
@@ -1335,9 +1347,9 @@ object InputOntologyV2 {
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIri")
         }
 
-        val projectIri = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: Option[SmartIri] = ontologyObj.maybeIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
-        val ontologyLabel = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val ontologyLabel: Option[String] = ontologyObj.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
         val lastModificationDate: Option[Instant] =
             ontologyObj.maybeStringWithValidation(OntologyConstants.KnoraApiV2Simple.LastModificationDate, stringFormatter.toInstant).
@@ -2913,6 +2925,7 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   *
   * @param ontologyIri          the IRI of the ontology.
   * @param projectIri           the IRI of the project that the ontology belongs to.
+  * @param isShared             `true` if this is a shared ontology.
   * @param label                the label of the ontology, if any.
   * @param lastModificationDate the ontology's last modification date, if any.
   */
@@ -2960,6 +2973,18 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
             None
         }
 
+        val isSharedStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraSharedDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsShared -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
+        val isBuiltInStatement: Option[(IRI, JsonLDBoolean)] = if (ontologyIri.isKnoraBuiltInDefinitionIri && targetSchema == ApiV2WithValueObjects) {
+            Some(OntologyConstants.KnoraApiV2WithValueObjects.IsBuiltIn -> JsonLDBoolean(true))
+        } else {
+            None
+        }
+
         val labelStatement: Option[(IRI, JsonLDString)] = label.map {
             labelStr => OntologyConstants.Rdfs.Label -> JsonLDString(labelStr)
         }
@@ -2976,6 +3001,6 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
 
         Map(JsonLDConstants.ID -> JsonLDString(ontologyIri.toString),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Owl.Ontology)
-        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement
+        ) ++ projectIriStatement ++ labelStatement ++ lastModDateStatement ++ isSharedStatement ++ isBuiltInStatement
     }
 }

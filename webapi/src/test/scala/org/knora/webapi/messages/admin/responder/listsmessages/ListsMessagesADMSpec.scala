@@ -21,7 +21,7 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.{BadRequestException, SharedTestDataADM}
+import org.knora.webapi.{BadRequestException, SharedListsTestDataADM, SharedTestDataADM}
 import org.scalatest.{Matchers, WordSpecLike}
 import spray.json._
 
@@ -34,11 +34,12 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
     "Conversion from case class to JSON and back" should {
 
-        "work for a 'ListInfoADM'" in {
+        "work for a 'ListRootNodeInfoADM'" in {
 
-            val listInfo: ListInfoADM = ListInfoADM (
+            val listInfo = ListRootNodeInfoADM (
                 id = "http://rdfh.ch/lists/73d0ec0302",
                 projectIri = "http://rdfh.ch/projects/00FF",
+                name = None,
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
                 comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
             )
@@ -47,77 +48,66 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
 
             // json should be ("")
 
-            val converted: ListInfoADM = json.parseJson.convertTo[ListInfoADM]
+            val converted = json.parseJson.convertTo[ListRootNodeInfoADM]
 
             converted should be(listInfo)
         }
 
-        "work for a 'ListNodeInfoADM'" in {
+        "work for a 'ListChildNodeInfoADM'" in {
 
-            val listNodeInfo: ListNodeInfoADM = ListNodeInfoADM (
+            val listNodeInfo = ListChildNodeInfoADM (
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
                 comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                position = Some(0),
-                rootNode = None // rootNode is not contained in JSON format
+                position = 0,
+                hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
             )
 
             val json = listNodeInfo.toJson.compactPrint
 
             // json should be ("")
 
-            val converted: ListNodeInfoADM = json.parseJson.convertTo[ListNodeInfoADM]
+            val converted: ListNodeInfoADM = json.parseJson.convertTo[ListChildNodeInfoADM]
 
             converted should be(listNodeInfo)
         }
 
-        "work for a 'ListNodeADM'" in {
+        "work for a 'ListChildNodeADM'" in {
 
-            val listNode: ListNodeADM = ListNodeADM(
+            val listNode: ListNodeADM = ListChildNodeADM(
                 id = "http://rdfh.ch/lists/00FF/526f26ed04",
                 name = Some("sommer"),
                 labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
                 comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                children = Seq.empty[ListNodeADM],
-                position = Some(0)
+                children = Seq.empty[ListChildNodeADM],
+                position = 0,
+                hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
             )
 
             val json = listNode.toJson.compactPrint
 
             // json should be ("")
 
-            val converted: ListNodeADM = json.parseJson.convertTo[ListNodeADM]
+            val converted: ListNodeADM = json.parseJson.convertTo[ListChildNodeADM]
 
             converted should be(listNode)
         }
 
         "work for a 'ListADM'" in {
 
-            val listInfo: ListInfoADM = ListInfoADM (
-                id = "http://rdfh.ch/lists/73d0ec0302",
-                projectIri = "http://rdfh.ch/projects/00FF",
-                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Title", Some("en")), StringLiteralV2("Titel", Some("de")), StringLiteralV2("Titre", Some("fr")))),
-                comments = StringLiteralSequenceV2(Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
-            )
+            val listInfo = SharedListsTestDataADM.treeListInfo
 
-            val listNode: ListNodeADM = ListNodeADM(
-                id = "http://rdfh.ch/lists/00FF/526f26ed04",
-                name = Some("sommer"),
-                labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-                comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
-                children = Seq.empty[ListNodeADM],
-                position = Some(0)
-            )
+            val children = SharedListsTestDataADM.treeListChildNodes
 
-            val json = ListADM(listInfo, Seq(listNode)).toJson.compactPrint
+            val json = ListADM(listInfo, children).toJson.compactPrint
 
             // json should be ("")
 
             val converted: ListADM = json.parseJson.convertTo[ListADM]
 
             converted.listinfo should be(listInfo)
-            converted.children.head should be(listNode)
+            converted.children should be(children)
         }
 
         "throw 'BadRequestException' for `CreateListApiRequestADM` when project IRI is empty" in {
@@ -252,6 +242,96 @@ class ListsMessagesADMSpec extends WordSpecLike with Matchers with ListADMJsonPr
             val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[ChangeListInfoApiRequestADM]
 
             thrown.getMessage should equal (REQUEST_NOT_CHANGING_DATA_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal (LIST_NODE_IRI_MISSING_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when list node iri is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "notvalidIRI",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal (LIST_NODE_IRI_INVALID_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when project iri is empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "$exampleListIri",
+                   |    "projectIri": "",
+                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_MISSING_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when project iri is invalid" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "$exampleListIri",
+                   |    "projectIri": "notvalidIRI",
+                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal (PROJECT_IRI_INVALID_ERROR)
+
+        }
+
+        "throw 'BadRequestException' for `CreateChildNodeApiRequestADM` when labels are empty" in {
+
+            val payload =
+                s"""
+                   |{
+                   |    "parentNodeIri": "$exampleListIri",
+                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                   |    "labels": [],
+                   |    "comments": []
+                   |}
+                """.stripMargin
+
+            val thrown = the [BadRequestException] thrownBy payload.parseJson.convertTo[CreateChildNodeApiRequestADM]
+
+            thrown.getMessage should equal (LABEL_MISSING_ERROR)
 
         }
 

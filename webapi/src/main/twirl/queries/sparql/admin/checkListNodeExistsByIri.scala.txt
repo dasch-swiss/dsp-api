@@ -30,7 +30,7 @@ PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 ASK {
-    BIND(IRI("@listNodeIri") AS ?listNode)
+    BIND(IRI("@listNodeIri") AS ?node)
 
-    ?listNode rdf:type knora-base:ListNode .
+    ?node rdf:type knora-base:ListNode .
 }

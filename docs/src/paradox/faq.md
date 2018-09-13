@@ -34,12 +34,17 @@ has been partly implemented, but is not currently supported.
 
 ### Can a project use classes or properties defined in another project's ontology?
 
-No, and Knora API v2 will forbid this. Each project must be free to change its
-own ontologies, but this is not possible if they have been used in ontologies or
-data created by other projects.
+Knora does not allow this to be done with ordinary project-specific ontologies.
+Each project must be free to change its own ontologies, but this is not possible
+if they have been used in ontologies or data created by other projects.
 
-Instead, there will be a process for standardising ontologies that can be shared
-by multiple projects (issue @github[#523](#523)).
+An ontology can be defined as shared, meaning that it can be used by multiple
+projects, and that its creators promise not to change it in ways that could
+affect other ontologies or data that are based on it. See
+@ref:[Shared Ontologies](03-apis/api-v2/knora-iris.md#shared-ontologies) for details.
+
+There will be a standardisation process for shared ontologies
+(issue @github[#523](#523)).
 
 ### Why doesn't Knora use `rdfs:domain` and `rdfs:range` for consistency checking?
 

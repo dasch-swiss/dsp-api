@@ -89,7 +89,8 @@ class OntologyResponderV2 extends Responder {
         case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser), log)
         case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser), log)
         case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser), log)
-        case OntologyMetadataGetRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
+        case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
+        case OntologyMetadataGetByIriRequestV2(ontologyIris, requestingUser) => future2Message(sender(), getOntologyMetadataByIriV2(ontologyIris, requestingUser), log)
         case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
         case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
         case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
@@ -409,8 +410,134 @@ class OntologyResponderV2 extends Responder {
                 }
         }
 
+        // Check references between ontologies.
+        checkReferencesBetweenOntologies(ontologyCacheData)
+
         // Update the cache.
         storeCacheData(ontologyCacheData)
+    }
+
+    /**
+      * Checks a reference between an ontology entity and another ontology entity to see if the target
+      * is in a non-shared ontology in another project.
+      *
+      * @param ontologyCacheData the ontology cache data.
+      * @param sourceEntityIri the entity whose definition contains the reference.
+      * @param targetEntityIri the entity that's the target of the reference.
+      * @param errorFun a function that throws an exception with the specified message if the reference is invalid.
+      */
+    private def checkOntologyReferenceInEntity(ontologyCacheData: OntologyCacheData, sourceEntityIri: SmartIri, targetEntityIri: SmartIri, errorFun: String => Nothing): Unit = {
+        if (targetEntityIri.isKnoraDefinitionIri) {
+            val sourceOntologyIri = sourceEntityIri.getOntologyFromEntity
+            val sourceOntologyMetadata = ontologyCacheData.ontologies(sourceOntologyIri).ontologyMetadata
+
+            val targetOntologyIri = targetEntityIri.getOntologyFromEntity
+            val targetOntologyMetadata = ontologyCacheData.ontologies(targetOntologyIri).ontologyMetadata
+
+            if (sourceOntologyMetadata.projectIri != targetOntologyMetadata.projectIri) {
+                if (!(targetOntologyIri.isKnoraBuiltInDefinitionIri || targetOntologyIri.isKnoraSharedDefinitionIri)) {
+                    errorFun(s"Entity $sourceEntityIri refers to entity $targetEntityIri, which is in a non-shared ontology that belongs to another project")
+                }
+            }
+        }
+    }
+
+    /**
+      * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
+      *
+      * @param ontologyCacheData the ontology cache data.
+      * @param propertyDef the property definition.
+      * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
+      */
+    private def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData, propertyDef: PropertyInfoContentV2, errorFun: String => Nothing): Unit = {
+        // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
+
+        for (subPropertyOf <- propertyDef.subPropertyOf) {
+            checkOntologyReferenceInEntity(
+                ontologyCacheData = ontologyCacheData,
+                sourceEntityIri = propertyDef.propertyIri,
+                targetEntityIri = subPropertyOf,
+                errorFun = errorFun
+            )
+        }
+
+        // Ensure that the property doesn't have subject or object constraints pointing to a non-shared ontology in another project.
+
+        propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
+            case Some(subjectClassConstraint) =>
+                checkOntologyReferenceInEntity(
+                    ontologyCacheData = ontologyCacheData,
+                    sourceEntityIri = propertyDef.propertyIri,
+                    targetEntityIri = subjectClassConstraint,
+                    errorFun = errorFun
+                )
+
+            case None => ()
+        }
+
+        propertyDef.getPredicateIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri) match {
+            case Some(objectClassConstraint) =>
+                checkOntologyReferenceInEntity(
+                    ontologyCacheData = ontologyCacheData,
+                    sourceEntityIri = propertyDef.propertyIri,
+                    targetEntityIri = objectClassConstraint,
+                    errorFun = errorFun
+                )
+
+            case None => ()
+        }
+    }
+
+    /**
+      * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
+      *
+      * @param ontologyCacheData the ontology cache data.
+      * @param classDef the class definition.
+      * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
+      */
+    private def checkOntologyReferencesInClassDef(ontologyCacheData: OntologyCacheData, classDef: ClassInfoContentV2, errorFun: String => Nothing): Unit = {
+        for (subClassOf <- classDef.subClassOf) {
+            checkOntologyReferenceInEntity(
+                ontologyCacheData = ontologyCacheData,
+                sourceEntityIri = classDef.classIri,
+                targetEntityIri = subClassOf,
+                errorFun = errorFun
+            )
+        }
+
+        for (cardinalityPropIri <- classDef.directCardinalities.keys) {
+            checkOntologyReferenceInEntity(
+                ontologyCacheData = ontologyCacheData,
+                sourceEntityIri = classDef.classIri,
+                targetEntityIri = cardinalityPropIri,
+                errorFun = errorFun
+            )
+        }
+    }
+
+    /**
+      * Checks references between ontologies to ensure that they do not refer to non-shared ontologies in other projects.
+      *
+      * @param ontologyCacheData the ontology cache data.
+      */
+    private def checkReferencesBetweenOntologies(ontologyCacheData: OntologyCacheData): Unit = {
+        for (ontology <- ontologyCacheData.ontologies.values) {
+            for (propertyInfo <- ontology.properties.values) {
+                checkOntologyReferencesInPropertyDef(
+                    ontologyCacheData = ontologyCacheData,
+                    propertyDef = propertyInfo.entityInfoContent,
+                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                )
+            }
+
+            for (classInfo <- ontology.classes.values) {
+                checkOntologyReferencesInClassDef(
+                    ontologyCacheData = ontologyCacheData,
+                    classDef = classInfo.entityInfoContent,
+                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                )
+            }
+        }
     }
 
     /**
@@ -1288,6 +1415,36 @@ class OntologyResponderV2 extends Responder {
     }
 
     /**
+      * Gets the metadata describing the specified ontologies, or all ontologies.
+      *
+      * @param ontologyIris    the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
+      * @param requestingUser the user making the request.
+      * @return a [[ReadOntologyMetadataV2]].
+      */
+    private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri], requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
+        for {
+            cacheData <- getCacheData
+            returnAllOntologies: Boolean = ontologyIris.isEmpty
+
+            ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
+                cacheData.ontologies.values.map(_.ontologyMetadata).toSet
+            } else {
+                val missingOntologies = ontologyIris -- cacheData.ontologies.keySet
+
+                if (missingOntologies.nonEmpty) {
+                    throw BadRequestException(s"One or more requested ontologies were not found: ${missingOntologies.mkString(", ")}")
+                }
+
+                cacheData.ontologies.filterKeys(ontologyIris).values.map {
+                    ontology => ontology.ontologyMetadata
+                }.toSet
+            }
+        } yield ReadOntologyMetadataV2(
+            ontologies = ontologyMetadata
+        )
+    }
+
+    /**
       * Requests the entities defined in the given ontology.
       *
       * @param ontologyIri    the IRI (internal or external) of the ontology to be queried.
@@ -1420,7 +1577,7 @@ class OntologyResponderV2 extends Responder {
                                 }
                         }
 
-                        val projectIris = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
+                        val projectIris: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
                         val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
                         val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
 
@@ -1428,6 +1585,16 @@ class OntologyResponderV2 extends Responder {
                             throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject")
                         } else {
                             projectIris.head.toSmartIri
+                        }
+
+                        if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
+                            if (projectIri.toString == OntologyConstants.KnoraBase.SystemProject) {
+                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraBase.SystemProject}")
+                            }
+
+                            if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}")
+                            }
                         }
 
                         val label: String = if (labels.size > 1) {
@@ -1478,6 +1645,16 @@ class OntologyResponderV2 extends Responder {
                     throw BadRequestException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2WithValueObjects)} cannot be created, because it already exists")
                 }
 
+                // If this is a shared ontology, make sure it's in the default shared ontologies project.
+                _ = if (createOntologyRequest.isShared && createOntologyRequest.projectIri.toString != OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+                    throw BadRequestException(s"Shared ontologies must be created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}>")
+                }
+
+                // If it's in the default shared ontologies project, make sure it's a shared ontology.
+                _ = if (createOntologyRequest.projectIri.toString == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject && !createOntologyRequest.isShared) {
+                    throw BadRequestException(s"Ontologies created in project <${OntologyConstants.KnoraBase.DefaultSharedOntologiesProject}> must be shared")
+                }
+
                 // Create the ontology.
 
                 currentTime: Instant = Instant.now
@@ -1487,6 +1664,7 @@ class OntologyResponderV2 extends Responder {
                     ontologyNamedGraphIri = internalOntologyIri,
                     ontologyIri = internalOntologyIri,
                     projectIri = createOntologyRequest.projectIri,
+                    isShared = createOntologyRequest.isShared,
                     ontologyLabel = createOntologyRequest.label,
                     currentTime = currentTime
                 ).toString
@@ -1540,7 +1718,7 @@ class OntologyResponderV2 extends Responder {
             validOntologyName = stringFormatter.validateProjectSpecificOntologyName(createOntologyRequest.ontologyName, throw BadRequestException(s"Invalid project-specific ontology name: ${createOntologyRequest.ontologyName}"))
 
             // Make the internal ontology IRI.
-            internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, projectInfo.project.shortcode)
+            internalOntologyIri = stringFormatter.makeProjectSpecificInternalOntologyIri(validOntologyName, createOntologyRequest.isShared, projectInfo.project.shortcode)
 
             // Do the remaining pre-update checks and the update while holding an update lock on the ontology.
             taskResult <- IriLocker.runWithIriLock(
@@ -1693,11 +1871,17 @@ class OntologyResponderV2 extends Responder {
                 }
 
                 // Check that the cardinalities are valid, and add any inherited cardinalities.
-
                 (internalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = internalClassDef,
                     allBaseClassIris = allBaseClassIris,
                     cacheData = cacheData
+                )
+
+                // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+                _ = checkOntologyReferencesInClassDef(
+                    ontologyCacheData = cacheData,
+                    classDef = internalClassDefWithLinkValueProps,
+                    errorFun = { msg: String => throw BadRequestException(msg) }
                 )
 
                 // Prepare to update the ontology cache, undoing the SPARQL-escaping of the input.
@@ -2049,6 +2233,13 @@ class OntologyResponderV2 extends Responder {
                     cacheData = cacheData
                 )
 
+                // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+                _ = checkOntologyReferencesInClassDef(
+                    ontologyCacheData = cacheData,
+                    classDef = newInternalClassDefWithLinkValueProps,
+                    errorFun = { msg: String => throw BadRequestException(msg) }
+                )
+
                 // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
                 // isn't any text to escape in cardinalities.)
 
@@ -2204,6 +2395,13 @@ class OntologyResponderV2 extends Responder {
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
                     cacheData = cacheData
+                )
+
+                // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+                _ = checkOntologyReferencesInClassDef(
+                    ontologyCacheData = cacheData,
+                    classDef = newInternalClassDefWithLinkValueProps,
+                    errorFun = { msg: String => throw BadRequestException(msg) }
                 )
 
                 // Prepare to update the ontology cache. (No need to deal with SPARQL-escaping here, because there
@@ -2745,6 +2943,13 @@ class OntologyResponderV2 extends Responder {
                     constraintValueToBeChecked = objectClassConstraint,
                     allSuperPropertyIris = allKnoraSuperPropertyIris,
                     errorSchema = ApiV2WithValueObjects,
+                    errorFun = { msg: String => throw BadRequestException(msg) }
+                )
+
+                // Check that the property definition doesn't refer to any non-shared ontologies in other projects.
+                _ = checkOntologyReferencesInPropertyDef(
+                    ontologyCacheData = cacheData,
+                    propertyDef = internalPropertyDef,
                     errorFun = { msg: String => throw BadRequestException(msg) }
                 )
 

@@ -1,0 +1,139 @@
+{
+  "@graph" : [ {
+    "@id" : "example-box:Box",
+    "@type" : "owl:Class",
+    "knora-api:canBeInstantiated" : true,
+    "knora-api:isResourceClass" : true,
+    "knora-api:resourceIcon" : "thing.png",
+    "rdfs:comment" : "A shared thing.",
+    "rdfs:label" : "shared thing",
+    "rdfs:subClassOf" : [ {
+      "@id" : "knora-api:Resource"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:attachedToProject"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:attachedToUser"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:creationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteComment"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasIncomingLink"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasPermissions"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasStandoffLinkTo"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:minCardinality" : 0,
+      "owl:onProperty" : {
+        "@id" : "knora-api:hasStandoffLinkToValue"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:isDeleted"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:lastModificationDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "rdfs:label"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "salsah-gui:guiOrder" : 0,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "example-box:hasName"
+      }
+    } ]
+  }, {
+    "@id" : "example-box:hasName",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:isEditable" : true,
+    "knora-api:isResourceProperty" : true,
+    "knora-api:objectType" : {
+      "@id" : "knora-api:TextValue"
+    },
+    "salsah-gui:guiAttribute" : [ "maxlength=255", "size=80" ],
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:SimpleText"
+    },
+    "rdfs:comment" : "Has name.",
+    "rdfs:label" : "has name",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasValue"
+    }
+  } ],
+  "@id" : "http://api.knora.org/ontology/shared/example-box/v2",
+  "@type" : "owl:Ontology",
+  "knora-api:attachedToProject" : {
+    "@id" : "http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject"
+  },
+  "knora-api:isShared" : true,
+  "knora-api:lastModificationDate" : "2018-09-10T14:53:00Z",
+  "rdfs:label" : "An example of a shared ontology",
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "example-box" : "http://api.knora.org/ontology/shared/example-box/v2#"
+  }
+}

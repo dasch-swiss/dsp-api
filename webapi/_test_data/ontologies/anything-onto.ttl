@@ -611,6 +611,20 @@
     rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de .
 
 
+:TrivialThing rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Resource ;
+
+    knora-base:resourceIcon "thing.png" ;
+
+    rdfs:label "Unbedeutendes Ding"@de ,
+               "Chose sans importance"@fr ,
+               "Cosa senza importanza"@it ,
+               "Trivial thing"@en ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein unbedeutendes Ding"""@de .
+
+
 #################################################################
 #
 #    Standoff Classes

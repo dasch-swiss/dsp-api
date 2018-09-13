@@ -417,45 +417,25 @@ object SharedTestDataV1 {
         status = true,
         selfjoin = false
     )
-
-
-    /** **********************************/
-    /** BIBLIO                          **/
-    /** **********************************/
-
-    val BIBLIO_PROJECT_IRI = "http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ"
-
-    def biblioProjectInfo = ProjectInfoV1(
-        id = BIBLIO_PROJECT_IRI,
-        shortname = "biblio",
-        shortcode = "0802",
-        longname = Some("Bibliography"),
-        description = Some("Bibliography"),
-        keywords = None,
-        logo = None,
-        institution = None,
-        ontologies = Seq("http://www.knora.org/ontology/0802/biblio"),
-        status = true,
-        selfjoin = false
-    )
-
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def biblioUser = UserProfileV1(
+    def beolUser = UserProfileV1(
         UserDataV1(
-            user_id = Some("http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw"),
-            firstname = Some("biblio"),
-            lastname = Some("biblio"),
-            email = Some("biblio@example.com"),
+            user_id = Some("http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE"),
+            firstname = Some("BEOL"),
+            lastname = Some("BEOL"),
+            email = Some("beol@example.com"),
             password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), // -> "test"
             token = None,
             status = Some(true),
             lang = "en"
         ),
         groups = Vector.empty[IRI],
-        projects_info = Map(BIBLIO_PROJECT_IRI -> biblioProjectInfo),
+        projects_info = Map(BEOL_PROJECT_IRI-> beolProjectInfo),
         sessionId = None,
         permissionData = PermissionsDataADM()
     )
+
+
 
     /** **********************************/
     /** DOKUBIB                         **/

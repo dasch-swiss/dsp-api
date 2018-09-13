@@ -1814,13 +1814,19 @@
     "@id" : "knora-api:ListNode",
     "@type" : "owl:Class",
     "rdfs:comment" : "Represents a flat or hierarchical list",
-    "rdfs:subClassOf" : {
+    "rdfs:subClassOf" : [ {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
-    }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:minCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "rdfs:label"
+      }
+    } ]
   }, {
     "@id" : "knora-api:ListValue",
     "@type" : "owl:Class",
@@ -4642,6 +4648,14 @@
       "@id" : "knora-api:hasLinkToValue"
     }
   }, {
+    "@id" : "knora-api:isBuiltIn",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "rdfs:comment" : "Indicates whether an ontology is built into Knora",
+    "rdfs:label" : "is shared"
+  }, {
     "@id" : "knora-api:isDeleted",
     "@type" : "owl:DatatypeProperty",
     "knora-api:objectType" : {
@@ -4777,6 +4791,14 @@
     },
     "rdfs:comment" : "Indicates whether class is a subclass of Resource.",
     "rdfs:label" : "is resource class"
+  }, {
+    "@id" : "knora-api:isShared",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:boolean"
+    },
+    "rdfs:comment" : "Indicates whether an ontology can be shared by multiple projects",
+    "rdfs:label" : "is shared"
   }, {
     "@id" : "knora-api:isStandoffClass",
     "@type" : "owl:AnnotationProperty",
@@ -5262,6 +5284,7 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
   },
+  "knora-api:isBuiltIn" : true,
   "rdfs:label" : "The knora-api ontology in the complex schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

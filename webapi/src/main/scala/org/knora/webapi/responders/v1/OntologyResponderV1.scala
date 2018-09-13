@@ -259,7 +259,7 @@ class OntologyResponderV1 extends Responder {
 
         for {
             projectsResponse <- (responderManager ? ProjectsGetRequestADM(userProfile)).mapTo[ProjectsGetResponseADM]
-            readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
+            readOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = userProfile)).mapTo[ReadOntologyMetadataV2]
 
             projectsMap: Map[IRI, ProjectADM] = projectsResponse.projects.map {
                 project => project.id -> project

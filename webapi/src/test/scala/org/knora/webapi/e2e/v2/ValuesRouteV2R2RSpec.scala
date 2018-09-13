@@ -3,25 +3,20 @@ package org.knora.webapi.e2e.v2
 import java.net.URLEncoder
 import java.time.Instant
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{HttpEntity, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.pattern._
-import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.v2.{ResourcesRouteV2, SearchRouteV2, ValuesRouteV2}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.search.SparqlQueryConstants
 
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor}
 
 class ValuesRouteV2R2RSpec extends R2RSpec {
 
@@ -160,11 +155,6 @@ class ValuesRouteV2R2RSpec extends R2RSpec {
             propertyIriInResult = propertyIriInResult,
             expectedValueIri = expectedValueIri
         )
-    }
-
-    "Load test data" in {
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 360.seconds)
-        Await.result(responderManager ? LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser), 30.seconds)
     }
 
     "The values v2 endpoint" should {

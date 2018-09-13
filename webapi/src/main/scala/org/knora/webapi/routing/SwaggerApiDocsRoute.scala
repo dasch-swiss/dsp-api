@@ -26,10 +26,10 @@ import com.github.swagger.akka.SwaggerHttpService
 import com.github.swagger.akka.model.Info
 import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{ExternalDocs, Scheme}
-import org.knora.webapi.SettingsImpl
 import org.knora.webapi.routing.admin._
+import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 /**
   * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContextExecutor
 class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends SwaggerHttpService {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // List all routes here
     override val apiClasses: Set[Class[_]] = Set(
@@ -58,11 +58,13 @@ class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: Log
         List(Scheme.HTTP)
     }
 
-    override val host: String = settings.externalKnoraApiHostPort //the url of your api, not swagger's json endpoint
+    // swagger will publish at: http://locahost:3333/api-docs/swagger.json
+
+    override val host: String = settings.externalKnoraApiHostPort // the url of your api, not swagger's json endpoint
     override val basePath = "/"    //the basePath for the API you are exposing
     override val apiDocsPath = "api-docs" //where you want the swagger-json endpoint exposed
-    override val info = Info(version = "1.3.0") //provides license and other description details
-    override val externalDocs = Some(new ExternalDocs("Knora Docs", "http://www.knora.org/documentation/manual/rst/"))
+    override val info = Info(version = "1.8.0") //provides license and other description details
+    override val externalDocs = Some(new ExternalDocs("Knora Docs", "http://docs.knora.org"))
     override val securitySchemeDefinitions = Map("basicAuth" -> new BasicAuthDefinition())
 
     def knoraApiPath: Route = {
