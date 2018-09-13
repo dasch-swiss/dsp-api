@@ -938,6 +938,18 @@ HTTP POST to http://host/v2/ontologies
 The ontology name must follow the rules given in
 @ref:[Knora IRIs](knora-iris.md).
 
+If the ontology is to be shared by multiple projects, it must be
+created in the default shared ontologies project,
+`http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject`,
+and the request must have this additional boolean property:
+
+```
+"knora-api:isShared" : true
+```
+
+See @ref:[Shared Ontologies](knora-iris.md#shared-ontologies) for details about
+shared ontologies.
+
 A successful response will be a JSON-LD document providing only the
 ontology's metadata, which includes the ontology's IRI. When the client
 makes further requests to create entities (classes and properties) in

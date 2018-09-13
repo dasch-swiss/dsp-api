@@ -28,14 +28,17 @@ certain conventions.
 
 A project short-code is a hexadecimal number of at least four digits,
 assigned by the [DaSCH](http://dasch.swiss/) to uniquely identify a
-Knora project regardless of where it is hosted. Project short-codes are
-currently optional. It is recommended that new projects request a
-project code and use it in their ontology IRIs, to avoid possible future
-naming conflicts.
+Knora project regardless of where it is hosted. The IRIs of ontologies that
+are built into Knora do not contain shortcodes; these ontologies implicitly
+belong to the Knora system project.
+
+A project-specific ontology IRI must always include its project shortcode.
+
+Project ID `0000` is reserved for shared ontologies
+(see @ref:[Shared Ontologies](#shared-ontologies)).
 
 The range of project IDs from `0001` to `00FF` inclusive is reserved for
-local testing, and also the ID `0000` is reserved for future use by the
-system. Thus, the first useful project will be `0100`.
+local testing. Thus, the first useful project will be `0100`.
 
 In the beginning, Unil will use the IDs `0100` to `07FF`, and Unibas
 `0800` to `08FF`.
@@ -53,13 +56,13 @@ ontologies based on project-specific internal ontologies.
 
 Each internal ontology has an IRI, which is also the IRI of the named
 graph that contains the ontology in the triplestore. An internal
-project-specific ontology IRI has the form:
+ontology IRI has the form:
 
 ```
 http://www.knora.org/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME
 ```
 
-For example, the ontology IRI based on project code `0001` and ontology
+For example, the internal ontology IRI based on project code `0001` and ontology
 name `example` would be:
 
 ```
@@ -82,6 +85,7 @@ words:
   - `knora`
   - `ontology`
   - `simple`
+  - `shared`
 
 ### External Ontology IRIs
 
@@ -96,14 +100,14 @@ The IRI of an external Knora ontology has the form:
 http://HOST[:PORT]/ontology/PROJECT_SHORTCODE/ONTOLOGY_NAME/API_VERSION
 ```
 
-For built-in ontologies, the host is always `api.knora.org`. Otherwise,
+For built-in and shared ontologies, the host is always `api.knora.org`. Otherwise,
 the hostname and port configured in `application.conf` under
 `app.http.knora-api.host` and `app.http.knora-api.http-port` are used
 (the port is omitted if it is 80).
 
-This means that when a built-in external ontology IRI is dereferenced,
+This means that when a built-in or shared external ontology IRI is dereferenced,
 the ontology can be served by a Knora API server running at
-`api.knora.org`. When a project-specific external ontology IRI is
+`api.knora.org`. When the external IRI of a non-shared, project-specific ontology is
 dereferenced, the ontology can be served by Knora that
 hosts the project. During development and testing, this could be
 `localhost`.
@@ -134,9 +138,9 @@ For example, suppose a Knora API server is running at
 `http://www.knora.org/ontology/0001/example`. That ontology can then be
 requested using either of these IRIs:
 
-  - `http://knora.example.org/ontology/0001/example/v2` (for the complex
+  - `http://knora.example.org/ontology/0001/example/v2` (in the complex
     schema)
-  - `http://knora.example.org/ontology/0001/example/simple/v2` (for the
+  - `http://knora.example.org/ontology/0001/example/simple/v2` (in the
     simple schema)
 
 While the internal `example` ontology refers to definitions in
@@ -144,9 +148,9 @@ While the internal `example` ontology refers to definitions in
 refers instead to a `knora-api` ontology, whose IRI depends on the
 schema being used:
 
-  - `http://api.knora.org/ontology/knora-api/v2` (for the complex
+  - `http://api.knora.org/ontology/knora-api/v2` (in the complex
     schema)
-  - `http://api.knora.org/ontology/knora-api/simple/v2` (for the simple
+  - `http://api.knora.org/ontology/knora-api/simple/v2` (in the simple
     schema)
 
 ### Ontology Entity IRIs
@@ -168,6 +172,42 @@ has the following IRIs:
     API v2 complex schema)
   - `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing`
     (in the API v2 simple schema)
+
+### Shared Ontologies
+
+Knora does not normally allow a project to use classes or properties defined in
+an ontology that belongs to another project. Each project must be free to change
+its own ontologies, but this is not possible if they have been used in ontologies
+or data created by other projects.
+
+However, an ontology can be defined as shared, meaning that it can be used by
+multiple projects, and that its creators will not change it in ways that could
+affect other ontologies or data that are based on it. Specifically, in a shared
+ontology, existing classes and properties cannot safely be changed, but new ones
+can be added. (It is not even safe to add an optional cardinality to an existing
+class, because this could cause subclasses to violate the rule that a class cannot
+have a cardinality on property P as well as a cardinality on a subproperty of P;
+see @ref:[Restrictions on Classes](../../02-knora-ontologies/knora-base.md#restrictions-on-classes).)
+
+A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
+
+There is currently one project for shared ontologies:
+
+```
+http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject
+```
+
+Its project code is `0000`. Additional projects for shared ontologies may be supported
+in future.
+
+The internal and external IRIs of shared ontologies always use the hostname
+`api.knora.org`, and have an additional segment, `shared`, after `ontology`.
+The project code can be omitted, in which case the default shared ontology
+project, `0000`, is assumed. The sample shared ontology, `example-box`, has these IRIs:
+
+  - `http://www.knora.org/ontology/shared/example-box` (internal)
+  - `http://api.knora.org/ontology/shared/example-box/v2` (external, complex schema)
+  - `http://api.knora.org/ontology/shared/example-box/simple/v2` (external, simple schema)
 
 ## IRIs for Data
 

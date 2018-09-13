@@ -29,7 +29,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
+import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
@@ -115,7 +115,7 @@ class ProjectsResponderADM extends Responder {
       */
     private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
         for {
-            ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = requestingUser)).mapTo[ReadOntologyMetadataV2]
+            ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(projectIris = projectIris.map(_.toSmartIri), requestingUser = requestingUser)).mapTo[ReadOntologyMetadataV2]
         } yield ontologyMetadataResponse.ontologies.map {
             ontology =>
                 val ontologyIri: IRI = ontology.ontologyIri.toString
