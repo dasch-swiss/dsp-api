@@ -1476,7 +1476,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
-      * Encodes a string for use in JSON.
+      * Encodes a string for use in JSON, and encloses it in quotation marks.
       *
       * @param s the string to be encoded.
       * @return the encoded string.

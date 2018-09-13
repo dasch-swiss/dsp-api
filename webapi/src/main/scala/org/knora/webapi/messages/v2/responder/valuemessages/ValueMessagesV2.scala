@@ -501,7 +501,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
       * @param executionContext an execution context for futures.
       * @return a [[ValueContentV2]].
       */
-    def fromJsonLDObject(jsonLDObject: JsonLDObject,
+    override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                          requestingUser: UserADM,
                          responderManager: ActorSelection,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
