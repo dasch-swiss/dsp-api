@@ -37,8 +37,6 @@ services:
     - ${PWD}/sipi/server:/sipi/server:delegated
     networks:
     - knora-net
-    extra_hosts:
-    - webapihost:0.0.0.0
     restart: unless-stopped
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
     container_name: sipi
