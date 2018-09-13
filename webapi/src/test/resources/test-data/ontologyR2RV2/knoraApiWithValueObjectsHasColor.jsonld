@@ -25,6 +25,7 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
   },
+  "knora-api:isBuiltIn" : true,
   "rdfs:label" : "The knora-api ontology in the complex schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

@@ -12,10 +12,10 @@
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Represents a date as a period with different possible precisions.</rdfs:comment>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Date literal</rdfs:label>
 	<rdfs:subClassOf>
-		<rdfs:Datatype rdf:nodeID="genid-c57c4dc71669409b820e08a18b08e0ae-b0">
+		<rdfs:Datatype rdf:nodeID="genid-d23ca0322a2f4d3ea0b5746bc6a5c1d7-b0">
 			<owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
 			<owl:withRestrictions>
-				<rdf:Description rdf:nodeID="genid-c57c4dc71669409b820e08a18b08e0ae-b1">
+				<rdf:Description rdf:nodeID="genid-d23ca0322a2f4d3ea0b5746bc6a5c1d7-b1">
 					<xsd:pattern rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(GREGORIAN|JULIAN):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?</xsd:pattern>
 				</rdf:Description>
 			</owl:withRestrictions>
