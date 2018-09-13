@@ -35,12 +35,15 @@
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
-  listIri: IRI,
-  projectIri: IRI,
   listClassIri: IRI,
+  nodeIri: IRI,
+  parentNodeIri: IRI,
+  rootNodeIri: IRI,
+  position: Int,
   maybeName: Option[String],
   maybeLabels: Seq[StringLiteralV2],
-  maybeComments: Seq[StringLiteralV2])
+  maybeComments: Seq[StringLiteralV2]
+)
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -51,22 +54,24 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 INSERT {
     GRAPH ?dataNamedGraph {
-        ?listIri rdf:type ?listClassIri .
+        ?nodeIri rdf:type ?listClassIri .
 
-        ?listIri knora-base:attachedToProject ?projectIri .
+        ?parentNodeIri knora-base:hasSubListNode ?nodeIri .
 
-        ?listIri knora-base:isRootNode "true"^^xsd:boolean .
+        ?nodeIri knora-base:hasRootNode ?rootNodeIri .
+
+        ?nodeIri knora-base:listNodePosition "@position"^^xsd:integer .
 
         @if(maybeName.nonEmpty) {
-            ?listIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
+            ?nodeIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
         }
 
         @if(maybeLabels.nonEmpty) {
             @for(label <- maybeLabels) {
                 @if(label.language.nonEmpty) {
-                    ?listIri rdfs:label """@label.value"""@@@{label.language.get} .
+                    ?nodeIri rdfs:label """@label.value"""@@@{label.language.get} .
                 } else {
-                    ?listIri rdfs:label """@label.value"""^^xsd:string .
+                    ?nodeIri rdfs:label """@label.value"""^^xsd:string .
                 }
             }
         }
@@ -74,9 +79,9 @@ INSERT {
         @if(maybeComments.nonEmpty) {
             @for(comment <- maybeComments) {
                 @if(comment.language.nonEmpty) {
-                    ?listIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
+                    ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
                 } else {
-                    ?listIri rdfs:comment """@comment.value"""^^xsd:string .
+                    ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .
                 }
             }
         }
@@ -98,9 +103,10 @@ explicit statements in the WHERE clause here.
 }
 WHERE {
     BIND(IRI("@dataNamedGraph") AS ?dataNamedGraph)
-    BIND(IRI("@listIri") AS ?listIri)
-    BIND(IRI("@projectIri") AS ?projectIri)
+    BIND(IRI("@nodeIri") AS ?nodeIri)
+    BIND(IRI("@parentNodeIri") AS ?parentNodeIri)
+    BIND(IRI("@rootNodeIri") AS ?rootNodeIri)
     BIND(IRI("@listClassIri") AS ?listClassIri)
 
-    FILTER NOT EXISTS { ?listIri rdf:type ?listClassIri . }
+    FILTER NOT EXISTS { ?nodeIri rdf:type ?listClassIri . }
 }

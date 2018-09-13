@@ -14,8 +14,8 @@
 	<knora-api:subjectType rdf:resource="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book"/>
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Datum der Herausgabe</rdfs:comment>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Datum der Herausgabe</rdfs:label>
-	<rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/date"/>
 	<rdfs:subPropertyOf rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#hasValue"/>
+	<rdfs:subPropertyOf rdf:resource="http://purl.org/dc/terms/date"/>
 </owl:DatatypeProperty>
 
 </rdf:RDF>

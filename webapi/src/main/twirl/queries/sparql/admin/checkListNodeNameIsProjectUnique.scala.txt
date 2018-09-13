@@ -20,18 +20,25 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks if a project exists.
+ * Checks if a list node name is already used inside a project.
  *
- * @param projectIri the IRI of the project we want to check.
+ * @param projectIri the IRI of the project for which we want to check.
+ * @param listNodeName the name of the list node we want to check.
  *@
-@(projectIri: IRI)
+@(projectIri: IRI,
+listNodeName: String)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 ASK {
-    BIND(IRI("@projectIri") AS ?project)
+    BIND(IRI("@projectIri") AS ?projectIri)
 
-    ?project rdf:type knora-base:knoraProject .
+    ?rootNode rdf:type knora-base:ListNode .
+    ?rootNode knora-base:attachedToProject ?projectIri .
+
+    ?rootNode knora-base:hasSubListNode* ?node .
+
+    ?node knora-base:listNodeName "@listNodeName"^^xsd:string .
 }
 

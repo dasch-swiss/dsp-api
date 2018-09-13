@@ -20,18 +20,19 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks if a project exists.
+ * Checks if a list node exists and is the root node.
  *
- * @param projectIri the IRI of the project we want to check.
+ * @param listNodeIri the IRI of the list node we want to check.
  *@
-@(projectIri: IRI)
+@(listNodeIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 ASK {
-    BIND(IRI("@projectIri") AS ?project)
+    BIND(IRI("@listNodeIri") AS ?node)
 
-    ?project rdf:type knora-base:knoraProject .
+    ?node rdf:type knora-base:ListNode .
+    ?node knora-base:isRootNode "true"^^xsd:boolean .
 }
 
