@@ -172,6 +172,20 @@ feature (resources route): add route for resource creation
 
 ```
 
+## Release Versioning Convention
+
+The Knora project is following the Semantic Versioning convention for numbering the releases
+as defined by [http://semver.org]:
+
+> Given a version number MAJOR.MINOR.PATCH, increment the:
+>
+> * MAJOR version when you make incompatible API changes,
+> * MINOR version when you add functionality in a backwards-compatible manner, and
+> * PATCH version when you make backwards-compatible bug fixes.
+
+Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
+data would be necessary, e.g., any changes to the Knora-Base ontologies which are not backwards compatible.
+
 ## Acknowledgments
 
 ![](https://www.yourkit.com/images/yklogo.png)
