@@ -15,7 +15,6 @@
 
 #### Basel range - `0800` to `08FF`
    - beol: `0801`
-   - biblio: `0802`
    - incunabula: `0803`
    - dokubib: `0804`
    - ubkvp: `0805` // University of Basel Kings Valley Project
