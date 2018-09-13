@@ -1814,13 +1814,19 @@
     "@id" : "knora-api:ListNode",
     "@type" : "owl:Class",
     "rdfs:comment" : "Represents a flat or hierarchical list",
-    "rdfs:subClassOf" : {
+    "rdfs:subClassOf" : [ {
       "@type" : "owl:Restriction",
       "owl:maxCardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
-    }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:minCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "rdfs:label"
+      }
+    } ]
   }, {
     "@id" : "knora-api:ListValue",
     "@type" : "owl:Class",

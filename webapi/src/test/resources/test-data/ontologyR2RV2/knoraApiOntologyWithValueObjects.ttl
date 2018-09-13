@@ -1451,6 +1451,9 @@ knora-api:ListNode a owl:Class;
   rdfs:subClassOf [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty rdfs:label
     ] .
 
 knora-api:ListValue a owl:Class;

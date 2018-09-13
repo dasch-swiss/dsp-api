@@ -2,7 +2,7 @@
   "swagger" : "2.0",
   "info" : {
     "description" : "",
-    "version" : "1.3.0",
+    "version" : "1.8.0",
     "title" : "",
     "termsOfService" : ""
   },
@@ -23,6 +23,129 @@
   } ],
   "schemes" : [ "http" ],
   "paths" : {
+    "/admin/lists" : {
+      "get" : {
+        "tags" : [ "lists" ],
+        "summary" : "Get lists",
+        "description" : "",
+        "operationId" : "getlists",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ListsGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "lists" ],
+        "summary" : "Add new list",
+        "description" : "",
+        "operationId" : "addList",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "\"list\" to create",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/CreateListApiRequestADM"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ListGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      }
+    },
+    "/admin/lists/{IRI}" : {
+      "get" : {
+        "tags" : [ "lists" ],
+        "summary" : "Get a list",
+        "description" : "",
+        "operationId" : "getlist",
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ListGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "lists" ],
+        "summary" : "Add new child node",
+        "description" : "",
+        "operationId" : "addListChildNode",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "\"node\" to create",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/CreateChildNodeApiRequestADM"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ListNodeInfoGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "lists" ],
+        "summary" : "Update basic list information",
+        "description" : "",
+        "operationId" : "putList",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "description" : "\"list\" to update",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/definitions/ChangeListInfoApiRequestADM"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/ListInfoGetResponseADM"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error"
+          }
+        }
+      }
+    },
     "/admin/users" : {
       "get" : {
         "tags" : [ "users" ],
@@ -105,6 +228,457 @@
     }
   },
   "definitions" : {
+    "ListNodeInfoADM" : {
+      "type" : "object"
+    },
+    "ListsGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "lists", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "lists" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ListNodeInfoADM"
+          }
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "RootJsonFormat" : {
+      "type" : "object"
+    },
+    "RootJsonFormatChangeListInfoApiRequestADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatCreateChildNodeApiRequestADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatCreateListApiRequestADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatListGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatListInfoGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatListNodeInfoGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatListsGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatNodePathGetResponseADM" : {
+      "type" : "object"
+    },
+    "RootJsonFormatRdfDataObject" : {
+      "type" : "object"
+    },
+    "RootJsonFormatResetTriplestoreContent" : {
+      "type" : "object"
+    },
+    "ListADM" : {
+      "type" : "object",
+      "required" : [ "children", "listinfo" ],
+      "properties" : {
+        "listinfo" : {
+          "$ref" : "#/definitions/ListRootNodeInfoADM"
+        },
+        "children" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ListChildNodeADM"
+          }
+        }
+      }
+    },
+    "ListChildNodeADM" : {
+      "type" : "object",
+      "required" : [ "children", "comments", "hasRootNode", "id", "labels", "position" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "labels" : {
+          "$ref" : "#/definitions/StringLiteralSequenceV2"
+        },
+        "comments" : {
+          "$ref" : "#/definitions/StringLiteralSequenceV2"
+        },
+        "position" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "hasRootNode" : {
+          "type" : "string"
+        },
+        "children" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ListChildNodeADM"
+          }
+        }
+      }
+    },
+    "ListGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "list", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "list" : {
+          "$ref" : "#/definitions/ListADM"
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "ListRootNodeInfoADM" : {
+      "type" : "object",
+      "required" : [ "comments", "id", "labels", "projectIri" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "projectIri" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "labels" : {
+          "$ref" : "#/definitions/StringLiteralSequenceV2"
+        },
+        "comments" : {
+          "$ref" : "#/definitions/StringLiteralSequenceV2"
+        }
+      }
+    },
+    "StringLiteralSequenceV2" : {
+      "type" : "object",
+      "required" : [ "stringLiterals" ],
+      "properties" : {
+        "stringLiterals" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        }
+      }
+    },
+    "StringLiteralV2" : {
+      "type" : "object",
+      "required" : [ "value" ],
+      "properties" : {
+        "value" : {
+          "type" : "string"
+        },
+        "language" : {
+          "type" : "string"
+        }
+      }
+    },
+    "CreateListApiRequestADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "comments", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "labels", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "projectIri", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "projectIri" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "labels" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "comments" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "ListInfoGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listinfo", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "listinfo" : {
+          "$ref" : "#/definitions/ListRootNodeInfoADM"
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "ChangeListInfoApiRequestADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "comments", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "labels", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listIri", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "projectIri", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "listIri" : {
+          "type" : "string"
+        },
+        "projectIri" : {
+          "type" : "string"
+        },
+        "labels" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "comments" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "ListNodeInfoGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "nodeinfo", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "nodeinfo" : {
+          "$ref" : "#/definitions/ListNodeInfoADM"
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
+    "CreateChildNodeApiRequestADM" : {
+      "type" : "object",
+      "required" : [ "changeListInfoApiRequestADMFormat", "comments", "createListApiRequestADMFormat", "createListNodeApiRequestADMFormat", "labels", "listGetResponseADMFormat", "listInfoGetResponseADMFormat", "listNodeInfoGetResponseADMFormat", "listsGetResponseADMFormat", "nodePathGetResponseADMFormat", "parentNodeIri", "projectIri", "rdfDataObjectFormat", "resetTriplestoreContentFormat" ],
+      "properties" : {
+        "parentNodeIri" : {
+          "type" : "string"
+        },
+        "projectIri" : {
+          "type" : "string"
+        },
+        "name" : {
+          "type" : "string"
+        },
+        "labels" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "comments" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/StringLiteralV2"
+          }
+        },
+        "createListApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateListApiRequestADM"
+        },
+        "createListNodeApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatCreateChildNodeApiRequestADM"
+        },
+        "changeListInfoApiRequestADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatChangeListInfoApiRequestADM"
+        },
+        "nodePathGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatNodePathGetResponseADM"
+        },
+        "listsGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListsGetResponseADM"
+        },
+        "listGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListGetResponseADM"
+        },
+        "listInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListInfoGetResponseADM"
+        },
+        "listNodeInfoGetResponseADMFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatListNodeInfoGetResponseADM"
+        },
+        "rdfDataObjectFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatRdfDataObject"
+        },
+        "resetTriplestoreContentFormat" : {
+          "$ref" : "#/definitions/RootJsonFormatResetTriplestoreContent"
+        }
+      }
+    },
     "GroupADM" : {
       "type" : "object",
       "required" : [ "description", "id", "name", "project", "selfjoin", "status" ],
@@ -267,7 +841,7 @@
     },
     "ProjectADM" : {
       "type" : "object",
-      "required" : [ "description", "id", "keywords", "ontologies", "selfjoin", "shortname", "status" ],
+      "required" : [ "description", "id", "keywords", "ontologies", "selfjoin", "shortcode", "shortname", "status" ],
       "properties" : {
         "id" : {
           "type" : "string"
@@ -309,9 +883,6 @@
           "type" : "boolean"
         }
       }
-    },
-    "RootJsonFormat" : {
-      "type" : "object"
     },
     "RootJsonFormatAdministrativePermissionCreateResponseADM" : {
       "type" : "object"
@@ -361,24 +932,6 @@
     "RootJsonFormatProjectsKeywordsGetResponseADM" : {
       "type" : "object"
     },
-    "RootJsonFormatRdfDataObject" : {
-      "type" : "object"
-    },
-    "RootJsonFormatResetTriplestoreContent" : {
-      "type" : "object"
-    },
-    "StringLiteralV2" : {
-      "type" : "object",
-      "required" : [ "value" ],
-      "properties" : {
-        "value" : {
-          "type" : "string"
-        },
-        "language" : {
-          "type" : "string"
-        }
-      }
-    },
     "UserADM" : {
       "type" : "object",
       "required" : [ "active", "anonymousUser", "digest", "email", "familyName", "givenName", "groups", "id", "lang", "permissions", "projects", "status", "systemAdmin", "systemUser" ],
@@ -425,6 +978,9 @@
         "permissions" : {
           "$ref" : "#/definitions/PermissionsDataADM"
         },
+        "systemAdmin" : {
+          "type" : "boolean"
+        },
         "active" : {
           "type" : "boolean"
         },
@@ -436,21 +992,6 @@
         },
         "digest" : {
           "type" : "string"
-        },
-        "systemAdmin" : {
-          "type" : "boolean"
-        }
-      }
-    },
-    "UsersGetResponseADM" : {
-      "type" : "object",
-      "required" : [ "users" ],
-      "properties" : {
-        "users" : {
-          "type" : "array",
-          "items" : {
-            "$ref" : "#/definitions/UserADM"
-          }
         }
       }
     },
@@ -490,6 +1031,18 @@
         }
       }
     },
+    "UsersGetResponseADM" : {
+      "type" : "object",
+      "required" : [ "users" ],
+      "properties" : {
+        "users" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/UserADM"
+          }
+        }
+      }
+    },
     "Function1" : {
       "type" : "object"
     },
@@ -508,6 +1061,6 @@
   },
   "externalDocs" : {
     "description" : "Knora Docs",
-    "url" : "http://www.knora.org/documentation/manual/rst/"
+    "url" : "http://docs.knora.org"
   }
 }
