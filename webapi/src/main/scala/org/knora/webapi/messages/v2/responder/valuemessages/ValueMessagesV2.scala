@@ -623,7 +623,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
       */
     def toComplexDateValueAssertions: Map[IRI, JsonLDValue] = {
 
-        val startDateConversion = DateUtilV2.jdnToDateYearMonthDay(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
+        val startDateConversion: DateYearMonthDay = DateUtilV2.jdnToDateYearMonthDay(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
 
         val startDateAssertions = startDateConversion.toStartDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
@@ -632,7 +632,7 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
 
             case (k: IRI, v: String) => (k, JsonLDString(v))
         }
-        val endDateConversion = DateUtilV2.jdnToDateYearMonthDay(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
+        val endDateConversion: DateYearMonthDay = DateUtilV2.jdnToDateYearMonthDay(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
 
         val endDateAssertions = endDateConversion.toEndDateAssertions.map {
             case (k: IRI, v: Int) => (k, JsonLDInt(v))
@@ -687,52 +687,33 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     }
 
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): DateValueContentV2 = {
-        /**
-          * Given an optional month and an optional day of the month, determines the precision of a date.
-          *
-          * @param maybeMonth an optional month.
-          * @param maybeDay   an optional day of the month.
-          * @return the precision of the date.
-          */
-        def getPrecision(maybeMonth: Option[Int], maybeDay: Option[Int]): KnoraPrecisionV1.Value = {
-            (maybeMonth, maybeMonth) match {
-                case (Some(_), Some(_)) => KnoraPrecisionV1.DAY
-                case (Some(_), None) => KnoraPrecisionV1.MONTH
-                case (None, None) => KnoraPrecisionV1.YEAR
-                case (None, Some(day)) => throw BadRequestException(s"Invalid date: day $day is given but month is missing")
-            }
-        }
 
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val calendar: KnoraCalendarV1.Value = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
 
-        val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear).value
-        val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth).map(_.value)
-        val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay).map(_.value)
+        val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear)
+        val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth)
+        val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay)
         val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
-        val startPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasStartMonth, maybeDateValueHasStartDay)
 
-        val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear).value
-        val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth).map(_.value)
-        val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay).map(_.value)
+        val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear)
+        val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth)
+        val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay)
         val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
-        val endPrecision: KnoraPrecisionV1.Value = getPrecision(maybeDateValueHasEndMonth, maybeDateValueHasEndDay)
 
         val startDate = DateYearMonthDay(
             year = dateValueHasStartYear,
-            month = maybeDateValueHasStartMonth.getOrElse(1),
-            day = maybeDateValueHasStartDay.getOrElse(1),
-            era = maybeDateValueHasStartEra.getOrElse(KnoraEraV2.CE),
-            precision = startPrecision
+            maybeMonth = maybeDateValueHasStartMonth,
+            maybeDay = maybeDateValueHasStartDay,
+            era = maybeDateValueHasStartEra.getOrElse(KnoraEraV2.CE)
         )
 
         val endDate = DateYearMonthDay(
             year = dateValueHasEndYear,
-            month = maybeDateValueHasEndMonth.getOrElse(12),
-            day = maybeDateValueHasEndDay.getOrElse(31),
-            era = maybeDateValueHasEndEra.getOrElse(KnoraEraV2.CE),
-            precision = endPrecision
+            maybeMonth = maybeDateValueHasEndMonth,
+            maybeDay = maybeDateValueHasEndDay,
+            era = maybeDateValueHasEndEra.getOrElse(KnoraEraV2.CE)
         )
 
         // TODO: convert the date range to start and end JDNs without first converting it to a string (#928).
@@ -749,8 +730,8 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
             ontologySchema = ApiV2WithValueObjects,
             valueHasStartJDN = julianDateRange.dateval1,
             valueHasEndJDN = julianDateRange.dateval2,
-            valueHasStartPrecision = startPrecision,
-            valueHasEndPrecision = endPrecision,
+            valueHasStartPrecision = startDate.getPrecision,
+            valueHasEndPrecision = endDate.getPrecision,
             valueHasCalendar = calendar,
             comment = getComment(jsonLDObject)
         )
@@ -1139,7 +1120,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): IntegerValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt).value
+        val intValueAsInt: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.IntValueAsInt)
 
         IntegerValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
@@ -1303,7 +1284,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): BooleanValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val booleanValueAsBoolean: Boolean = jsonLDObject.requireBoolean(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean).value
+        val booleanValueAsBoolean: Boolean = jsonLDObject.requireBoolean(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean)
 
         BooleanValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
