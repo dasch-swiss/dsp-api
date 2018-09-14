@@ -46,13 +46,13 @@ object ConstructResponseUtilV2 {
       *
       * @param valueObjectIri   the value object's IRI.
       * @param valueObjectClass the type (class) of the value object.
-      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[incomingLink]]).
-      * @param incomingLink     indicates if it is an incoming or outgoing link in case of a link value.
+      * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
+      * @param isIncomingLink     indicates if it is an incoming or outgoing link in case of a link value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
       * @param listNode         assertions about the referred list node, if the value points to a list node.
       */
-    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, incomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]], listNode: Map[IRI, String])
+    case class ValueRdfData(valueObjectIri: IRI, valueObjectClass: IRI, nestedResource: Option[ResourceWithValueRdfData] = None, isIncomingLink: Boolean = false, assertions: Map[IRI, String], standoff: Map[IRI, Map[IRI, String]], listNode: Map[IRI, String])
 
     /**
       * Represents a resource and its values.
@@ -384,7 +384,7 @@ object ConstructResponseUtilV2 {
 
                         linkValue.copy(
                             nestedResource = source,
-                            incomingLink = true
+                            isIncomingLink = true
                         )
                 }
 
@@ -577,32 +577,27 @@ object ConstructResponseUtilV2 {
 
             case OntologyConstants.KnoraBase.LinkValue =>
 
-                val sourceResourceIri = valueObject.assertions(OntologyConstants.Rdf.Subject)
-                val targetResourceIri = valueObject.assertions(OntologyConstants.Rdf.Object)
+                val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
+                    valueObject.assertions(OntologyConstants.Rdf.Subject)
+                } else {
+                    valueObject.assertions(OntologyConstants.Rdf.Object)
+                }
 
                 val linkValue = LinkValueContentV2(
                     ontologySchema = InternalSchema,
-                    subject = sourceResourceIri,
-                    predicate = valueObject.assertions(OntologyConstants.Rdf.Predicate).toSmartIri,
-                    target = targetResourceIri,
-                    comment = valueCommentOption,
-                    incomingLink = valueObject.incomingLink,
-                    nestedResource = None
+                    referredResourceIri = referredResourceIri,
+                    isIncomingLink = valueObject.isIncomingLink,
+                    nestedResource = None,
+                    comment = valueCommentOption
                 )
 
                 valueObject.nestedResource match {
 
                     case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
 
-                        val nestedResourceIri = if (!valueObject.incomingLink) {
-                            targetResourceIri
-                        } else {
-                            sourceResourceIri
-                        }
-
                         // add information about the referred resource
                         linkValue.copy(
-                            nestedResource = Some(constructReadResourceV2(nestedResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
+                            nestedResource = Some(constructReadResourceV2(referredResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
                         )
 
                     case None => linkValue // do not include information about the referred resource

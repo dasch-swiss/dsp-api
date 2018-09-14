@@ -79,6 +79,11 @@ class ValuesResponderV2 extends Responder {
                 propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <- (responderManager ? propertyInfoRequestForSubmittedProperty).mapTo[ReadOntologyV2]
                 propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(submittedInternalPropertyIri)
 
+                // Don't accept link properties.
+                _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
+                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                }
+
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
                 // corresponding link property, whose objects we will need to query. Get ontology information about the
                 // adjusted property.
@@ -393,7 +398,7 @@ class ValuesResponderV2 extends Responder {
             sparqlTemplateLinkUpdate <- Future(incrementLinkValue(
                 sourceResourceInfo = resourceInfo,
                 linkPropertyIri = linkPropertyIri,
-                targetResourceIri = linkValueContent.target,
+                targetResourceIri = linkValueContent.referredResourceIri,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
                 requestingUser = requestingUser
@@ -448,6 +453,11 @@ class ValuesResponderV2 extends Responder {
 
                 propertyInfoResponseForSubmittedProperty: ReadOntologyV2 <- (responderManager ? propertyInfoRequestForSubmittedProperty).mapTo[ReadOntologyV2]
                 propertyInfoForSubmittedProperty: ReadPropertyInfoV2 = propertyInfoResponseForSubmittedProperty.properties(submittedInternalPropertyIri)
+
+                // Don't accept link properties.
+                _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
+                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                }
 
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
                 // corresponding link property, whose objects we will need to query. Get ontology information about the
@@ -803,7 +813,7 @@ class ValuesResponderV2 extends Responder {
         val sparqlTemplateLinkUpdateForCurrentLink = decrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = propertyIri,
-            targetResourceIri = currentLinkValue.target,
+            targetResourceIri = currentLinkValue.referredResourceIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
             requestingUser = requestingUser
@@ -813,7 +823,7 @@ class ValuesResponderV2 extends Responder {
         val sparqlTemplateLinkUpdateForNewLink = incrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = propertyIri,
-            targetResourceIri = newLinkValue.target,
+            targetResourceIri = newLinkValue.referredResourceIri,
             valueCreator = valueCreator,
             valuePermissions = valuePermissions,
             requestingUser = requestingUser
@@ -1077,7 +1087,7 @@ class ValuesResponderV2 extends Responder {
 
             resourcePreviewRequest <- FastFuture.successful(
                 ResourcesPreviewGetRequestV2(
-                    resourceIris = Seq(linkValueContent.target),
+                    resourceIris = Seq(linkValueContent.referredResourceIri),
                     requestingUser = requestingUser
                 )
             )
@@ -1087,7 +1097,7 @@ class ValuesResponderV2 extends Responder {
             // If we get a resource, we know the user has permission to view it.
 
             resource: ReadResourceV2 = resourcesSequenceToResource(
-                requestedResourceIri = linkValueContent.target,
+                requestedResourceIri = linkValueContent.referredResourceIri,
                 readResourcesSequence = resourcePreviewResponse,
                 requestingUser = requestingUser
             )
@@ -1104,7 +1114,7 @@ class ValuesResponderV2 extends Responder {
 
             // If it isn't, throw an exception.
             _ = if (!subClassResponse.isSubClass) {
-                throw OntologyConstraintException(s"Resource <${linkValueContent.target}> cannot be the target of property <$linkPropertyIri>, because it is not a member of class <$objectClassConstraint>")
+                throw OntologyConstraintException(s"Resource <${linkValueContent.referredResourceIri}> cannot be the target of property <$linkPropertyIri>, because it is not a member of class <$objectClassConstraint>")
             }
         } yield ()
     }
@@ -1161,11 +1171,6 @@ class ValuesResponderV2 extends Responder {
                     // Check that the property whose object class constraint is to be checked is actually a link property.
                     if (!propertyInfo.isLinkProp) {
                         throw BadRequestException(s"Property <${propertyInfo.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}> is not a link property")
-                    }
-
-                    // Check that the link value's predicate is the same link property.
-                    if (linkValueContent.predicate != propertyInfo.entityInfoContent.propertyIri) {
-                        throw BadRequestException(s"Invalid link value predicate: <${linkValueContent.predicate.toOntologySchema(ApiV2WithValueObjects)}>")
                     }
 
                     // Check that the user has permission to view the target resource, and that the target resource has the correct type.
@@ -1235,7 +1240,7 @@ class ValuesResponderV2 extends Responder {
                 linkValueInfos.find {
                     linkValueInfo: ReadValueV2 =>
                         linkValueInfo.valueContent match {
-                            case linkValue: LinkValueContentV2 => linkValue.target == targetResourceIri
+                            case linkValue: LinkValueContentV2 => linkValue.referredResourceIri == targetResourceIri
                             case _ => throw AssertionException(s"Expected a LinkValueContentV2: $linkValueInfo")
                         }
                 }

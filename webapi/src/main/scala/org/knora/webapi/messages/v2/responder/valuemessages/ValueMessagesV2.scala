@@ -502,9 +502,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
       * @return a [[ValueContentV2]].
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
-                         requestingUser: UserADM,
-                         responderManager: ActorSelection,
-                         log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
+                                  requestingUser: UserADM,
+                                  responderManager: ActorSelection,
+                                  log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
@@ -662,7 +662,19 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatDateValue: DateValueContentV2 =>
+                valueHasStartJDN == thatDateValue.valueHasStartJDN &&
+                    valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+                    valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+                    valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+                    valueHasCalendar == thatDateValue.valueHasCalendar &&
+                    comment == thatDateValue.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -938,7 +950,8 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
     }
 
     override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
-        // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup.
+        // It's OK to add a new version of a text value as long as something has been changed in it, even if it's only the markup
+        // or the comment.
         currentVersion match {
             case thatTextValue: TextValueContentV2 =>
                 val valueHasStringIdentical: Boolean = valueHasString == thatTextValue.valueHasString
@@ -955,7 +968,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                     case _ => false
                 }
 
-                valueHasStringIdentical && standoffIdentical
+                valueHasStringIdentical && standoffIdentical && comment == thatTextValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1092,7 +1105,15 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatIntegerValue: IntegerValueContentV2 =>
+                valueHasInteger == thatIntegerValue.valueHasInteger &&
+                    comment == thatIntegerValue.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1173,7 +1194,15 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatDecimalValue: DecimalValueContentV2 =>
+                valueHasDecimal == thatDecimalValue.valueHasDecimal &&
+                    comment == thatDecimalValue.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1253,7 +1282,10 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
 
     override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
         currentVersion match {
-            case thatBooleanValue: BooleanValueContentV2 => valueHasBoolean == thatBooleanValue.valueHasBoolean
+            case thatBooleanValue: BooleanValueContentV2 =>
+                valueHasBoolean == thatBooleanValue.valueHasBoolean &&
+                    comment == thatBooleanValue.comment
+
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
     }
@@ -1339,7 +1371,15 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatGeomValue: GeomValueContentV2 =>
+                valueHasGeometry == thatGeomValue.valueHasGeometry &&
+                    comment == thatGeomValue.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1436,7 +1476,16 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatIntervalValueContent: IntervalValueContentV2 =>
+                valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
+                    valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
+                    comment == thatIntervalValueContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1537,7 +1586,15 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatListContent: HierarchicalListValueContentV2 =>
+                valueHasListNode == thatListContent.valueHasListNode &&
+                    comment == thatListContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1565,11 +1622,15 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): HierarchicalListValueContentV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val listValueAsListNode: IRI = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
+        val listValueAsListNode: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.toSmartIriWithErr)
+
+        if (!listValueAsListNode.isKnoraDataIri) {
+            throw BadRequestException(s"List node IRI <$listValueAsListNode> is not a Knora data IRI")
+        }
 
         HierarchicalListValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
-            valueHasListNode = listValueAsListNode,
+            valueHasListNode = listValueAsListNode.toString,
             comment = getComment(jsonLDObject)
         )
     }
@@ -1621,7 +1682,15 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatColorContent: ColorValueContentV2 =>
+                valueHasColor == thatColorContent.valueHasColor &&
+                    comment == thatColorContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1705,7 +1774,15 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatUriContent: UriValueContentV2 =>
+                valueHasUri == thatUriContent.valueHasUri &&
+                    comment == thatUriContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1793,7 +1870,15 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatGeonameContent: GeonameValueContentV2 =>
+                valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode &&
+                    comment == thatGeonameContent.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1920,7 +2005,22 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatStillImage: StillImageFileValueContentV2 =>
+                internalMimeType == thatStillImage.internalMimeType &&
+                    internalFilename == thatStillImage.internalFilename &&
+                    originalFilename == thatStillImage.originalFilename &&
+                    originalMimeType == thatStillImage.originalMimeType &&
+                    dimX == thatStillImage.dimX &&
+                    dimY == thatStillImage.dimY &&
+                    qualityLevel == thatStillImage.qualityLevel &&
+                    isPreview == thatStillImage.isPreview &&
+                    comment == thatStillImage.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -1990,7 +2090,18 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatTextFile: TextFileValueContentV2 =>
+                internalMimeType == thatTextFile.internalMimeType &&
+                    internalFilename == thatTextFile.internalFilename &&
+                    originalFilename == thatTextFile.originalFilename &&
+                    originalMimeType == thatTextFile.originalMimeType &&
+                    comment == thatTextFile.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -2010,26 +2121,23 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
 /**
   * Represents a Knora link value.
   *
-  * @param subject        the IRI of the link's source resource.
-  * @param predicate      the link's predicate.
-  * @param target         the IRI of the link's target resource.
-  * @param comment        a comment on the link.
-  * @param incomingLink   indicates if it is an incoming link.
-  * @param nestedResource information about the nested resource, if given.
+  * @param referredResourceIri the IRI of resource that this link value refers to (either the source
+  *                            of an incoming link, or the target of an outgoing link).
+  * @param isIncomingLink      indicates if it is an incoming link.
+  * @param nestedResource      information about the nested resource, if given.
+  * @param comment             a comment on the link.
   */
 case class LinkValueContentV2(ontologySchema: OntologySchema,
-                              subject: IRI,
-                              predicate: SmartIri,
-                              target: IRI,
-                              comment: Option[String] = None,
-                              incomingLink: Boolean = false,
-                              nestedResource: Option[ReadResourceV2] = None) extends ValueContentV2 {
+                              referredResourceIri: IRI,
+                              isIncomingLink: Boolean = false,
+                              nestedResource: Option[ReadResourceV2] = None,
+                              comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.LinkValue.toSmartIri.toOntologySchema(ontologySchema)
     }
 
-    override def valueHasString: String = target
+    override def valueHasString: String = referredResourceIri
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = {
         val convertedNestedResource = nestedResource.map {
@@ -2044,14 +2152,13 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
 
         copy(
             ontologySchema = targetSchema,
-            predicate = predicate.toOntologySchema(targetSchema),
             nestedResource = convertedNestedResource
         )
     }
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
         targetSchema match {
-            case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(target)
+            case ApiV2Simple => JsonLDUtil.iriToJsonLDObject(referredResourceIri)
 
             case ApiV2WithValueObjects =>
                 // check if the referred resource has to be included in the JSON response
@@ -2064,17 +2171,17 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
                         )
 
                         // check whether the nested resource is the target or the source of the link
-                        if (!incomingLink) {
+                        if (!isIncomingLink) {
                             Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget -> referredResourceAsJsonLDValue)
                         } else {
                             Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSource -> referredResourceAsJsonLDValue)
                         }
                     case None =>
                         // check whether it is an outgoing or incoming link
-                        if (!incomingLink) {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(target))
+                        if (!isIncomingLink) {
+                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
                         } else {
-                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(subject))
+                            Map(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasSourceIri -> JsonLDUtil.iriToJsonLDObject(referredResourceIri))
                         }
                 }
 
@@ -2089,15 +2196,23 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
     override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
         that match {
             case thatLinkValue: LinkValueContentV2 =>
-                subject == thatLinkValue.subject &&
-                    predicate == thatLinkValue.predicate &&
-                    target == thatLinkValue.target
+                referredResourceIri == thatLinkValue.referredResourceIri &&
+                    isIncomingLink == thatLinkValue.isIncomingLink
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
     }
 
-    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = wouldDuplicateOtherValue(currentVersion)
+    override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+        currentVersion match {
+            case thatLinkValue: LinkValueContentV2 =>
+                referredResourceIri == thatLinkValue.referredResourceIri &&
+                    isIncomingLink == thatLinkValue.isIncomingLink &&
+                    comment == thatLinkValue.comment
+
+            case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+        }
+    }
 }
 
 /**
@@ -2108,8 +2223,23 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
-        // TODO
-        throw NotImplementedException(s"Reading of ${getClass.getName} from JSON-LD input not implemented")
+        Future(fromJsonLDObjectSync(jsonLDObject))
+    }
+
+    private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): LinkValueContentV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val targetIri: SmartIri = jsonLDObject.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTargetIri, stringFormatter.toSmartIriWithErr)
+
+        if (!targetIri.isKnoraDataIri) {
+            throw BadRequestException(s"Link target IRI <$targetIri> is not a Knora data IRI")
+        }
+
+        LinkValueContentV2(
+            ontologySchema = ApiV2WithValueObjects,
+            referredResourceIri = targetIri.toString,
+            comment = getComment(jsonLDObject)
+        )
     }
 }
 

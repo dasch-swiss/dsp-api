@@ -1280,9 +1280,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkPropertyIri,
-                        target = zeitglöckleinIri
+                        referredResourceIri = zeitglöckleinIri
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1306,9 +1304,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: LinkValueContentV2 =>
-                    savedValue.subject should ===(resourceIri)
-                    savedValue.predicate should ===(linkPropertyIri)
-                    savedValue.target should ===(zeitglöckleinIri)
+                    savedValue.referredResourceIri should ===(zeitglöckleinIri)
                     valueFromTriplestore.valueHasRefCount should ===(Some(1))
 
                 case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
@@ -1327,9 +1323,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkValuePropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkPropertyIri,
-                        target = zeitglöckleinIri
+                        referredResourceIri = zeitglöckleinIri
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1354,36 +1348,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkPropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkPropertyIri,
-                        target = zeitglöckleinIri
-                    )
-                ),
-                requestingUser = incunabulaUser,
-                apiRequestID = UUID.randomUUID
-            )
-
-            actorUnderTest ! createValueRequest
-
-            expectMsgPF(timeout) {
-                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-            }
-        }
-
-        "not create a link value with a link value property as its predicate" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
-
-            val createValueRequest = CreateValueRequestV2(
-                CreateValueV2(
-                    resourceIri = resourceIri,
-                    resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
-                    propertyIri = linkValuePropertyIri,
-                    valueContent = LinkValueContentV2(
-                        ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkValuePropertyIri,
-                        target = zeitglöckleinIri
+                        referredResourceIri = zeitglöckleinIri
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1511,9 +1476,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOf".toSmartIri,
-                        target = "http://rdfh.ch/e41ab5695c"
+                        referredResourceIri = "http://rdfh.ch/e41ab5695c"
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1629,9 +1592,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case savedLinkValue: LinkValueContentV2 =>
                     linkValueFromTriplestore.previousValueIri.isEmpty should ===(true)
                     linkValueFromTriplestore.valueHasRefCount.contains(1) should ===(true)
-                    savedLinkValue.subject should ===(resourceIri)
-                    savedLinkValue.predicate should ===(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri)
-                    savedLinkValue.target should ===(zeitglöckleinIri)
+                    savedLinkValue.referredResourceIri should ===(zeitglöckleinIri)
                     standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
 
                 case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
@@ -1722,9 +1683,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case savedLinkValue: LinkValueContentV2 =>
                     linkValueFromTriplestore.previousValueIri.contains(standoffLinkValueIri.get) should ===(true)
                     linkValueFromTriplestore.valueHasRefCount.contains(2) should ===(true)
-                    savedLinkValue.subject should ===(resourceIri)
-                    savedLinkValue.predicate should ===(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri)
-                    savedLinkValue.target should ===(zeitglöckleinIri)
+                    savedLinkValue.referredResourceIri should ===(zeitglöckleinIri)
                     standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
 
                 case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
@@ -2950,9 +2909,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = linkValueIri.get,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkPropertyIri,
-                        target = generationeIri
+                        referredResourceIri = generationeIri
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -2976,9 +2933,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             valueFromTriplestore.valueContent match {
                 case savedValue: LinkValueContentV2 =>
-                    savedValue.subject should ===(resourceIri)
-                    savedValue.predicate should ===(linkPropertyIri)
-                    savedValue.target should ===(generationeIri)
+                    savedValue.referredResourceIri should ===(generationeIri)
                     valueFromTriplestore.valueHasRefCount should ===(Some(1))
 
                 case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
@@ -2997,9 +2952,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = linkValuePropertyIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        subject = resourceIri,
-                        predicate = linkPropertyIri,
-                        target = generationeIri
+                        referredResourceIri = generationeIri
                     )
                 ),
                 requestingUser = incunabulaUser,
