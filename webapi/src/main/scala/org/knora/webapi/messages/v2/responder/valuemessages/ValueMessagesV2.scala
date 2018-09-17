@@ -102,6 +102,10 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                                 log = log
                             )
 
+                        _ = if (jsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
+                            throw BadRequestException("The @id of a value cannot be given in a request to create the value")
+                        }
+
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
                         resourceIri = resourceIri.toString,

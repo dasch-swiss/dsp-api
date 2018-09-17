@@ -2942,7 +2942,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not update a link without changing it" in {
             val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
