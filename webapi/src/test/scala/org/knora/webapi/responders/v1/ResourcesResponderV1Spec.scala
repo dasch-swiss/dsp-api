@@ -1447,6 +1447,38 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
+        "not create an instance of anything:Thing in the incunabula project" in {
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                label = "Test Resource",
+                projectIri = "http://rdfh.ch/projects/0803",
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = None,
+                userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a resource in the default shared ontologies project" in {
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/shared/example-box#Box",
+                label = "Test Resource",
+                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject,
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = None,
+                userProfile = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "change a resource's label" in {
             val myNewLabel = "my new beautiful label"
 

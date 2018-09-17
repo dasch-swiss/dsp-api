@@ -14,6 +14,6 @@ services:
         - $PWD/images:/sipi/images
         - $PWD/server:/sipi/server
       extra_hosts:
-        - webapihost:$DOCKERHOST
+        - webapi:$DOCKERHOST
       restart: unless-stopped
       command: --config=/sipi/config/sipi.knora-docker-it-config.lua

@@ -38,6 +38,7 @@
   listIri: IRI,
   projectIri: IRI,
   listClassIri: IRI,
+  maybeName: Option[String],
   maybeLabels: Seq[StringLiteralV2],
   maybeComments: Seq[StringLiteralV2])
 
@@ -53,6 +54,12 @@ INSERT {
         ?listIri rdf:type ?listClassIri .
 
         ?listIri knora-base:attachedToProject ?projectIri .
+
+        ?listIri knora-base:isRootNode "true"^^xsd:boolean .
+
+        @if(maybeName.nonEmpty) {
+            ?listIri knora-base:listNodeName "@maybeName.get"^^xsd:string .
+        }
 
         @if(maybeLabels.nonEmpty) {
             @for(label <- maybeLabels) {

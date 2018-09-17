@@ -2018,7 +2018,11 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :attachedToProject ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                          ] ;
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty rdfs:label ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          ];
 
           rdfs:comment "Represents a flat or hierarchical list"@en .
 

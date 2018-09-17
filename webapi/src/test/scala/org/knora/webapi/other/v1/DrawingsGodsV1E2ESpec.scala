@@ -49,7 +49,8 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/0105/drawings-gods"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/parole-religieuse-dummy-onto.ttl", name = "http://www.knora.org/ontology/0106/parole-religieuse")
     )
 
     /**
@@ -72,7 +73,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0106/parole-religieuse#Thing",
                    |    "label": "A thing",
                    |    "project_id": "http://rdfh.ch/projects/0106",
                    |    "properties": {}
@@ -95,7 +96,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                   |    "int_value": 1234
                   |}
                 """.stripMargin
@@ -115,7 +116,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                   |    "int_value": 1111
                   |}
                 """.stripMargin
@@ -136,7 +137,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                    |{
                    |    "res_id": "${thingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                   |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                    |    "int_value": 2222
                    |}
                 """.stripMargin

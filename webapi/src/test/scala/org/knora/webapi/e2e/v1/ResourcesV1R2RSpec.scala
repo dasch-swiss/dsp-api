@@ -61,6 +61,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
     private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
 
+    private val superUser = SharedTestDataADM.superUser
+    private val superUserEmail = superUser.email
+
     private val imagesUser = SharedTestDataADM.imagesUser01
     private val imagesUserEmail = imagesUser.email
 
@@ -86,6 +89,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     implicit val ec: ExecutionContextExecutor = system.dispatcher
 
     override lazy val rdfDataObjects = List(
+        RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
         RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -1432,6 +1436,75 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
             Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+            }
+        }
+
+        "not create an anything:Thing in the incunabula project in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="test_thing">
+                   |        <knoraXmlImport:label>These are a few of my favorite things</knoraXmlImport:label>
+                   |        <p0001-anything:hasText knoraType="richtext_value">This is a test.</p0001-anything:hasText>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.BadRequest, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include("not shared")
+            }
+        }
+
+        "not create a resource in a shared ontologies project in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/shared/example-box/xml-import/v1# p0000-example-box.xsd"
+                   |    xmlns:p0000-example-box="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0000-example-box:Box id="test_box">
+                   |        <knoraXmlImport:label>test box</knoraXmlImport:label>
+                   |        <p0000-example-box:hasName knoraType="richtext_value">This is a test.</p0000-example-box:hasName>
+                   |    </p0000-example-box:Box>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-base#DefaultSharedOntologiesProject", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPath ~> check {
+                assert(status == StatusCodes.BadRequest, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include("Resources cannot be created in project")
+            }
+        }
+
+        "create a resource in the incunabula project using a class from the default shared ontologies project" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/shared/example-box/xml-import/v1# p0000-example-box.xsd"
+                   |    xmlns:p0000-example-box="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0000-example-box:Box id="test_box">
+                   |        <knoraXmlImport:label>test box</knoraXmlImport:label>
+                   |        <p0000-example-box:hasName knoraType="richtext_value">This is a test.</p0000-example-box:hasName>
+                   |    </p0000-example-box:Box>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPath ~> check {
                 val responseStr = responseAs[String]
                 assert(status == StatusCodes.OK, responseStr)
                 responseStr should include("createdResources")

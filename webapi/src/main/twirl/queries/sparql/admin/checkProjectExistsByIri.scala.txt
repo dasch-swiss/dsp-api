@@ -32,6 +32,6 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 ASK {
     BIND(IRI("@projectIri") AS ?project)
 
-    ?project rdf:type knora-base:knoraProject
+    ?project rdf:type knora-base:knoraProject .
 }
 

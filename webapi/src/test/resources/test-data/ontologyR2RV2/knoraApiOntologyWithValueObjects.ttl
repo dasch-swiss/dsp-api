@@ -7,6 +7,7 @@
 
 <http://api.knora.org/ontology/knora-api/v2> a owl:Ontology;
   knora-api:attachedToProject <http://www.knora.org/ontology/knora-base#SystemProject>;
+  knora-api:isBuiltIn true;
   rdfs:label "The knora-api ontology in the complex schema" .
 
 knora-api:Annotation a owl:Class;
@@ -1450,6 +1451,9 @@ knora-api:ListNode a owl:Class;
   rdfs:subClassOf [ a owl:Restriction;
       owl:maxCardinality 1;
       owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      owl:minCardinality 1;
+      owl:onProperty rdfs:label
     ] .
 
 knora-api:ListValue a owl:Class;
@@ -2800,6 +2804,11 @@ knora-api:hasRepresentationValue a owl:ObjectProperty;
   knora-api:subjectType knora-api:Resource;
   rdfs:subPropertyOf knora-api:hasLinkToValue .
 
+knora-api:isBuiltIn a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  rdfs:comment "Indicates whether an ontology is built into Knora";
+  rdfs:label "is shared" .
+
 knora-api:isEditable a owl:AnnotationProperty;
   knora-api:objectType xsd:boolean;
   knora-api:subjectType rdf:Property;
@@ -2850,6 +2859,11 @@ knora-api:isResourceClass a owl:AnnotationProperty;
   knora-api:subjectType owl:Class;
   rdfs:comment "Indicates whether class is a subclass of Resource.";
   rdfs:label "is resource class" .
+
+knora-api:isShared a owl:DatatypeProperty;
+  knora-api:objectType xsd:boolean;
+  rdfs:comment "Indicates whether an ontology can be shared by multiple projects";
+  rdfs:label "is shared" .
 
 knora-api:isStandoffClass a owl:AnnotationProperty;
   knora-api:objectType xsd:boolean;
