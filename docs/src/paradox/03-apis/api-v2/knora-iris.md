@@ -228,11 +228,11 @@ currently used, but it is owned by the [DaSCH](http://dasch.swiss/), so
 it would be possible to make resource IRIs directly dereferenceable in
 the future.
 
-Knora values do not have stable IRIs, because each time a new version of a value
-is made, the new version gets a new IRI. Therefore, it would not make sense
-to publish Knora value IRIs. When designing ontologies for Knora projects,
-keep in mind that if you want something be directly citable, it needs to be a
-resource, not a value.
+A Knora value does not have a stable IRI throughout its version history.
+Each time a new version of a value is made, the new version gets a new IRI.
+Therefore, it would not make sense to publish Knora value IRIs. When designing
+ontologies for Knora projects, keep in mind that if you want something be directly
+citable, it needs to be a resource, not a value.
 
 The formats of generated data IRIs for different types of objects are as
 follows:

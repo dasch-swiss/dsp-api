@@ -50,6 +50,32 @@ given. For example, to create an integer value:
 }
 ```
 
+Permissions for the new value can be given by adding `knora-api:hasPermissions`. For example:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@type" : "knora-api:IntValue",
+    "knora-api:intValueAsInt" : 4,
+    "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
+The format of the object of `knora-api:hasPermissions` is described in
+@ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
+
+If permissions are not given, configurable default permissions are used
+(see @ref:[Default Object Access Permissions](../../05-internals/design/administration.md#default-object-access-permissions)).
+
+To create a value, the user must have **modify permission** on the containing resource.
+
 The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
 and type of the value that was created.
 
@@ -80,6 +106,8 @@ we can create a link like this:
   }
 }
 ```
+
+As with ordinary values, permissions on links can be specified by adding `knora-api:hasPermissions`.
 
 ### Creating a Text Value with Standoff Markup
 
@@ -146,14 +174,29 @@ the `@id` of the current value version is given. For example, to update an integ
 }
 ```
 
+Permissions can be specified by adding `knora-api:hasPermissions`. Otherwise, the new
+version has the same permissions as the previous one. To change the permissions
+on a value, the user must have **change rights permission** on the value.
+
+To update a link, the user must have **modify permission** on the containing resource as
+well as on the value.
+
 The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
 and type of the new value version.
 
 If you submit an outdated value ID in a request to update a value, the response will be
 an HTTP 404 (Not Found) error.
 
-### Updating a Link Between Resources
+## Deleting a Value
 
-When you update a `knora-api:LinkValue`, the existing direct link between the two resources
-is deleted, the existing `LinkValue` is marked as deleted (and therefore becomes invisible
-to normal queries), and a new direct link and a new `LinkValue` are created.
+Knora does not normally delete values; instead, it marks them as deleted, which means
+that they do not appear in normal query results.
+
+To mark a value as deleted, use this route:
+
+```
+HTTP DELETE to http://host/v2/values/RESOURCE_IRI/PROPERTY_IRI/VALUE_IRI
+```
+
+The resource IRI, property IRI, and value IRI must be URL-encoded. If the value
+is a link value, the property must be a link value property.

@@ -243,6 +243,23 @@ case class UpdateValueResponseV2(valueIri: IRI,
 }
 
 /**
+  * Requests that a value is marked as deleted. A successful response will be a [[SuccessResponseV2]].
+  *
+  * @param resourceIri    the IRI of the containing resource.
+  * @param propertyIri    the IRI of the property pointing to the value to be marked as deleted.
+  * @param valueIri       the IRI of the value to be marked as deleted.
+  * @param deleteComment  an optional comment explaining why the value is being marked as deleted.
+  * @param requestingUser the user making the request.
+  * @param apiRequestID   the API request ID.
+  */
+case class DeleteValueRequestV2(resourceIri: IRI,
+                                propertyIri: SmartIri,
+                                valueIri: IRI,
+                                deleteComment: Option[String] = None,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID) extends ValuesResponderRequestV2
+
+/**
   * The value of a Knora property in the context of some particular input or output operation.
   * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
@@ -253,8 +270,8 @@ sealed trait IOValueV2 {
 /**
   * Provides information about the deletion of a resource or value.
   *
-  * @param deleteDate    the date when the resource was deleted.
-  * @param deleteComment the reason why the resource was deleted.
+  * @param deleteDate    the date when the resource or value was deleted.
+  * @param deleteComment the reason why the resource or value was deleted.
   */
 case class DeletionInfo(deleteDate: Instant,
                         deleteComment: String) {
@@ -277,7 +294,7 @@ case class DeletionInfo(deleteDate: Instant,
 }
 
 /**
-  * The value of a Knora property read back from the triplestore.
+  * A value of a Knora property, as read from the triplestore.
   *
   * @param valueIri         the IRI of the value.
   * @param attachedToUser   the user that created the value.

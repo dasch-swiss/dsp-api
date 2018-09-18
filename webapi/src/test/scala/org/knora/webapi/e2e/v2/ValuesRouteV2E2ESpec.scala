@@ -219,7 +219,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 1
-            val customPermissions: String = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val customPermissions: String = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLDEntity =
@@ -1271,7 +1271,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue: Int = 6
-            val customPermissions: String = "M http://rdfh.ch/groups/0001/thing-searcher"
+            val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
             val jsonLDEntity =
@@ -2244,5 +2244,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedTargetIri should ===(generationeIri)
         }
 
+        "delete an integer value" in {
+            val resourceIriEnc: String = URLEncoder.encode(aThingIri, "UTF-8")
+            val propertyIriEnc: String = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
+            val valueIriEnc: String = URLEncoder.encode(intValueIri.get, "UTF-8")
+
+            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+        }
+
+        "delete a link between two resources" in {
+            val resourceIriEnc: String = URLEncoder.encode("http://rdfh.ch/cb1a74e3e2f6", "UTF-8")
+            val propertyIriEnc: String = URLEncoder.encode(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue, "UTF-8")
+            val valueIriEnc: String = URLEncoder.encode(linkValueIri.get, "UTF-8")
+
+            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+        }
     }
 }

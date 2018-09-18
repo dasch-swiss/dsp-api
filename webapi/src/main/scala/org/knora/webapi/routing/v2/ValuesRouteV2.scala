@@ -28,12 +28,13 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 
 /**
   * Provides a routing function for API v2 routes that deal with values.
@@ -98,6 +99,57 @@ object ValuesRouteV2 extends Authenticator {
                             ApiV2WithValueObjects
                         )
                     }
+                }
+            }
+        } ~ path("v2" / "values" / Segments ) { iris: Seq[IRI] =>
+            delete {
+                requestContext => {
+                    if (iris.length != 3) {
+                        throw BadRequestException("A request to delete a value must provide resource IRI, property IRI, and value IRI")
+                    }
+
+                    val Seq(resourceIriStr, propertyIriStr, valueIriStr) = iris
+
+                    val resourceIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: <$valueIriStr>"))
+
+                    if (!resourceIri.isKnoraDataIri) {
+                        throw BadRequestException(s"Invalid resource IRI: <$valueIriStr>")
+                    }
+
+                    val propertyIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$valueIriStr>"))
+
+                    if (!(propertyIri.isKnoraApiV2DefinitionIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                        throw BadRequestException(s"Invalid property IRI: <$valueIriStr>")
+                    }
+
+                    val valueIri = valueIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid value IRI: <$valueIriStr>"))
+
+                    if (!valueIri.isKnoraDataIri) {
+                        throw BadRequestException(s"Invalid value IRI: <$valueIriStr>")
+                    }
+
+                    val params = requestContext.request.uri.query().toMap
+                    val deleteComment = params.get("deleteComment")
+
+                    val requestMessageFuture: Future[DeleteValueRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield DeleteValueRequestV2(
+                        resourceIri = resourceIri.toString,
+                        propertyIri = propertyIri,
+                        valueIri = valueIri.toString,
+                        deleteComment = deleteComment,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessageFuture,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        ApiV2WithValueObjects
+                    )
                 }
             }
         }

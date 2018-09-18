@@ -27,7 +27,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -51,7 +51,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
-    private val anythingUser = SharedTestDataADM.anythingUser1
+    private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
+    private val anythingUser1 = SharedTestDataADM.anythingUser1
+    private val anythingUser2 = SharedTestDataADM.anythingUser2
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -162,6 +164,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyValues.find(_.valueIri == expectedValueIri).getOrElse(throw AssertionException(s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"))
     }
 
+    private def checkValueIsDeleted(resourceIri: IRI,
+                                    maybePreviousLastModDate: Option[Instant],
+                                    propertyIriForGravsearch: SmartIri,
+                                    propertyIriInResult: SmartIri,
+                                    valueIri: IRI,
+                                    requestingUser: UserADM): Unit = {
+        val resource = getResourceWithValues(
+            resourceIri = resourceIri,
+            propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+            requestingUser = requestingUser
+        )
+
+        checkLastModDate(
+            resourceIri = resourceIri,
+            maybePreviousLastModDate = maybePreviousLastModDate,
+            maybeUpdatedLastModDate = resource.lastModificationDate
+        )
+
+        val propertyValues: Seq[ReadValueV2] = getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+
+        propertyValues.find(_.valueIri == valueIri) match {
+            case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
+            case None => ()
+        }
+    }
+
     private def checkLastModDate(resourceIri: IRI, maybePreviousLastModDate: Option[Instant], maybeUpdatedLastModDate: Option[Instant]): Unit = {
         maybeUpdatedLastModDate match {
             case Some(updatedLastModDate) =>
@@ -257,7 +285,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 4
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -269,7 +297,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -287,7 +315,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -302,8 +330,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 1
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val permissions = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -316,7 +344,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -332,7 +360,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIriWithCustomPermissions.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -361,7 +389,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -388,7 +416,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -436,7 +464,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -642,7 +670,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val valueHasDecimal = BigDecimal("4.3")
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -654,7 +682,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -670,7 +698,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = decimalValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -694,7 +722,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -708,7 +736,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
@@ -726,7 +754,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = submittedValueContent
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -742,7 +770,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = dateValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -777,7 +805,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = propertyIri,
                     valueContent = submittedValueContent
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -792,7 +820,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val valueHasBoolean = true
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -804,7 +832,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -820,7 +848,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = booleanValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -835,7 +863,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -847,7 +875,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -863,7 +891,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geometryValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -887,7 +915,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -903,7 +931,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.2")
             val valueHasIntervalEnd = BigDecimal("3.4")
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -916,7 +944,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -932,7 +960,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intervalValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -961,7 +989,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -976,7 +1004,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList03"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -988,7 +1016,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1004,7 +1032,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = listValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -1030,7 +1058,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1054,7 +1082,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1069,7 +1097,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3333"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1081,7 +1109,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasColor = valueHasColor
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1097,7 +1125,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = colorValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -1123,7 +1151,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasColor = valueHasColor
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1138,7 +1166,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://www.knora.org"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1150,7 +1178,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasUri = valueHasUri
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1166,7 +1194,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = uriValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -1192,7 +1220,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasUri = valueHasUri
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1207,7 +1235,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2661604"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1219,7 +1247,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1235,7 +1263,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geonameValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -1261,7 +1289,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1380,7 +1408,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1433,7 +1461,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1697,7 +1725,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             // Get the value before update.
             val previousValueFromTriplestore: ReadValueV2 = getValue(
@@ -1706,7 +1734,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 checkLastModDateChanged = false
             )
 
@@ -1725,7 +1753,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1741,7 +1769,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             updatedValueFromTriplestore.valueContent match {
@@ -1769,7 +1797,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1781,8 +1809,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a value with custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-            val permissions = "M knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val permissions = "CR knora-base:Creator|V knora-base:ProjectMember"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
             val intValue = 6
 
             actorUnderTest ! UpdateValueRequestV2(
@@ -1797,7 +1825,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1813,7 +1841,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             updatedValueFromTriplestore.valueContent match {
@@ -1822,6 +1850,33 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     updatedValueFromTriplestore.permissions should ===(permissions)
 
                 case _ => throw AssertionException(s"Expected integer value, got $updatedValueFromTriplestore")
+            }
+        }
+
+        "not update a value with custom permissions if the requesting user does not have ChangeRightsPermission on the value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val permissions = "CR knora-base:Creator"
+            val intValue = 10
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = intValueIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    ),
+                    permissions = Some(permissions)
+                ),
+                requestingUser = anythingUser2,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
             }
         }
 
@@ -1843,7 +1898,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1870,7 +1925,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     ),
                     permissions = Some(permissions)
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1920,7 +1975,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1945,7 +2000,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasInteger = intValue
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2267,7 +2322,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri
             val valueHasDecimal = BigDecimal("3.1415926")
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2280,7 +2335,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2296,7 +2351,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = decimalValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2321,7 +2376,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasDecimal = valueHasDecimal
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2333,7 +2388,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         "update a date value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
@@ -2352,7 +2407,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = dateValueIri.get,
                     valueContent = submittedValueContent
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2368,7 +2423,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = dateValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2404,7 +2459,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     valueIri = dateValueIri.get,
                     valueContent = submittedValueContent
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2417,7 +2472,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
             val valueHasBoolean = false
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2430,7 +2485,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2446,7 +2501,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = booleanValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2471,7 +2526,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasBoolean = valueHasBoolean
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2484,7 +2539,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
             val valueHasGeometry = """{"status":"active","lineColor":"#ff3334","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2497,7 +2552,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2513,7 +2568,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geometryValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2538,7 +2593,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeometry = valueHasGeometry
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2552,7 +2607,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
             val valueHasIntervalStart = BigDecimal("1.23")
             val valueHasIntervalEnd = BigDecimal("3.45")
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2566,7 +2621,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2582,7 +2637,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = intervalValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2612,7 +2667,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasIntervalEnd = valueHasIntervalEnd
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2625,7 +2680,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
             val valueHasListNode = "http://rdfh.ch/lists/0001/treeList02"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2638,7 +2693,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2654,7 +2709,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = listValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2681,7 +2736,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2706,7 +2761,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasListNode = valueHasListNode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2719,7 +2774,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
             val valueHasColor = "#ff3334"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2732,7 +2787,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasColor = valueHasColor
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2748,7 +2803,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = colorValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2775,7 +2830,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasColor = valueHasColor
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2788,7 +2843,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
             val valueHasUri = "https://en.wikipedia.org"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2801,7 +2856,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasUri = valueHasUri
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2817,7 +2872,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = uriValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2844,7 +2899,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasUri = valueHasUri
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2857,7 +2912,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
             val valueHasGeonameCode = "2988507"
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
             actorUnderTest ! UpdateValueRequestV2(
                 UpdateValueV2(
@@ -2870,7 +2925,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2886,7 +2941,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriForGravsearch = propertyIri,
                 propertyIriInResult = propertyIri,
                 expectedValueIri = geonameValueIri.get,
-                requestingUser = anythingUser
+                requestingUser = anythingUser1
             )
 
             valueFromTriplestore.valueContent match {
@@ -2913,7 +2968,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                         valueHasGeonameCode = valueHasGeonameCode
                     )
                 ),
-                requestingUser = anythingUser,
+                requestingUser = anythingUser1,
                 apiRequestID = UUID.randomUUID
             )
 
@@ -2991,5 +3046,88 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
             }
         }
+
+        "not delete a value if the requesting user does not have DeletePermission on the value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                valueIri = intValueIri.get,
+                deleteComment = Some("this value was incorrect"),
+                requestingUser = anythingUser2,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "delete an integer value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                propertyIri = propertyIri,
+                valueIri = intValueIri.get,
+                deleteComment = Some("this value was incorrect"),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                valueIri = intValueIri.get,
+                requestingUser = anythingUser1)
+        }
+
+        "delete a link between two resources" in {
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = resourceIri,
+                propertyIri = linkValuePropertyIri,
+                valueIri = linkValueIri.get,
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                valueIri = intValueIri.get,
+                requestingUser = anythingUser1)
+        }
+
+        "not delete a value if the property's cardinality doesn't allow it" in {
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri
+
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = zeitglöckleinIri,
+                propertyIri = propertyIri,
+                valueIri = "http://rdfh.ch/c5058f3a/values/c3295339",
+                requestingUser = incunabulaCreatorUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
     }
 }
