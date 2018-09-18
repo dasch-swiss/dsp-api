@@ -53,6 +53,34 @@ given. For example, to create an integer value:
 The response is a JSON-LD document containing only `@id` and `@type`, returning the IRI
 and type of the value that was created.
 
+### Creating a Link Between Resources
+
+To create a link, you must create a `knora-api:LinkValue`, which represents metadata about the
+link. The property that connects the resource to the `LinkValue` is a link value property, whose
+name is constructed by adding `Value` to the name of the link property
+(see @ref:[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+The triple representing the direct link between the resources is created automatically. For
+example, if the link property that should connect the resources is `anything:hasOtherThing`,
+we can create a link like this:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasOtherThingValue" : {
+    "@type" : "knora-api:LinkValue",
+    "knora-api:linkValueHasTargetIri" : {
+      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+    }
+  },
+  "@context" : {
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
 ### Creating a Text Value with Standoff Markup
 
 Currently, the only way to create a text value with standoff markup is to submit it in XML format
@@ -123,3 +151,9 @@ and type of the new value version.
 
 If you submit an outdated value ID in a request to update a value, the response will be
 an HTTP 404 (Not Found) error.
+
+### Updating a Link Between Resources
+
+When you update a `knora-api:LinkValue`, the existing direct link between the two resources
+is deleted, the existing `LinkValue` is marked as deleted (and therefore becomes invisible
+to normal queries), and a new direct link and a new `LinkValue` are created.
