@@ -21,6 +21,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     private val zeitglöckleinIri: IRI = "http://rdfh.ch/c5058f3a"
+    private val generationeIri = "http://rdfh.ch/c3f913666f"
     private val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
     private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
@@ -1857,5 +1858,391 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             savedValue.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay) should ===(None)
             savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra) should ===(dateValueHasStartEra)
         }
+
+        "update a boolean value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri
+            val booleanValue: Boolean = false
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasBoolean" : {
+                   |    "@id" : "${booleanValueIri.get}",
+                   |    "@type" : "knora-api:BooleanValue",
+                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            booleanValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = booleanValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val booleanValueAsBoolean: Boolean = savedValue.requireBoolean(OntologyConstants.KnoraApiV2WithValueObjects.BooleanValueAsBoolean)
+            booleanValueAsBoolean should ===(booleanValue)
+        }
+
+        "update a geometry value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri
+            val geometryValue = """{"status":"active","lineColor":"#ff3344","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasGeometry" : {
+                   |    "@id" : "${geometryValueIri.get}",
+                   |    "@type" : "knora-api:GeomValue",
+                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue)}
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            geometryValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.GeomValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = geometryValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val geometryValueAsGeometry: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.GeometryValueAsGeometry)
+            geometryValueAsGeometry should ===(geometryValue)
+        }
+
+        "update an interval value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri
+            val intervalStart = BigDecimal("5.6")
+            val intervalEnd = BigDecimal("7.8")
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasInterval" : {
+                   |    "@id" : "${intervalValueIri.get}",
+                   |    "@type" : "knora-api:IntervalValue",
+                   |    "knora-api:intervalValueHasStart" : {
+                   |      "@type" : "xsd:decimal",
+                   |      "@value" : "$intervalStart"
+                   |    },
+                   |    "knora-api:intervalValueHasEnd" : {
+                   |      "@type" : "xsd:decimal",
+                   |      "@value" : "$intervalEnd"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            intervalValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = intervalValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedIntervalValueHasStart: BigDecimal = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart,
+                expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+                validationFun = stringFormatter.validateBigDecimal
+            )
+
+            savedIntervalValueHasStart should ===(intervalStart)
+
+            val savedIntervalValueHasEnd: BigDecimal = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd,
+                expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+                validationFun = stringFormatter.validateBigDecimal
+            )
+
+            savedIntervalValueHasEnd should ===(intervalEnd)
+        }
+
+        "update a list value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
+            val listNode = "http://rdfh.ch/lists/0001/treeList02"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasListItem" : {
+                   |    "@id" : "${listValueIri.get}",
+                   |    "@type" : "knora-api:ListValue",
+                   |    "knora-api:listValueAsListNode" : {
+                   |      "@id" : "$listNode"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            listValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.ListValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = listValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedListValueHasListNode: IRI = savedValue.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.ListValueAsListNode, stringFormatter.validateAndEscapeIri)
+            savedListValueHasListNode should ===(listNode)
+        }
+
+        "update a color value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri
+            val color = "#ff3344"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasColor" : {
+                   |    "@id" : "${colorValueIri.get}",
+                   |    "@type" : "knora-api:ColorValue",
+                   |    "knora-api:colorValueAsColor" : "$color"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            colorValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.ColorValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = colorValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedColor: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.ColorValueAsColor)
+            savedColor should ===(color)
+        }
+
+        "update a URI value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri
+            val uri = "https://docs.knora.org"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasUri" : {
+                   |    "@id" : "${uriValueIri.get}",
+                   |    "@type" : "knora-api:UriValue",
+                   |    "knora-api:uriValueAsUri" : {
+                   |      "@type" : "xsd:anyURI",
+                   |      "@value" : "$uri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            uriValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.UriValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = uriValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedUri: IRI = savedValue.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2WithValueObjects.UriValueAsUri,
+                expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+                validationFun = stringFormatter.validateAndEscapeIri
+            )
+
+            savedUri should ===(uri)
+        }
+
+        "update a geoname value" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri
+            val geonameCode = "2988507"
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasGeoname" : {
+                   |    "@id" : "${geonameValueIri.get}",
+                   |    "@type" : "knora-api:GeonameValue",
+                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            geonameValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = geonameValueIri.get,
+                userEmail = anythingUserEmail
+            )
+
+            val savedGeonameCode: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.GeonameValueAsGeonameCode)
+            savedGeonameCode should ===(geonameCode)
+        }
+
+        "update a link between two resources" in {
+            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
+            val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
+
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "knora-api:LinkObj",
+                   |  "knora-api:hasLinkToValue" : {
+                   |    "@id" : "${linkValueIri.get}",
+                   |    "@type" : "knora-api:LinkValue",
+                   |    "knora-api:linkValueHasTargetIri" : {
+                   |      "@id" : "$generationeIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            linkValueIri.set(valueIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.LinkValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = linkPropertyIri,
+                propertyIriInResult = linkValuePropertyIri,
+                expectedValueIri = linkValueIri.get,
+                userEmail = incunabulaUserEmail
+            )
+
+            val savedTarget: JsonLDObject = savedValue.requireObject(OntologyConstants.KnoraApiV2WithValueObjects.LinkValueHasTarget)
+            val savedTargetIri: IRI = savedTarget.requireString(JsonLDConstants.ID)
+            savedTargetIri should ===(generationeIri)
+        }
+
     }
 }
