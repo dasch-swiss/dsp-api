@@ -64,6 +64,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
+    private val firstIntValueVersionIri = new MutableTestIri
     private val intValueIri = new MutableTestIri
     private val intValueIriWithCustomPermissions = new MutableTestIri
     private val zeitglöckleinCommentWithoutStandoffIri = new MutableTestIri
@@ -273,7 +274,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             expectMsgPF(timeout) {
-                case createValueResponse: CreateValueResponseV2 => intValueIri.set(createValueResponse.valueIri)
+                case createValueResponse: CreateValueResponseV2 =>
+                    intValueIri.set(createValueResponse.valueIri)
+                    firstIntValueVersionIri.set(createValueResponse.valueIri)
             }
 
             // Read the value back to check that it was added correctly.
@@ -1750,6 +1753,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not update a value if an outdated value IRI is given" in {
+            val resourceIri: IRI = aThingIri
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            val intValue = 3
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = firstIntValueVersionIri.get,
+                    valueContent = IntegerValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        valueHasInteger = intValue
+                    )
+                ),
+                requestingUser = anythingUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
         "update a value with custom permissions" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -2018,7 +2046,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
             }
         }
-
 
         "not update a text value, duplicating an existing text value (without submitting standoff)" in {
             val valueHasString = "this is a text value that has a comment"

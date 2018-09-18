@@ -495,7 +495,7 @@ class ValuesResponderV2 extends Responder {
 
                 currentValue: ReadValueV2 = maybeCurrentValue match {
                     case Some(value) => value
-                    case None => throw BadRequestException(s"Resource <${updateValueRequest.updateValue.resourceIri}> does not have value <${updateValueRequest.updateValue.valueIri}> as an object of property <${updateValueRequest.updateValue.propertyIri}>")
+                    case None => throw NotFoundException(s"Resource <${updateValueRequest.updateValue.resourceIri}> does not have value <${updateValueRequest.updateValue.valueIri}> as an object of property <${updateValueRequest.updateValue.propertyIri}>")
                 }
 
                 _ = checkValuePermission(
