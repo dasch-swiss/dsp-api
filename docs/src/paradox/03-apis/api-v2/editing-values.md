@@ -50,6 +50,24 @@ given. For example, to create an integer value:
 }
 ```
 
+Each value can have a comment, given in `knora-api:valueHasComment`. For example:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasInteger" : {
+    "@type" : "knora-api:IntValue",
+    "knora-api:intValueAsInt" : 4,
+    "knora-api:valueHasComment" : "This is a comment."
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
 Permissions for the new value can be given by adding `knora-api:hasPermissions`. For example:
 
 ```jsonld
@@ -109,6 +127,25 @@ we can create a link like this:
 
 As with ordinary values, permissions on links can be specified by adding `knora-api:hasPermissions`.
 
+### Creating a Text Value Without Standoff Markup
+
+Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:
+
+```jsonld
+{
+  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@type" : "anything:Thing",
+  "anything:hasText" : {
+    "@type" : "knora-api:TextValue",
+    "knora-api:valueAsString" : "This is a text without markup."
+  },
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  }
+}
+```
+
 ### Creating a Text Value with Standoff Markup
 
 Currently, the only way to create a text value with standoff markup is to submit it in XML format
@@ -123,7 +160,7 @@ document like this:
 </text>
 ```
 
-This document can then be embedded in a JSON-LD request to create a value:
+This document can then be embedded in a JSON-LD request, using the predicate `knora-api:textValueAsXml`:
 
 ```jsonld
 {
@@ -174,6 +211,9 @@ the `@id` of the current value version is given. For example, to update an integ
 }
 ```
 
+The value can be given a comment by using `knora-api:valueHasComment`. To change only
+the comment of a value, you can resubmit the existing value with the updated comment.
+
 Permissions can be specified by adding `knora-api:hasPermissions`. Otherwise, the new
 version has the same permissions as the previous one. To change the permissions
 on a value, the user must have **change rights permission** on the value.
@@ -195,8 +235,11 @@ that they do not appear in normal query results.
 To mark a value as deleted, use this route:
 
 ```
-HTTP DELETE to http://host/v2/values/RESOURCE_IRI/PROPERTY_IRI/VALUE_IRI
+HTTP DELETE to http://host/v2/values/RESOURCE_IRI/PROPERTY_IRI/VALUE_IRI[?deleteComment=DELETE_COMMENT]
 ```
 
 The resource IRI, property IRI, and value IRI must be URL-encoded. If the value
 is a link value, the property must be a link value property.
+
+The optional URL parameter `deleteComment` specifies a comment to be attached to the
+value, explaining why it has been marked as deleted. The comment must also be URL-encoded.

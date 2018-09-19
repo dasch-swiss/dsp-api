@@ -2248,8 +2248,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val resourceIriEnc: String = URLEncoder.encode(aThingIri, "UTF-8")
             val propertyIriEnc: String = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
             val valueIriEnc: String = URLEncoder.encode(intValueIri.get, "UTF-8")
+            val deleteComment: String = URLEncoder.encode("this value was incorrect", "UTF-8")
 
-            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Delete(s"$baseApiUrl/v2/values/$resourceIriEnc/$propertyIriEnc/$valueIriEnc?deleteComment=$deleteComment") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
         }

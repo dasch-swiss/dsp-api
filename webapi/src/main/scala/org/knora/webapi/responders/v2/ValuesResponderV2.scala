@@ -83,7 +83,12 @@ class ValuesResponderV2 extends Responder {
 
                 // Don't accept link properties.
                 _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
-                    throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"Invalid property <${createValueRequest.createValue.propertyIri}>. Use a link value property to submit a link.")
+                }
+
+                // Don't accept knora-api:hasStandoffLinkToValue.
+                _ = if (createValueRequest.createValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                    throw BadRequestException(s"Values of <${createValueRequest.createValue.propertyIri}> cannot be created directly")
                 }
 
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
@@ -461,6 +466,11 @@ class ValuesResponderV2 extends Responder {
                     throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
                 }
 
+                // Don't accept knora-api:hasStandoffLinkToValue.
+                _ = if (updateValueRequest.updateValue.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                    throw BadRequestException(s"Values of <${updateValueRequest.updateValue.propertyIri}> cannot be updated directly")
+                }
+
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the
                 // corresponding link property, whose objects we will need to query. Get ontology information about the
                 // adjusted property.
@@ -813,7 +823,7 @@ class ValuesResponderV2 extends Responder {
                                              valuePermissions: String,
                                              requestingUser: UserADM): Future[UnverifiedValueV2] = {
         // Delete the existing link and decrement its LinkValue's reference count.
-        val sparqlTemplateLinkUpdateForCurrentLink = decrementLinkValue(
+        val sparqlTemplateLinkUpdateForCurrentLink: SparqlTemplateLinkUpdate = decrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = propertyIri,
             targetResourceIri = currentLinkValue.referredResourceIri,
@@ -823,7 +833,7 @@ class ValuesResponderV2 extends Responder {
         )
 
         // Create a new link, and create a new LinkValue for it.
-        val sparqlTemplateLinkUpdateForNewLink = incrementLinkValue(
+        val sparqlTemplateLinkUpdateForNewLink: SparqlTemplateLinkUpdate = incrementLinkValue(
             sourceResourceInfo = resourceInfo,
             linkPropertyIri = propertyIri,
             targetResourceIri = newLinkValue.referredResourceIri,
@@ -885,6 +895,11 @@ class ValuesResponderV2 extends Responder {
                 // Don't accept link properties.
                 _ = if (propertyInfoForSubmittedProperty.isLinkProp) {
                     throw BadRequestException(s"Invalid property <${propertyInfoForSubmittedProperty.entityInfoContent.propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                }
+
+                // Don't accept knora-api:hasStandoffLinkToValue.
+                _ = if (deleteValueRequest.propertyIri.toString == OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue) {
+                    throw BadRequestException(s"Values of <${deleteValueRequest.propertyIri}> cannot be deleted directly")
                 }
 
                 // Make an adjusted version of the submitted property: if it's a link value property, substitute the

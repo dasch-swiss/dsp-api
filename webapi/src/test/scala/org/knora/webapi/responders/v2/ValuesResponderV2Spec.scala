@@ -125,6 +125,27 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
     )
 
+    private val sampleStandoffWithLink: Vector[StandoffTagV2] = Vector(
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+            dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+            startPosition = 0,
+            endPosition = 7,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 0,
+            attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = aThingIri)),
+        ),
+        StandoffTagV2(
+            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
+            startPosition = 0,
+            endPosition = 10,
+            uuid = UUID.randomUUID().toString,
+            originalXMLID = None,
+            startIndex = 1
+        )
+    )
+
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
     private def getResourceWithValues(resourceIri: IRI,
@@ -1344,7 +1365,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not create a duplicate link" in {
             val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
@@ -1387,6 +1407,26 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             actorUnderTest ! createValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a standoff link directly" in {
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        referredResourceIri = generationeIri
+                    )
+                ),
+                requestingUser = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -2054,7 +2094,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueHasString = "Comment 1ab"
 
             val standoffAndMapping = Some(StandoffAndMapping(
-                standoff = sampleStandoff,
+                standoff = sampleStandoffWithLink,
                 mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
                 mapping = standardMapping.get
             ))
@@ -2099,6 +2139,31 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     savedValue.standoffAndMapping should ===(standoffAndMapping)
 
                 case _ => throw AssertionException(s"Expected text value, got $valueFromTriplestore")
+            }
+
+
+            // There should be a link value for a standoff link.
+
+            val resource = getResourceWithValues(
+                resourceIri = zeitglöckleinIri,
+                propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri),
+                requestingUser = incunabulaUser
+            )
+
+            val standoffLinkValues: Seq[ReadValueV2] = getValuesFromResource(
+                resource = resource,
+                propertyIriInResult = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri
+            )
+
+            assert(standoffLinkValues.size == 1)
+            val standoffLinkValueFromTriplestore = standoffLinkValues.head
+
+            standoffLinkValueFromTriplestore.valueContent match {
+                case linkValueContentV2: LinkValueContentV2 =>
+                    standoffLinkValueIri.set(standoffLinkValueFromTriplestore.valueIri)
+                    assert(linkValueContentV2.referredResourceIri == aThingIri)
+
+                case _ => throw AssertionException(s"Expected a link value, got $standoffLinkValueFromTriplestore")
             }
         }
 
@@ -3047,6 +3112,27 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "not update a standoff link directly" in {
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = zeitglöckleinIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                    propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                    valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                    valueContent = LinkValueContentV2(
+                        ontologySchema = ApiV2WithValueObjects,
+                        referredResourceIri = generationeIri
+                    )
+                ),
+                requestingUser = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "not delete a value if the requesting user does not have DeletePermission on the value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -3087,6 +3173,53 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 propertyIriInResult = propertyIri,
                 valueIri = intValueIri.get,
                 requestingUser = anythingUser1)
+        }
+
+        "not delete a standoff link directly" in {
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = zeitglöckleinIri,
+                propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri,
+                valueIri = standoffLinkValueIri.get,
+                requestingUser = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "delete a text value with a standoff link" in {
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, incunabulaUser)
+
+            actorUnderTest ! DeleteValueRequestV2(
+                resourceIri = zeitglöckleinIri,
+                propertyIri = propertyIri,
+                valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                deleteComment = Some("this value was incorrect"),
+                requestingUser = incunabulaUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[SuccessResponseV2](timeout)
+
+            checkValueIsDeleted(resourceIri = zeitglöckleinIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                valueIri = zeitglöckleinCommentWithStandoffIri.get,
+                requestingUser = incunabulaUser)
+
+            // There should be no standoff link values left in the resource.
+
+            val resource = getResourceWithValues(
+                resourceIri = zeitglöckleinIri,
+                propertyIrisForGravsearch = Seq(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkTo.toSmartIri),
+                requestingUser = incunabulaUser
+            )
+
+            assert(resource.values.get(OntologyConstants.KnoraApiV2WithValueObjects.HasStandoffLinkToValue.toSmartIri).isEmpty)
         }
 
         "delete a link between two resources" in {
