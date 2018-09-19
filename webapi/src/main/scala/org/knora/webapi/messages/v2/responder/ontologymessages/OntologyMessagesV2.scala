@@ -108,7 +108,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
         val ontologyName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.OntologyName, stringFormatter.validateProjectSpecificOntologyName)
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
-        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(_.value)
+        val isShared: Boolean = jsonLDDocument.maybeBoolean(OntologyConstants.KnoraApiV2WithValueObjects.IsShared).exists(identity)
 
         CreateOntologyRequestV2(
             ontologyName = ontologyName,
@@ -2228,7 +2228,7 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
         }
 
         val jsonRestriction: Option[JsonLDObject] = entityInfoContent.xsdStringRestrictionPattern.map {
-            (pattern: String) =>
+            pattern: String =>
                 JsonLDObject(Map(
                     JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.Rdfs.Datatype),
                     OntologyConstants.Owl.OnDatatype -> JsonLDUtil.iriToJsonLDObject(OntologyConstants.Xsd.String),
@@ -2629,22 +2629,22 @@ object ClassInfoContentV2 {
                             }
 
                             val (owlCardinalityIri: IRI, owlCardinalityValue: Int) = restriction.maybeInt(OntologyConstants.Owl.Cardinality) match {
-                                case Some(JsonLDInt(value)) => OntologyConstants.Owl.Cardinality -> value
+                                case Some(value) => OntologyConstants.Owl.Cardinality -> value
 
                                 case None =>
                                     restriction.maybeInt(OntologyConstants.Owl.MinCardinality) match {
-                                        case Some(JsonLDInt(value)) => OntologyConstants.Owl.MinCardinality -> value
+                                        case Some(value) => OntologyConstants.Owl.MinCardinality -> value
 
                                         case None =>
                                             restriction.maybeInt(OntologyConstants.Owl.MaxCardinality) match {
-                                                case Some(JsonLDInt(value)) => OntologyConstants.Owl.MaxCardinality -> value
+                                                case Some(value) => OntologyConstants.Owl.MaxCardinality -> value
                                                 case None => throw BadRequestException(s"Missing OWL cardinality predicate in the definition of $classIri")
                                             }
                                     }
                             }
 
                             val onProperty = restriction.requireIriInObject(OntologyConstants.Owl.OnProperty, stringFormatter.toSmartIriWithErr)
-                            val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder).map(_.value)
+                            val guiOrder = restriction.maybeInt(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiOrder)
 
                             val owlCardinalityInfo = OwlCardinalityInfo(
                                 owlCardinalityIri = owlCardinalityIri,
@@ -2925,7 +2925,6 @@ case class SubClassInfoV2(id: SmartIri, label: String)
   *
   * @param ontologyIri          the IRI of the ontology.
   * @param projectIri           the IRI of the project that the ontology belongs to.
-  * @param isShared             `true` if this is a shared ontology.
   * @param label                the label of the ontology, if any.
   * @param lastModificationDate the ontology's last modification date, if any.
   */

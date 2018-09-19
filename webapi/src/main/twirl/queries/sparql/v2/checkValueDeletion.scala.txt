@@ -20,17 +20,27 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks if a list node exists.
+ * Checks whether a knora-base:Value exists and is deleted.
  *
- * @param listNodeIri the IRI of the list node we want to check.
+ * @param triplestore the name of the triplestore being used.
+ * @param valueIri the IRI of the value.
  *@
-@(listNodeIri: IRI)
+@(triplestore: String,
+  valueIri: IRI)
 
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
-ASK {
-    BIND(IRI("@listNodeIri") AS ?node)
+SELECT ?isDeleted
+@* Ensure that inference is not used in this query. *@
+@if(triplestore.startsWith("graphdb")) {
+    FROM <http://www.ontotext.com/explicit>
+}
+WHERE {
+    BIND(IRI("@valueIri") AS ?value)
 
-    ?node rdf:type knora-base:ListNode .
+    ?value rdf:type ?valueClass .
+    ?valueClass rdfs:subClassOf* knora-base:Value .
+    ?value knora-base:isDeleted ?isDeleted .
 }

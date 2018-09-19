@@ -1663,12 +1663,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // recursively traverse the link value's nested resource and its assertions
                     val resAndValObjIrisForDependentRes: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(dependentRes.valuePropertyAssertions)
-                    // get the dependent resource's IRI from the current link value's rdf:object or rdf:subject in case of an incoming link
-                    val dependentResIri: IRI = if (!assertion.incomingLink) {
-                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
-                    } else {
+
+                    // get the dependent resource's IRI from the current link value's rdf:object, or rdf:subject in case of an incoming link
+                    val dependentResIri: IRI = if (assertion.isIncomingLink) {
                         assertion.assertions.getOrElse(OntologyConstants.Rdf.Subject, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Subject} for link value ${assertion.valueObjectIri}"))
+                    } else {
+                        assertion.assertions.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"expected ${OntologyConstants.Rdf.Object} for link value ${assertion.valueObjectIri}"))
                     }
+
                     // append results from recursion and current value object
                     ResourceIrisAndValueObjectIris(
                         resourceIris = resAndValObjIrisForDependentRes.resourceIris + dependentResIri,

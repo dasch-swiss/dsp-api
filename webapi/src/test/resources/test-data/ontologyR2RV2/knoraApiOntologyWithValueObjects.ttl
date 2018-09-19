@@ -725,7 +725,7 @@ knora-api:hasDDDFileValue a owl:ObjectProperty;
 
 knora-api:DateBase a owl:Class;
   rdfs:subClassOf knora-api:ValueBase, [ a owl:Restriction;
-      owl:maxCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasCalendar
     ], [ a owl:Restriction;
       owl:maxCardinality 1;
@@ -865,7 +865,7 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:maxCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasCalendar
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1985,7 +1985,7 @@ knora-api:StandoffDateTag a owl:Class;
   rdfs:comment "Represents a date in a TextValue";
   rdfs:subClassOf knora-api:DateBase, knora-api:StandoffDataTypeTag, [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:maxCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasCalendar
     ], [ a owl:Restriction;
       knora-api:isInherited true;

@@ -18,7 +18,7 @@ knora-api:DateValue a owl:Class;
       owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:maxCardinality 1;
+      owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasCalendar
     ], [ a owl:Restriction;
       knora-api:isInherited true;

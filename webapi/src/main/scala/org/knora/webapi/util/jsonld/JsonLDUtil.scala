@@ -367,9 +367,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @param key the key of the required value.
       * @return the required value.
       */
-    def requireInt(key: String): JsonLDInt = {
+    def requireInt(key: String): Int = {
         value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-            case obj: JsonLDInt => obj
+            case obj: JsonLDInt => obj.value
             case other => throw BadRequestException(s"Invalid $key: $other (integer expected)")
         }
     }
@@ -381,9 +381,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @param key the key of the optional value.
       * @return the optional value.
       */
-    def maybeInt(key: String): Option[JsonLDInt] = {
+    def maybeInt(key: String): Option[Int] = {
         value.get(key).map {
-            case obj: JsonLDInt => obj
+            case obj: JsonLDInt => obj.value
             case other => throw BadRequestException(s"Invalid $key: $other (integer expected)")
         }
     }
@@ -395,9 +395,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @param key the key of the required value.
       * @return the required value.
       */
-    def requireBoolean(key: String): JsonLDBoolean = {
+    def requireBoolean(key: String): Boolean = {
         value.getOrElse(key, throw BadRequestException(s"No $key provided")) match {
-            case obj: JsonLDBoolean => obj
+            case obj: JsonLDBoolean => obj.value
             case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
         }
     }
@@ -409,9 +409,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
       * @param key the key of the optional value.
       * @return the optional value.
       */
-    def maybeBoolean(key: String): Option[JsonLDBoolean] = {
+    def maybeBoolean(key: String): Option[Boolean] = {
         value.get(key).map {
-            case obj: JsonLDBoolean => obj
+            case obj: JsonLDBoolean => obj.value
             case other => throw BadRequestException(s"Invalid $key: $other (boolean expected)")
         }
     }
@@ -535,22 +535,22 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     /**
       * A convenience function that calls `body.requireInt`.
       */
-    def requireInt(key: String): JsonLDInt = body.requireInt(key)
+    def requireInt(key: String): Int = body.requireInt(key)
 
     /**
       * A convenience function that calls `body.maybeInt`.
       */
-    def maybeInt(key: String): Option[JsonLDInt] = body.maybeInt(key)
+    def maybeInt(key: String): Option[Int] = body.maybeInt(key)
 
     /**
       * A convenience function that calls `body.requireBoolean`.
       */
-    def requireBoolean(key: String): JsonLDBoolean = body.requireBoolean(key)
+    def requireBoolean(key: String): Boolean = body.requireBoolean(key)
 
     /**
       * A convenience function that calls `body.maybeBoolean`.
       */
-    def maybeBoolean(key: String): Option[JsonLDBoolean] = body.maybeBoolean(key)
+    def maybeBoolean(key: String): Option[Boolean] = body.maybeBoolean(key)
 
     /**
       * Converts this JSON-LD object to its compacted Java representation.

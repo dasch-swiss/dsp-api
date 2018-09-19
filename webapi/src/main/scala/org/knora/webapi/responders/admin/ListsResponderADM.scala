@@ -112,8 +112,8 @@ class ListsResponderADM extends Responder {
                         id = listIri.toString,
                         projectIri = propsMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException("The required property 'attachedToProject' not found.")).head.asInstanceOf[IriLiteralV2].value,
                         name = name,
-                        labels = StringLiteralSequenceV2(labels.toVector),
-                        comments = StringLiteralSequenceV2(comments.toVector)
+                        labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                        comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
                     )
             }
 
@@ -271,15 +271,15 @@ class ListsResponderADM extends Responder {
                                 id = nodeIri.toString,
                                 projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
                                 name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                                labels = StringLiteralSequenceV2(labels.toVector),
-                                comments = StringLiteralSequenceV2(comments.toVector)
+                                labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
                             )
                         } else {
                             ListChildNodeInfoADM (
                                 id = nodeIri.toString,
                                 name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                                labels = StringLiteralSequenceV2(labels.toVector),
-                                comments = StringLiteralSequenceV2(comments.toVector),
+                                labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
                                 position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
                                 hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri."))
                             )
@@ -386,16 +386,16 @@ class ListsResponderADM extends Responder {
                                     id = nodeIri.toString,
                                     projectIri = attachedToProjectOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required attachedToProject property missing for list node $nodeIri.")),
                                     name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                                    labels = StringLiteralSequenceV2(labels.toVector),
-                                    comments = StringLiteralSequenceV2(comments.toVector),
+                                    labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                    comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
                                     children = children
                                 )
                             } else {
                                 ListChildNodeADM (
                                     id = nodeIri.toString,
                                     name = propsMap.get(OntologyConstants.KnoraBase.ListNodeName).map(_.head.asInstanceOf[StringLiteralV2].value),
-                                    labels = StringLiteralSequenceV2(labels.toVector),
-                                    comments = StringLiteralSequenceV2(comments.toVector),
+                                    labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                                    comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
                                     position = positionOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required position property missing for list node $nodeIri.")),
                                     hasRootNode = hasRootNodeOption.getOrElse(throw InconsistentTriplestoreDataException(s"Required hasRootNode property missing for list node $nodeIri.")),
                                     children = children
@@ -465,8 +465,8 @@ class ListsResponderADM extends Responder {
             ListChildNodeADM(
                 id = nodeIri,
                 name = nameOption,
-                labels = StringLiteralSequenceV2(labels.toVector),
-                comments = StringLiteralSequenceV2(comments.toVector),
+                labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
+                comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
                 children = children.map(_.sorted),
                 position = position,
                 hasRootNode = hasRootNode

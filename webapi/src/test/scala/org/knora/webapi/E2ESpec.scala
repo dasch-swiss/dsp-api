@@ -19,6 +19,8 @@
 
 package org.knora.webapi
 
+import java.io.StringReader
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
@@ -26,15 +28,17 @@ import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
+import org.eclipse.rdf4j.model.Model
+import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext}
-import scala.language.postfixOps
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object E2ESpec {
@@ -110,13 +114,26 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
 
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
         val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 5 minutes)
+        singleAwaitingRequest(request, 5.minutes)
     }
 
     // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999 milliseconds): HttpResponse = {
+    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 2999.milliseconds): HttpResponse = {
         val responseFuture = Http().singleRequest(request)
         Await.result(responseFuture, duration)
     }
 
+    protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+        JsonLDUtil.parseJsonLD(responseBodyStr)
+    }
+
+    protected def parseTurtle(turtleStr: String): Model = {
+        Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
+    }
+
+    protected def parseRdfXml(rdfXmlStr: String): Model = {
+        Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+    }
 }
