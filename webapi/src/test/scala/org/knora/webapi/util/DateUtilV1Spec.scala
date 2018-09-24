@@ -29,8 +29,8 @@ import org.scalatest._
 /**
   * Tests [[DateUtilV1]].
   */
-class DateUtilSpec extends WordSpec with Matchers {
-    "The DateUtils class" should {
+class DateUtilV1Spec extends WordSpec with Matchers {
+    "The DateUtilV1 class" should {
         "convert a date in YYYY-MM-DD format, in the Julian calendar, into a Julian day count, and back again" in {
             val bundesbriefDateValueV1 = DateValueV1(
                 dateval1 = "1291-08-01",

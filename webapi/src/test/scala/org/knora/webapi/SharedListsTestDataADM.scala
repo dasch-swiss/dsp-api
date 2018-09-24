@@ -91,7 +91,7 @@ object SharedListsTestDataADM {
         id = "http://rdfh.ch/lists/0001/treeList",
         projectIri = "http://rdfh.ch/projects/0001",
         name = Some("treelistroot"),
-        labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list root", language = Some("en")), StringLiteralV2(value = "Listenwurzel", language = Some("de")))),
+        labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Listenwurzel", language = Some("de")), StringLiteralV2(value = "Tree list root", language = Some("en")))),
         comments = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Anything Tree List", language = Some("en"))))
     )
 
@@ -108,7 +108,7 @@ object SharedListsTestDataADM {
         ListChildNodeADM(
             id = "http://rdfh.ch/lists/0001/treeList02",
             name = Some("Tree list node 02"),
-            labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 02", language = Some("en")), StringLiteralV2(value = "Baumlistenknoten 02", language = Some("de")))),
+            labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Baumlistenknoten 02", language = Some("de")), StringLiteralV2(value = "Tree list node 02", language = Some("en")))),
             comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
             children = Seq.empty[ListChildNodeADM],
             position = 1,

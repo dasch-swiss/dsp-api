@@ -73,7 +73,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }

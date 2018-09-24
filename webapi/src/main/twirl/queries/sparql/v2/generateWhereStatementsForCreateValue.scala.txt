@@ -20,7 +20,7 @@
 @import org.knora.webapi._
 @import org.knora.webapi.util.SmartIri
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-@import org.knora.webapi.messages.v1.responder.valuemessages._
+@import org.knora.webapi.messages.v2.responder.valuemessages._
 
 @**
  * Generates statements to be added to the WHERE clause of a SPARQL update when creating a new value of a resource
@@ -38,14 +38,14 @@
  *@
 @(propertyIri: SmartIri,
   newValueIri: IRI,
-  valueTypeIri: SmartIri,
+  value: ValueContentV2,
   linkUpdates: Seq[SparqlTemplateLinkUpdate])
 
     # Value: @newValueIri
     # Property: @propertyIri
 
     BIND(IRI("@propertyIri") AS ?property)
-    BIND(IRI("@valueTypeIri") AS ?valueType)
+    BIND(IRI("@value.valueType") AS ?valueType)
 
     @* Do nothing if the submitted value has the wrong type. *@
 
@@ -57,6 +57,20 @@
     ?resourceClass rdfs:subClassOf* ?restriction .
     ?restriction a owl:Restriction .
     ?restriction owl:onProperty ?property .
+
+    @* If this is a list value, make sure the list node that it points to exists and is a ListNode. *@
+
+    @value match {
+
+        case listValue: HierarchicalListValueContentV2 => {
+
+            <@{listValue.valueHasListNode}> a knora-base:ListNode .
+
+        }
+
+        case _ => {}
+
+    }
 
     @*
 

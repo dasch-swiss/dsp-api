@@ -21,9 +21,8 @@ package org.knora.webapi.util
 
 import java.util.{Calendar, GregorianCalendar}
 
-import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
-import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants}
+import org.knora.webapi.{AssertionException, IRI, InconsistentTriplestoreDataException, OntologyConstants}
 
 /**
   * Utility functions for converting dates.
@@ -57,26 +56,45 @@ object DateUtilV2 {
     /**
       * Represents a date as year, month, day including the given precision.
       *
-      * @param year      the date's year.
-      * @param month     the date's month.
-      * @param day       the date's day.
-      * @param precision the given date's precision.
+      * @param year       the date's year.
+      * @param maybeMonth the date's month, if given.
+      * @param maybeDay   the date's day, if given.
+      * @param era        the date's era.
       */
-    case class DateYearMonthDay(year: Int, month: Int, day: Int, era: KnoraEraV2.Value, precision: KnoraPrecisionV1.Value) {
+    case class DateYearMonthDay(year: Int, maybeMonth: Option[Int], maybeDay: Option[Int], era: KnoraEraV2.Value) {
+        if (maybeMonth.isEmpty && maybeDay.isDefined) {
+            throw AssertionException(s"Invalid date: ${super.toString}")
+        }
+
+        /**
+          * Determines the precision of this date.
+          *
+          * @return the precision of the date.
+          */
+        def getPrecision: KnoraPrecisionV1.Value = {
+            (maybeMonth, maybeDay) match {
+                case (Some(_), Some(_)) => KnoraPrecisionV1.DAY
+                case (Some(_), None) => KnoraPrecisionV1.MONTH
+                case (None, None) => KnoraPrecisionV1.YEAR
+                case _ => throw AssertionException("Unreachable code")
+            }
+        }
 
         override def toString: String = {
-            precision match {
-                case KnoraPrecisionV1.YEAR =>
-                    // Year precision: just include the year.
-                    f"$year%04d${StringFormatter.EraSeparator}$era"
+            (maybeMonth, maybeDay) match {
+                case (Some(month), Some(day)) =>
+                    // Day precision: include the year, the month, and the day.
+                    f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.PrecisionSeparator}$day%02d${StringFormatter.EraSeparator}$era"
 
-                case KnoraPrecisionV1.MONTH =>
+                case (Some(month), None) =>
                     // Month precision: include the year and the month.
                     f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.EraSeparator}$era"
 
-                case KnoraPrecisionV1.DAY =>
-                    // Day precision: include the year, the month, and the day.
-                    f"$year%04d${StringFormatter.PrecisionSeparator}$month%02d${StringFormatter.PrecisionSeparator}$day%02d${StringFormatter.EraSeparator}$era"
+                case (None, None) =>
+                    // Year precision: just include the year.
+                    f"$year%04d${StringFormatter.EraSeparator}$era"
+
+                case _ => throw AssertionException("Unreachable code")
             }
         }
 
@@ -86,30 +104,9 @@ object DateUtilV2 {
           * @return a Map of knora-api value properties to numbers (year, month, day) taking into account the given precision.
           */
         def toStartDateAssertions: Map[IRI, Int] = {
-
-            precision match {
-
-                case KnoraPrecisionV1.YEAR =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year
-                    )
-
-                case KnoraPrecisionV1.MONTH =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month
-                    )
-
-                case KnoraPrecisionV1.DAY =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> day
-                    )
-
-            }
-
-
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> year) ++
+                maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> month) ++
+                maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> day)
         }
 
         /**
@@ -119,38 +116,17 @@ object DateUtilV2 {
           */
         def toStartEraAssertion: Map[IRI, String] = {
             Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> era.toString)
-
         }
 
+        /**
+          * Converts the [[DateYearMonthDay]] to knora-api assertions representing an end date.
+          *
+          * @return a Map of knora-api value properties to numbers (year, month, day) taking into account the given precision.
+          */
         def toEndDateAssertions: Map[IRI, Int] = {
-
-            /**
-              * Converts the [[DateYearMonthDay]] to knora-api assertions representing an end date.
-              *
-              * @return a Map of knora-api value properties to numbers (year, month, day) taking into account the given precision.
-              */
-            precision match {
-
-                case KnoraPrecisionV1.YEAR =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year
-                    )
-
-                case KnoraPrecisionV1.MONTH =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month
-                    )
-
-                case KnoraPrecisionV1.DAY =>
-                    Map(
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month,
-                        OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> day
-                    )
-
-            }
-
+            Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> year) ++
+                maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> month) ++
+                maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> day)
         }
 
         /**
@@ -159,28 +135,7 @@ object DateUtilV2 {
           * @return a map of knora-api value EndEra property to era
           */
         def toEndEraAssertion: Map[IRI, String] = {
-
             Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> era.toString)
-
-        }
-
-        /**
-          * Determines whether two [[DateYearMonthDay]] objects represent the same date, considering their precisions.
-          *
-          * @param that the [[DateYearMonthDay]] to be compared to this one.
-          * @return `true` if the two dates have the same precision and era and if their differences are smaller than their
-          *         precision.
-          */
-        def equalsWithinPrecision(that: DateYearMonthDay): Boolean = {
-            if (this.precision == that.precision && this.era == that.era) {
-                precision match {
-                    case KnoraPrecisionV1.YEAR => this.year == that.year
-                    case KnoraPrecisionV1.MONTH => this.year == that.year && this.month == that.month
-                    case KnoraPrecisionV1.DAY => this.year == that.year && this.month == that.month && this.day == that.day
-                }
-            } else {
-                false
-            }
         }
     }
 
@@ -197,7 +152,7 @@ object DateUtilV2 {
         str.append(startDate.toString)
 
         // Can we represent the start and end dates as a single date?
-        if (!startDate.equalsWithinPrecision(endDate)) {
+        if (startDate != endDate) {
             // No. Include the end date.
             str.append(StringFormatter.CalendarSeparator).append(endDate.toString)
         }
@@ -221,8 +176,13 @@ object DateUtilV2 {
         val day: Int = javaGregorianCalendarDate.get(Calendar.DAY_OF_MONTH)
         val era: String = DateUtilV1.eraToString(javaGregorianCalendarDate.get(Calendar.ERA))
 
+        val (maybeMonth, maybeDay) = precision match {
+            case KnoraPrecisionV1.YEAR => (None, None)
+            case KnoraPrecisionV1.MONTH => (Some(month), None)
+            case KnoraPrecisionV1.DAY => (Some(month), Some(day))
+        }
 
-        DateYearMonthDay(year = year, month = month, day = day, era = KnoraEraV2.lookup(era), precision = precision)
+        DateYearMonthDay(year = year, maybeMonth = maybeMonth, maybeDay = maybeDay, era = KnoraEraV2.lookup(era))
 
     }
 
