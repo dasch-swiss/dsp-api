@@ -19,16 +19,19 @@
 
 package org.knora.webapi.routing.v2
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ResourceTEIGetRequestV2, ResourcesGetRequestV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, ResourceTEIGetRequestV2, ResourcesGetRequestV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -128,7 +131,35 @@ object ResourcesRouteV2 extends Authenticator {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        path("v2" / "resources" / Segments) { resIris: Seq[String] =>
+        path("v2" / "resources") {
+            post {
+                entity(as[String]) { jsonRequest =>
+                    requestContext => {
+                        val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+                        val requestMessageFuture: Future[CreateResourceRequestV2] = for {
+                            requestingUser <- getUserADM(requestContext)
+                            requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
+                                requestDoc,
+                                apiRequestID = UUID.randomUUID,
+                                requestingUser = requestingUser,
+                                responderManager = responderManager,
+                                log = log
+                            )
+                        } yield requestMessage
+
+                        RouteUtilV2.runRdfRouteWithFuture(
+                            requestMessageFuture,
+                            requestContext,
+                            settings,
+                            responderManager,
+                            log,
+                            ApiV2WithValueObjects
+                        )
+                    }
+                }
+            }
+        } ~ path("v2" / "resources" / Segments) { resIris: Seq[String] =>
             get {
                 requestContext => {
 
