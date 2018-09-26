@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
@@ -54,6 +54,7 @@ class ValuesResponderV2 extends Responder {
         case createValueRequest: CreateValueRequestV2 => future2Message(sender(), createValueV2(createValueRequest), log)
         case updateValueRequest: UpdateValueRequestV2 => future2Message(sender(), updateValueV2(updateValueRequest), log)
         case deleteValueRequest: DeleteValueRequestV2 => future2Message(sender(), deleteValueV2(deleteValueRequest), log)
+        case createMultipleValuesRequestV2: GenerateSparqlToCreateMultipleValuesRequestV2 => future2Message(sender(), generateSparqToCreateMultipleValuesV2(createMultipleValuesRequestV2), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -183,7 +184,7 @@ class ValuesResponderV2 extends Responder {
                 // and that the user has permission to see them.
 
                 _ <- submittedInternalValueContent match {
-                    case textValueContent: TextValueContentV2 => checkStandoffLinkTargets(textValueContent, createValueRequest.requestingUser)
+                    case textValueContent: TextValueContentV2 => checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, createValueRequest.requestingUser)
                     case _ => FastFuture.successful(())
                 }
 
@@ -438,6 +439,115 @@ class ValuesResponderV2 extends Responder {
     }
 
     /**
+      * Generates SPARQL for creating multiple values.
+      *
+      * @param createMultipleValuesRequest the request to create multiple values.
+      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV2]] containing the generated SPARQL and information
+      *         about the values to be created.
+      */
+    private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
+        for {
+            // Check that the targets of standoff links exist if they're expected to exist (i.e. they aren't being
+            // created in the same transaction).
+
+            _ <- checkStandoffLinkTargetsInMultipleValues(createMultipleValuesRequest)
+
+            // Generate SPARQL to create links and LinkValues for standoff links in text values.
+            sparqlForStandoffLinks: String = generateSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
+
+
+
+
+        } yield ???
+    }
+
+    /**
+      * Given a sequence of values to create, checks that each standoff link in a text value points to a resource
+      * that actually exists, if the its [[StandoffTagIriAttributeV2]] expects the target resource to exist.
+      *
+      * @param createMultipleValuesRequest the request to create multiple values.
+      */
+    private def checkStandoffLinkTargetsInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[Unit] = {
+        val valuesToCreate: Iterable[CreateValueV2] = createMultipleValuesRequest.values.values.flatten
+
+        val standoffLinkTargetsThatShouldExist: Set[IRI] = valuesToCreate.foldLeft(Set.empty[IRI]) {
+            case (acc: Set[IRI], valueToCreate: CreateValueV2) =>
+                valueToCreate.valueContent match {
+                    case textValueContentV2: TextValueContentV2 => acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
+                    case _ => acc
+                }
+        }
+
+        checkResourceIris(standoffLinkTargetsThatShouldExist, createMultipleValuesRequest.requestingUser)
+    }
+
+    /**
+      * When processing a request to create multiple values, generates SPARQL for standoff links in text values.
+      *
+      * @param createMultipleValuesRequest the request to create multiple values.
+      * @return SPARQL INSERT statements.
+      */
+    private def generateSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): String = {
+        // To create LinkValues for the standoff links in the values to be created, we need to compute
+        // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+        // that have standoff links to a particular target resource.
+
+        // First, get the standoff link targets from all the text values to be created.
+
+        val valuesToCreate: Iterable[CreateValueV2] = createMultipleValuesRequest.values.values.flatten
+
+        val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = valuesToCreate.foldLeft(Vector.empty[Set[IRI]]) {
+            case (acc: Vector[Set[IRI]], createValueV2: CreateValueV2) =>
+                createValueV2.valueContent match {
+                    case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+                    case _ => acc
+                }
+        }
+
+        // Combine those resource references into a single list, so if there are n text values with a link to
+        // some IRI, the list will contain that IRI n times.
+        val allStandoffLinkTargets: Vector[IRI] = standoffLinkTargetsPerTextValue.flatten
+
+        // Now we need to count the number of times each IRI occurs in allStandoffLinkTargets. To do this, first
+        // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
+        // collection, and makes a Map in which items with the same key are grouped together. The identity
+        // function just returns its argument. So groupBy(identity) makes a Map[IRI, Vector[IRI]] in which each
+        // IRI points to a sequence of the same IRI repeated as many times as it occurred in allStandoffLinkTargets.
+        val allStandoffLinkTargetsGrouped: Map[IRI, Vector[IRI]] = allStandoffLinkTargets.groupBy(identity)
+
+        // Replace each Vector[IRI] with its size. That's the number of text values containing
+        // standoff links to that IRI.
+        val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
+
+        // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+        // and one LinkValue with its initial reference count.
+        val standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
+            case (targetIri, initialReferenceCount) =>
+                SparqlTemplateLinkUpdate(
+                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                    directLinkExists = false,
+                    insertDirectLink = true,
+                    deleteDirectLink = false,
+                    linkValueExists = false,
+                    linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+                    newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                    linkTargetIri = targetIri,
+                    currentReferenceCount = 0,
+                    newReferenceCount = initialReferenceCount,
+                    newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                    newLinkValuePermissions = standoffLinkValuePermissions
+                )
+        }
+
+        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
+        queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+            resourceIri = createMultipleValuesRequest.resourceIri,
+            linkUpdates = standoffLinkUpdates,
+            currentTime = createMultipleValuesRequest.currentTime
+        ).toString()
+    }
+
+    /**
       * Creates a new version of an existing value.
       *
       * @param updateValueRequest the request to update the value.
@@ -579,7 +689,7 @@ class ValuesResponderV2 extends Responder {
                     case textValueContent: TextValueContentV2 =>
                         // This is a text value. Check that the resources pointed to by any standoff link tags exist
                         // and that the user has permission to see them.
-                        checkStandoffLinkTargets(textValueContent, updateValueRequest.requestingUser)
+                        checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, updateValueRequest.requestingUser)
 
                     case _: LinkValueContentV2 =>
                         // We're updating a link. This means deleting an existing link and creating a new one, so
@@ -1210,22 +1320,20 @@ class ValuesResponderV2 extends Responder {
     }
 
     /**
-      * Given a text value, checks whether the targets of the value's standoff link tags exist and are Knora resources.
+      * Given a set of resource IRIs, checks that they point to Knora resources.
       * If not, throws an exception.
       *
-      * @param textValueContent the text value.
+      * @param targeResourceIris the IRIs to be checked.
       * @param requestingUser   the user making the request.
       */
-    private def checkStandoffLinkTargets(textValueContent: TextValueContentV2, requestingUser: UserADM): Future[Unit] = {
-        val targetResourceIris: Seq[IRI] = textValueContent.standoffLinkTagTargetResourceIris.toSeq
-
-        if (targetResourceIris.isEmpty) {
+    private def checkResourceIris(targeResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+        if (targeResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
             for {
                 resourcePreviewRequest <- FastFuture.successful(
                     ResourcesPreviewGetRequestV2(
-                        resourceIris = targetResourceIris,
+                        resourceIris = targeResourceIris.toSeq,
                         requestingUser = requestingUser
                     )
                 )

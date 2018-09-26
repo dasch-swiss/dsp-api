@@ -49,9 +49,15 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
+        // case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
+    /*
+    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ResourcesPreviewGetRequestV2] = {
+
+    }
+    */
 
     /**
       * Gets the requested resources from the triplestore.

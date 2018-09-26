@@ -126,7 +126,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
   * Represents a successful response to a [[CreateValueRequestV2]].
   *
-  * @param valueIri the IRI of the value that was created.
+  * @param valueIri  the IRI of the value that was created.
+  * @param valueType the type of the value that was created.
   */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri) extends KnoraResponseV2 {
@@ -258,6 +259,44 @@ case class DeleteValueRequestV2(resourceIri: IRI,
                                 deleteComment: Option[String] = None,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
+
+/**
+  * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
+  * resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the Knora
+  * v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
+  * sender must ensure that:
+  *
+  * - The requesting user has permission to add values to the resource.
+  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
+  * to point to it.
+  * - The resource class has a suitable cardinality for each submitted value.
+  * - All required values are provided.
+  *
+  * @param resourceIri    the IRI of the resource in which values are to be created.
+  * @param projectIri     the project the values belong to.
+  * @param values         the values to be added.
+  * @param currentTime    an xsd:dateTimeStamp that will be attached to the values.
+  * @param requestingUser the user that is creating the values.
+  * @param apiRequestID   the API request ID.
+  */
+case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
+                                                         projectIri: IRI,
+                                                         values: Map[SmartIri, Seq[CreateValueV2]],
+                                                         currentTime: String,
+                                                         requestingUser: UserADM,
+                                                         apiRequestID: UUID) extends ValuesResponderRequestV2
+
+/**
+  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be
+  * included in the `INSERT DATA` clause of a SPARQL update operation to create the requested values.
+  *
+  * @param insertSparql     a string containing statements that must be inserted into the INSERT clause of the SPARQL
+  *                         update that will create the values.
+  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV2]] objects describing
+  *                         the values that should have been created.
+  */
+case class GenerateSparqlToCreateMultipleValuesResponseV2(insertSparql: String,
+                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]])
 
 /**
   * The value of a Knora property in the context of some particular input or output operation.
@@ -805,13 +844,20 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       * Returns the IRIs of any resources that are target of standoff link tags in this text value.
       */
     lazy val standoffLinkTagTargetResourceIris: Set[IRI] = {
+        standoffLinkTagIriAttributes.map(_.value)
+    }
+
+    /**
+      * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
+      */
+    lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] = {
         standoffAndMapping match {
             case Some(definedStandoffAndMapping) =>
-                definedStandoffAndMapping.standoff.foldLeft(Set.empty[IRI]) {
+                definedStandoffAndMapping.standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
                     case (acc, standoffTag: StandoffTagV2) =>
                         if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-                            val iriAttributes: Set[IRI] = standoffTag.attributes.collect {
-                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute.value
+                            val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
                             }.toSet
 
                             acc ++ iriAttributes
@@ -820,7 +866,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                         }
                 }
 
-            case None => Set.empty[IRI]
+            case None => Set.empty[StandoffTagIriAttributeV2]
         }
     }
 
@@ -2142,14 +2188,17 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
 /**
   * Represents a Knora link value.
   *
-  * @param referredResourceIri the IRI of resource that this link value refers to (either the source
-  *                            of an incoming link, or the target of an outgoing link).
-  * @param isIncomingLink      indicates if it is an incoming link.
-  * @param nestedResource      information about the nested resource, if given.
-  * @param comment             a comment on the link.
+  * @param referredResourceIri    the IRI of resource that this link value refers to (either the source
+  *                               of an incoming link, or the target of an outgoing link).
+  * @param referredResourceExists `true` if the referred resource already exists, `false` if it is being created in the
+  *                               same transaction.
+  * @param isIncomingLink         indicates if it is an incoming link.
+  * @param nestedResource         information about the nested resource, if given.
+  * @param comment                a comment on the link.
   */
 case class LinkValueContentV2(ontologySchema: OntologySchema,
                               referredResourceIri: IRI,
+                              referredResourceExists: Boolean = true,
                               isIncomingLink: Boolean = false,
                               nestedResource: Option[ReadResourceV2] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
