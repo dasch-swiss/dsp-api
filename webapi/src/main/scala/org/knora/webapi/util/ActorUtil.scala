@@ -117,12 +117,29 @@ object ActorUtil {
     }
 
     /**
+      * Converts a [[Map]] containing futures of values into a future containing a [[Map]] of values.
+      *
+      * @param mapToSequence the [[Map]] to be converted.
+      * @return a future that will provide the results of the futures that were in the [[Map]].
+      */
+    def sequenceFuturesInMap[KeyT: ClassTag, ValueT](mapToSequence: Map[KeyT, Future[ValueT]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, ValueT]] = {
+        Future.sequence {
+            mapToSequence.map {
+                case (key: KeyT, futureValue: Future[ValueT]) =>
+                    futureValue.map {
+                        value => key -> value
+                    }
+            }
+        }.map(_.toMap)
+    }
+
+    /**
       * Converts a [[Map]] containing futures of sequences into a future containing a [[Map]] containing sequences.
       *
       * @param mapToSequence the [[Map]] to be converted.
       * @return a future that will provide the results of the futures that were in the [[Map]].
       */
-    def sequenceFuturesInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Future[Seq[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
+    def sequenceFutureSeqsInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Future[Seq[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
         // See http://stackoverflow.com/a/17479415
         Future.sequence {
             mapToSequence.map {
@@ -145,7 +162,7 @@ object ActorUtil {
             case (key: KeyT, seqFuture: Seq[Future[ElemT]]) => key -> Future.sequence(seqFuture)
         }
 
-        sequenceFuturesInMap(transformedMap)
+        sequenceFutureSeqsInMap(transformedMap)
     }
 
     /**

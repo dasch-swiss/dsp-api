@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -36,7 +37,7 @@
   triplestore: String,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  currentTime: String,
+  currentTime: Instant,
   maybeComment: Option[String])
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

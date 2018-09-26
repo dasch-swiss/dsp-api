@@ -272,19 +272,23 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   *
-  * @param resourceIri    the IRI of the resource in which values are to be created.
-  * @param projectIri     the project the values belong to.
-  * @param values         the values to be added.
-  * @param currentTime    an xsd:dateTimeStamp that will be attached to the values.
-  * @param requestingUser the user that is creating the values.
-  * @param apiRequestID   the API request ID.
+  * @param resourceIri      the IRI of the resource in which values are to be created.
+  * @param resourceClassIri the IRI of the resource class.
+  * @param projectIri       the project the values belong to.
+  * @param propertyValues   a map of property IRIs to the values to be added for each property.
+  * @param currentTime      an xsd:dateTimeStamp that will be attached to the values.
+  * @param requestingUser   the user that is creating the values.
+  * @param apiRequestID     the API request ID.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
+                                                         resourceClassIri: SmartIri,
                                                          projectIri: IRI,
-                                                         values: Map[SmartIri, Seq[CreateValueV2]],
-                                                         currentTime: String,
+                                                         propertyValues: Map[SmartIri, Seq[CreateValueV2]],
+                                                         currentTime: Instant,
                                                          requestingUser: UserADM,
-                                                         apiRequestID: UUID) extends ValuesResponderRequestV2
+                                                         apiRequestID: UUID) extends ValuesResponderRequestV2 {
+    lazy val values: Iterable[CreateValueV2] = propertyValues.values.flatten
+}
 
 /**
   * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be

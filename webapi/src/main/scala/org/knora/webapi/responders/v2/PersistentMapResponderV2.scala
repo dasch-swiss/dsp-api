@@ -100,7 +100,7 @@ class PersistentMapResponderV2 extends Responder {
     private def putPersistentMapEntryV2(request: PersistentMapEntryPutRequestV2): Future[PersistentMapEntryPutResponseV2] = {
         def makeTaskFuture(): Future[PersistentMapEntryPutResponseV2] = {
             // An xsd:dateTimeStamp for the map entry, and for the map if it doesn't exist yet.
-            val currentTime = Instant.now.toString
+            val currentTime = Instant.now
 
             val updateFuture = for {
                 // Create the persistent map if it doesn't exist already.
