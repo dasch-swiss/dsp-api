@@ -321,7 +321,9 @@ case class CreateResourceV2(resourceClassIri: SmartIri,
                             label: String,
                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                             projectIri: IRI,
-                            permissions: Option[String] = None) extends ResourceV2
+                            permissions: Option[String] = None) extends ResourceV2 {
+    lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
+}
 
 /**
   * Represents a request to create a resource.

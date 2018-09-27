@@ -30,7 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateValueInNewResourceV2, ReadResourceV2}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
@@ -272,11 +272,13 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
   * - Any custom permissions in values have been validated and correctly formatted.
+  * - The target resources of link values and standoff links exist, if they are expected to exist.
+  * - The list nodes referred to by list values exist.
   *
   * @param resourceIri                   the IRI of the resource in which values are to be created.
   * @param resourceClassIri              the IRI of the resource class.
   * @param projectIri                    the project the values belong to.
-  * @param propertyValues                a map of property IRIs to the values to be added for each property.
+  * @param values                        a map of property IRIs to the values to be added for each property.
   * @param defaultPermissionsPerProperty a map of property IRIs to default permissions for each property (to be
   *                                      used if a value doesn't supply custom permissions).
   * @param currentTime                   an xsd:dateTimeStamp that will be attached to the values.
@@ -286,12 +288,12 @@ case class DeleteValueRequestV2(resourceIri: IRI,
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
                                                          resourceClassIri: SmartIri,
                                                          projectIri: IRI,
-                                                         propertyValues: Map[SmartIri, Seq[CreateValueWithResourceV2]],
+                                                         values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                                          defaultPermissionsPerProperty: Map[SmartIri, String],
                                                          currentTime: Instant,
                                                          requestingUser: UserADM,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV2 {
-    lazy val values: Iterable[CreateValueWithResourceV2] = propertyValues.values.flatten
+    lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 }
 
 /**
@@ -436,15 +438,6 @@ case class CreateValueV2(resourceIri: IRI,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
                          permissions: Option[String] = None) extends IOValueV2
-
-/**
-  * Represents a Knora value to be created as part of a new resource.
-  *
-  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
-  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
-  */
-case class CreateValueWithResourceV2(valueContent: ValueContentV2,
-                                     permissions: Option[String] = None) extends IOValueV2
 
 /**
   * A new version of a value of a Knora property to be created.

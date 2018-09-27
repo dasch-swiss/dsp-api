@@ -19,29 +19,38 @@
 
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
+
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
+import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util._
 import org.knora.webapi.util.search.ConstructQuery
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.util.{ConstructResponseUtilV2, FileUtil, SmartIri}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class ResourcesResponderV2 extends ResponderWithStandoffV2 {
+    // Creates IRIs for new Knora value objects.
+    val knoraIdUtil = new KnoraIdUtil
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
@@ -49,60 +58,227 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
-        // case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
+        case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
-    /*
-    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ResourcesPreviewGetRequestV2] = {
-        // Start futures to get the default permissions for each property used.
-        val defaultPermissionsPerPropertyFutures: Map[SmartIri, Future[String]] = createMultipleValuesRequest.propertyValues.keySet.map {
-            propertyIri =>
-                // Get the default permissions for values of this property.
-                val defaultValuePermissionsFuture: Future[String] = getDefaultValuePermissions(
-                    projectIri = createMultipleValuesRequest.projectIri,
-                    resourceClassIri = createMultipleValuesRequest.resourceClassIri,
-                    propertyIri = propertyIri,
-                    requestingUser = createMultipleValuesRequest.requestingUser
-                )
+    /**
+      * Creates a new resource.
+      *
+      * @param createResourceRequestV2 the request to create the resource.
+      * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
+      */
+    private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
-                propertyIri -> defaultValuePermissionsFuture
-        }.toMap
+        def makeTaskFuture(resourceIri: IRI, projectInfo: ProjectADM): Future[ReadResourcesSequenceV2] = {
+            for {
+                // Get ontology information about the resource class and its properties.
 
-        // Start futures to validate and reformat any permissions in the request.
-        val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[CreateValueV2]]] = createMultipleValuesRequest.propertyValues.map {
-            case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueV2]) =>
-                val validatedPermissionFutures: Seq[Future[CreateValueV2]] = valuesToCreate.map {
-                    valueToCreate =>
-                        // Does this value have custom permissions?
-                        valueToCreate.permissions match {
-                            case Some(permissionStr: String) =>
-                                // Yes. Validate and reformat them.
-                                val validatedPermissionFuture: Future[String] = PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(
+                    classIris = Set(createResourceRequestV2.createResource.resourceClassIri),
+                    requestingUser = createResourceRequestV2.requestingUser
+                )).mapTo[EntityInfoGetResponseV2]
 
-                                // Make a future in which the value has the reformatted permissions.
-                                validatedPermissionFuture.map {
-                                    validatedPermissions: String => valueToCreate.copy(permissions = Some(validatedPermissions))
-                                }
+                resourceClassInfo: ReadClassInfoV2 = resourceClassEntityInfoResponse.classInfoMap(createResourceRequestV2.createResource.resourceClassIri)
 
-                            case None =>
-                                // No. Make a future containing the value as it is.
-                                FastFuture.successful(valueToCreate)
+                propertyEntityInfoResponse: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(
+                    propertyIris = resourceClassInfo.knoraResourceProperties,
+                    requestingUser = createResourceRequestV2.requestingUser
+                )).mapTo[EntityInfoGetResponseV2]
+
+                propertyInfoMap: Map[SmartIri, ReadPropertyInfoV2] = propertyEntityInfoResponse.propertyInfoMap
+
+                // Check that the resource class has a suitable cardinality for each submitted value.
+
+                knoraPropertyCardinalities = resourceClassInfo.allCardinalities.filterKeys(resourceClassInfo.knoraResourceProperties)
+
+                _ = createResourceRequestV2.createResource.values.foreach {
+                    case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
+                        val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
+
+                        val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"Resource class <${createResourceRequestV2.createResource.resourceClassIri}> has no cardinality for property <$propertyIri>"))
+
+                        if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
+                            throw OntologyConstraintException(s"Resource class <${createResourceRequestV2.createResource.resourceClassIri}> does not allow more than one value for property <$propertyIri>")
                         }
                 }
 
-                propertyIri -> validatedPermissionFutures
+                // Check that no required values are missing.
+
+                requiredProps: Set[SmartIri] = knoraPropertyCardinalities.filter {
+                    case (_, cardinalityInfo) => cardinalityInfo.cardinality == Cardinality.MustHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveSome
+                }.keySet -- resourceClassInfo.linkProperties
+
+                submittedInternalPropertyIris: Set[SmartIri] = createResourceRequestV2.createResource.values.keySet.map(_.toOntologySchema(InternalSchema))
+
+                _ = if (!requiredProps.subsetOf(submittedInternalPropertyIris)) {
+                    val missingProps = (requiredProps -- submittedInternalPropertyIris).map(iri => s"<$iri>").mkString(", ")
+                    throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class <${createResourceRequestV2.createResource.resourceClassIri}>: $missingProps")
+                }
+
+                // TODO: Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
+                // point to it. This includes: for each link to an existing resource, check that the target resource belongs to the right
+                // class for the property.
+
+                // Check standoff link targets that should exist.
+
+                standoffLinkTargetsThatShouldExist: Set[IRI] = createResourceRequestV2.createResource.flatValues.foldLeft(Set.empty[IRI]) {
+                    case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
+                        valueToCreate.valueContent match {
+                            case textValueContentV2: TextValueContentV2 => acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
+                            case _ => acc
+                        }
+                }
+
+                _ <- checkResourceIris(standoffLinkTargetsThatShouldExist, createResourceRequestV2.requestingUser)
+
+                // Check list nodes that should exist.
+
+                listNodesThatShouldExist: Set[IRI] = createResourceRequestV2.createResource.flatValues.foldLeft(Set.empty[IRI]) {
+                    case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
+                        valueToCreate.valueContent match {
+                            case hierarchicalListValueContentV2: HierarchicalListValueContentV2 => acc + hierarchicalListValueContentV2.valueHasListNode
+                            case _ => acc
+                        }
+                }
+
+                _ <- Future.sequence(listNodesThatShouldExist.map(listNodeIri => ValueUtilV2.checkListNodeExists(listNodeIri, storeManager)).toSeq)
+
+                // Validate and reformat any permissions in the request.
+
+                maybeValidatedResourcePermissions: Option[String] <- createResourceRequestV2.createResource.permissions match {
+                    case Some(permissionStr) => PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager).map(Some(_))
+                    case None => FastFuture.successful(None)
+                }
+
+                propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = createResourceRequestV2.createResource.values.map {
+                    case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+                        val validatedPermissionFutures: Seq[Future[CreateValueInNewResourceV2]] = valuesToCreate.map {
+                            valueToCreate =>
+                                // Does this value have custom permissions?
+                                valueToCreate.permissions match {
+                                    case Some(permissionStr: String) =>
+                                        // Yes. Validate and reformat them.
+                                        val validatedPermissionFuture: Future[String] = PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+
+                                        // Make a future in which the value has the reformatted permissions.
+                                        validatedPermissionFuture.map {
+                                            validatedPermissions: String => valueToCreate.copy(permissions = Some(validatedPermissions))
+                                        }
+
+                                    case None =>
+                                        // No. Make a future containing the value as it is.
+                                        FastFuture.successful(valueToCreate)
+                                }
+                        }
+
+                        propertyIri -> validatedPermissionFutures
+                }
+
+                propertyValuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
+
+                // Get the default permissions of the resource class.
+
+                defaultResourcePermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
+                    responderManager ? DefaultObjectAccessPermissionsStringForResourceClassGetADM(
+                        projectIri = projectInfo.id,
+                        resourceClassIri = createResourceRequestV2.createResource.resourceClassIri.toString,
+                        targetUser = createResourceRequestV2.requestingUser,
+                        requestingUser = KnoraSystemInstances.Users.SystemUser
+                    )
+                }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
+
+                defaultResourcePermissions = defaultResourcePermissionsResponse.permissionLiteral
+
+                // Get the default permissions for each property used.
+
+                defaultPermissionsPerPropertyFutures: Map[SmartIri, Future[String]] = createResourceRequestV2.createResource.values.keySet.map {
+                    propertyIri =>
+                        // Get the default permissions for values of this property.
+                        val defaultValuePermissionsFuture: Future[String] = ValueUtilV2.getDefaultValuePermissions(
+                            projectIri = createResourceRequestV2.createResource.projectIri,
+                            resourceClassIri = createResourceRequestV2.createResource.resourceClassIri,
+                            propertyIri = propertyIri,
+                            requestingUser = createResourceRequestV2.requestingUser,
+                            responderManager = responderManager
+                        )
+
+                        propertyIri -> defaultValuePermissionsFuture
+                }.toMap
+
+
+                defaultPermissionsPerProperty: Map[SmartIri, String] <- ActorUtil.sequenceFuturesInMap(defaultPermissionsPerPropertyFutures)
+
+                // Everything looks OK, so we can create the resource and its values.
+
+                // Make a timestamp for the resource and its values.
+                currentTime: Instant = Instant.now
+
+                // Get the named graph that the resource should be created in.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo)
+
+                // TODO: ask the values responder for SPARQL for generating the values.
+
+                // TODO: make a SparqlTemplateResourceToCreate for the resource, and generate SPARQL for it.
+
+                // TODO: create the resource.
+
+                // TODO: verify that the resource was created correctly.
+            } yield ???
+
         }
 
         for {
-            // Get the default permissions for each property used.
-            defaultPermissionsPerProperty: Map[SmartIri, String] <- ActorUtil.sequenceFuturesInMap(defaultPermissionsPerPropertyFutures)
+            // Don't allow anonymous users to create resources.
+            _ <- Future {
+                if (createResourceRequestV2.requestingUser.isAnonymousUser) {
+                    throw ForbiddenException("Anonymous users aren't allowed to create resources")
+                } else {
+                    createResourceRequestV2.requestingUser.id
+                }
+            }
 
-            // Get the validated and reformatted value permissions from the request.
-            propertyValuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
-        } yield ???
+            // Get information about the project that the resource should be created in.
+            projectInfoResponse: ProjectGetResponseADM <- {
+                responderManager ? ProjectGetRequestADM(maybeIri = Some(createResourceRequestV2.createResource.projectIri), requestingUser = createResourceRequestV2.requestingUser)
+            }.mapTo[ProjectGetResponseADM]
+
+            projectIri = projectInfoResponse.project.id
+
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            _ = if (projectIri == OntologyConstants.KnoraBase.SystemProject || projectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+                throw BadRequestException(s"Resources cannot be created in project $projectIri")
+            }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
+            resourceClassOntologyIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.getOntologyFromEntity
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(Set(resourceClassOntologyIri), createResourceRequestV2.requestingUser)).mapTo[ReadOntologyMetadataV2]
+            ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
+
+            _ = if (projectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
+                throw BadRequestException(s"Cannot create a resource in project <$projectIri> with resource class <$projectIri>, which is defined in a non-shared ontology in another project")
+            }
+
+            // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
+            // create a new resource in the given project.
+            _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(createResourceRequestV2.createResource.resourceClassIri.toString), projectIri, None)) {
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permissions to create a resource in project <$projectIri>")
+            }
+
+            resourceIri = knoraIdUtil.makeRandomResourceIri(createResourceRequestV2.createResource.projectIri)
+
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
+            taskResult <- IriLocker.runWithIriLock(
+                createResourceRequestV2.apiRequestID,
+                resourceIri,
+                () => makeTaskFuture(resourceIri, projectInfoResponse.project)
+            )
+        } yield taskResult
+
     }
-    */
 
     /**
       * Gets the requested resources from the triplestore.
@@ -476,7 +652,21 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             )
 
         } yield tei
+    }
 
+    /**
+      * Given a set of resource IRIs, checks that they point to Knora resources.
+      * If not, throws an exception.
+      *
+      * @param targetResourceIris the IRIs to be checked.
+      * @param requestingUser     the user making the request.
+      */
+    private def checkResourceIris(targetResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+        if (targetResourceIris.isEmpty) {
+            FastFuture.successful(())
+        } else {
+            getResourcePreview(targetResourceIris.toSeq, requestingUser).map(_ => ())
+        }
     }
 }
 

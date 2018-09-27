@@ -24,22 +24,22 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateValueInNewResourceV2, ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2}
+import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
-import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, PermissionUtilADM, SmartIri}
+import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
 
@@ -155,7 +155,7 @@ class ValuesResponderV2 extends Responder {
                 // If this is a list value, check that it points to a real list node.
 
                 _ <- submittedInternalValueContent match {
-                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case listValue: HierarchicalListValueContentV2 => ValueUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
                     case _ => FastFuture.successful(())
                 }
 
@@ -196,11 +196,12 @@ class ValuesResponderV2 extends Responder {
 
                     case None =>
                         // No. Get default permissions for the new value.
-                        getDefaultValuePermissions(
+                        ValueUtilV2.getDefaultValuePermissions(
                             projectIri = resourceInfo.attachedToProject,
                             resourceClassIri = resourceInfo.resourceClassIri,
                             propertyIri = submittedInternalPropertyIri,
-                            requestingUser = createValueRequest.requestingUser
+                            requestingUser = createValueRequest.requestingUser,
+                            responderManager = responderManager
                         )
                 }
 
@@ -448,29 +449,15 @@ class ValuesResponderV2 extends Responder {
       *         about the values to be created.
       */
     private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
-        // Make a set of link target IRIs that should exist, so we can check whether they actually exist.
-        val linkTargetsThatShouldExist: Set[IRI] = createMultipleValuesRequest.values.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], valueToCreate: CreateValueWithResourceV2) =>
-                valueToCreate.valueContent match {
-                    case linkValueContentV2: LinkValueContentV2 if linkValueContentV2.referredResourceExists => acc + linkValueContentV2.referredResourceIri
-                    case textValueContentV2: TextValueContentV2 => acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
-                    case _ => acc
-                }
-        }
-
         for {
-            // Check that the targets of link values and standoff links exist if they're expected to exist (i.e. they
-            // aren't being created in the same transaction).
-            _ <- checkResourceIris(linkTargetsThatShouldExist, createMultipleValuesRequest.requestingUser)
-
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
-            sparqlForStandoffLinks: String = generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
+            sparqlForStandoffLinks: String <- Future(generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest))
 
             // Generate SPARQL for each value.
-            sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = createMultipleValuesRequest.propertyValues.map {
-                case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueWithResourceV2]) =>
+            sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = createMultipleValuesRequest.values.map {
+                case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
                     propertyIri -> valuesToCreate.zipWithIndex.map {
-                        case (valueToCreate: CreateValueWithResourceV2, valueHasOrder: Int) =>
+                        case (valueToCreate: CreateValueInNewResourceV2, valueHasOrder: Int) =>
                             generateInsertSparqlWithUnverifiedValue(
                                 resourceIri = createMultipleValuesRequest.resourceIri,
                                 propertyIri = propertyIri,
@@ -510,7 +497,7 @@ class ValuesResponderV2 extends Responder {
       */
     private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
                                                         propertyIri: SmartIri,
-                                                        valueToCreate: CreateValueWithResourceV2,
+                                                        valueToCreate: CreateValueInNewResourceV2,
                                                         valueHasOrder: Int,
                                                         defaultPermissionsPerProperty: Map[SmartIri, String],
                                                         currentTime: Instant,
@@ -592,8 +579,8 @@ class ValuesResponderV2 extends Responder {
         // that have standoff links to a particular target resource.
 
         // First, get the standoff link targets from all the text values to be created.
-        val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.values.foldLeft(Vector.empty[Set[IRI]]) {
-            case (acc: Vector[Set[IRI]], createValueV2: CreateValueWithResourceV2) =>
+        val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.flatValues.foldLeft(Vector.empty[Set[IRI]]) {
+            case (acc: Vector[Set[IRI]], createValueV2: CreateValueInNewResourceV2) =>
                 createValueV2.valueContent match {
                     case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
                     case _ => acc
@@ -761,7 +748,7 @@ class ValuesResponderV2 extends Responder {
                 // If this is a list value, check that it points to a real list node.
 
                 _ <- submittedInternalValueContent match {
-                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case listValue: HierarchicalListValueContentV2 => ValueUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
                     case _ => FastFuture.successful(())
                 }
 
@@ -1919,49 +1906,6 @@ class ValuesResponderV2 extends Responder {
                 // We didn't find the LinkValue. This shouldn't happen.
                 throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
         }
-    }
-
-    /**
-      * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
-      *
-      * @param listNodeIri the IRI of the list node.
-      */
-    def checkListNodeExists(listNodeIri: IRI): Future[Unit] = {
-        for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
-
-            checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-
-            _ = if (!checkListNodeExistsResponse.result) {
-                throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
-            }
-        } yield ()
-    }
-
-    /**
-      * Gets the default permissions for a new value.
-      *
-      * @param projectIri       the IRI of the project of the containing resource.
-      * @param resourceClassIri the IRI of the resource class.
-      * @param propertyIri      the IRI of the property that points to the value.
-      * @param requestingUser   the user that is creating the value.
-      * @return a permission string.
-      */
-    private def getDefaultValuePermissions(projectIri: IRI,
-                                           resourceClassIri: SmartIri,
-                                           propertyIri: SmartIri,
-                                           requestingUser: UserADM): Future[String] = {
-        for {
-            defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                    projectIri = projectIri,
-                    resourceClassIri = resourceClassIri.toString,
-                    propertyIri = propertyIri.toString,
-                    targetUser = requestingUser,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
-        } yield defaultObjectAccessPermissionsResponse.permissionLiteral
     }
 
     /**

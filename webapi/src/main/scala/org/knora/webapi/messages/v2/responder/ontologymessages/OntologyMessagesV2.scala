@@ -2041,12 +2041,10 @@ sealed trait ReadEntityInfoV2 {
   *                                inherited cardinalities on those properties.
   * @param standoffDataType        if this is a standoff tag class, the standoff datatype tag class (if any) that it
   *                                is a subclass of.
-  * @param knoraResourceProperties a [[Set]] of IRIs of properties that are subproperties of `knora-base:resourceProperty`.
-  * @param linkProperties          a [[Set]] of IRIs of properties of the class that point to resources.
-  * @param linkValueProperties     a [[Set]] of IRIs of properties of the class
-  *                                that point to `LinkValue` objects.
-  * @param fileValueProperties     a [[Set]] of IRIs of properties of the class
-  *                                that point to `FileValue` objects.
+  * @param knoraResourceProperties a [[Set]] of IRIs of properties in `allCardinalities` that are subproperties of `knora-base:resourceProperty`.
+  * @param linkProperties          a [[Set]] of IRIs of properties in `allCardinalities` that point to resources.
+  * @param linkValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `LinkValue` objects.
+  * @param fileValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            allBaseClasses: Set[SmartIri] = Set.empty[SmartIri],
