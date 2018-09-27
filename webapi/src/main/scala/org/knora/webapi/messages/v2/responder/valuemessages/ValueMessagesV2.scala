@@ -271,23 +271,27 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   * to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
+  * - Any custom permissions in values have been validated and correctly formatted.
   *
-  * @param resourceIri      the IRI of the resource in which values are to be created.
-  * @param resourceClassIri the IRI of the resource class.
-  * @param projectIri       the project the values belong to.
-  * @param propertyValues   a map of property IRIs to the values to be added for each property.
-  * @param currentTime      an xsd:dateTimeStamp that will be attached to the values.
-  * @param requestingUser   the user that is creating the values.
-  * @param apiRequestID     the API request ID.
+  * @param resourceIri                   the IRI of the resource in which values are to be created.
+  * @param resourceClassIri              the IRI of the resource class.
+  * @param projectIri                    the project the values belong to.
+  * @param propertyValues                a map of property IRIs to the values to be added for each property.
+  * @param defaultPermissionsPerProperty a map of property IRIs to default permissions for each property (to be
+  *                                      used if a value doesn't supply custom permissions).
+  * @param currentTime                   an xsd:dateTimeStamp that will be attached to the values.
+  * @param requestingUser                the user that is creating the values.
+  * @param apiRequestID                  the API request ID.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
                                                          resourceClassIri: SmartIri,
                                                          projectIri: IRI,
-                                                         propertyValues: Map[SmartIri, Seq[CreateValueV2]],
+                                                         propertyValues: Map[SmartIri, Seq[CreateValueWithResourceV2]],
+                                                         defaultPermissionsPerProperty: Map[SmartIri, String],
                                                          currentTime: Instant,
                                                          requestingUser: UserADM,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV2 {
-    lazy val values: Iterable[CreateValueV2] = propertyValues.values.flatten
+    lazy val values: Iterable[CreateValueWithResourceV2] = propertyValues.values.flatten
 }
 
 /**
@@ -419,7 +423,7 @@ case class ReadValueV2(valueIri: IRI,
 }
 
 /**
-  * The value of a Knora property sent to Knora to be created in an existing resource.
+  * Represents a Knora value to be created in an existing resource.
   *
   * @param resourceIri      the resource the new value should be attached to.
   * @param resourceClassIri the resource class that the client believes the resource belongs to.
@@ -432,6 +436,15 @@ case class CreateValueV2(resourceIri: IRI,
                          propertyIri: SmartIri,
                          valueContent: ValueContentV2,
                          permissions: Option[String] = None) extends IOValueV2
+
+/**
+  * Represents a Knora value to be created as part of a new resource.
+  *
+  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
+  */
+case class CreateValueWithResourceV2(valueContent: ValueContentV2,
+                                     permissions: Option[String] = None) extends IOValueV2
 
 /**
   * A new version of a value of a Knora property to be created.

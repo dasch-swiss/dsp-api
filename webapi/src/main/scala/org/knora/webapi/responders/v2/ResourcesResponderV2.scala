@@ -55,7 +55,52 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     /*
     private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ResourcesPreviewGetRequestV2] = {
+        // Start futures to get the default permissions for each property used.
+        val defaultPermissionsPerPropertyFutures: Map[SmartIri, Future[String]] = createMultipleValuesRequest.propertyValues.keySet.map {
+            propertyIri =>
+                // Get the default permissions for values of this property.
+                val defaultValuePermissionsFuture: Future[String] = getDefaultValuePermissions(
+                    projectIri = createMultipleValuesRequest.projectIri,
+                    resourceClassIri = createMultipleValuesRequest.resourceClassIri,
+                    propertyIri = propertyIri,
+                    requestingUser = createMultipleValuesRequest.requestingUser
+                )
 
+                propertyIri -> defaultValuePermissionsFuture
+        }.toMap
+
+        // Start futures to validate and reformat any permissions in the request.
+        val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[CreateValueV2]]] = createMultipleValuesRequest.propertyValues.map {
+            case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueV2]) =>
+                val validatedPermissionFutures: Seq[Future[CreateValueV2]] = valuesToCreate.map {
+                    valueToCreate =>
+                        // Does this value have custom permissions?
+                        valueToCreate.permissions match {
+                            case Some(permissionStr: String) =>
+                                // Yes. Validate and reformat them.
+                                val validatedPermissionFuture: Future[String] = PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+
+                                // Make a future in which the value has the reformatted permissions.
+                                validatedPermissionFuture.map {
+                                    validatedPermissions: String => valueToCreate.copy(permissions = Some(validatedPermissions))
+                                }
+
+                            case None =>
+                                // No. Make a future containing the value as it is.
+                                FastFuture.successful(valueToCreate)
+                        }
+                }
+
+                propertyIri -> validatedPermissionFutures
+        }
+
+        for {
+            // Get the default permissions for each property used.
+            defaultPermissionsPerProperty: Map[SmartIri, String] <- ActorUtil.sequenceFuturesInMap(defaultPermissionsPerPropertyFutures)
+
+            // Get the validated and reformatted value permissions from the request.
+            propertyValuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
+        } yield ???
     }
     */
 

@@ -448,48 +448,9 @@ class ValuesResponderV2 extends Responder {
       *         about the values to be created.
       */
     private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
-        // Start futures to get the default permissions for each property used.
-        val defaultPermissionsPerPropertyFutures: Map[SmartIri, Future[String]] = createMultipleValuesRequest.propertyValues.keySet.map {
-            propertyIri =>
-                // Get the default permissions for values of this property.
-                val defaultValuePermissionsFuture: Future[String] = getDefaultValuePermissions(
-                    projectIri = createMultipleValuesRequest.projectIri,
-                    resourceClassIri = createMultipleValuesRequest.resourceClassIri,
-                    propertyIri = propertyIri,
-                    requestingUser = createMultipleValuesRequest.requestingUser
-                )
-
-                propertyIri -> defaultValuePermissionsFuture
-        }.toMap
-
-        // Start futures to validate and reformat any permissions in the request.
-        val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[CreateValueV2]]] = createMultipleValuesRequest.propertyValues.map {
-            case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueV2]) =>
-                val validatedPermissionFutures: Seq[Future[CreateValueV2]] = valuesToCreate.map {
-                    valueToCreate =>
-                        // Does this value have custom permissions?
-                        valueToCreate.permissions match {
-                            case Some(permissionStr: String) =>
-                                // Yes. Validate and reformat them.
-                                val validatedPermissionFuture: Future[String] = PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
-
-                                // Make a future in which the value has the reformatted permissions.
-                                validatedPermissionFuture.map {
-                                    validatedPermissions: String => valueToCreate.copy(permissions = Some(validatedPermissions))
-                                }
-
-                            case None =>
-                                // No. Make a future containing the value as it is.
-                                FastFuture.successful(valueToCreate)
-                        }
-                }
-
-                propertyIri -> validatedPermissionFutures
-        }
-
         // Make a set of link target IRIs that should exist, so we can check whether they actually exist.
         val linkTargetsThatShouldExist: Set[IRI] = createMultipleValuesRequest.values.foldLeft(Set.empty[IRI]) {
-            case (acc: Set[IRI], valueToCreate: CreateValueV2) =>
+            case (acc: Set[IRI], valueToCreate: CreateValueWithResourceV2) =>
                 valueToCreate.valueContent match {
                     case linkValueContentV2: LinkValueContentV2 if linkValueContentV2.referredResourceExists => acc + linkValueContentV2.referredResourceIri
                     case textValueContentV2: TextValueContentV2 => acc ++ textValueContentV2.standoffLinkTagIriAttributes.filter(_.targetExists).map(_.value)
@@ -502,30 +463,20 @@ class ValuesResponderV2 extends Responder {
             // aren't being created in the same transaction).
             _ <- checkResourceIris(linkTargetsThatShouldExist, createMultipleValuesRequest.requestingUser)
 
-            // Get the default permissions for each property used.
-            defaultPermissionsPerProperty: Map[SmartIri, String] <- ActorUtil.sequenceFuturesInMap(defaultPermissionsPerPropertyFutures)
-
-            // Get the validated and reformatted value permissions from the request.
-            propertyValuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueV2]] <- ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
-
             // Generate SPARQL to create links and LinkValues for standoff links in text values.
             sparqlForStandoffLinks: String = generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest)
 
             // Generate SPARQL for each value.
-            sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = propertyValuesWithValidatedPermissions.map {
-                case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueV2]) =>
+            sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = createMultipleValuesRequest.propertyValues.map {
+                case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueWithResourceV2]) =>
                     propertyIri -> valuesToCreate.zipWithIndex.map {
-                        case (valueToCreate: CreateValueV2, valueHasOrder: Int) =>
-                            if (valueToCreate.propertyIri != propertyIri) {
-                                throw AssertionException(s"Wrong property IRI (expected <$propertyIri>): $valueToCreate")
-                            }
-
+                        case (valueToCreate: CreateValueWithResourceV2, valueHasOrder: Int) =>
                             generateInsertSparqlWithUnverifiedValue(
                                 resourceIri = createMultipleValuesRequest.resourceIri,
                                 propertyIri = propertyIri,
                                 valueToCreate = valueToCreate,
                                 valueHasOrder = valueHasOrder,
-                                defaultPermissionsPerProperty = defaultPermissionsPerProperty,
+                                defaultPermissionsPerProperty = createMultipleValuesRequest.defaultPermissionsPerProperty,
                                 currentTime = createMultipleValuesRequest.currentTime,
                                 requestingUser = createMultipleValuesRequest.requestingUser
                             )
@@ -559,7 +510,7 @@ class ValuesResponderV2 extends Responder {
       */
     private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
                                                         propertyIri: SmartIri,
-                                                        valueToCreate: CreateValueV2,
+                                                        valueToCreate: CreateValueWithResourceV2,
                                                         valueHasOrder: Int,
                                                         defaultPermissionsPerProperty: Map[SmartIri, String],
                                                         currentTime: Instant,
@@ -642,7 +593,7 @@ class ValuesResponderV2 extends Responder {
 
         // First, get the standoff link targets from all the text values to be created.
         val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.values.foldLeft(Vector.empty[Set[IRI]]) {
-            case (acc: Vector[Set[IRI]], createValueV2: CreateValueV2) =>
+            case (acc: Vector[Set[IRI]], createValueV2: CreateValueWithResourceV2) =>
                 createValueV2.valueContent match {
                     case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
                     case _ => acc
