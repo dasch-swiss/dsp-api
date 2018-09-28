@@ -462,7 +462,7 @@ case class UpdateValueV2(resourceIri: IRI,
   * @param newValueIri the IRI that was assigned to the new value.
   * @param value       the content of the new value.
   */
-case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2)
+case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
 /**
   * The content of the value of a Knora property.

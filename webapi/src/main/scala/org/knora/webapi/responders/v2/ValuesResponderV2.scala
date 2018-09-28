@@ -374,7 +374,8 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = value.unescape
+            value = value.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -429,7 +430,8 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-            value = linkValueContent.unescape
+            value = linkValueContent.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -552,7 +554,8 @@ class ValuesResponderV2 extends Responder {
             insertSparql = insertSparql,
             unverifiedValue = UnverifiedValueV2(
                 newValueIri = newValueIri,
-                value = valueToCreate.valueContent
+                value = valueToCreate.valueContent,
+                permissions = valueToCreate.permissions
             )
         )
     }
@@ -980,7 +983,8 @@ class ValuesResponderV2 extends Responder {
 
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = newValueVersion.unescape
+            value = newValueVersion.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -1049,7 +1053,8 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            value = newLinkValue.unescape
+            value = newLinkValue.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -1488,12 +1493,19 @@ class ValuesResponderV2 extends Responder {
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
-            resource = searchResponse.toResource(resourceIri)
+
+            resource = try {
+                searchResponse.toResource(resourceIri)
+            } catch {
+                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
+            }
 
             propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
-            _ = if (!unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent)) {
+            _ = if (!(unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
+                valueInTriplestore.permissions == unverifiedValue.permissions &&
+                valueInTriplestore.attachedToUser == requestingUser.id)) {
                 /*
                 import org.knora.webapi.util.MessageUtil
                 println("==============================")

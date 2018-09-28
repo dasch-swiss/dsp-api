@@ -52,6 +52,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
+    /**
+      * Represents a resource that is ready to be created and whose contents can be verified afterwards.
+      *
+      * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
+      *                                       the resource.
+      * @param values                         the resource's values for verification.
+      */
+    case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
+                                     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]])
+
     override def receive: Receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
@@ -79,7 +89,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
                 // Get the class IRIs of all the link targets in the request.
-
                 linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
                     internalCreateResources = Seq(internalCreateResource),
                     requestingUser = createResourceRequestV2.requestingUser
@@ -128,9 +137,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 // Make a timestamp for the resource and its values.
                 currentTime: Instant = Instant.now
 
-                // Do the remaining pre-update checks and make a SparqlTemplateResourceToCreate describing the SPARQL
+                // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
                 // for creating the resource.
-                sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate <- generateSparqlTemplateResourceToCreate(
+                resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
                     internalCreateResource = internalCreateResource,
                     linkTargetClasses = linkTargetClasses,
                     entityInfo = allEntityInfo,
@@ -148,7 +157,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 sparqlUpdate = queries.sparql.v2.txt.createNewResources(
                     dataNamedGraph = dataNamedGraph,
                     triplestore = settings.triplestoreType,
-                    resourcesToCreate = Seq(sparqlTemplateResourceToCreate),
+                    resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
                     creatorIri = createResourceRequestV2.requestingUser.id,
                     currentTime = currentTime
@@ -157,8 +166,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 // Do the update.
                 _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
-                // TODO: verify that the resource was created correctly.
-            } yield ???
+                // Verify that the resource was created correctly.
+                previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
+                    resourceReadyToCreate = resourceReadyToCreate,
+                    projectIri = createResourceRequestV2.createResource.projectADM.id,
+                    requestingUser = createResourceRequestV2.requestingUser
+                )
+            } yield previewOfCreatedResource
         }
 
         for {
@@ -221,16 +235,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
       * @param currentTime                the timestamp to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
-      * @return a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating the resource.
+      * @return a [[ResourceReadyToCreate]].
       */
-    private def generateSparqlTemplateResourceToCreate(internalCreateResource: CreateResourceV2,
-                                                       linkTargetClasses: Map[IRI, SmartIri],
-                                                       entityInfo: EntityInfoGetResponseV2,
-                                                       clientResourceIDs: Map[IRI, String],
-                                                       defaultResourcePermissions: String,
-                                                       defaultPropertyPermissions: Map[SmartIri, String],
-                                                       currentTime: Instant,
-                                                       requestingUser: UserADM): Future[SparqlTemplateResourceToCreate] = {
+    private def generateResourceReadyToCreate(internalCreateResource: CreateResourceV2,
+                                              linkTargetClasses: Map[IRI, SmartIri],
+                                              entityInfo: EntityInfoGetResponseV2,
+                                              clientResourceIDs: Map[IRI, String],
+                                              defaultResourcePermissions: String,
+                                              defaultPropertyPermissions: Map[SmartIri, String],
+                                              currentTime: Instant,
+                                              requestingUser: UserADM): Future[ResourceReadyToCreate] = {
         for {
             // Check that the resource class has a suitable cardinality for each submitted value.
 
@@ -290,12 +304,15 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     currentTime = currentTime,
                     requestingUser = requestingUser)
                 ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
-        } yield SparqlTemplateResourceToCreate(
-            resourceIri = internalCreateResource.resourceIri,
-            permissions = resourcePermissions,
-            sparqlForValues = sparqlForValuesResponse.insertSparql,
-            resourceClassIri = internalCreateResource.resourceClassIri.toString,
-            resourceLabel = internalCreateResource.label
+        } yield ResourceReadyToCreate(
+            sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
+                resourceIri = internalCreateResource.resourceIri,
+                permissions = resourcePermissions,
+                sparqlForValues = sparqlForValuesResponse.insertSparql,
+                resourceClassIri = internalCreateResource.resourceClassIri.toString,
+                resourceLabel = internalCreateResource.label
+            ),
+            values = valuesWithValidatedPermissions
         )
     }
 
@@ -550,6 +567,78 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         }
 
         ActorUtil.sequenceFuturesInMap(permissionsFutures)
+    }
+
+    /**
+      * Checks that a resource was created correctly.
+      *
+      * @param resourceReadyToCreate the resource that should have been created.
+      * @param projectIri            the IRI of the project in which the resource should have been created.
+      * @param requestingUser        the user that attempted to create the resource.
+      * @return a preview of the resource that was created.
+      */
+    private def verifyResource(resourceReadyToCreate: ResourceReadyToCreate,
+                               projectIri: IRI,
+                               requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
+        val resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri
+
+        for {
+            resourcesResponse: ReadResourcesSequenceV2 <- getResources(
+                resourceIris = Seq(resourceIri),
+                requestingUser = requestingUser
+            )
+
+            resource: ReadResourceV2 = try {
+                resourcesResponse.toResource(requestedResourceIri = resourceIri)
+            } catch {
+                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
+            }
+
+            _ = if (resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
+            }
+
+            _ = if (resource.attachedToUser != requestingUser.id) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
+            }
+
+            _ = if (resource.attachedToProject != projectIri) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
+            }
+
+            _ = if (resource.permissions != resourceReadyToCreate.sparqlTemplateResourceToCreate.permissions) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong permissions")
+            }
+
+            _ = if (resource.label != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong label")
+            }
+
+            _ = if (resource.values.keySet != resourceReadyToCreate.values.keySet) {
+                throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong properties")
+            }
+
+            _ = resource.values.foreach {
+                case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
+                    val expectedValues: Seq[GenerateSparqlForValueInNewResourceV2] = resourceReadyToCreate.values(propertyIri)
+
+                    if (expectedValues.size != savedValues.size) {
+                        throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
+                    }
+
+                    savedValues.zip(expectedValues).foreach {
+                        case (savedValue, expectedValue) =>
+                            if (!(savedValue.valueContent.wouldDuplicateCurrentVersion(expectedValue.valueContent) &&
+                                savedValue.permissions == expectedValue.permissions &&
+                                savedValue.attachedToUser == requestingUser.id)) {
+                                throw AssertionException(s"Resource <$resourceIri> was saved, but one or more of its values are not correct")
+                            }
+                    }
+            }
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = 1,
+            resources = Seq(resource.copy(values = Map.empty))
+        )
     }
 
     /**
