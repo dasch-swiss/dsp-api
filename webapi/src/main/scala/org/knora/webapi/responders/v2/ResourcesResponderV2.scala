@@ -225,7 +225,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * multiple resources are being created in a single request.
       *
       * @param internalCreateResource     the resource to be created.
-      * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resource's classes.
+      * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resources' classes.
       * @param entityInfo                 an [[EntityInfoGetResponseV2]] containing definitions of the class of the resource to
       *                                   be created, as well as the classes that all the link targets
       *                                   belong to.
