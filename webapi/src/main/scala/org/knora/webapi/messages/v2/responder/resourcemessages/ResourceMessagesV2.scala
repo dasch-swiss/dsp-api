@@ -25,10 +25,12 @@ import java.util.UUID
 
 import akka.actor.ActorSelection
 import akka.event.LoggingAdapter
+import akka.pattern._
 import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
@@ -36,7 +38,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{ActorUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -311,18 +313,42 @@ case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
 /**
   * Represents a Knora resource to be created.
   *
+  * @param projectIri       the IRI of the project in which the resource should be created.
+  * @param resourceIri      the IRI that should be given to the resource.
   * @param resourceClassIri the class the resource belongs to.
   * @param label            the resource's label.
   * @param values           the resource's values.
   * @param projectIri       the IRI of the project that the resource should belong to.
   * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
   */
-case class CreateResourceV2(resourceClassIri: SmartIri,
+case class CreateResourceV2(resourceIri: IRI,
+                            resourceClassIri: SmartIri,
                             label: String,
                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                            projectIri: IRI,
+                            projectADM: ProjectADM,
                             permissions: Option[String] = None) extends ResourceV2 {
     lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
+
+    /**
+      * Converts this [[CreateResourceV2]] to the specified ontology schema.
+      *
+      * @param targetSchema the target ontology schema.
+      * @return a copy of this [[CreateResourceV2]] in the specified ontology schema.
+      */
+    def toOntologySchema(targetSchema: OntologySchema): CreateResourceV2 = {
+        copy(
+            resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
+            values = values.map {
+                case (propertyIri, valuesToCreate) =>
+                    propertyIri -> valuesToCreate.map {
+                        valueToCreate =>
+                            valueToCreate.copy(
+                                valueContent = valueToCreate.valueContent.toOntologySchema(targetSchema)
+                            )
+                    }
+            }
+        )
+    }
 }
 
 /**
@@ -356,6 +382,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             responderManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val knoraIdUtil = new KnoraIdUtil
 
         for {
             // Get the resource class.
@@ -418,12 +445,20 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(valueFutures)
 
+            // Get information about the project that the resource should be created in.
+            projectInfoResponse: ProjectGetResponseADM <- {
+                responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri.toString), requestingUser = requestingUser)
+            }.mapTo[ProjectGetResponseADM]
+
+            // Generate a random IRI for the resource.
+            resourceIri = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode)
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
+                resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
                 label = label,
                 values = values,
-                projectIri = projectIri.toString,
+                projectADM = projectInfoResponse.project,
                 permissions = maybePermissions
             ),
             requestingUser = requestingUser,
