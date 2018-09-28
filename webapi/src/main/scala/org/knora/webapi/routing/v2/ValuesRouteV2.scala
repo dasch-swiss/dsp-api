@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -46,6 +47,7 @@ object ValuesRouteV2 extends Authenticator {
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
 
         path("v2" / "values") {
             post {
@@ -60,6 +62,7 @@ object ValuesRouteV2 extends Authenticator {
                                 apiRequestID = UUID.randomUUID,
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
+                                storeManager = storeManager,
                                 log = log
                             )
                         } yield requestMessage
@@ -86,6 +89,7 @@ object ValuesRouteV2 extends Authenticator {
                                 apiRequestID = UUID.randomUUID,
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
+                                storeManager = storeManager,
                                 log = log
                             )
                         } yield requestMessage

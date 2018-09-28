@@ -28,7 +28,6 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
@@ -71,6 +70,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
         def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
             for {
+                // Convert the resource to the internal ontology schema.
                 internalCreateResource <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
                 // Check standoff link targets and list nodes that should exist.
@@ -85,8 +85,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     requestingUser = createResourceRequestV2.requestingUser
                 )
 
-                // Get ontology information about the resource class and its properties, as well as about
-                // the classes of all resources that are link targets.
+                // Get the definitions of the resource class and its properties, as well as of the classes of all
+                // resources that are link targets.
 
                 resourceClassEntityInfoResponse: EntityInfoGetResponseV2 <- (responderManager ? EntityInfoGetRequestV2(
                     classIris = linkTargetClasses.values.toSet + internalCreateResource.resourceClassIri,
@@ -115,7 +115,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                 defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
 
-                // Get the default permissions for each property used.
+                // Get the default permissions of each property used.
 
                 defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
@@ -125,18 +125,37 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
-                // Make a SparqlTemplateResourceToCreate describing the SPARQL for creating the resource.
+                // Make a timestamp for the resource and its values.
+                currentTime: Instant = Instant.now
 
+                // Do the remaining pre-update checks and make a SparqlTemplateResourceToCreate describing the SPARQL
+                // for creating the resource.
                 sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate <- generateSparqlTemplateResourceToCreate(
-                    projectADM = createResourceRequestV2.createResource.projectADM,
+                    projectIri = createResourceRequestV2.createResource.projectADM.id,
                     internalCreateResource = internalCreateResource,
                     linkTargetClasses = linkTargetClasses,
                     entityInfo = allEntityInfo,
                     clientResourceIDs = Map.empty[IRI, String],
                     defaultResourcePermissions = defaultResourcePermissions,
                     defaultPropertyPermissions = defaultPropertyPermissions,
+                    currentTime = currentTime,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
+
+                // Get the IRI of the named graph in which the resource will be created.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
+
+                // Generate SPARQL for creating the resource.
+                sparqlUpdate = queries.sparql.v2.txt.createNewResources(
+                    dataNamedGraph = dataNamedGraph,
+                    triplestore = settings.triplestoreType,
+                    resourcesToCreate = Seq(sparqlTemplateResourceToCreate),
+                    projectIri = createResourceRequestV2.createResource.projectADM.id,
+                    creatorIri = createResourceRequestV2.requestingUser.id,
+                    currentTime = currentTime
+                ).toString()
+
+                // TODO: verify that the resource was created correctly.
             } yield ???
         }
 
@@ -186,9 +205,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource.
+      * Given a new resource to create, checks cardinalities, custom permissions, and object class constraints, and
+      * generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating the resource.
       *
-      * @param projectADM                 information about the project in which the resource should be created.
+      * @param projectIri                 the IRI of the project in which the resource will be created.
       * @param internalCreateResource     information about the resource to be created, in the internal ontology schema.
       * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resource's classes.
       * @param entityInfo                 an [[EntityInfoGetResponseV2]] containing definitions of the class of the resource to
@@ -199,16 +219,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       *                                   have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
+      * @param currentTime                the timestamp to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating the resource.
       */
-    private def generateSparqlTemplateResourceToCreate(projectADM: ProjectADM,
+    private def generateSparqlTemplateResourceToCreate(projectIri: IRI,
                                                        internalCreateResource: CreateResourceV2,
                                                        linkTargetClasses: Map[IRI, SmartIri],
                                                        entityInfo: EntityInfoGetResponseV2,
                                                        clientResourceIDs: Map[IRI, String],
                                                        defaultResourcePermissions: String,
                                                        defaultPropertyPermissions: Map[SmartIri, String],
+                                                       currentTime: Instant,
                                                        requestingUser: UserADM): Future[SparqlTemplateResourceToCreate] = {
         for {
             // Check that the resource class has a suitable cardinality for each submitted value.
@@ -253,31 +275,33 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Validate and reformat any permissions in the request.
 
-            maybeValidatedResourcePermissions: Option[String] <- internalCreateResource.permissions match {
-                case Some(permissionStr) => PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager).map(Some(_))
-                case None => FastFuture.successful(None)
+            resourcePermissions: String <- internalCreateResource.permissions match {
+                case Some(permissionStr) => PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
+                case None => FastFuture.successful(defaultResourcePermissions)
             }
 
             valuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- validateAndFormatValuePermissions(internalCreateResource.values)
 
-            internalCreateResourceWithValidatedPermissions: CreateResourceV2 = internalCreateResource.copy(
-                values = valuesWithValidatedPermissions,
-                permissions = maybeValidatedResourcePermissions
-            )
-
             // Everything looks OK.
 
-            // Make a timestamp for the resource and its values.
-            currentTime: Instant = Instant.now
-
-            // Get the named graph that the resource should be created in.
-            dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectADM)
-
-            // TODO: ask the values responder for SPARQL for generating the values.
-
-            // TODO: make a SparqlTemplateResourceToCreate for the resource, and generate SPARQL for it.
-
-        } yield ???
+            // Ask the values responder for SPARQL for generating the values.
+            sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
+                GenerateSparqlToCreateMultipleValuesRequestV2(
+                    resourceIri = internalCreateResource.resourceIri,
+                    resourceClassIri = internalCreateResource.resourceClassIri,
+                    projectIri = projectIri,
+                    values = valuesWithValidatedPermissions,
+                    defaultPropertyPermissions = defaultPropertyPermissions,
+                    currentTime = currentTime,
+                    requestingUser = requestingUser)
+                ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+        } yield SparqlTemplateResourceToCreate(
+            resourceIri = internalCreateResource.resourceIri,
+            permissions = resourcePermissions,
+            sparqlForValues = sparqlForValuesResponse.insertSparql,
+            resourceClassIri = internalCreateResource.resourceClassIri.toString,
+            resourceLabel = internalCreateResource.label
+        )
     }
 
     /**

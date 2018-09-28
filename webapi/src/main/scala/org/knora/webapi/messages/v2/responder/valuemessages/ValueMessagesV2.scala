@@ -71,6 +71,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -80,6 +81,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -170,6 +172,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -179,6 +182,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -275,24 +279,24 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   * - The target resources of link values and standoff links exist, if they are expected to exist.
   * - The list nodes referred to by list values exist.
   *
+  * A successful response will be a [[GenerateSparqlToCreateMultipleValuesResponseV2]].
+  *
   * @param resourceIri                   the IRI of the resource in which values are to be created.
   * @param resourceClassIri              the IRI of the resource class.
   * @param projectIri                    the project the values belong to.
   * @param values                        a map of property IRIs to the values to be added for each property.
-  * @param defaultPermissionsPerProperty a map of property IRIs to default permissions for each property (to be
+  * @param defaultPropertyPermissions a map of property IRIs to default permissions for each property (to be
   *                                      used if a value doesn't supply custom permissions).
   * @param currentTime                   an xsd:dateTimeStamp that will be attached to the values.
   * @param requestingUser                the user that is creating the values.
-  * @param apiRequestID                  the API request ID.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
                                                          resourceClassIri: SmartIri,
                                                          projectIri: IRI,
                                                          values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                                         defaultPermissionsPerProperty: Map[SmartIri, String],
+                                                         defaultPropertyPermissions: Map[SmartIri, String],
                                                          currentTime: Instant,
-                                                         requestingUser: UserADM,
-                                                         apiRequestID: UUID) extends ValuesResponderRequestV2 {
+                                                         requestingUser: UserADM) extends ValuesResponderRequestV2 {
     lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 }
 

@@ -463,7 +463,7 @@ class ValuesResponderV2 extends Responder {
                                 propertyIri = propertyIri,
                                 valueToCreate = valueToCreate,
                                 valueHasOrder = valueHasOrder,
-                                defaultPermissionsPerProperty = createMultipleValuesRequest.defaultPermissionsPerProperty,
+                                defaultPermissionsPerProperty = createMultipleValuesRequest.defaultPropertyPermissions,
                                 currentTime = createMultipleValuesRequest.currentTime,
                                 requestingUser = createMultipleValuesRequest.requestingUser
                             )

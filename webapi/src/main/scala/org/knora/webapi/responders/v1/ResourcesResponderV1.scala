@@ -1436,7 +1436,7 @@ class ResourcesResponderV1 extends Responder {
                         }
 
                         // generate sparql for every resource
-                        generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+                        generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                             projectIri = projectIri,
                             resourceIri = resourceIri,
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
@@ -1452,7 +1452,7 @@ class ResourcesResponderV1 extends Responder {
                     } yield SparqlTemplateResourceToCreate(
                         resourceIri = resourceIri,
                         permissions = defaultObjectAccessPermissions,
-                        generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                        sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
                         resourceLabel = resourceCreateRequest.label
                     )
@@ -1842,7 +1842,7 @@ class ResourcesResponderV1 extends Responder {
             // Make a timestamp for the resource and its values.
             currentTime: String = Instant.now.toString
 
-            generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
@@ -1858,7 +1858,7 @@ class ResourcesResponderV1 extends Responder {
             resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
                 resourceIri = resourceIri,
                 permissions = defaultResourceClassAccessPermissions,
-                generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                 resourceClassIri = resourceClassIri,
                 resourceLabel = label)
             )

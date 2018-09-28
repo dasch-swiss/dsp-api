@@ -371,6 +371,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -380,6 +381,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val knoraIdUtil = new KnoraIdUtil
@@ -446,12 +448,13 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(valueFutures)
 
             // Get information about the project that the resource should be created in.
-            projectInfoResponse: ProjectGetResponseADM <- {
-                responderManager ? ProjectGetRequestADM(maybeIri = Some(projectIri.toString), requestingUser = requestingUser)
-            }.mapTo[ProjectGetResponseADM]
+            projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                maybeIri = Some(projectIri.toString),
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
 
             // Generate a random IRI for the resource.
-            resourceIri = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode)
+            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager)
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = resourceIri,
