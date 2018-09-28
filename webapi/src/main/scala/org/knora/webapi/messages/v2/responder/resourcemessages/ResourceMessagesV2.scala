@@ -35,6 +35,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.v2.SearchResponderV2Constants
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
@@ -313,12 +314,11 @@ case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
 /**
   * Represents a Knora resource to be created.
   *
-  * @param projectIri       the IRI of the project in which the resource should be created.
   * @param resourceIri      the IRI that should be given to the resource.
   * @param resourceClassIri the class the resource belongs to.
   * @param label            the resource's label.
   * @param values           the resource's values.
-  * @param projectIri       the IRI of the project that the resource should belong to.
+  * @param projectADM       the project that the resource should belong to.
   * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
   */
 case class CreateResourceV2(resourceIri: IRI,
@@ -361,7 +361,6 @@ case class CreateResourceV2(resourceIri: IRI,
 case class CreateResourceRequestV2(createResource: CreateResourceV2,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV2
-
 
 object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResourceRequestV2] {
     /**
@@ -454,7 +453,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             )).mapTo[ProjectGetResponseADM]
 
             // Generate a random IRI for the resource.
-            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager)
+            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
         } yield CreateResourceRequestV2(
             createResource = CreateResourceV2(
                 resourceIri = resourceIri,
@@ -535,5 +534,31 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    }
+
+
+    /**
+      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
+      * is not present, or if it's `ForbiddenResource`, throws an exception.
+      *
+      * @param requestedResourceIri the IRI of the expected resource.
+      * @return the resource.
+      */
+    def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
+        if (numberOfResources == 0) {
+            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+        }
+
+        if (numberOfResources > 1) {
+            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+        }
+
+        val resourceInfo = resources.head
+
+        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
+            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
+        }
+
+        resourceInfo
     }
 }

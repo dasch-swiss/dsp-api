@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateValueInNewResourceV2, ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
@@ -455,15 +455,14 @@ class ValuesResponderV2 extends Responder {
 
             // Generate SPARQL for each value.
             sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = createMultipleValuesRequest.values.map {
-                case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+                case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
                     propertyIri -> valuesToCreate.zipWithIndex.map {
-                        case (valueToCreate: CreateValueInNewResourceV2, valueHasOrder: Int) =>
+                        case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
                             generateInsertSparqlWithUnverifiedValue(
                                 resourceIri = createMultipleValuesRequest.resourceIri,
                                 propertyIri = propertyIri,
                                 valueToCreate = valueToCreate,
                                 valueHasOrder = valueHasOrder,
-                                defaultPermissionsPerProperty = createMultipleValuesRequest.defaultPropertyPermissions,
                                 currentTime = createMultipleValuesRequest.currentTime,
                                 requestingUser = createMultipleValuesRequest.requestingUser
                             )
@@ -486,31 +485,22 @@ class ValuesResponderV2 extends Responder {
     /**
       * Generates SPARQL to create one of multiple values in a new resource.
       *
-      * @param resourceIri                   the IRI of the resource.
-      * @param propertyIri                   the IRI of the property that will point to the value.
-      * @param valueToCreate                 the value to be created.
-      * @param valueHasOrder                 the value's `knora-base:valueHasOrder`.
-      * @param defaultPermissionsPerProperty a map of property IRIs to default permissions for each property.
-      * @param currentTime                   the timestamp to be used as the value creation time.
-      * @param requestingUser                the user making the request.
+      * @param resourceIri    the IRI of the resource.
+      * @param propertyIri    the IRI of the property that will point to the value.
+      * @param valueToCreate  the value to be created.
+      * @param valueHasOrder  the value's `knora-base:valueHasOrder`.
+      * @param currentTime    the timestamp to be used as the value creation time.
+      * @param requestingUser the user making the request.
       * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
       */
     private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
                                                         propertyIri: SmartIri,
-                                                        valueToCreate: CreateValueInNewResourceV2,
+                                                        valueToCreate: GenerateSparqlForValueInNewResourceV2,
                                                         valueHasOrder: Int,
-                                                        defaultPermissionsPerProperty: Map[SmartIri, String],
                                                         currentTime: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
         // Make an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
-
-        // If the request supplied permissions for the new value, use those. Otherwise, use the default
-        // permissions.
-        val valuePermissions: String = valueToCreate.permissions match {
-            case Some(permissionStr) => permissionStr
-            case None => defaultPermissionsPerProperty(propertyIri)
-        }
 
         // Generate the SPARQL.
         val insertSparql: String = valueToCreate.valueContent match {
@@ -531,7 +521,7 @@ class ValuesResponderV2 extends Responder {
                     currentReferenceCount = 0,
                     newReferenceCount = 1,
                     newLinkValueCreator = requestingUser.id,
-                    newLinkValuePermissions = valuePermissions
+                    newLinkValuePermissions = valueToCreate.permissions
                 )
 
                 // Generate SPARQL for the link.
@@ -552,7 +542,7 @@ class ValuesResponderV2 extends Responder {
                     newValueIri = newValueIri,
                     linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                     valueCreator = requestingUser.id,
-                    valuePermissions = valuePermissions,
+                    valuePermissions = valueToCreate.permissions,
                     currentTime = currentTime,
                     maybeValueHasOrder = Some(valueHasOrder)
                 ).toString()
@@ -580,7 +570,7 @@ class ValuesResponderV2 extends Responder {
 
         // First, get the standoff link targets from all the text values to be created.
         val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.flatValues.foldLeft(Vector.empty[Set[IRI]]) {
-            case (acc: Vector[Set[IRI]], createValueV2: CreateValueInNewResourceV2) =>
+            case (acc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
                 createValueV2.valueContent match {
                     case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
                     case _ => acc
@@ -1467,14 +1457,7 @@ class ValuesResponderV2 extends Responder {
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-            // Get the resource from the response.
-            resource = resourcesSequenceToResource(
-                requestedResourceIri = resourceIri,
-                readResourcesSequence = searchResponse,
-                requestingUser = requestingUser
-            )
-        } yield resource
+        } yield searchResponse.toResource(resourceIri)
     }
 
     /*
@@ -1505,12 +1488,7 @@ class ValuesResponderV2 extends Responder {
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-            resource = resourcesSequenceToResource(
-                requestedResourceIri = resourceIri,
-                readResourcesSequence = searchResponse,
-                requestingUser = requestingUser
-            )
+            resource = searchResponse.toResource(resourceIri)
 
             propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
@@ -1605,12 +1583,7 @@ class ValuesResponderV2 extends Responder {
             resourcePreviewResponse <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
 
             // If we get a resource, we know the user has permission to view it.
-
-            resource: ReadResourceV2 = resourcesSequenceToResource(
-                requestedResourceIri = linkValueContent.referredResourceIri,
-                readResourcesSequence = resourcePreviewResponse,
-                requestingUser = requestingUser
-            )
+            resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
             // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
 
@@ -1702,33 +1675,6 @@ class ValuesResponderV2 extends Responder {
 
             }
         } yield result
-    }
-
-    /**
-      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
-      * is not present, or if it's `ForbiddenResource`, throws an exception.
-      *
-      * @param requestedResourceIri  the IRI of the expected resource.
-      * @param readResourcesSequence a [[ReadResourcesSequenceV2]] that should contain the resource.
-      * @param requestingUser        the user making the request.
-      * @return the resource.
-      */
-    private def resourcesSequenceToResource(requestedResourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
-        if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
-        }
-
-        if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
-        }
-
-        val resourceInfo = readResourcesSequence.resources.head
-
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
-            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
-        }
-
-        resourceInfo
     }
 
     /**

@@ -23,6 +23,7 @@ import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
 import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -67,7 +68,8 @@ class KnoraIdUtil {
       * @param storeManager a reference to the Knora store manager actor.
       */
     def makeUnusedIri(iriFun: => IRI,
-                      storeManager: ActorSelection)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
+                      storeManager: ActorSelection,
+                      log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
         def makeUnusedIriRec(attempts: Int): Future[IRI] = {
             val newIri = iriFun
 
@@ -78,6 +80,7 @@ class KnoraIdUtil {
                 result <- if (!response.result) {
                     FastFuture.successful(newIri)
                 } else if (attempts > 1) {
+                    log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
                     makeUnusedIriRec(attempts - 1)
                 } else {
                     throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")

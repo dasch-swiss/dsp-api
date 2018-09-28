@@ -30,7 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateValueInNewResourceV2, ReadResourceV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
@@ -281,24 +281,20 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   *
   * A successful response will be a [[GenerateSparqlToCreateMultipleValuesResponseV2]].
   *
-  * @param resourceIri                   the IRI of the resource in which values are to be created.
-  * @param resourceClassIri              the IRI of the resource class.
-  * @param projectIri                    the project the values belong to.
-  * @param values                        a map of property IRIs to the values to be added for each property.
-  * @param defaultPropertyPermissions a map of property IRIs to default permissions for each property (to be
-  *                                      used if a value doesn't supply custom permissions).
-  * @param currentTime                   an xsd:dateTimeStamp that will be attached to the values.
-  * @param requestingUser                the user that is creating the values.
+  * @param resourceIri    the IRI of the resource in which values are to be created.
+  * @param values         a map of property IRIs to the values to be added for each property.
+  * @param currentTime    an xsd:dateTimeStamp that will be attached to the values.
+  * @param requestingUser the user that is creating the values.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
-                                                         resourceClassIri: SmartIri,
-                                                         projectIri: IRI,
-                                                         values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                                         defaultPropertyPermissions: Map[SmartIri, String],
+                                                         values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
                                                          currentTime: Instant,
                                                          requestingUser: UserADM) extends ValuesResponderRequestV2 {
-    lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
+    lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
 }
+
+case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
+                                                 permissions: String) extends IOValueV2
 
 /**
   * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be

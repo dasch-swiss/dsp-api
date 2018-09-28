@@ -29,7 +29,7 @@ import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -131,7 +131,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 // Do the remaining pre-update checks and make a SparqlTemplateResourceToCreate describing the SPARQL
                 // for creating the resource.
                 sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate <- generateSparqlTemplateResourceToCreate(
-                    projectIri = createResourceRequestV2.createResource.projectADM.id,
                     internalCreateResource = internalCreateResource,
                     linkTargetClasses = linkTargetClasses,
                     entityInfo = allEntityInfo,
@@ -154,6 +153,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     creatorIri = createResourceRequestV2.requestingUser.id,
                     currentTime = currentTime
                 ).toString()
+
+                // Do the update.
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
                 // TODO: verify that the resource was created correctly.
             } yield ???
@@ -201,30 +203,27 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 () => makeTaskFuture
             )
         } yield taskResult
-
     }
 
     /**
-      * Given a new resource to create, checks cardinalities, custom permissions, and object class constraints, and
-      * generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating the resource.
+      * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
+      * This method does pre-update checks that have to be done for each new resource individually, even when
+      * multiple resources are being created in a single request.
       *
-      * @param projectIri                 the IRI of the project in which the resource will be created.
-      * @param internalCreateResource     information about the resource to be created, in the internal ontology schema.
+      * @param internalCreateResource     the resource to be created.
       * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resource's classes.
       * @param entityInfo                 an [[EntityInfoGetResponseV2]] containing definitions of the class of the resource to
       *                                   be created, as well as the classes that all the link targets
       *                                   belong to.
       * @param clientResourceIDs          a map of IRIs of resources to be created to client IDs for the same resources, if any.
-      * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not
-      *                                   have custom permissions.
+      * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
       * @param currentTime                the timestamp to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating the resource.
       */
-    private def generateSparqlTemplateResourceToCreate(projectIri: IRI,
-                                                       internalCreateResource: CreateResourceV2,
+    private def generateSparqlTemplateResourceToCreate(internalCreateResource: CreateResourceV2,
                                                        linkTargetClasses: Map[IRI, SmartIri],
                                                        entityInfo: EntityInfoGetResponseV2,
                                                        clientResourceIDs: Map[IRI, String],
@@ -237,7 +236,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             resourceClassInfo <- Future(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
 
-            knoraPropertyCardinalities = resourceClassInfo.allCardinalities.filterKeys(resourceClassInfo.knoraResourceProperties)
+            knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] = resourceClassInfo.allCardinalities.filterKeys(resourceClassInfo.knoraResourceProperties)
 
             _ = internalCreateResource.values.foreach {
                 case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
@@ -273,25 +272,21 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 clientResourceIDs = clientResourceIDs
             )
 
-            // Validate and reformat any permissions in the request.
+            // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
+            // permissions are not provided.
 
             resourcePermissions: String <- internalCreateResource.permissions match {
                 case Some(permissionStr) => PermissionUtilADM.validatePermissions(permissionLiteral = permissionStr, responderManager = responderManager)
                 case None => FastFuture.successful(defaultResourcePermissions)
             }
 
-            valuesWithValidatedPermissions: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- validateAndFormatValuePermissions(internalCreateResource.values)
-
-            // Everything looks OK.
+            valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- validateAndFormatValuePermissions(internalCreateResource.values, defaultPropertyPermissions)
 
             // Ask the values responder for SPARQL for generating the values.
             sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
                 GenerateSparqlToCreateMultipleValuesRequestV2(
                     resourceIri = internalCreateResource.resourceIri,
-                    resourceClassIri = internalCreateResource.resourceClassIri,
-                    projectIri = projectIri,
                     values = valuesWithValidatedPermissions,
-                    defaultPropertyPermissions = defaultPropertyPermissions,
                     currentTime = currentTime,
                     requestingUser = requestingUser)
                 ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
@@ -460,15 +455,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
     /**
       * Given a map of property IRIs to values to be created in a new resource, validates and reformats any custom
-      * permissions in the values.
+      * permissions in the values, and sets all value permissions to defaults if custom permissions are not provided.
       *
-      * @param values the values whose permissions are to be validated.
-      * @return a copy of the input map, with permissions validated and reformatted.
+      * @param values                     the values whose permissions are to be validated.
+      * @param defaultPropertyPermissions a map of property IRIs to default permissions.
+      * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
+      *         all permissions have been validated and defined.
       */
-    private def validateAndFormatValuePermissions(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]]): Future[Map[SmartIri, Seq[CreateValueInNewResourceV2]]] = {
-        val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = values.map {
+    private def validateAndFormatValuePermissions(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                                                  defaultPropertyPermissions: Map[SmartIri, String]): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
+        val propertyValuesWithValidatedPermissionsFutures: Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
             case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-                val validatedPermissionFutures: Seq[Future[CreateValueInNewResourceV2]] = valuesToCreate.map {
+                val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
                     valueToCreate =>
                         // Does this value have custom permissions?
                         valueToCreate.permissions match {
@@ -478,12 +476,21 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                                 // Make a future in which the value has the reformatted permissions.
                                 validatedPermissionFuture.map {
-                                    validatedPermissions: String => valueToCreate.copy(permissions = Some(validatedPermissions))
+                                    validatedPermissions: String =>
+                                        GenerateSparqlForValueInNewResourceV2(
+                                            valueContent = valueToCreate.valueContent,
+                                            permissions = validatedPermissions
+                                        )
                                 }
 
                             case None =>
-                                // No. Make a future containing the value as it is.
-                                FastFuture.successful(valueToCreate)
+                                // No. Use the default permissions.
+                                FastFuture.successful {
+                                    GenerateSparqlForValueInNewResourceV2(
+                                        valueContent = valueToCreate.valueContent,
+                                        permissions = defaultPropertyPermissions(propertyIri)
+                                    )
+                                }
                         }
                 }
 
