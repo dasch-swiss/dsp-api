@@ -106,21 +106,6 @@
        salsah-gui:guiAttribute "size=80" ,
                                "maxlength=255" .
 
-:hasTextArea rdf:type owl:ObjectProperty ;
-
-       rdfs:subPropertyOf knora-base:hasValue ;
-
-       rdfs:label "Text Area"@de ,
-                  "Texte Area"@fr ,
-                  "Testo Area"@it ,
-                  "Text Area"@en ;
-
-       knora-base:subjectClassConstraint :Thing ;
-
-       knora-base:objectClassConstraint knora-base:TextValue ;
-
-       salsah-gui:guiElement salsah-gui:Textarea .
-
 
 :hasRichtext rdf:type owl:ObjectProperty ;
 
@@ -472,12 +457,6 @@
                          owl:onProperty :hasText ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                      ] ,
-                      [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasTextArea ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "14"^^xsd:nonNegativeInteger
                       ] ,
                       [
                          rdf:type owl:Restriction ;
