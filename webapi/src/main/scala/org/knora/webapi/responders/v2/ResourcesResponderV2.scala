@@ -286,6 +286,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 clientResourceIDs = clientResourceIDs
             )
 
+            // TODO: Check that the submitted values are not redundant.
+
             // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
             // permissions are not provided.
 

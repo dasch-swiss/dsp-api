@@ -275,6 +275,7 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   * to point to it.
   * - The resource class has a suitable cardinality for each submitted value.
   * - All required values are provided.
+  * - Redundant values are not submitted.
   * - Any custom permissions in values have been validated and correctly formatted.
   * - The target resources of link values and standoff links exist, if they are expected to exist.
   * - The list nodes referred to by list values exist.

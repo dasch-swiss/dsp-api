@@ -530,5 +530,27 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = anythingUserProfile
             )
         }
+
+        // TODO:
+
+        // Don't create a resource with missing required values.
+
+        // Don't create a resource with too many values for the cardinality of a property.
+
+        // Don't create a resource with redundant values.
+
+        // Don't create a resource if the user doesn't have permission to create resources in the project.
+
+        // Don't create a resource with a link to a nonexistent other resource.
+
+        // Don't create a resource with a standoff link to a nonexistent other resource.
+
+        // Don't create a resource with a list value referring to a nonexistent list node.
+
+        // Don't create a resource with a value that's the wrong type for the property.
+
+        // Don't create a resource with a link to a resource of the wrong class for the link property.
+
+        // Don't create a resource with invalid custom permissions.
     }
 }
