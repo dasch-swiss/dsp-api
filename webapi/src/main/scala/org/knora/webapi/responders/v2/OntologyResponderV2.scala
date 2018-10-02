@@ -1429,13 +1429,22 @@ class OntologyResponderV2 extends Responder {
             ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
                 cacheData.ontologies.values.map(_.ontologyMetadata).toSet
             } else {
-                val missingOntologies = ontologyIris -- cacheData.ontologies.keySet
+                val ontologyIrisForCache = ontologyIris.map {
+                    ontologyIri =>
+                        if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                            ontologyIri
+                        } else {
+                            ontologyIri.toOntologySchema(InternalSchema)
+                        }
+                }
+
+                val missingOntologies = ontologyIrisForCache -- cacheData.ontologies.keySet
 
                 if (missingOntologies.nonEmpty) {
                     throw BadRequestException(s"One or more requested ontologies were not found: ${missingOntologies.mkString(", ")}")
                 }
 
-                cacheData.ontologies.filterKeys(ontologyIris).values.map {
+                cacheData.ontologies.filterKeys(ontologyIrisForCache).values.map {
                     ontology => ontology.ontologyMetadata
                 }.toSet
             }
@@ -1467,7 +1476,14 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
+
+            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                ontologyIri
+            } else {
+                ontologyIri.toOntologySchema(InternalSchema)
+            }
+
+        } yield cacheData.ontologies(ontologyIriForCache).copy(
             userLang = userLang
         )
     }
@@ -1490,7 +1506,13 @@ class OntologyResponderV2 extends Responder {
             }
 
             classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
-            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+
+            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                ontologyIri
+            } else {
+                ontologyIri.toOntologySchema(InternalSchema)
+            }
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1501,7 +1523,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(ontologyIriForCache).ontologyMetadata,
             classes = classInfoResponse.classInfoMap,
             userLang = userLang
         )
@@ -1525,7 +1547,13 @@ class OntologyResponderV2 extends Responder {
             }
 
             propertyInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
-            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+
+            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
+                ontologyIri
+            } else {
+                ontologyIri.toOntologySchema(InternalSchema)
+            }
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1536,7 +1564,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(ontologyIriForCache).ontologyMetadata,
             properties = propertyInfoResponse.propertyInfoMap,
             userLang = userLang
         )

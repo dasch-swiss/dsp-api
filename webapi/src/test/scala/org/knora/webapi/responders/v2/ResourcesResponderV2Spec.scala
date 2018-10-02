@@ -19,18 +19,16 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.Props
+import java.util.UUID
+
 import akka.testkit.{ImplicitSender, TestActorRef}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{CoreSpec, KnoraSystemInstances, LiveActorMaker, SharedTestDataADM}
+import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -46,18 +44,38 @@ object ResourcesResponderV2Spec {
   * Tests [[ResourcesResponderV2]].
   */
 class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
+
     import ResourcesResponderV2Spec._
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV2]
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
+    private val knoraIdUtil = new KnoraIdUtil
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
+
+    private def resourcesSequenceToResource(requestedresourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
+        if (readResourcesSequence.numberOfResources == 0) {
+            throw AssertionException(s"Expected one resource, <$requestedresourceIri>, but no resources were returned")
+        }
+
+        if (readResourcesSequence.numberOfResources > 1) {
+            throw AssertionException(s"More than one resource returned with IRI <$requestedresourceIri>")
+        }
+
+        val resourceInfo = readResourcesSequence.resources.head
+
+        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) {
+            throw ForbiddenException(s"User ${requestingUser.email} does not have permission to view resource <${resourceInfo.resourceIri}>")
+        }
+
+        resourceInfo.toOntologySchema(ApiV2WithValueObjects)
+    }
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
@@ -175,6 +193,113 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     xmlDiff.hasDifferences should be(false)
             }
 
+        }
+
+        "create a resource with no values" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+            val label = "test thing"
+            val expectedPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = CreateResourceV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    label = label,
+                    values = Map.empty,
+                    projectADM = SharedTestDataADM.anythingProject
+                ),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    val resource = resourcesSequenceToResource(
+                        requestedresourceIri = resourceIri,
+                        readResourcesSequence = response,
+                        requestingUser = anythingUserProfile
+                    )
+
+                    resource.resourceIri should ===(resourceIri)
+                    resource.resourceClassIri should ===(resourceClassIri)
+                    resource.label should ===(label)
+                    resource.attachedToUser should ===(anythingUserProfile.id)
+                    resource.attachedToProject should ===(SharedTestDataADM.anythingProject.id)
+                    resource.permissions should ===(expectedPermissions)
+            }
+
+            actorUnderTest ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = anythingUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    val resource = resourcesSequenceToResource(
+                        requestedresourceIri = resourceIri,
+                        readResourcesSequence = response,
+                        requestingUser = anythingUserProfile
+                    )
+
+                    resource.resourceIri should ===(resourceIri)
+                    resource.resourceClassIri should ===(resourceClassIri)
+                    resource.label should ===(label)
+                    resource.attachedToUser should ===(anythingUserProfile.id)
+                    resource.attachedToProject should ===(SharedTestDataADM.anythingProject.id)
+                    resource.permissions should ===(expectedPermissions)
+            }
+        }
+
+        "create a resource with no values and custom permissions" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+            val resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+            val label = "test thing"
+            val permissions = "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = CreateResourceV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = resourceClassIri,
+                    label = label,
+                    values = Map.empty,
+                    projectADM = SharedTestDataADM.anythingProject,
+                    permissions = Some(permissions)
+                ),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    val resource = resourcesSequenceToResource(
+                        requestedresourceIri = resourceIri,
+                        readResourcesSequence = response,
+                        requestingUser = anythingUserProfile
+                    )
+
+                    resource.resourceIri should ===(resourceIri)
+                    resource.resourceClassIri should ===(resourceClassIri)
+                    resource.label should ===(label)
+                    resource.attachedToUser should ===(anythingUserProfile.id)
+                    resource.attachedToProject should ===(SharedTestDataADM.anythingProject.id)
+                    resource.permissions should ===(permissions)
+            }
+
+            actorUnderTest ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = anythingUserProfile)
+
+            expectMsgPF(timeout) {
+                case response: ReadResourcesSequenceV2 =>
+                    val resource = resourcesSequenceToResource(
+                        requestedresourceIri = resourceIri,
+                        readResourcesSequence = response,
+                        requestingUser = anythingUserProfile
+                    )
+
+                    resource.resourceIri should ===(resourceIri)
+                    resource.resourceClassIri should ===(resourceClassIri)
+                    resource.label should ===(label)
+                    resource.attachedToUser should ===(anythingUserProfile.id)
+                    resource.attachedToProject should ===(SharedTestDataADM.anythingProject.id)
+                    resource.permissions should ===(permissions)
+            }
         }
 
     }
