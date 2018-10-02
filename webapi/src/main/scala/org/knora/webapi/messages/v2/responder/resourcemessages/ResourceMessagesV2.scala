@@ -340,7 +340,7 @@ case class CreateResourceV2(resourceIri: IRI,
             resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
             values = values.map {
                 case (propertyIri, valuesToCreate) =>
-                    propertyIri -> valuesToCreate.map {
+                    propertyIri.toOntologySchema(targetSchema) -> valuesToCreate.map {
                         valueToCreate =>
                             valueToCreate.copy(
                                 valueContent = valueToCreate.valueContent.toOntologySchema(targetSchema)

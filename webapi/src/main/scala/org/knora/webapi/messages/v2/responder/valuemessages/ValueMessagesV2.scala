@@ -913,7 +913,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                         // xml is returned
                         Map(
                             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoffAndMapping.get.mappingIri)
+                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(standoffAndMapping.get.mappingIri)
                         )
                     }
 

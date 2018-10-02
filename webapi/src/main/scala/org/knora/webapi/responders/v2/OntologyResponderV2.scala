@@ -1429,15 +1429,7 @@ class OntologyResponderV2 extends Responder {
             ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
                 cacheData.ontologies.values.map(_.ontologyMetadata).toSet
             } else {
-                val ontologyIrisForCache = ontologyIris.map {
-                    ontologyIri =>
-                        if (ontologyIri.isKnoraBuiltInDefinitionIri) {
-                            ontologyIri
-                        } else {
-                            ontologyIri.toOntologySchema(InternalSchema)
-                        }
-                }
-
+                val ontologyIrisForCache = ontologyIris.map(_.toOntologySchema(InternalSchema))
                 val missingOntologies = ontologyIrisForCache -- cacheData.ontologies.keySet
 
                 if (missingOntologies.nonEmpty) {
@@ -1477,13 +1469,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
 
-            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
-                ontologyIri
-            } else {
-                ontologyIri.toOntologySchema(InternalSchema)
-            }
-
-        } yield cacheData.ontologies(ontologyIriForCache).copy(
+        } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
             userLang = userLang
         )
     }
@@ -1508,12 +1494,6 @@ class OntologyResponderV2 extends Responder {
             classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
             ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
 
-            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
-                ontologyIri
-            } else {
-                ontologyIri.toOntologySchema(InternalSchema)
-            }
-
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
@@ -1523,7 +1503,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(ontologyIriForCache).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
             classes = classInfoResponse.classInfoMap,
             userLang = userLang
         )
@@ -1549,12 +1529,6 @@ class OntologyResponderV2 extends Responder {
             propertyInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
             ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
 
-            ontologyIriForCache = if (ontologyIri.isKnoraBuiltInDefinitionIri) {
-                ontologyIri
-            } else {
-                ontologyIri.toOntologySchema(InternalSchema)
-            }
-
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
                 // Just the user's preferred language.
@@ -1564,7 +1538,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(ontologyIriForCache).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
             properties = propertyInfoResponse.propertyInfoMap,
             userLang = userLang
         )

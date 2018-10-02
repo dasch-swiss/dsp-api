@@ -32,8 +32,8 @@ HTTP POST to http://host/v2/values
 The body of the request is a JSON-LD document in the
 @ref:[complex API schema](introduction.md#api-schema), specifying the resource's IRI and type,
 the resource property, and the content of the value. The representation of the value
-is the same as when it is returned in a `GET` request, except that its IRI is not
-given. For example, to create an integer value:
+is the same as when it is returned in a `GET` request, except that its IRI and `knora-api:attachedToUser`
+are not given. For example, to create an integer value:
 
 ```jsonld
 {
