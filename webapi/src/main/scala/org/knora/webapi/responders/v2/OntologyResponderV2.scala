@@ -1468,7 +1468,6 @@ class OntologyResponderV2 extends Responder {
                 // All available languages.
                 None
             }
-
         } yield cacheData.ontologies(ontologyIri.toOntologySchema(InternalSchema)).copy(
             userLang = userLang
         )
@@ -1492,7 +1491,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             classInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
-            ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1503,7 +1502,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
             classes = classInfoResponse.classInfoMap,
             userLang = userLang
         )
@@ -1527,7 +1526,7 @@ class OntologyResponderV2 extends Responder {
             }
 
             propertyInfoResponse: EntityInfoGetResponseV2 <- getEntityInfoResponseV2(propertyIris = propertyIris, requestingUser = requestingUser)
-            ontologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+            internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
 
             // Are we returning data in the user's preferred language, or in all available languages?
             userLang = if (!allLanguages) {
@@ -1538,7 +1537,7 @@ class OntologyResponderV2 extends Responder {
                 None
             }
         } yield ReadOntologyV2(
-            ontologyMetadata = cacheData.ontologies(ontologyIri).ontologyMetadata,
+            ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
             properties = propertyInfoResponse.propertyInfoMap,
             userLang = userLang
         )

@@ -245,6 +245,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                               defaultPropertyPermissions: Map[SmartIri, String],
                                               currentTime: Instant,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
+        val resourceIDForErrorMsg: String = clientResourceIDs.get(internalCreateResource.resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+
         for {
             // Check that the resource class has a suitable cardinality for each submitted value.
 
@@ -256,10 +258,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
                     val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
 
-                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has no cardinality for property <$propertyIri>"))
+                    val cardinalityInfo = knoraPropertyCardinalities.getOrElse(internalPropertyIri, throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> has no cardinality for property <$propertyIri>"))
 
                     if ((cardinalityInfo.cardinality == Cardinality.MayHaveOne || cardinalityInfo.cardinality == Cardinality.MustHaveOne) && valuesForProperty.size > 1) {
-                        throw OntologyConstraintException(s"Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> does not allow more than one value for property <$propertyIri>")
+                        throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}> does not allow more than one value for property <$propertyIri>")
                     }
             }
 
@@ -273,7 +275,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             _ = if (!requiredProps.subsetOf(internalPropertyIris)) {
                 val missingProps = (requiredProps -- internalPropertyIris).map(iri => s"<${iri.toOntologySchema(ApiV2WithValueObjects)}>").mkString(", ")
-                throw OntologyConstraintException(s"Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>: $missingProps")
+                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Values were not submitted for the following property or properties, which are required by resource class <${internalCreateResource.resourceClassIri.toOntologySchema(ApiV2WithValueObjects)}>: $missingProps")
             }
 
             // Check that each submitted value is consistent with the knora-base:objectClassConstraint of the property that is supposed to
@@ -283,10 +285,17 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 values = internalCreateResource.values,
                 linkTargetClasses = linkTargetClasses,
                 entityInfo = entityInfo,
-                clientResourceIDs = clientResourceIDs
+                clientResourceIDs = clientResourceIDs,
+                resourceIDForErrorMsg = resourceIDForErrorMsg
             )
 
-            // TODO: Check that the submitted values are not redundant.
+            // Check that the submitted values do not contain duplicates.
+
+            _ = checkForDuplicateValues(
+                values = internalCreateResource.values,
+                clientResourceIDs = clientResourceIDs,
+                resourceIDForErrorMsg = resourceIDForErrorMsg
+            )
 
             // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
             // permissions are not provided.
@@ -358,26 +367,57 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
+      * Checks that values to be created in a new resource do not contain duplicates.
+      *
+      * @param values                a map of property IRIs to values to be created (in the internal schema).
+      * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
+      * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
+      *                              resource to be created, if any.
+      */
+    private def checkForDuplicateValues(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                                        clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
+                                        resourceIDForErrorMsg: IRI): Unit = {
+        values.foreach {
+            case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+                // Given the values for a property, compute all possible combinations of two of those values.
+                val valueCombinations: Iterator[Seq[CreateValueInNewResourceV2]] = valuesToCreate.combinations(2)
+
+                for (valueCombination: Seq[CreateValueInNewResourceV2] <- valueCombinations) {
+                    // valueCombination must have two elements.
+                    val firstValue: ValueContentV2 = valueCombination.head.valueContent
+                    val secondValue: ValueContentV2 = valueCombination(1).valueContent
+
+                    if (firstValue.wouldDuplicateOtherValue(secondValue)) {
+                        throw DuplicateValueException(s"${resourceIDForErrorMsg}Duplicate values for property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                    }
+                }
+        }
+    }
+
+    /**
       * Checks that values to be created in a new resource are compatible with the object class constraints
       * of the resource's properties.
       *
-      * @param values            a map of property IRIs to values to be created (in the internal schema).
-      * @param linkTargetClasses a map of resources that are link targets to the IRIs of those resource's classes.
-      * @param entityInfo        an [[EntityInfoGetResponseV2]] containing definitions of the classes that all the link targets
-      *                          belong to.
-      * @param clientResourceIDs a map of IRIs of resources to be created to client IDs for the same resources, if any.
+      * @param values                a map of property IRIs to values to be created (in the internal schema).
+      * @param linkTargetClasses     a map of resources that are link targets to the IRIs of those resource's classes.
+      * @param entityInfo            an [[EntityInfoGetResponseV2]] containing definitions of the classes that all the link targets
+      *                              belong to.
+      * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
+      * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
+      *                              resource to be created, if any.
       */
     private def checkObjectClassConstraints(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                             linkTargetClasses: Map[IRI, SmartIri],
                                             entityInfo: EntityInfoGetResponseV2,
-                                            clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String]): Unit = {
+                                            clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
+                                            resourceIDForErrorMsg: IRI): Unit = {
         values.foreach {
             case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
                 val propertyInfo: ReadPropertyInfoV2 = entityInfo.propertyInfoMap(propertyIri)
 
                 // Don't accept link properties.
                 if (propertyInfo.isLinkProp) {
-                    throw BadRequestException(s"Invalid property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
+                    throw BadRequestException(s"${resourceIDForErrorMsg}Invalid property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>. Use a link value property to submit a link.")
                 }
 
                 // Get the property's object class constraint. If this is a link value property, we want the object
@@ -401,7 +441,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                             // It's a link value.
 
                             if (!propertyInfo.isLinkValueProp) {
-                                throw OntologyConstraintException(s"Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type knora-api:LinkValue")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
                             }
 
                             // Does the resource that's the target of the link belongs to a subclass of the
@@ -419,14 +459,14 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                     s"'${clientResourceIDs(linkValueContentV2.referredResourceIri)}'"
                                 }
 
-                                throw OntologyConstraintException(s"Resource $resourceID cannot be the target of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Resource $resourceID cannot be the object of property <${propertyIriForObjectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>, because it does not belong to class <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
                             }
 
                         case otherValueContentV2: ValueContentV2 =>
                             // It's not a link value. Check that its type is equal to the property's object
                             // class constraint.
                             if (otherValueContentV2.valueType != objectClassConstraint) {
-                                throw OntologyConstraintException(s"Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type knora-api:LinkValue")
+                                throw OntologyConstraintException(s"${resourceIDForErrorMsg}Property <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}> requires a value of type <${objectClassConstraint.toOntologySchema(ApiV2WithValueObjects)}>")
                             }
                     }
                 }
@@ -672,11 +712,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             requestedButMissing: Set[IRI] = resourceIrisDistinct.toSet -- queryResultsSeparated.keySet
 
             _ = if (requestedButMissing.nonEmpty) {
-                throw NotFoundException(
-                    s"""Not all the requested resources from ${resourceIrisDistinct.mkString(", ")} could not be found:
-                        maybe you do not have the right to see all of them or some are marked as deleted.
-                        Missing: ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}""".stripMargin)
-
+                throw NotFoundException(s"One or more requested resources were not found (maybe you do not have permission to see them, or they are marked as deleted): ${requestedButMissing.map(resourceIri => s"<$resourceIri>").mkString(", ")}")
             }
         } yield queryResultsSeparated
 

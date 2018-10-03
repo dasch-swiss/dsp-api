@@ -27,10 +27,10 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.twirl.StandoffTagV2
+import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
 import org.xmlunit.builder.{DiffBuilder, Input}
@@ -45,6 +45,8 @@ object ResourcesResponderV2Spec {
 
     private val defaultAnythingResourcePermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
+
+    private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -531,26 +533,474 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
         }
 
-        // TODO:
+        "not create a resource with missing required values" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
-        // Don't create a resource with missing required values.
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                label = "invalid book",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
 
-        // Don't create a resource with too many values for the cardinality of a property.
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
 
-        // Don't create a resource with redundant values.
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
 
-        // Don't create a resource if the user doesn't have permission to create resources in the project.
+        "not create a resource with too many values for the cardinality of a property" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
-        // Don't create a resource with a link to a nonexistent other resource.
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title"
+                        )
+                    )
+                ),
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test publoc 1"
+                        )
+                    ),
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test publoc 2"
+                        )
+                    )
+                )
+            )
 
-        // Don't create a resource with a standoff link to a nonexistent other resource.
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                label = "invalid book",
+                values = inputValues,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
 
-        // Don't create a resource with a list value referring to a nonexistent list node.
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
 
-        // Don't create a resource with a value that's the wrong type for the property.
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
 
-        // Don't create a resource with a link to a resource of the wrong class for the link property.
+        "not create a resource with a property for which there is no cardinality in the resource class" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
-        // Don't create a resource with invalid custom permissions.
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title"
+                        )
+                    )
+                ),
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test pagenum"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                label = "invalid book",
+                values = inputValues,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "not create a resource with duplicate values" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title 1"
+                        )
+                    ),
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title 2"
+                        )
+                    ),
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title 1"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                label = "invalid book",
+                values = inputValues,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "not create a resource if the user doesn't have permission to create resources in the project" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "test title"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+                label = "invalid book",
+                values = inputValues,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "not create a resource with a link to a nonexistent other resource" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = LinkValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a resource with a standoff link to a nonexistent other resource" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
+                StandoffTagV2(
+                    standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
+                    startPosition = 0,
+                    endPosition = 26,
+                    uuid = UUID.randomUUID().toString,
+                    originalXMLID = None,
+                    startIndex = 0
+                ),
+                StandoffTagV2(
+                    standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
+                    dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+                    startPosition = 0,
+                    endPosition = 12,
+                    uuid = UUID.randomUUID().toString,
+                    originalXMLID = None,
+                    startIndex = 1,
+                    attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/0001/nonexistent-thing")),
+                    startParentIndex = Some(0)
+                ),
+                StandoffTagV2(
+                    standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag,
+                    startPosition = 0,
+                    endPosition = 7,
+                    uuid = UUID.randomUUID().toString,
+                    originalXMLID = None,
+                    startIndex = 2,
+                    startParentIndex = Some(1)
+                )
+            )
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "this is text with standoff",
+                            standoffAndMapping = Some(StandoffAndMapping(
+                                standoff = standoffWithInvalidLink,
+                                mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
+                                mapping = standardMapping.get
+                            ))
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a resource with a list value referring to a nonexistent list node" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = HierarchicalListValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasListNode = "http://rdfh.ch/lists/0001/nonexistent-list-node"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+            }
+        }
+
+        "not create a resource with a value that's the wrong type for the property" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = TextValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasString = "invalid text value"
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "not create a resource with a link to a resource of the wrong class for the link property" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = LinkValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            referredResourceIri = zeitglöckleinIri
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+            }
+        }
+
+        "not create a resource with invalid custom permissions" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.anythingProject,
+                permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a resource with a value that has invalid custom permissions" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = IntegerValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            valueHasInteger = 5,
+                            comment = Some("this is the number five")
+                        ),
+                        permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "invalid thing",
+                values = values,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a resource that uses a class from another non-shared project" in {
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                label = "test thing",
+                values = Map.empty,
+                projectADM = SharedTestDataADM.incunabulaProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
     }
 }
