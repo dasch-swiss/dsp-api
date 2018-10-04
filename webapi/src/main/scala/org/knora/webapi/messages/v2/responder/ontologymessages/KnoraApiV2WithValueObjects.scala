@@ -453,6 +453,28 @@ object KnoraApiV2WithValueObjects {
         )
     )
 
+    private val TextValueHasMapping: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
+        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.TextValue),
+        objectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.XMLToStandoffMapping),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Text value has mapping"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates the mapping that is used to convert a text value's markup from from XML to standoff."
+                )
+            )
+        )
+    )
+
     private val DateValueHasStartYear: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1212,7 +1234,8 @@ object KnoraApiV2WithValueObjects {
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasStandoff -> Cardinality.MayHaveMany,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasLanguage -> Cardinality.MayHaveOne,
             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> Cardinality.MayHaveOne,
-            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsHtml -> Cardinality.MayHaveOne,
+            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> Cardinality.MayHaveOne
         )
 
         private val GeomValueCardinalities = Map(
@@ -1432,6 +1455,7 @@ object KnoraApiV2WithValueObjects {
             TextValueHasLanguage,
             TextValueAsXml,
             TextValueAsHtml,
+            TextValueHasMapping,
             DateValueHasStartYear,
             DateValueHasEndYear,
             DateValueHasStartMonth,

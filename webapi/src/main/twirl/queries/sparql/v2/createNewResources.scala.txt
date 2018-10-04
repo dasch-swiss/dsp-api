@@ -17,10 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi.IRI
-@import org.knora.webapi.messages.v1.responder.valuemessages._
+@import org.knora.webapi.messages.v2.responder.valuemessages._
 @import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-
 
 @**
  * Creates new resources.
@@ -37,7 +37,7 @@
   resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
   creatorIri: IRI,
-  currentTime: String)
+  currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

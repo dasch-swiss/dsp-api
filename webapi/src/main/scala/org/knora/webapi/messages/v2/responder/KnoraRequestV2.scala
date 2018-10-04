@@ -47,6 +47,7 @@ trait KnoraJsonLDRequestReaderV2[C] {
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -56,5 +57,6 @@ trait KnoraJsonLDRequestReaderV2[C] {
                    apiRequestID: UUID,
                    requestingUser: UserADM,
                    responderManager: ActorSelection,
+                   storeManager: ActorSelection,
                    log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

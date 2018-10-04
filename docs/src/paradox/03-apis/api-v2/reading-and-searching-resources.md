@@ -90,7 +90,8 @@ HTTP GET to http://host/v2/resources/resourceIRI(/anotherResourceIri)*
 ### Get the preview of a resource by its IRI
 
 In some cases, the client may only want to request the preview of a
-resource, which just provides its `rdfs:label` and type.
+resource, which just provides its metadata (e.g. its IRI, `rdfs:label`,
+and type), without its values.
 
 This works exactly like making a conventional resource request, using
 the path segment `resourcespreview`:

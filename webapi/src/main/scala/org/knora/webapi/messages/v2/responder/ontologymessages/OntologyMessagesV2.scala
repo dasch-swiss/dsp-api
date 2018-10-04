@@ -81,6 +81,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -90,6 +91,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -350,6 +352,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -359,6 +362,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -441,6 +445,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -449,6 +454,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
+                            storeManager: ActorSelection,
                             responderManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] = {
         Future {
@@ -513,6 +519,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -522,6 +529,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -579,6 +587,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -587,7 +596,9 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection, log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] = {
+                            responderManager: ActorSelection,
+                            storeManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] = {
         Future {
             fromJsonLDSync(
                 jsonLDDocument = jsonLDDocument,
@@ -683,6 +694,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -692,6 +704,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -752,6 +765,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -761,6 +775,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -819,6 +834,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -828,6 +844,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -2041,12 +2058,10 @@ sealed trait ReadEntityInfoV2 {
   *                                inherited cardinalities on those properties.
   * @param standoffDataType        if this is a standoff tag class, the standoff datatype tag class (if any) that it
   *                                is a subclass of.
-  * @param knoraResourceProperties a [[Set]] of IRIs of properties that are subproperties of `knora-base:resourceProperty`.
-  * @param linkProperties          a [[Set]] of IRIs of properties of the class that point to resources.
-  * @param linkValueProperties     a [[Set]] of IRIs of properties of the class
-  *                                that point to `LinkValue` objects.
-  * @param fileValueProperties     a [[Set]] of IRIs of properties of the class
-  *                                that point to `FileValue` objects.
+  * @param knoraResourceProperties a [[Set]] of IRIs of properties in `allCardinalities` that are subproperties of `knora-base:resourceProperty`.
+  * @param linkProperties          a [[Set]] of IRIs of properties in `allCardinalities` that point to resources.
+  * @param linkValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `LinkValue` objects.
+  * @param fileValueProperties     a [[Set]] of IRIs of properties in `allCardinalities` that point to `FileValue` objects.
   */
 case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
                            allBaseClasses: Set[SmartIri] = Set.empty[SmartIri],
