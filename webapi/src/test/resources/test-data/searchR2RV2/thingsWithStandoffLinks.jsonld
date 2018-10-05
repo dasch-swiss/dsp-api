@@ -10,7 +10,9 @@
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
-      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      "knora-api:textValueHasMapping" : {
+        "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
     }, {
       "@id" : "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
       "@type" : "knora-api:TextValue",
@@ -19,7 +21,9 @@
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
-      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      "knora-api:textValueHasMapping" : {
+        "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
     } ],
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"
@@ -44,7 +48,9 @@
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator",
       "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/0001/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
-      "knora-api:textValueHasMapping" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      "knora-api:textValueHasMapping" : {
+        "@id" : "http://rdfh.ch/standoff/mappings/StandardMapping"
+      }
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0001"

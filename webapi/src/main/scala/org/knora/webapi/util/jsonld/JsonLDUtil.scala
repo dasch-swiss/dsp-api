@@ -23,8 +23,8 @@ import com.github.jsonldjava.core.{JsonLdOptions, JsonLdProcessor}
 import com.github.jsonldjava.utils.JsonUtils
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{JavaUtil, SmartIri, StringFormatter}
-
 
 /**
   * Constant strings used in JSON-LD.
@@ -417,6 +417,75 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     override def compare(that: JsonLDValue): Int = 0
+
+    /**
+      * Validates the `@id` of a JSON-LD object as a Knora data IRI.
+      *
+      * @return a validated Knora data IRI.
+      */
+    def getIDAsKnoraDataIri: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val dataIri = requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
+
+        if (!dataIri.isKnoraDataIri) {
+            throw BadRequestException(s"Invalid Knora data IRI: $dataIri")
+        }
+
+        dataIri
+    }
+
+    /**
+      * Validates the `@type` of a JSON-LD object as a Knora type IRI in the API v2 complex schema.
+      *
+
+      * @return a validated Knora type IRI.
+      */
+    def getTypeAsKnoraTypeIri: SmartIri = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val typeIri = requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+
+        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+            throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
+        }
+
+        typeIri
+    }
+
+    /**
+      * When called on a JSON-LD object representing a resource, ensures that it contains a single Knora property with
+      * a single value.
+      *
+      * @return the property IRI and the value.
+      */
+    def getResourcePropertyValue: (SmartIri, JsonLDObject) = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val resourceProps: Map[IRI, JsonLDValue] = value - JsonLDConstants.ID - JsonLDConstants.TYPE
+
+        if (resourceProps.isEmpty) {
+            throw BadRequestException("No value submitted")
+        }
+
+        if (resourceProps.size > 1) {
+            throw BadRequestException(s"Only one value can be submitted per request using this route")
+        }
+
+        resourceProps.head match {
+            case (key: IRI, jsonLDValue: JsonLDValue) =>
+                val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
+
+                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
+                    throw BadRequestException(s"Invalid property IRI: $propertyIri")
+                }
+
+                jsonLDValue match {
+                    case jsonLDObject: JsonLDObject => propertyIri -> jsonLDObject
+                    case _ => throw BadRequestException(s"Invalid value for $propertyIri")
+                }
+        }
+    }
 }
 
 /**
@@ -551,6 +620,21 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
       * A convenience function that calls `body.maybeBoolean`.
       */
     def maybeBoolean(key: String): Option[Boolean] = body.maybeBoolean(key)
+
+    /**
+      * A convenience function that calls `body.getIDAsKnoraDataIri`.
+      */
+    def getIDAsKnoraDataIri: SmartIri = body.getIDAsKnoraDataIri
+
+    /**
+      * A convenience function that calls `body.getTypeAsKnoraTypeIri`.
+      */
+    def getTypeAsKnoraTypeIri: SmartIri = body.getTypeAsKnoraTypeIri
+
+    /**
+      * A convenience function that calls `body.getResourcePropertyValue`.
+      */
+    def getResourcePropertyValue: (SmartIri, JsonLDObject) = body.getResourcePropertyValue
 
     /**
       * Converts this JSON-LD object to its compacted Java representation.

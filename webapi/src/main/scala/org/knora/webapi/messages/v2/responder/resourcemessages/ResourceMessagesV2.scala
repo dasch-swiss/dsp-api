@@ -21,17 +21,27 @@ package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import java.io.{StringReader, StringWriter}
 import java.time.Instant
+import java.util.UUID
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.pattern._
+import akka.util.Timeout
 import org.eclipse.rdf4j.rio.rdfxml.util.RDFXMLPrettyWriter
 import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, RDFWriter, Rio}
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.v2.SearchResponderV2Constants
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
-import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.{ActorUtil, KnoraIdUtil, SmartIri, StringFormatter}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An abstract trait for messages that can be sent to `ResourcesResponderV2`.
@@ -293,13 +303,171 @@ case class ReadResourceV2(resourceIri: IRI,
 }
 
 /**
-  * Represents a Knora resource that is about to be created.
+  * The value of a Knora property sent to Knora to be created in a new resource.
   *
-  * @param label            the resource's label.
-  * @param resourceClassIri the class the resource belongs to.
-  * @param values           the resource's values.
+  * @param valueContent the content of the new value. If the client wants to create a link, this must be a [[LinkValueContentV2]].
+  * @param permissions  the permissions to be given to the new value. If not provided, these will be taken from defaults.
   */
-case class CreateResource(label: String, resourceClassIri: SmartIri, values: Map[SmartIri, Seq[CreateValueV2]]) extends ResourceV2
+case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
+                                      permissions: Option[String] = None) extends IOValueV2
+
+/**
+  * Represents a Knora resource to be created.
+  *
+  * @param resourceIri      the IRI that should be given to the resource.
+  * @param resourceClassIri the class the resource belongs to.
+  * @param label            the resource's label.
+  * @param values           the resource's values.
+  * @param projectADM       the project that the resource should belong to.
+  * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
+  */
+case class CreateResourceV2(resourceIri: IRI,
+                            resourceClassIri: SmartIri,
+                            label: String,
+                            values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                            projectADM: ProjectADM,
+                            permissions: Option[String] = None) extends ResourceV2 {
+    lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
+
+    /**
+      * Converts this [[CreateResourceV2]] to the specified ontology schema.
+      *
+      * @param targetSchema the target ontology schema.
+      * @return a copy of this [[CreateResourceV2]] in the specified ontology schema.
+      */
+    def toOntologySchema(targetSchema: OntologySchema): CreateResourceV2 = {
+        copy(
+            resourceClassIri = resourceClassIri.toOntologySchema(targetSchema),
+            values = values.map {
+                case (propertyIri, valuesToCreate) =>
+                    propertyIri.toOntologySchema(targetSchema) -> valuesToCreate.map {
+                        valueToCreate =>
+                            valueToCreate.copy(
+                                valueContent = valueToCreate.valueContent.toOntologySchema(targetSchema)
+                            )
+                    }
+            }
+        )
+    }
+}
+
+/**
+  * Represents a request to create a resource.
+  *
+  * @param createResource the resource to be created.
+  * @param requestingUser the user making the request.
+  * @param apiRequestID   the API request ID.
+  */
+case class CreateResourceRequestV2(createResource: CreateResourceV2,
+                                   requestingUser: UserADM,
+                                   apiRequestID: UUID) extends ResourcesResponderRequestV2
+
+object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResourceRequestV2] {
+    /**
+      * Converts JSON-LD input to a [[CreateResourceRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            storeManager: ActorSelection,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        val knoraIdUtil = new KnoraIdUtil
+
+        for {
+            // Get the resource class.
+            resourceClassIri: SmartIri <- Future(jsonLDDocument.getTypeAsKnoraTypeIri)
+
+            // Get the resource's rdfs:label.
+            label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+
+            // Get the resource's project.
+            projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+
+            // Get the resource's permissions.
+            maybePermissions = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+
+            // Get the resource's values.
+
+            propertyIriStrs: Set[IRI] = jsonLDDocument.body.value.keySet --
+                Set(
+                    JsonLDConstants.ID,
+                    JsonLDConstants.TYPE,
+                    OntologyConstants.Rdfs.Label,
+                    OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
+                    OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions
+                )
+
+            valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
+                propertyIriStr =>
+                    val propertyIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
+                    val valuesArray = jsonLDDocument.requireArray(propertyIriStr)
+
+                    val propertyValues = valuesArray.value.map {
+                        valueJsonLD =>
+                            val valueJsonLDObject = valueJsonLD match {
+                                case jsonLDObject: JsonLDObject => jsonLDObject
+                                case _ => throw BadRequestException(s"Invalid JSON-LD as object of property <$propertyIriStr>")
+                            }
+
+                            for {
+                                valueContent: ValueContentV2 <-
+                                    ValueContentV2.fromJsonLDObject(
+                                        jsonLDObject = valueJsonLDObject,
+                                        requestingUser = requestingUser,
+                                        responderManager = responderManager,
+                                        log = log
+                                    )
+
+                                _ = if (valueJsonLDObject.value.get(JsonLDConstants.ID).nonEmpty) {
+                                    throw BadRequestException("The @id of a value cannot be given in a request to create the value")
+                                }
+
+                                maybePermissions: Option[String] = valueJsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+                            } yield CreateValueInNewResourceV2(
+                                valueContent = valueContent,
+                                permissions = maybePermissions
+                            )
+                    }
+
+                    propertyIri -> propertyValues
+            }.toMap
+
+            values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] <- ActorUtil.sequenceSeqFuturesInMap(valueFutures)
+
+            // Get information about the project that the resource should be created in.
+            projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                maybeIri = Some(projectIri.toString),
+                requestingUser = requestingUser
+            )).mapTo[ProjectGetResponseADM]
+
+            // Generate a random IRI for the resource.
+            resourceIri <- knoraIdUtil.makeUnusedIri(knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project.shortcode), storeManager, log)
+        } yield CreateResourceRequestV2(
+            createResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = resourceClassIri,
+                label = label,
+                values = values,
+                projectADM = projectInfoResponse.project,
+                permissions = maybePermissions
+            ),
+            requestingUser = requestingUser,
+            apiRequestID = apiRequestID
+        )
+    }
+}
 
 /**
   * Represents a sequence of resources read back from Knora.
@@ -366,5 +534,31 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    }
+
+
+    /**
+      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
+      * is not present, or if it's `ForbiddenResource`, throws an exception.
+      *
+      * @param requestedResourceIri the IRI of the expected resource.
+      * @return the resource.
+      */
+    def toResource(requestedResourceIri: IRI): ReadResourceV2 = {
+        if (numberOfResources == 0) {
+            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
+        }
+
+        if (numberOfResources > 1) {
+            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
+        }
+
+        val resourceInfo = resources.head
+
+        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
+            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
+        }
+
+        resourceInfo
     }
 }

@@ -22,9 +22,16 @@ package org.knora.webapi.util
 import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
+import akka.actor.ActorSelection
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
+import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.util.IriConversions._
+
+import scala.concurrent.{ExecutionContext, Future}
 
 object KnoraIdUtil {
     private val CanonicalUuidLength = 36
@@ -47,6 +54,42 @@ class KnoraIdUtil {
     private val base64Encoder = Base64.getUrlEncoder.withoutPadding
     private val base64Decoder = Base64.getUrlDecoder
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    /**
+      * The maximum number of times that `makeUnusedIri` will try to make a new, unused IRI.
+      */
+    val MAX_IRI_ATTEMPTS: Int = 5
+
+    /**
+      * Attempts to create a new IRI that isn't already used in the triplestore. Will try up to [[MAX_IRI_ATTEMPTS]]
+      * times, then throw an exception if an unused IRI could not be created.
+      *
+      * @param iriFun       a function that generates a random IRI.
+      * @param storeManager a reference to the Knora store manager actor.
+      */
+    def makeUnusedIri(iriFun: => IRI,
+                      storeManager: ActorSelection,
+                      log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
+        def makeUnusedIriRec(attempts: Int): Future[IRI] = {
+            val newIri = iriFun
+
+            for {
+                askString <- Future(queries.sparql.admin.txt.checkIriExists(iri = newIri).toString)
+                response <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+
+                result <- if (!response.result) {
+                    FastFuture.successful(newIri)
+                } else if (attempts > 1) {
+                    log.warning("KnoraIdUtil.makeUnusedIri generated an IRI that already exists in the triplestore, retrying")
+                    makeUnusedIriRec(attempts - 1)
+                } else {
+                    throw UpdateNotPerformedException(s"Could not make an unused new IRI after $MAX_IRI_ATTEMPTS attempts")
+                }
+            } yield result
+        }
+
+        makeUnusedIriRec(attempts = MAX_IRI_ATTEMPTS)
+    }
 
     /**
       * Generates a type 4 UUID using [[java.util.UUID]], and Base64-encodes it using a URL and filename safe
@@ -135,12 +178,12 @@ class KnoraIdUtil {
     /**
       * Creates a new resource IRI based on a UUID.
       *
-      * @param projectInfo the project's info.
+      * @param projectShortcode the project's shortcode.
       * @return a new resource IRI.
       */
-    def makeRandomResourceIri(projectInfo: ProjectInfoV1): IRI = {
+    def makeRandomResourceIri(projectShortcode: String): IRI = {
         val knoraResourceID = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/${projectInfo.shortcode}/$knoraResourceID"
+        s"http://$IriDomain/$projectShortcode/$knoraResourceID"
     }
 
     /**
@@ -227,7 +270,7 @@ class KnoraIdUtil {
       */
     def makeRandomListIri(shortcode: String): String = {
         val knoraListUuid = makeRandomBase64EncodedUuid
-        s"http://$IriDomain/lists/${shortcode}/$knoraListUuid"
+        s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
     }
 
     /**
