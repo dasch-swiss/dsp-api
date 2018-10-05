@@ -1281,7 +1281,7 @@ class ResourcesResponderV1 extends Responder {
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1436,7 +1436,7 @@ class ResourcesResponderV1 extends Responder {
                         }
 
                         // generate sparql for every resource
-                        generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+                        generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                             projectIri = projectIri,
                             resourceIri = resourceIri,
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
@@ -1452,7 +1452,7 @@ class ResourcesResponderV1 extends Responder {
                     } yield SparqlTemplateResourceToCreate(
                         resourceIri = resourceIri,
                         permissions = defaultObjectAccessPermissions,
-                        generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                        sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
                         resourceLabel = resourceCreateRequest.label
                     )
@@ -1842,7 +1842,7 @@ class ResourcesResponderV1 extends Responder {
             // Make a timestamp for the resource and its values.
             currentTime: String = Instant.now.toString
 
-            generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
@@ -1858,7 +1858,7 @@ class ResourcesResponderV1 extends Responder {
             resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
                 resourceIri = resourceIri,
                 permissions = defaultResourceClassAccessPermissions,
-                generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                 resourceClassIri = resourceClassIri,
                 resourceLabel = label)
             )
@@ -1940,7 +1940,7 @@ class ResourcesResponderV1 extends Responder {
             }
 
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)
+            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.

@@ -24,7 +24,7 @@ import java.time.Instant
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -54,6 +54,7 @@ class ValuesResponderV2 extends Responder {
         case createValueRequest: CreateValueRequestV2 => future2Message(sender(), createValueV2(createValueRequest), log)
         case updateValueRequest: UpdateValueRequestV2 => future2Message(sender(), updateValueV2(updateValueRequest), log)
         case deleteValueRequest: DeleteValueRequestV2 => future2Message(sender(), deleteValueV2(deleteValueRequest), log)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 => future2Message(sender(), generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -154,7 +155,7 @@ class ValuesResponderV2 extends Responder {
                 // If this is a list value, check that it points to a real list node.
 
                 _ <- submittedInternalValueContent match {
-                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case listValue: HierarchicalListValueContentV2 => ValueUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
                     case _ => FastFuture.successful(())
                 }
 
@@ -183,7 +184,7 @@ class ValuesResponderV2 extends Responder {
                 // and that the user has permission to see them.
 
                 _ <- submittedInternalValueContent match {
-                    case textValueContent: TextValueContentV2 => checkStandoffLinkTargets(textValueContent, createValueRequest.requestingUser)
+                    case textValueContent: TextValueContentV2 => checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, createValueRequest.requestingUser)
                     case _ => FastFuture.successful(())
                 }
 
@@ -195,17 +196,13 @@ class ValuesResponderV2 extends Responder {
 
                     case None =>
                         // No. Get default permissions for the new value.
-                        for {
-                            defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
-                                responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
-                                    projectIri = resourceInfo.attachedToProject,
-                                    resourceClassIri = resourceInfo.resourceClassIri.toString,
-                                    propertyIri = submittedInternalPropertyIri.toString,
-                                    targetUser = createValueRequest.requestingUser,
-                                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                                )
-                            }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
-                        } yield defaultObjectAccessPermissionsResponse.permissionLiteral
+                        ValueUtilV2.getDefaultValuePermissions(
+                            projectIri = resourceInfo.attachedToProject,
+                            resourceClassIri = resourceInfo.resourceClassIri,
+                            propertyIri = submittedInternalPropertyIri,
+                            requestingUser = createValueRequest.requestingUser,
+                            responderManager = responderManager
+                        )
                 }
 
                 // Get information about the project that the resource is in, so we know which named graph to put the new value in.
@@ -262,7 +259,6 @@ class ValuesResponderV2 extends Responder {
             )
         } yield taskResult
     }
-
 
     /**
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
@@ -332,7 +328,7 @@ class ValuesResponderV2 extends Responder {
         for {
             // Generate an IRI for the new value.
             newValueIri <- FastFuture.successful(knoraIdUtil.makeRandomValueIri(resourceInfo.resourceIri))
-            currentTime: String = Instant.now.toString
+            currentTime: Instant = Instant.now
 
             // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
             standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = value match {
@@ -378,7 +374,8 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = value.unescape
+            value = value.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -411,7 +408,7 @@ class ValuesResponderV2 extends Responder {
                 requestingUser = requestingUser
             ))
 
-            currentTime: String = Instant.now.toString
+            currentTime: Instant = Instant.now
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v2.txt.createLink(
@@ -433,8 +430,197 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-            value = linkValueContent.unescape
+            value = linkValueContent.unescape,
+            permissions = valuePermissions
         )
+    }
+
+    /**
+      * Represents SPARQL generated to create one of multiple values in a new resource.
+      *
+      * @param insertSparql    the generated SPARQL.
+      * @param unverifiedValue an [[UnverifiedValueV2]] representing the value that is to be created.
+      */
+    private case class InsertSparqlWithUnverifiedValue(insertSparql: String, unverifiedValue: UnverifiedValueV2)
+
+    /**
+      * Generates SPARQL for creating multiple values.
+      *
+      * @param createMultipleValuesRequest the request to create multiple values.
+      * @return a [[GenerateSparqlToCreateMultipleValuesResponseV2]] containing the generated SPARQL and information
+      *         about the values to be created.
+      */
+    private def generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): Future[GenerateSparqlToCreateMultipleValuesResponseV2] = {
+        for {
+            // Generate SPARQL to create links and LinkValues for standoff links in text values.
+            sparqlForStandoffLinks: String <- Future(generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest))
+
+            // Generate SPARQL for each value.
+            sparqlForPropertyValues: Map[SmartIri, Seq[InsertSparqlWithUnverifiedValue]] = createMultipleValuesRequest.values.map {
+                case (propertyIri: SmartIri, valuesToCreate: Seq[GenerateSparqlForValueInNewResourceV2]) =>
+                    propertyIri -> valuesToCreate.zipWithIndex.map {
+                        case (valueToCreate: GenerateSparqlForValueInNewResourceV2, valueHasOrder: Int) =>
+                            generateInsertSparqlWithUnverifiedValue(
+                                resourceIri = createMultipleValuesRequest.resourceIri,
+                                propertyIri = propertyIri,
+                                valueToCreate = valueToCreate,
+                                valueHasOrder = valueHasOrder,
+                                currentTime = createMultipleValuesRequest.currentTime,
+                                requestingUser = createMultipleValuesRequest.requestingUser
+                            )
+                    }
+            }
+
+            // Concatenate all the generated SPARQL.
+            allInsertSparql: String = sparqlForPropertyValues.values.flatten.map(_.insertSparql).mkString("\n\n") + "\n\n" + sparqlForStandoffLinks
+
+            // Collect all the unverified values.
+            unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]] = sparqlForPropertyValues.map {
+                case (propertyIri, unverifiedValuesWithSparql) => propertyIri -> unverifiedValuesWithSparql.map(_.unverifiedValue)
+            }
+        } yield GenerateSparqlToCreateMultipleValuesResponseV2(
+            insertSparql = allInsertSparql,
+            unverifiedValues = unverifiedValues
+        )
+    }
+
+    /**
+      * Generates SPARQL to create one of multiple values in a new resource.
+      *
+      * @param resourceIri    the IRI of the resource.
+      * @param propertyIri    the IRI of the property that will point to the value.
+      * @param valueToCreate  the value to be created.
+      * @param valueHasOrder  the value's `knora-base:valueHasOrder`.
+      * @param currentTime    the timestamp to be used as the value creation time.
+      * @param requestingUser the user making the request.
+      * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
+      */
+    private def generateInsertSparqlWithUnverifiedValue(resourceIri: IRI,
+                                                        propertyIri: SmartIri,
+                                                        valueToCreate: GenerateSparqlForValueInNewResourceV2,
+                                                        valueHasOrder: Int,
+                                                        currentTime: Instant,
+                                                        requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
+        // Make an IRI for the new value.
+        val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
+
+        // Generate the SPARQL.
+        val insertSparql: String = valueToCreate.valueContent match {
+            case linkValueContentV2: LinkValueContentV2 =>
+                // We're creating a link.
+
+                // Construct a SparqlTemplateLinkUpdate to tell the SPARQL template how to create
+                // the link and its LinkValue.
+                val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
+                    linkPropertyIri = propertyIri.fromLinkValuePropToLinkProp,
+                    directLinkExists = false,
+                    insertDirectLink = true,
+                    deleteDirectLink = false,
+                    linkValueExists = false,
+                    linkTargetExists = linkValueContentV2.referredResourceExists,
+                    newLinkValueIri = newValueIri,
+                    linkTargetIri = linkValueContentV2.referredResourceIri,
+                    currentReferenceCount = 0,
+                    newReferenceCount = 1,
+                    newLinkValueCreator = requestingUser.id,
+                    newLinkValuePermissions = valueToCreate.permissions
+                )
+
+                // Generate SPARQL for the link.
+                queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
+                    resourceIri = resourceIri,
+                    linkUpdate = sparqlTemplateLinkUpdate,
+                    currentTime = currentTime,
+                    maybeComment = valueToCreate.valueContent.comment,
+                    maybeValueHasOrder = Some(valueHasOrder)
+                ).toString()
+
+            case otherValueContentV2 =>
+                // We're creating an ordinary value. Generate SPARQL for it.
+                queries.sparql.v2.txt.generateInsertStatementsForCreateValue(
+                    resourceIri = resourceIri,
+                    propertyIri = propertyIri,
+                    value = otherValueContentV2,
+                    newValueIri = newValueIri,
+                    linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
+                    valueCreator = requestingUser.id,
+                    valuePermissions = valueToCreate.permissions,
+                    currentTime = currentTime,
+                    maybeValueHasOrder = Some(valueHasOrder)
+                ).toString()
+        }
+
+        InsertSparqlWithUnverifiedValue(
+            insertSparql = insertSparql,
+            unverifiedValue = UnverifiedValueV2(
+                newValueIri = newValueIri,
+                value = valueToCreate.valueContent,
+                permissions = valueToCreate.permissions
+            )
+        )
+    }
+
+    /**
+      * When processing a request to create multiple values, generates SPARQL for standoff links in text values.
+      *
+      * @param createMultipleValuesRequest the request to create multiple values.
+      * @return SPARQL INSERT statements.
+      */
+    private def generateInsertSparqlForStandoffLinksInMultipleValues(createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2): String = {
+        // To create LinkValues for the standoff links in the values to be created, we need to compute
+        // the initial reference count of each LinkValue. This is equal to the number of TextValues in the resource
+        // that have standoff links to a particular target resource.
+
+        // First, get the standoff link targets from all the text values to be created.
+        val standoffLinkTargetsPerTextValue: Vector[Set[IRI]] = createMultipleValuesRequest.flatValues.foldLeft(Vector.empty[Set[IRI]]) {
+            case (acc: Vector[Set[IRI]], createValueV2: GenerateSparqlForValueInNewResourceV2) =>
+                createValueV2.valueContent match {
+                    case textValueContentV2: TextValueContentV2 => acc :+ textValueContentV2.standoffLinkTagTargetResourceIris
+                    case _ => acc
+                }
+        }
+
+        // Combine those resource references into a single list, so if there are n text values with a link to
+        // some IRI, the list will contain that IRI n times.
+        val allStandoffLinkTargets: Vector[IRI] = standoffLinkTargetsPerTextValue.flatten
+
+        // Now we need to count the number of times each IRI occurs in allStandoffLinkTargets. To do this, first
+        // use groupBy(identity). The groupBy method takes a function that returns a key for each item in the
+        // collection, and makes a Map in which items with the same key are grouped together. The identity
+        // function just returns its argument. So groupBy(identity) makes a Map[IRI, Vector[IRI]] in which each
+        // IRI points to a sequence of the same IRI repeated as many times as it occurred in allStandoffLinkTargets.
+        val allStandoffLinkTargetsGrouped: Map[IRI, Vector[IRI]] = allStandoffLinkTargets.groupBy(identity)
+
+        // Replace each Vector[IRI] with its size. That's the number of text values containing
+        // standoff links to that IRI.
+        val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
+
+        // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+        // and one LinkValue with its initial reference count.
+        val standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
+            case (targetIri, initialReferenceCount) =>
+                SparqlTemplateLinkUpdate(
+                    linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
+                    directLinkExists = false,
+                    insertDirectLink = true,
+                    deleteDirectLink = false,
+                    linkValueExists = false,
+                    linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
+                    newLinkValueIri = knoraIdUtil.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+                    linkTargetIri = targetIri,
+                    currentReferenceCount = 0,
+                    newReferenceCount = initialReferenceCount,
+                    newLinkValueCreator = OntologyConstants.KnoraBase.SystemUser,
+                    newLinkValuePermissions = standoffLinkValuePermissions
+                )
+        }
+
+        // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
+        queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
+            resourceIri = createMultipleValuesRequest.resourceIri,
+            linkUpdates = standoffLinkUpdates,
+            currentTime = createMultipleValuesRequest.currentTime
+        ).toString()
     }
 
     /**
@@ -555,7 +741,7 @@ class ValuesResponderV2 extends Responder {
                 // If this is a list value, check that it points to a real list node.
 
                 _ <- submittedInternalValueContent match {
-                    case listValue: HierarchicalListValueContentV2 => checkListNodeExists(listValue.valueHasListNode)
+                    case listValue: HierarchicalListValueContentV2 => ValueUtilV2.checkListNodeExists(listValue.valueHasListNode, storeManager)
                     case _ => FastFuture.successful(())
                 }
 
@@ -579,7 +765,7 @@ class ValuesResponderV2 extends Responder {
                     case textValueContent: TextValueContentV2 =>
                         // This is a text value. Check that the resources pointed to by any standoff link tags exist
                         // and that the user has permission to see them.
-                        checkStandoffLinkTargets(textValueContent, updateValueRequest.requestingUser)
+                        checkResourceIris(textValueContent.standoffLinkTagTargetResourceIris, updateValueRequest.requestingUser)
 
                     case _: LinkValueContentV2 =>
                         // We're updating a link. This means deleting an existing link and creating a new one, so
@@ -766,7 +952,7 @@ class ValuesResponderV2 extends Responder {
         }
 
         // Make a timestamp to indicate when the value was updated.
-        val currentTime: String = Instant.now.toString
+        val currentTime: Instant = Instant.now
 
         for {
             // Generate a SPARQL update.
@@ -797,7 +983,8 @@ class ValuesResponderV2 extends Responder {
 
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = newValueVersion.unescape
+            value = newValueVersion.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -843,7 +1030,7 @@ class ValuesResponderV2 extends Responder {
         )
 
         // Make a timestamp to indicate when the link value was updated.
-        val currentTime: String = Instant.now.toString
+        val currentTime: Instant = Instant.now
 
         for {
             // Generate a SPARQL update string.
@@ -866,7 +1053,8 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            value = newLinkValue.unescape
+            value = newLinkValue.unescape,
+            permissions = valuePermissions
         )
     }
 
@@ -1092,7 +1280,7 @@ class ValuesResponderV2 extends Responder {
         )
 
         // Make a timestamp to indicate when the link value was updated.
-        val currentTime: String = Instant.now.toString
+        val currentTime: Instant = Instant.now
 
         for {
             sparqlUpdate <- Future(queries.sparql.v2.txt.deleteLink(
@@ -1147,7 +1335,7 @@ class ValuesResponderV2 extends Responder {
         }
 
         // Make a timestamp to indicate when the value was marked as deleted.
-        val currentTime: String = Instant.now.toString
+        val currentTime: Instant = Instant.now
 
         for {
             sparqlUpdate <- Future(queries.sparql.v2.txt.deleteValue(
@@ -1210,22 +1398,20 @@ class ValuesResponderV2 extends Responder {
     }
 
     /**
-      * Given a text value, checks whether the targets of the value's standoff link tags exist and are Knora resources.
+      * Given a set of resource IRIs, checks that they point to Knora resources.
       * If not, throws an exception.
       *
-      * @param textValueContent the text value.
-      * @param requestingUser   the user making the request.
+      * @param targeResourceIris the IRIs to be checked.
+      * @param requestingUser    the user making the request.
       */
-    private def checkStandoffLinkTargets(textValueContent: TextValueContentV2, requestingUser: UserADM): Future[Unit] = {
-        val targetResourceIris: Seq[IRI] = textValueContent.standoffLinkTagTargetResourceIris.toSeq
-
-        if (targetResourceIris.isEmpty) {
+    private def checkResourceIris(targeResourceIris: Set[IRI], requestingUser: UserADM): Future[Unit] = {
+        if (targeResourceIris.isEmpty) {
             FastFuture.successful(())
         } else {
             for {
                 resourcePreviewRequest <- FastFuture.successful(
                     ResourcesPreviewGetRequestV2(
-                        resourceIris = targetResourceIris,
+                        resourceIris = targeResourceIris.toSeq,
                         requestingUser = requestingUser
                     )
                 )
@@ -1276,14 +1462,7 @@ class ValuesResponderV2 extends Responder {
 
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
-
-            // Get the resource from the response.
-            resource = resourcesSequenceToResource(
-                requestedResourceIri = resourceIri,
-                readResourcesSequence = searchResponse,
-                requestingUser = requestingUser
-            )
-        } yield resource
+        } yield searchResponse.toResource(resourceIri)
     }
 
     /*
@@ -1315,16 +1494,18 @@ class ValuesResponderV2 extends Responder {
             parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
             searchResponse <- (responderManager ? GravsearchRequestV2(parsedGravsearchQuery, requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            resource = resourcesSequenceToResource(
-                requestedResourceIri = resourceIri,
-                readResourcesSequence = searchResponse,
-                requestingUser = requestingUser
-            )
+            resource = try {
+                searchResponse.toResource(resourceIri)
+            } catch {
+                case _: NotFoundException => throw UpdateNotPerformedException(s"Resource <$resourceIri> was not created. Please report this as a possible bug.")
+            }
 
             propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
-            _ = if (!unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent)) {
+            _ = if (!(unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
+                valueInTriplestore.permissions == unverifiedValue.permissions &&
+                valueInTriplestore.attachedToUser == requestingUser.id)) {
                 /*
                 import org.knora.webapi.util.MessageUtil
                 println("==============================")
@@ -1414,12 +1595,7 @@ class ValuesResponderV2 extends Responder {
             resourcePreviewResponse <- (responderManager ? resourcePreviewRequest).mapTo[ReadResourcesSequenceV2]
 
             // If we get a resource, we know the user has permission to view it.
-
-            resource: ReadResourceV2 = resourcesSequenceToResource(
-                requestedResourceIri = linkValueContent.referredResourceIri,
-                readResourcesSequence = resourcePreviewResponse,
-                requestingUser = requestingUser
-            )
+            resource: ReadResourceV2 = resourcePreviewResponse.toResource(linkValueContent.referredResourceIri)
 
             // Ask the ontology responder whether the resource's class is a subclass of the link property's object class constraint.
 
@@ -1511,33 +1687,6 @@ class ValuesResponderV2 extends Responder {
 
             }
         } yield result
-    }
-
-    /**
-      * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
-      * is not present, or if it's `ForbiddenResource`, throws an exception.
-      *
-      * @param requestedResourceIri  the IRI of the expected resource.
-      * @param readResourcesSequence a [[ReadResourcesSequenceV2]] that should contain the resource.
-      * @param requestingUser        the user making the request.
-      * @return the resource.
-      */
-    private def resourcesSequenceToResource(requestedResourceIri: IRI, readResourcesSequence: ReadResourcesSequenceV2, requestingUser: UserADM): ReadResourceV2 = {
-        if (readResourcesSequence.numberOfResources == 0) {
-            throw AssertionException(s"Expected one resource, <$requestedResourceIri>, but no resources were returned")
-        }
-
-        if (readResourcesSequence.numberOfResources > 1) {
-            throw AssertionException(s"More than one resource returned with IRI <$requestedResourceIri>")
-        }
-
-        val resourceInfo = readResourcesSequence.resources.head
-
-        if (resourceInfo.resourceIri == SearchResponderV2Constants.forbiddenResourceIri) { // TODO: #953
-            throw NotFoundException(s"Resource <$requestedResourceIri> does not exist, has been deleted, or you do not have permission to view it and/or the values of the specified property")
-        }
-
-        resourceInfo
     }
 
     /**
@@ -1715,23 +1864,6 @@ class ValuesResponderV2 extends Responder {
                 // We didn't find the LinkValue. This shouldn't happen.
                 throw InconsistentTriplestoreDataException(s"There should be a knora-base:LinkValue describing a direct link from resource <${sourceResourceInfo.resourceIri}> to resource <$targetResourceIri> using property <$linkPropertyIri>, but it seems to be missing")
         }
-    }
-
-    /**
-      * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
-      *
-      * @param listNodeIri the IRI of the list node.
-      */
-    def checkListNodeExists(listNodeIri: IRI): Future[Unit] = {
-        for {
-            askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
-
-            checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
-
-            _ = if (!checkListNodeExistsResponse.result) {
-                throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
-            }
-        } yield ()
     }
 
     /**

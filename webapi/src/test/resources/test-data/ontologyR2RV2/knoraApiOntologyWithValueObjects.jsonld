@@ -3700,6 +3700,12 @@
       }
     }, {
       "@type" : "owl:Restriction",
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:textValueHasMapping"
+      }
+    }, {
+      "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
         "@id" : "knora-api:textValueHasStandoff"
@@ -5206,6 +5212,20 @@
     },
     "rdfs:comment" : "Language code attached to a text value.",
     "rdfs:label" : "text value has language",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:valueHas"
+    }
+  }, {
+    "@id" : "knora-api:textValueHasMapping",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:XMLToStandoffMapping"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:TextValue"
+    },
+    "rdfs:comment" : "Indicates the mapping that is used to convert a text value's markup from from XML to standoff.",
+    "rdfs:label" : "Text value has mapping",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }

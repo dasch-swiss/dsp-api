@@ -2616,6 +2616,9 @@ knora-api:TextValue a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty knora-api:textValueHasLanguage
     ], [ a owl:Restriction;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:textValueHasMapping
+    ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:textValueHasStandoff
     ], [ a owl:Restriction;
@@ -2651,6 +2654,13 @@ knora-api:textValueHasLanguage a owl:DatatypeProperty;
   knora-api:subjectType knora-api:TextValue;
   rdfs:comment "Language code attached to a text value.";
   rdfs:label "text value has language";
+  rdfs:subPropertyOf knora-api:valueHas .
+
+knora-api:textValueHasMapping a owl:ObjectProperty;
+  knora-api:objectType knora-api:XMLToStandoffMapping;
+  knora-api:subjectType knora-api:TextValue;
+  rdfs:comment "Indicates the mapping that is used to convert a text value's markup from from XML to standoff.";
+  rdfs:label "Text value has mapping";
   rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:textValueHasStandoff a owl:ObjectProperty;

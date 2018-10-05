@@ -67,6 +67,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {
             fromJsonLDSync(
