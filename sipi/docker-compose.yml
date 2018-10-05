@@ -17,3 +17,20 @@ services:
         - webapi:$DOCKERHOST
       restart: unless-stopped
       command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+
+  sipi-no-auth:
+      image: dhlabbasel/sipi:develop
+      container_name: sipi-no-auth
+      ports:
+        - "1024:1024"
+      volumes:
+        - $PWD/config:/sipi/config
+        - $PWD/scripts:/sipi/scripts
+        - /tmp:/tmp
+        - $HOME:$HOME
+        - $PWD/images:/sipi/images
+        - $PWD/server:/sipi/server
+      extra_hosts:
+        - webapi:$DOCKERHOST
+      restart: unless-stopped
+      command: --config=/sipi/config/sipi.knora-docker-no-auth-config.lua
