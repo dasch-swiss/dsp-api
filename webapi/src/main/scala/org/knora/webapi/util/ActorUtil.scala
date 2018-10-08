@@ -62,11 +62,12 @@ object ActorUtil {
       */
     def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
         future.onComplete {
-            tryObj: Try[ReplyT] => try2message(
-                sender = sender,
-                tryObj = tryObj,
-                log = log
-            )
+            tryObj: Try[ReplyT] =>
+                try2message(
+                    sender = sender,
+                    tryObj = tryObj,
+                    log = log
+                )
         }
     }
 
@@ -116,21 +117,52 @@ object ActorUtil {
     }
 
     /**
-      * Convert a [[Map]] containing futures of sequences into a future containing a [[Map]] containing sequences.
+      * Converts a [[Map]] containing futures of values into a future containing a [[Map]] of values.
       *
       * @param mapToSequence the [[Map]] to be converted.
       * @return a future that will provide the results of the futures that were in the [[Map]].
       */
-    def sequenceFuturesInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Future[Seq[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
-        // See http://stackoverflow.com/a/17479415
+    def sequenceFuturesInMap[KeyT: ClassTag, ValueT](mapToSequence: Map[KeyT, Future[ValueT]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, ValueT]] = {
         Future.sequence {
             mapToSequence.map {
-                case (propertyIri: KeyT, responseFutures: Future[Seq[ElemT]]) =>
-                    responseFutures.map {
-                        responses: Seq[ElemT] => (propertyIri, responses)
+                case (key: KeyT, futureValue: Future[ValueT]) =>
+                    futureValue.map {
+                        value => key -> value
                     }
             }
         }.map(_.toMap)
+    }
+
+    /**
+      * Converts a [[Map]] containing futures of sequences into a future containing a [[Map]] containing sequences.
+      *
+      * @param mapToSequence the [[Map]] to be converted.
+      * @return a future that will provide the results of the futures that were in the [[Map]].
+      */
+    def sequenceFutureSeqsInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Future[Seq[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
+        // See http://stackoverflow.com/a/17479415
+        Future.sequence {
+            mapToSequence.map {
+                case (key: KeyT, futureSeq: Future[Seq[ElemT]]) =>
+                    futureSeq.map {
+                        elements: Seq[ElemT] => (key, elements)
+                    }
+            }
+        }.map(_.toMap)
+    }
+
+    /**
+      * Converts a [[Map]] containing sequences of futures into a future containing a [[Map]] containing sequences.
+      *
+      * @param mapToSequence the [[Map]] to be converted.
+      * @return a future that will provide the results of the futures that were in the [[Map]].
+      */
+    def sequenceSeqFuturesInMap[KeyT: ClassTag, ElemT](mapToSequence: Map[KeyT, Seq[Future[ElemT]]])(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Map[KeyT, Seq[ElemT]]] = {
+        val transformedMap: Map[KeyT, Future[Seq[ElemT]]] = mapToSequence.map {
+            case (key: KeyT, seqFuture: Seq[Future[ElemT]]) => key -> Future.sequence(seqFuture)
+        }
+
+        sequenceFutureSeqsInMap(transformedMap)
     }
 
     /**
@@ -142,7 +174,7 @@ object ActorUtil {
     def optionFuture2FutureOption[A](optionFuture: Option[Future[A]])(implicit executionContext: ExecutionContext): Future[Option[A]] = {
         optionFuture match {
             case Some(f) => f.map(Some(_))
-            case None    => Future.successful(None)
+            case None => Future.successful(None)
         }
     }
 }

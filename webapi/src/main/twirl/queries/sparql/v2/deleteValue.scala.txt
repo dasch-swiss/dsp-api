@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi._
 @import org.knora.webapi.util._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
@@ -41,7 +42,7 @@
   valueIri: IRI,
   maybeDeleteComment: Option[String],
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  currentTime: String)
+  currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

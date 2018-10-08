@@ -71,6 +71,7 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -80,18 +81,19 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
+            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
             // Get the resource class.
-            resourceClassIri: SmartIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
+            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
             // Get the resource property and the value to be created.
-            createValue: CreateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
+            createValue: CreateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     for {
                         valueContent: ValueContentV2 <-
@@ -126,7 +128,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 /**
   * Represents a successful response to a [[CreateValueRequestV2]].
   *
-  * @param valueIri the IRI of the value that was created.
+  * @param valueIri  the IRI of the value that was created.
+  * @param valueType the type of the value that was created.
   */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri) extends KnoraResponseV2 {
@@ -169,6 +172,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
       * @param apiRequestID     the UUID of the API request.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -178,18 +182,19 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                             apiRequestID: UUID,
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
+                            storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
             // Get the IRI of the resource that the value is to be created in.
-            resourceIri: SmartIri <- Future(ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDDocument.body))
+            resourceIri: SmartIri <- Future(jsonLDDocument.getIDAsKnoraDataIri)
 
             // Get the resource class.
-            resourceClassIri: SmartIri = ValueUpdateJsonLDUtil.getTypeAsKnoraTypeIri(jsonLDDocument.body)
+            resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
             // Get the resource property and the new value version.
-            updateValue: UpdateValueV2 <- ValueUpdateJsonLDUtil.getResourcePropertyValue(jsonLDDocument.body) match {
+            updateValue: UpdateValueV2 <- jsonLDDocument.getResourcePropertyValue match {
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     for {
                         valueContent: ValueContentV2 <-
@@ -200,7 +205,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                                 log = log
                             )
 
-                        valueIri = ValueUpdateJsonLDUtil.getIDAsKnoraDataIri(jsonLDObject)
+                        valueIri = jsonLDObject.getIDAsKnoraDataIri
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield UpdateValueV2(
                         resourceIri = resourceIri.toString,
@@ -260,10 +265,55 @@ case class DeleteValueRequestV2(resourceIri: IRI,
                                 apiRequestID: UUID) extends ValuesResponderRequestV2
 
 /**
+  * Requests SPARQL for creating multiple values in a new, empty resource. The resource ''must'' be a new, empty
+  * resource, i.e. it must have no values. This message is used only internally by Knora, and is not part of the Knora
+  * v1 API. All pre-update checks must already have been performed before this message is sent. Specifically, the
+  * sender must ensure that:
+  *
+  * - The requesting user has permission to add values to the resource.
+  * - Each submitted value is consistent with the `knora-base:objectClassConstraint` of the property that is supposed
+  * to point to it.
+  * - The resource class has a suitable cardinality for each submitted value.
+  * - All required values are provided.
+  * - Redundant values are not submitted.
+  * - Any custom permissions in values have been validated and correctly formatted.
+  * - The target resources of link values and standoff links exist, if they are expected to exist.
+  * - The list nodes referred to by list values exist.
+  *
+  * A successful response will be a [[GenerateSparqlToCreateMultipleValuesResponseV2]].
+  *
+  * @param resourceIri    the IRI of the resource in which values are to be created.
+  * @param values         a map of property IRIs to the values to be added for each property.
+  * @param currentTime    an xsd:dateTimeStamp that will be attached to the values.
+  * @param requestingUser the user that is creating the values.
+  */
+case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
+                                                         values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
+                                                         currentTime: Instant,
+                                                         requestingUser: UserADM) extends ValuesResponderRequestV2 {
+    lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
+}
+
+case class GenerateSparqlForValueInNewResourceV2(valueContent: ValueContentV2,
+                                                 permissions: String) extends IOValueV2
+
+/**
+  * Represents a response to a [[GenerateSparqlToCreateMultipleValuesRequestV2]], providing a string that can be
+  * included in the `INSERT DATA` clause of a SPARQL update operation to create the requested values.
+  *
+  * @param insertSparql     a string containing statements that must be inserted into the INSERT clause of the SPARQL
+  *                         update that will create the values.
+  * @param unverifiedValues a map of property IRIs to [[UnverifiedValueV2]] objects describing
+  *                         the values that should have been created.
+  */
+case class GenerateSparqlToCreateMultipleValuesResponseV2(insertSparql: String,
+                                                          unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]])
+
+/**
   * The value of a Knora property in the context of some particular input or output operation.
   * Any implementation of `IOValueV2` is an API operation-specific wrapper of a `ValueContentV2`.
   */
-sealed trait IOValueV2 {
+trait IOValueV2 {
     def valueContent: ValueContentV2
 }
 
@@ -376,7 +426,7 @@ case class ReadValueV2(valueIri: IRI,
 }
 
 /**
-  * The value of a Knora property sent to Knora to be created.
+  * Represents a Knora value to be created in an existing resource.
   *
   * @param resourceIri      the resource the new value should be attached to.
   * @param resourceClassIri the resource class that the client believes the resource belongs to.
@@ -413,7 +463,7 @@ case class UpdateValueV2(resourceIri: IRI,
   * @param newValueIri the IRI that was assigned to the new value.
   * @param value       the content of the new value.
   */
-case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2)
+case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
 /**
   * The content of the value of a Knora property.
@@ -805,13 +855,20 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
       * Returns the IRIs of any resources that are target of standoff link tags in this text value.
       */
     lazy val standoffLinkTagTargetResourceIris: Set[IRI] = {
+        standoffLinkTagIriAttributes.map(_.value)
+    }
+
+    /**
+      * Returns the IRI attributes representing the target IRIs of any standoff links in this text value.
+      */
+    lazy val standoffLinkTagIriAttributes: Set[StandoffTagIriAttributeV2] = {
         standoffAndMapping match {
             case Some(definedStandoffAndMapping) =>
-                definedStandoffAndMapping.standoff.foldLeft(Set.empty[IRI]) {
+                definedStandoffAndMapping.standoff.foldLeft(Set.empty[StandoffTagIriAttributeV2]) {
                     case (acc, standoffTag: StandoffTagV2) =>
                         if (standoffTag.dataType.contains(StandoffDataTypeClasses.StandoffLinkTag)) {
-                            val iriAttributes: Set[IRI] = standoffTag.attributes.collect {
-                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute.value
+                            val iriAttributes: Set[StandoffTagIriAttributeV2] = standoffTag.attributes.collect {
+                                case iriAttribute: StandoffTagIriAttributeV2 => iriAttribute
                             }.toSet
 
                             acc ++ iriAttributes
@@ -820,7 +877,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                         }
                 }
 
-            case None => Set.empty[IRI]
+            case None => Set.empty[StandoffTagIriAttributeV2]
         }
     }
 
@@ -857,7 +914,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                         // xml is returned
                         Map(
                             OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml -> JsonLDString(xmlFromStandoff),
-                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDString(standoffAndMapping.get.mappingIri)
+                            OntologyConstants.KnoraApiV2WithValueObjects.TextValueHasMapping -> JsonLDUtil.iriToJsonLDObject(standoffAndMapping.get.mappingIri)
                         )
                     }
 
@@ -2142,14 +2199,17 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
 /**
   * Represents a Knora link value.
   *
-  * @param referredResourceIri the IRI of resource that this link value refers to (either the source
-  *                            of an incoming link, or the target of an outgoing link).
-  * @param isIncomingLink      indicates if it is an incoming link.
-  * @param nestedResource      information about the nested resource, if given.
-  * @param comment             a comment on the link.
+  * @param referredResourceIri    the IRI of resource that this link value refers to (either the source
+  *                               of an incoming link, or the target of an outgoing link).
+  * @param referredResourceExists `true` if the referred resource already exists, `false` if it is being created in the
+  *                               same transaction.
+  * @param isIncomingLink         indicates if it is an incoming link.
+  * @param nestedResource         information about the nested resource, if given.
+  * @param comment                a comment on the link.
   */
 case class LinkValueContentV2(ontologySchema: OntologySchema,
                               referredResourceIri: IRI,
+                              referredResourceExists: Boolean = true,
                               isIncomingLink: Boolean = false,
                               nestedResource: Option[ReadResourceV2] = None,
                               comment: Option[String] = None) extends ValueContentV2 {
@@ -2261,81 +2321,5 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
             referredResourceIri = targetIri.toString,
             comment = getComment(jsonLDObject)
         )
-    }
-}
-
-/**
-  * Utility functions for value updates.
-  */
-object ValueUpdateJsonLDUtil {
-    /**
-      * Given a JSON-LD object, validates its `@id` as a Knora data IRI.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return a validated Knora data IRI.
-      */
-    def getIDAsKnoraDataIri(jsonLDObject: JsonLDObject): SmartIri = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val dataIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.toSmartIriWithErr)
-
-        if (!dataIri.isKnoraDataIri) {
-            throw BadRequestException(s"Invalid Knora data IRI: $dataIri")
-        }
-
-        dataIri
-    }
-
-    /**
-      * Given a JSON-LD object, validates its `@type` as a Knora type IRI in the API v2 complex schema.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return a validated Knora type IRI.
-      */
-    def getTypeAsKnoraTypeIri(jsonLDObject: JsonLDObject): SmartIri = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val typeIri = jsonLDObject.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
-
-        if (!(typeIri.isKnoraEntityIri && typeIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-            throw BadRequestException(s"Invalid Knora type IRI: $typeIri")
-        }
-
-        typeIri
-    }
-
-    /**
-      * Given a JSON-LD object representing a resource, ensures that it contains a single Knora property with
-      * a single value.
-      *
-      * @param jsonLDObject the JSON-LD object.
-      * @return the property IRI and the value.
-      */
-    def getResourcePropertyValue(jsonLDObject: JsonLDObject): (SmartIri, JsonLDObject) = {
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val resourceProps: Map[IRI, JsonLDValue] = jsonLDObject.value - JsonLDConstants.ID - JsonLDConstants.TYPE
-
-        if (resourceProps.isEmpty) {
-            throw BadRequestException("No value submitted")
-        }
-
-        if (resourceProps.size > 1) {
-            throw BadRequestException(s"Only one value can be submitted per request using this route")
-        }
-
-        resourceProps.head match {
-            case (key: IRI, jsonLDValue: JsonLDValue) =>
-                val propertyIri = key.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $key"))
-
-                if (!(propertyIri.isKnoraEntityIri && propertyIri.getOntologySchema.contains(ApiV2WithValueObjects))) {
-                    throw BadRequestException(s"Invalid property IRI: $propertyIri")
-                }
-
-                jsonLDValue match {
-                    case jsonLDObject: JsonLDObject => propertyIri -> jsonLDObject
-                    case _ => throw BadRequestException(s"Invalid value for $propertyIri")
-                }
-        }
     }
 }

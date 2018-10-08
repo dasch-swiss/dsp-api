@@ -1429,13 +1429,14 @@ class OntologyResponderV2 extends Responder {
             ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
                 cacheData.ontologies.values.map(_.ontologyMetadata).toSet
             } else {
-                val missingOntologies = ontologyIris -- cacheData.ontologies.keySet
+                val ontologyIrisForCache = ontologyIris.map(_.toOntologySchema(InternalSchema))
+                val missingOntologies = ontologyIrisForCache -- cacheData.ontologies.keySet
 
                 if (missingOntologies.nonEmpty) {
                     throw BadRequestException(s"One or more requested ontologies were not found: ${missingOntologies.mkString(", ")}")
                 }
 
-                cacheData.ontologies.filterKeys(ontologyIris).values.map {
+                cacheData.ontologies.filterKeys(ontologyIrisForCache).values.map {
                     ontology => ontology.ontologyMetadata
                 }.toSet
             }

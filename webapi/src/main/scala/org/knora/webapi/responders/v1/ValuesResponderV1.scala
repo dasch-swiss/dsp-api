@@ -593,7 +593,7 @@ class ValuesResponderV1 extends Responder {
         // Convert our Map full of Futures into one Future, which will provide a Map of all the results
         // when they're available.
         for {
-            valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFuturesInMap(valueVerificationFutures)
+            valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFutureSeqsInMap(valueVerificationFutures)
         } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
     }
 

@@ -129,6 +129,11 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
 
+    protected def responseToString(httpResponse: HttpResponse): String = {
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+        Await.result(responseBodyFuture, 5.seconds)
+    }
+
     protected def parseTurtle(turtleStr: String): Model = {
         Rio.parse(new StringReader(turtleStr), "", RDFFormat.TURTLE)
     }
