@@ -237,7 +237,8 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
 
     /**
       * Converts this [[CalendarDateV2]] to a pair of Julian Day Numbers representing a date range. If the date's
-      * precision is [[DatePrecisionDay]], the two Julian Day Numbers will be equal.
+      * precision is [[DatePrecisionDay]], the two Julian Day Numbers will be equal. This method validates the date
+      * using its calendar.
       */
     def toJulianDayRange: (Int, Int) = {
         // Note: in com.ibm.icu.util.Calendar, JULIAN_DAY demarcates days at local zone midnight, rather than noon GMT.
@@ -358,7 +359,8 @@ object CalendarDateV2 {
     }
 
     /**
-      * Parses a string representing a single date, without the calendar.
+      * Parses a string representing a single date, without the calendar. This method does does not check that the
+      * date is valid in its calendar; to do that, call `toJulianDayRange` on it.
       *
       * @param dateStr the string to be parsed.
       * @param calendarName the name of the calendar used.
@@ -478,7 +480,8 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
 object CalendarDateRangeV2 {
     /**
       * Parses a string representing a date range with a calendar. If the end date is not provided, it is assumed to be\
-      * the same as the start date.
+      * the same as the start date. This method does syntactic validation, but does not check that the date range is valid
+      * in its calendar; to do that, call `toJulianDayRange` on it.
       *
       * @param dateStr the string to be parsed.
       * @return a [[CalendarDateRangeV2]] representing the date range.

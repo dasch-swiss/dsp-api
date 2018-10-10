@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util.date
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.{BadRequestException, CoreSpec}
 
 /**
   * Tests [[CalendarDateUtilV2]].
@@ -211,6 +211,46 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
         "convert an era date string with julian calendar with year precision to a CalendarDateV2 BC" in {
             val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 AD", CalendarNameJulian)
             assert(calendarDate.maybeEra.contains(DateEraCE))
+        }
+
+
+        "convert a valid date string with day precision to a Julian Day range" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-28", CalendarNameGregorian)
+            calendarDate.toJulianDayRange
+        }
+
+
+        "not convert a string representing a non-existent date with day precision to a Julian Day range" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-29", CalendarNameGregorian)
+                calendarDate.toJulianDayRange
+            }
+        }
+
+        "not convert an invalid date string with day precision to a Julian Day range" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-00", CalendarNameGregorian)
+                calendarDate.toJulianDayRange
+            }
+        }
+
+        "not convert an invalid date string with day precision to a Julian Day range (2)" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00-01", CalendarNameGregorian)
+                calendarDate.toJulianDayRange
+            }
+        }
+
+        "convert a valid date string with month precision to a Julian Day range" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02", CalendarNameGregorian)
+            calendarDate.toJulianDayRange
+        }
+
+        "not to convert an invalid date string with month precision to a Julian Day range" in {
+            assertThrows[BadRequestException] {
+                val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00", CalendarNameGregorian)
+                calendarDate.toJulianDayRange
+            }
         }
     }
 }
