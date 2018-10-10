@@ -84,8 +84,6 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
 
     "The CalendarDateUtilV2Spec class" should {
         "convert between calendar dates, Julian Day Numbers, and strings" in {
-            // These examples are copied from DateUtilV1Spec.
-
             // JULIAN:1291-08-01 CE
 
             checkSingleDate(
@@ -178,6 +176,41 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
                 expectedEndJDN = 2457235,
                 dateStr = "GREGORIAN:2005-09 CE:2015-07 CE"
             )
+        }
+
+        "convert an era date string with year precision to a CalendarDateV2 BC" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 BC", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraBCE))
+        }
+
+        "convert an era date string with year precision to a CalendarDateV2 AD" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 AD", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraCE))
+        }
+
+        "convert an era date string with year precision to a CalendarDateV2 BCE" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 BCE", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraBCE))
+        }
+
+        "convert an era date string with just year precision to a CalendarDateV2 BCE" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50 BCE", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraBCE))
+        }
+
+        "convert an era date string with just year/month precision to a CalendarDateV2 BCE" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02 BCE", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraBCE))
+        }
+
+        "convert an era date string with year precision to a CalendarDateV2 CE" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 CE", CalendarNameGregorian)
+            assert(calendarDate.maybeEra.contains(DateEraCE))
+        }
+
+        "convert an era date string with julian calendar with year precision to a CalendarDateV2 BC" in {
+            val calendarDate: CalendarDateV2 = CalendarDateV2.parse("50-02-28 AD", CalendarNameJulian)
+            assert(calendarDate.maybeEra.contains(DateEraCE))
         }
     }
 }
