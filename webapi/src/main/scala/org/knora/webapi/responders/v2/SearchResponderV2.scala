@@ -23,9 +23,9 @@ import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.JulianDayNumberValueV1
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.responders.v2.SearchResponderV2Constants.GravsearchConstants
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
@@ -727,7 +727,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // validate Knora date string
             val dateStr: String = stringFormatter.validateDate(dateStringLiteral.value, throw BadRequestException(s"${dateStringLiteral.value} is not a valid date string"))
 
-            val date: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateStr)
+            // Convert it to Julian Day Numbers.
+            val dateValueContent = DateValueContentV2.parse(dateStr)
 
             // Generate a variable name representing the period's start
             val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
@@ -750,9 +751,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.EQUALS =>
 
                     // any overlap in considered as equality
-                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
+                    val leftArgFilter = CompareExpression(XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, dateValueHasEndVar)
 
-                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
+                    val rightArgFilter = CompareExpression(XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, dateValueHasStartVar)
 
                     val filter = AndExpression(leftArgFilter, rightArgFilter)
 
@@ -767,9 +768,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.NOT_EQUALS =>
 
                     // no overlap in considered as inequality (negation of equality)
-                    val leftArgFilter = CompareExpression(XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
+                    val leftArgFilter = CompareExpression(XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.GREATER_THAN, dateValueHasEndVar)
 
-                    val rightArgFilter = CompareExpression(XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
+                    val rightArgFilter = CompareExpression(XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri), CompareExpressionOperator.LESS_THAN, dateValueHasStartVar)
 
                     val filter = OrExpression(leftArgFilter, rightArgFilter)
 
@@ -784,7 +785,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.LESS_THAN =>
 
                     // period ends before indicated period
-                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.LESS_THAN, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                     val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                     generatedDateStatements ++= statementsToAdd
@@ -797,7 +798,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO =>
 
                     // period ends before indicated period or equals it (any overlap)
-                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                     val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
                         generatedDateStatements += dateValStartStatement
@@ -814,7 +815,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.GREATER_THAN =>
 
                     // period starts after end of indicated period
-                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(date.dateval2.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+                    val filter = CompareExpression(dateValueHasStartVar, CompareExpressionOperator.GREATER_THAN, XsdLiteral(dateValueContent.valueHasEndJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                     val statementToAdd = if (!generatedDateStatements.contains(dateValStartStatement)) {
                         generatedDateStatements += dateValStartStatement
@@ -831,7 +832,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO =>
 
                     // period starts after indicated period or equals it (any overlap)
-                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(date.dateval1.toString, OntologyConstants.Xsd.Integer.toSmartIri))
+                    val filter = CompareExpression(dateValueHasEndVar, CompareExpressionOperator.GREATER_THAN_OR_EQUAL_TO, XsdLiteral(dateValueContent.valueHasStartJDN.toString, OntologyConstants.Xsd.Integer.toSmartIri))
 
                     val statementsToAdd = Seq(dateValStartStatement, dateValEndStatement).filterNot(statement => generatedDateStatements.contains(statement)) // dateValStartStatement may be used as ORDER BY statement
                     generatedDateStatements ++= statementsToAdd

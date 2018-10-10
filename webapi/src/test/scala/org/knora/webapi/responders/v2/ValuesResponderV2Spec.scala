@@ -34,6 +34,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
 
@@ -754,11 +755,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
-                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264907,
-                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasStartPrecision = DatePrecisionYear,
                 valueHasEndJDN = 2265271,
-                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                valueHasEndPrecision = DatePrecisionYear
             )
 
             actorUnderTest ! CreateValueRequestV2(
@@ -805,11 +806,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
-                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264907,
-                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasStartPrecision = DatePrecisionYear,
                 valueHasEndJDN = 2265271,
-                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                valueHasEndPrecision = DatePrecisionYear
             )
 
             actorUnderTest ! CreateValueRequestV2(
@@ -2450,11 +2451,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
-                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264908,
-                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasStartPrecision = DatePrecisionYear,
                 valueHasEndJDN = 2265272,
-                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                valueHasEndPrecision = DatePrecisionYear
             )
 
             actorUnderTest ! UpdateValueRequestV2(
@@ -2502,11 +2503,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val submittedValueContent = DateValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
-                valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                valueHasCalendar = CalendarNameGregorian,
                 valueHasStartJDN = 2264908,
-                valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                valueHasStartPrecision = DatePrecisionYear,
                 valueHasEndJDN = 2265272,
-                valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                valueHasEndPrecision = DatePrecisionYear
             )
 
             actorUnderTest ! UpdateValueRequestV2(

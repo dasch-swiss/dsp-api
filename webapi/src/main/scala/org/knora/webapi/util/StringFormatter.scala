@@ -33,11 +33,9 @@ import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV2
-import org.knora.webapi.util.DateUtilV2.KnoraEraV2
 import org.knora.webapi.util.JavaUtil.Optional
 import spray.json._
 
@@ -105,6 +103,31 @@ object StringFormatter {
       * Common Era (equivalent to AD)
       */
     val Era_CE: String = "CE"
+
+    /**
+      * String representation of the name of the Gregorian calendar.
+      */
+    val CalendarGregorian: String = "GREGORIAN"
+
+    /**
+      * String representation of the name of the Julian calendar.
+      */
+    val CalendarJulian: String = "JULIAN"
+
+    /**
+      * String representation of day precision in a date.
+      */
+    val PrecisionDay: String = "DAY"
+
+    /**
+      * String representation of month precision in a date.
+      */
+    val PrecisionMonth: String = "MONTH"
+
+    /**
+      * String representation of year precision in a date.
+      */
+    val PrecisionYear: String = "YEAR"
 
     /**
       * A container for an XML import namespace and its prefix label.
@@ -1670,35 +1693,6 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         KnoraDateRegex.findFirstIn(s) match {
             case Some(value) => value
             case None => errorFun // calling this function throws an error
-        }
-    }
-
-    /**
-      * Validates the era in a date.
-      *
-      * @param s        a string representing an era.
-      * @param errorFun a function that throws an exception. It will be called if the era is invalid.
-      * @return a [[org.knora.webapi.util.DateUtilV2.KnoraEraV2.Value]] representing the era.
-      */
-    def validateEra(s: String, errorFun: => Nothing): KnoraEraV2.Value = {
-        s match {
-            case StringFormatter.Era_BCE | StringFormatter.Era_BC => KnoraEraV2.BCE
-            case StringFormatter.Era_CE | StringFormatter.Era_AD => KnoraEraV2.CE
-            case _ => errorFun
-        }
-    }
-
-    /**
-      * Validates the calendar name in a date.
-      *
-      * @param s        a string representing a calendar.
-      * @param errorFun a function that throws an exception. It will be called if the calendar is invalid.
-      * @return a [[KnoraCalendarV1.Value]] representing the calendar.
-      */
-    def validateCalendar(s: String, errorFun: => Nothing): KnoraCalendarV1.Value = {
-        KnoraCalendarV1.valueMap.get(s) match {
-            case Some(value) => value
-            case None => errorFun
         }
     }
 
