@@ -744,7 +744,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
       */
     def parse(dateStr: String): DateValueContentV2 = {
         val dateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse(dateStr)
-        val (startJDN, endJDN) = dateRange.toJulianDayRange
+        val (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
 
         DateValueContentV2(
             ontologySchema = ApiV2Simple,

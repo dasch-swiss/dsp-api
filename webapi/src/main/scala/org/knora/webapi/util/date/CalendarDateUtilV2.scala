@@ -241,7 +241,11 @@ case class CalendarDateV2(calendarName: CalendarNameV2, year: Int, maybeMonth: O
       * using its calendar.
       */
     def toJulianDayRange: (Int, Int) = {
-        // Note: in com.ibm.icu.util.Calendar, JULIAN_DAY demarcates days at local zone midnight, rather than noon GMT.
+        // Note:
+        //
+        // In com.ibm.icu.util.Calendar, JULIAN_DAY demarcates days at local zone midnight, rather than noon GMT:
+        // http://icu-project.org/apiref/icu4j/com/ibm/icu/util/GregorianCalendar.html#setGregorianChange-java.util.Date-
+        //
         // Month is 0-based.
 
         try {
@@ -373,17 +377,16 @@ object CalendarDateV2 {
 
         val maybeEra: Option[DateEraV2] = dateStringSplitByEra.length match {
             case 1 =>
-                // In the Gregorian or Julian calendar, the era defaults to CE.
+                // No era given. In the Gregorian or Julian calendar, the era defaults to CE.
                 calendarName match {
                     case _: CalendarNameGregorianOrJulian => Some(DateEraCE)
                     case _ => None
                 }
 
             case 2 =>
-                dateStringSplitByEra(1) match {
-                    case StringFormatter.Era_BC | StringFormatter.Era_BCE => Some(DateEraBCE)
-                    case StringFormatter.Era_AD | StringFormatter.Era_CE => Some(DateEraCE)
-                }
+                // An era was given. Parse it.
+                val eraStr: String = dateStringSplitByEra(1)
+                Some(DateEraV2.parse(eraStr, throw BadRequestException(s"Invalid date era: $eraStr")))
 
             case _ => throw BadRequestException(s"Invalid date: $dateStr")
         }
@@ -424,8 +427,7 @@ object CalendarDateV2 {
                 case _ => throw BadRequestException(s"Invalid date: $dateStr")
             }
         } catch {
-            case _: IllegalArgumentException => throw BadRequestException(s"Invalid date: $dateStr")
-            case e: Exception => throw BadRequestException(s"The date '$dateStr' could not parsed: $e")
+            case e: IllegalArgumentException => throw BadRequestException(s"Invalid date '$dateStr': $e")
         }
     }
 }
@@ -479,7 +481,7 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
 
 object CalendarDateRangeV2 {
     /**
-      * Parses a string representing a date range with a calendar. If the end date is not provided, it is assumed to be\
+      * Parses a string representing a date range with a calendar. If the end date is not provided, it is assumed to be
       * the same as the start date. This method does syntactic validation, but does not check that the date range is valid
       * in its calendar; to do that, call `toJulianDayRange` on it.
       *
