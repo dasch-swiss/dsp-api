@@ -213,7 +213,6 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
             assert(calendarDate.maybeEra.contains(DateEraCE))
         }
 
-
         "convert a valid date string with day precision to a Julian Day range" in {
             val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-28", CalendarNameGregorian)
             calendarDate.toJulianDayRange
@@ -246,7 +245,7 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
             calendarDate.toJulianDayRange
         }
 
-        "not to convert an invalid date string with month precision to a Julian Day range" in {
+        "not convert an invalid date string with month precision to a Julian Day range" in {
             assertThrows[BadRequestException] {
                 val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00", CalendarNameGregorian)
                 calendarDate.toJulianDayRange
