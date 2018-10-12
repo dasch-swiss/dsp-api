@@ -218,7 +218,6 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
             calendarDate.toJulianDayRange
         }
 
-
         "not convert a string representing a non-existent date with day precision to a Julian Day range" in {
             assertThrows[BadRequestException] {
                 val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-02-29", CalendarNameGregorian)
@@ -249,6 +248,13 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
             assertThrows[BadRequestException] {
                 val calendarDate: CalendarDateV2 = CalendarDateV2.parse("2017-00", CalendarNameGregorian)
                 calendarDate.toJulianDayRange
+            }
+        }
+
+        "not convert a date range in which the start date is after the end date" in {
+            assertThrows[BadRequestException] {
+                val calendarDateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse("GREGORIAN:2000:1900")
+                calendarDateRange.toJulianDayRange
             }
         }
     }

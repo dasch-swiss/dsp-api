@@ -467,7 +467,7 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
       */
     def toJulianDayRange: (Int, Int) = {
         // Is this a date range or a single date?
-        if (startCalendarDate == endCalendarDate) {
+        val (startJDN: Int, endJDN: Int) = if (startCalendarDate == endCalendarDate) {
             // It's a single date. Use its start and end JDNs.
             startCalendarDate.toJulianDayRange
         } else {
@@ -476,6 +476,12 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
             val (_, endDateEndJDN) = endCalendarDate.toJulianDayRange
             (startDateStartJDN, endDateEndJDN)
         }
+
+        if (startJDN > endJDN) {
+            throw BadRequestException(s"Start date $startCalendarDate is after end date $endCalendarDate")
+        }
+
+        (startJDN, endJDN)
     }
 }
 
