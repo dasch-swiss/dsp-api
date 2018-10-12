@@ -8,6 +8,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 
 class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
@@ -366,10 +367,10 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
                     valueHasEndJDN = 2262358,
                     valueHasStartJDN = 2261994,
                     ontologySchema = InternalSchema,
-                    valueHasStartPrecision = KnoraPrecisionV1.YEAR,
-                    valueHasCalendar = KnoraCalendarV1.JULIAN,
+                    valueHasStartPrecision = DatePrecisionYear,
+                    valueHasCalendar = CalendarNameJulian,
                     comment = None,
-                    valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                    valueHasEndPrecision = DatePrecisionYear
                 ),
                 valueHasRefCount = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/63fc012e9205",

@@ -28,14 +28,13 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.valuemessages.{JulianDayNumberValueV1, KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.util.DateUtilV2.{DateYearMonthDay, KnoraEraV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
+import org.knora.webapi.util.date._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.util.standoff.{StandoffTagUtilV2, XMLUtil}
@@ -638,36 +637,37 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
 case class DateValueContentV2(ontologySchema: OntologySchema,
                               valueHasStartJDN: Int,
                               valueHasEndJDN: Int,
-                              valueHasStartPrecision: KnoraPrecisionV1.Value,
-                              valueHasEndPrecision: KnoraPrecisionV1.Value,
-                              valueHasCalendar: KnoraCalendarV1.Value,
+                              valueHasStartPrecision: DatePrecisionV2,
+                              valueHasEndPrecision: DatePrecisionV2,
+                              valueHasCalendar: CalendarNameV2,
                               comment: Option[String] = None) extends ValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.DateValue.toSmartIri.toOntologySchema(ontologySchema)
     }
 
-    // We compute valueHasString instead of taking it from the triplestore, because the
-    // string literal in the triplestore isn't in API v2 format.
-    override lazy val valueHasString: String = {
-        val startDate = DateUtilV2.jdnToDateYearMonthDay(
-            julianDayNumber = valueHasStartJDN,
+    private lazy val asCalendarDateRange: CalendarDateRangeV2 = {
+        val startCalendarDate = CalendarDateV2.fromJulianDayNumber(
+            julianDay = valueHasStartJDN,
             precision = valueHasStartPrecision,
-            calendar = valueHasCalendar
+            calendarName = valueHasCalendar
         )
 
-        val endDate = DateUtilV2.jdnToDateYearMonthDay(
-            julianDayNumber = valueHasEndJDN,
+        val endCalendarDate = CalendarDateV2.fromJulianDayNumber(
+            julianDay = valueHasEndJDN,
             precision = valueHasEndPrecision,
-            calendar = valueHasCalendar
+            calendarName = valueHasCalendar
         )
 
-        DateUtilV2.dateRangeToString(
-            startDate = startDate,
-            endDate = endDate,
-            calendar = valueHasCalendar
+        CalendarDateRangeV2(
+            startCalendarDate = startCalendarDate,
+            endCalendarDate = endCalendarDate
         )
     }
+
+    // We compute valueHasString instead of taking it from the triplestore, because the
+    // string literal in the triplestore isn't in API v2 format.
+    override lazy val valueHasString: String = asCalendarDateRange.toString
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
@@ -680,40 +680,24 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                 )
 
             case ApiV2WithValueObjects =>
+                val startCalendarDate: CalendarDateV2 = asCalendarDateRange.startCalendarDate
+                val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
+
+                val startDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
+                    startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
+                    startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
+                    startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
+
+                val endDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> JsonLDInt(endCalendarDate.year)) ++
+                    endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
+                    endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
+                    endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
+
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
                     OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar -> JsonLDString(valueHasCalendar.toString)
-                ) ++ toComplexDateValueAssertions)
+                ) ++ startDateAssertions ++ endDateAssertions)
         }
-    }
-
-    /**
-      * Create knora-api assertions.
-      *
-      * @return a Map of [[ApiV2WithValueObjects]] value properties to numbers (year, month, day) representing the date value.
-      */
-    def toComplexDateValueAssertions: Map[IRI, JsonLDValue] = {
-
-        val startDateConversion: DateYearMonthDay = DateUtilV2.jdnToDateYearMonthDay(valueHasStartJDN, valueHasStartPrecision, valueHasCalendar)
-
-        val startDateAssertions = startDateConversion.toStartDateAssertions.map {
-            case (k: IRI, v: Int) => (k, JsonLDInt(v))
-
-        } ++ startDateConversion.toStartEraAssertion.map {
-
-            case (k: IRI, v: String) => (k, JsonLDString(v))
-        }
-        val endDateConversion: DateYearMonthDay = DateUtilV2.jdnToDateYearMonthDay(valueHasEndJDN, valueHasEndPrecision, valueHasCalendar)
-
-        val endDateAssertions = endDateConversion.toEndDateAssertions.map {
-            case (k: IRI, v: Int) => (k, JsonLDInt(v))
-
-        } ++ endDateConversion.toEndEraAssertion.map {
-
-            case (k: IRI, v: String) => (k, JsonLDString(v))
-        }
-
-        startDateAssertions ++ endDateAssertions
     }
 
     override def unescape: ValueContentV2 = {
@@ -753,6 +737,26 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
   */
 object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     /**
+      * Parses a string representing a date range in API v2 simple format.
+      *
+      * @param dateStr the string to be parsed.
+      * @return a [[DateValueContentV2]] representing the date range.
+      */
+    def parse(dateStr: String): DateValueContentV2 = {
+        val dateRange: CalendarDateRangeV2 = CalendarDateRangeV2.parse(dateStr)
+        val (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
+
+        DateValueContentV2(
+            ontologySchema = ApiV2Simple,
+            valueHasStartJDN = startJDN,
+            valueHasEndJDN = endJDN,
+            valueHasStartPrecision = dateRange.startCalendarDate.precision,
+            valueHasEndPrecision = dateRange.endCalendarDate.precision,
+            valueHasCalendar = dateRange.startCalendarDate.calendarName
+        )
+    }
+
+    /**
       * Converts a JSON-LD object to a [[DateValueContentV2]].
       *
       * @param jsonLDObject     the JSON-LD object.
@@ -770,52 +774,77 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     }
 
     private def fromJsonLDObjectSync(jsonLDObject: JsonLDObject): DateValueContentV2 = {
-
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val calendar: KnoraCalendarV1.Value = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, stringFormatter.validateCalendar)
+        // Get the values given in the the JSON-LD object.
+
+        val calendarName: CalendarNameV2 = jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasCalendar, CalendarNameV2.parse)
 
         val dateValueHasStartYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear)
         val maybeDateValueHasStartMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth)
         val maybeDateValueHasStartDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay)
-        val maybeDateValueHasStartEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, stringFormatter.validateEra)
+        val maybeDateValueHasStartEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra, DateEraV2.parse)
 
         val dateValueHasEndYear: Int = jsonLDObject.requireInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear)
         val maybeDateValueHasEndMonth: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth)
         val maybeDateValueHasEndDay: Option[Int] = jsonLDObject.maybeInt(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay)
-        val maybeDateValueHasEndEra: Option[KnoraEraV2.Value] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, stringFormatter.validateEra)
+        val maybeDateValueHasEndEra: Option[DateEraV2] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra, DateEraV2.parse)
 
-        val startDate = DateYearMonthDay(
+        // Check that the date precisions are valid.
+
+        if (maybeDateValueHasStartMonth.isEmpty && maybeDateValueHasStartDay.isDefined) {
+            throw AssertionException(s"Invalid date: $jsonLDObject")
+        }
+
+        if (maybeDateValueHasEndMonth.isEmpty && maybeDateValueHasEndDay.isDefined) {
+            throw AssertionException(s"Invalid date: $jsonLDObject")
+        }
+
+        // Check that the era is given if required.
+
+        calendarName match {
+            case _: CalendarNameGregorianOrJulian =>
+                if (maybeDateValueHasStartEra.isEmpty || maybeDateValueHasEndEra.isEmpty) {
+                    throw AssertionException(s"Era is required in calendar $calendarName")
+                }
+
+            case _ => ()
+        }
+
+        // Construct a CalendarDateRangeV2 representing the start and end dates.
+
+        val startCalendarDate = CalendarDateV2(
+            calendarName = calendarName,
             year = dateValueHasStartYear,
             maybeMonth = maybeDateValueHasStartMonth,
             maybeDay = maybeDateValueHasStartDay,
-            era = maybeDateValueHasStartEra.getOrElse(KnoraEraV2.CE)
+            maybeEra = maybeDateValueHasStartEra
         )
 
-        val endDate = DateYearMonthDay(
+        val endCalendarDate = CalendarDateV2(
+            calendarName = calendarName,
             year = dateValueHasEndYear,
             maybeMonth = maybeDateValueHasEndMonth,
             maybeDay = maybeDateValueHasEndDay,
-            era = maybeDateValueHasEndEra.getOrElse(KnoraEraV2.CE)
+            maybeEra = maybeDateValueHasEndEra
         )
 
-        // TODO: convert the date range to start and end JDNs without first converting it to a string (#928).
-
-        val dateRangeStr = DateUtilV2.dateRangeToString(
-            startDate = startDate,
-            endDate = endDate,
-            calendar = calendar
+        val dateRange = CalendarDateRangeV2(
+            startCalendarDate = startCalendarDate,
+            endCalendarDate = endCalendarDate
         )
 
-        val julianDateRange: JulianDayNumberValueV1 = DateUtilV1.createJDNValueV1FromDateString(dateRangeStr)
+        // Convert the CalendarDateRangeV2 to start and end Julian Day Numbers.
+
+        val (startJDN: Int, endJDN: Int) = dateRange.toJulianDayRange
 
         DateValueContentV2(
             ontologySchema = ApiV2WithValueObjects,
-            valueHasStartJDN = julianDateRange.dateval1,
-            valueHasEndJDN = julianDateRange.dateval2,
-            valueHasStartPrecision = startDate.getPrecision,
-            valueHasEndPrecision = endDate.getPrecision,
-            valueHasCalendar = calendar,
+            valueHasStartJDN = startJDN,
+            valueHasEndJDN = endJDN,
+            valueHasStartPrecision = startCalendarDate.precision,
+            valueHasEndPrecision = endCalendarDate.precision,
+            valueHasCalendar = calendarName,
             comment = getComment(jsonLDObject)
         )
     }
@@ -976,11 +1005,11 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
                     tagWithIndex => tagWithIndex.standoffNode.startIndex -> tagWithIndex.standoffTagInstanceIri
                 }.toMap
 
-                // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV1`
+                // resolve the original XML ids to standoff Iris every the `StandoffTagInternalReferenceAttributeV2`
                 val standoffTagsWithNodeReferences: Seq[CreateStandoffTagV2InTriplestore] = standoffTagsWithOriginalXMLIDs.map {
                     standoffTag: CreateStandoffTagV2InTriplestore =>
 
-                        // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV1`
+                        // resolve original XML ids to standoff node Iris for `StandoffTagInternalReferenceAttributeV2`
                         val attributesWithStandoffNodeIriReferences: Seq[StandoffTagAttributeV2] = standoffTag.standoffNode.attributes.map {
                             attributeWithOriginalXMLID: StandoffTagAttributeV2 =>
                                 attributeWithOriginalXMLID match {

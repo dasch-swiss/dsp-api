@@ -220,7 +220,8 @@ lazy val webApiLibs = Seq(
     library.springSecurityCore,
     library.swaggerAkkaHttp,
     library.typesafeConfig,
-    library.xmlunitCore
+    library.xmlunitCore,
+    library.icu4j
 )
 
 lazy val library =
@@ -318,6 +319,8 @@ lazy val library =
 
         // Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
         val jaxbApi                = "javax.xml.bind"                % "jaxb-api"                 % "2.2.12"
+
+        val icu4j                  = "com.ibm.icu"                   % "icu4j"                    % "62.1"
     }
 
 lazy val javaRunOptions = Seq(
