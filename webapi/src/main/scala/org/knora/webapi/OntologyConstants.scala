@@ -854,6 +854,9 @@ object OntologyConstants {
         val MatchFunction: IRI = KnoraApiV2PrefixExpansion + "match"
         val MatchInStandoffFunction: IRI = KnoraApiV2PrefixExpansion + "matchInStandoff"
         val StandoffLinkFunction:  IRI = KnoraApiV2PrefixExpansion + "standoffLink"
+
+        val GraphNodes: IRI = KnoraApiV2PrefixExpansion + "graphNodes"
+        val GraphEdges: IRI = KnoraApiV2PrefixExpansion + "graphEdges"
     }
 
     object SalsahGuiApiV2WithValueObjects {
@@ -943,6 +946,9 @@ object OntologyConstants {
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+
+        val GraphNodes: IRI = KnoraApiV2PrefixExpansion + "graphNodes"
+        val GraphEdges: IRI = KnoraApiV2PrefixExpansion + "graphEdges"
     }
 
     /**

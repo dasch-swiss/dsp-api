@@ -278,6 +278,44 @@ object KnoraApiV2Simple {
         )
     )
 
+    private val GraphNodes: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.GraphNodes,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Graph nodes"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the nodes in a resource graph."
+                )
+            )
+        )
+    )
+
+    private val GraphEdges: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.GraphEdges,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Graph edges"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the edges in a resource graph."
+                )
+            )
+        )
+    )
+
     /**
       * Rules for transforming entities from `knora-base` into the corresponding entities from `knora-api`
       * in the [[ApiV2Simple]] schema.
@@ -491,7 +529,9 @@ object KnoraApiV2Simple {
             HasValue,
             ResourceProperty,
             SubjectType,
-            ObjectType
+            ObjectType,
+            GraphNodes,
+            GraphEdges
         ).map {
             propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
         }.toMap
@@ -568,43 +608,6 @@ object KnoraApiV2Simple {
                 }.toMap,
                 subPropertyOf = subPropertyOf.map(_.toSmartIri)
             )
-        )
-    }
-
-    /**
-      * Makes a [[ReadClassInfoV2]] representing an owl:Class.
-      *
-      * @param classIri               the IRI of the class.
-      * @param subClassOf             the set of direct superclasses of this class.
-      * @param predicates             the predicates of the class.
-      * @param directCardinalities    the direct cardinalities of the class.
-      * @param inheritedCardinalities the inherited cardinalities of the class.
-      * @return a [[ReadClassInfoV2]].
-      */
-    private def makeClass(classIri: IRI,
-                          subClassOf: Set[IRI] = Set.empty[IRI],
-                          predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
-                          directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo]): ReadClassInfoV2 = {
-
-        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-        )
-
-        ReadClassInfoV2(
-            entityInfoContent = ClassInfoContentV2(
-                classIri = classIri.toSmartIri,
-                predicates = predicates.map {
-                    pred => pred.predicateIri -> pred
-                }.toMap + rdfType,
-                directCardinalities = directCardinalities.map {
-                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
-                },
-                subClassOf = subClassOf.map(_.toSmartIri),
-                ontologySchema = ApiV2Simple
-            ),
-            inheritedCardinalities = inheritedCardinalities
         )
     }
 
