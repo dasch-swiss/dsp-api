@@ -8,6 +8,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
 
 class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
@@ -171,10 +172,10 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     valueHasEndJDN = 2266376,
                     valueHasStartJDN = 2266011,
                     ontologySchema = InternalSchema,
-                    valueHasStartPrecision = KnoraPrecisionV1.YEAR,
-                    valueHasCalendar = KnoraCalendarV1.JULIAN,
+                    valueHasStartPrecision = DatePrecisionYear,
+                    valueHasCalendar = CalendarNameJulian,
                     comment = None,
-                    valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                    valueHasEndPrecision = DatePrecisionYear
                 ),
                 valueHasRefCount = None,
                 valueIri = "http://rdfh.ch/c5058f3a/values/cfd09f1e01",
@@ -572,10 +573,10 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
                     valueHasEndJDN = 2262358,
                     valueHasStartJDN = 2261994,
                     ontologySchema = InternalSchema,
-                    valueHasStartPrecision = KnoraPrecisionV1.YEAR,
-                    valueHasCalendar = KnoraCalendarV1.JULIAN,
+                    valueHasStartPrecision = DatePrecisionYear,
+                    valueHasCalendar = CalendarNameJulian,
                     comment = None,
-                    valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                    valueHasEndPrecision = DatePrecisionYear
                 ),
                 valueHasRefCount = None,
                 valueIri = "http://rdfh.ch/2a6221216701/values/63fc012e9205",

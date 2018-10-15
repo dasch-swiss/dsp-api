@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
 import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
@@ -429,11 +430,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     CreateValueInNewResourceV2(
                         valueContent = DateValueContentV2(
                             ontologySchema = ApiV2WithValueObjects,
-                            valueHasCalendar = KnoraCalendarV1.GREGORIAN,
+                            valueHasCalendar = CalendarNameGregorian,
                             valueHasStartJDN = 2264907,
-                            valueHasStartPrecision = KnoraPrecisionV1.YEAR,
+                            valueHasStartPrecision = DatePrecisionYear,
                             valueHasEndJDN = 2265271,
-                            valueHasEndPrecision = KnoraPrecisionV1.YEAR
+                            valueHasEndPrecision = DatePrecisionYear
                         )
                     )
                 ),

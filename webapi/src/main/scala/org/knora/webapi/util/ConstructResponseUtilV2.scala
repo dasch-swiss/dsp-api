@@ -24,13 +24,13 @@ import java.time.Instant
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStandoff
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 
 
@@ -506,14 +506,17 @@ object ConstructResponseUtilV2 {
 
 
             case OntologyConstants.KnoraBase.DateValue =>
+                val startPrecisionStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)
+                val endPrecisionStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndPrecision)
+                val calendarNameStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasCalendar)
 
                 DateValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasStartJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                     valueHasEndJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
-                    valueHasStartPrecision = KnoraPrecisionV1.lookup(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)),
-                    valueHasEndPrecision = KnoraPrecisionV1.lookup(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndPrecision)),
-                    valueHasCalendar = KnoraCalendarV1.lookup(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasCalendar)),
+                    valueHasStartPrecision = DatePrecisionV2.parse(startPrecisionStr, throw InconsistentTriplestoreDataException(s"Invalid date precision: $startPrecisionStr")),
+                    valueHasEndPrecision = DatePrecisionV2.parse(endPrecisionStr, throw InconsistentTriplestoreDataException(s"Invalid date precision: $endPrecisionStr")),
+                    valueHasCalendar = CalendarNameV2.parse(calendarNameStr, throw InconsistentTriplestoreDataException(s"Invalid calendar name: $calendarNameStr")),
                     comment = valueCommentOption
                 )
 

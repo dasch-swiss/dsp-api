@@ -30,7 +30,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -42,6 +41,7 @@ import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
+import org.knora.webapi.util.date.CalendarNameGregorian
 import org.knora.webapi.util.search.ConstructQuery
 import org.knora.webapi.util.search.gravsearch.GravsearchParser
 
@@ -914,7 +914,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                     valueObj.copy(
                                         valueContent = dateContent.copy(
                                             // act as if this was a Gregorian date
-                                            valueHasCalendar = KnoraCalendarV1.GREGORIAN
+                                            valueHasCalendar = CalendarNameGregorian
                                         )
                                     )
 
