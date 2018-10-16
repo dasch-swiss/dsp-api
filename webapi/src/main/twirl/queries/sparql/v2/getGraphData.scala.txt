@@ -32,19 +32,22 @@
  * @param startNodeOnly if true, returns information only about the start node.
  * @param maybeExcludeLinkProperty if provided, a link property that should be excluded from the results.
  * @param outbound true to get outbound links, false to get inbound links.
+ * @param limit the maximum number of edges to return.
  *@
 @(triplestore: String,
   startNodeIri: IRI,
   startNodeOnly: Boolean,
   maybeExcludeLinkProperty: Option[SmartIri],
-  outbound: Boolean = true)
+  outbound: Boolean,
+  limit: Int)
 
 @if(triplestore.startsWith("graphdb")) {
     @{
         queries.sparql.v2.txt.getGraphDataGraphDB(startNodeIri = startNodeIri,
                                                   startNodeOnly = startNodeOnly,
                                                   maybeExcludeLinkProperty = maybeExcludeLinkProperty,
-                                                  outbound = outbound)
+                                                  outbound = outbound,
+                                                  limit = limit)
     }
 } else {
     @{
@@ -52,6 +55,7 @@
                                                    startNodeIri = startNodeIri,
                                                    startNodeOnly = startNodeOnly,
                                                    maybeExcludeLinkProperty = maybeExcludeLinkProperty,
-                                                   outbound = outbound)
+                                                   outbound = outbound,
+                                                   limit = limit)
     }
 }

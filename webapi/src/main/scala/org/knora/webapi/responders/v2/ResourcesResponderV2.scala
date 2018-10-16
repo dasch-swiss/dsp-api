@@ -1142,7 +1142,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     startNodeIri = startNode.nodeIri,
                     startNodeOnly = false,
                     maybeExcludeLinkProperty = excludePropertyInternal,
-                    outbound = outbound // true to query outbound edges, false to query inbound edges
+                    outbound = outbound, // true to query outbound edges, false to query inbound edges
+                    limit = settings.maxGraphBreadth
                 ).toString())
 
                 // _ = println(sparql)
@@ -1277,7 +1278,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 triplestore = settings.triplestoreType,
                 startNodeIri = graphDataGetRequest.resourceIri,
                 maybeExcludeLinkProperty = excludePropertyInternal,
-                startNodeOnly = true
+                startNodeOnly = true,
+                outbound = true,
+                limit = settings.maxGraphBreadth
             ).toString())
 
             // _ = println(sparql)

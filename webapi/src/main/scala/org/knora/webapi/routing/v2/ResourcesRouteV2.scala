@@ -262,8 +262,17 @@ object ResourcesRouteV2 extends Authenticator {
                 requestContext => {
                     val resourceIri: IRI = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: <$resIriStr>"))
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
-                    val depth: Int = params.get(Depth).map(_.toInt).getOrElse(4)
-                    val direction: String = params.getOrElse(Direction, Both)
+                    val depth: Int = params.get(Depth).map(_.toInt).getOrElse(settings.defaultGraphDepth)
+
+                    if (depth < 1) {
+                        throw BadRequestException(s"$Depth must be at least 1")
+                    }
+
+                    if (depth > settings.maxGraphDepth) {
+                        throw BadRequestException(s"$Depth cannot be greater than ${settings.maxGraphDepth}")
+                    }
+
+                    val direction: String = params.getOrElse(Direction, Outbound)
                     val excludeProperty: Option[SmartIri] = params.get(ExcludeProperty).map(propIriStr => propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propIriStr>")))
 
                     val (inbound: Boolean, outbound: Boolean) = direction match {

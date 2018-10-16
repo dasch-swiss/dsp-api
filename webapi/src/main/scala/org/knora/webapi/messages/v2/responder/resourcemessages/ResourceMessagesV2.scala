@@ -620,12 +620,12 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-        val nodesInTargetSchema = nodes.map(_.toOntologySchema(targetSchema))
-        val edgesInTargetSchema = edges.map(_.toOntologySchema(targetSchema))
+        val sortedNodesInTargetSchema: Seq[GraphNodeV2] = nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri)
+        val edgesInTargetSchema: Seq[GraphEdgeV2] = edges.map(_.toOntologySchema(targetSchema))
 
         // Make JSON-LD prefixes for the project-specific ontologies used in the response.
 
-        val resourceOntologiesUsed: Set[SmartIri] = nodesInTargetSchema.map(_.resourceClassIri.getOntologyFromEntity).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
+        val resourceOntologiesUsed: Set[SmartIri] = sortedNodesInTargetSchema.map(_.resourceClassIri.getOntologyFromEntity).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
         val propertyOntologiesUsed: Set[SmartIri] = edgesInTargetSchema.map(_.propertyIri.getOntologyFromEntity).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
         val projectSpecificOntologiesUsed = resourceOntologiesUsed ++ propertyOntologiesUsed
 
@@ -652,7 +652,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 
         val groupedEdges: Map[IRI, Seq[GraphEdgeV2]] = edgesInTargetSchema.groupBy(_.source)
 
-        val nodesWithEdges: Seq[JsonLDObject] = nodesInTargetSchema.map {
+        val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map {
             node: GraphNodeV2 =>
                 // Convert the node to JSON-LD.
                 val jsonLDNodeMap = Map(
@@ -666,12 +666,13 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
                     case Some(nodeEdges: Seq[GraphEdgeV2]) =>
                         // Yes. Convert them to JSON-LD and add them to the node.
 
-                        val nodeEdgesGroupedByProperty: Map[SmartIri, Seq[GraphEdgeV2]] = nodeEdges.groupBy(_.propertyIri)
+                        val nodeEdgesGroupedAndSortedByProperty: Vector[(SmartIri, Seq[GraphEdgeV2])] = nodeEdges.groupBy(_.propertyIri).toVector.sortBy(_._1)
 
-                        val jsonLDNodeEdges: Map[IRI, JsonLDArray] = nodeEdgesGroupedByProperty.map {
-                            case (propertyIri, propertyEdges) =>
-                                propertyIri.toString -> JsonLDArray(propertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
-                        }
+                        val jsonLDNodeEdges: Map[IRI, JsonLDArray] = nodeEdgesGroupedAndSortedByProperty.map {
+                            case (propertyIri: SmartIri, propertyEdges: Seq[GraphEdgeV2]) =>
+                                val sortedPropertyEdges = propertyEdges.sortBy(_.target)
+                                propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
+                        }.toMap
 
                         JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
 

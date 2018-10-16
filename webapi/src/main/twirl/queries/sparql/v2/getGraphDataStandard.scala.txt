@@ -31,12 +31,14 @@
  * @param startNodeOnly if true, returns information only about the start node.
  * @param maybeExcludeLinkProperty if provided, a link property that should be excluded from the results.
  * @param outbound true to get outbound links, false to get inbound links.
+ * @param limit the maximum number of edges to return.
  *@
 @(triplestore: String,
   startNodeIri: IRI,
   startNodeOnly: Boolean,
   maybeExcludeLinkProperty: Option[SmartIri],
-  outbound: Boolean = true)
+  outbound: Boolean,
+  limit: Int)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -115,4 +117,4 @@ WHERE {
             knora-base:hasPermissions ?linkValuePermissions .
     }
 }
-LIMIT 50
+LIMIT @limit
