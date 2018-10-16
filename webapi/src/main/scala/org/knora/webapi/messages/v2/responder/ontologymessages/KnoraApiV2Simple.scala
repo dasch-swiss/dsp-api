@@ -278,44 +278,6 @@ object KnoraApiV2Simple {
         )
     )
 
-    private val GraphNodes: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.GraphNodes,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Graph nodes"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the nodes in a resource graph."
-                )
-            )
-        )
-    )
-
-    private val GraphEdges: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2Simple.GraphEdges,
-        propertyType = OntologyConstants.Owl.ObjectProperty,
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Graph edges"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Provides the edges in a resource graph."
-                )
-            )
-        )
-    )
-
     /**
       * Rules for transforming entities from `knora-base` into the corresponding entities from `knora-api`
       * in the [[ApiV2Simple]] schema.
@@ -529,9 +491,7 @@ object KnoraApiV2Simple {
             HasValue,
             ResourceProperty,
             SubjectType,
-            ObjectType,
-            GraphNodes,
-            GraphEdges
+            ObjectType
         ).map {
             propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
         }.toMap

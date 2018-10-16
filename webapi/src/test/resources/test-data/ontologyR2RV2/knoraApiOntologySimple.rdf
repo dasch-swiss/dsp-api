@@ -675,14 +675,6 @@
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Provides a message indicating that an operation was unsuccessful</rdfs:comment>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">error</rdfs:label>
 </owl:DatatypeProperty>
-<owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#graphEdges">
-	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Provides the edges in a resource graph.</rdfs:comment>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Graph edges</rdfs:label>
-</owl:ObjectProperty>
-<owl:ObjectProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#graphNodes">
-	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Provides the nodes in a resource graph.</rdfs:comment>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Graph nodes</rdfs:label>
-</owl:ObjectProperty>
 <owl:DatatypeProperty rdf:about="http://api.knora.org/ontology/knora-api/simple/v2#hasValue">
 	<knora-api:subjectType rdf:resource="http://api.knora.org/ontology/knora-api/simple/v2#Resource"/>
 	<rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The base property of properties that point from Knora resources to Knora values.</rdfs:comment>

@@ -479,14 +479,6 @@ knora-api:error a owl:DatatypeProperty;
   rdfs:comment "Provides a message indicating that an operation was unsuccessful";
   rdfs:label "error" .
 
-knora-api:graphEdges a owl:ObjectProperty;
-  rdfs:comment "Provides the edges in a resource graph.";
-  rdfs:label "Graph edges" .
-
-knora-api:graphNodes a owl:ObjectProperty;
-  rdfs:comment "Provides the nodes in a resource graph.";
-  rdfs:label "Graph nodes" .
-
 knora-api:hasValue a owl:DatatypeProperty;
   knora-api:subjectType knora-api:Resource;
   rdfs:comment "The base property of properties that point from Knora resources to Knora values.";

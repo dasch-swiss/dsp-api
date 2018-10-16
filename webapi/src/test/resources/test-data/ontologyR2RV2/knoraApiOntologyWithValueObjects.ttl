@@ -2785,14 +2785,6 @@ knora-api:canBeInstantiated a owl:AnnotationProperty;
   rdfs:comment "Indicates whether a resource class can be instantiated via the Knora API.";
   rdfs:label "can be instantiated" .
 
-knora-api:graphEdges a owl:ObjectProperty;
-  rdfs:comment "Provides the edges in a resource graph.";
-  rdfs:label "Graph edges" .
-
-knora-api:graphNodes a owl:ObjectProperty;
-  rdfs:comment "Provides the nodes in a resource graph.";
-  rdfs:label "Graph nodes" .
-
 knora-api:hasValue a owl:ObjectProperty;
   knora-api:isResourceProperty true;
   knora-api:objectType knora-api:Value;

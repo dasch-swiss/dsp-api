@@ -4286,16 +4286,6 @@
       "@id" : "knora-api:valueHas"
     }
   }, {
-    "@id" : "knora-api:graphEdges",
-    "@type" : "owl:ObjectProperty",
-    "rdfs:comment" : "Provides the edges in a resource graph.",
-    "rdfs:label" : "Graph edges"
-  }, {
-    "@id" : "knora-api:graphNodes",
-    "@type" : "owl:ObjectProperty",
-    "rdfs:comment" : "Provides the nodes in a resource graph.",
-    "rdfs:label" : "Graph nodes"
-  }, {
     "@id" : "knora-api:hasAudioFileValue",
     "@type" : "owl:ObjectProperty",
     "knora-api:isEditable" : true,
