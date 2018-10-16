@@ -1508,7 +1508,7 @@
 						// encode '<strong>' in '&lt;strong&gt;'
 						tmpele.text(propinfo[prop].values[value_index].utf8str);
 						// replace the remaining '\n' with '<br>'
-						tmpele.html($this.html().replace(/\n/g, '<br>'));
+						tmpele.html(tmpele.html().replace(/\n/g, '<br>'));
 					}
 					value_container.append(tmpele);
 					tmpele.focus();
