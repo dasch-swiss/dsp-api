@@ -1182,13 +1182,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // Collect the IRIs of the nodes that the user has permission to see, including the start node.
-                    val visibleNodeIris = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
+                    val visibleNodeIris: Set[IRI] = otherNodes.map(_.nodeIri).toSet + startNode.nodeIri
 
                     // Get the edges from the query results.
                     val edges: Set[QueryResultEdge] = rows.map {
-                        row =>
-                            val rowMap = row.rowMap
-                            val nodeIri = rowMap("node")
+                        row: VariableResultsRow =>
+                            val rowMap: Map[String, String] = row.rowMap
+                            val nodeIri: IRI = rowMap("node")
 
                             // The SPARQL query takes a start node and returns the other node in the edge.
                             //
@@ -1208,11 +1208,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 linkValuePermissions = rowMap("linkValuePermissions")
                             )
                     }.filter {
-                        edge =>
+                        edge: QueryResultEdge =>
                             // Filter out the edges that the user doesn't have permission to see. To see an edge,
                             // the user must have some permission on the link value and on the source and target
                             // nodes.
-                            val hasPermission = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
+                            val hasPermission: Boolean = visibleNodeIris.contains(edge.sourceNodeIri) && visibleNodeIris.contains(edge.targetNodeIri) &&
                                 PermissionUtilADM.getUserPermissionADM(
                                     entityIri = edge.linkValueIri,
                                     entityCreator = edge.linkValueCreator,
@@ -1230,8 +1230,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                     // Include only nodes that are reachable via edges that we're going to traverse (i.e. the user
                     // has permission to see those edges, and we haven't already traversed them).
-                    val visibleNodeIrisFromEdges = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
-                    val filteredOtherNodes = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
+                    val visibleNodeIrisFromEdges: Set[IRI] = edges.map(_.sourceNodeIri) ++ edges.map(_.targetNodeIri)
+                    val filteredOtherNodes: Seq[QueryResultNode] = otherNodes.filter(node => visibleNodeIrisFromEdges.contains(node.nodeIri))
 
                     // Make a GraphQueryResults containing the resulting nodes and edges, including the start
                     // node.
@@ -1244,13 +1244,15 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     } else {
                         // No. Recursively get results for each of the nodes we found.
 
+                        val traversedEdgesForRecursion: Set[QueryResultEdge] = traversedEdges ++ edges
+
                         val lowerResultFutures: Seq[Future[GraphQueryResults]] = filteredOtherNodes.map {
                             node =>
                                 traverseGraph(
                                     startNode = node,
                                     outbound = outbound,
                                     depth = depth - 1,
-                                    traversedEdges = traversedEdges ++ edges
+                                    traversedEdges = traversedEdgesForRecursion
                                 )
                         }
 
@@ -1258,14 +1260,15 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                         // Return those results plus the ones we found.
 
-                        for {
-                            lowerResultsSeq <- lowerResultsFuture
-                        } yield lowerResultsSeq.foldLeft(results) {
-                            case (acc, lowerResults) =>
-                                GraphQueryResults(
-                                    nodes = acc.nodes ++ lowerResults.nodes,
-                                    edges = acc.edges ++ lowerResults.edges
-                                )
+                        lowerResultsFuture.map {
+                            lowerResultsSeq =>
+                                lowerResultsSeq.foldLeft(results) {
+                                    case (acc, lowerResults) =>
+                                        GraphQueryResults(
+                                            nodes = acc.nodes ++ lowerResults.nodes,
+                                            edges = acc.edges ++ lowerResults.edges
+                                        )
+                                }
                         }
                     }
                 }

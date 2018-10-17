@@ -439,6 +439,6 @@ object ResourcesRouteV2E2ESpec {
     val config: Config = ConfigFactory.parseString(
         """akka.loglevel = "DEBUG"
           |akka.stdout-loglevel = "DEBUG"
-          |app.triplestore.profile-queries = true
+          |app.triplestore.profile-queries = false
         """.stripMargin)
 }
