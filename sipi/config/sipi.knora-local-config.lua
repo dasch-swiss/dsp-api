@@ -67,7 +67,7 @@ sipi = {
     -- thousand files in a unix directory (your mileage may vay depending on the
     -- file system used).
     --
-    subdir_levels = 1,
+    subdir_levels = 0,
 
     --
     -- if subdir_levels is > 0 and if prefix_as_path is true, all prefixes will be
@@ -126,8 +126,13 @@ sipi = {
     --
     -- loglevel, one of "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG"
     --
-    loglevel = "DEBUG"
+    loglevel = "DEBUG",
 
+    --
+    -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
+    --
+    jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
+    --            12345678901234567890123456789012
 }
 
 
@@ -173,6 +178,11 @@ routes = {
         method = 'POST',
         route = '/Knora_logout',
         script = 'Knora_logout.lua'
+    },
+    {
+        method = 'POST',
+        route = '/upload',
+        script = 'upload.lua'
     }
 
 }
