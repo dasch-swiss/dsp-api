@@ -68,8 +68,8 @@ WHERE {
                 case Some(excludeLinkProperty) => {
 
                     FILTER NOT EXISTS {
-                        ?isPartOfProp rdfs:subPropertyOf* <@excludeLinkProperty> .
-                        ?startNode ?isPartOfProp ?node .
+                        ?excludedProp rdfs:subPropertyOf* <@excludeLinkProperty> .
+                        ?startNode ?excludedProp ?node .
                     }
 
                 }
@@ -90,8 +90,8 @@ WHERE {
                 case Some(excludeLinkProperty) => {
 
                     FILTER NOT EXISTS {
-                        ?isPartOfProp rdfs:subPropertyOf* <@excludeLinkProperty> .
-                        ?node ?isPartOfProp ?startNode .
+                        ?excludedProp rdfs:subPropertyOf* <@excludeLinkProperty> .
+                        ?node ?excludedProp ?startNode .
                     }
 
                 }

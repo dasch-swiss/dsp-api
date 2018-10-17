@@ -1149,7 +1149,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 // _ = println(sparql)
 
                 response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
-                rows = response.results.bindings
+                rows: Seq[VariableResultsRow] = response.results.bindings
 
                 // Did we get any results?
                 recursiveResults: GraphQueryResults <- if (rows.isEmpty) {
@@ -1158,8 +1158,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 } else {
                     // Yes. Get the nodes from the query results.
                     val otherNodes: Seq[QueryResultNode] = rows.map {
-                        row =>
-                            val rowMap = row.rowMap
+                        row: VariableResultsRow =>
+                            val rowMap: Map[String, String] = row.rowMap
 
                             QueryResultNode(
                                 nodeIri = rowMap("node"),
@@ -1170,7 +1170,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 nodePermissions = rowMap("nodePermissions")
                             )
                     }.filter {
-                        node =>
+                        node: QueryResultNode =>
                             // Filter out the nodes that the user doesn't have permission to see.
                             PermissionUtilADM.getUserPermissionADM(
                                 entityIri = node.nodeIri,
@@ -1222,7 +1222,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 ).nonEmpty
 
                             // Filter out edges we've already traversed.
-                            val isRedundant = traversedEdges.contains(edge)
+                            val isRedundant: Boolean = traversedEdges.contains(edge)
                             // if (isRedundant) println(s"filtering out edge from ${edge.sourceNodeIri} to ${edge.targetNodeIri}")
 
                             hasPermission && !isRedundant
@@ -1261,9 +1261,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                         // Return those results plus the ones we found.
 
                         lowerResultsFuture.map {
-                            lowerResultsSeq =>
+                            lowerResultsSeq: Seq[GraphQueryResults] =>
                                 lowerResultsSeq.foldLeft(results) {
-                                    case (acc, lowerResults) =>
+                                    case (acc: GraphQueryResults, lowerResults: GraphQueryResults) =>
                                         GraphQueryResults(
                                             nodes = acc.nodes ++ lowerResults.nodes,
                                             edges = acc.edges ++ lowerResults.edges
@@ -1289,13 +1289,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // _ = println(sparql)
 
             response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
-            rows = response.results.bindings
+            rows: Seq[VariableResultsRow] = response.results.bindings
 
             _ = if (rows.isEmpty) {
-                throw NotFoundException(s"Resource ${graphDataGetRequest.resourceIri} not found (it may have been deleted)")
+                throw NotFoundException(s"Resource <${graphDataGetRequest.resourceIri}> not found (it may have been deleted)")
             }
 
-            firstRowMap = rows.head.rowMap
+            firstRowMap: Map[String, String] = rows.head.rowMap
 
             startNode: QueryResultNode = QueryResultNode(
                 nodeIri = firstRowMap("node"),
@@ -1314,7 +1314,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 entityPermissionLiteral = startNode.nodePermissions,
                 requestingUser = graphDataGetRequest.requestingUser
             ).isEmpty) {
-                throw ForbiddenException(s"User ${graphDataGetRequest.requestingUser.id} does not have permission to view resource ${graphDataGetRequest.resourceIri}")
+                throw ForbiddenException(s"User ${graphDataGetRequest.requestingUser.email} does not have permission to view resource <${graphDataGetRequest.resourceIri}>")
             }
 
             // Recursively get the graph containing outbound links.
@@ -1345,7 +1345,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Convert each node to a GraphNodeV2 for the API response message.
             resultNodes: Vector[GraphNodeV2] = nodes.map {
-                node =>
+                node: QueryResultNode =>
                     GraphNodeV2(
                         resourceIri = node.nodeIri,
                         resourceClassIri = node.nodeClass,
@@ -1355,7 +1355,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Convert each edge to a GraphEdgeV2 for the API response message.
             resultEdges: Vector[GraphEdgeV2] = edges.map {
-                edge =>
+                edge: QueryResultEdge =>
                     GraphEdgeV2(
                         source = edge.sourceNodeIri,
                         propertyIri = edge.linkProp,
@@ -1363,7 +1363,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     )
             }.toVector
 
-        } yield GraphDataGetResponseV2(nodes = resultNodes, edges = resultEdges, ontologySchema = InternalSchema)
+        } yield GraphDataGetResponseV2(
+            nodes = resultNodes,
+            edges = resultEdges,
+            ontologySchema = InternalSchema
+        )
     }
 
 }
