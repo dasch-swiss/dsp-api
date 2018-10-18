@@ -108,8 +108,6 @@
            rdfs:comment """Autor/Verfasser"""@de ,
                         """Author"""@en ;
 
-           knora-base:subjectClassConstraint :writtenSource ;
-
            knora-base:objectClassConstraint :person ;
 
            salsah-gui:guiElement salsah-gui:Searchbox .
@@ -121,8 +119,6 @@
 :hasAuthorValue rdf:type owl:ObjectProperty ;
 
                 knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                knora-base:subjectClassConstraint :writtenSource ;
 
                 rdfs:subPropertyOf knora-base:hasLinkToValue ;
 

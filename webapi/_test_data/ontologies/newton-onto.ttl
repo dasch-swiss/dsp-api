@@ -59,6 +59,132 @@
                    rdfs:comment """Faksimile des Briefs"""@de ,
                                 """Facsimile of Letter"""@en .
 
+
+
+### ###########################################
+### newton:hasExtent
+
+:hasExtent rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Umfang"@de ,
+                           "Extent"@en ;
+
+                rdfs:comment """Represents extent of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                knora-base:subjectClassConstraint :fileDescription ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### newton:hasFileDescription
+
+:hasFileDescription rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Datei-Beschreibung"@de ,
+                         "File Description"@en ;
+
+              rdfs:comment """Deschreibung der Datei von einem Brief"""@de ,
+                           """File-Description of letter"""@en ;
+
+              knora-base:objectClassConstraint :FileDescription ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:hasFileDescriptionValue
+
+:hasFileDescriptionValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                    rdfs:label "Datei-Beschreibung"@de ,
+                               "File Description"@en ;
+
+                    rdfs:comment """Deschreibung der Datei von einem Brief"""@de ,
+                                 """File-Description of letter"""@en .
+
+### ###########################################
+### newton:hasTitleStmt
+
+:hasTitleStmt rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Title-Beschreibung"@de ,
+                         "Title Statement"@en ;
+
+              rdfs:comment """Beschreibung des Titel von einem Brief"""@de ,
+                           """Statement about title of a letter"""@en ;
+
+              knora-base:objectClassConstraint :titleStmt ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:hasTitleStmt
+
+:hasTitleStmtValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Titel-Beschreibung"@de ,
+                              "Title Statement"@en ;
+
+                   rdfs:comment """Beschreibung des Titel von einem Brief"""@de ,
+                                """Statement about title of a letter"""@en .
+
+### ###########################################
+### newton:hasTitle
+
+:hasTitle rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Titel eines Briefes"@de ,
+                           "Title of letter"@en ;
+
+                rdfs:comment """Represents the complete title of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+
+### ###########################################
+### newton:hasTitleAbbreviation
+
+:hasTitleAbbreviation rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Abkürzung des Titels"@de ,
+                           "Abbreviation of Title"@en ;
+
+                rdfs:comment """Represents the abbreviated title of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                knora-base:subjectClassConstraint :titleStmt ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+
+
 ##########################################################
 #
 # RESOURCES
@@ -82,6 +208,18 @@
                           owl:onProperty :hasFacsimileValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasFileDescription ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasFileDescriptionValue ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ];
 
         knora-base:resourceIcon "letter.png" ;
@@ -91,3 +229,71 @@
                    "Letter"@en ;
 
         rdfs:comment "A resource representing a letter from The Newton Project"@en .
+
+
+### ###########################################
+### newton:fileDescription
+
+:fileDescription rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasExtent ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasTitleStmt ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasTitleStmtValue ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ;
+
+        rdfs:label "Datei-Beschreibung"@de ,
+                   "File Description"@en ;
+
+        rdfs:comment "A resource representing the description of a file containing letter"@en .
+
+
+### ###########################################
+### newton:titleStmt
+
+:titleStmt rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasTitle ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ],
+                       [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasTitleAbbreviation ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty beol:hasAuthor ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty beol:hasAuthorValue ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ;
+
+        rdfs:label "Titel-Beschreibung"@de ,
+                   "Title Statement"@en ;
+
+        rdfs:comment "A resource representing the statement about title of letter"@en .
