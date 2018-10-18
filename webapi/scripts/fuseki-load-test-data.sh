@@ -5,7 +5,6 @@ curl -F filedata=@../../knora-ontologies/knora-base.ttl http://localhost:3030/kn
 curl -F filedata=@../../knora-ontologies/knora-admin.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/knora-base > /dev/null
 curl -F filedata=@../../knora-ontologies/standoff-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/standoff > /dev/null
 curl -F filedata=@../../knora-ontologies/standoff-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/standoff > /dev/null
-curl -F filedata=@../../knora-ontologies/knora-dc.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/dc > /dev/null
 curl -F filedata=@../../knora-ontologies/salsah-gui.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/salsah-gui > /dev/null
 curl -F filedata=@../_test_data/all_data/admin-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/admin > /dev/null
 curl -F filedata=@../_test_data/all_data/permissions-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/permissions > /dev/null
@@ -16,6 +15,7 @@ curl -F filedata=@../_test_data/demo_data/images-demo-data.ttl http://localhost:
 curl -F filedata=@../_test_data/ontologies/anything-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0001/anything > /dev/null
 curl -F filedata=@../_test_data/all_data/anything-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/anything > /dev/null
 curl -F filedata=@../_test_data/ontologies/beol-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/beol > /dev/null
-curl -F filedata=@../_test_data/all_data/beol-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/beol > /dev/null
-curl -F filedata=@../_test_data/ontologies/biblio-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0802/biblio > /dev/null
+curl -F filedata=@../_test_data/ontologies/biblio-onto.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/ontology/0801/biblio > /dev/null
 curl -F filedata=@../_test_data/all_data/biblio-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/biblio > /dev/null
+curl -F filedata=@../_test_data/all_data/beol-data.ttl http://localhost:3030/knora-test/data?graph=http://www.knora.org/data/beol > /dev/null
+
