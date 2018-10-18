@@ -148,25 +148,19 @@
             }
 
             case stillImageFileValue: StillImageFileValueContentV2 => {
-                <@newValueIri> knora-base:originalFilename """@stillImageFileValue.originalFilename""" ;
-                                     knora-base:originalMimeType """@stillImageFileValue.originalMimeType""" ;
-                                     knora-base:internalFilename """@stillImageFileValue.internalFilename""" ;
-                                     knora-base:internalMimeType """@stillImageFileValue.internalMimeType""" ;
+                <@newValueIri> knora-base:originalFilename """@stillImageFileValue.fileValue.originalFilename""" ;
+                                     knora-base:originalMimeType """@stillImageFileValue.fileValue.originalMimeType""" ;
+                                     knora-base:internalFilename """@stillImageFileValue.fileValue.internalFilename""" ;
+                                     knora-base:internalMimeType """@stillImageFileValue.fileValue.internalMimeType""" ;
                                      knora-base:dimX @stillImageFileValue.dimX ;
-                                     knora-base:dimY @stillImageFileValue.dimY ;
-                                     knora-base:qualityLevel @stillImageFileValue.qualityLevel .
-
-                @if(stillImageFileValue.isPreview) {
-                    <@newValueIri> knora-base:isPreview true .
-                }
-
+                                     knora-base:dimY @stillImageFileValue.dimY .
             }
 
             case textFileValue: TextFileValueContentV2 => {
-                <@newValueIri> knora-base:originalFilename """@textFileValue.originalFilename""" ;
-                                     knora-base:originalMimeType """@textFileValue.originalMimeType""" ;
-                                     knora-base:internalFilename """@textFileValue.internalFilename""" ;
-                                     knora-base:internalMimeType """@textFileValue.internalMimeType""" .
+                <@newValueIri> knora-base:originalFilename """@textFileValue.fileValue.originalFilename""" ;
+                                     knora-base:originalMimeType """@textFileValue.fileValue.originalMimeType""" ;
+                                     knora-base:internalFilename """@textFileValue.fileValue.internalFilename""" ;
+                                     knora-base:internalMimeType """@textFileValue.fileValue.internalMimeType""" .
             }
 
             case listValue: HierarchicalListValueContentV2 => {

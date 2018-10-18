@@ -164,13 +164,6 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
         "@id" : "knora-api:hasPermissions"
       }
     }, {
@@ -512,13 +505,6 @@
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:fileValueHasFilename"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -975,13 +961,6 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
         "@id" : "knora-api:hasPermissions"
       }
     }, {
@@ -1149,12 +1128,6 @@
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:fileValueHasFilename"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1943,13 +1916,6 @@
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:fileValueHasFilename"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -3300,13 +3266,6 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
         "@id" : "knora-api:hasPermissions"
       }
     }, {
@@ -3496,13 +3455,6 @@
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:fileValueHasFilename"
-      }
-    }, {
-      "@type" : "owl:Restriction",
-      "knora-api:isInherited" : true,
-      "owl:cardinality" : 1,
-      "owl:onProperty" : {
-        "@id" : "knora-api:fileValueIsPreview"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -4240,20 +4192,6 @@
     },
     "rdfs:comment" : "The name of the file that a file value represents.",
     "rdfs:label" : "File value has filename",
-    "rdfs:subPropertyOf" : {
-      "@id" : "knora-api:valueHas"
-    }
-  }, {
-    "@id" : "knora-api:fileValueIsPreview",
-    "@type" : "owl:DatatypeProperty",
-    "knora-api:objectType" : {
-      "@id" : "xsd:boolean"
-    },
-    "knora-api:subjectType" : {
-      "@id" : "knora-api:FileValue"
-    },
-    "rdfs:comment" : "Indicates whether this is file value is a preview.",
-    "rdfs:label" : "File value is preview",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }

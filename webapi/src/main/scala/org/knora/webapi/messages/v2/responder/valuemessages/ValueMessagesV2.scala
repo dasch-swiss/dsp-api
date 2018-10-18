@@ -2024,15 +2024,15 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
 }
 
 /**
-  * An abstract trait representing any file value.
+  * Represents the basic metadata stored about any file value.
   */
-sealed trait FileValueContentV2 {
-    val internalMimeType: String
-    val internalFilename: String
-    val originalFilename: String
-    val originalMimeType: Option[String]
+case class FileValueV2(
+    internalMimeType: String,
+    internalFilename: String,
+    originalFilename: String,
+    originalMimeType: Option[String]) {
 
-    protected def toJsonLDValueinSimpleSchema(imagePath: String): JsonLDObject = {
+    def toJsonLDValueinSimpleSchema(imagePath: String): JsonLDObject = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         JsonLDUtil.datatypeValueToJsonLDObject(
@@ -2040,53 +2040,55 @@ sealed trait FileValueContentV2 {
             datatype = OntologyConstants.KnoraApiV2Simple.File.toSmartIri
         )
     }
+
+    def toJsonLDObjectMapInComplexSchema(imagePath: String): Map[IRI, JsonLDValue] = Map(
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(imagePath)
+    )
 }
 
 /**
-  * Represents an image file. Please note that the file itself is managed by Sipi.
+  * A trait for case classes representing different types of file values.
+  */
+sealed trait FileValueContentV2 extends ValueContentV2 {
+    /**
+      * The basic metadata about the file value.
+      */
+    def fileValue: FileValueV2
+}
+
+/**
+  * Represents image file metadata.
   *
-  * @param internalMimeType the mime type of the file corresponding to this image file value.
-  * @param internalFilename the name of the file corresponding to this image file value.
-  * @param originalFilename the original mime type of the image file before importing it.
-  * @param originalMimeType the original name of the image file before importing it.
+  * @param fileValue        the basic metadata about the file value.
   * @param dimX             the with of the the image file corresponding to this file value in pixels.
   * @param dimY             the height of the the image file corresponding to this file value in pixels.
-  * @param qualityLevel     the quality (resolution) of the the image file corresponding to this file value (scale 10-100)
-  * @param isPreview        indicates if the file value represents a preview image (thumbnail).
   * @param comment          a comment on this `StillImageFileValueContentV2`, if any.
   */
 case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
-                                        internalMimeType: String,
-                                        internalFilename: String,
-                                        originalFilename: String,
-                                        originalMimeType: Option[String],
+                                        fileValue: FileValueV2,
                                         dimX: Int,
                                         dimY: Int,
-                                        qualityLevel: Int,
-                                        isPreview: Boolean,
-                                        comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+                                        comment: Option[String] = None) extends FileValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.StillImageFileValue.toSmartIri.toOntologySchema(ontologySchema)
     }
 
-    override def valueHasString: String = internalFilename
+    override def valueHasString: String = fileValue.internalFilename
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
-        val imagePath: String = s"${settings.externalSipiIIIFGetUrl}/$internalFilename/full/$dimX,$dimY/0/default.jpg"
+        val imagePath: String = s"${settings.externalSipiIIIFGetUrl}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
-            case ApiV2Simple => toJsonLDValueinSimpleSchema(imagePath)
+            case ApiV2Simple => fileValue.toJsonLDValueinSimpleSchema(imagePath)
 
             case ApiV2WithValueObjects =>
-                JsonLDObject(Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(imagePath),
-                    OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> JsonLDBoolean(isPreview),
+                JsonLDObject(fileValue.toJsonLDObjectMapInComplexSchema(imagePath) ++ Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
-                    OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.externalSipiIIIFGetUrl)
                 ))
         }
@@ -2099,14 +2101,9 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
     override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
         that match {
             case thatStillImage: StillImageFileValueContentV2 =>
-                internalMimeType == thatStillImage.internalMimeType &&
-                    internalFilename == thatStillImage.internalFilename &&
-                    originalFilename == thatStillImage.originalFilename &&
-                    originalMimeType == thatStillImage.originalMimeType &&
+                fileValue == thatStillImage.fileValue &&
                     dimX == thatStillImage.dimX &&
-                    dimY == thatStillImage.dimY &&
-                    qualityLevel == thatStillImage.qualityLevel &&
-                    isPreview == thatStillImage.isPreview
+                    dimY == thatStillImage.dimY
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2115,15 +2112,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
     override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
         currentVersion match {
             case thatStillImage: StillImageFileValueContentV2 =>
-                internalMimeType == thatStillImage.internalMimeType &&
-                    internalFilename == thatStillImage.internalFilename &&
-                    originalFilename == thatStillImage.originalFilename &&
-                    originalMimeType == thatStillImage.originalMimeType &&
-                    dimX == thatStillImage.dimX &&
-                    dimY == thatStillImage.dimY &&
-                    qualityLevel == thatStillImage.qualityLevel &&
-                    isPreview == thatStillImage.isPreview &&
-                    comment == thatStillImage.comment
+                wouldDuplicateOtherValue(thatStillImage) && comment == thatStillImage.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2146,38 +2135,29 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
 /**
   * Represents a text file value. Please note that the file itself is managed by Sipi.
   *
-  * @param internalMimeType the mime type of the file corresponding to this text file value.
-  * @param internalFilename the name of the file corresponding to this text file value.
-  * @param originalFilename the original mime type of the text file before importing it.
-  * @param originalMimeType the original name of the text file before importing it.
+  * @param fileValue        the basic metadata about the file value.
   * @param comment          a comment on this `TextFileValueContentV2`, if any.
   */
 case class TextFileValueContentV2(ontologySchema: OntologySchema,
-                                  internalMimeType: String,
-                                  internalFilename: String,
-                                  originalFilename: String,
-                                  originalMimeType: Option[String],
-                                  comment: Option[String] = None) extends FileValueContentV2 with ValueContentV2 {
+                                  fileValue: FileValueV2,
+                                  comment: Option[String] = None) extends FileValueContentV2 {
     override def valueType: SmartIri = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         OntologyConstants.KnoraBase.TextFileValue.toSmartIri.toOntologySchema(ontologySchema)
     }
 
-    override def valueHasString: String = internalFilename
+    override def valueHasString: String = fileValue.internalFilename
 
     override def toOntologySchema(targetSchema: OntologySchema): ValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDValue = {
-        val imagePath: String = s"${settings.externalSipiFileServerGetUrl}/$internalFilename"
+        val imagePath: String = s"${settings.externalSipiFileServerGetUrl}/${fileValue.internalFilename}"
 
         targetSchema match {
-            case ApiV2Simple => toJsonLDValueinSimpleSchema(imagePath)
+            case ApiV2Simple => fileValue.toJsonLDValueinSimpleSchema(imagePath)
 
             case ApiV2WithValueObjects =>
-                JsonLDObject(Map(
-                    OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(internalFilename),
-                    OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(imagePath)
-                ))
+                JsonLDObject(fileValue.toJsonLDObjectMapInComplexSchema(imagePath))
         }
     }
 
@@ -2188,10 +2168,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
     override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
         that match {
             case thatTextFile: TextFileValueContentV2 =>
-                internalMimeType == thatTextFile.internalMimeType &&
-                    internalFilename == thatTextFile.internalFilename &&
-                    originalFilename == thatTextFile.originalFilename &&
-                    originalMimeType == thatTextFile.originalMimeType
+                fileValue == thatTextFile.fileValue
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2200,10 +2177,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
     override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
         currentVersion match {
             case thatTextFile: TextFileValueContentV2 =>
-                internalMimeType == thatTextFile.internalMimeType &&
-                    internalFilename == thatTextFile.internalFilename &&
-                    originalFilename == thatTextFile.originalFilename &&
-                    originalMimeType == thatTextFile.originalMimeType &&
+                fileValue == thatTextFile.fileValue &&
                     comment == thatTextFile.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")

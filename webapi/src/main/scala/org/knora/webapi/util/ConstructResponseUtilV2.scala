@@ -47,7 +47,7 @@ object ConstructResponseUtilV2 {
       * @param valueObjectIri   the value object's IRI.
       * @param valueObjectClass the type (class) of the value object.
       * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
-      * @param isIncomingLink     indicates if it is an incoming or outgoing link in case of a link value.
+      * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
       * @param listNode         assertions about the referred list node, if the value points to a list node.
@@ -607,35 +607,35 @@ object ConstructResponseUtilV2 {
 
                 }
 
+            case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
 
-            case OntologyConstants.KnoraBase.StillImageFileValue =>
-
-                val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
-
-                StillImageFileValueContentV2(
-                    ontologySchema = InternalSchema,
+                val fileValue = FileValueV2(
                     internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
                     internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
                     originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
-                    originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
-                    dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
-                    dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
-                    qualityLevel = valueObject.assertions(OntologyConstants.KnoraBase.QualityLevel).toInt,
-                    isPreview = isPreview,
-                    comment = valueCommentOption
+                    originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType)
                 )
 
-            case OntologyConstants.KnoraBase.TextFileValue =>
+                fileValueClass match {
+                    case OntologyConstants.KnoraBase.StillImageFileValue =>
 
-                TextFileValueContentV2(
-                    ontologySchema = InternalSchema,
-                    internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
-                    internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
-                    originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
-                    originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
-                    comment = valueCommentOption
-                )
+                        StillImageFileValueContentV2(
+                            ontologySchema = InternalSchema,
+                            fileValue = fileValue,
+                            dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
+                            dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
+                            comment = valueCommentOption
+                        )
+
+                    case OntologyConstants.KnoraBase.TextFileValue =>
+
+                        TextFileValueContentV2(
+                            ontologySchema = InternalSchema,
+                            fileValue = fileValue,
+                            comment = valueCommentOption
+                        )
+                }
+
 
             case other =>
                 throw NotImplementedException(s"not implemented yet: $other")
@@ -717,7 +717,7 @@ object ConstructResponseUtilV2 {
                             valueHasRefCount = valueHasRefCount,
                             previousValueIri = previousValueIri,
                             deletionInfo = valueDeletionInfo
-                         )
+                        )
                 }
 
                 property.toSmartIri -> readValues

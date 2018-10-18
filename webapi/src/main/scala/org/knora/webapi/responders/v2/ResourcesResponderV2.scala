@@ -782,7 +782,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         val gravsearchUrlFuture = for {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            gravsearchFileValue: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
+            gravsearchFileValueContent: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
                 case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
@@ -799,11 +799,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValue.internalMimeType == "text/plain" && gravsearchFileValue.originalFilename.endsWith(".txt"))) {
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.endsWith(".txt"))) {
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 
