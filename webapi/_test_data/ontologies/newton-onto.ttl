@@ -91,7 +91,7 @@
               rdfs:label "Datei-Beschreibung"@de ,
                          "File Description"@en ;
 
-              rdfs:comment """Deschreibung der Datei von einem Brief"""@de ,
+              rdfs:comment """Beschreibung der Datei von einem Brief"""@de ,
                            """File-Description of letter"""@en ;
 
               knora-base:objectClassConstraint :FileDescription ;
@@ -111,7 +111,7 @@
                     rdfs:label "Datei-Beschreibung"@de ,
                                "File Description"@en ;
 
-                    rdfs:comment """Deschreibung der Datei von einem Brief"""@de ,
+                    rdfs:comment """Beschreibung der Datei von einem Brief"""@de ,
                                  """File-Description of letter"""@en .
 
 ### ###########################################
@@ -146,6 +146,39 @@
 
                    rdfs:comment """Beschreibung des Titel von einem Brief"""@de ,
                                 """Statement about title of a letter"""@en .
+
+### ###########################################
+### newton:hasNotesStmt
+
+:hasNotesStmt rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Notizen-Beschreibung"@de ,
+                         "Notes Statement"@en ;
+
+              rdfs:comment """Beschreibung der Notizen von einem Brief"""@de ,
+                           """Statement about notes of a letter"""@en ;
+
+              knora-base:objectClassConstraint :notesStmt ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:hasTitleStmt
+
+:hasNotesStmtValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Notizen-Beschreibung"@de ,
+                              "Notes Statement"@en ;
+
+                   rdfs:comment """Beschreibung der Notizen von einem Brief"""@de ,
+                                """Statement about notes of a letter"""@en .
 
 ### ###########################################
 ### newton:hasTitle
@@ -183,6 +216,74 @@
 
                 rdfs:subPropertyOf knora-base:hasValue .
 
+### ###########################################
+### newton:hasPages
+
+:hasPages rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Seiten des Briefes"@de ,
+                           "Pages of letter"@en ;
+
+                rdfs:comment """Represents the pages of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                knora-base:subjectClassConstraint :notesStmt ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### newton:hasRelatedMaterial
+
+:hasRelatedMaterial rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Zusammenhang mit dem Brief"@de ,
+                           "Related Material"@en ;
+
+                rdfs:comment """Represents the materials related to a letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                knora-base:subjectClassConstraint :notesStmt ;
+
+                salsah-gui:guiElement salsah-gui:RichText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
+### newton:hasRelatedText
+
+:hasRelatedText rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Verbundene-Texte"@de ,
+                         "Related Texts"@en ;
+
+              rdfs:comment """Texte in Verbindung mit dem Brief"""@de ,
+                           """Texts related to the letter"""@en ;
+
+              knora-base:objectClassConstraint :letter ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:hasRelatedTextValue
+
+:hasRelatedTextValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+                   rdfs:label "Verbundene-Texte"@de ,
+                              "Related Texts"@en ;
+
+                   rdfs:comment """Beschreibung der Texte in Verbindung mit dem Brief"""@de ,
+                                 """Texts related to the letter"""@en .
 
 
 ##########################################################
@@ -254,6 +355,18 @@
                           owl:onProperty :hasTitleStmtValue ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasNotesStmt ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasNotesStmtValue ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
                        ] ;
 
         rdfs:label "Datei-Beschreibung"@de ,
@@ -278,7 +391,7 @@
                          rdf:type owl:Restriction ;
                          owl:onProperty :hasTitleAbbreviation ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ,
                        [
                          rdf:type owl:Restriction ;
@@ -297,3 +410,39 @@
                    "Title Statement"@en ;
 
         rdfs:comment "A resource representing the statement about title of letter"@en .
+
+### ###########################################
+### newton:notesStmt
+
+:notesStmt rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasPages ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ],
+                       [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasRelatedMaterial ;
+                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty beol:hasRelatedText ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty beol:hasRelatedTextValue ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ;
+
+        rdfs:label "Notizen-Beschreibung"@de ,
+                   "Notes Statement"@en ;
+
+        rdfs:comment "A resource representing the statement about notes of the letter"@en .
