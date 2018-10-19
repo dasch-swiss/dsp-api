@@ -127,9 +127,12 @@ class SettingsImpl(config: Config) extends Extension {
     val defaultIconSizeDimX: Int = config.getInt("app.gui.default-icon-size.dimX")
     val defaultIconSizeDimY: Int = config.getInt("app.gui.default-icon-size.dimY")
 
-
     val v2ResultsPerPage: Int = config.getInt("app.v2.resources-sequence.results-per-page")
     val searchValueMinLength: Int = config.getInt("app.v2.fulltext-search.search-value-min-length")
+
+    val defaultGraphDepth: Int = config.getInt("app.v2.graph-route.default-graph-depth")
+    val maxGraphDepth: Int = config.getInt("app.v2.graph-route.max-graph-depth")
+    val maxGraphBreadth: Int = config.getInt("app.v2.graph-route.max-graph-breadth")
 
     val triplestoreType: String = config.getString("app.triplestore.dbtype")
     val triplestoreHost: String = config.getString("app.triplestore.host")

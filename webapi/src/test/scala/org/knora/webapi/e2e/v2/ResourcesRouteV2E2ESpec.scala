@@ -26,12 +26,13 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForResourcesResponse
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument}
+import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StringFormatter}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -39,7 +40,7 @@ import scala.concurrent.ExecutionContextExecutor
 /**
   * Tests the API v2 resources route.
   */
-class ResourcesRouteV2E2ESpec extends E2ESpec {
+class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
@@ -233,6 +234,99 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAsString)
         }
 
+        "return a graph of resources reachable via links from/to a given resource" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBoth.jsonld"), writeTestDataFiles)
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+
+            assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
+        }
+
+        "return a graph of resources reachable via links from a given resource" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=outbound")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphOutbound.jsonld"), writeTestDataFiles)
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+
+            assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
+        }
+
+        "return a graph of resources reachable via links to a given resource" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=inbound")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphInbound.jsonld"), writeTestDataFiles)
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+
+            assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
+        }
+
+        "return a graph of resources reachable via links to/from a given resource, excluding a specified property" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&excludeProperty=${URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing", "UTF-8")}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBothWithExcludedProp.jsonld"), writeTestDataFiles)
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+
+            assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
+        }
+
+        "return a graph of resources reachable via links from a given resource, specifying search depth" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=both&depth=2")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.OK, responseAsString)
+            val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(responseAsString)
+
+            val expectedAnswerJSONLD = readOrWriteTextFile(responseAsString, new File("src/test/resources/test-data/resourcesR2RV2/ThingGraphBothWithDepth.jsonld"), writeTestDataFiles)
+            val parsedExpectedJsonLD = JsonLDUtil.parseJsonLD(expectedAnswerJSONLD)
+
+            assert(parsedReceivedJsonLD == parsedExpectedJsonLD)
+        }
+
+        "not accept a graph request with an invalid direction" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?direction=foo")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
+        "not accept a graph request with an invalid depth (< 1)" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=0")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
+        "not accept a graph request with an invalid depth (> max)" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?depth=${settings.maxGraphBreadth + 1}")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
+        "not accept a graph request with an invalid property to exclude" in {
+            val request = Get(s"$baseApiUrl/v2/graph/${URLEncoder.encode("http://rdfh.ch/0001/start", "UTF-8")}?excludeProperty=foo")
+            val response: HttpResponse = singleAwaitingRequest(request)
+            val responseAsString = responseToString(response)
+            assert(response.status == StatusCodes.BadRequest, responseAsString)
+        }
+
         "create a resource with values" in {
             val jsonLdEntity =
                 """{
@@ -339,4 +433,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec {
             assert(resourceIri.toSmartIri.isKnoraDataIri)
         }
     }
+}
+
+object ResourcesRouteV2E2ESpec {
+    val config: Config = ConfigFactory.parseString(
+        """akka.loglevel = "DEBUG"
+          |akka.stdout-loglevel = "DEBUG"
+          |app.triplestore.profile-queries = false
+        """.stripMargin)
 }

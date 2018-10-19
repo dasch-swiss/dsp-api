@@ -27,7 +27,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi._
-import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceRequestV2, ResourceTEIGetRequestV2, ResourcesGetRequestV2, ResourcesPreviewGetRequestV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
@@ -45,6 +45,12 @@ object ResourcesRouteV2 extends Authenticator {
     private val Mapping_Iri = "mappingIri"
     private val GravsearchTemplate_Iri = "gravsearchTemplateIri"
     private val TEIHeader_XSLT_IRI = "teiHeaderXSLTIri"
+    private val Depth = "depth"
+    private val ExcludeProperty = "excludeProperty"
+    private val Direction = "direction"
+    private val Inbound = "inbound"
+    private val Outbound = "outbound"
+    private val Both = "both"
 
     /**
       * Gets the Iri of the property that represents the text of the resource.
@@ -58,10 +64,10 @@ object ResourcesRouteV2 extends Authenticator {
 
         textProperty match {
             case Some(textPropIriStr: String) =>
-                val externalResourceClassIri = textPropIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $textPropIriStr"))
+                val externalResourceClassIri = textPropIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$textPropIriStr>"))
 
                 if (!externalResourceClassIri.isKnoraApiV2EntityIri) {
-                    throw BadRequestException(s"$textPropIriStr is not a valid knora-api property IRI")
+                    throw BadRequestException(s"<$textPropIriStr> is not a valid knora-api property IRI")
                 }
 
                 externalResourceClassIri.toOntologySchema(InternalSchema)
@@ -82,7 +88,7 @@ object ResourcesRouteV2 extends Authenticator {
 
         mappingIriStr match {
             case Some(mapping: String) =>
-                Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: '$mapping'")))
+                Some(stringFormatter.validateAndEscapeIri(mapping, throw BadRequestException(s"Invalid mapping IRI: <$mapping>")))
 
             case None => None
         }
@@ -100,7 +106,7 @@ object ResourcesRouteV2 extends Authenticator {
 
         gravsearchTemplateIriStr match {
             case Some(gravsearch: String) =>
-                Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: '$gravsearch'")))
+                Some(stringFormatter.validateAndEscapeIri(gravsearch, throw BadRequestException(s"Invalid template IRI: <$gravsearch>")))
 
             case None => None
         }
@@ -118,7 +124,7 @@ object ResourcesRouteV2 extends Authenticator {
 
         headerXSLTIriStr match {
             case Some(xslt: String) =>
-                Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: '$xslt'")))
+                Some(stringFormatter.validateAndEscapeIri(xslt, throw BadRequestException(s"Invalid XSLT IRI: <$xslt>")))
 
             case None => None
         }
@@ -170,7 +176,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
                     val requestMessage: Future[ResourcesGetRequestV2] = for {
@@ -194,7 +200,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val resourceIris: Seq[IRI] = resIris.map {
                         resIri: String =>
-                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                            stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
                     val requestMessage: Future[ResourcesPreviewGetRequestV2] = for {
@@ -216,7 +222,7 @@ object ResourcesRouteV2 extends Authenticator {
             get {
                 requestContext => {
 
-                    val resourceIri = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: '$resIri'"))
+                    val resourceIri: IRI = stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
 
                     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
@@ -251,9 +257,52 @@ object ResourcesRouteV2 extends Authenticator {
                 }
             }
 
+        } ~ path("v2" / "graph" / Segment) { resIriStr: String =>
+            get {
+                requestContext => {
+                    val resourceIri: IRI = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: <$resIriStr>"))
+                    val params: Map[String, String] = requestContext.request.uri.query().toMap
+                    val depth: Int = params.get(Depth).map(_.toInt).getOrElse(settings.defaultGraphDepth)
+
+                    if (depth < 1) {
+                        throw BadRequestException(s"$Depth must be at least 1")
+                    }
+
+                    if (depth > settings.maxGraphDepth) {
+                        throw BadRequestException(s"$Depth cannot be greater than ${settings.maxGraphDepth}")
+                    }
+
+                    val direction: String = params.getOrElse(Direction, Outbound)
+                    val excludeProperty: Option[SmartIri] = params.get(ExcludeProperty).map(propIriStr => propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propIriStr>")))
+
+                    val (inbound: Boolean, outbound: Boolean) = direction match {
+                        case Inbound => (true, false)
+                        case Outbound => (false, true)
+                        case Both => (true, true)
+                        case other => throw BadRequestException(s"Invalid direction: $other")
+                    }
+
+                    val requestMessage: Future[GraphDataGetRequestV2] = for {
+                        requestingUser <- getUserADM(requestContext)
+                    } yield GraphDataGetRequestV2(
+                        resourceIri = resourceIri,
+                        depth = depth,
+                        inbound = inbound,
+                        outbound = outbound,
+                        excludeProperty = excludeProperty,
+                        requestingUser = requestingUser
+                    )
+
+                    RouteUtilV2.runRdfRouteWithFuture(
+                        requestMessage,
+                        requestContext,
+                        settings,
+                        responderManager,
+                        log,
+                        RouteUtilV2.getOntologySchema(requestContext)
+                    )
+                }
+            }
         }
-
     }
-
-
 }
