@@ -572,43 +572,6 @@ object KnoraApiV2Simple {
     }
 
     /**
-      * Makes a [[ReadClassInfoV2]] representing an owl:Class.
-      *
-      * @param classIri               the IRI of the class.
-      * @param subClassOf             the set of direct superclasses of this class.
-      * @param predicates             the predicates of the class.
-      * @param directCardinalities    the direct cardinalities of the class.
-      * @param inheritedCardinalities the inherited cardinalities of the class.
-      * @return a [[ReadClassInfoV2]].
-      */
-    private def makeClass(classIri: IRI,
-                          subClassOf: Set[IRI] = Set.empty[IRI],
-                          predicates: Seq[PredicateInfoV2] = Seq.empty[PredicateInfoV2],
-                          directCardinalities: Map[IRI, Cardinality.Value] = Map.empty[IRI, Cardinality.Value],
-                          inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = Map.empty[SmartIri, KnoraCardinalityInfo]): ReadClassInfoV2 = {
-
-        val rdfType = OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
-        )
-
-        ReadClassInfoV2(
-            entityInfoContent = ClassInfoContentV2(
-                classIri = classIri.toSmartIri,
-                predicates = predicates.map {
-                    pred => pred.predicateIri -> pred
-                }.toMap + rdfType,
-                directCardinalities = directCardinalities.map {
-                    case (propertyIri, cardinality) => propertyIri.toSmartIri -> KnoraCardinalityInfo(cardinality)
-                },
-                subClassOf = subClassOf.map(_.toSmartIri),
-                ontologySchema = ApiV2Simple
-            ),
-            inheritedCardinalities = inheritedCardinalities
-        )
-    }
-
-    /**
       * Makes a [[ReadClassInfoV2]] representing an rdfs:Datatype.
       *
       * @param datatypeIri                 the IRI of the datatype.
