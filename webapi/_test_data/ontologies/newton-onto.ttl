@@ -76,7 +76,7 @@
 
                 salsah-gui:guiElement salsah-gui:SimpleText ;
 
-                knora-base:subjectClassConstraint :fileDescription ;
+                knora-base:subjectClassConstraint :letter ;
 
                 rdfs:subPropertyOf knora-base:hasValue .
 
@@ -199,9 +199,9 @@
 
 
 ### ###########################################
-### newton:hasTitleAbbreviation
+### newton:hasAbbreviatedTitle
 
-:hasTitleAbbreviation rdf:type owl:ObjectProperty ;
+:hasAbbreviatedTitle rdf:type owl:ObjectProperty ;
 
 
                 rdfs:label "Abkürzung des Titels"@de ,
@@ -210,7 +210,7 @@
                 rdfs:comment """Represents the abbreviated title of the letter."""@en ;
 
                 knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :titleStmt ;
+                knora-base:subjectClassConstraint :letter ;
 
                 salsah-gui:guiElement salsah-gui:SimpleText ;
 
@@ -228,7 +228,7 @@
                 rdfs:comment """Represents the pages of the letter."""@en ;
 
                 knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :notesStmt ;
+                knora-base:subjectClassConstraint :letter ;
 
                 salsah-gui:guiElement salsah-gui:SimpleText ;
 
@@ -246,7 +246,7 @@
                 rdfs:comment """Represents the materials related to a letter."""@en ;
 
                 knora-base:objectClassConstraint knora-base:TextValue ;
-                knora-base:subjectClassConstraint :notesStmt ;
+                knora-base:subjectClassConstraint :letter ;
 
                 salsah-gui:guiElement salsah-gui:RichText ;
 
@@ -300,28 +300,52 @@
         rdfs:subClassOf beol:letter ,
                        [
                           rdf:type owl:Restriction ;
+                          owl:onProperty :hasAbbreviatedTitle ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
                           owl:onProperty :hasFacsimile ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ,
                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFacsimileValue ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasFileDescription ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ,
                        [
                           rdf:type owl:Restriction ;
-                          owl:onProperty :hasFileDescriptionValue ;
+                          owl:onProperty :hasExtent ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ];
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasPages ;
+                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty :hasRelatedMaterial ;
+                            owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty beol:hasRelatedText ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                            rdf:type owl:Restriction ;
+                            owl:onProperty beol:hasRelatedTextValue ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                            salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
+                       ] ;
 
         knora-base:resourceIcon "letter.png" ;
 
@@ -331,118 +355,3 @@
 
         rdfs:comment "A resource representing a letter from The Newton Project"@en .
 
-
-### ###########################################
-### newton:fileDescription
-
-:fileDescription rdf:type owl:Class ;
-
-        rdfs:subClassOf knora-base:Resource ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasExtent ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasTitleStmt ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasTitleStmtValue ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasNotesStmt ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasNotesStmtValue ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ;
-
-        rdfs:label "Datei-Beschreibung"@de ,
-                   "File Description"@en ;
-
-        rdfs:comment "A resource representing the description of a file containing letter"@en .
-
-
-### ###########################################
-### newton:titleStmt
-
-:titleStmt rdf:type owl:Class ;
-
-        rdfs:subClassOf knora-base:Resource ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasTitle ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ],
-                       [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasTitleAbbreviation ;
-                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty beol:hasAuthor ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty beol:hasAuthorValue ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ;
-
-        rdfs:label "Titel-Beschreibung"@de ,
-                   "Title Statement"@en ;
-
-        rdfs:comment "A resource representing the statement about title of letter"@en .
-
-### ###########################################
-### newton:notesStmt
-
-:notesStmt rdf:type owl:Class ;
-
-        rdfs:subClassOf knora-base:Resource ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty :hasPages ;
-                          owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
-                       ],
-                       [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty :hasRelatedMaterial ;
-                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                         rdf:type owl:Restriction ;
-                         owl:onProperty beol:hasRelatedText ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ,
-                       [
-                          rdf:type owl:Restriction ;
-                          owl:onProperty beol:hasRelatedTextValue ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
-                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
-                       ] ;
-
-        rdfs:label "Notizen-Beschreibung"@de ,
-                   "Notes Statement"@en ;
-
-        rdfs:comment "A resource representing the statement about notes of the letter"@en .
