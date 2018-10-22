@@ -1727,8 +1727,12 @@
 					    type: "checkbox"
 					});
 
-					if (propinfo[prop].values[value_index]) {
-						checkbox.attr('checked', true);
+					if (is_new_value) {
+						checkbox.attr('checked', false);
+					} else {
+						if (propinfo[prop].values[value_index]) {
+							checkbox.attr('checked', true);
+						}
 					}
 
 					checkbox.attr(attributes);
