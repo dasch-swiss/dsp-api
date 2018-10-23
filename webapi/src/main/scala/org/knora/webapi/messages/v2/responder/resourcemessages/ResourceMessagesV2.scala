@@ -536,7 +536,6 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
 
-
     /**
       * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource
       * is not present, or if it's `ForbiddenResource`, throws an exception.
@@ -560,5 +559,145 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         }
 
         resourceInfo
+    }
+}
+
+/**
+  * Requests a graph of resources that are reachable via links to or from a given resource. A successful response
+  * will be a [[GraphDataGetResponseV2]].
+  *
+  * @param resourceIri     the IRI of the initial resource.
+  * @param depth           the maximum depth of the graph, counting from the initial resource.
+  * @param inbound         `true` to query inbound links.
+  * @param outbound        `true` to query outbound links.
+  * @param excludeProperty the IRI of a link property to exclude from the results.
+  * @param requestingUser  the user making the request.
+  */
+case class GraphDataGetRequestV2(resourceIri: IRI,
+                                 depth: Int,
+                                 inbound: Boolean,
+                                 outbound: Boolean,
+                                 excludeProperty: Option[SmartIri],
+                                 requestingUser: UserADM) extends ResourcesResponderRequestV2 {
+    if (!(inbound || outbound)) {
+        throw BadRequestException("No link direction selected")
+    }
+}
+
+/**
+  * Represents a node (i.e. a resource) in a resource graph.
+  *
+  * @param resourceIri      the IRI of the resource.
+  * @param resourceLabel    the label of the resource.
+  * @param resourceClassIri the IRI of the resource's OWL class.
+  */
+case class GraphNodeV2(resourceIri: IRI, resourceClassIri: SmartIri, resourceLabel: String) extends KnoraReadV2[GraphNodeV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): GraphNodeV2 = {
+        copy(resourceClassIri = resourceClassIri.toOntologySchema(targetSchema))
+    }
+}
+
+/**
+  * Represents an edge (i.e. a link) in a resource graph.
+  *
+  * @param source      the resource that is the source of the link.
+  * @param propertyIri the link property that links the source to the target.
+  * @param target      the resource that is the target of the link.
+  */
+case class GraphEdgeV2(source: IRI, propertyIri: SmartIri, target: IRI) extends KnoraReadV2[GraphEdgeV2] {
+    override def toOntologySchema(targetSchema: ApiV2Schema): GraphEdgeV2 = {
+        copy(propertyIri = propertyIri.toOntologySchema(targetSchema))
+    }
+}
+
+/**
+  * Represents a graph of resources.
+  *
+  * @param nodes the nodes in the graph.
+  * @param edges the edges in the graph.
+  */
+case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV2], ontologySchema: OntologySchema) extends KnoraResponseV2 with KnoraReadV2[GraphDataGetResponseV2] {
+    private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val sortedNodesInTargetSchema: Seq[GraphNodeV2] = nodes.map(_.toOntologySchema(targetSchema)).sortBy(_.resourceIri)
+        val edgesInTargetSchema: Seq[GraphEdgeV2] = edges.map(_.toOntologySchema(targetSchema))
+
+        // Make JSON-LD prefixes for the project-specific ontologies used in the response.
+
+        val resourceOntologiesUsed: Set[SmartIri] = sortedNodesInTargetSchema.map(_.resourceClassIri.getOntologyFromEntity).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
+        val propertyOntologiesUsed: Set[SmartIri] = edgesInTargetSchema.map(_.propertyIri.getOntologyFromEntity).toSet.filter(!_.isKnoraBuiltInDefinitionIri)
+        val projectSpecificOntologiesUsed = resourceOntologiesUsed ++ propertyOntologiesUsed
+
+        // Make the knora-api prefix for the target schema.
+
+        val knoraApiPrefixExpansion = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiV2PrefixExpansion
+        }
+
+        // Make the JSON-LD context.
+
+        val context = JsonLDUtil.makeContext(
+            fixedPrefixes = Map(
+                "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+                "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+                "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+                OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+            ),
+            knoraOntologiesNeedingPrefixes = projectSpecificOntologiesUsed
+        )
+
+        // Group the edges by source IRI and add them to the nodes.
+
+        val groupedEdges: Map[IRI, Seq[GraphEdgeV2]] = edgesInTargetSchema.groupBy(_.source)
+
+        val nodesWithEdges: Seq[JsonLDObject] = sortedNodesInTargetSchema.map {
+            node: GraphNodeV2 =>
+                // Convert the node to JSON-LD.
+                val jsonLDNodeMap = Map(
+                    JsonLDConstants.ID -> JsonLDString(node.resourceIri),
+                    JsonLDConstants.TYPE -> JsonLDString(node.resourceClassIri.toString),
+                    OntologyConstants.Rdfs.Label -> JsonLDString(node.resourceLabel)
+                )
+
+                // Is this node the source of any edges?
+                groupedEdges.get(node.resourceIri) match {
+                    case Some(nodeEdges: Seq[GraphEdgeV2]) =>
+                        // Yes. Convert them to JSON-LD and add them to the node.
+
+                        val nodeEdgesGroupedAndSortedByProperty: Vector[(SmartIri, Seq[GraphEdgeV2])] = nodeEdges.groupBy(_.propertyIri).toVector.sortBy(_._1)
+
+                        val jsonLDNodeEdges: Map[IRI, JsonLDArray] = nodeEdgesGroupedAndSortedByProperty.map {
+                            case (propertyIri: SmartIri, propertyEdges: Seq[GraphEdgeV2]) =>
+                                val sortedPropertyEdges = propertyEdges.sortBy(_.target)
+                                propertyIri.toString -> JsonLDArray(sortedPropertyEdges.map(propertyEdge => JsonLDUtil.iriToJsonLDObject(propertyEdge.target)))
+                        }.toMap
+
+                        JsonLDObject(jsonLDNodeMap ++ jsonLDNodeEdges)
+
+                    case None =>
+                        // This node isn't the source of any edges.
+                        JsonLDObject(jsonLDNodeMap)
+                }
+        }
+
+        // Make the JSON-LD document.
+
+        val body = JsonLDObject(Map(JsonLDConstants.GRAPH -> JsonLDArray(nodesWithEdges)))
+
+        JsonLDDocument(body = body, context = context)
+    }
+
+    override def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    }
+
+    override def toOntologySchema(targetSchema: ApiV2Schema): GraphDataGetResponseV2 = {
+        GraphDataGetResponseV2(
+            nodes = nodes.map(_.toOntologySchema(targetSchema)),
+            edges = edges.map(_.toOntologySchema(targetSchema)),
+            ontologySchema = targetSchema
+        )
     }
 }

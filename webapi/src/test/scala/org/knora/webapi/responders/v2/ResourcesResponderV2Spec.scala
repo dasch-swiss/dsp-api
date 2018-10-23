@@ -25,7 +25,6 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -79,6 +78,327 @@ object ResourcesResponderV2Spec {
     )
 }
 
+class GraphTestData {
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val graphForAnythingUser1 = GraphDataGetResponseV2(
+        edges = Vector(
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/start",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/start",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            )
+        ),
+        nodes = Vector(
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Tango",
+                resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Foxtrot",
+                resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Echo",
+                resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Golf",
+                resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Whiskey",
+                resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Mike",
+                resourceIri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "X-ray",
+                resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Uniform",
+                resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Sierra",
+                resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Romeo",
+                resourceIri = "http://rdfh.ch/0001/start"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Quebec",
+                resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Hotel",
+                resourceIri = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Papa",
+                resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Victor",
+                resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Delta",
+                resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+            )
+        ),
+        ontologySchema = InternalSchema
+    )
+
+    val graphForIncunabulaUser = GraphDataGetResponseV2(
+        edges = Vector(
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/start",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/start",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphEdgeV2(
+                target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+                propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+                source = "http://rdfh.ch/0001/start"
+            )
+        ),
+        nodes = Vector(
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Tango",
+                resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Foxtrot",
+                resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Echo",
+                resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Golf",
+                resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Whiskey",
+                resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "X-ray",
+                resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Uniform",
+                resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Sierra",
+                resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Romeo",
+                resourceIri = "http://rdfh.ch/0001/start"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Quebec",
+                resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Papa",
+                resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Victor",
+                resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+            )
+        ),
+        ontologySchema = InternalSchema
+    )
+
+    val graphWithStandoffLink = GraphDataGetResponseV2(
+        edges = Vector(GraphEdgeV2(
+            target = "http://rdfh.ch/0001/a-thing",
+            propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
+            source = "http://rdfh.ch/0001/a-thing-with-text-values"
+        )),
+        nodes = Vector(
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
+                resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values"
+            ),
+            GraphNodeV2(
+                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                resourceLabel = "A thing",
+                resourceIri = "http://rdfh.ch/0001/a-thing"
+            )
+        ),
+        ontologySchema = InternalSchema
+    )
+
+    val graphWithOneNode = GraphDataGetResponseV2(
+        edges = Nil,
+        nodes = Vector(GraphNodeV2(
+            resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+            resourceLabel = "Another thing",
+            resourceIri = "http://rdfh.ch/0001/another-thing"
+        )),
+        ontologySchema = InternalSchema
+    )
+}
+
 /**
   * Tests [[ResourcesResponderV2]].
   */
@@ -93,6 +413,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val knoraIdUtil = new KnoraIdUtil
 
     private var standardMapping: Option[MappingXMLtoStandoff] = None
+
+    private val graphTestData = new GraphTestData
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -287,6 +609,72 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     xmlDiff.hasDifferences should be(false)
             }
 
+        }
+
+        "return a graph of resources reachable via links from/to a given resource" in {
+            actorUnderTest ! GraphDataGetRequestV2(
+                resourceIri = "http://rdfh.ch/0001/start",
+                depth = 6,
+                inbound = true,
+                outbound = true,
+                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                requestingUser = SharedTestDataADM.anythingUser1
+            )
+
+            val response = expectMsgType[GraphDataGetResponseV2](timeout)
+            val edges = response.edges
+            val nodes = response.nodes
+
+            edges should contain theSameElementsAs graphTestData.graphForAnythingUser1.edges
+            nodes should contain theSameElementsAs graphTestData.graphForAnythingUser1.nodes
+        }
+
+        "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
+            actorUnderTest ! GraphDataGetRequestV2(
+                resourceIri = "http://rdfh.ch/0001/start",
+                depth = 6,
+                inbound = true,
+                outbound = true,
+                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+            )
+
+            val response = expectMsgType[GraphDataGetResponseV2](timeout)
+            val edges = response.edges
+            val nodes = response.nodes
+
+            edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
+            nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
+        }
+
+        "return a graph containing a standoff link" in {
+            actorUnderTest ! GraphDataGetRequestV2(
+                resourceIri = "http://rdfh.ch/0001/a-thing",
+                depth = 4,
+                inbound = true,
+                outbound = true,
+                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                requestingUser = SharedTestDataADM.anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithStandoffLink)
+            }
+        }
+
+        "return a graph containing just one node" in {
+            actorUnderTest ! GraphDataGetRequestV2(
+                resourceIri = "http://rdfh.ch/0001/another-thing",
+                depth = 4,
+                inbound = true,
+                outbound = true,
+                excludeProperty = Some(OntologyConstants.KnoraApiV2WithValueObjects.IsPartOf.toSmartIri),
+                requestingUser = SharedTestDataADM.anythingUser1
+            )
+
+            expectMsgPF(timeout) {
+                case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithOneNode)
+            }
         }
 
         "create a resource with no values" in {
@@ -1002,6 +1390,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
+
 
     }
 }
