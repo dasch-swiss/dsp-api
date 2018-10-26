@@ -83,105 +83,6 @@
 
 
 ### ###########################################
-### newton:hasFileDescription
-
-:hasFileDescription rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-              rdfs:label "Datei-Beschreibung"@de ,
-                         "File Description"@en ;
-
-              rdfs:comment """Beschreibung der Datei von einem Brief"""@de ,
-                           """File-Description of letter"""@en ;
-
-              knora-base:objectClassConstraint :FileDescription ;
-
-              salsah-gui:guiElement salsah-gui:Searchbox .
-
-
-### ###########################################
-### newton:hasFileDescriptionValue
-
-:hasFileDescriptionValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                    rdfs:label "Datei-Beschreibung"@de ,
-                               "File Description"@en ;
-
-                    rdfs:comment """Beschreibung der Datei von einem Brief"""@de ,
-                                 """File-Description of letter"""@en .
-
-### ###########################################
-### newton:hasTitleStmt
-
-:hasTitleStmt rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-              rdfs:label "Title-Beschreibung"@de ,
-                         "Title Statement"@en ;
-
-              rdfs:comment """Beschreibung des Titel von einem Brief"""@de ,
-                           """Statement about title of a letter"""@en ;
-
-              knora-base:objectClassConstraint :titleStmt ;
-
-              salsah-gui:guiElement salsah-gui:Searchbox .
-
-
-### ###########################################
-### newton:hasTitleStmt
-
-:hasTitleStmtValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                   rdfs:label "Titel-Beschreibung"@de ,
-                              "Title Statement"@en ;
-
-                   rdfs:comment """Beschreibung des Titel von einem Brief"""@de ,
-                                """Statement about title of a letter"""@en .
-
-### ###########################################
-### newton:hasNotesStmt
-
-:hasNotesStmt rdf:type owl:ObjectProperty ;
-
-              rdfs:subPropertyOf knora-base:hasLinkTo ;
-
-              rdfs:label "Notizen-Beschreibung"@de ,
-                         "Notes Statement"@en ;
-
-              rdfs:comment """Beschreibung der Notizen von einem Brief"""@de ,
-                           """Statement about notes of a letter"""@en ;
-
-              knora-base:objectClassConstraint :notesStmt ;
-
-              salsah-gui:guiElement salsah-gui:Searchbox .
-
-
-### ###########################################
-### newton:hasTitleStmt
-
-:hasNotesStmtValue rdf:type owl:ObjectProperty ;
-
-                   knora-base:objectClassConstraint knora-base:LinkValue ;
-
-                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
-
-                   rdfs:label "Notizen-Beschreibung"@de ,
-                              "Notes Statement"@en ;
-
-                   rdfs:comment """Beschreibung der Notizen von einem Brief"""@de ,
-                                """Statement about notes of a letter"""@en .
-
-### ###########################################
 ### newton:hasTitle
 
 :hasTitle rdf:type owl:ObjectProperty ;
@@ -249,7 +150,7 @@
                 knora-base:objectClassConstraint knora-base:TextValue ;
                 knora-base:subjectClassConstraint :letter ;
 
-                salsah-gui:guiElement salsah-gui:RichText ;
+                salsah-gui:guiElement salsah-gui:Richtext ;
 
                 rdfs:subPropertyOf knora-base:hasValue .
 
@@ -479,6 +380,26 @@
                    rdfs:comment "A resource representing the editor who made the change on data"@en .
 
 
+
+### ###########################################
+### newton:revisionDate
+:revisionDate rdf:type owl:ObjectProperty ;
+
+                    rdfs:label "Datum der Änderung "@de ,
+                               "Revision Date "@en ;
+
+
+                    rdfs:comment """Represents a Revision Date."""@en ;
+
+                    knora-base:subjectClassConstraint knora-base:Resource ;
+
+                    knora-base:objectClassConstraint knora-base:DateValue  ;
+
+                    salsah-gui:guiElement salsah-gui:Date ;
+
+                    rdfs:subPropertyOf knora-base:hasValue, dcterms:issued .
+
+
 ##########################################################
 #
 # RESOURCES
@@ -684,6 +605,12 @@
                           owl:onProperty :editorValue ;
                           owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :revisionDate ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                       ] ;
 
         rdfs:label "Änderung"@de ,
