@@ -10,6 +10,7 @@
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix beol: <http://www.knora.org/ontology/0801/beol#> .
+@prefix biblio: <http://www.knora.org/ontology/0801/biblio#> .
 @base <http://www.knora.org/ontology/0801/newton#> .
 
 @prefix : <http://www.knora.org/ontology/0801/newton#> .
@@ -409,6 +410,74 @@
 
              rdfs:subPropertyOf knora-base:hasValue .
 
+### ###########################################
+### newton:hasChanges
+
+:hasChanges rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Änderungen-Beschreibung"@de ,
+                         "Changes Description"@en ;
+
+              rdfs:comment "A resource representing the changes made in every revision"@en ;
+
+              knora-base:subjectClassConstraint :revisionDesc ;
+
+              knora-base:objectClassConstraint :change ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:hasChangesValue
+
+:hasChangesValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+
+                   rdfs:label "Änderungen-Beschreibung"@de ,
+                             "Changes Description"@en ;
+
+                   rdfs:comment "A resource representing the changes made in every revision"@en .
+
+### ###########################################
+### newton:editor
+
+:editor rdf:type owl:ObjectProperty ;
+
+              rdfs:subPropertyOf knora-base:hasLinkTo ;
+
+              rdfs:label "Editor"@de ,
+                         "Editor"@en ;
+
+              rdfs:comment "A resource representing the editor who made the change on data"@en ;
+
+              knora-base:subjectClassConstraint :change ;
+
+              knora-base:objectClassConstraint beol:person ;
+
+              salsah-gui:guiElement salsah-gui:Searchbox .
+
+
+### ###########################################
+### newton:editorValue
+
+:editorValue rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:LinkValue ;
+
+                   rdfs:subPropertyOf knora-base:hasLinkToValue ;
+
+
+                   rdfs:label "Editor"@de ,
+                              "Editor"@en ;
+
+                   rdfs:comment "A resource representing the editor who made the change on data"@en .
+
 
 ##########################################################
 #
@@ -460,25 +529,25 @@
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasRelatedText ;
+                            owl:onProperty :hasRelatedText ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasRelatedTextValue ;
+                            owl:onProperty :hasRelatedTextValue ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasPublicationStmt ;
+                            owl:onProperty :hasPublicationStmt ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasPublicationStmtValue ;
+                            owl:onProperty :hasPublicationStmtValue ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "7"^^xsd:nonNegativeInteger
                        ] ;
@@ -490,6 +559,7 @@
                    "Letter"@en ;
 
         rdfs:comment "A resource representing a letter from The Newton Project"@en .
+
 
 ### ###########################################
 ### newton:publicationStmt
@@ -504,13 +574,13 @@
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasAvailability ;
+                            owl:onProperty :hasAvailability ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                        ] ,
                        [
                             rdf:type owl:Restriction ;
-                            owl:onProperty beol:hasAvailabilityValue ;
+                            owl:onProperty :hasAvailabilityValue ;
                             owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                             salsah-gui:guiOrder "6"^^xsd:nonNegativeInteger
                        ] ,
@@ -544,6 +614,7 @@
 
         rdfs:comment "A resource representing a statement about publication of letter"@en .
 
+
 ### ###########################################
 ### newton:license
 :license rdf:type owl:Class ;
@@ -573,3 +644,49 @@
 
         rdfs:comment "A resource representing publication license"@en .
 
+
+### ###########################################
+### newton:revisionDesc
+:revisionDesc rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasChanges ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasChangesValue ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                       ] ;
+
+        rdfs:label "Überarbeitung-Beschreibung"@de ,
+                   "Revision Description"@en ;
+
+        rdfs:comment "A resource representing the description of revisions of data."@en .
+
+### ###########################################
+### newton:change
+:change rdf:type owl:Class ;
+
+        rdfs:subClassOf knora-base:Resource ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :editor ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :editorValue ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                      ] ;
+
+        rdfs:label "Änderung"@de ,
+                   "Change"@en ;
+
+        rdfs:comment "A resource representing a change made on data."@en .

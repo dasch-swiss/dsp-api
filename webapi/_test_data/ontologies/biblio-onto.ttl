@@ -132,8 +132,6 @@
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
-                    knora-base:subjectClassConstraint :Publication ;
-
                     rdfs:subPropertyOf knora-base:hasLinkToValue .
 
 
