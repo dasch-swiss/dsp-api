@@ -462,7 +462,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(outputResource.resourceClassIri == inputResource.resourceClassIri)
         assert(outputResource.label == inputResource.label)
         assert(outputResource.attachedToUser == requestingUser.id)
-        assert(outputResource.attachedToProject == inputResource.projectADM.id)
+        assert(outputResource.projectADM.id == inputResource.projectADM.id)
 
         val expectedPermissions = inputResource.permissions.getOrElse(defaultResourcePermissions)
         assert(outputResource.permissions == expectedPermissions)

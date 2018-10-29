@@ -1348,10 +1348,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = incunabulaUser
             )
 
-            valueFromTriplestore.valueContent match {
-                case savedValue: LinkValueContentV2 =>
-                    savedValue.referredResourceIri should ===(zeitglöckleinIri)
-                    valueFromTriplestore.valueHasRefCount should ===(Some(1))
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
 
                 case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
             }
@@ -1651,17 +1651,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             assert(linkValuesFromTripletore.size == 1)
-            val linkValueFromTriplestore: ReadValueV2 = linkValuesFromTripletore.head
 
-            linkValueFromTriplestore.valueContent match {
-                case savedLinkValue: LinkValueContentV2 =>
-                    linkValueFromTriplestore.previousValueIri.isEmpty should ===(true)
-                    linkValueFromTriplestore.valueHasRefCount.contains(1) should ===(true)
-                    savedLinkValue.referredResourceIri should ===(zeitglöckleinIri)
-                    standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
-
-                case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
+            val linkValueFromTriplestore: ReadLinkValueV2 = linkValuesFromTripletore.head match {
+                case readLinkValueV2: ReadLinkValueV2 => readLinkValueV2
+                case other => throw AssertionException(s"Expected link value, got $other")
             }
+
+            linkValueFromTriplestore.previousValueIri.isEmpty should ===(true)
+            linkValueFromTriplestore.valueHasRefCount should ===(1)
+            linkValueFromTriplestore.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+            standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
         "add another new text value containing a Standoff resource reference, and make a new version of the LinkValue" in {
@@ -1742,18 +1741,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
 
             assert(linkValuesFromTripletore.size == 1)
-            val linkValueFromTriplestore: ReadValueV2 = linkValuesFromTripletore.head
 
-            linkValueFromTriplestore.valueContent match {
-                case savedLinkValue: LinkValueContentV2 =>
-                    linkValueFromTriplestore.previousValueIri.contains(standoffLinkValueIri.get) should ===(true)
-                    linkValueFromTriplestore.valueHasRefCount.contains(2) should ===(true)
-                    savedLinkValue.referredResourceIri should ===(zeitglöckleinIri)
-                    standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
-
-                case _ => throw AssertionException(s"Expected link value, got $linkValueFromTriplestore")
+            val linkValueFromTriplestore: ReadLinkValueV2 = linkValuesFromTripletore.head match {
+                case readLinkValueV2: ReadLinkValueV2 => readLinkValueV2
+                case other => throw AssertionException(s"Expected link value, got $other")
             }
 
+            linkValueFromTriplestore.previousValueIri.contains(standoffLinkValueIri.get) should ===(true)
+            linkValueFromTriplestore.valueHasRefCount should ===(2)
+            linkValueFromTriplestore.valueContent.referredResourceIri should ===(zeitglöckleinIri)
+            standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
         "update an integer value" in {
@@ -3072,10 +3069,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 requestingUser = incunabulaUser
             )
 
-            valueFromTriplestore.valueContent match {
-                case savedValue: LinkValueContentV2 =>
-                    savedValue.referredResourceIri should ===(generationeIri)
-                    valueFromTriplestore.valueHasRefCount should ===(Some(1))
+            valueFromTriplestore match {
+                case readLinkValueV2: ReadLinkValueV2 =>
+                    readLinkValueV2.valueContent.referredResourceIri should ===(generationeIri)
+                    readLinkValueV2.valueHasRefCount should ===(1)
 
                 case _ => throw AssertionException(s"Expected link value, got $valueFromTriplestore")
             }

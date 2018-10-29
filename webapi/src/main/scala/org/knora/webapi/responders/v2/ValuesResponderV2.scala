@@ -197,7 +197,7 @@ class ValuesResponderV2 extends Responder {
                     case None =>
                         // No. Get default permissions for the new value.
                         ValueUtilV2.getDefaultValuePermissions(
-                            projectIri = resourceInfo.attachedToProject,
+                            projectIri = resourceInfo.projectADM.id,
                             resourceClassIri = resourceInfo.resourceClassIri,
                             propertyIri = submittedInternalPropertyIri,
                             requestingUser = createValueRequest.requestingUser,
@@ -207,7 +207,7 @@ class ValuesResponderV2 extends Responder {
 
                 // Get information about the project that the resource is in, so we know which named graph to put the new value in.
                 projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.attachedToProject.toString), requestingUser = createValueRequest.requestingUser)
+                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = createValueRequest.requestingUser)
                 }.mapTo[ProjectGetResponseADM]
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
@@ -783,7 +783,7 @@ class ValuesResponderV2 extends Responder {
 
                 // Get information about the project that the resource is in, so we know which named graph to put the new value in.
                 projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.attachedToProject.toString), requestingUser = updateValueRequest.requestingUser)
+                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = updateValueRequest.requestingUser)
                 }.mapTo[ProjectGetResponseADM]
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
@@ -1153,7 +1153,7 @@ class ValuesResponderV2 extends Responder {
                 // Get information about the project that the resource is in, so we know which named graph to do the update in.
 
                 projectInfo: ProjectGetResponseADM <- {
-                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.attachedToProject.toString), requestingUser = deleteValueRequest.requestingUser)
+                    responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceInfo.projectADM.id), requestingUser = deleteValueRequest.requestingUser)
                 }.mapTo[ProjectGetResponseADM]
 
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfo.project)
@@ -1531,7 +1531,7 @@ class ValuesResponderV2 extends Responder {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
             entityIri = resourceInfo.resourceIri,
             entityCreator = resourceInfo.attachedToUser,
-            entityProject = resourceInfo.attachedToProject,
+            entityProject = resourceInfo.projectADM.id,
             entityPermissionLiteral = resourceInfo.permissions,
             requestingUser = requestingUser
         )
@@ -1557,7 +1557,7 @@ class ValuesResponderV2 extends Responder {
         val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
             entityIri = valueInfo.valueIri,
             entityCreator = valueInfo.attachedToUser,
-            entityProject = resourceInfo.attachedToProject,
+            entityProject = resourceInfo.projectADM.id,
             entityPermissionLiteral = valueInfo.permissions,
             requestingUser = requestingUser
         )
@@ -1696,21 +1696,17 @@ class ValuesResponderV2 extends Responder {
       * @param sourceResourceInfo a [[ReadResourceV2]] describing the source of the link.
       * @param linkPropertyIri    the IRI of the link property.
       * @param targetResourceIri  the IRI of the target resource.
-      * @return a [[ReadValueV2]] describing the link value, if found.
+      * @return a [[ReadLinkValueV2]] describing the link value, if found.
       */
     private def findLinkValue(sourceResourceInfo: ReadResourceV2,
                               linkPropertyIri: SmartIri,
-                              targetResourceIri: IRI): Option[ReadValueV2] = {
+                              targetResourceIri: IRI): Option[ReadLinkValueV2] = {
         val linkValueProperty = linkPropertyIri.fromLinkPropToLinkValueProp
 
         sourceResourceInfo.values.get(linkValueProperty).flatMap {
             linkValueInfos: Seq[ReadValueV2] =>
-                linkValueInfos.find {
-                    linkValueInfo: ReadValueV2 =>
-                        linkValueInfo.valueContent match {
-                            case linkValue: LinkValueContentV2 => linkValue.referredResourceIri == targetResourceIri
-                            case _ => throw AssertionException(s"Expected a LinkValueContentV2: $linkValueInfo")
-                        }
+                linkValueInfos.collectFirst {
+                    case linkValueInfo: ReadLinkValueV2 if linkValueInfo.valueContent.referredResourceIri == targetResourceIri => linkValueInfo
                 }
         }
     }
@@ -1744,7 +1740,7 @@ class ValuesResponderV2 extends Responder {
                                    valuePermissions: String,
                                    requestingUser: UserADM): SparqlTemplateLinkUpdate = {
         // Check whether a LinkValue already exists for this link.
-        val maybeLinkValueInfo = findLinkValue(
+        val maybeLinkValueInfo: Option[ReadLinkValueV2] = findLinkValue(
             sourceResourceInfo = sourceResourceInfo,
             linkPropertyIri = linkPropertyIri,
             targetResourceIri = targetResourceIri
@@ -1757,9 +1753,6 @@ class ValuesResponderV2 extends Responder {
             case Some(linkValueInfo) =>
                 // There's already a LinkValue for links between these two resources. Increment
                 // its reference count.
-                val currentReferenceCount = linkValueInfo.valueHasRefCount.getOrElse(throw AssertionException(s"Link value <${linkValueInfo.valueIri}> has no reference count"))
-                val newReferenceCount = currentReferenceCount + 1
-
                 SparqlTemplateLinkUpdate(
                     linkPropertyIri = linkPropertyIri,
                     directLinkExists = true,
@@ -1769,8 +1762,8 @@ class ValuesResponderV2 extends Responder {
                     linkTargetExists = true,
                     newLinkValueIri = newLinkValueIri,
                     linkTargetIri = targetResourceIri,
-                    currentReferenceCount = currentReferenceCount,
-                    newReferenceCount = newReferenceCount,
+                    currentReferenceCount = linkValueInfo.valueHasRefCount,
+                    newReferenceCount = linkValueInfo.valueHasRefCount + 1,
                     newLinkValueCreator = valueCreator,
                     newLinkValuePermissions = valuePermissions
                 )
@@ -1835,8 +1828,7 @@ class ValuesResponderV2 extends Responder {
                 // Yes. Make a SparqlTemplateLinkUpdate.
 
                 // Decrement the LinkValue's reference count.
-                val currentReferenceCount = linkValueInfo.valueHasRefCount.getOrElse(throw AssertionException(s"Link value <${linkValueInfo.valueIri}> has no reference count"))
-                val newReferenceCount = currentReferenceCount - 1
+                val newReferenceCount = linkValueInfo.valueHasRefCount - 1
 
                 // If the new reference count is 0, specify that the direct link between the source and target
                 // resources should be removed.
@@ -1854,7 +1846,7 @@ class ValuesResponderV2 extends Responder {
                     linkTargetExists = true,
                     newLinkValueIri = newLinkValueIri,
                     linkTargetIri = targetResourceIri,
-                    currentReferenceCount = currentReferenceCount,
+                    currentReferenceCount = linkValueInfo.valueHasRefCount,
                     newReferenceCount = newReferenceCount,
                     newLinkValueCreator = valueCreator,
                     newLinkValuePermissions = valuePermissions

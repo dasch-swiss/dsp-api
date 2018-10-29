@@ -645,7 +645,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
-            _ = if (resource.attachedToProject != projectIri) {
+            _ = if (resource.projectADM.id != projectIri) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
@@ -738,10 +738,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = mappingsAsMap)
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = mappingsAsMap,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -762,10 +770,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         for {
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -908,21 +924,28 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                         // convert all dates to Gregorian calendar dates (standardization)
                         valueObj: ReadValueV2 =>
-                            valueObj.valueContent match {
-                                case dateContent: DateValueContentV2 =>
-                                    // date value
+                            valueObj match {
+                                case readNonLinkValueV2: ReadNonLinkValueV2 =>
+                                    readNonLinkValueV2.valueContent match {
+                                        case dateContent: DateValueContentV2 =>
+                                            // date value
 
-                                    valueObj.copy(
-                                        valueContent = dateContent.copy(
-                                            // act as if this was a Gregorian date
-                                            valueHasCalendar = CalendarNameGregorian
-                                        )
-                                    )
+                                            readNonLinkValueV2.copy(
+                                                valueContent = dateContent.copy(
+                                                    // act as if this was a Gregorian date
+                                                    valueHasCalendar = CalendarNameGregorian
+                                                )
+                                            )
 
-                                case linkContent: LinkValueContentV2 if linkContent.nestedResource.nonEmpty =>
+                                        case _ => valueObj
+                                    }
+
+                                case readLinkValueV2: ReadLinkValueV2 if readLinkValueV2.valueContent.nestedResource.nonEmpty =>
                                     // recursively process the values of the nested resource
 
-                                    valueObj.copy(
+                                    val linkContent = readLinkValueV2.valueContent
+
+                                    readLinkValueV2.copy(
                                         valueContent = linkContent.copy(
                                             nestedResource = Some(
                                                 linkContent.nestedResource.get.copy(
@@ -936,7 +959,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 case _ => valueObj
                             }
                     }
-
             }
         }
 
