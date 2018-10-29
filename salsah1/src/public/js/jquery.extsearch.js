@@ -438,6 +438,11 @@
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'exists'}).append('&exist;'));
 							break;
 						}
+						case VALTYPE_BOOLEAN: {
+							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
+							compop.append($('<option>', {'value': 'EXISTS', 'title': 'exists'}).append('&exist;'));
+							break;
+						}
 						default: {
 						
 						}
