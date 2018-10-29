@@ -441,6 +441,7 @@
 						case VALTYPE_BOOLEAN: {
 							compop.append($('<option>', {'value': 'EQ', 'title': 'equal'}).append('='));
 							compop.append($('<option>', {'value': 'EXISTS', 'title': 'exists'}).append('&exist;'));
+							valfield.append($('<input>', {'type': 'checkbox', name: 'searchval'}).addClass('propval').data('gui_element', 'bool'));
 							break;
 						}
 						default: {
@@ -752,6 +753,10 @@
 							}
 							case 'geonames': {
 								searchval.push($(searchval_ele[index]).geonames('value'));
+								break;
+							}
+							case 'bool': {
+								searchval.push(searchval_ele[index].checked? 'TRUE' : 'FALSE');
 								break;
 							}
 							default: {
