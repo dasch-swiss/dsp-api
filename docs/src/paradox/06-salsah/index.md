@@ -30,10 +30,11 @@ download it from
 [here](https://sites.google.com/a/chromium.org/chromedriver/downloads)
 and install it in this directory.
 
-Then, launch the services as described above; the triple store with the
-test data, the Knora server with `reStart -r` (`allowReloadOverHTTP`-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``), Sipi
-with the test configuration (`--config=config/sipi.knora-docker-test-config.lua`) and SALSAH 1 where you can run the tests in
-the same SBT session:
+Then, launch the services as described in other parts of this document;
+- the triple store with the test data,
+- the Knora server with `reStart -r` (`allowReloadOverHTTP`-flag) from SBT (from ``KNORA_PROJECT_DIRECTORY/webapi``),
+- Sipi with the test configuration (either run the docker instance as described in @ref:[The Sipi Media Server](../07-sipi/setup-sipi-for-knora.md) or run Sipi with the argument: `--config=config/sipi.knora-docker-test-config.lua`, the required config files can be found ``KNORA_PROJECT_DIRECTORY/sipi`` and should be copied to your sipi directory)
+- and SALSAH 1 where you can run the tests in the same SBT session:
 
 ```
 $ cd KNORA_PROJECT_DIRECTORY/salsah1
