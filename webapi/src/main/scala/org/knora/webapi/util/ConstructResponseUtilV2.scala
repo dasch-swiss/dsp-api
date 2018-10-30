@@ -441,7 +441,164 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], create a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
+      * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]].
+      *
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[TextValueContentV2]].
+      */
+    private def makeTextValueContentV2(valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
+        // Any knora-base:TextValue may have a language
+        val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
+
+        if (valueObject.standoff.nonEmpty) {
+            // standoff nodes given
+            // get the IRI of the mapping
+            val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+
+            val mapping: MappingAndXSLTransformation = mappings(mappingIri)
+
+            val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
+
+            FastFuture.successful(TextValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasString = valueObjectValueHasString,
+                valueHasLanguage = valueLanguageOption,
+                standoffAndMapping = Some(
+                    StandoffAndMapping(
+                        standoff = standoffTags,
+                        mappingIri = mappingIri,
+                        mapping = mapping.mapping,
+                        xslt = mapping.XSLTransformation
+                    )
+                ),
+                comment = valueCommentOption
+            ))
+
+        } else {
+            // no standoff nodes given
+            FastFuture.successful(TextValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasString = valueObjectValueHasString,
+                valueHasLanguage = valueLanguageOption,
+                standoffAndMapping = None,
+                comment = valueCommentOption
+            ))
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[FileValueContentV2]].
+      *
+      * @param valueType                 the IRI of the file value type
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[FileValueContentV2]].
+      */
+    private def makeFileValueContentV2(valueType: IRI,
+                                       valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueContentV2] = {
+        val fileValue = FileValueV2(
+            internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
+            internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
+            originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
+            originalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.OriginalMimeType)
+        )
+
+        valueType match {
+            case OntologyConstants.KnoraBase.StillImageFileValue =>
+
+                FastFuture.successful(StillImageFileValueContentV2(
+                    ontologySchema = InternalSchema,
+                    fileValue = fileValue,
+                    dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
+                    dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
+                    comment = valueCommentOption
+                ))
+
+            case OntologyConstants.KnoraBase.TextFileValue =>
+
+                FastFuture.successful(TextFileValueContentV2(
+                    ontologySchema = InternalSchema,
+                    fileValue = fileValue,
+                    comment = valueCommentOption
+                ))
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[LinkValueContentV2]].
+      *
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[LinkValueContentV2]].
+      */
+    private def makeLinkValueContentV2(valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
+        val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
+            valueObject.assertions(OntologyConstants.Rdf.Subject)
+        } else {
+            valueObject.assertions(OntologyConstants.Rdf.Object)
+        }
+
+        val linkValue = LinkValueContentV2(
+            ontologySchema = InternalSchema,
+            referredResourceIri = referredResourceIri,
+            isIncomingLink = valueObject.isIncomingLink,
+            nestedResource = None,
+            comment = valueCommentOption
+        )
+
+        valueObject.nestedResource match {
+
+            case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+
+                // add information about the referred resource
+
+                for {
+                    nestedResource <- constructReadResourceV2(
+                        resourceIri = referredResourceIri,
+                        resourceWithValueRdfData = nestedResourceAssertions,
+                        mappings = mappings,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
+                } yield linkValue.copy(
+                    nestedResource = Some(nestedResource) // construct a `ReadResourceV2`
+                )
+
+
+            case None => FastFuture.successful(linkValue) // do not include information about the referred resource
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
       * @param valueObject the given [[ValueRdfData]].
       * @param mappings    the mappings needed for standoff conversions and XSL transformations.
@@ -459,48 +616,18 @@ object ConstructResponseUtilV2 {
         // every knora-base:value (any of its subclasses) may have a comment
         val valueCommentOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-        val valueType = valueObject.valueObjectClass
+        val valueType: IRI = valueObject.valueObjectClass
 
         valueType match {
             case OntologyConstants.KnoraBase.TextValue =>
-                // Any knora-base:TextValue may have a language
-                val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
-
-                if (valueObject.standoff.nonEmpty) {
-                    // standoff nodes given
-                    // get the IRI of the mapping
-                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
-
-                    val mapping: MappingAndXSLTransformation = mappings(mappingIri)
-
-                    val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
-
-                    FastFuture.successful(TextValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasString = valueObjectValueHasString,
-                        valueHasLanguage = valueLanguageOption,
-                        standoffAndMapping = Some(
-                            StandoffAndMapping(
-                                standoff = standoffTags,
-                                mappingIri = mappingIri,
-                                mapping = mapping.mapping,
-                                xslt = mapping.XSLTransformation
-                            )
-                        ),
-                        comment = valueCommentOption
-                    ))
-
-                } else {
-                    // no standoff nodes given
-                    FastFuture.successful(TextValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasString = valueObjectValueHasString,
-                        valueHasLanguage = valueLanguageOption,
-                        standoffAndMapping = None,
-                        comment = valueCommentOption
-                    ))
-                }
-
+                makeTextValueContentV2(
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
+                )
 
             case OntologyConstants.KnoraBase.DateValue =>
                 val startPrecisionStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)
@@ -589,78 +716,28 @@ object ConstructResponseUtilV2 {
                 ))
 
             case OntologyConstants.KnoraBase.LinkValue =>
-
-                val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
-                    valueObject.assertions(OntologyConstants.Rdf.Subject)
-                } else {
-                    valueObject.assertions(OntologyConstants.Rdf.Object)
-                }
-
-                val linkValue = LinkValueContentV2(
-                    ontologySchema = InternalSchema,
-                    referredResourceIri = referredResourceIri,
-                    isIncomingLink = valueObject.isIncomingLink,
-                    nestedResource = None,
-                    comment = valueCommentOption
+                makeLinkValueContentV2(
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
                 )
-
-                valueObject.nestedResource match {
-
-                    case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
-
-                        // add information about the referred resource
-
-                        for {
-                            nestedResource <- constructReadResourceV2(
-                                resourceIri = referredResourceIri,
-                                resourceWithValueRdfData = nestedResourceAssertions,
-                                mappings = mappings,
-                                responderManager = responderManager,
-                                requestingUser = requestingUser
-                            )
-                        } yield linkValue.copy(
-                            nestedResource = Some(nestedResource) // construct a `ReadResourceV2`
-                        )
-
-
-                    case None => FastFuture.successful(linkValue) // do not include information about the referred resource
-
-                }
 
             case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
-
-                val fileValue = FileValueV2(
-                    internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
-                    internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
-                    originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
-                    originalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.OriginalMimeType)
+                makeFileValueContentV2(
+                    valueType = fileValueClass,
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
                 )
 
-                fileValueClass match {
-                    case OntologyConstants.KnoraBase.StillImageFileValue =>
-
-                        FastFuture.successful(StillImageFileValueContentV2(
-                            ontologySchema = InternalSchema,
-                            fileValue = fileValue,
-                            dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
-                            dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
-                            comment = valueCommentOption
-                        ))
-
-                    case OntologyConstants.KnoraBase.TextFileValue =>
-
-                        FastFuture.successful(TextFileValueContentV2(
-                            ontologySchema = InternalSchema,
-                            fileValue = fileValue,
-                            comment = valueCommentOption
-                        ))
-                }
-
-
-            case other =>
-                throw NotImplementedException(s"not implemented yet: $other")
+            case other => throw NotImplementedException(s"Not implemented yet: $other")
         }
-
     }
 
     /**

@@ -22,15 +22,15 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
-import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
+import org.knora.webapi.SipiException
 import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
+import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.try2Message
-import org.knora.webapi.{SipiException, TriplestoreConnectionException}
 import spray.json._
 
-import scala.concurrent.{Await, Future, TimeoutException}
-import scala.util.{Failure, Try}
+import scala.concurrent.{Await, Future}
+import scala.util.Try
 
 /**
   * Makes requests to Sipi.
@@ -55,27 +55,23 @@ class SipiResponderV2 extends Responder {
 
         } yield response
 
-        val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
+        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
+        // than the value of akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances
+        val sipiResponseTry: Try[HttpResponse] = Try {
+            Await.ready(sipiResponseFuture, settings.sipiTimeout)
+            sipiResponseFuture.value.get
+        }.flatten
+
+        val sipiResponseTryRecovered: Try[HttpResponse] = sipiResponseTry.recoverWith {
             case exception: Exception => throw SipiException(message = "Sipi error", e = exception, log = log)
         }
 
-        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
-        // than the value of akka.actor.deployment./responderManager/sipiRouterV1.nr-of-instances
-        val sipiResponseTry: Try[HttpResponse] = try {
-            Await.ready(sipiResponseFutureRecovered, settings.sipiTimeout)
-            sipiResponseFutureRecovered.value.get
-        } catch {
-            case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to Sipi timed out after ${settings.sipiTimeout}", timeoutEx, log))
-        }
-
         for {
-            sipiResponse: HttpResponse <- sipiResponseTry
+            sipiResponse: HttpResponse <- sipiResponseTryRecovered
             httpStatusCode: StatusCode = sipiResponse.status
             strictEntityFuture: Future[HttpEntity.Strict] = sipiResponse.entity.toStrict(settings.sipiTimeout)
-            _ = Await.ready(strictEntityFuture, settings.sipiTimeout)
-            strictEntityTry: Try[HttpEntity.Strict] = strictEntityFuture.value.get
-            strictEntity: HttpEntity.Strict <- strictEntityTry
-            responseStr = strictEntity.data.decodeString("UTF-8")
+            strictEntity: HttpEntity.Strict = Await.result(strictEntityFuture, settings.sipiTimeout)
+            responseStr: String = strictEntity.data.decodeString("UTF-8")
 
             _ = if (httpStatusCode != StatusCodes.OK) {
                 throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")

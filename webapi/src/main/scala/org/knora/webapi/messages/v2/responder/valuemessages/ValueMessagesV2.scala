@@ -692,6 +692,9 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
                 case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue =>
                     ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
 
+                case OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue =>
+                    StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
 
@@ -2164,7 +2167,7 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
     override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 = copy(ontologySchema = targetSchema)
 
     override def toJsonLDValue(targetSchema: ApiV2Schema, projectADM: ProjectADM, settings: SettingsImpl): JsonLDValue = {
-        // TODO: this needs to include the project shortcode
+        // TODO: this needs to include the project shortcode (#874).
         val fileUrl: String = s"${settings.externalSipiIIIFGetUrl}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
 
         targetSchema match {
@@ -2216,11 +2219,26 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         for {
-            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename, stringFormatter.validateAndEscapeIri))
+            // The submitted value provides only Sipi's internal filename for the image.
+            internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
+
+            // Ask Sipi about the rest of the file's metadata.
             tempFileUrl = s"${settings.externalSipiIIIFGetUrl}/tmp/$internalFilename"
             imageMetadataResponse: GetImageMetadataResponseV2 <- (responderManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetImageMetadataResponseV2]
-            // TODO: combine the information from the JSON-LD request with the information from Sipi.
-        } yield ???
+
+            fileValue = FileValueV2(
+                internalFilename = internalFilename,
+                internalMimeType = "image/jp2", // Sipi stores all images as JPEG 2000.
+                originalFilename = imageMetadataResponse.originalFilename,
+                originalMimeType = imageMetadataResponse.originalMimeType
+            )
+        } yield StillImageFileValueContentV2(
+            ontologySchema = ApiV2WithValueObjects,
+            fileValue = fileValue,
+            dimX = imageMetadataResponse.width,
+            dimY = imageMetadataResponse.height,
+            comment = getComment(jsonLDObject)
+        )
     }
 }
 

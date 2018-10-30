@@ -43,6 +43,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesRespond
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
+import org.knora.webapi.messages.v2.responder.sipimessages.SipiResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.admin._
@@ -224,6 +225,11 @@ class ResponderManager extends Actor with ActorLogging {
     protected final def makeDefaultListsRouterV2: ActorRef = makeActor(Props[ListsResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_V2_ACTOR_NAME)
 
     /**
+      * Constructs the default Akka routing actor that routes messages to [[SipiResponderV2]].
+      */
+    protected final def makeDefaultSipiRouterV2: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV2]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SIPI_ROUTER_V2_ACTOR_NAME)
+
+    /**
       * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
       * member to substitute a custom actor instead of the default ontology responder.
       */
@@ -242,8 +248,8 @@ class ResponderManager extends Actor with ActorLogging {
     protected val resourcesRouterV2: ActorRef = makeDefaultResourcesRouterV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default resources responder.
+      * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default values responder.
       */
     protected val valuesRouterV2: ActorRef = makeDefaultValuesRouterV2
 
@@ -254,16 +260,22 @@ class ResponderManager extends Actor with ActorLogging {
     protected val persistentMapRouterV2: ActorRef = makeDefaultPersistentMapRouterV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default resources responder.
+      * The Akka routing actor that should receive messages addressed to the standoff responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default standoff responder.
       */
     protected val standoffRouterV2: ActorRef = makeDefaultStandoffRouterV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default resources responder.
+      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default lists responder.
       */
     protected val listsRouterV2: ActorRef = makeDefaultListsRouterV2
+
+    /**
+      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
+      * member to substitute a custom actor instead of the default Sipi responder.
+      */
+    protected val sipiRouterV2: ActorRef = makeDefaultSipiRouterV2
 
     //
     // Admin responders
@@ -357,6 +369,7 @@ class ResponderManager extends Actor with ActorLogging {
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => standoffRouterV2.forward(standoffResponderRequestV2)
         case listsResponderRequestV2: ListsResponderRequestV2 => listsRouterV2.forward(listsResponderRequestV2)
+        case sipiResponderRequestV2: SipiResponderRequestV2 => sipiRouterV2.forward(sipiResponderRequestV2)
 
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
