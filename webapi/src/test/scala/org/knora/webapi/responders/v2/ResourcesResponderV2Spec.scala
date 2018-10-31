@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import java.util.UUID
 
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -28,6 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
@@ -415,6 +417,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private var standardMapping: Option[MappingXMLtoStandoff] = None
 
     private val graphTestData = new GraphTestData
+
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V2_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV2)))
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

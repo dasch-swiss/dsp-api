@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.util.UUID
 
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -31,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
@@ -54,6 +56,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
     private val anythingUser1 = SharedTestDataADM.anythingUser1
     private val anythingUser2 = SharedTestDataADM.anythingUser2
+
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V2_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV2)))
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

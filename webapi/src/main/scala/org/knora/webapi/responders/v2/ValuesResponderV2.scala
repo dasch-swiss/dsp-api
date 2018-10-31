@@ -32,6 +32,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
+import org.knora.webapi.messages.v2.responder.sipimessages.MoveTemporaryFileToPermanentStorageRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
@@ -233,6 +234,14 @@ class ValuesResponderV2 extends Responder {
                     propertyIriInResult = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = createValueRequest.requestingUser
+                )
+
+                // If the value is a file value, ask Sipi to move the file to permanent storage.
+
+                _ <- ValueUtilV2.doSipiPostUpdate(
+                    valueContent = submittedInternalValueContent,
+                    requestingUser = createValueRequest.requestingUser,
+                    responderManager = responderManager
                 )
 
             } yield CreateValueResponseV2(
@@ -809,6 +818,14 @@ class ValuesResponderV2 extends Responder {
                     propertyIriInResult = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = updateValueRequest.requestingUser
+                )
+
+                // If the value is a file value, ask Sipi to move the file to permanent storage.
+
+                _ <- ValueUtilV2.doSipiPostUpdate(
+                    valueContent = submittedInternalValueContent,
+                    requestingUser = updateValueRequest.requestingUser,
+                    responderManager = responderManager
                 )
 
             } yield UpdateValueResponseV2(

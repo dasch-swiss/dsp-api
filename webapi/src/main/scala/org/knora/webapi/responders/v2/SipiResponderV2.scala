@@ -102,12 +102,13 @@ class SipiResponderV2 extends Responder {
         )
 
         val sipiResponseFuture: Future[HttpResponse] = for {
-            request <- Marshal(FormData(formParams)).to[RequestEntity]
+            requestEntity <- Marshal(FormData(formParams)).to[RequestEntity]
 
             response: HttpResponse <- Http().singleRequest(
                 HttpRequest(
                     method = HttpMethods.POST,
-                    uri = moveFileUrl
+                    uri = moveFileUrl,
+                    entity = requestEntity
                 )
             )
 

@@ -20,11 +20,15 @@
 package org.knora.webapi.responders.v2
 
 import akka.actor.ActorSelection
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.sipimessages.MoveTemporaryFileToPermanentStorageRequestV2
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ValueContentV2}
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.{IRI, KnoraSystemInstances, NotFoundException}
 
@@ -77,5 +81,29 @@ object ValueUtilV2 {
                 throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
             }
         } yield ()
+    }
+
+
+    /**
+      * After a value is created or updated, this method checks whether it's a file value, and if so,
+      * asks Sipi to move the file to permanent storage.
+      *
+      * @param valueContent the value that was created or updated.
+      * @param requestingUser the user making the request.
+      */
+    def doSipiPostUpdate(valueContent: ValueContentV2,
+                                 requestingUser: UserADM,
+                                 responderManager: ActorSelection)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
+        valueContent match {
+            case fileValueContent: FileValueContentV2 =>
+                val sipiRequest = MoveTemporaryFileToPermanentStorageRequestV2(
+                    internalFilename = fileValueContent.fileValue.internalFilename,
+                    requestingUser = requestingUser
+                )
+
+                (responderManager ? sipiRequest).mapTo[SuccessResponseV2].map(_ => ())
+
+            case _ => FastFuture.successful(())
+        }
     }
 }

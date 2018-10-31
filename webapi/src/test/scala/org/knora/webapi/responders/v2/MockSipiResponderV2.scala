@@ -19,7 +19,8 @@
 
 package org.knora.webapi.responders.v2
 
-import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.try2Message
 
@@ -31,6 +32,7 @@ import scala.util.{Success, Try}
 class MockSipiResponderV2 extends Responder {
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
+        case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
     }
 
     private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] =
@@ -42,4 +44,7 @@ class MockSipiResponderV2 extends Responder {
                 height = 256
             )
         }
+
+    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] =
+        Success(SuccessResponseV2("Moved file to permanent storage"))
 }

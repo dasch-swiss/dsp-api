@@ -82,7 +82,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
             for {
                 // Convert the resource to the internal ontology schema.
-                internalCreateResource <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+                internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
                 // Check standoff link targets and list nodes that should exist.
 
@@ -171,6 +171,13 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
                     resourceReadyToCreate = resourceReadyToCreate,
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
+                    requestingUser = createResourceRequestV2.requestingUser
+                )
+
+                // If the request includes file values, tell Sipi to move the files to permanent storage.
+
+                _ <- doSipiPostUpdateForResources(
+                    createResources = Seq(internalCreateResource),
                     requestingUser = createResourceRequestV2.requestingUser
                 )
             } yield previewOfCreatedResource
@@ -682,6 +689,28 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             numberOfResources = 1,
             resources = Seq(resource.copy(values = Map.empty))
         )
+    }
+
+    /**
+      * After the creation of one or more resources, looks for file values among the values that were created, and tells
+      * Sipi to move those files to permanent storage.
+      *
+      * @param createResources the resources that were created.
+      * @param requestingUser  the user making the request.
+      */
+    private def doSipiPostUpdateForResources(createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Unit] = {
+        val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
+
+        val resultFutures: Seq[Future[Unit]] = allValues.map {
+            valueContent =>
+                ValueUtilV2.doSipiPostUpdate(
+                    valueContent = valueContent,
+                    requestingUser = requestingUser,
+                    responderManager = responderManager
+                )
+        }
+
+        Future.sequence(resultFutures).map(_ => ())
     }
 
     /**
