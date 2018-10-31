@@ -1694,7 +1694,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }
@@ -4259,7 +4259,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }
@@ -6178,7 +6178,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }

@@ -41,6 +41,14 @@ case class GetImageMetadataRequestV2(fileUrl: String,
                                      requestingUser: UserADM) extends SipiResponderRequestV2
 
 
+/**
+  * Represents a response from Sipi providing metadata about an image file.
+  *
+  * @param originalFilename the image's original filename.
+  * @param originalMimeType the image's original MIME type.
+  * @param width            the image's width in pixels.
+  * @param height           the image's height in pixels.
+  */
 case class GetImageMetadataResponseV2(originalFilename: String,
                                       originalMimeType: String,
                                       width: Int,
@@ -49,3 +57,12 @@ case class GetImageMetadataResponseV2(originalFilename: String,
 object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val getImageMetadataResponseV2Format: RootJsonFormat[GetImageMetadataResponseV2] = jsonFormat4(GetImageMetadataResponseV2)
 }
+
+/**
+  * Asks Sipi to move a file from temporary to permanent storage.
+  *
+  * @param internalFilename the name of the file.
+  * @param requestingUser   the user making the request.
+  */
+case class MoveTemporaryFileToPermanentStorageRequestV2(internalFilename: String,
+                                                        requestingUser: UserADM) extends SipiResponderRequestV2

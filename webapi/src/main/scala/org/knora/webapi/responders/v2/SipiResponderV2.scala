@@ -20,11 +20,13 @@
 package org.knora.webapi.responders.v2
 
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
 import akka.stream.ActorMaterializer
 import org.knora.webapi.SipiException
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
-import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2}
+import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.try2Message
 import spray.json._
@@ -40,8 +42,15 @@ class SipiResponderV2 extends Responder {
 
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
+        case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
     }
 
+    /**
+      * Asks Sipi for metadata about a file.
+      *
+      * @param getFileMetadataRequestV2 the request.
+      * @return a [[GetImageMetadataResponseV2]] containing the requested metadata.
+      */
     private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] = {
         val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
 
@@ -77,5 +86,54 @@ class SipiResponderV2 extends Responder {
                 throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
             }
         } yield responseStr.parseJson.convertTo[GetImageMetadataResponseV2]
+    }
+
+    /**
+      * Asks Sipi to move a file from temporary storage to permanent storage.
+      *
+      * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
+      * @return a [[SuccessResponseV2]].
+      */
+    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] = {
+        val moveFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiMoveFileRouteV2}"
+
+        val formParams = Map(
+            "internalFilename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename
+        )
+
+        val sipiResponseFuture: Future[HttpResponse] = for {
+            request <- Marshal(FormData(formParams)).to[RequestEntity]
+
+            response: HttpResponse <- Http().singleRequest(
+                HttpRequest(
+                    method = HttpMethods.POST,
+                    uri = moveFileUrl
+                )
+            )
+
+        } yield response
+
+        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
+        // than the value of akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances
+        val sipiResponseTry: Try[HttpResponse] = Try {
+            Await.ready(sipiResponseFuture, settings.sipiTimeout)
+            sipiResponseFuture.value.get
+        }.flatten
+
+        val sipiResponseTryRecovered: Try[HttpResponse] = sipiResponseTry.recoverWith {
+            case exception: Exception => throw SipiException(message = "Sipi error", e = exception, log = log)
+        }
+
+        for {
+            sipiResponse: HttpResponse <- sipiResponseTryRecovered
+            httpStatusCode: StatusCode = sipiResponse.status
+            strictEntityFuture: Future[HttpEntity.Strict] = sipiResponse.entity.toStrict(settings.sipiTimeout)
+            strictEntity: HttpEntity.Strict = Await.result(strictEntityFuture, settings.sipiTimeout)
+            responseStr: String = strictEntity.data.decodeString("UTF-8")
+
+            _ = if (httpStatusCode != StatusCodes.OK) {
+                throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
+            }
+        } yield SuccessResponseV2("Moved file to permanent storage")
     }
 }

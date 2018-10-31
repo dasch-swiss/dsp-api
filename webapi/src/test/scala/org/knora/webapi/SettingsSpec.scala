@@ -64,7 +64,7 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.internalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
             settings.externalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
 
-            settings.internalSipiImageConversionUrl should be ("http://localhost:1024")
+            settings.internalSipiImageConversionUrlV1 should be ("http://localhost:1024")
 
             settings.prometheusReporter should be (false)
             settings.zipkinReporter should be (false)
