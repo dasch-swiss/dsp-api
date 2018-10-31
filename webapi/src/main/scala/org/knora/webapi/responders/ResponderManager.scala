@@ -275,7 +275,7 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
       * member to substitute a custom actor instead of the default Sipi responder.
       */
-    protected val sipiRouterV2: ActorRef = makeDefaultSipiRouterV2
+    protected lazy val sipiRouterV2: ActorRef = makeDefaultSipiRouterV2
 
     //
     // Admin responders

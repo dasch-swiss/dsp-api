@@ -26,7 +26,6 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -49,6 +48,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
     private val generationeIri = "http://rdfh.ch/c3f913666f"
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
+    private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
     private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
@@ -86,6 +86,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val geonameValueIri = new MutableTestIri
     private val linkValueIri = new MutableTestIri
     private val standoffLinkValueIri = new MutableTestIri
+    private val stillImageFileValueIri = new MutableTestIri
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -1753,6 +1754,90 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             standoffLinkValueIri.set(linkValueFromTriplestore.valueIri)
         }
 
+        "create a still image file value" in {
+            // Add the value.
+
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case createValueResponse: CreateValueResponseV2 => stillImageFileValueIri.set(createValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val valueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = stillImageFileValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            valueFromTriplestore.valueContent match {
+                case savedValue: StillImageFileValueContentV2 => savedValue should ===(valueContent)
+                case _ => throw AssertionException(s"Expected file value, got $valueFromTriplestore")
+            }
+        }
+
+        "not create a duplicate still image file value" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
         "update an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -3082,11 +3167,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
-            val createValueRequest = CreateValueRequestV2(
-                CreateValueV2(
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueV2(
                     resourceIri = resourceIri,
                     resourceClassIri = OntologyConstants.KnoraApiV2WithValueObjects.LinkObj.toSmartIri,
                     propertyIri = linkValuePropertyIri,
+                    valueIri = linkValueIri.get,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
                         referredResourceIri = generationeIri
@@ -3096,7 +3182,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! createValueRequest
+            actorUnderTest ! updateValueRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
@@ -3122,6 +3208,107 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
+        }
+
+        "not update a still image file value without changing it" in {
+            val resourceIri: IRI = aThingPictureIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            val updateValueRequest = UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateValueRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+            }
+        }
+
+        "update a still image file value" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+
+            // Get the value before update.
+            val previousValueFromTriplestore: ReadValueV2 = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = stillImageFileValueIri.get,
+                requestingUser = anythingUser1,
+                checkLastModDateChanged = false
+            )
+
+            // Update the value.
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = "updated-filename.jp2",
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            actorUnderTest ! UpdateValueRequestV2(
+                UpdateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueIri = stillImageFileValueIri.get,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case updateValueResponse: UpdateValueResponseV2 => stillImageFileValueIri.set(updateValueResponse.valueIri)
+            }
+
+            // Read the value back to check that it was added correctly.
+
+            val updatedValueFromTriplestore = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = stillImageFileValueIri.get,
+                requestingUser = anythingUser1
+            )
+
+            updatedValueFromTriplestore.valueContent match {
+                case savedValue: StillImageFileValueContentV2 =>
+                    savedValue should ===(valueContent)
+                    updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+
+                case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
+            }
+
         }
 
         "not delete a value if the requesting user does not have DeletePermission on the value" in {
