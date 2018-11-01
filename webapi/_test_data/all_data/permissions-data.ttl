@@ -282,7 +282,7 @@
 
                       knora-base:forResourceClass beol:figure ;
 
-                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 ### Default Object Access Permissions on beol:documentImage resource class
@@ -294,7 +294,7 @@
 
                       knora-base:forResourceClass beol:documentImage ;
 
-                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|V knora-base:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 ##########################################################
