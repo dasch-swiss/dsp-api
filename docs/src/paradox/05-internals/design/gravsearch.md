@@ -47,8 +47,10 @@ SPARQL that is sent to the triplestore. This SPARQL is more complex.
 
 ### Prequery
 
-The purpose of the prequery is to get an ordered collection of results (sort criteria can be submitted by the user, but the result is always deterministic).
+The purpose of the prequery is to get an ordered collection of results. Sort criteria can be submitted by the user, but the result is always deterministic also without sort criteria.
 Also paging is supported. A prequery is a SPARQL SELECT query.
+
+If the client submits a count query, the prrequery returns the overall number of hits, but not the results themselves.
 
 In a first step, the Gravsearch query's WHERE clause is transformed and the prequery is generated from this result. 
 The transformation of the Gravsearch query's WHERE clause relies on an implementation of the abstract class `AbstractSparqlTransformer` 
