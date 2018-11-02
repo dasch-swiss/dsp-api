@@ -1,9 +1,9 @@
 ##################################
 ## first stage does the building
 ##################################
-FROM dhlabbasel/scala-sbt as build-stage
+FROM dhlabbasel/scala-sbt:master as build-stage
 
-MAINTAINER Ivan Subotic "ivan.subotic@unibas.ch"
+LABEL maintainer="ivan.subotic@unibas.ch"
 
 ENV LANG="en_US.UTF-8"
 ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
@@ -12,18 +12,19 @@ ENV JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8"
 COPY . /src
 
 ## generate deployment packaging
-RUN \
-  cd /src && \
-  sbt stage
+WORKDIR /src
+RUN sbt stage
 
 ##################################
 ## starting second stage
 ##################################
 FROM openjdk:10-jre-slim
 
+LABEL maintainer="ivan.subotic@unibas.ch"
+
 ## install wget
 RUN apt-get update && \
-    apt-get install -y wget && \
+    apt-get install -y --no-install-recommends wget=1.18-5+deb9u2 && \
     rm -rf /var/lib/apt/lists/*
 
 ## install yourkit profiler
