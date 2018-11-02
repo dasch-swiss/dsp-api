@@ -1,5 +1,5 @@
 # first stage does the building
-FROM dhlabbasel/scala-sbt:latest as build-stage
+FROM dhlabbasel/scala-sbt:master as build-stage
 
 LABEL maintainer="ivan.subotic@unibas.ch"
 
