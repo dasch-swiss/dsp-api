@@ -160,7 +160,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         // Contains the variable representing the main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
 
-        // get method for public access
+        // getter method for public access
         def getMainResourceVariable: QueryVariable = mainResourceVariable.getOrElse(throw GravsearchException("Could not get main resource variable from transformer"))
 
         // a Set containing all `TypeableEntity` (keys of `typeInspectionResult`) that have already been processed
@@ -176,7 +176,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         // contains variables representing group concatenated dependent resource IRIs
         protected var dependentResourceVariablesGroupConcat: Set[QueryVariable] = Set.empty
 
-        // get method for public access
+        // getter method for public access
         def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
 
         // contains the variables of value objects (including those for link values)
