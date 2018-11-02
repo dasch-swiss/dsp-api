@@ -221,7 +221,8 @@ lazy val webApiLibs = Seq(
     library.swaggerAkkaHttp,
     library.typesafeConfig,
     library.xmlunitCore,
-    library.icu4j
+    library.icu4j,
+    library.jwtSprayJson
 )
 
 lazy val library =
@@ -321,6 +322,8 @@ lazy val library =
         val jaxbApi                = "javax.xml.bind"                % "jaxb-api"                 % "2.2.12"
 
         val icu4j                  = "com.ibm.icu"                   % "icu4j"                    % "62.1"
+
+        val jwtSprayJson           = "com.pauldijou"                %% "jwt-spray-json"          % "0.19.0"
     }
 
 lazy val javaRunOptions = Seq(

@@ -37,7 +37,8 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
-import spray.json.{JsNumber, JsObject, JsString}
+import spray.json._
+import pdi.jwt.{JwtSprayJson, JwtAlgorithm, JwtClaim}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -677,13 +678,13 @@ object JWTHelper {
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 
     // the encryption algorithm we chose to use.
-    val algorithm = Algorithm.HS256
+    val algorithm: Algorithm = Algorithm.HS256
 
     // the headers which need to be present inside the JWT
     val requiredHeaders: Set[HeaderField] = Set[HeaderField](Typ)
 
     // the claims that need to be present inside the JWT
-    // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
+    // Iss: issuer, Sub: subject, Aud: audience, Iat: issued at, Exp: expiration date, Jti: unique identifier
     val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp, Jti)
 
     val log = Logger(LoggerFactory.getLogger(this.getClass))
@@ -694,7 +695,7 @@ object JWTHelper {
       * @param userIri   the user IRI that will be encoded into the token.
       * @param secretKey the secret key used for encoding.
       * @param longevity the token's longevity in days.
-      * @return a [[String]] containg the JWT.
+      * @return a [[String]] containing the JWT.
       */
     def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration): String = {
 
@@ -707,10 +708,10 @@ object JWTHelper {
         // calculate expiration time (seconds)
         val nowPlusLongevity: Long = now + longevity.toSeconds
 
-        val identifier: String = UUID.randomUUID().toString()
+        val identifier: String = UUID.randomUUID().toString
 
         // Add required claims
-        // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
+        // Iss: issuer, Sub: subject, Aud: audience, Iat: issued at, Exp: expiration date, Jti: unique identifier
         val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity), Jti(identifier))
 
         val jwt = new DecodedJwt(headers, claims)
@@ -770,3 +771,42 @@ object JWTHelper {
 
 }
 
+object JWTHelper2 {
+    import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
+
+    private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
+
+    private val header: String = """{"typ":"JWT","alg":"HS256"}"""
+
+    def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
+
+        // now in seconds
+        val now: Long = System.currentTimeMillis() / 1000l
+
+        // calculate expiration time (seconds)
+        val nowPlusLongevity: Long = now + longevity.toSeconds
+
+        val identifier: String = UUID.randomUUID().toString
+
+        val claim: String = JwtClaim(
+            content = JsObject(content).compactPrint,
+            issuer = Some("webapi"),
+            subject = Some(userIri),
+            audience = Some(Set("webapi")),
+            issuedAt = Some(now),
+            expiration = Some(nowPlusLongevity),
+            jwtId = Some(identifier)
+        ).toJson
+
+        JwtSprayJson.encode(
+            header = header,
+            claim = claim,
+            key = secretKey,
+            algorithm = algorithm
+        )
+    }
+
+    def validateToken(token: String, secret: String): Boolean = true
+
+    def extractUserIriFromToken(token: String, secret: String): Option[IRI] = None
+}
