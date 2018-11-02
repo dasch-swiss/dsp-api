@@ -7,7 +7,6 @@ LABEL maintainer="ivan.subotic@unibas.ch"
 
 # Install.
 RUN \
-  sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
   apt-get -qq update && \
   apt-get install -y --no-install-recommends git=1:2.11.0-3+deb9u4
 
