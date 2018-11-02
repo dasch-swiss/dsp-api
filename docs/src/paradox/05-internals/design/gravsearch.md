@@ -110,9 +110,15 @@ SELECT DISTINCT
     (GROUP_CONCAT(DISTINCT(?seqnum); SEPARATOR='') AS ?seqnum__Concat)
     (GROUP_CONCAT(DISTINCT(?book__LinkValue); SEPARATOR='') AS ?book__LinkValue__Concat) 
     WHERE {...}
+    GROUP BY ?page
+    ORDER BY ASC(?page)
+    LIMIT 25
 ```
 
 The variables `?page`, `?book__Concat`, `?seqnum__Concat`, and `?book__LinkValue__Concat` 
 are accessible in the result rows and contain the IRIs of the resources and values that matched the search criteria.
+`?book`, `?seqnum`, and `?book__LinkValue` are only used inside the aggregation function. Aggregation is necessary to make paging work: 
+results are grouped by main resource to ensure that the same main resource is only returned once.
 
 ### Main Query
+
