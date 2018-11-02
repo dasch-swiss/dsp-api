@@ -92,5 +92,27 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     }
 ```
 
+The prequery's SELECT clause is built using the member vars defined in `AbstractSparqlTransformer`.
+State of member vars after analysis:
+
+- `mainResourceVariable`: `QueryVariable(page)`
+- `dependentResourceVariables`: `Set(QueryVariable(book))`
+- `dependentResourceVariablesConcat`: `Set(QueryVariable(book__Concat))`
+- `valueObjectVariables`: `Set(QueryVariable(book__LinkValue), QueryVariable(seqnum))`
+- `valueObjectVariablesConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
+
+The resulting SELECT clause of the prequery looks as follows:
+
+```sparql
+SELECT DISTINCT 
+    ?page 
+    (GROUP_CONCAT(DISTINCT(?book); SEPARATOR='') AS ?book__Concat) 
+    (GROUP_CONCAT(DISTINCT(?seqnum); SEPARATOR='') AS ?seqnum__Concat)
+    (GROUP_CONCAT(DISTINCT(?book__LinkValue); SEPARATOR='') AS ?book__LinkValue__Concat) 
+    WHERE {...}
+```
+
+The variables `?page`, `?book__Concat`, `?seqnum__Concat`, and `?book__LinkValue__Concat` 
+are accessible in the result rows and contain the IRIs of the resources and values that matched the search criteria.
 
 ### Main Query
