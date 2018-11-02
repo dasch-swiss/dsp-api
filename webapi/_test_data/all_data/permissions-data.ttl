@@ -5,7 +5,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
-
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ##########################################################
 #
@@ -272,6 +272,29 @@
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
+
+### Default Object Access Permissions on beol:figure resource class
+<http://rdfh.ch/permissions/0801/006-d2>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forResourceClass beol:figure ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on beol:documentImage resource class
+<http://rdfh.ch/permissions/0801/006-d3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forResourceClass beol:documentImage ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 ##########################################################
