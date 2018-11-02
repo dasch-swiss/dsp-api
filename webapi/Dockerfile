@@ -23,7 +23,7 @@ FROM openjdk:10-jre-slim
 LABEL maintainer="ivan.subotic@unibas.ch"
 
 ## install wget
-RUN apt-get update && \
+RUN apt-get -qq update && \
     apt-get install -y --no-install-recommends wget=1.18-5+deb9u2 && \
     rm -rf /var/lib/apt/lists/*
 
