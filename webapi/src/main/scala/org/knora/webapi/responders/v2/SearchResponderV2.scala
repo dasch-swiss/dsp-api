@@ -2545,6 +2545,53 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
+        /**
+          * Collects the Iris of dependent resources per main resource from the results returned by the prequery.
+          * Dependent resource Iris are grouped by main resource.
+          *
+          * @param prequeryResponse the results returned by the prequery.
+          * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+          * @param mainResourceVar  the variable representing the main resource.
+          * @return A Map of main resource Iris to a Set of Iris representing dependent resources.
+          */
+        def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+                                                    transformer: NonTriplestoreSpecificConstructToSelectTransformer,
+                                                    mainResourceVar: QueryVariable): Map[IRI, Set[IRI]] = {
+
+            // variables representing dependent resources
+            val dependentResourceVariablesConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
+
+            prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
+                case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
+                    // collect all the dependent resource Iris for the current main resource from prequery's response
+
+                    // the main resource's Iri
+                    val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+
+                    // get the Iris of all the dependent resources for the given main resource
+                    val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
+                        dependentResVar: QueryVariable =>
+
+                            // check if key exists: the variable representing dependent resources
+                            // could be contained in an OPTIONAL or a UNION and be unbound
+                            // It would not be returned in that case
+                            val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
+
+                            dependentResIriOption match {
+                                case Some(depResIri: IRI) =>
+
+                                    // IRIs are concatenated, split them
+                                    depResIri.split(transformer.groupConcatSeparator).toSeq
+
+                                case None => Set.empty[IRI] // no Iri present
+                            }
+
+                    }
+
+                    acc + (mainResIri -> dependentResIris)
+            }
+        }
+
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
@@ -2607,39 +2654,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
-                // println("main res" + nonTriplestoreSpecificConstructToSelectTransformer.getMainResourceVariable)
-
-                // variables representing dependent resources
-                val dependentResourceVariablesConcat: Set[QueryVariable] = nonTriplestoreSpecificConstructToSelectTransformer.getDependentResourceVariablesGroupConcat
-
-                // println("dependent resource Iris concat: " + dependentResourceVariablesConcat)
-
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
-                    case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
-                        // collect all the values for the current main resource from prequery response
-
-                        val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
-
-                        val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
-                            dependentResVar: QueryVariable =>
-
-                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
-                                val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
-
-                                dependentResIriOption match {
-                                    case Some(depResIri: IRI) =>
-
-                                        // IRIs are concatenated, split them
-                                        depResIri.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSeq
-
-                                    case None => Set.empty[IRI] // no value present
-                                }
-
-                        }
-
-                        acc + (mainResIri -> dependentResIris)
-                }
+                val dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
