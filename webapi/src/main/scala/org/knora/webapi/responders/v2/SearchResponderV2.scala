@@ -2641,6 +2641,77 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
+        /**
+          * Removes the main resources from the main query's results that the requesting user has insufficient permissions on.
+          * If the user does not have full permission on the full graph pattern (main resource, dependent resources, value objects)
+          * then the main resource is excluded completely from the results.
+          *
+          * @param mainQueryResponse results returned by the main query.
+          * @param dependentResourceIrisPerMainResource Iris of dependent resources per main resource.
+          * @param valueObjectVarsAndIrisPerMainResource variable names and Iris of value objects per main resource.
+          * @return a Map of main resource Iris and their values.
+          */
+        def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlConstructResponse,
+                                                    dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]],
+                                                    valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]]): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+
+            // separate main resources and value objects (dependent resources are nested)
+            // this method removes resources and values the requesting users has insufficient permissions on (missing view permissions).
+            val queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = mainQueryResponse, requestingUser = requestingUser)
+
+            queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
+                case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
+
+                    // check for presence of dependent resources: dependentResourceIrisPerMainResource plus the dependent resources whose Iris where provided in the Gravsearch query.
+                    val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
+                    // TODO: https://github.com/dhlab-basel/Knora/issues/924
+
+                    // println(expectedDependentResources)
+
+                    // check for presence of value objects: valueObjectIrisPerMainResource
+                    val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource(mainResIri).values.flatten.toSet
+
+                    // value property assertions for the current main resource
+                    val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
+
+                    // all the IRIs of dependent resources and value objects contained in `valuePropAssertions`
+                    val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
+
+                    // check if the client has sufficient permissions on all dependent resources present in the graph pattern
+                    val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependentResources) == expectedDependentResources
+
+                    // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
+                    val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
+
+                    // println(allValueObjects)
+
+                    /*println("+++++++++")
+
+                    println("graph pattern check for " + mainResIri)
+
+                    println("expected dependent resources: " + expectedDependentResources)
+
+                    println("all expected dependent resources present: " + allDependentResources)
+
+                    println("given dependent resources " + resAndValueObjIris.resourceIris)
+
+                    println("expected value objs: " + expectedValueObjects)
+
+                    println("given value objs: " + resAndValueObjIris.valueObjectIris)
+
+                    println("all expected value objects present: " + allValueObjects)*/
+
+                    if (allDependentResources && allValueObjects) {
+                        // sufficient permissions, include the main resource and its values
+                        acc + (mainResIri -> values)
+                    } else {
+                        // insufficient permissions, skip the resource
+                        acc
+                    }
+            }
+
+        }
+
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
@@ -2721,11 +2792,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // the IRIs of all dependent resources for all main resources
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
-                // for each main resource, create a Map of value object variables and their values
-                val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                // for each main resource, create a Map of value object variables and their Iris
+                val valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
-                val allValueObjectIris: Set[IRI] = valueObjectIrisPerMainResource.values.foldLeft(Set.empty[IRI]) {
+                val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.values.foldLeft(Set.empty[IRI]) {
                     case (acc: Set[IRI], valObjIrisForQueryVar: Map[QueryVariable, Set[IRI]]) =>
                         acc ++ valObjIrisForQueryVar.values.flatten.toSet
                 }
@@ -2760,63 +2831,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // println(triplestoreSpecificSparql)
 
                 for {
-                    searchResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
+                    mainQueryResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(triplestoreSpecificSparql)).mapTo[SparqlConstructResponse]
 
-                    // separate main resources and value objects (dependent resources are nested)
-                    queryResultsSep: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
-
-                    // for each main resource check if all dependent resources and value objects are still present after permission checking
-                    // this ensures that the user has sufficient permissions on the whole query path
-                    queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
-                        case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
-
-                            // check for presence of dependent resources: dependentResourceIrisPerMainResource plus the dependent resources whose Iris where provided in the Gravsearch query.
-                            val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
-                            // TODO: https://github.com/dhlab-basel/Knora/issues/924
-
-                            // println(expectedDependentResources)
-
-                            // check for presence of value objects: valueObjectIrisPerMainResource
-                            val expectedValueObjects: Set[IRI] = valueObjectIrisPerMainResource(mainResIri).values.flatten.toSet
-
-                            // value property assertions for the current main resource
-                            val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
-
-                            // all the IRIs of dependent resources and value objects contained in `valuePropAssertions`
-                            val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
-
-                            // check if the client has sufficient permissions on all dependent resources present in the query path
-                            val allDependentResources: Boolean = resAndValueObjIris.resourceIris.intersect(expectedDependentResources) == expectedDependentResources
-
-                            // check if the client has sufficient permissions on all value objects IRIs present in the query path
-                            val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
-
-                            // println(allValueObjects)
-
-                            /*println("+++++++++")
-
-                            println("graph pattern check for " + mainResIri)
-
-                            println("expected dependent resources: " + expectedDependentResources)
-
-                            println("all expected dependent resources present: " + allDependentResources)
-
-                            println("given dependent resources " + resAndValueObjIris.resourceIris)
-
-                            println("expected value objs: " + expectedValueObjects)
-
-                            println("given value objs: " + resAndValueObjIris.valueObjectIris)
-
-                            println("all expected value objects present: " + allValueObjects)*/
-
-                            if (allDependentResources && allValueObjects) {
-                                // sufficient permissions, include the main resource and its values
-                                acc + (mainResIri -> values)
-                            } else {
-                                // insufficient permissions, skip the resource
-                                acc
-                            }
-                    }
+                    // for each main resource, check if all dependent resources and value objects are still present after permission checking
+                    // this ensures that the user has sufficient permissions on the whole graph pattern
+                    queryResultsWithFullGraphPattern = getMainQueryResultsWithFullGraphPattern(
+                        mainQueryResponse = mainQueryResponse,
+                        dependentResourceIrisPerMainResource = dependentResourceIrisPerMainResource,
+                        valueObjectVarsAndIrisPerMainResource = valueObjectVarsAndIrisPerMainResource)
 
                     // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
                     valueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
@@ -2832,10 +2854,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris
 
                     // collect requested value object IRIs for each resource
-                    requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResWithFullQueryPath.map {
+                    requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
-                            val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectIrisPerMainResource(resIri)
+                            val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(resIri)
 
                             val valObjIrisRequestedForRes: Set[IRI] = allValueObjectVariables.flatMap {
                                 requestedQueryVar: QueryVariable =>
@@ -2846,7 +2868,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // filter out those value objects that the user does not want to be returned by the query
-                    queryResWithFullQueryPathOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResWithFullQueryPath.map {
+                    queryResWithFullQueryPathOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResultsWithFullGraphPattern.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
                             // get the IRIs of all the value objects requested for this resource
