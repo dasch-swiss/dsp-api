@@ -119,6 +119,24 @@
                 rdfs:subPropertyOf knora-base:hasValue .
 
 ### ###########################################
+### newton:fileName
+
+:fileName rdf:type owl:ObjectProperty ;
+
+
+                rdfs:label "Datei-Name"@de ,
+                           "File Name of letter"@en ;
+
+                rdfs:comment """Represents the filename of the letter."""@en ;
+
+                knora-base:objectClassConstraint knora-base:TextValue ;
+                knora-base:subjectClassConstraint :letter ;
+
+                salsah-gui:guiElement salsah-gui:SimpleText ;
+
+                rdfs:subPropertyOf knora-base:hasValue .
+
+### ###########################################
 ### newton:hasPages
 
 :hasPages rdf:type owl:ObjectProperty ;
@@ -416,6 +434,12 @@
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasAbbreviatedTitle ;
                           owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "0"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :fileName ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
                        ] ,
                        [
