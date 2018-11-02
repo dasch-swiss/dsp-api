@@ -2574,7 +2574,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             // check if key exists: the variable representing dependent resources
                             // could be contained in an OPTIONAL or a UNION and be unbound
-                            // It would not be returned in that case
+                            // It would be suppressed by `TriplestoreMessages` in that case
                             val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
 
                             dependentResIriOption match {
@@ -2589,6 +2589,55 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     acc + (mainResIri -> dependentResIris)
+            }
+        }
+
+        /**
+          * Collects object variables and their values per main resource from the results returned by the prequery.
+          * Value objects variables and their Iris are grouped by main resource.
+          *
+          * @param prequeryResponse the results returned by the prequery.
+          * @param transformer the transformer that was used to turn the Gravsearch query into the prequery.
+          * @param mainResourceVar the variable representing the main resource.
+          * @return A Map of main resource Iris to a Map of value variables to value object Iris.
+          */
+        def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
+                                              transformer: NonTriplestoreSpecificConstructToSelectTransformer,
+                                              mainResourceVar: QueryVariable): Map[IRI, Map[QueryVariable, Set[IRI]]] = {
+
+            // value objects variables present in the prequery's WHERE clause
+            val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
+
+            prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+                (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
+
+                    // the main resource's Iri
+                    val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
+
+                    // the the variables representing value objects and their Iris
+                    val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
+                        valueObjVarConcat: QueryVariable =>
+
+                            // check if key exists: the variable representing value objects
+                            // could be contained in an OPTIONAL or a UNION and be unbound
+                            // It would be suppressed by `TriplestoreMessages` in that case
+                            val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
+
+                            val valueObjIris: Set[IRI] = valueObjIrisOption match {
+
+                                case Some(valObjIris) =>
+
+                                    // IRIs are concatenated, split them
+                                    valObjIris.split(transformer.groupConcatSeparator).toSet
+
+                                case None => Set.empty[IRI] // no Iri present
+
+                            }
+
+                            valueObjVarConcat -> valueObjIris
+                    }.toMap
+
+                    acc + (mainResIri -> valueObjVarToIris)
             }
         }
 
@@ -2672,39 +2721,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // the IRIs of all dependent resources for all main resources
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
-                // value objects variables present in the prequery's WHERE clause
-                val valueObjectVariablesConcat = nonTriplestoreSpecificConstructToSelectTransformer.getValueObjectVarsGroupConcat
-
-                // println("value object Iris concat: " + valueObjectVariablesConcat)
-
                 // for each main resource, create a Map of value object variables and their values
-                val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
-                    (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
-
-                        val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
-
-                        val valueObjVarToIris: Map[QueryVariable, Set[IRI]] = valueObjectVariablesConcat.map {
-                            valueObjVarConcat: QueryVariable =>
-
-                                // check if key exists (the variable could be contained in an OPTIONAL or a UNION)
-                                val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
-
-                                val valueObjIris: Set[IRI] = valueObjIrisOption match {
-
-                                    case Some(valObjIris) =>
-
-                                        // IRIs are concatenated, split them
-                                        valObjIris.split(nonTriplestoreSpecificConstructToSelectTransformer.groupConcatSeparator).toSet
-
-                                    case None => Set.empty[IRI] // no value present
-
-                                }
-
-                                valueObjVarConcat -> valueObjIris
-                        }.toMap
-
-                        acc + (mainResIri -> valueObjVarToIris)
-                }
+                val valueObjectIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
                 val allValueObjectIris: Set[IRI] = valueObjectIrisPerMainResource.values.foldLeft(Set.empty[IRI]) {
