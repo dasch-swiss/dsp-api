@@ -2150,9 +2150,34 @@
 
 :StandoffMathTag rdf:type owl:Class ;
 
-                 rdfs:subClassOf knora-base:StandoffTag ;
+                 rdfs:subClassOf knora-base:StandoffTag,
+                 [ rdf:type owl:Restriction ;
+                   owl:onProperty :standoffMathTagHasBorder ;
+                   owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                 ] ;
 
                  rdfs:comment "mathematical notation encoded in LaTeX"@en .
+
+
+###  http://www.knora.org/ontology/0801/beol#standoffMathTagHasBorder
+:standoffMathTagHasBorder rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "border settings of mathematical notation"@en ;
+
+                knora-base:subjectClassConstraint :StandoffMathTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .
+
+
+###  http://www.knora.org/ontology/0801/beol#StandoffGapTag
+
+:StandoffGapTag rdf:type owl:Class ;
+
+                 rdfs:subClassOf knora-base:StandoffTag ;
+
+                 rdfs:comment "Gap in the manuscript"@en .
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffMarginalTag
 
