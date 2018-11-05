@@ -2597,13 +2597,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * Value objects variables and their Iris are grouped by main resource.
           *
           * @param prequeryResponse the results returned by the prequery.
-          * @param transformer the transformer that was used to turn the Gravsearch query into the prequery.
-          * @param mainResourceVar the variable representing the main resource.
+          * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+          * @param mainResourceVar  the variable representing the main resource.
           * @return A Map of main resource Iris to a Map of value variables to value object Iris.
           */
         def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
-                                              transformer: NonTriplestoreSpecificConstructToSelectTransformer,
-                                              mainResourceVar: QueryVariable): Map[IRI, Map[QueryVariable, Set[IRI]]] = {
+                                                     transformer: NonTriplestoreSpecificConstructToSelectTransformer,
+                                                     mainResourceVar: QueryVariable): Map[IRI, Map[QueryVariable, Set[IRI]]] = {
 
             // value objects variables present in the prequery's WHERE clause
             val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
@@ -2646,8 +2646,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * If the user does not have full permission on the full graph pattern (main resource, dependent resources, value objects)
           * then the main resource is excluded completely from the results.
           *
-          * @param mainQueryResponse results returned by the main query.
-          * @param dependentResourceIrisPerMainResource Iris of dependent resources per main resource.
+          * @param mainQueryResponse                     results returned by the main query.
+          * @param dependentResourceIrisPerMainResource  Iris of dependent resources per main resource.
           * @param valueObjectVarsAndIrisPerMainResource variable names and Iris of value objects per main resource.
           * @return a Map of main resource Iris and their values.
           */
@@ -2710,6 +2710,116 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
             }
 
+        }
+
+        /**
+          * Given the results of the main query, filters out all values that the user did not ask for in the input query,
+          * i.e that are not present in its CONSTRUCT clause.
+          *
+          * @param queryResultsWithFullGraphPattern        results with full graph pattern (that user has sufficient permissions on).
+          * @param valueObjectVarsAndIrisPerMainResource   value object variables and their Iris per main resource.
+          * @param allResourceVariablesFromTypeInspection  all variables representing resources.
+          * @param dependentResourceIrisFromTypeInspection Iris of dependent resources used in the input query.
+          * @param transformer                             the transformer that was used to turn the input query into the prequery.
+          * @param typeInspectionResult                    results of type inspection of the input query.
+          * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
+          */
+        def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData],
+                                          valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]],
+                                          allResourceVariablesFromTypeInspection: Set[QueryVariable],
+                                          dependentResourceIrisFromTypeInspection: Set[IRI],
+                                          transformer: NonTriplestoreSpecificConstructToSelectTransformer,
+                                          typeInspectionResult: GravsearchTypeInspectionResult): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+
+            // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+            val requestedValueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
+                depResVar =>
+                    collectValueVariablesForResource(inputQuery.constructClause, depResVar, typeInspectionResult, transformer.groupConcatVariableSuffix)
+            }
+
+            val requestedValueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
+                depResIri =>
+                    collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, transformer.groupConcatVariableSuffix)
+            }
+
+            val allRequestedValueObjectVariables: Set[QueryVariable] = requestedValueObjectVariablesForAllResVars ++ requestedValueObjectVariablesForDependentResIris
+
+            // collect requested value object IRIs for each resource
+            val requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.map {
+                case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+
+                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(resIri)
+
+                    val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
+                        requestedQueryVar: QueryVariable =>
+                            valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $resIri"))
+                    }
+
+                    resIri -> valObjIrisRequestedForRes
+            }
+
+            queryResultsWithFullGraphPattern.map {
+                case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+
+                    // get the IRIs of all the value objects requested for this resource
+                    val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerResource.getOrElse(resIri, throw AssertionException(s"key $resIri is absent in requested value object IRIs collection for resource $resIri"))
+
+                    /**
+                      * Filter out those values that the user does not want to see.
+                      *
+                      * @param values the values to be filtered.
+                      * @return filtered values.
+                      */
+                    def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
+                        values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
+                            case (acc, (propIri: IRI, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
+
+                                // filter values for the current resource
+                                val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
+                                    valueObj: ConstructResponseUtilV2.ValueRdfData =>
+                                        // only return those value objects whose IRIs are contained in valueObjIrisRequestedForRes
+                                        valueObjIrisRequestedForRes(valueObj.valueObjectIri)
+                                }
+
+                                // if there are link values including a target resource, apply filter to their values too
+                                val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
+                                    valObj: ConstructResponseUtilV2.ValueRdfData =>
+                                        if (valObj.nestedResource.nonEmpty) {
+
+                                            val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
+
+                                            // apply filter to the target resource's values
+                                            val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
+
+                                            valObj.copy(
+                                                nestedResource = Some(targetResourceAssertions.copy(
+                                                    valuePropertyAssertions = targetResourceAssertionsFiltered
+                                                ))
+                                            )
+                                        } else {
+                                            valObj
+                                        }
+                                }
+
+                                // ignore properties if there are no value object to be displayed
+                                if (valuesFilteredRecursively.nonEmpty) {
+                                    acc + (propIri -> valuesFilteredRecursively)
+                                } else {
+                                    // ignore this property since there are no value objects
+                                    acc
+                                }
+
+
+                        }
+                    }
+
+                    val requestedValuePropertyAssertions = traverseAndFilterValues(assertions)
+
+                    resIri -> assertions.copy(
+                        valuePropertyAssertions = requestedValuePropertyAssertions
+                    )
+
+            }
         }
 
         for {
@@ -2835,102 +2945,20 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // for each main resource, check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole graph pattern
-                    queryResultsWithFullGraphPattern = getMainQueryResultsWithFullGraphPattern(
+                    queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = getMainQueryResultsWithFullGraphPattern(
                         mainQueryResponse = mainQueryResponse,
                         dependentResourceIrisPerMainResource = dependentResourceIrisPerMainResource,
                         valueObjectVarsAndIrisPerMainResource = valueObjectVarsAndIrisPerMainResource)
 
-                    // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
-                    valueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
-                        depResVar =>
-                            collectValueVariablesForResource(inputQuery.constructClause, depResVar, typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableSuffix)
-                    }
-
-                    valueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
-                        depResIri =>
-                            collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, nonTriplestoreSpecificConstructToSelectTransformer.groupConcatVariableSuffix)
-                    }
-
-                    allValueObjectVariables: Set[QueryVariable] = valueObjectVariablesForAllResVars ++ valueObjectVariablesForDependentResIris
-
-                    // collect requested value object IRIs for each resource
-                    requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.map {
-                        case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
-
-                            val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(resIri)
-
-                            val valObjIrisRequestedForRes: Set[IRI] = allValueObjectVariables.flatMap {
-                                requestedQueryVar: QueryVariable =>
-                                    valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $resIri"))
-                            }
-
-                            resIri -> valObjIrisRequestedForRes
-                    }
-
-                    // filter out those value objects that the user does not want to be returned by the query
-                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResultsWithFullGraphPattern.map {
-                        case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
-
-                            // get the IRIs of all the value objects requested for this resource
-                            val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerResource.getOrElse(resIri, throw AssertionException(s"key $resIri is absent in requested value object IRIs collection for resource $resIri"))
-
-                            /**
-                              * Filter out those values that the user does not want to see.
-                              *
-                              * @param values the values to be filtered.
-                              * @return filtered values.
-                              */
-                            def traverseAndFilterValues(values: ConstructResponseUtilV2.ResourceWithValueRdfData): Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = {
-                                values.valuePropertyAssertions.foldLeft(Map.empty[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]]) {
-                                    case (acc, (propIri: IRI, values: Seq[ConstructResponseUtilV2.ValueRdfData])) =>
-
-                                        // filter values for the current resource
-                                        val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
-                                            valueObj: ConstructResponseUtilV2.ValueRdfData =>
-                                                // only return those value objects whose IRIs are contained in valueObjIrisRequestedForRes
-                                                valueObjIrisRequestedForRes(valueObj.valueObjectIri)
-                                        }
-
-                                        // if there are link values including a target resource, apply filter to their values too
-                                        val valuesFilteredRecursively: Seq[ConstructResponseUtilV2.ValueRdfData] = valuesFiltered.map {
-                                            valObj: ConstructResponseUtilV2.ValueRdfData =>
-                                                if (valObj.nestedResource.nonEmpty) {
-
-                                                    val targetResourceAssertions: ConstructResponseUtilV2.ResourceWithValueRdfData = valObj.nestedResource.get
-
-                                                    // apply filter to the target resource's values
-                                                    val targetResourceAssertionsFiltered: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(targetResourceAssertions)
-
-                                                    valObj.copy(
-                                                        nestedResource = Some(targetResourceAssertions.copy(
-                                                            valuePropertyAssertions = targetResourceAssertionsFiltered
-                                                        ))
-                                                    )
-                                                } else {
-                                                    valObj
-                                                }
-                                        }
-
-                                        // ignore properties if there are no value object to be displayed
-                                        if (valuesFilteredRecursively.nonEmpty) {
-                                            acc + (propIri -> valuesFilteredRecursively)
-                                        } else {
-                                            // ignore this property since there are no value objects
-                                            acc
-                                        }
-
-
-                                }
-                            }
-
-                            val requestedValuePropertyAssertions = traverseAndFilterValues(assertions)
-
-                            resIri -> assertions.copy(
-                                valuePropertyAssertions = requestedValuePropertyAssertions
-                            )
-
-                    }
-
+                    // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
+                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = getRequestedValuesFromResultsWithFullGraphPattern(
+                        queryResultsWithFullGraphPattern,
+                        valueObjectVarsAndIrisPerMainResource,
+                        allResourceVariablesFromTypeInspection,
+                        dependentResourceIrisFromTypeInspection,
+                        nonTriplestoreSpecificConstructToSelectTransformer,
+                        typeInspectionResult
+                    )
 
                 } yield queryResWithFullGraphPatternOnlyRequestedValues
 
