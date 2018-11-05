@@ -37,12 +37,12 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 import org.slf4j.LoggerFactory
+import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
 import spray.json._
-import pdi.jwt.{JwtSprayJson, JwtAlgorithm, JwtClaim}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -694,7 +694,7 @@ object JWTHelper {
       *
       * @param userIri   the user IRI that will be encoded into the token.
       * @param secretKey the secret key used for encoding.
-      * @param longevity the token's longevity in days.
+      * @param longevity the token's longevity.
       * @return a [[String]] containing the JWT.
       */
     def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration): String = {
@@ -720,8 +720,9 @@ object JWTHelper {
     }
 
     /**
-      * Validates a JWT by also taking the invalidation cache into account. The invalidation cache holds invalidated
-      * tokens, which would otherwise validate. Further, it makes sure that the required headers and claims are present.
+      * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+      * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+      * present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
@@ -747,7 +748,7 @@ object JWTHelper {
     }
 
     /**
-      * Extract the encoded user IRI. Further, it makes sure that the required headers and claims are present.
+      * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
@@ -771,13 +772,28 @@ object JWTHelper {
 
 }
 
+/**
+  * Provides functions for creating, decoding, and validating JWT tokens.
+  */
 object JWTHelper2 {
+
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 
     private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
 
     private val header: String = """{"typ":"JWT","alg":"HS256"}"""
 
+    val log = Logger(LoggerFactory.getLogger(this.getClass))
+
+    /**
+      * Creates a JWT.
+      *
+      * @param userIri   the user IRI that will be encoded into the token.
+      * @param secretKey the secret key used for encoding.
+      * @param longevity the token's longevity.
+      * @param content   any other content to be included in the token.
+      * @return a [[String]] containing the JWT.
+      */
     def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
 
         // now in seconds
@@ -806,7 +822,66 @@ object JWTHelper2 {
         )
     }
 
-    def validateToken(token: String, secret: String): Boolean = true
+    /**
+      * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+      * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+      * present.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return a [[Boolean]].
+      */
+    def validateToken(token: String, secret: String): Boolean = {
+        if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
+            // token invalidated so no need to decode
+            log.debug("validateToken - token found in invalidation cache, so not valid")
+            false
+        } else {
+            decodeToken(token, secret).isDefined
+        }
+    }
 
-    def extractUserIriFromToken(token: String, secret: String): Option[IRI] = None
+    /**
+      * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
+      *
+      * @param token  the JWT.
+      * @param secret the secret used to encode the token.
+      * @return an optional [[IRI]].
+      */
+    def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
+        decodeToken(token, secret) match {
+            case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
+            case None => None
+        }
+    }
+
+    /**
+      * Decodes and validates a JWT token.
+      *
+      * @param token  the token to be decoded.
+      * @param secret the secret used to encode the token.
+      * @return the token's header and claim, or `None` if the token is invalid.
+      */
+    private def decodeToken(token: String, secret: String): Option[(JwtHeader, JwtClaim)] = {
+        JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
+            case Success((header: JwtHeader, claim: JwtClaim, _)) =>
+                val requiredContent = Seq(
+                    header.typ,
+                    claim.issuer,
+                    claim.subject,
+                    claim.audience,
+                    claim.issuedAt,
+                    claim.expiration,
+                    claim.jwtId
+                )
+
+                if (!requiredContent.exists(_.isEmpty)) {
+                    Some(header, claim)
+                } else {
+                    None
+                }
+
+            case Failure(_) => None
+        }
+    }
 }
