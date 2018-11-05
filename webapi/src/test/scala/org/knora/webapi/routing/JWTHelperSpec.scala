@@ -20,62 +20,104 @@
 package org.knora.webapi.routing
 
 import akka.testkit.ImplicitSender
-import akka.util.Timeout
-import com.typesafe.config.ConfigFactory
-import io.igl.jwt._
-import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.{CoreSpec, SharedTestDataV1}
-
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.{CoreSpec, SharedTestDataADM}
+import spray.json.JsString
 
 object JWTHelperSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
-        app {
-
-        }
+          |app {
+          |    akka.loglevel = "DEBUG"
+          |
+          |    jwt-secret-key = "UP 4888, nice 4-8-4 steam engine"
+          |    jwt-longevity = 36500 days
+          |}
         """.stripMargin)
 }
 
-class JWTHelperSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender {
+class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
-    implicit val timeout: Timeout = Duration(5, SECONDS)
-
-    val rootUserProfileV1: UserProfileV1 = SharedTestDataV1.rootUser
-    val rootUserEmail: String = rootUserProfileV1.userData.email.get
-    val rootUserPassword: String = "test"
-
-    val secretKey: String = "super-secret-key"
+    private val validToken: String = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.TQFcGYN0EBjzypr3WaqXxWgo3FWDdSdSTp9czOflpB0"
 
     "The JWTHelper" should {
 
-        val secret = "123456"
-
-        "create token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1 day)
-
-            val decodedJwt: Try[Jwt] = DecodedJwt.validateEncodedJwt(
-                token,
-                secret,
-                JWTHelper.algorithm,
-                JWTHelper.requiredHeaders,
-                JWTHelper.requiredClaims,
-                iss = Some(Iss("webapi")),
-                aud = Some(Aud("webapi"))
+        "create a token" in {
+            val token: String = JWTHelper.createToken(
+                userIri = SharedTestDataADM.anythingUser1.id,
+                secret = settings.jwtSecretKey,
+                longevity = settings.jwtLongevity,
+                content = Map("foo" -> JsString("bar"))
             )
 
-            decodedJwt.isSuccess should be(true)
-            decodedJwt.get.getClaim[Sub].map(_.value) should be(Some("userIri"))
+            JWTHelper.extractUserIriFromToken(
+                token = token,
+                secret = settings.jwtSecretKey
+            ) should be(Some(SharedTestDataADM.anythingUser1.id))
+
+            JWTHelper.extractContentFromToken(
+                token = token,
+                secret = settings.jwtSecretKey,
+                contentName = "foo"
+            ) should be(Some("bar"))
         }
-        "validate token" in {
-            val token = JWTHelper.createToken("userIri", secret, 1 day)
-            JWTHelper.validateToken(token, secret) should be(true)
+
+        "validate a token" in {
+            JWTHelper.validateToken(
+                token = validToken,
+                secret = settings.jwtSecretKey
+            ) should be(true)
         }
-        "extract user's IRI" in {
-            val token = JWTHelper.createToken("userIri", secret, 1 day)
-            JWTHelper.extractUserIriFromToken(token, secret) should be(Some("userIri"))
+
+        "extract the user's IRI" in {
+            JWTHelper.extractUserIriFromToken(
+                token = validToken,
+                secret = settings.jwtSecretKey
+            ) should be(Some(SharedTestDataADM.anythingUser1.id))
+        }
+
+        "extract application-specific content" in {
+            JWTHelper.extractContentFromToken(
+                token = validToken,
+                secret = settings.jwtSecretKey,
+                contentName = "foo"
+            ) should be(Some("bar"))
+        }
+
+        "not decode an invalid token" in {
+            val invalidToken: String = "foobareyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.TQFcGYN0EBjzypr3WaqXxWgo3FWDdSdSTp9czOflpB0"
+
+            JWTHelper.extractUserIriFromToken(
+                token = invalidToken,
+                secret = settings.jwtSecretKey
+            ) should be(None)
+        }
+
+        "not decode a token with an invalid user IRI" in {
+            val tokenWithInvalidSubject = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJpbnZhbGlkIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.wwwCqHqqPxOCzb_8uBy5XHt2sQr3v59X2gCtbnRqioA"
+
+            JWTHelper.extractUserIriFromToken(
+                token = tokenWithInvalidSubject,
+                secret = settings.jwtSecretKey
+            ) should be(None)
+        }
+
+        "not decode a token with missing required content" in {
+            val tokenWithMissingExp = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJpYXQiOjE1NDE0Mzk3OTIsImp0aSI6IlNtSGNWZnBMUXdHZzlkR3MzT0FnSHciLCJmb28iOiJiYXIifQ.pxKrLq2LAAg0K85wIL78NoGHfQ7UjJ-47zGMnJbednk"
+
+            JWTHelper.extractUserIriFromToken(
+                token = tokenWithMissingExp,
+                secret = settings.jwtSecretKey
+            ) should be(None)
+        }
+
+        "not decode an expired token" in {
+            val expiredToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjE1NDE0Mzk4OTEsImlhdCI6MTU0MTQzOTg5MCwianRpIjoiTnRSYVBJOTRSazI2OHdLYXg1cEc1QSIsImZvbyI6ImJhciJ9.07a9GnqsqUOTnPYI160tRW-yyBrq-pqSNFvzsCba5yA"
+
+            JWTHelper.extractUserIriFromToken(
+                token = expiredToken,
+                secret = settings.jwtSecretKey
+            ) should be(None)
         }
     }
 }

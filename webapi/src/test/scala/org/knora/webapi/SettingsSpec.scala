@@ -19,10 +19,10 @@
 
 package org.knora.webapi
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 
 object SettingsSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
         akka {
             akka.loglevel = "DEBUG"
