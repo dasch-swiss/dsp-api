@@ -2771,7 +2771,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     resultRow.rowMap(mainResourceVar.variableName)
             }
 
-            queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
+            queryResultsSeparatedWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (mainResourceIris.nonEmpty) {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
@@ -2868,7 +2868,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     // filter out those value objects that the user does not want to be returned by the query
-                    queryResWithFullQueryPathOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResultsWithFullGraphPattern.map {
+                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = queryResultsWithFullGraphPattern.map {
                         case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
                             // get the IRIs of all the value objects requested for this resource
@@ -2932,7 +2932,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
 
-                } yield queryResWithFullQueryPathOnlyRequestedValues
+                } yield queryResWithFullGraphPatternOnlyRequestedValues
 
             } else {
                 // the prequery returned no results, no further query is necessary
@@ -2940,7 +2940,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
+            forbiddenResourceOption: Option[ReadResourceV2] <- if (mainResourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
                 getForbiddenResource(requestingUser)
@@ -2950,13 +2950,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
 
 
         } yield ReadResourcesSequenceV2(
             numberOfResources = mainResourceIris.size,
             resources = ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullQueryPath,
+                searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption
