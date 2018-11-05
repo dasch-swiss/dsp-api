@@ -16,7 +16,7 @@ lazy val docs = (project in file(".")).
     ).
     settings(
         // Set version string
-        version in ParadoxSite := "v2.0.0",
+        version in ParadoxSite := "v2.1.0",
 
         // Ghpages settings
         ghpagesNoJekyll := true,
