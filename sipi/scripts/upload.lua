@@ -22,29 +22,13 @@
 --
 
 require "send_response"
+require "jwt"
 require "clean_tempdir"
 
-function table.contains(table, element)
-  for _, value in pairs(table) do
-    if value == element then
-      return true
-    end
-  end
+token = get_token()
+
+if token == nil then
   return false
-end
-
-
-if server.request == nil or server.request["token"] == nil then
-    send_error(400, "token missing")
-    return -1
-end
-
-token = server.request["token"]
-
-success, tokendata = server.decode_jwt(token)
-if not success then
-    send_error(401, "Token not valid")
-    return false
 end
 
 myimg = {}
@@ -135,6 +119,7 @@ for imgindex, imgparam in pairs(server.uploads) do
     end
 
     local success, errmsg = server.fs.unlink(tmppath)
+
     if not success then
         server.sendStatus(500)
         server.log(errmsg, server.loglevel.LOG_ERR)
