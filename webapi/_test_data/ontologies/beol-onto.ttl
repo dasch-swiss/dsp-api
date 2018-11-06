@@ -2145,6 +2145,26 @@
 
                       rdfs:comment "a URI referring to a facsimile"@en .
 
+:StandoffRegionTag rdf:type owl:Class ;
+
+                   rdfs:subClassOf standoff:StandoffRootTag ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :standoffRegionTagHasBorder ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                   ] ;
+
+                   rdfs:comment "represent a region in the manuscript"@en .
+
+###  http://www.knora.org/ontology/0801/beol#standoffMathTagHasBorder
+:standoffRegionTagHasBorder rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "border settings of a region"@en ;
+
+                knora-base:subjectClassConstraint :StandoffRegionTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .
 
 ###  http://www.knora.org/ontology/0801/beol#StandoffMathTag
 
