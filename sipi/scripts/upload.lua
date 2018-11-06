@@ -22,6 +22,7 @@
 --
 
 require "send_response"
+require "clean_tempdir"
 
 function table.contains(table, element)
   for _, value in pairs(table) do
@@ -43,30 +44,32 @@ token = server.request["token"]
 success, tokendata = server.decode_jwt(token)
 if not success then
     send_error(401, "Token not valid")
-    return -1
+    return false
 end
 
 myimg = {}
 newfilename = {}
 iiifurls = {}
 
-for imgindex,imgparam in pairs(server.uploads) do
+for imgindex, imgparam in pairs(server.uploads) do
 
     --
     -- check if tmporary directory is available under image root, if not, create it
     --
-    tmpdir = config.imgroot .. '/tmp/'
+    local tmpdir = config.imgroot .. '/tmp/'
     local success, exists = server.fs.exists(tmpdir)
+
     if not success then
         server.sendStatus(500)
-        server.log(exists, server.loglevel.error)
+        server.log(exists, server.loglevel.LOG_ERR)
         return false
     end
+
     if not exists then
         local success, errmsg = server.fs.mkdir(tmpdir, 511)
         if not success then
             server.sendStatus(500)
-            server.log(errmsg, server.loglevel.error)
+            server.log(errmsg, server.loglevel.LOG_ERR)
             return false
         end
     end
@@ -77,14 +80,16 @@ for imgindex,imgparam in pairs(server.uploads) do
     local success, uuid62 = server.uuid62()
     if not success then
         server.sendStatus(500)
-        server.log(uuid62, server.loglevel.error)
+        server.log(uuid62, server.loglevel.LOG_ERR)
         return false
     end
-    tmppath =  tmpdir .. uuid62
+
+    local tmppath = tmpdir .. uuid62
     local success, errmsg = server.copyTmpfile(imgindex, tmppath)
+
     if not success then
         server.sendStatus(500)
-        server.log(errmsg, server.loglevel.error)
+        server.log(errmsg, server.loglevel.LOG_ERR)
         return false
     end
 
@@ -93,17 +98,17 @@ for imgindex,imgparam in pairs(server.uploads) do
     -- internal in-memory representation independent of the original
     -- image format.
     --
-    success, tmpimgref = SipiImage.new(tmppath, {original = imgparam["origname"], hash = "sha256"})
+    local success, tmpimgref = SipiImage.new(tmppath, {original = imgparam["origname"], hash = "sha256"})
+
     if not success then
         server.sendStatus(500)
-        server.log(gaga, server.loglevel.error)
+        server.log(tmpimgref, server.loglevel.LOG_ERR)
         return false
     end
 
     myimg[imgindex] = tmpimgref
 
-    filename = imgparam["origname"]
-    n1, n2 = string.find(filename, '.', 1, true)
+    local filename = imgparam["origname"]
     newfilename[imgindex] = tmppath .. '.jp2'
 
     if server.secure then
@@ -111,30 +116,37 @@ for imgindex,imgparam in pairs(server.uploads) do
     else
         protocol = 'http://'
     end
+
     iiifurls[uuid62 .. ".jp2"] = protocol .. server.host .. '/tmp/' .. uuid62 .. '.jp2'
 
-    success, newfilepath = helper.filename_hash(newfilename[imgindex]);
+    local success, newfilepath = helper.filename_hash(newfilename[imgindex])
+
     if not success then
         server.sendStatus(500)
-        server.log(gaga, server.loglevel.error)
+        server.log(newfilepath, server.loglevel.LOG_ERR)
         return false
     end
 
-    fullfilepath = config.imgroot .. '/tmp/' .. newfilepath
+    local fullfilepath = config.imgroot .. '/tmp/' .. newfilepath
 
     local status, errmsg = myimg[imgindex]:write(fullfilepath)
     if not status then
         server.print('Error converting image to j2k: ', filename, ' ** ', errmsg)
     end
 
-    success, errmsg = server.fs.unlink(tmppath)
+    local success, errmsg = server.fs.unlink(tmppath)
     if not success then
         server.sendStatus(500)
-        server.log(errmsg, server.loglevel.error)
+        server.log(errmsg, server.loglevel.LOG_ERR)
         return false
     end
-
 end
 
+-- Clean up old temporary files.
+--
+-- No need to handle errors from clean_tempdir here, because it logs them
+-- itself, and in any case we don't want it to stop us from processing
+-- the request.
+clean_tempdir()
 
 send_success(iiifurls)

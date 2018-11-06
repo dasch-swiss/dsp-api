@@ -143,9 +143,10 @@ sipi = {
     logfile = "sipi.log",
 
     --
-    -- loglevel, one of "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG"
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
     --
-    loglevel = "DEBUG",
+    loglevel = "DEBUG"
 }
 
 fileserver = {
