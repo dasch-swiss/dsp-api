@@ -2516,3 +2516,33 @@
 
             rdfs:comment "represents text that was deleted"@en .
 
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionTag
+:StandoffSubstitutionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a substitution of text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionDeletionTag
+:StandoffSubstitutionDeletionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents a substituted text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffSubstitutionAdditionTag
+:StandoffSubstitutionAdditionTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents substituting text"@en .
+
+### http://www.knora.org/ontology/0801/beol#StandoffUnclearTag
+:StandoffUnclearTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag ;
+
+            rdfs:comment "represents unreadable text"@en .
+
+
