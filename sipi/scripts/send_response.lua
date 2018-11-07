@@ -20,7 +20,7 @@
 -------------------------------------------------------------------------------
 MIMETYPES_INCONSISTENCY = "Submitted mimetypes and/or file extension are inconsistent"
 
-FILE_NOT_READBLE = "Submitted file path could not be read: "
+FILE_NOT_READABLE = "Submitted file path could not be read: "
 
 PARAMETERS_INCORRECT = "Parameters not set correctly"
 -------------------------------------------------------------------------------

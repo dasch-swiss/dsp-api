@@ -2140,7 +2140,11 @@ sealed trait FileValueContentV2 extends NonLinkValueContentV2 {
 
     def toJsonLDObjectMapInComplexSchema(fileUrl: String): Map[IRI, JsonLDValue] = Map(
         OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> JsonLDString(fileValue.internalFilename),
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDString(fileUrl)
+
+        OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = fileUrl,
+            datatype = OntologyConstants.Xsd.Uri.toSmartIri
+        )
     )
 }
 
@@ -2223,7 +2227,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
             internalFilename <- Future(jsonLDObject.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename, stringFormatter.toSparqlEncodedString))
 
             // Ask Sipi about the rest of the file's metadata.
-            tempFileUrl = s"${settings.externalSipiIIIFGetUrl}/tmp/$internalFilename"
+            tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
             imageMetadataResponse: GetImageMetadataResponseV2 <- (responderManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetImageMetadataResponseV2]
 
             fileValue = FileValueV2(

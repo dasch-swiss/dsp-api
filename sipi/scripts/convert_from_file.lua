@@ -71,7 +71,7 @@ if not success then
 end
 if not readable then
 
-    send_error(500, FILE_NOT_READBLE .. sourcePath)
+    send_error(500, FILE_NOT_READABLE .. sourcePath)
 
     return
 end

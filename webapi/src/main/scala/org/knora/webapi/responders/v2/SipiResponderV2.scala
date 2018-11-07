@@ -28,9 +28,11 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.util.ActorUtil.try2Message
 import spray.json._
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
@@ -95,10 +97,24 @@ class SipiResponderV2 extends Responder {
       * @return a [[SuccessResponseV2]].
       */
     private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] = {
-        val moveFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiMoveFileRouteV2}"
+        val token: String = JWTHelper.createToken(
+            userIri = moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
+            secret = settings.jwtSecretKey,
+            longevity = settings.jwtLongevity,
+            content = Map(
+                "knora-data" -> JsObject(
+                    Map(
+                        "permission" -> JsString("StoreFile"),
+                        "filename" -> JsString(moveTemporaryFileToPermanentStorageRequestV2.internalFilename)
+                    )
+                )
+            )
+        )
+
+        val moveFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiMoveFileRouteV2}?token=$token"
 
         val formParams = Map(
-            "internalFilename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename
+            "filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename
         )
 
         val sipiResponseFuture: Future[HttpResponse] = for {
@@ -133,7 +149,7 @@ class SipiResponderV2 extends Responder {
             responseStr: String = strictEntity.data.decodeString("UTF-8")
 
             _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
+                throw SipiException(s"Sipi may not have moved files to permanent storage. Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
             }
         } yield SuccessResponseV2("Moved file to permanent storage")
     }

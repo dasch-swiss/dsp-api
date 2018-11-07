@@ -67,6 +67,12 @@ case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
   */
 case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
 
+/**
+  * Represents a response Knora returns when communicating with the 'v2/authentication' route during the 'login' operation.
+  *
+  * @param token is the returned json web token.
+  */
+case class LoginResponse(token: String)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -75,6 +81,6 @@ case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
   * A spray-json protocol for generating Knora API v2 JSON for property values.
   */
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-
     implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] = jsonFormat2(LoginApiRequestPayloadV2)
+    implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
 }

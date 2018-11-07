@@ -46,6 +46,7 @@ function get_token()
     end
 
     local token_str = server.request["token"]
+    server.log("got token: " .. token_str, server.loglevel.DEBUG)
 
     local success, token = server.decode_jwt(token_str)
 

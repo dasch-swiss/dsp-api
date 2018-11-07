@@ -30,11 +30,12 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
 
 import scala.concurrent.duration.{Duration, _}
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object ITKnoraLiveSpec {
@@ -152,4 +153,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
         Await.result(responseFuture, duration)
     }
 
+    protected def getResponseJsonLD(request: HttpRequest): JsonLDDocument = {
+        val responseBodyStr = getResponseString(request)
+        JsonLDUtil.parseJsonLD(responseBodyStr)
+    }
 }

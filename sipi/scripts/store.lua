@@ -15,26 +15,58 @@
 -- You should have received a copy of the GNU Affero General Public
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
--- Knora GUI-case: Sipi has already saved the file that is supposed to be converted
--- the file was saved to: config.imgroot .. '/tmp/' (route make_thumbnail)
+--
+-- Moves a file from temporary to permanent storage.
+--
 
 require "send_response"
+require "jwt"
 
+-- Check that this request is really from Knora and that the user has permission
+-- to store the file.
 
---
--- check if knora directory is available. needs to be created before sipi is started,
--- so that sipi can create the directory sublevels on startup.
---
-knoraDir = config.imgroot .. '/knora/'
-local success, exists = server.fs.exists(knoraDir)
-if not exists then
-    local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting sipi."
-    send_error(500, errorMsg)
-    server.log(errorMsg, server.loglevel.LOG_ERR)
-    return -1
+local token = get_knora_token()
+
+if token == nil then
+    return
 end
 
-success, errmsg = server.setBuffer()
+local knora_data = token["knora-data"]
+
+if knora_data == nil then
+    send_error(403, "No knora-data in token")
+    return
+end
+
+if knora_data["permission"] ~= "StoreFile" then
+    send_error(403, "Token does not grant permission to store file")
+    return
+end
+
+local token_filename = knora_data["filename"]
+
+if token_filename == nil then
+    send_error(401, "Token does not specify a filename")
+    return
+end
+
+-- Check that the permanent storage directory exists. It needs to be created
+-- before sipi is started, so that sipi can create the directory sublevels on
+-- startup.
+
+local knoraDir = config.imgroot .. "/knora/"
+
+local success, exists = server.fs.exists(knoraDir)
+
+if not exists then
+    local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting Sipi."
+    send_error(500, errorMsg)
+    server.log(errorMsg, server.loglevel.LOG_ERR)
+    return
+end
+
+local success, errmsg = server.setBuffer()
+
 if not success then
     server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
     return
@@ -42,59 +74,68 @@ end
 
 if server.post == nil then
     send_error(400, PARAMETERS_INCORRECT)
-
     return
 end
 
-filename = server.post['filename']
-
+local filename = server.post["filename"]
 
 -- check if all the expected params are set
+
 if filename == nil then
     send_error(400, PARAMETERS_INCORRECT)
     return
 end
 
--- file with name given in param "filename" has been saved by upload.lua beforehand
-tmpDir = config.imgroot .. '/tmp/'
-sourcePath = tmpDir .. filename
+if filename ~= token_filename then
+    send_error(401, "Incorrect filename in token")
+    return
+end
 
+-- file with name given in param "filename" has been saved by upload.lua beforehand
+local tmpDir = config.imgroot .. "/tmp/"
+local sourcePath = tmpDir .. filename
 
 -- check if source is readable
-success, readable = server.fs.is_readable(sourcePath)
+local success, readable = server.fs.is_readable(sourcePath)
+
 if not success then
     server.log("Source: " .. sourcePath .. "not readable, " .. readable, server.loglevel.LOG_ERR)
     return
 end
+
 if not readable then
-
-    send_error(500, FILE_NOT_READBLE .. sourcePath)
-
+    send_error(500, FILE_NOT_READABLE .. sourcePath)
     return
 end
 
---
--- Move temporary file to permanent image file storage path with sublevels:
---
-success, newFilePath = helper.filename_hash(filename);
+-- Move temporary file to permanent image file storage path with sublevels.
+local success, newFilePath = helper.filename_hash(filename);
+
 if not success then
     server.sendStatus(500)
-    server.log(gaga, server.loglevel.error)
-    return false
+    server.log(newFilePath, server.loglevel.LOG_ERR)
+    return
 end
 
--- TODO
+local success, errmsg = server.fs.moveFile(sourcePath, newFilePath)
 
---
+if not success then
+    server.sendStatus(500)
+    server.log(errmsg, server.loglevel.LOG_ERR)
+    return
+end
+
 -- delete tmp file
---
-success, errmsg = server.fs.unlink(sourcePath)
+local success, errmsg = server.fs.unlink(sourcePath)
+
 if not success then
     server.log("server.fs.unlink failed: " .. errmsg, server.loglevel.LOG_ERR)
     return
 end
 
-result = {
+server.log(sourcePath .. " moved to " .. newFilePath, server.loglevel.DEBUG)
+
+local result = {
     status = 0
 }
 
