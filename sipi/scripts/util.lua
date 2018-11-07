@@ -15,15 +15,16 @@
 -- You should have received a copy of the GNU Affero General Public
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
-if not authorize_api('admin.sipi.org', 'administrator', config.adminuser) then
-    return
-end
+--- Checks whether a table contains a value.
+-- @param table the table to be checked.
+-- @param search_value the value to look for.
+-- @param a boolean indicating whether the table contains the value.
+function table.contains(table, search_value)
+  for _, value in pairs(table) do
+    if value == search_value then
+      return true
+    end
+  end
 
-result = {
-    status = 'OK'
-}
-local success, jsonresult = server.table_to_json(result)
-server.sendHeader('Content-type', 'application/json')
-server.sendStatus(200)
-server.print(jsonresult)
-server.shutdown()
+  return false
+end

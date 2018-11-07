@@ -708,9 +708,9 @@ object JWTHelper {
 
         val claim: String = JwtClaim(
             content = JsObject(content).compactPrint,
-            issuer = Some("webapi"),
+            issuer = Some("Knora"),
             subject = Some(userIri),
-            audience = Some(Set("webapi")),
+            audience = Some(Set("Knora", "Sipi")),
             issuedAt = Some(now),
             expiration = Some(nowPlusLongevity),
             jwtId = Some(identifier)

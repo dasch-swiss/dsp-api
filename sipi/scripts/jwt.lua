@@ -1,54 +1,78 @@
+-- Copyright © 2015-2018 the contributors (see Contributors.md).
 --
--- Copyright © 2016 Lukas Rosenthaler, Andrea Bianco, Benjamin Geer,
--- Ivan Subotic, Tobias Schweizer, André Kilchenmann, and André Fatton.
--- This file is part of Sipi.
--- Sipi is free software: you can redistribute it and/or modify
+-- This file is part of Knora.
+--
+-- Knora is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as published
 -- by the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
--- Sipi is distributed in the hope that it will be useful,
+--
+-- Knora is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
--- Additional permission under GNU AGPL version 3 section 7:
--- If you modify this Program, or any covered work, by linking or combining
--- it with Kakadu (or a modified version of that library), containing parts
--- covered by the terms of the Kakadu Software Licence, the licensors of this
--- Program grant you additional permission to convey the resulting work.
--- See the GNU Affero General Public License for more details.
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
 -- You should have received a copy of the GNU Affero General Public
--- License along with Sipi.  If not, see <http://www.gnu.org/licenses/>.
+-- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
--- validates JWT tokens
+--
+-- Parses and validates JSON web tokens.
+--
 
 require "send_response"
+require "util"
 
+--- Parses and validates a JSON web token from Knora. Sends an HTTP error
+-- if the token is missing or invalid.
+-- @return a table representing the token.
+function get_knora_token()
+    local token = get_token()
+
+    if token["iss"] ~= "Knora" then
+        send_error(401, "Not a Knora token")
+        return nil
+    end
+
+    return token
+end
+
+--- Parses and validates a JSON web token. Sends an HTTP error if the token is
+-- missing or invalid.
+-- @return a table representing the token.
 function get_token()
     if server.request == nil or server.request["token"] == nil then
         send_error(400, "Token missing")
         return nil
     end
 
-    token = server.request["token"]
+    local token_str = server.request["token"]
 
-    success, tokendata = server.decode_jwt(token)
+    local success, token = server.decode_jwt(token_str)
 
     if not success then
         send_error(401, "Invalid token")
         return nil
     end
 
-    token_expiration = tokendata["exp"]
+    local expiration_date = token["exp"]
 
-    if token_expiration == nil then
+    if expiration_date == nil then
        send_error(401, "Token has no expiry date")
        return nil
     end
 
-    systime = server.systime()
+    local systime = server.systime()
 
-    if (token_expiration <= systime) then
+    if (expiration_date <= systime) then
       send_error(401, "Expired token")
       return nil
+    end
+
+    local audience = token["aud"]
+
+    if audience == nil or not table.contains(audience, "Sipi") then
+        send_error(401, "Sipi not in token audience")
+        return nil
     end
 
     return token

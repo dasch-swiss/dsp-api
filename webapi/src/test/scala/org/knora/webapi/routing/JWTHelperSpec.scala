@@ -38,7 +38,7 @@ object JWTHelperSpec {
 
 class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
 
-    private val validToken: String = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.TQFcGYN0EBjzypr3WaqXxWgo3FWDdSdSTp9czOflpB0"
+    private val validToken: String = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NTE5MzYwNSwiaWF0IjoxNTQxNTkzNjA1LCJqdGkiOiJsZmdreWJqRlM5Q1NiV19NeVA0SGV3IiwiZm9vIjoiYmFyIn0.qPMJjv8tVOM7KKDxR4Dmdz_kB0FzTOtJBYHSp62Dilk"
 
     "The JWTHelper" should {
 
@@ -85,7 +85,7 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         }
 
         "not decode an invalid token" in {
-            val invalidToken: String = "foobareyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.TQFcGYN0EBjzypr3WaqXxWgo3FWDdSdSTp9czOflpB0"
+            val invalidToken: String = "foobareyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NTE5MzYwNSwiaWF0IjoxNTQxNTkzNjA1LCJqdGkiOiJsZmdreWJqRlM5Q1NiV19NeVA0SGV3IiwiZm9vIjoiYmFyIn0.qPMJjv8tVOM7KKDxR4Dmdz_kB0FzTOtJBYHSp62Dilk"
 
             JWTHelper.extractUserIriFromToken(
                 token = invalidToken,
@@ -94,7 +94,7 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         }
 
         "not decode a token with an invalid user IRI" in {
-            val tokenWithInvalidSubject = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJpbnZhbGlkIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjQ2OTUwMzk3OTIsImlhdCI6MTU0MTQzOTc5MiwianRpIjoiU21IY1ZmcExRd0dnOWRHczNPQWdIdyIsImZvbyI6ImJhciJ9.wwwCqHqqPxOCzb_8uBy5XHt2sQr3v59X2gCtbnRqioA"
+            val tokenWithInvalidSubject = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6ImludmFsaWQiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NTE5MzYwNSwiaWF0IjoxNTQxNTkzNjA1LCJqdGkiOiJsZmdreWJqRlM5Q1NiV19NeVA0SGV3IiwiZm9vIjoiYmFyIn0.9uPJahn_KtCCZrnr5e4OHbEh3DsSIiX_b3ZB6H3ptY4"
 
             JWTHelper.extractUserIriFromToken(
                 token = tokenWithInvalidSubject,
@@ -103,7 +103,7 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         }
 
         "not decode a token with missing required content" in {
-            val tokenWithMissingExp = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJpYXQiOjE1NDE0Mzk3OTIsImp0aSI6IlNtSGNWZnBMUXdHZzlkR3MzT0FnSHciLCJmb28iOiJiYXIifQ.pxKrLq2LAAg0K85wIL78NoGHfQ7UjJ-47zGMnJbednk"
+            val tokenWithMissingExp = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImlhdCI6MTU0MTU5MzYwNSwianRpIjoibGZna3liakZTOUNTYldfTXlQNEhldyIsImZvbyI6ImJhciJ9.-ugb7OCoQq1JvBSso2HlfqVRBWM97b8burJTp3J9WeQ"
 
             JWTHelper.extractUserIriFromToken(
                 token = tokenWithMissingExp,
@@ -112,7 +112,7 @@ class JWTHelperSpec extends CoreSpec(JWTHelperSpec.config) with ImplicitSender {
         }
 
         "not decode an expired token" in {
-            val expiredToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJ3ZWJhcGkiLCJzdWIiOiJodHRwOi8vcmRmaC5jaC91c2Vycy85WEJDckRWM1NSYTdrUzFXd3luQjRRIiwiYXVkIjpbIndlYmFwaSJdLCJleHAiOjE1NDE0Mzk4OTEsImlhdCI6MTU0MTQzOTg5MCwianRpIjoiTnRSYVBJOTRSazI2OHdLYXg1cEc1QSIsImZvbyI6ImJhciJ9.07a9GnqsqUOTnPYI160tRW-yyBrq-pqSNFvzsCba5yA"
+            val expiredToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6MTU0MTU5MzYwNiwiaWF0IjoxNTQxNTkzNjA1LCJqdGkiOiJsZmdreWJqRlM5Q1NiV19NeVA0SGV3IiwiZm9vIjoiYmFyIn0.gahFI5-xg_gKLAwHRkKNbF0p_PzBTWC2m36vAYJPkz4"
 
             JWTHelper.extractUserIriFromToken(
                 token = expiredToken,
