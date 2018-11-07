@@ -44,34 +44,8 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
     "The UserADM case class " should {
         "return a RESTRICTED UserADM when requested " in {
-            val rootUser = UserADM(
-                id = id,
-                email = email,
-                password = password,
-                token = token,
-                givenName = givenName,
-                familyName = familyName,
-                status = status,
-                lang = lang,
-                groups = groups,
-                projects = projects,
-                sessionId = sessionId,
-                permissions = permissions
-            )
-            val rootUserRestricted = UserADM(
-                id = id,
-                email = email,
-                password = None,
-                token = None,
-                givenName = givenName,
-                familyName = familyName,
-                status = status,
-                lang = lang,
-                groups = groups,
-                projects = projects,
-                sessionId = sessionId,
-                permissions = permissions.ofType(PermissionDataType.RESTRICTED)
-            )
+            val rootUser = UserADM(id = id, , email = email, password = password, token = token, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions)
+            val rootUserRestricted = UserADM(id = id, , email = email, password = None, token = None, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions.ofType(PermissionDataType.RESTRICTED))
 
             assert(rootUser.ofType(UserInformationTypeADM.RESTRICTED) === rootUserRestricted)
         }
@@ -79,20 +53,7 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
             //hashedPassword =  encoder.encode(createRequest.password);
             val encoder = new SCryptPasswordEncoder
             val hp = encoder.encode("123456")
-            val up = UserADM(
-                id = "something",
-                email = "something",
-                password = Some(hp),
-                token = None,
-                givenName = "something",
-                familyName = "something",
-                status = status,
-                lang = lang,
-                groups = groups,
-                projects = projects,
-                sessionId = sessionId,
-                permissions = PermissionsDataADM()
-            )
+            val up = UserADM(id = "something", , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
 
             // test SCrypt
             assert(encoder.matches("123456", encoder.encode("123456")))

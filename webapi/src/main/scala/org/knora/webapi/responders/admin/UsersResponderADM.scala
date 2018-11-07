@@ -61,8 +61,8 @@ class UsersResponderADM extends Responder {
     def receive = {
         case UsersGetADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetADM(userInformationTypeADM, requestingUser), log)
         case UsersGetRequestADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetRequestADM(userInformationTypeADM, requestingUser), log)
-        case UserGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
-        case UserGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
+        case UserGetADM(maybeUserIri, maybeUsername, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(maybeUserIri, maybeUsername, maybeEmail, userInformationTypeADM, requestingUser), log)
+        case UserGetRequestADM(maybeUserIri, maybeUsername, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(maybeUserIri, maybeUsername, maybeEmail, userInformationTypeADM, requestingUser), log)
         case UserCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), createNewUserADM(createRequest, requestingUser, apiRequestID), log)
         case UserChangeBasicUserInformationRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicUserInformationADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
         case UserChangePasswordRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changePasswordADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
@@ -112,12 +112,12 @@ class UsersResponderADM extends Responder {
 
                     UserADM(
                         id = userIri.toString,
+                        username = propsMap.getOrElse(OntologyConstants.KnoraBase.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                        lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value
-                    )
+                        lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value)
             }
 
         } yield users.sorted
@@ -147,20 +147,20 @@ class UsersResponderADM extends Responder {
       * are always `UserInformationTypeADM.FULL`.
       *
       * @param maybeUserIri     the IRI of the user.
-      * @param maybeUserEmail the email of the user.
+      * @param maybeEmail the email of the user.
       * @param userInformationType the type of the requested profile (restricted of full).
       * @param requestingUser the user initiating the request.
       * @return a [[UserADM]] describing the user.
       */
-    private def userGetADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
+    private def userGetADM(maybeUserIri: Option[IRI], maybeUsername: Option[String], maybeEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
         // log.debug(s"userGetADM: maybeUserIri: {}, maybeUserEmail: {}, userInformationType: {}, requestingUser: {}", maybeUserIri, maybeUserEmail, userInformationType, requestingUser )
 
         // ToDO: need to have certain permissions to allow access (#961)
 
         val userFromCache = if (maybeUserIri.nonEmpty) {
             CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserIri.get)
-        } else if (maybeUserEmail.nonEmpty) {
-            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserEmail.get)
+        } else if (maybeEmail.nonEmpty) {
+            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeEmail.get)
         } else {
             throw BadRequestException("Need to provide the user IRI and/or email.")
         }
@@ -168,17 +168,17 @@ class UsersResponderADM extends Responder {
         val maybeUserADM: Future[Option[UserADM]] = userFromCache match {
             case Some(user) =>
                 // found a user profile in the cache
-                log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
+                log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeEmail).flatten.head)
                 FastFuture.successful(Some(user.ofType(userInformationType)))
 
             case None =>
                 // didn't find a user profile in the cache
-                log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
+                log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeEmail).flatten.head)
                 for {
                     sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                         triplestore = settings.triplestoreType,
                         maybeIri = maybeUserIri,
-                        maybeEmail = maybeUserEmail
+                        maybeEmail = maybeEmail
                     ).toString())
 
                     userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
@@ -541,7 +541,7 @@ class UsersResponderADM extends Responder {
       */
     def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
         for {
-            maybeUser <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUser <- userGetADM(maybeUserIri = Some(userIri), maybeEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = maybeUser match {
                 case Some(userADM) => userADM.projects
                 case None => Seq.empty[ProjectADM]
@@ -936,7 +936,7 @@ class UsersResponderADM extends Responder {
     def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
-            maybeUserADM: Option[UserADM] <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUserADM: Option[UserADM] <- userGetADM(maybeUserIri = Some(userIri), maybeEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             groups: Seq[GroupADM] = maybeUserADM match {
                 case Some(user) => user.groups
                 case None => Seq.empty[GroupADM]
@@ -1164,7 +1164,7 @@ class UsersResponderADM extends Responder {
             _ = invalidateCachedUserADM(Some(userIri), userUpdatePayload.email)
 
             /* Verify that the user was updated. */
-            maybeUpdatedUserADM <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
+            maybeUpdatedUserADM <- userGetADM(maybeUserIri = Some(userIri), maybeEmail = None, requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
             updatedUserADM = maybeUpdatedUserADM.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
@@ -1313,15 +1313,14 @@ class UsersResponderADM extends Responder {
                 /* construct the user profile from the different parts */
                 user = UserADM(
                     id = userIri,
+                    username = propsMap.getOrElse(OntologyConstants.KnoraBase.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     password = propsMap.get(OntologyConstants.KnoraBase.Password).map(_.head.asInstanceOf[StringLiteralV2].value),
                     token = None,
                     givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                    lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    groups = groups,
-                    projects = projects,
+                    lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value, groups = groups, projects = projects,
                     sessionId = None,
                     permissions = permissionData
                 )

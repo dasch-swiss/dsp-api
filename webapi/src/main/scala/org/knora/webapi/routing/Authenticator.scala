@@ -35,7 +35,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGet
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.slf4j.LoggerFactory
 import spray.json.{JsNumber, JsObject, JsString}
 
@@ -108,7 +108,7 @@ trait Authenticator {
 
         settings = Settings(system)
 
-        userADM <- getUserADMByEmail(credentials.email)
+        userADM <- getUserADMByUsernameOrEmaill(credentials.email)
 
         token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
@@ -345,6 +345,8 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     /**
       * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
       * authentication is performed checking if the supplied email/password combination is valid by retrieving the
@@ -366,7 +368,7 @@ object Authenticator {
             result <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
                     for {
-                        user <- getUserADMByEmail(passCreds.email)
+                        user <- getUserADMByUsernameOrEmaill(passCreds.email)
 
                         /* check if the user is active, if not, then no need to check the password */
                         _ = if (!user.isActive) {
@@ -575,7 +577,7 @@ object Authenticator {
             user: UserADM <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
                     log.debug("getUserADMThroughCredentialsV2 - used email")
-                    getUserADMByEmail(passCreds.email)
+                    getUserADMByUsernameOrEmail(passCreds.usernameOrEmail)
                 }
                 case Some(tokenCreds: KnoraTokenCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
@@ -625,7 +627,7 @@ object Authenticator {
     private def getUserADMByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
         val userADMFuture = for {
-            maybeUser <- (responderManager ? UserGetADM(maybeIri = Some(iri), maybeEmail = None, UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+            maybeUser <- (responderManager ? UserGetADM(maybeIri = Some(iri), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             user = maybeUser match {
                 case Some(userADM) => userADM
                 case None => {
@@ -648,17 +650,21 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
       */
-    private def getUserADMByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
+    private def getUserADMByUsernameOrEmail(usernameOrEmail: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        if (email.nonEmpty) {
+        if (usernameOrEmail.nonEmpty) {
+            val (maybeUsername: Option[String], maybeEmail: Option[String]) = stringFormatter.validateEmail(usernameOrEmail) match {
+                case Some(value) => (None, Some(value))
+                case None => (Some(usernameOrEmail), None)
+            }
             val userADMFuture = for {
-                maybeUserADM <- (responderManager ? UserGetADM(maybeIri = None, maybeEmail = Some(email), UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                maybeUserADM <- (responderManager ? UserGetADM(maybeUsername = maybeUsername, maybeEmail = maybeEmail, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
                 user = maybeUserADM match {
                     case Some(u) => u
                     case None => {
-                        log.debug(s"getUserADMByEmail - supplied email not found - throwing exception")
+                        log.debug(s"getUserADMByUsernameOrEmail - supplied email not found - throwing exception")
                         throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                     }
                 }
@@ -670,6 +676,11 @@ object Authenticator {
             throw BadCredentialsException(BAD_CRED_EMAIL_NOT_SUPPLIED)
         }
     }
+
+    private def parseUsernameOrEmail(uoe: String): (Option[String], Option[String]) = {
+
+    }
+
 }
 
 object JWTHelper {

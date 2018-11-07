@@ -29,14 +29,14 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token
   *
-  * @param email    the user's email.
+  * @param id       the user's email or username.
   * @param password the user's password.
   */
-case class LoginApiRequestPayloadV2(email: String,
+case class LoginApiRequestPayloadV2(id: String,
                                     password: String) {
 
     // email and password need to be supplied
-    if (email.isEmpty || password.isEmpty) throw BadRequestException("Both email and password need to be supplied.")
+    if (id.isEmpty || password.isEmpty) throw BadRequestException("Both email/username and password need to be supplied.")
 }
 
 /**
@@ -45,12 +45,12 @@ case class LoginApiRequestPayloadV2(email: String,
 sealed abstract class KnoraCredentialsV2()
 
 /**
-  * Represents email/password credentials that a user can supply within the authorization header or as URL parameters.
+  * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
   *
-  * @param email    the supplied email.
-  * @param password the supplied password.
+  * @param usernameOrEmail  the supplied id.
+  * @param password         the supplied password.
   */
-case class KnoraPasswordCredentialsV2(email: String, password: String) extends KnoraCredentialsV2
+case class KnoraPasswordCredentialsV2(usernameOrEmail: String, password: String) extends KnoraCredentialsV2
 
 /**
   * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
