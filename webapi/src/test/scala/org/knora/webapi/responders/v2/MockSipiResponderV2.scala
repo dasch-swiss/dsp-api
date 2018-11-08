@@ -20,9 +20,9 @@
 package org.knora.webapi.responders.v2
 
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.sipimessages.{GetImageMetadataRequestV2, GetImageMetadataResponseV2, MoveTemporaryFileToPermanentStorageRequestV2}
+import org.knora.webapi.messages.v2.responder.sipimessages.{DeleteTemporaryFileRequestV2, GetImageMetadataRequestV2, GetImageMetadataResponseV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil.try2Message
+import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 
 import scala.util.{Success, Try}
 
@@ -33,6 +33,8 @@ class MockSipiResponderV2 extends Responder {
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
+        case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] =
@@ -47,4 +49,7 @@ class MockSipiResponderV2 extends Responder {
 
     private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] =
         Success(SuccessResponseV2("Moved file to permanent storage"))
+
+    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] =
+        Success(SuccessResponseV2("Deleted temporary file."))
 }

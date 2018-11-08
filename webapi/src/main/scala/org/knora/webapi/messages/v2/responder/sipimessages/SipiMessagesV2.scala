@@ -66,3 +66,12 @@ object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with Defa
   */
 case class MoveTemporaryFileToPermanentStorageRequestV2(internalFilename: String,
                                                         requestingUser: UserADM) extends SipiResponderRequestV2
+
+/**
+  * Asks Sipi to delete a temporary file.
+  *
+  * @param internalFilename the name of the file.
+  * @param requestingUser   the user making the request.
+  */
+case class DeleteTemporaryFileRequestV2(internalFilename: String,
+                                        requestingUser: UserADM) extends SipiResponderRequestV2

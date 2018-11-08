@@ -32,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
-import org.knora.webapi.messages.v2.responder.sipimessages.MoveTemporaryFileToPermanentStorageRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
@@ -50,6 +49,14 @@ import scala.concurrent.Future
 class ValuesResponderV2 extends Responder {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
+
+    /**
+      * The IRI and content of a new value or value version whose existence in the triplestore has been verified.
+      *
+      * @param newValueIri the IRI that was assigned to the new value.
+      * @param value       the content of the new value.
+      */
+    case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
     override def receive: Receive = {
         case createValueRequest: CreateValueRequestV2 => future2Message(sender(), createValueV2(createValueRequest), log)
@@ -228,29 +235,20 @@ class ValuesResponderV2 extends Responder {
 
                 // Check that the value was written correctly to the triplestore.
 
-                _ <- verifyValue(
+                verifiedValue: VerifiedValueV2 <- verifyValue(
                     resourceIri = createValueRequest.createValue.resourceIri,
                     propertyIriForGravsearch = adjustedInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects),
                     propertyIriInResult = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = createValueRequest.requestingUser
                 )
-
-                // If the value is a file value, ask Sipi to move the file to permanent storage.
-
-                _ <- ValueUtilV2.doSipiPostUpdate(
-                    valueContent = submittedInternalValueContent,
-                    requestingUser = createValueRequest.requestingUser,
-                    responderManager = responderManager
-                )
-
             } yield CreateValueResponseV2(
-                valueIri = unverifiedValue.newValueIri,
-                valueType = unverifiedValue.value.valueType
+                valueIri = verifiedValue.newValueIri,
+                valueType = verifiedValue.value.valueType
             )
         }
 
-        for {
+        val triplestoreUpdateFuture: Future[CreateValueResponseV2] = for {
             // Don't allow anonymous users to create values.
             _ <- Future {
                 if (createValueRequest.requestingUser.isAnonymousUser) {
@@ -267,6 +265,16 @@ class ValuesResponderV2 extends Responder {
                 () => makeTaskFuture
             )
         } yield taskResult
+
+        // If we were creating a file value, have Sipi move the file to permanent storage if the update
+        // was successful, or delete the temporary file if the update failed.
+        ValueUtilV2.doSipiPostUpdate(
+            updateFuture = triplestoreUpdateFuture,
+            valueContent = createValueRequest.createValue.valueContent,
+            requestingUser = createValueRequest.requestingUser,
+            responderManager = responderManager,
+            log = log
+        )
     }
 
     /**
@@ -812,29 +820,20 @@ class ValuesResponderV2 extends Responder {
 
                 // Check that the value was written correctly to the triplestore.
 
-                _ <- verifyValue(
+                verifiedValue <- verifyValue(
                     resourceIri = updateValueRequest.updateValue.resourceIri,
                     propertyIriForGravsearch = adjustedInternalPropertyIri.toOntologySchema(ApiV2WithValueObjects),
                     propertyIriInResult = submittedInternalPropertyIri,
                     unverifiedValue = unverifiedValue,
                     requestingUser = updateValueRequest.requestingUser
                 )
-
-                // If the value is a file value, ask Sipi to move the file to permanent storage.
-
-                _ <- ValueUtilV2.doSipiPostUpdate(
-                    valueContent = submittedInternalValueContent,
-                    requestingUser = updateValueRequest.requestingUser,
-                    responderManager = responderManager
-                )
-
             } yield UpdateValueResponseV2(
-                valueIri = unverifiedValue.newValueIri,
-                valueType = unverifiedValue.value.valueType
+                valueIri = verifiedValue.newValueIri,
+                valueType = verifiedValue.value.valueType
             )
         }
 
-        for {
+        val triplestoreUpdateFuture: Future[UpdateValueResponseV2] = for {
             // Don't allow anonymous users to create values.
             _ <- Future {
                 if (updateValueRequest.requestingUser.isAnonymousUser) {
@@ -851,6 +850,14 @@ class ValuesResponderV2 extends Responder {
                 () => makeTaskFuture
             )
         } yield taskResult
+
+        ValueUtilV2.doSipiPostUpdate(
+            updateFuture = triplestoreUpdateFuture,
+            valueContent = updateValueRequest.updateValue.valueContent,
+            requestingUser = updateValueRequest.requestingUser,
+            responderManager = responderManager,
+            log = log
+        )
     }
 
     /**
@@ -1501,7 +1508,7 @@ class ValuesResponderV2 extends Responder {
                             propertyIriForGravsearch: SmartIri,
                             propertyIriInResult: SmartIri,
                             unverifiedValue: UnverifiedValueV2,
-                            requestingUser: UserADM): Future[Unit] = {
+                            requestingUser: UserADM): Future[VerifiedValueV2] = {
         for {
             gravsearchQuery: String <- Future(queries.gravsearch.txt.getResourceWithSpecifiedProperties(
                 resourceIri = resourceIri,
@@ -1535,7 +1542,11 @@ class ValuesResponderV2 extends Responder {
                 */
                 throw AssertionException(s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted")
             }
-        } yield ()
+        } yield VerifiedValueV2(
+            newValueIri = unverifiedValue.newValueIri,
+            value = unverifiedValue.value,
+            permissions = unverifiedValue.permissions
+        )
     }
 
     /**

@@ -47,6 +47,7 @@ import org.knora.webapi.util.search.gravsearch.GravsearchParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
@@ -173,17 +174,10 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
-
-                // If the request includes file values, tell Sipi to move the files to permanent storage.
-
-                _ <- doSipiPostUpdateForResources(
-                    createResources = Seq(internalCreateResource),
-                    requestingUser = createResourceRequestV2.requestingUser
-                )
             } yield previewOfCreatedResource
         }
 
-        for {
+        val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
             // Don't allow anonymous users to create resources.
             _ <- Future {
                 if (createResourceRequestV2.requestingUser.isAnonymousUser) {
@@ -225,6 +219,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 () => makeTaskFuture
             )
         } yield taskResult
+
+
+        // If the request includes file values, tell Sipi to move the files to permanent storage if the update
+        // succeeded, or to delete the temporary files if the update failed.
+        doSipiPostUpdateForResources(
+            updateFuture = triplestoreUpdateFuture,
+            createResources = Seq(createResourceRequestV2.createResource),
+            requestingUser = createResourceRequestV2.requestingUser
+        )
+
     }
 
     /**
@@ -692,25 +696,32 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     }
 
     /**
-      * After the creation of one or more resources, looks for file values among the values that were created, and tells
-      * Sipi to move those files to permanent storage.
+      * After the attempted creation of one or more resources, looks for file values among the values that were supposed
+      * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
+      * temporary files if the update failed.
       *
-      * @param createResources the resources that were created.
+      * @param updateFuture    the operation that was supposed to create the resources.
+      * @param createResources the resources that were supposed to be created.
       * @param requestingUser  the user making the request.
       */
-    private def doSipiPostUpdateForResources(createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[Unit] = {
+    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
         val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
 
-        val resultFutures: Seq[Future[Unit]] = allValues.map {
+        val resultFutures: Seq[Future[T]] = allValues.map {
             valueContent =>
                 ValueUtilV2.doSipiPostUpdate(
+                    updateFuture = updateFuture,
                     valueContent = valueContent,
                     requestingUser = requestingUser,
-                    responderManager = responderManager
+                    responderManager = responderManager,
+                    log = log
                 )
         }
 
-        Future.sequence(resultFutures).map(_ => ())
+        Future.sequence(resultFutures).transformWith {
+            case Success(_) => updateFuture
+            case Failure(e) => Future.failed(e)
+        }
     }
 
     /**

@@ -109,6 +109,7 @@ class SettingsImpl(config: Config) extends Extension {
 
     val sipiFileMetadataRouteV2: String = config.getString("app.sipi.v2.file-metadata-route")
     val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
+    val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
 
     val caches: Vector[KnoraCacheConfig] = config.getList("app.caches").iterator.asScala.map {
         cacheConfigItem: ConfigValue =>

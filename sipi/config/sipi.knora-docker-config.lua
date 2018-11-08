@@ -174,6 +174,21 @@ routes = {
         method = 'POST',
         route = '/Knora_logout',
         script = 'Knora_logout.lua'
+    },
+    {
+        method = 'POST',
+        route = '/upload',
+        script = 'upload.lua'
+    },
+    {
+        method = 'PUT',
+        route = '/store',
+        script = 'store.lua'
+    },
+    {
+        method = 'DELETE',
+        route = '/delete_temp_file',
+        script = 'delete_temp_file.lua'
     }
 
 }

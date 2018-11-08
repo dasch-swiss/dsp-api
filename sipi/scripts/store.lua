@@ -58,6 +58,11 @@ local knoraDir = config.imgroot .. "/knora/"
 
 local success, exists = server.fs.exists(knoraDir)
 
+if not success then
+    send_error(500, exists)
+    return
+end
+
 if not exists then
     local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting Sipi."
     send_error(500, errorMsg)

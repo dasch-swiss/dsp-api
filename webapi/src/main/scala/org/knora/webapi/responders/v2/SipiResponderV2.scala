@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v2
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import org.knora.webapi.SipiException
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -29,10 +30,9 @@ import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataRespo
 import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.routing.JWTHelper
-import org.knora.webapi.util.ActorUtil.try2Message
+import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import spray.json._
 
-import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
@@ -45,6 +45,8 @@ class SipiResponderV2 extends Responder {
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
+        case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
+        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
     /**
@@ -56,37 +58,15 @@ class SipiResponderV2 extends Responder {
     private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] = {
         val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
 
-        val sipiResponseFuture: Future[HttpResponse] = for {
-            response: HttpResponse <- Http().singleRequest(
-                HttpRequest(
-                    method = HttpMethods.GET,
-                    uri = knoraInfoUrl
-                )
+        val request = FastFuture.successful(
+            HttpRequest(
+                method = HttpMethods.GET,
+                uri = knoraInfoUrl
             )
-
-        } yield response
-
-        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
-        // than the value of akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances
-        val sipiResponseTry: Try[HttpResponse] = Try {
-            Await.ready(sipiResponseFuture, settings.sipiTimeout)
-            sipiResponseFuture.value.get
-        }.flatten
-
-        val sipiResponseTryRecovered: Try[HttpResponse] = sipiResponseTry.recoverWith {
-            case exception: Exception => throw SipiException(message = "Sipi error", e = exception, log = log)
-        }
+        )
 
         for {
-            sipiResponse: HttpResponse <- sipiResponseTryRecovered
-            httpStatusCode: StatusCode = sipiResponse.status
-            strictEntityFuture: Future[HttpEntity.Strict] = sipiResponse.entity.toStrict(settings.sipiTimeout)
-            strictEntity: HttpEntity.Strict = Await.result(strictEntityFuture, settings.sipiTimeout)
-            responseStr: String = strictEntity.data.decodeString("UTF-8")
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
-            }
+            responseStr <- doSipiRequest(request)
         } yield responseStr.parseJson.convertTo[GetImageMetadataResponseV2]
     }
 
@@ -117,18 +97,66 @@ class SipiResponderV2 extends Responder {
             "filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename
         )
 
-        val sipiResponseFuture: Future[HttpResponse] = for {
+        val requestFuture = for {
             requestEntity <- Marshal(FormData(formParams)).to[RequestEntity]
+        } yield HttpRequest(
+            method = HttpMethods.PUT,
+            uri = moveFileUrl,
+            entity = requestEntity
+        )
 
-            response: HttpResponse <- Http().singleRequest(
-                HttpRequest(
-                    method = HttpMethods.POST,
-                    uri = moveFileUrl,
-                    entity = requestEntity
+        for {
+            _ <- doSipiRequest(requestFuture)
+        } yield SuccessResponseV2("Moved file to permanent storage.")
+    }
+
+    /**
+      * Asks Sipi to delete a temporary file.
+      *
+      * @param deleteTemporaryFileRequestV2 the request.
+      * @return a [[SuccessResponseV2]].
+      */
+    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] = {
+        val token: String = JWTHelper.createToken(
+            userIri = deleteTemporaryFileRequestV2.requestingUser.id,
+            secret = settings.jwtSecretKey,
+            longevity = settings.jwtLongevity,
+            content = Map(
+                "knora-data" -> JsObject(
+                    Map(
+                        "permission" -> JsString("DeleteTempFile"),
+                        "filename" -> JsString(deleteTemporaryFileRequestV2.internalFilename)
+                    )
                 )
             )
+        )
 
-        } yield response
+        val deleteFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiDeleteTempFileRouteV2}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
+
+        val requestFuture = FastFuture.successful(
+            HttpRequest(
+                method = HttpMethods.DELETE,
+                uri = deleteFileUrl
+            )
+        )
+
+        for {
+            _ <- doSipiRequest(requestFuture)
+        } yield SuccessResponseV2("Deleted temporary file.")
+    }
+
+    /**
+      * Makes an HTTP request to Sipi and returns the response.
+      *
+      * @param requestFuture the HTTP request.
+      * @return Sipi's response.
+      */
+    private def doSipiRequest(requestFuture: Future[HttpRequest]): Try[String] = {
+        val sipiResponseFuture: Future[HttpResponse] =
+            for {
+                request <- requestFuture
+                response <- Http().singleRequest(request)
+            } yield response
 
         // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
         // than the value of akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances
@@ -149,8 +177,8 @@ class SipiResponderV2 extends Responder {
             responseStr: String = strictEntity.data.decodeString("UTF-8")
 
             _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi may not have moved files to permanent storage. Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
+                throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
             }
-        } yield SuccessResponseV2("Moved file to permanent storage")
+        } yield responseStr
     }
 }
