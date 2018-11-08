@@ -245,7 +245,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     SharedTestDataADM.anonymousUser,
                     UUID.randomUUID
                 )
-                expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
+                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
@@ -264,94 +264,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
-            }
-
-            "return 'BadRequestException' if 'username', 'email', 'password', 'givenName', 'familyName' are missing" in {
-
-                /* missing username */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        username = "",
-                        email = "ddd@example.com",
-                        givenName = "Donald",
-                        familyName = "Duck",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Username cannot be empty")))
-
-                /* missing email */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        username = "ddd",
-                        email = "",
-                        givenName = "Donald",
-                        familyName = "Duck",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Email cannot be empty")))
-
-                /* missing password */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        username = "donald.duck",
-                        email = "donald.duck@example.com",
-                        givenName = "Donald",
-                        familyName = "Duck",
-                        password = "",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Password cannot be empty")))
-
-                /* missing givenName */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        username = "donald.duck",
-                        email = "donald.duck@example.com",
-                        givenName = "",
-                        familyName = "Duck",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Given name cannot be empty")))
-
-                /* missing familyName */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        username = "donald.duck",
-                        email = "donald.duck@example.com",
-                        givenName = "Donald",
-                        familyName = "",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Family name cannot be empty")))
             }
         }
 

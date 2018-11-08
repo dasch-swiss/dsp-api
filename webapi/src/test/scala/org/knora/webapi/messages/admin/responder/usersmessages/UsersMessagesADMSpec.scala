@@ -19,6 +19,9 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
+import java.util.UUID
+
+import akka.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
 import org.scalatest.{Matchers, WordSpecLike}
@@ -65,6 +68,89 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
         "allow checking the password (2)" in {
             SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
+        }
+    }
+
+    "The CreateUserApiRequestADM case class" should {
+
+        "throw 'BadRequestException' if 'username'is missing" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    username = "",
+                    email = "ddd@example.com",
+                    givenName = "Donald",
+                    familyName = "Duck",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+        }
+
+        "throw 'BadRequestException' if 'email' is missing" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    username = "ddd",
+                    email = "",
+                    givenName = "Donald",
+                    familyName = "Duck",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+        }
+
+        "throw 'BadRequestException' if 'password' is missing" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    username = "donald.duck",
+                    email = "donald.duck@example.com",
+                    givenName = "Donald",
+                    familyName = "Duck",
+                    password = "",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+        }
+
+        "throw 'BadRequestException' if 'givenName' is missing" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    username = "donald.duck",
+                    email = "donald.duck@example.com",
+                    givenName = "",
+                    familyName = "Duck",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
+        }
+
+        "throw 'BadRequestException' if 'familyName' is missing" in {
+
+            assertThrows[BadRequestException](
+                CreateUserApiRequestADM(
+                    username = "donald.duck",
+                    email = "donald.duck@example.com",
+                    givenName = "Donald",
+                    familyName = "",
+                    password = "test",
+                    status = true,
+                    lang = "en",
+                    systemAdmin = false
+                )
+            )
         }
     }
 
