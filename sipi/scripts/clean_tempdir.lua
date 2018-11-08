@@ -26,7 +26,7 @@ function clean_tempdir()
 
     if not success then
         server.log(filenames, server.loglevel.LOG_ERR)
-        return false
+        return
     end
 
     for _, filename in pairs(filenames) do
@@ -46,16 +46,15 @@ function clean_tempdir()
 
                     if not success then
                         -- If we couldn't delete the file, maybe it has already been deleted.
-                        server.log(errormsg, server.loglevel.LOG_NOTICE)
+                        server.log(errormsg, server.loglevel.LOG_WARNING)
                     end
                 end
             else
                 -- If we couldn't get the file's last modification date, maybe it has already been deleted.
-                server.log(modtime, server.loglevel.LOG_NOTICE)
+                server.log(modtime, server.loglevel.LOG_WARNING)
             end
         end
     end
 
     server.log("clean_tempdir done", server.loglevel.LOG_DEBUG)
-    return true
 end

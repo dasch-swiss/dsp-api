@@ -29,7 +29,7 @@ require "clean_tempdir"
 local token = get_knora_token()
 
 if token == nil then
-  return false
+  return
 end
 
 local myimg = {}
@@ -45,17 +45,15 @@ for imgindex, imgparam in pairs(server.uploads) do
     local success, exists = server.fs.exists(tmpdir)
 
     if not success then
-        server.sendStatus(500)
-        server.log(exists, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, exists)
+        return
     end
 
     if not exists then
         local success, errmsg = server.fs.mkdir(tmpdir, 511)
         if not success then
-            server.sendStatus(500)
-            server.log(errmsg, server.loglevel.LOG_ERR)
-            return false
+            send_error(500, errmsg)
+            return
         end
     end
 
@@ -65,19 +63,19 @@ for imgindex, imgparam in pairs(server.uploads) do
     local success, uuid62 = server.uuid62()
 
     if not success then
-        server.sendStatus(500)
-        server.log(uuid62, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, uuid62)
+        return
     end
 
     local tmppath = tmpdir .. uuid62
     local success, errmsg = server.copyTmpfile(imgindex, tmppath)
 
     if not success then
-        server.sendStatus(500)
-        server.log(errmsg, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, errmsg)
+        return
     end
+
+    server.log("upload.lua: copied upload to " .. tmppath, server.loglevel.LOG_DEBUG)
 
     -- Create a new Lua image object. This reads the image into an
     -- internal in-memory representation independent of the original
@@ -85,16 +83,15 @@ for imgindex, imgparam in pairs(server.uploads) do
     local success, tmpimgref = SipiImage.new(tmppath, {original = imgparam["origname"], hash = "sha256"})
 
     if not success then
-        server.sendStatus(500)
-        server.log(tmpimgref, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, tmpimgref)
+        return
     end
 
     myimg[imgindex] = tmpimgref
 
     -- Remember the file's original name=.
     local filename = imgparam["origname"]
-    newfilename[imgindex] = tmppath .. '.jp2'
+    newfilename[imgindex] = uuid62 .. '.jp2'
 
     if server.secure then
         protocol = 'https://'
@@ -107,20 +104,22 @@ for imgindex, imgparam in pairs(server.uploads) do
 
     -- Convert the image to JPEG 2000 format, saving it in the temporary directory.
 
-    local success, newfilepath = helper.filename_hash(newfilename[imgindex])
+    local success, hashedFilename = helper.filename_hash(newfilename[imgindex])
 
     if not success then
-        server.sendStatus(500)
-        server.log(newfilepath, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, newfilepath)
+        return
     end
 
-    local fullfilepath = config.imgroot .. '/tmp/' .. newfilepath
+    local fullfilepath = config.imgroot .. '/tmp/' .. hashedFilename
 
     local status, errmsg = myimg[imgindex]:write(fullfilepath)
 
+    server.log("upload.lua: wrote JPEG 2000 file to " .. fullfilepath, server.loglevel.LOG_DEBUG)
+
     if not status then
-        server.print('Error converting image to j2k: ', filename, ' ** ', errmsg)
+        send_error(500, errmsg)
+        return
     end
 
     -- Delete the original file.
@@ -128,9 +127,8 @@ for imgindex, imgparam in pairs(server.uploads) do
     local success, errmsg = server.fs.unlink(tmppath)
 
     if not success then
-        server.sendStatus(500)
-        server.log(errmsg, server.loglevel.LOG_ERR)
-        return false
+        send_error(500, errmsg)
+        return
     end
 end
 

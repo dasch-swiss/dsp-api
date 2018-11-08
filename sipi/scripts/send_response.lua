@@ -55,15 +55,24 @@ function send_error(status, msg)
     end
 
     local success, errormsg = server.sendHeader("Content-Type", "application/json")
+
     if not success then
         print(errormsg)
     end
+
     server.sendStatus(http_status)
+
     local success, jsonstr = server.table_to_json(result)
 
     local success, errmsg = server.print(jsonstr)
+
     if not success then
         print(errormsg)
+    end
+
+    -- If this is an internal server error, log it.
+    if http_status // 100 == 5 then
+        server.log(msg, server.loglevel.LOG_ERR)
     end
 
 end

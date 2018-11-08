@@ -61,14 +61,13 @@ local success, exists = server.fs.exists(knoraDir)
 if not exists then
     local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting Sipi."
     send_error(500, errorMsg)
-    server.log(errorMsg, server.loglevel.LOG_ERR)
     return
 end
 
 local success, errmsg = server.setBuffer()
 
 if not success then
-    server.log("server.setBuffer() failed: " .. errmsg, server.loglevel.LOG_ERR)
+    send_error(500, errmsg)
     return
 end
 
@@ -98,42 +97,30 @@ local sourcePath = tmpDir .. filename
 -- check if source is readable
 local success, readable = server.fs.is_readable(sourcePath)
 
-if not success then
-    server.log("Source: " .. sourcePath .. "not readable, " .. readable, server.loglevel.LOG_ERR)
-    return
-end
-
-if not readable then
-    send_error(500, FILE_NOT_READABLE .. sourcePath)
+if not (success and readable) then
+    send_error(500, sourcePath .. " not readable: " .. readable)
     return
 end
 
 -- Move temporary file to permanent image file storage path with sublevels.
-local success, newFilePath = helper.filename_hash(filename);
+
+local success, hashedFilename = helper.filename_hash(filename);
 
 if not success then
-    server.sendStatus(500)
-    server.log(newFilePath, server.loglevel.LOG_ERR)
+    send_error(500, hashedFilename)
     return
 end
+
+local newFilePath = knoraDir .. hashedFilename
 
 local success, errmsg = server.fs.moveFile(sourcePath, newFilePath)
 
 if not success then
-    server.sendStatus(500)
-    server.log(errmsg, server.loglevel.LOG_ERR)
+    send_error(500, errmsg)
     return
 end
 
--- delete tmp file
-local success, errmsg = server.fs.unlink(sourcePath)
-
-if not success then
-    server.log("server.fs.unlink failed: " .. errmsg, server.loglevel.LOG_ERR)
-    return
-end
-
-server.log(sourcePath .. " moved to " .. newFilePath, server.loglevel.DEBUG)
+server.log("store.lua: moved " .. sourcePath .. " to " .. newFilePath, server.loglevel.LOG_DEBUG)
 
 local result = {
     status = 0
