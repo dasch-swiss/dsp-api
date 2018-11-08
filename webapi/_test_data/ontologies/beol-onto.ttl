@@ -2546,3 +2546,25 @@
             rdfs:comment "represents unreadable text"@en .
 
 
+### http://www.knora.org/ontology/0801/beol#StandoffForeignTag
+:StandoffForeignTag rdf:type owl:Class ;
+
+            rdfs:subClassOf knora-base:StandoffTag,
+            [ rdf:type owl:Restriction ;
+              owl:onProperty :standoffForeignTagHasLanguage ;
+              owl:cardinality "1"^^xsd:nonNegativeInteger
+            ] ;
+
+            rdfs:comment "represents text written in another language"@en .
+
+
+###  http://www.knora.org/ontology/0801/beol#standoffForeignTagHasLanguage
+:standoffForeignTagHasLanguage rdf:type owl:DatatypeProperty ;
+
+                rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+                rdfs:comment "language of a foreign tag"@en ;
+
+                knora-base:subjectClassConstraint :StandoffForeignTag ;
+
+                knora-base:objectDatatypeConstraint xsd:string .
