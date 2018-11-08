@@ -29,6 +29,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
@@ -135,7 +136,7 @@ trait KnoraService {
     /**
       * All routes composed together and CORS activated.
       */
-    private val apiRoutes: Route = CORS(
+    private val apiRoutes: Route = addServerHeader(CORS(
         new HealthRoute(system, settings).knoraApiPath ~
             new RejectingRoute(system, settings).knoraApiPath() ~
             ResourcesRouteV1.knoraApiPath(system, settings, log) ~
@@ -166,7 +167,7 @@ trait KnoraService {
             new SwaggerApiDocsRoute(system, settings, log).knoraApiPath,
         settings,
         log
-    )
+    ))
 
     /**
       * Starts the Knora API server.

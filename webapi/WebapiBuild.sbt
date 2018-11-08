@@ -161,7 +161,11 @@ lazy val webapi = (project in file(".")).
             IntegrationTest / mainClass := Some("org.scalatest.tools.Runner")
         ).
         settings(
-            buildInfoKeys := Seq[BuildInfoKey](name, version, library.akkaHttp),
+            buildInfoKeys ++= Seq[BuildInfoKey](
+                name,
+                version,
+                "akkaHttp" -> library.Version.akkaHttp
+            ),
             buildInfoPackage := "org.knora.webapi"
         ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin

@@ -17,20 +17,19 @@
 package org.knora.webapi.http
 
 import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.headers
 import akka.http.scaladsl.model.headers.Server
+import akka.http.scaladsl.server.Route
 import org.knora.webapi.BuildInfo
+import akka.http.scaladsl.server.Directives.respondWithHeader
 
-trait ServerVersion {
+/**
+  * This trait can be used to add the [[Server]] header to an [[HttpResponse]].
+  */
+object ServerVersion {
 
-    private val serverVersionHeader = List(
+    private val ServerVersionString = s"${BuildInfo.name}/${BuildInfo.version}" + " " + s"akka-http/${BuildInfo.akkaHttp}"
+    private val ServerVersionHeader = `Server`(ServerVersionString)
 
-        `Server`(BuildInfo.name + "/" + BuildInfo.version)
-        `Access-Control-Allow-Headers`("Authorization",
-            "Content-Type", "X-Requested-With")
-    )
-
-    def addServerVersionHeader(response: HttpResponse):HttpResponse =
-        response.withHeaders(corsResponseHeaders)
-
+    def addServerHeader(route: Route):Route = respondWithHeader(ServerVersionHeader) {route}
+    def getServerVersionHeader() = ServerVersionHeader
 }
