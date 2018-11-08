@@ -239,24 +239,25 @@ class UsersResponderADM extends Responder {
           */
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
-            _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
+            _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
+            _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
             _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
 
-            // check if the supplied email for the new user is unique, i.e. not already registered
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
-                triplestore = settings.triplestoreType,
-                email = createRequest.email
-            ).toString())
-            //_ = log.debug(s"createNewUser - check duplicate email: $sparqlQueryString")
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
-            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            _ = if (usernameTaken) {
+                throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
+            }
 
-            _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
+            emailTaken: Boolean <- userByEmailExists(createRequest.email)
+
+            _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
             }
+
+            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
             userIri = knoraIdUtil.makeRandomPersonIri
 
@@ -269,6 +270,7 @@ class UsersResponderADM extends Responder {
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
+                username = createRequest.username,
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
@@ -348,6 +350,11 @@ class UsersResponderADM extends Responder {
 
             parametersCount = List(changeUserRequest.username, changeUserRequest.email, changeUserRequest.givenName, changeUserRequest.familyName, changeUserRequest.lang).flatten.size
             _ = if (parametersCount == 0) throw BadRequestException("At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
+
+            // FIXME: Check username and email
+            // get current user information
+            // if current username is different from the new then check if new username is free
+            // if current email is different from the new then check if new email is free
 
             userUpdatePayload = UserUpdatePayloadADM(
                 username = changeUserRequest.username,
@@ -1346,7 +1353,41 @@ class UsersResponderADM extends Responder {
       */
     def userExists(userIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
+            // _ = log.debug("userExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if an username is already registered.
+      *
+      * @param username the username of the user.
+      * @return a [[Boolean]].
+      */
+    def userByUsernameExists(username: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
+            // _ = log.debug("userExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if an email is already registered.
+      *
+      * @param email the email of the user.
+      * @return a [[Boolean]].
+      */
+    def userByEmailExists(email: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]

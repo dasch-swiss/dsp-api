@@ -59,6 +59,13 @@ case class CreateUserApiRequestADM(username: String,
                                    systemAdmin: Boolean) {
 
     def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
+
+    // check for required information
+    if (username.isEmpty) throw BadRequestException("Username cannot be empty")
+    if (email.isEmpty) throw BadRequestException("Email cannot be empty")
+    if (password.isEmpty) throw BadRequestException("Password cannot be empty")
+    if (givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
+    if (familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
 }
 
 /**

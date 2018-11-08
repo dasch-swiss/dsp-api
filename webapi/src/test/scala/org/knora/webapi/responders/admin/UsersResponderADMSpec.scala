@@ -122,15 +122,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 expectMsg(None)
             }
-
-            "return 'BadRequest' when the user IRI is malformed" in {
-                actorUnderTest ! UserGetADM(
-                    identifier = UserIdentifierADM("http://rdfh.ch/malformed/user/iri"),
-                    userInformationTypeADM = UserInformationTypeADM.FULL,
-                    requestingUser = KnoraSystemInstances.Users.SystemUser
-                )
-                expectMsgType[BadRequestException](timeout)
-            }
         }
 
         "asked about an user identified by 'username'" should {
@@ -159,7 +150,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
-                expectMsg(Failure(NotFoundException(s"User 'userwrong@example.com' not found")))
+                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
             }
 
             "return 'None' when the user is unknown" in {
