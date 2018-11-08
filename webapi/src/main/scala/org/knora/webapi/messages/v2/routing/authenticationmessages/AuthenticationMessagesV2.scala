@@ -21,6 +21,7 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,14 +30,14 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token
   *
-  * @param id       the user's email or username.
-  * @param password the user's password.
+  * @param identifier   the user's IRI, username, or email.
+  * @param password     the user's password.
   */
-case class LoginApiRequestPayloadV2(id: String,
+case class LoginApiRequestPayloadV2(identifier: String,
                                     password: String) {
 
     // email and password need to be supplied
-    if (id.isEmpty || password.isEmpty) throw BadRequestException("Both email/username and password need to be supplied.")
+    if (identifier.isEmpty || password.isEmpty) throw BadRequestException("Both identifier and password need to be supplied.")
 }
 
 /**
@@ -47,10 +48,10 @@ sealed abstract class KnoraCredentialsV2()
 /**
   * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
   *
-  * @param usernameOrEmail  the supplied id.
-  * @param password         the supplied password.
+  * @param identifier   the supplied id.
+  * @param password     the supplied password.
   */
-case class KnoraPasswordCredentialsV2(usernameOrEmail: String, password: String) extends KnoraCredentialsV2
+case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String) extends KnoraCredentialsV2
 
 /**
   * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
@@ -66,6 +67,8 @@ case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
   * @param token the supplied session token.
   */
 case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
+
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

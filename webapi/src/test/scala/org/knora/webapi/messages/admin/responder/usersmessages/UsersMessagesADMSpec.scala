@@ -30,6 +30,7 @@ import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
     private val id = SharedTestDataADM.rootUser.id
+    private val username = SharedTestDataADM.rootUser.username
     private val email = SharedTestDataADM.rootUser.email
     private val password = SharedTestDataADM.rootUser.password
     private val token = SharedTestDataADM.rootUser.token
@@ -42,10 +43,10 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
     private val sessionId = SharedTestDataADM.rootUser.sessionId
     private val permissions = SharedTestDataADM.rootUser.permissions
 
-    "The UserADM case class " should {
+    "The UserADM case class" should {
         "return a RESTRICTED UserADM when requested " in {
-            val rootUser = UserADM(id = id, , email = email, password = password, token = token, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions)
-            val rootUserRestricted = UserADM(id = id, , email = email, password = None, token = None, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions.ofType(PermissionDataType.RESTRICTED))
+            val rootUser = UserADM(id = id, username = username, email = email, password = password, token = token, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions)
+            val rootUserRestricted = UserADM(id = id, username = username, email = email, password = None, token = None, givenName = givenName, familyName = familyName, status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = permissions.ofType(PermissionDataType.RESTRICTED))
 
             assert(rootUser.ofType(UserInformationTypeADM.RESTRICTED) === rootUserRestricted)
         }
@@ -53,7 +54,7 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
             //hashedPassword =  encoder.encode(createRequest.password);
             val encoder = new SCryptPasswordEncoder
             val hp = encoder.encode("123456")
-            val up = UserADM(id = "something", , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
+            val up = UserADM(id = "something", username = "something" , email = "something", password = Some(hp), token = None, givenName = "something", familyName = "something", status = status, lang = lang, groups = groups, projects = projects, sessionId = sessionId, permissions = PermissionsDataADM())
 
             // test SCrypt
             assert(encoder.matches("123456", encoder.encode("123456")))
@@ -64,6 +65,16 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
 
         "allow checking the password (2)" in {
             SharedTestDataADM.rootUser.passwordMatch("test") should equal(true)
+        }
+    }
+
+    "The UserIdentifierADM case class" should {
+        "throw a BadRequestException for an empty identifier string" in {
+
+            assertThrows[BadRequestException](
+                UserIdentifierADM("")
+            )
+
         }
     }
 }

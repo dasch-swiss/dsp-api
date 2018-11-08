@@ -36,7 +36,7 @@ object OntologyResponderV1Spec {
     private val userProfileWithGerman = SharedTestDataADM.incunabulaProjectAdminUser
 
     // A test user that prefers responses in English.
-    private val userProfileWithEnglish = userProfileWithGerman.copy(username = , lang = "en")
+    private val userProfileWithEnglish = userProfileWithGerman.copy(lang = "en")
 
 }
 

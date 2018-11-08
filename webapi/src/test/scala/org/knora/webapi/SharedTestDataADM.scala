@@ -39,48 +39,112 @@ object SharedTestDataADM {
     val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraBase.SystemProject // built-in project
 
     /* represents the user profile of 'root' as found in admin-data.ttl */
-    def rootUser = UserADM(id = "http://rdfh.ch/users/root", , email = "root@example.com", password = Option("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "System", familyName = "Administrator", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq.empty[ProjectADM], sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraBase.SystemAdmin)
-                ),
-                administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
-            ))
+    def rootUser = UserADM(
+        id = "http://rdfh.ch/users/root",
+        username = "root",
+        email = "root@example.com",
+        password = Option("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "System",
+        familyName = "Administrator",
+        status = true, lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq.empty[ProjectADM],
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraBase.SystemAdmin)
+            ),
+            administrativePermissionsPerProject = Map.empty[IRI, Set[PermissionADM]]
+        ))
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def superUser = UserADM(id = "http://rdfh.ch/users/superuser", , email = "super.user@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Super", familyName = "User", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq.empty[ProjectADM], sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraBase.SystemAdmin)
-                )
-            ))
+    def superUser = UserADM(
+        id = "http://rdfh.ch/users/superuser",
+        username = "superuser",
+        email = "super.user@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Super",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq.empty[ProjectADM],
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                SYSTEM_PROJECT_IRI -> List(OntologyConstants.KnoraBase.SystemAdmin)
+            )
+        ))
 
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def normalUser = UserADM(id = "http://rdfh.ch/users/normaluser", , email = "normal.user@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Normal", familyName = "User", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq.empty[ProjectADM], sessionId = None, permissions = PermissionsDataADM())
+    def normalUser = UserADM(
+        id = "http://rdfh.ch/users/normaluser",
+        username = "normaluser",
+        email = "normal.user@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Normal",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq.empty[ProjectADM],
+        sessionId = None,
+        permissions = PermissionsDataADM())
 
     /* represents the user profile of 'inactive user' as found in admin-data.ttl */
-    def inactiveUser = UserADM(id = "http://rdfh.ch/users/inactiveuser", , email = "inactive.user@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Inactive", familyName = "User", status = false, lang = "de", groups = Seq.empty[GroupADM], projects = Seq.empty[ProjectADM], sessionId = None, permissions = PermissionsDataADM())
+    def inactiveUser = UserADM(
+        id = "http://rdfh.ch/users/inactiveuser",
+        username = "inactiveuser",
+        email = "inactive.user@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Inactive",
+        familyName = "User",
+        status = false,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq.empty[ProjectADM],
+        sessionId = None,
+        permissions = PermissionsDataADM())
 
     /* represents an anonymous user */
     def anonymousUser: UserADM = KnoraSystemInstances.Users.AnonymousUser
 
 
     /* represents the 'multiuser' as found in admin-data.ttl */
-    def multiuserUser = UserADM(id = "http://rdfh.ch/users/multiuser", , email = "multi.user@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Multi", familyName = "User", status = true, lang = "de", groups = Seq(imagesReviewerGroup), projects = Seq(incunabulaProject, imagesProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin),
-                    IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
-                ),
-                administrativePermissionsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectAdminAllPermission,
-                        PermissionADM.ProjectResourceCreateAllPermission
+    def multiuserUser = UserADM(
+        id = "http://rdfh.ch/users/multiuser",
+        username = "multiuser",
+        email = "multi.user@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Multi",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq(imagesReviewerGroup),
+        projects = Seq(incunabulaProject, imagesProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin),
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
 
-                    ),
-                    IMAGES_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectAdminAllPermission,
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+                ),
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents the full project info of the Knora System project */
     def systemProject = ProjectADM(
@@ -120,42 +184,80 @@ object SharedTestDataADM {
     val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
     /* represents 'user01' as found in admin-data.ttl  */
-    def imagesUser01 = UserADM(id = "http://rdfh.ch/users/c266a56709", , email = "user01.user1@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "User01", familyName = "User", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(imagesProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
-                ),
-                administrativePermissionsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectAdminAllPermission,
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def imagesUser01 = UserADM(
+        id = "http://rdfh.ch/users/c266a56709",
+        username = "user01.user1", email = "user01.user1@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "User01",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(imagesProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents 'user02' as found in admin-data.ttl  */
-    def imagesUser02 = UserADM(id = "http://rdfh.ch/users/97cec4000f", , email = "user02.user@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "User02", familyName = "User", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(imagesProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
-                ),
-                administrativePermissionsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def imagesUser02 = UserADM(
+        id = "http://rdfh.ch/users/97cec4000f",
+        username = "user02.user",
+        email = "user02.user@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "User02",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(imagesProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
+            ),
+            administrativePermissionsPerProject = Map(
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents 'images-reviewer-user' as found in admin-data.ttl  */
-    def imagesReviewerUser = UserADM(id = "http://rdfh.ch/users/images-reviewer-user", , email = "images-reviewer-user@example.com", password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), token = None, givenName = "User03", familyName = "User", status = true, lang = "de", groups = Seq(imagesReviewerGroup), projects = Seq(imagesProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", OntologyConstants.KnoraBase.ProjectMember)
-                ),
-                administrativePermissionsPerProject = Map(
-                    IMAGES_PROJECT_IRI -> Set(
-                        PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
-                        PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
-                    )
+    def imagesReviewerUser = UserADM(
+        id = "http://rdfh.ch/users/images-reviewer-user",
+        username = "images-reviewer-user",
+        email = "images-reviewer-user@example.com",
+        password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
+        token = None,
+        givenName = "User03",
+        familyName = "User",
+        status = true,
+        lang = "de",
+        groups = Seq(imagesReviewerGroup),
+        projects = Seq(imagesProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer", OntologyConstants.KnoraBase.ProjectMember)
+            ),
+            administrativePermissionsPerProject = Map(
+                IMAGES_PROJECT_IRI -> Set(
+                    PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bild"),
+                    PermissionADM.projectResourceCreateRestrictedPermission(s"$IMAGES_ONTOLOGY_IRI#bildformat")
                 )
-            ))
+            )
+        ))
 
     /* represents the full project info of the images project */
     def imagesProject: ProjectADM = ProjectADM(
@@ -209,32 +311,61 @@ object SharedTestDataADM {
     val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
 
     /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-    def incunabulaProjectAdminUser = UserADM(id = "http://rdfh.ch/users/b83acc5f05", , email = "user.test@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "User", familyName = "Test", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
-                ),
-                administrativePermissionsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectAdminAllPermission,
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def incunabulaProjectAdminUser = UserADM(
+        id = "http://rdfh.ch/users/b83acc5f05",
+        username = "user.test",
+        email = "user.test@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "User",
+        familyName = "Test",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(incunabulaProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
-    def incunabulaCreatorUser: UserADM = UserADM(id = "http://rdfh.ch/users/91e19f1e01", , email = "root-alt@example.com", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Administrator-alt", familyName = "Admin-alt", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
-                ),
-                administrativePermissionsPerProject = Map(
-                    INCUNABULA_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def incunabulaCreatorUser: UserADM = UserADM(
+        id = "http://rdfh.ch/users/91e19f1e01",
+        username = "root-alt",
+        email = "root-alt@example.com",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Administrator-alt",
+        familyName = "Admin-alt",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(incunabulaProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
+            ),
+            administrativePermissionsPerProject = Map(
+                INCUNABULA_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
-    def incunabulaMemberUser = UserADM(id = "http://rdfh.ch/users/incunabulaMemberUser", , email = "test.user2@test.ch", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "User", familyName = "Test2", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
+    def incunabulaMemberUser = UserADM(
+        id = "http://rdfh.ch/users/incunabulaMemberUser",
+        username = "incunabulaMemberUser"
+        , email = "test.user2@test.ch", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "User", familyName = "Test2", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(incunabulaProject), sessionId = None, permissions = PermissionsDataADM(
                 groupsPerProject = Map(
                     INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
                 ),
@@ -265,39 +396,78 @@ object SharedTestDataADM {
 
     val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
-    def anythingAdminUser = UserADM(id = "http://rdfh.ch/users/AnythingAdminUser", , email = "anything.admin@example.org", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Anything", familyName = "Admin", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(anythingProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
-                ),
-                administrativePermissionsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectAdminAllPermission,
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def anythingAdminUser = UserADM(
+        id = "http://rdfh.ch/users/AnythingAdminUser",
+        username = "AnythingAdminUser",
+        email = "anything.admin@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Anything",
+        familyName = "Admin",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, OntologyConstants.KnoraBase.ProjectAdmin)
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectAdminAllPermission,
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
-    def anythingUser1: UserADM = UserADM(id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q", , email = "anything.user01@example.org", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Anything", familyName = "User01", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(anythingProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, "http://rdfh.ch/groups/0001/thing-searcher")
-                ),
-                administrativePermissionsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def anythingUser1: UserADM = UserADM(
+        id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+        username = "anything.user01",
+        email = "anything.user01@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Anything",
+        familyName = "User01",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember, "http://rdfh.ch/groups/0001/thing-searcher")
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
-    def anythingUser2: UserADM = UserADM(id = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ", , email = "anything.user02@example.org", password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="), token = None, givenName = "Anything", familyName = "User02", status = true, lang = "de", groups = Seq.empty[GroupADM], projects = Seq(anythingProject), sessionId = None, permissions = PermissionsDataADM(
-                groupsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
-                ),
-                administrativePermissionsPerProject = Map(
-                    ANYTHING_PROJECT_IRI -> Set(
-                        PermissionADM.ProjectResourceCreateAllPermission
-                    )
+    def anythingUser2: UserADM = UserADM(
+        id = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+        username = "anything.user02",
+        email = "anything.user02@example.org",
+        password = Some("$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="),
+        token = None,
+        givenName = "Anything",
+        familyName = "User02",
+        status = true,
+        lang = "de",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(anythingProject),
+        sessionId = None,
+        permissions = PermissionsDataADM(
+            groupsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraBase.ProjectMember)
+            ),
+            administrativePermissionsPerProject = Map(
+                ANYTHING_PROJECT_IRI -> Set(
+                    PermissionADM.ProjectResourceCreateAllPermission
                 )
-            ))
+            )
+        ))
 
     def anythingProject: ProjectADM = ProjectADM(
         id = ANYTHING_PROJECT_IRI,
@@ -332,7 +502,21 @@ object SharedTestDataADM {
         selfjoin = false
     )
     /* represents the user profile of 'superuser' as found in admin-data.ttl */
-    def beolUser = UserADM(id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE", , email = "beol@example.com", password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"), token = None, givenName = "BEOL", familyName = "BEOL", status = true, lang = "en", groups = Seq.empty[GroupADM], projects = Seq(beolProject), sessionId = None, permissions = PermissionsDataADM())
+    def beolUser = UserADM(
+        id = "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE",
+        username = "beol",
+        email = "beol@example.com",
+        password = Some("$2a$10$fTEr/xVjPq7UBAy1O6KWKOM1scLhKGeRQdR4GTA997QPqHzXv0MnW"),
+        token = None,
+        givenName = "BEOL",
+        familyName = "BEOL",
+        status = true,
+        lang = "en",
+        groups = Seq.empty[GroupADM],
+        projects = Seq(beolProject),
+        sessionId = None,
+        permissions = PermissionsDataADM()
+    )
 
 
     /** **********************************/

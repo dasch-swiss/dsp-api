@@ -1417,6 +1417,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Returns `true` if an IRI string looks like a Knora user IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraUserIriStr(iri: IRI): Boolean = {
+        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
+    }
+
+    /**
       * Checks that a string represents a valid resource identifier in a standoff link.
       *
       * @param s               the string to be checked.

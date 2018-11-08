@@ -23,7 +23,7 @@ import akka.testkit.ImplicitSender
 import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.util.CacheUtil
@@ -74,17 +74,17 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
         "called, the 'authenticateCredentialsV2' method" should {
             "succeed with correct email/password" in {
-                val correctPasswordCreds = KnoraPasswordCredentialsV2(AuthenticatorSpec.rootUserEmail, AuthenticatorSpec.rootUserPassword)
+                val correctPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), AuthenticatorSpec.rootUserPassword)
                 val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(correctPasswordCreds), system, executionContext)
                 resF map {res => assert(res)}
             }
             "fail with unknown email" in {
-                    val wrongPasswordCreds = KnoraPasswordCredentialsV2("wrongemail", "wrongpassword")
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM("wrongemail"), "wrongpassword")
                     val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }
             "fail with wrong password" in {
-                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(AuthenticatorSpec.rootUserEmail, "wrongpassword")
+                    val wrongPasswordCreds = KnoraPasswordCredentialsV2(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), "wrongpassword")
                     val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds), system, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }
