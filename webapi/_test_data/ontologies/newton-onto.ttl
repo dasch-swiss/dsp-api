@@ -63,6 +63,23 @@
                 rdfs:subPropertyOf knora-base:hasValue .
 
 ### ###########################################
+### newton:hasFacsimiles
+
+:hasFacsimiles rdf:type owl:ObjectProperty ;
+
+                   knora-base:objectClassConstraint knora-base:UriValue ;
+
+                   knora-base:subjectClassConstraint :letter ;
+
+                   rdfs:subPropertyOf knora-base:hasValue ;
+
+                   rdfs:label "Die Faksimilen von dem Brief"@de ,
+                              "Facsimiles of letter"@en ;
+
+                   rdfs:comment """Die Faksimilen von deisem Brief ist vorhanden in"""@de ,
+                              """The Facsimiles of this letter are available in"""@en .
+
+### ###########################################
 ### newton:hasAvailability
 
 :hasAvailability rdf:type owl:ObjectProperty ;
@@ -265,6 +282,12 @@
                           owl:onProperty :fileName ;
                           owl:minCardinality "1"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasFacsimiles ;
+                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ;
 
         knora-base:resourceIcon "letter.png" ;
