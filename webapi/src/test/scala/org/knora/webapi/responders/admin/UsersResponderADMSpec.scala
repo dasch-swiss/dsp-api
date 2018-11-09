@@ -34,6 +34,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.duration._
 
@@ -64,6 +65,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
     private val actorUnderTest = TestActorRef[UsersResponderADM]
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The UsersResponder " when {
 

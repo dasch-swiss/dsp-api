@@ -26,7 +26,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.PrivateMethodTester
 
 import scala.concurrent.Future
@@ -50,6 +50,8 @@ object AuthenticatorSpec {
 class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with ImplicitSender with PrivateMethodTester {
 
     implicit val timeout: Timeout = settings.defaultTimeout
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val getUserADMByEmail = PrivateMethod[Future[UserADM]]('getUserADMByEmail)
     val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]]('authenticateCredentialsV2)

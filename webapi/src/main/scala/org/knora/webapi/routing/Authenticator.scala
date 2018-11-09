@@ -446,11 +446,13 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
-        val maybeEmail: Option[String] = params get "email" map (_.head)
+        // check for email (old name) or identifier (new name) parameters
+        val identifierList: Iterable[String] = params.get("email").map(_.head) ++ params.get("identifier").map(_.head)
+        val maybeIdentifier: Option[String] = identifierList.headOption
         val maybePassword: Option[String] = params get "password" map (_.head)
 
-        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail.get), maybePassword.get))
+        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
         } else {
             None
         }
@@ -510,8 +512,8 @@ object Authenticator {
                 // in v2 we support the basic scheme
                 val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
 
-                // try to decode email/password
-                val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
+                // try to decode identifier/password
+                val (maybeIdentifier, maybePassword) = maybeBasicAuthValue match {
                     case Some(value) =>
                         val trimmedValue = value.substring(5).trim() // remove 'Basic '
                     val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
@@ -521,8 +523,8 @@ object Authenticator {
                         (None, None)
                 }
 
-                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail.get), maybePassword.get))
+                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
+                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
                 } else {
                     None
                 }
@@ -576,8 +578,8 @@ object Authenticator {
 
             user: UserADM <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                    log.debug("getUserADMThroughCredentialsV2 - used email")
-                    getUserByIdentifier(UserIdentifierADM(passCreds.password))
+                    log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
+                    getUserByIdentifier(passCreds.identifier)
                 }
                 case Some(tokenCreds: KnoraTokenCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {

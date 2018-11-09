@@ -27,6 +27,7 @@ import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, KnoraPasswordCredentialsV2, LoginApiRequestPayloadV2}
 import org.knora.webapi.routing.Authenticator
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
 
 import scala.concurrent.ExecutionContext
@@ -40,6 +41,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         path("v2" / "authentication") {
             get { // authenticate credentials

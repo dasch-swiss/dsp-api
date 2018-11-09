@@ -24,7 +24,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGet
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
-import org.knora.webapi.util.MutableUserADM
+import org.knora.webapi.util.{MutableUserADM, StringFormatter}
 
 import scala.concurrent.duration._
 
@@ -42,6 +42,8 @@ object DrawingsGodsV1Spec {
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
     private val timeout = 5.seconds
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),

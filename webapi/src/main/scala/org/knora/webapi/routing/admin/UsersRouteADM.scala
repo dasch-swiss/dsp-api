@@ -49,7 +49,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(
