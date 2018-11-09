@@ -93,7 +93,7 @@ for image_index, image_params in pairs(server.uploads) do
     -- Create a new Lua image object. This reads the image into an
     -- internal in-memory representation independent of the original
     -- image format.
-    local success, uploaded_image = SipiImage.new(image_index, { original = original_filename, hash = "sha256" })
+    local success, uploaded_image = SipiImage.new(image_index)
 
     if not success then
         send_error(500, uploaded_image)
