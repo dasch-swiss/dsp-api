@@ -50,13 +50,10 @@ if token_filename == nil then
     return
 end
 
--- Check that the permanent storage directory exists. It needs to be created
--- before sipi is started, so that sipi can create the directory sublevels on
--- startup.
+-- Check that the permanent storage directory exists.
 
-local knoraDir = config.imgroot .. "/knora/"
-
-local success, exists = server.fs.exists(knoraDir)
+local storage_dir = config.imgroot .. "/knora/" -- TODO: use project-specific dir
+local success, exists = server.fs.exists(storage_dir)
 
 if not success then
     send_error(500, exists)
@@ -64,17 +61,11 @@ if not success then
 end
 
 if not exists then
-    local errorMsg = "Directory " .. knoraDir .. " not found. Please make sure it exists before starting Sipi."
-    send_error(500, errorMsg)
+    send_error(500, "Directory " .. storage_dir .. " not found (it must exist when Sipi starts)")
     return
 end
 
-local success, errmsg = server.setBuffer()
-
-if not success then
-    send_error(500, errmsg)
-    return
-end
+-- Get the submitted filename.
 
 if server.post == nil then
     send_error(400, PARAMETERS_INCORRECT)
@@ -82,8 +73,6 @@ if server.post == nil then
 end
 
 local filename = server.post["filename"]
-
--- check if all the expected params are set
 
 if filename == nil then
     send_error(400, PARAMETERS_INCORRECT)
@@ -95,37 +84,42 @@ if filename ~= token_filename then
     return
 end
 
--- file with name given in param "filename" has been saved by upload.lua beforehand
-local tmpDir = config.imgroot .. "/tmp/"
-local sourcePath = tmpDir .. filename
+-- Construct the path of that file under the temp directory.
 
--- check if source is readable
-local success, readable = server.fs.is_readable(sourcePath)
-
-if not (success and readable) then
-    send_error(500, sourcePath .. " not readable: " .. readable)
-    return
-end
-
--- Move temporary file to permanent image file storage path with sublevels.
-
-local success, hashedFilename = helper.filename_hash(filename);
+local success, hashed_filename = helper.filename_hash(filename)
 
 if not success then
-    send_error(500, hashedFilename)
+    send_error(500, hashed_source_filename)
     return
 end
 
-local newFilePath = knoraDir .. hashedFilename
+local source_path = config.imgroot .. "/tmp/" .. hashed_filename
 
-local success, errmsg = server.fs.moveFile(sourcePath, newFilePath)
+-- Make sure the source file is readable.
+
+local success, readable = server.fs.is_readable(source_path)
 
 if not success then
-    send_error(500, errmsg)
+    send_error(500, readable)
     return
 end
 
-server.log("store.lua: moved " .. sourcePath .. " to " .. newFilePath, server.loglevel.LOG_DEBUG)
+if not readable then
+    send_error(500, source_path .. " not readable")
+    return
+end
+
+-- Move the temporary file to the permanent storage directory.
+
+local destination_path = storage_dir .. hashed_filename
+local success, error_msg = server.fs.moveFile(source_path, destination_path)
+
+if not success then
+    send_error(500, error_msg)
+    return
+end
+
+server.log("store.lua: moved " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
 
 local result = {
     status = 0

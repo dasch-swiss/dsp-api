@@ -55,6 +55,8 @@ function get_token()
         return nil
     end
 
+    -- TODO: test with a token signed with the wrong secret.
+
     local expiration_date = token["exp"]
 
     if expiration_date == nil then

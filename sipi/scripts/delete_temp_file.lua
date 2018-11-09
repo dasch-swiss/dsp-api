@@ -63,7 +63,7 @@ end
 
 local filename = server.uri:sub(last_slash_pos)
 
-if filename:len() == 0 then
+if filename:len() == 0 or filename == "." or filename == ".." then
     send_error(400, "Invalid filename: " .. filename)
     return
 end
@@ -77,7 +77,14 @@ end
 
 -- Check that the file exists in the temp directory.
 
-local temp_file_path = config.imgroot .. '/tmp/' .. filename
+local success, hashed_filename = helper.filename_hash(filename)
+
+if not success then
+    send_error(500, hashed_filename)
+    return
+end
+
+local temp_file_path = config.imgroot .. '/tmp/' .. hashed_filename
 local success, exists = server.fs.exists(temp_file_path)
 
 if not success then

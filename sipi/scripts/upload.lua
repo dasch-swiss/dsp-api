@@ -22,9 +22,9 @@
 require "get_mediatype"
 require "send_response"
 require "jwt"
-require "clean_tempdir"
+require "clean_temp_dir"
 
--- Check for a JSON Web Token from Knora.
+-- Check for a valid JSON Web Token from Knora.
 
 local token = get_knora_token()
 
@@ -32,17 +32,15 @@ if token == nil then
   return
 end
 
-local myimg = {}
-local newfilename = {}
-local iiifurls = {}
+-- A table of JPEG 2000 filenames to their IIIF URLs.
+local iiif_urls = {}
 
 -- Process the uploaded files.
-
-for imgindex, imgparam in pairs(server.uploads) do
+for image_index, image_params in pairs(server.uploads) do
     -- Create the temporary directory if necessary.
 
-    local tmpdir = config.imgroot .. '/tmp/'
-    local success, exists = server.fs.exists(tmpdir)
+    local temp_dir = config.imgroot .. '/tmp/'
+    local success, exists = server.fs.exists(temp_dir)
 
     if not success then
         send_error(500, exists)
@@ -50,48 +48,58 @@ for imgindex, imgparam in pairs(server.uploads) do
     end
 
     if not exists then
-        local success, errmsg = server.fs.mkdir(tmpdir, 511)
+        local success, error_msg = server.fs.mkdir(temp_dir, 511)
         if not success then
-            send_error(500, errmsg)
+            send_error(500, error_msg)
             return
         end
     end
 
-    -- Save the uploaded file to the temporary directory, using a random
-    -- filename.
+    -- Check that the file is an image (TODO: support other file types.)
 
-    local success, uuid62 = server.uuid62()
+    local success, mime_info = server.file_mimetype(image_index)
 
     if not success then
-        send_error(500, uuid62)
+        send_error(500, mime_info)
         return
     end
 
-    local tmppath = tmpdir .. uuid62
-    local success, errmsg = server.copyTmpfile(imgindex, tmppath)
+    local mime_type = mime_info["mimetype"]
 
-    if not success then
-        send_error(500, errmsg)
+    if mime_type == nil then
+        send_error(500, "Could not determine MIME type of uploaded file")
         return
     end
 
-    server.log("upload.lua: copied upload to " .. tmppath, server.loglevel.LOG_DEBUG)
+    local media_type = get_mediatype(mime_info["mimetype"])
+
+    if media_type ~= IMAGE then
+        send_error(400, "Unsupported MIME type: " .. mime_type)
+        return
+    end
+
+    -- Get the file's original name.
+    local original_filename = image_params["origname"]
 
     -- Create a new Lua image object. This reads the image into an
     -- internal in-memory representation independent of the original
     -- image format.
-    local success, tmpimgref = SipiImage.new(tmppath, {original = imgparam["origname"], hash = "sha256"})
+    local success, uploaded_image = SipiImage.new(image_index, { original = original_filename, hash = "sha256" })
 
     if not success then
-        send_error(500, tmpimgref)
+        send_error(500, uploaded_image)
         return
     end
 
-    myimg[imgindex] = tmpimgref
+    -- Make a random filename for the converted image file.
+    local success, uuid62 = server.uuid62()
 
-    -- Remember the file's original name=.
-    local filename = imgparam["origname"]
-    newfilename[imgindex] = uuid62 .. '.jp2'
+    if not success then
+        send_error(500, "Could not generate random filename")
+        return
+    end
+
+    local jp2_filename = uuid62 .. '.jp2'
 
     if server.secure then
         protocol = 'https://'
@@ -100,39 +108,32 @@ for imgindex, imgparam in pairs(server.uploads) do
     end
 
     -- Create a IIIF URL for the converted file.
-    iiifurls[uuid62 .. ".jp2"] = protocol .. server.host .. '/tmp/' .. uuid62 .. '.jp2'
+    iiif_urls[jp2_filename] = protocol .. server.host .. '/tmp/' .. jp2_filename
 
-    -- Convert the image to JPEG 2000 format, saving it in the temporary directory.
+    -- Convert the image to JPEG 2000 format, saving it in a subdirectory of
+    -- the temporary directory.
 
-    local success, hashedFilename = helper.filename_hash(newfilename[imgindex])
-
-    if not success then
-        send_error(500, newfilepath)
-        return
-    end
-
-    local fullfilepath = config.imgroot .. '/tmp/' .. hashedFilename
-
-    local status, errmsg = myimg[imgindex]:write(fullfilepath)
-
-    server.log("upload.lua: wrote JPEG 2000 file to " .. fullfilepath, server.loglevel.LOG_DEBUG)
-
-    if not status then
-        send_error(500, errmsg)
-        return
-    end
-
-    -- Delete the original file.
-
-    local success, errmsg = server.fs.unlink(tmppath)
+    local success, hashed_jp2_filename = helper.filename_hash(jp2_filename)
 
     if not success then
-        send_error(500, errmsg)
+        send_error(500, hashed_jp2_filename)
         return
     end
+
+    local jp2_file_path = config.imgroot .. '/tmp/' .. hashed_jp2_filename
+    local success, error_msg = uploaded_image:write(jp2_file_path)
+
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+
+    server.log("upload.lua: wrote JPEG 2000 file to " .. jp2_file_path, server.loglevel.LOG_DEBUG)
+
 end
 
 -- Clean up old temporary files.
-clean_tempdir()
+clean_temp_dir()
 
-send_success(iiifurls)
+-- Return the filenames and IIIF URLs to the client.
+send_success(iiif_urls)
