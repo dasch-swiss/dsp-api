@@ -132,7 +132,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
             "return all users" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 

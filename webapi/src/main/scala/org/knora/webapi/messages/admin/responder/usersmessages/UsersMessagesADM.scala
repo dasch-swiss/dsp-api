@@ -695,14 +695,12 @@ object UserIdentifierType extends Enumeration {
   * Represents the user's identifier. It can be an IRI, email, or username.
   * @param value the user's identifier.
   */
-case class UserIdentifierADM(value: String) {
+case class UserIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
 
     // throws an exception if an empty string is used as an identifier value
     if (value.isEmpty) {
         throw BadRequestException("Empty user identifier is not allowed.")
     }
-
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def nonEmpty: Boolean = value.nonEmpty
 

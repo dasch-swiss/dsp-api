@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future
@@ -153,7 +153,7 @@ class UsersResponderADM extends Responder {
       * @return a [[UserADM]] describing the user.
       */
     private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
-        // log.debug(s"userGetADM: maybeUserIri: {}, maybeUserEmail: {}, userInformationType: {}, requestingUser: {}", maybeUserIri, maybeUserEmail, userInformationType, requestingUser )
+        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser )
 
         // ToDO: need to have certain permissions to allow access (#961)
 
@@ -204,8 +204,7 @@ class UsersResponderADM extends Responder {
     /**
       * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
       *
-      * @param maybeUserIri        the IRI of the user.
-      * @param maybeUserEmail      the email of the user.
+      * @param identifier          the IRI, username, or email of the user.
       * @param userInformationType the type of the requested profile (restricted of full).
       * @param requestingUser      the user initiating the request.
       * @return a [[UserResponseADM]]

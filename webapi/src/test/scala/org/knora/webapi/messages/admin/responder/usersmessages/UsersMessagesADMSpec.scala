@@ -24,6 +24,7 @@ import java.util.UUID
 import akka.actor.Status.Failure
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
+import org.knora.webapi.util.StringFormatter
 import org.scalatest.{Matchers, WordSpecLike}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -45,6 +46,8 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
     private val projects = SharedTestDataADM.rootUser.projects
     private val sessionId = SharedTestDataADM.rootUser.sessionId
     private val permissions = SharedTestDataADM.rootUser.permissions
+
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
     "The UserADM case class" should {
         "return a RESTRICTED UserADM when requested " in {
@@ -155,6 +158,20 @@ class UsersMessagesADMSpec extends WordSpecLike with Matchers {
     }
 
     "The UserIdentifierADM case class" should {
+
+        "return the identifier type" in {
+
+            // FIXME: not working!!!
+            val iriIdentifier = UserIdentifierADM("http://www.knora.org/users/root")
+            iriIdentifier.hasType should be (UserIdentifierType.IRI)
+
+            val emailIdentifier = UserIdentifierADM("root@example.com")
+            emailIdentifier.hasType should be (UserIdentifierType.EMAIL)
+
+            val usernameIdentifier = UserIdentifierADM("root")
+            usernameIdentifier.hasType should be (UserIdentifierType.USERNAME)
+        }
+
         "throw a BadRequestException for an empty identifier string" in {
 
             assertThrows[BadRequestException](
