@@ -64,7 +64,16 @@ sipi = {
     -- thousand files in a unix directory (your mileage may vay depending on the
     -- file system used).
     --
-    subdir_levels = 0,
+    subdir_levels = 1,
+
+    --
+    -- if subdir_levels is > 0 and if prefix_as_path is true, all prefixes will be
+    -- regarded as directories under imgroot. Thus, the subdirs 'A'-'Z' will be
+    -- created in these directories for the prefixes. However, it may make sense
+    -- for certain prefixes *not* to use subdirs. A list of these prefix-directories
+    -- can be given with this configuration parameter.
+    --
+    subdir_excludes = { "thumbs" },
 
     --
     -- Lua script which is executed on initialization of the Lua interpreter
@@ -209,6 +218,21 @@ routes = {
         method = 'DELETE',
         route = '/delete_temp_file',
         script = 'delete_temp_file.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_mediatype',
+        script = 'test_mediatype.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
     }
 
 }

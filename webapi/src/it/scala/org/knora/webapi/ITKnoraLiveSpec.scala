@@ -108,14 +108,8 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
 
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
-
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
-
-        //log.debug("REQUEST: {}", request)
-        //log.debug("RESPONSE: {}", response.toString())
-
         val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
-
+        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
 
