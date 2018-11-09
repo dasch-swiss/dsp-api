@@ -23,7 +23,7 @@ import org.knora.webapi.BuildInfo
 import akka.http.scaladsl.server.Directives.respondWithHeader
 
 /**
-  * This trait can be used to add the [[Server]] header to an [[HttpResponse]].
+  * This object provides methods that can be used to add the [[Server]] header to an [[HttpResponse]].
   */
 object ServerVersion {
 
