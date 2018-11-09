@@ -22,6 +22,15 @@
 require "send_response"
 require "jwt"
 
+-- Buffer the response (helps with error handling).
+
+local success, error_msg = server.setBuffer()
+
+if not success then
+    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    return
+end
+
 -- Check that this request is really from Knora and that the user has permission
 -- to store the file.
 

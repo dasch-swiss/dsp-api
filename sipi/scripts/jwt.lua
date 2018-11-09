@@ -15,10 +15,6 @@
 -- You should have received a copy of the GNU Affero General Public
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
---
--- Parses and validates JSON web tokens.
---
-
 require "send_response"
 require "util"
 
@@ -27,6 +23,10 @@ require "util"
 -- @return a table representing the token.
 function get_knora_token()
     local token = get_token()
+
+    if token == nil then
+        return nil
+    end
 
     if token["iss"] ~= "Knora" then
         send_error(401, "Not a Knora token")
@@ -46,8 +46,6 @@ function get_token()
     end
 
     local token_str = server.request["token"]
-    server.log("got token: " .. token_str, server.loglevel.DEBUG)
-
     local success, token = server.decode_jwt(token_str)
 
     if not success then

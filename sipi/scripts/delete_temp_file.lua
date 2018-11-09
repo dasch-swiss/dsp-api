@@ -22,6 +22,15 @@
 require "send_response"
 require "jwt"
 
+-- Buffer the response (helps with error handling).
+
+local success, error_msg = server.setBuffer()
+
+if not success then
+    server.log("server.setBuffer() failed: " .. error_msg, server.loglevel.LOG_ERR)
+    return
+end
+
 -- Check that this request is really from Knora and that the user has permission
 -- to delete the file.
 
@@ -51,8 +60,6 @@ if token_filename == nil then
 end
 
 -- Parse the URL to get the filename to be deleted.
-
-server.log("delete_temp_file.lua: URI is " .. server.uri, server.loglevel.LOG_DEBUG)
 
 local last_slash_pos = server.uri:match(".*/()")
 

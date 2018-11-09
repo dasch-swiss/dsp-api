@@ -36,6 +36,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     private val marblesOriginalFilename = "marbles.tif"
     private val pathToMarbles = s"_test_data/test_route/images/$marblesOriginalFilename"
     private val anythingUserEmail = "anything.user01@example.org"
+    private val incunabulaUserEmail = "test.user2@test.ch"
     private val password = "test"
     private val stillImageFileValueIri = new MutableTestIri
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
@@ -66,8 +67,30 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         matchingValues.head
     }
 
-    "Knora and Sipi" should {
+    "The Knora/Sipi integration" should {
         var loginToken: String = ""
+
+        "not accept a token in Sipi that hasn't been signed by Knora" in {
+            val invalidToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJLbm9yYSIsInN1YiI6Imh0dHA6Ly9yZGZoLmNoL3VzZXJzLzlYQkNyRFYzU1JhN2tTMVd3eW5CNFEiLCJhdWQiOlsiS25vcmEiLCJTaXBpIl0sImV4cCI6NDY5NDM1MTEyMiwiaWF0IjoxNTQxNzU5MTIyLCJqdGkiOiJ4bnlYeklFb1QxNmM2dkpDbHhSQllnIn0.P2Aq37G6XMLLBVMdnpDVVhWjenbVw0HTb1BpEuTWGRo"
+
+            // The image to be uploaded.
+            val fileToSend = new File(pathToMarbles)
+            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
+            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$invalidToken", sipiFormData)
+            val sipiResponse = singleAwaitingRequest(sipiRequest)
+            assert(sipiResponse.status == StatusCodes.Unauthorized)
+        }
 
         "log in as a Knora user" in {
             /* Correct username and correct password */
@@ -88,10 +111,11 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             loginToken = lr.token
 
             loginToken.nonEmpty should be(true)
+
             log.debug("token: {}", loginToken)
         }
 
-        "create a still image file value" in {
+        "store a still image file" in {
             // The image to be uploaded.
             val fileToSend = new File(pathToMarbles)
             assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
@@ -106,7 +130,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
-            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
             val sipiResponseJson = getResponseJson(sipiRequest)
 
             val (internalFilename: String, tempBaseUrl: String) = sipiResponseJson.fields.head match {
@@ -161,9 +185,63 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 validationFun = stringFormatter.toSparqlEncodedString
             )
 
-            // Request the temporary image from Sipi.
+            // Request the permanently stored image from Sipi.
             val sipiGetImageRequest = Get(iiifUrl)
             checkResponseOK(sipiGetImageRequest)
+        }
+
+        "delete the temporary file if Knora rejects the request to create a file value" in {
+            // The image to be uploaded.
+            val fileToSend = new File(pathToMarbles)
+            assert(fileToSend.exists(), s"File $pathToMarbles does not exist")
+
+            // A multipart/form-data request containing the image.
+            val sipiFormData = Multipart.FormData(
+                Multipart.FormData.BodyPart(
+                    "file",
+                    HttpEntity.fromPath(MediaTypes.`image/tiff`, fileToSend.toPath),
+                    Map("filename" -> fileToSend.getName)
+                )
+            )
+
+            // Send a POST request to Sipi, asking it to convert the image to JPEG 2000 and store it in a temporary file.
+            val sipiRequest = Post(s"$baseSipiUrl/upload?token=$loginToken", sipiFormData)
+            val sipiResponseJson = getResponseJson(sipiRequest)
+
+            val (internalFilename: String, tempBaseUrl: String) = sipiResponseJson.fields.head match {
+                case (jsonKey, JsString(jsonValue)) => (jsonKey, jsonValue)
+                case _ => throw AssertionException(s"Invalid response from Sipi: ${sipiResponseJson.compactPrint}")
+            }
+
+            // Request the temporary image from Sipi.
+            val sipiGetTmpFileRequest = Get(tempBaseUrl + "/full/full/0/default.jpg")
+            checkResponseOK(sipiGetTmpFileRequest)
+
+            val resourceIri: IRI = aThingPictureIri
+
+            // JSON describing the new image to Knora.
+            val jsonLdEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:ThingPicture",
+                   |  "knora-api:hasStillImageFileValue" : {
+                   |    "@type" : "knora-api:StillImageFileValue",
+                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            // Send the JSON in a POST request to Knora.
+            val knoraPostRequest = Post(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password))
+            val knoraPostResponse = singleAwaitingRequest(knoraPostRequest)
+            assert(knoraPostResponse.status == StatusCodes.Forbidden)
+
+            // Request the temporary image from Sipi.
+            val sipiResponse = singleAwaitingRequest(sipiGetTmpFileRequest)
+            assert(sipiResponse.status == StatusCodes.NotFound)
         }
     }
 }
