@@ -2745,8 +2745,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             val allRequestedValueObjectVariables: Set[QueryVariable] = requestedValueObjectVariablesForAllResVars ++ requestedValueObjectVariablesForDependentResIris
 
             // collect requested value object IRIs for each resource
-            val requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.map {
-                case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+            val requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.keySet.map {
+                resIri =>
 
                     val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(resIri)
 
@@ -2756,7 +2756,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     }
 
                     resIri -> valObjIrisRequestedForRes
-            }
+            }.toMap
 
             queryResultsWithFullGraphPattern.map {
                 case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
