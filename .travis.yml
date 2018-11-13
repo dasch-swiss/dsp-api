@@ -78,7 +78,7 @@ jobs:
         # start the built-in webapi server tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt clean coverage test coverageReport
         # upload code coverage report
-        - sbt codacyCoverage
+        # - sbt codacyCoverage
     # integration tests
     - stage: test
       script:
@@ -95,7 +95,7 @@ jobs:
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/webapi/ && sbt clean coverage it:test coverageReport
         # upload code coverage report
-        - sbt codacyCoverage
+        # - sbt codacyCoverage
     # testing docs generation
     - stage: test
       script:
