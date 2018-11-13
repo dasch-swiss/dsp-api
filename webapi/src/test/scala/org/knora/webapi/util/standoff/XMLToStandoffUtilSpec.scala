@@ -49,6 +49,36 @@ class XMLToStandoffUtilSpec extends CoreSpec {
             xmlDiff.hasDifferences should be(false)
         }
 
+        "convert an XML document with one nested empty tag to text with standoff, then back to an equivalent XML document" in {
+            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+
+            // Convert the XML document to text with standoff.
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag, log = log)
+
+            // Convert the text with standoff back to XML.
+            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag)).withTest(Input.fromString(backToXml)).build()
+            println(xmlDiff.getDifferences)
+            xmlDiff.hasDifferences should be(false)
+        }
+
+        "convert an XML document with multiple nested empty tags to text with standoff, then back to an equivalent XML document" in {
+            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+
+            // Convert the XML document to text with standoff.
+            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags, log = log)
+
+            // Convert the text with standoff back to XML.
+            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+
+            // Compare the original XML with the regenerated XML.
+            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags)).withTest(Input.fromString(backToXml)).build()
+            println(xmlDiff.getDifferences)
+            xmlDiff.hasDifferences should be(false)
+        }
+
         "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document" in {
             val documentSpecificIDs = Map(
                 "s02" -> UUID.randomUUID,
@@ -526,13 +556,12 @@ class XMLToStandoffUtilSpec extends CoreSpec {
 
 
         }
-
     }
 }
 
 object XMLToStandoffUtilSpec {
 
-    val simpleXmlDoc =
+    val simpleXmlDoc: String =
         """<?xml version="1.0" encoding="UTF-8"?>
           |<article id="first">
           |    <title>Special Relativity</title>
@@ -559,7 +588,61 @@ object XMLToStandoffUtilSpec {
           |    </paragraph>
           |</article>""".stripMargin
 
-    val xmlDocWithClix =
+    val simpleXmlDocWithNestedEmptyTag: String =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<article id="first">
+          |    <title>Special Relativity</title>
+          |
+          |    <paragraph>
+          |        In physics, special relativity is the generally accepted and experimentally well confirmed physical
+          |        theory regarding the relationship between space and time. In <person personId="6789">Albert Einstein</person>'s
+          |        original pedagogical treatment, it is based on two postulates:
+          |
+          |        <orderedList>
+          |            <listItem>that the laws of physics are invariant (i.e. identical) in all inertial systems
+          |                (non-accelerating frames of reference).</listItem>
+          |            <listItem>that the speed of light in a vacuum is the same for all observers, regardless of the
+          |                motion of the light source.</listItem>
+          |        </orderedList>
+          |    </paragraph>
+          |
+          |    <paragraph>
+          |        <person personId="6789">Einstein</person> originally proposed it in
+          |        <date value="1905" calendar="gregorian">1905</date> in <citation
+          |        citationId="einstein_1905a"/>.
+          |
+          |        Here is a sentence with a sequence of <span><br/></span> empty tags: <foo /><bar /><baz />. And then some more text.
+          |    </paragraph>
+          |</article>""".stripMargin
+
+    val simpleXmlDocWithNestedEmptyTags: String =
+        """<?xml version="1.0" encoding="UTF-8"?>
+          |<article id="first">
+          |    <title>Special Relativity</title>
+          |
+          |    <paragraph>
+          |        In physics, special relativity is the generally accepted and experimentally well confirmed physical
+          |        theory regarding the relationship between space and time. In <person personId="6789">Albert Einstein</person>'s
+          |        original pedagogical treatment, it is based on two postulates:
+          |
+          |        <orderedList>
+          |            <listItem>that the laws of physics are invariant (i.e. identical) in all inertial systems
+          |                (non-accelerating frames of reference).</listItem>
+          |            <listItem>that the speed of light in a vacuum is the same for all observers, regardless of the
+          |                motion of the light source.</listItem>
+          |        </orderedList>
+          |    </paragraph>
+          |
+          |    <paragraph>
+          |        <person personId="6789">Einstein</person> originally proposed it in
+          |        <date value="1905" calendar="gregorian">1905</date> in <citation
+          |        citationId="einstein_1905a"/>.
+          |
+          |        Here is a sentence with a sequence of <span><span><br/><br/></span></span> empty tags: <foo /><bar /><baz />. And then some more text.
+          |    </paragraph>
+          |</article>""".stripMargin
+
+    val xmlDocWithClix: String =
         """<?xml version="1.0" encoding="UTF-8"?>
           |<lg xmlns="http://www.example.org/ns1" xmlns:ns2="http://www.example.org/ns2">
           | <l>
