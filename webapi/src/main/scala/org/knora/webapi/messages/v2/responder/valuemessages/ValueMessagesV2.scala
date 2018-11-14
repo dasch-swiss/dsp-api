@@ -2181,7 +2181,10 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
                 JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimX -> JsonLDInt(dimX),
                     OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasDimY -> JsonLDInt(dimY),
-                    OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDString(settings.externalSipiIIIFGetUrl)
+                    OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValueHasIIIFBaseUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+                        value = settings.externalSipiIIIFGetUrl,
+                        datatype = OntologyConstants.Xsd.Uri.toSmartIri
+                    )
                 ))
         }
     }

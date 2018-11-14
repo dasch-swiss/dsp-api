@@ -53,23 +53,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
 
-    /**
-      * Reads or writes a test data file.
-      *
-      * @param responseAsString the API response received from Knora.
-      * @param file             the file in which the expected API response is stored.
-      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-      * @return the expected response.
-      */
-    private def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
-        if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
-            responseAsString
-        } else {
-            FileUtil.readTextFile(file)
-        }
-    }
-
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),

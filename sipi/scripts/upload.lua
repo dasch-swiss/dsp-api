@@ -41,8 +41,8 @@ if token == nil then
   return
 end
 
--- A table of JPEG 2000 filenames to their IIIF URLs.
-local iiif_urls = {}
+-- A table of data about each file that was uploaded.
+local file_upload_data = {}
 
 -- Process the uploaded files.
 for image_index, image_params in pairs(server.uploads) do
@@ -116,8 +116,14 @@ for image_index, image_params in pairs(server.uploads) do
         protocol = 'http://'
     end
 
-    -- Create a IIIF URL for the converted file.
-    iiif_urls[jp2_filename] = protocol .. server.host .. '/tmp/' .. jp2_filename
+    -- Create a IIIF base URL for the converted file.
+    local iiif_base_url = protocol .. server.host .. '/tmp/' .. jp2_filename
+
+    -- Construct response data about the file that was uploaded.
+    local this_file_upload_data = {}
+    this_file_upload_data["internalFilename"] = jp2_filename
+    this_file_upload_data["temporaryBaseIIIFUrl"] = iiif_base_url
+    file_upload_data[image_index] = this_file_upload_data
 
     -- Convert the image to JPEG 2000 format, saving it in a subdirectory of
     -- the temporary directory.
@@ -144,5 +150,7 @@ end
 -- Clean up old temporary files.
 clean_temp_dir()
 
--- Return the filenames and IIIF URLs to the client.
-send_success(iiif_urls)
+-- Return the file upload data in the response.
+local response = {}
+response["uploadedFiles"] = file_upload_data
+send_success(response)
