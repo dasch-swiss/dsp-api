@@ -1842,6 +1842,74 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             }
         }
 
+        "return a Sipi error if Sipi fails to move a file to permanent storage" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiResponderV2.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will accept this request.
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = valueContent
+                ),
+                requestingUser = anythingUser1,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[SipiException] should ===(true)
+            }
+        }
+
+        "not return a Sipi error if Sipi fails to delete a temporary file when Knora rejects a request" in {
+            val resourceIri: IRI = aThingPictureIri
+            val propertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri
+
+            val valueContent = StillImageFileValueContentV2(
+                ontologySchema = ApiV2WithValueObjects,
+                fileValue = FileValueV2(
+                    internalFilename = MockSipiResponderV2.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalMimeType = "image/jp2",
+                    originalFilename = "test.tiff",
+                    originalMimeType = "image/tiff"
+                ),
+                dimX = 512,
+                dimY = 256
+            )
+
+            // Knora will reject this request.
+            actorUnderTest ! CreateValueRequestV2(
+                CreateValueV2(
+                    resourceIri = resourceIri,
+                    resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                    propertyIri = propertyIri,
+                    valueContent = valueContent
+                ),
+                requestingUser = incunabulaUser, // this user doesn't have the necessary permission
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure =>
+                    msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
         "update an integer value" in {
             val resourceIri: IRI = aThingIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
@@ -3443,6 +3511,5 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
         }
-
     }
 }

@@ -47,6 +47,7 @@ object ResourcesResponderV2Spec {
 
     private val defaultAnythingResourcePermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
+    private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
 
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
 
@@ -926,6 +927,58 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             )
         }
 
+        "create a resource with a still image file value" in {
+            // Create the resource.
+
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = StillImageFileValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            fileValue = FileValueV2(
+                                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                                internalMimeType = "image/jp2",
+                                originalFilename = "test.tiff",
+                                originalMimeType = "image/tiff"
+                            ),
+                            dimX = 512,
+                            dimY = 256
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                label = "test thing picture",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[ReadResourcesSequenceV2]
+
+            // Get the resource from the triplestore and check it.
+
+            val outputResource = getResource(resourceIri, anythingUserProfile)
+
+            checkCreateResource(
+                inputResource = inputResource,
+                outputResource = outputResource,
+                defaultResourcePermissions = defaultAnythingResourcePermissions,
+                defaultValuePermissions = defaultStillImageFileValuePermissions,
+                requestingUser = anythingUserProfile
+            )
+        }
+
         "not create a resource with missing required values" in {
             val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
 
@@ -1394,7 +1447,5 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
-
-
     }
 }

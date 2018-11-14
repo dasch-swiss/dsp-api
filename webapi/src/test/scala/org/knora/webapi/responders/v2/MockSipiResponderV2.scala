@@ -19,12 +19,24 @@
 
 package org.knora.webapi.responders.v2
 
+import org.knora.webapi.SipiException
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.sipimessages.{DeleteTemporaryFileRequestV2, GetImageMetadataRequestV2, GetImageMetadataResponseV2, MoveTemporaryFileToPermanentStorageRequestV2}
+import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
+
+/**
+  * Constants for [[MockSipiResponderV2]].
+  */
+object MockSipiResponderV2 {
+    /**
+      * A request to [[MockSipiResponderV2]] with this filename will always cause the responder to simulate a Sipi
+      * error.
+      */
+    val FAILURE_FILENAME: String = "failure.jp2"
+}
 
 /**
   * Imitates [[MockSipiResponderV2]], with hard-coded responses.
@@ -47,9 +59,19 @@ class MockSipiResponderV2 extends Responder {
             )
         }
 
-    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] =
-        Success(SuccessResponseV2("Moved file to permanent storage"))
+    private def moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2): Try[SuccessResponseV2] = {
+        if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == MockSipiResponderV2.FAILURE_FILENAME) {
+            Failure(SipiException("Sipi failed to move file to permanent storage"))
+        } else {
+            Success(SuccessResponseV2("Moved file to permanent storage"))
+        }
+    }
 
-    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] =
-        Success(SuccessResponseV2("Deleted temporary file."))
+    private def deleteTemporaryFileV2(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2): Try[SuccessResponseV2] = {
+        if (deleteTemporaryFileRequestV2.internalFilename == MockSipiResponderV2.FAILURE_FILENAME) {
+            Failure(SipiException("Sipi failed to delete temporary file"))
+        } else {
+            Success(SuccessResponseV2("Deleted temporary file"))
+        }
+    }
 }
