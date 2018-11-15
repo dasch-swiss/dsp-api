@@ -10,7 +10,7 @@ connectInput in run := true
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "2.1.0",
+    version := "v2.2.0-snapshot",
     scalaVersion := "2.12.4"
 )
 
@@ -160,11 +160,20 @@ lazy val webapi = (project in file(".")).
             Test / mainClass := Some("org.scalatest.tools.Runner"),
             IntegrationTest / mainClass := Some("org.scalatest.tools.Runner")
         ).
+        settings(
+            buildInfoKeys ++= Seq[BuildInfoKey](
+                name,
+                version,
+                "akkaHttp" -> library.Version.akkaHttp
+            ),
+            buildInfoPackage := "org.knora.webapi"
+        ).
         enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
         enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
         enablePlugins(GatlingPlugin). // load testing
         enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
-        enablePlugins(RevolverPlugin)
+        enablePlugins(RevolverPlugin).
+        enablePlugins(BuildInfoPlugin) // allows generation of scala code with version information
 
 
 
@@ -289,7 +298,7 @@ lazy val library =
 
         // other
         //"javax.transaction" % "transaction-api" % "1.1-rev-1",
-        val commonsText            = "org.apache.commons"            % "commons-text"             % "1.3"
+        val commonsText            = "org.apache.commons"            % "commons-text"             % "1.6"
         val commonsIo              = "commons-io"                    % "commons-io"               % "2.6"
         val commonsBeanUtil        = "commons-beanutils"             % "commons-beanutils"        % "1.9.3" exclude("commons-logging", "commons-logging") // not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
         val jodd                   = "org.jodd"                      % "jodd"                     % "3.2.6"
