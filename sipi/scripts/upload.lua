@@ -122,6 +122,7 @@ for image_index, image_params in pairs(server.uploads) do
     -- Construct response data about the file that was uploaded.
     local this_file_upload_data = {}
     this_file_upload_data["internalFilename"] = jp2_filename
+    this_file_upload_data["originalFilename"] = original_filename
     this_file_upload_data["temporaryBaseIIIFUrl"] = iiif_base_url
     file_upload_data[image_index] = this_file_upload_data
 

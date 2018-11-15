@@ -27,6 +27,9 @@ object KnoraSipiIntegrationV2ITSpec {
         """.stripMargin)
 }
 
+/**
+  * Tests interaction between Knora and Sipi using Knora API v2.
+  */
 class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -70,10 +73,11 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     /**
       * Represents the information that Sipi returns about each file that has been uploaded.
       *
-      * @param internalFilename Sipi's internal filename for the stored temporary file.
-      * @param temporaryBaseIIIFUrl       the base URL at which the temporary file can be accessed.
+      * @param originalFilename     the original filename that was submitted to Sipi.
+      * @param internalFilename     Sipi's internal filename for the stored temporary file.
+      * @param temporaryBaseIIIFUrl the base URL at which the temporary file can be accessed.
       */
-    case class SipiUploadResponseEntry(internalFilename: String, temporaryBaseIIIFUrl: String)
+    case class SipiUploadResponseEntry(originalFilename: String, internalFilename: String, temporaryBaseIIIFUrl: String)
 
     /**
       * Represents Sipi's response to a file upload request.
@@ -83,7 +87,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
     case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
     object GetImageMetadataResponseV2JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat2(SipiUploadResponseEntry)
+        implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat3(SipiUploadResponseEntry)
         implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
     }
 
@@ -262,7 +266,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 filesToUpload = Seq(FileToUpload(path = pathToMarbles, mimeType = MediaTypes.`image/tiff`))
             )
 
-            val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+            uploadedFile.originalFilename should ===(marblesOriginalFilename)
             val resourceIri: IRI = aThingPictureIri
 
             // JSON describing the new image to Knora.
@@ -272,7 +277,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |  "@type" : "anything:ThingPicture",
                    |  "knora-api:hasStillImageFileValue" : {
                    |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
+                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "@context" : {
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -297,7 +302,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val savedImage = savedValueToSavedImage(savedValue)
-            savedImage.internalFilename should ===(internalFilename)
+            savedImage.internalFilename should ===(uploadedFile.internalFilename)
             savedImage.width should ===(marblesWidth)
             savedImage.height should ===(marblesHeight)
 
@@ -313,7 +318,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                 filesToUpload = Seq(FileToUpload(path = pathToTrp88, mimeType = MediaTypes.`image/tiff`))
             )
 
-            val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
+            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+            uploadedFile.originalFilename should ===(trp88OriginalFilename)
             val resourceIri: IRI = aThingPictureIri
 
             // JSON describing the new image to Knora.
@@ -324,7 +330,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                    |  "knora-api:hasStillImageFileValue" : {
                    |    "@id" : "${stillImageFileValueIri.get}",
                    |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
+                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "@context" : {
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -349,7 +355,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             val savedImage = savedValueToSavedImage(savedValue)
-            savedImage.internalFilename should ===(internalFilename)
+            savedImage.internalFilename should ===(uploadedFile.internalFilename)
             savedImage.width should ===(trp88Width)
             savedImage.height should ===(trp88Height)
 
@@ -372,6 +378,8 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             )
 
             assert(sipiUploadResponse.uploadedFiles.size == inputFiles.size)
+            assert(sipiUploadResponse.uploadedFiles.head.originalFilename == marblesOriginalFilename)
+            assert(sipiUploadResponse.uploadedFiles(1).originalFilename == trp88OriginalFilename)
 
             // Ask Knora to create the resource.
 

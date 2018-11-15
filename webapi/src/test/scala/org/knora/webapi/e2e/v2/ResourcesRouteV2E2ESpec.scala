@@ -32,8 +32,8 @@ import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForResourcesRes
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{FileUtil, StringFormatter}
 
 import scala.concurrent.ExecutionContextExecutor
 
