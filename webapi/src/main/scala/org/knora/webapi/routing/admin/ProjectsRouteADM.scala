@@ -195,7 +195,7 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
             }
     } ~ path("admin" / "projects" / "members" / Segment) { value =>
         get {
-            /* returns all members part of a project identified through iri or shortname */
+            /* returns all members part of a project identified through iri, shortname or shortcode */
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectMembersGetRequestADM] = for {
@@ -224,7 +224,7 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
         }
     } ~ path("admin" / "projects" / "admin-members" / Segment) { value =>
         get {
-            /* returns all admin members part of a project identified through iri or shortname */
+            /* returns all admin members part of a project identified through iri, shortname or shortcode */
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
