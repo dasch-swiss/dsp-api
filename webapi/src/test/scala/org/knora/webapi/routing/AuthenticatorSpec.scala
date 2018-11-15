@@ -53,24 +53,24 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val getUserADMByEmail = PrivateMethod[Future[UserADM]]('getUserADMByEmail)
+    val getUserByIdentifier = PrivateMethod[Future[UserADM]]('getUserByIdentifier)
     val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]]('authenticateCredentialsV2)
 
     "During Authentication" when {
         "called, the 'getUserADMByEmail' method " should {
             "succeed with the correct 'email' " in {
-                val resF = Authenticator invokePrivate getUserADMByEmail(AuthenticatorSpec.rootUserEmail, system, timeout, executionContext)
+                val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(AuthenticatorSpec.rootUserEmail), system, timeout, executionContext)
                 resF map { res => assert(res == AuthenticatorSpec.rootUser)}
             }
 
             "fail with the wrong 'email' " in {
-                    val resF = Authenticator invokePrivate getUserADMByEmail("wronguser@example.com", system, timeout, executionContext)
+                    val resF = Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM("wronguser@example.com"), system, timeout, executionContext)
                     resF map {res => assertThrows(BadCredentialsException)}
             }
 
             "fail when not providing a email " in {
-                an [BadCredentialsException] should be thrownBy {
-                    Authenticator invokePrivate getUserADMByEmail("", system, timeout, executionContext)
+                an [BadRequestException] should be thrownBy {
+                    Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(""), system, timeout, executionContext)
                 }
             }
         }
