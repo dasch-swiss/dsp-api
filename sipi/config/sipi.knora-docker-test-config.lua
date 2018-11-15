@@ -210,7 +210,7 @@ routes = {
         script = 'upload.lua'
     },
     {
-        method = 'PUT',
+        method = 'POST',
         route = '/store',
         script = 'store.lua'
     },

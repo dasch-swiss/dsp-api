@@ -114,6 +114,12 @@ sipi = {
     tmpdir = '/tmp',
 
     --
+    -- Maximum age of temporary files, in seconds (requires Knora's upload.lua).
+    -- Defaults to 86400 seconds (1 day).
+    --
+    max_temp_file_age = 86400,
+
+    --
     -- Path to Knora Application
     --
     knora_path = 'localhost',
@@ -186,7 +192,7 @@ routes = {
         script = 'upload.lua'
     },
     {
-        method = 'PUT',
+        method = 'POST',
         route = '/store',
         script = 'store.lua'
     },

@@ -100,7 +100,7 @@ class SipiResponderV2 extends Responder {
         val requestFuture = for {
             requestEntity <- Marshal(FormData(formParams)).to[RequestEntity]
         } yield HttpRequest(
-            method = HttpMethods.PUT,
+            method = HttpMethods.POST,
             uri = moveFileUrl,
             entity = requestEntity
         )
