@@ -2713,7 +2713,15 @@ knora-api:UriValue a owl:Class;
 
 knora-api:User a owl:Class;
   rdfs:comment "Represents a Knora user";
-  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person> .
+  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person>, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:username
+    ] .
+
+knora-api:username a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:User;
+  rdfs:comment "The username and login name of a user of Knora" .
 
 knora-api:XSLTransformation a owl:Class;
   knora-api:isResourceClass true;
