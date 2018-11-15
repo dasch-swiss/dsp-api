@@ -4,7 +4,7 @@ import NativePackagerHelper._
 lazy val salsahCommonSettings = Seq(
     organization := "org.knora",
     name := "salsah",
-    version := "2.1.0",
+    version := "V3.0.0-SNAPSHOT",
     scalaVersion := "2.12.4"
 )
 
