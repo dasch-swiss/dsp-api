@@ -307,7 +307,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 ))
 
                 val key = perm001_d3.p.cacheKey
-                val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsCacheName, key)
+                val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsResponderADM.PermissionsCacheName, key)
                 maybePermission should be (Some(perm001_d3.p))
             }
         }

@@ -28,6 +28,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, PermissionUtilADM}
 
@@ -705,11 +706,13 @@ class PermissionsResponderADM extends Responder {
 
         val maybeDefaultObjectAccessPermissionADM: Future[Option[DefaultObjectAccessPermissionADM]] = permissionFromCache match {
             case Some(permission) =>
-                // found a user profile in the cache
+                // found permission in the cache
                 log.debug("defaultObjectAccessPermissionGetADM - cache hit for key: {}", key)
                 FastFuture.successful(Some(permission))
 
             case None =>
+                // not found permission in the cache
+
                 for {
                     // check if necessary field are not empty.
                     _ <- Future(if (projectIri.isEmpty) throw BadRequestException("Project cannot be empty"))
@@ -745,9 +748,12 @@ class PermissionsResponderADM extends Responder {
                             case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
                         }
                         val hasPermissions: Set[PermissionADM] = PermissionUtilADM.parsePermissionsWithType(groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.HasPermissions).map(_.head), PermissionType.OAP)
-                        Some(
-                            DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
-                        )
+                        val doap: DefaultObjectAccessPermissionADM = DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraBase.ForProject, throw InconsistentTriplestoreDataException(s"Permission has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraBase.ForProperty).map(_.head), hasPermissions = hasPermissions)
+
+                        // write permission to cache
+                        writeDefaultObjectAccessPermissionADMToCache(doap)
+
+                        Some(doap)
                     } else {
                         None
                     }
@@ -1161,6 +1167,16 @@ class PermissionsResponderADM extends Responder {
     }
     */
 
+
+}
+
+/**
+  * Companion object providing helper methods.
+  */
+object PermissionsResponderADM {
+
+    val PermissionsCacheName = "permissionsCache"
+
     ////////////////////
     // Helper Methods //
     ////////////////////
@@ -1176,7 +1192,7 @@ class PermissionsResponderADM extends Responder {
       */
     def getDefaultObjectAccessPermissionADMKey(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): String = {
 
-        projectIri.toString + groupIri.toString + resourceClassIri.toString + propertyIri.toString
+        projectIri.toString + " | " + groupIri.toString + " | " + resourceClassIri.toString + " | " + propertyIri.toString
     }
 
     /**

@@ -21,6 +21,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.responders.admin.PermissionsResponderADM
 import spray.json._
 
 
@@ -550,7 +551,7 @@ case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup:
     /**
       * @return a simple string representing the permission which can be used as the cache key.
       */
-    def cacheKey: String = forProject.toString + forGroup.toString + forResourceClass.toString + forProperty.toString
+    def cacheKey: String = PermissionsResponderADM.getDefaultObjectAccessPermissionADMKey(forProject, forGroup, forResourceClass, forProperty)
 }
 
 /**
