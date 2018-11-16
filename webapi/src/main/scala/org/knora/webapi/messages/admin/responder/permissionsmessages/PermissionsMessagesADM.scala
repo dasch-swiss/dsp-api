@@ -545,7 +545,13 @@ case class NewObjectAccessPermissionADM(forResource: Option[IRI],
   * @param forProperty
   * @param hasPermissions
   */
-case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionADM])
+case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionADM]) {
+
+    /**
+      * @return a simple string representing the permission which can be used as the cache key.
+      */
+    def cacheKey: String = forProject.toString + forGroup.toString + forResourceClass.toString + forProperty.toString
+}
 
 /**
   * Represents information needed during default object access permission creation.

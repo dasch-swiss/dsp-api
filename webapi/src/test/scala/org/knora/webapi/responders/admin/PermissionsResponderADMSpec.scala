@@ -28,7 +28,7 @@ import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.util.KnoraIdUtil
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 
 import scala.collection.Map
 import scala.concurrent.Await
@@ -292,6 +292,23 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(
                     defaultObjectAccessPermission = perm001_d3.p
                 ))
+            }
+
+            "cache DefaultObjectAccessPermission" in {
+                actorUnderTest ! DefaultObjectAccessPermissionGetRequestADM(
+                    projectIRI = INCUNABULA_PROJECT_IRI,
+                    groupIRI = None,
+                    resourceClassIRI = None,
+                    propertyIRI = Some(OntologyConstants.KnoraBase.HasStillImageFileValue),
+                    requestingUser = rootUser
+                )
+                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
+                    defaultObjectAccessPermission = perm001_d3.p
+                ))
+
+                val key = perm001_d3.p.cacheKey
+                val maybePermission = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsCacheName, key)
+                maybePermission should be (Some(perm001_d3.p))
             }
         }
 
