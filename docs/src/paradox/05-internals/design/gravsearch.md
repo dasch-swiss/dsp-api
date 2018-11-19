@@ -135,3 +135,36 @@ The same logic applies to value objects.
 
 ### Main Query
 
+The purpose of the main query is to get all requested information about the main resource, dependent resources, and value objects. 
+The Iris of those resources and value objects were returned by the prequery. 
+Since the prequery only returns resources and value objects matching the input query's criteria, 
+the main query can specifically ask for more detailed information on these resources and values without having to reconsider these criteria.
+
+#### Generating the Main Query
+
+The main query is a SPARQL CONSTRUCT query. Its generation is handled by the method `createMainQuery`. 
+It takes three arguments: `mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]`. 
+From the given Iris, statements are generated that ask for complete information on *exactly* these resources and values. 
+For any given resource Iri, only the values present in `valueObjectIris` are to be queried. 
+This is achieved by using SPARQL's `VALUES` expression for the main resource and dependent resources as well as for values.
+
+#### Processing the Main Query's results
+
+When processing the main query's results, permissions are checked and resources and values that the user did not explicitly ask for in the input query are filtered out.
+
+The method `getMainQueryResultsWithFullGraphPattern` takes the main query's results as an input and makes sure that the client has sufficient permissions on the results.
+A main resource and its dependent resources and values are only returned if the user has view permissions on all the resources and value objects present in the main query. 
+Otherwise the method suppresses the main resource.
+To do the permission checking, the results of the main query are passed to `ConstructResponseUtilV2` which transforms a `SparqlConstructResponse` (a set of RDF triples)
+into a structure organized by main resource Iris. In this structure, dependent resources and values are nested can be accessed via their main resource. 
+`SparqlConstructResponse` suppresses all resources and values the user has insufficient permissions on. 
+For each main resource, a check is performed for the presence of all resources and values after permission checking.
+
+The method `getRequestedValuesFromResultsWithFullGraphPattern` filters out those resources and values that the user does not want to be returned by the query. 
+All the resources and values not present in the input query's CONSTRUCT clause are filtered out. This only happens after permission checking.
+
+The main resources that have been filtered out due to insufficient permissions are represented by the placeholder `ForbiddenResource`. 
+This placeholder stands for a main resource that cannot be returned, nevertheless it informs the client that such a resource exists.
+This is necessary for a consistent behaviour when doing paging. 
+
+
