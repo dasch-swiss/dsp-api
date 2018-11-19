@@ -382,7 +382,9 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
+        // #getGeneralInstance
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+        // #getGeneralInstance
         val knoraIdUtil = new KnoraIdUtil
 
         for {
@@ -411,8 +413,10 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
             valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
                 propertyIriStr =>
-                    val propertyIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
-                    val valuesArray = jsonLDDocument.requireArray(propertyIriStr)
+                    // #toSmartIriWithErr
+                    val propertyIri: SmartIri = propertyIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: <$propertyIriStr>"))
+                    // #toSmartIriWithErr
+                    val valuesArray: JsonLDArray = jsonLDDocument.requireArray(propertyIriStr)
 
                     val propertyValues = valuesArray.value.map {
                         valueJsonLD =>
@@ -483,7 +487,9 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
         )
     }
 
+    // #generateJsonLD
     private def generateJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
+        // #generateJsonLD
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // Generate JSON-LD for the resources.
@@ -532,9 +538,11 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
 
     }
 
+    // #toJsonLDDocument
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
+    // #toJsonLDDocument
 
     /**
       * Checks that a [[ReadResourcesSequenceV2]] contains exactly one resource, and returns that resource. If the resource

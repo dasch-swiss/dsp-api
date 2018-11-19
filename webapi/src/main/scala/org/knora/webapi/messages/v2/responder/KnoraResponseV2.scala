@@ -22,9 +22,10 @@ package org.knora.webapi.messages.v2.responder
 import org.knora.webapi._
 import org.knora.webapi.util.jsonld._
 
+// #KnoraResponseV2
 /**
   *
-  * A trait for Knora API V2 response messages. Any response can be converted into JSON or XML.
+  * A trait for Knora API V2 response messages. Any response can be converted into JSON-LD.
   *
   */
 trait KnoraResponseV2 {
@@ -37,6 +38,7 @@ trait KnoraResponseV2 {
       */
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument
 }
+// #KnoraResponseV2
 
 /**
   * Provides a message indicating that the result of an operation was successful.
@@ -71,6 +73,7 @@ trait KnoraContentV2[C <: KnoraContentV2[C]] {
     def toOntologySchema(targetSchema: OntologySchema): C
 }
 
+// #KnoraReadV2
 /**
   * A trait for read wrappers that can convert themselves to external schemas.
   *
@@ -80,3 +83,4 @@ trait KnoraReadV2[C <: KnoraReadV2[C]] {
     this: C =>
     def toOntologySchema(targetSchema: ApiV2Schema): C
 }
+// #KnoraReadV2
