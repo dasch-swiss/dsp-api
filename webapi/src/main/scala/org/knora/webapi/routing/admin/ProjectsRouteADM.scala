@@ -195,15 +195,19 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
             }
     } ~ path("admin" / "projects" / "members" / Segment) { value =>
         get {
-            /* returns all members part of a project identified through iri or shortname */
+            /* returns all members part of a project identified through iri, shortname or shortcode */
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectMembersGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield if (identifier != "iri") {
-                        // identify project by shortname.
+                    } yield if (identifier == "shortname") {
+                        // identify project by shortname
                         val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                         ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                    } else if (identifier == "shortcode") {
+                        // identify project by shortcode
+                        val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectMembersGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
                     } else {
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                         ProjectMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
@@ -220,15 +224,19 @@ class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: Loggin
         }
     } ~ path("admin" / "projects" / "admin-members" / Segment) { value =>
         get {
-            /* returns all admin members part of a project identified through iri or shortname */
+            /* returns all admin members part of a project identified through iri, shortname or shortcode */
             parameters("identifier" ? "iri") { identifier: String =>
                 requestContext =>
                     val requestMessage: Future[ProjectAdminMembersGetRequestADM] = for {
                         requestingUser <- getUserADM(requestContext)
-                    } yield if (identifier != "iri") {
-                        // identify project by shortname.
+                    } yield if (identifier == "shortname") {
+                        // identify project by shortname
                         val shortNameDec = java.net.URLDecoder.decode(value, "utf-8")
                         ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = Some(shortNameDec), maybeShortcode = None, requestingUser = requestingUser)
+                    } else if (identifier == "shortcode") {
+                        // identify project by shortcode
+                        val shortcodeDec = java.net.URLDecoder.decode(value, "utf-8")
+                        ProjectAdminMembersGetRequestADM(maybeIri = None, maybeShortname = None, maybeShortcode = Some(shortcodeDec), requestingUser = requestingUser)
                     } else {
                         val checkedProjectIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
                         ProjectAdminMembersGetRequestADM(maybeIri = Some(checkedProjectIri), maybeShortname = None, maybeShortcode = None, requestingUser = requestingUser)
