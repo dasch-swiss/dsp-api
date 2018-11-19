@@ -1644,7 +1644,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
     /**
       * Traverses value property assertions and returns the IRIs of the value objects and the dependent resources, recursively traversing their value properties as well.
-      * This is method is needed in order to determine if the full query path is still present in the results after permissions checking handled in [[ConstructResponseUtilV2.splitMainResourcesAndValueRdfData]].
+      * This is method is needed in order to determine if the whole graph pattern is still present in the results after permissions checking handled in [[ConstructResponseUtilV2.splitMainResourcesAndValueRdfData]].
       * Due to insufficient permissions, some of the resources (both main and dependent resources) and/or values may have been filtered out.
       *
       * @param valuePropertyAssertions the assertions to be traversed.
@@ -1886,7 +1886,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // make sure that the prequery returned some results
-            queryResultsSeparatedWithFullQueryPath: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (resourceIris.nonEmpty) {
+            queryResultsSeparatedWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] <- if (resourceIris.nonEmpty) {
 
                 // for each resource, create a Set of value object IRIs
                 val valueObjectIrisPerResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
@@ -1936,8 +1936,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     queryResultsSep = ConstructResponseUtilV2.splitMainResourcesAndValueRdfData(constructQueryResults = searchResponse, requestingUser = requestingUser)
 
                     // for each main resource check if all dependent resources and value objects are still present after permission checking
-                    // this ensures that the user has sufficient permissions on the whole query path
-                    queryResWithFullQueryPath = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
+                    // this ensures that the user has sufficient permissions on the whole graph pattern
+                    queryResWithFullGraphPattern = queryResultsSep.foldLeft(Map.empty[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData]) {
                         case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
                             valueObjectIrisPerResource.get(mainResIri) match {
@@ -1953,7 +1953,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     // all value objects contained in `valuePropAssertions`
                                     val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
 
-                                    // check if the client has sufficient permissions on all value objects IRIs present in the query path
+                                    // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
                                     val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
 
                                     if (allValueObjects) {
@@ -1970,7 +1970,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             }
                     }
 
-                } yield queryResWithFullQueryPath
+                } yield queryResWithFullGraphPattern
             } else {
 
                 // the prequery returned no results, no further query is necessary
@@ -1978,7 +1978,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if there are resources the user does not have sufficient permissions to see
-            forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullQueryPath.size) {
+            forbiddenResourceOption: Option[ReadResourceV2] <- if (resourceIris.size > queryResultsSeparatedWithFullGraphPattern.size) {
                 // some of the main resources have been suppressed, represent them using the forbidden resource
 
                 getForbiddenResource(requestingUser)
@@ -1988,7 +1988,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // get the mappings
-            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullQueryPath, requestingUser)
+            mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
 
             // _ = println(mappingsAsMap)
 
@@ -1996,7 +1996,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         } yield ReadResourcesSequenceV2(
             numberOfResources = resourceIris.size,
             resources = ConstructResponseUtilV2.createSearchResponse(
-                searchResults = queryResultsSeparatedWithFullQueryPath,
+                searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
                 forbiddenResource = forbiddenResourceOption
