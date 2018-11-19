@@ -2559,7 +2559,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                                     mainResourceVar: QueryVariable): Map[IRI, Set[IRI]] = {
 
             // variables representing dependent resources
-            val dependentResourceVariablesConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
+            val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
 
             prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
                 case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
@@ -2569,21 +2569,25 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     val mainResIri: String = resultRow.rowMap(mainResourceVar.variableName)
 
                     // get the Iris of all the dependent resources for the given main resource
-                    val dependentResIris: Set[IRI] = dependentResourceVariablesConcat.flatMap {
+                    val dependentResIris: Set[IRI] = dependentResourceVariablesGroupConcat.flatMap {
                         dependentResVar: QueryVariable =>
 
                             // check if key exists: the variable representing dependent resources
                             // could be contained in an OPTIONAL or a UNION and be unbound
-                            // It would be suppressed by `TriplestoreMessages` in that case
+                            // It would be suppressed by `TriplestoreMessages` in that case.
+                            //
+                            // Example: the query contains a dependent resource variable ?book within an OPTIONAL or a UNION.
+                            // If the query returns results for the dependent resource ?book (Iris of resources that match the given criteria),
+                            // those would be accessible via the variable ?book__Concat containing the aggregated results (Iris).
                             val dependentResIriOption: Option[IRI] = resultRow.rowMap.get(dependentResVar.variableName)
 
                             dependentResIriOption match {
                                 case Some(depResIri: IRI) =>
 
-                                    // IRIs are concatenated, split them
+                                    // IRIs are concatenated by GROUP_CONCAT using a separator, split them
                                     depResIri.split(transformer.groupConcatSeparator).toSeq
 
-                                case None => Set.empty[IRI] // no Iri present
+                                case None => Set.empty[IRI] // no Iri present since variable was inside aan OPTIONAL or UNION
                             }
 
                     }
@@ -2620,17 +2624,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             // check if key exists: the variable representing value objects
                             // could be contained in an OPTIONAL or a UNION and be unbound
-                            // It would be suppressed by `TriplestoreMessages` in that case
+                            // It would be suppressed by `TriplestoreMessages` in that case.
+
+                            // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
                             val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
 
                             val valueObjIris: Set[IRI] = valueObjIrisOption match {
 
                                 case Some(valObjIris) =>
 
-                                    // IRIs are concatenated, split them
+                                    // IRIs are concatenated by GROUP_CONCAT using a separator, split them
                                     valObjIris.split(transformer.groupConcatSeparator).toSet
 
-                                case None => Set.empty[IRI] // no Iri present
+                                case None => Set.empty[IRI] // since variable was inside aan OPTIONAL or UNION
 
                             }
 
