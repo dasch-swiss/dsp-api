@@ -2556,12 +2556,12 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
                                                     transformer: NonTriplestoreSpecificConstructToSelectTransformer,
-                                                    mainResourceVar: QueryVariable): Map[IRI, Set[IRI]] = {
+                                                    mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
 
             // variables representing dependent resources
             val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.getDependentResourceVariablesGroupConcat
 
-            prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
+            val dependentResourcesPerMainRes = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
                 case (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
                     // collect all the dependent resource Iris for the current main resource from prequery's response
 
@@ -2594,6 +2594,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     acc + (mainResIri -> dependentResIris)
             }
+
+            DependentResourcesPerMainResource(new ErrorHandlingMap(dependentResourcesPerMainRes, { key => throw GravsearchException(s"main resource not found: $key") }))
         }
 
         /**
@@ -2658,7 +2660,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return a Map of main resource Iris and their values.
           */
         def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlConstructResponse,
-                                                    dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]],
+                                                    dependentResourceIrisPerMainResource: DependentResourcesPerMainResource,
                                                     valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]]): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
 
             // separate main resources and value objects (dependent resources are nested)
@@ -2669,7 +2671,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 case (acc: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData], (mainResIri: IRI, values: ConstructResponseUtilV2.ResourceWithValueRdfData)) =>
 
                     // check for presence of dependent resources: dependentResourceIrisPerMainResource plus the dependent resources whose Iris where provided in the Gravsearch query.
-                    val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
+                    val expectedDependentResources: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource(mainResIri) /*++ dependentResourceIrisFromTypeInspection*/
                     // TODO: https://github.com/dhlab-basel/Knora/issues/924
 
                     // println(expectedDependentResources)
@@ -2850,6 +2852,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             }
         }
 
+        /**
+          * Represents dependent resources organized by main resource.
+          *
+          * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
+          */
+        case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: ErrorHandlingMap[IRI, Set[IRI]])
+
+
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
 
@@ -2913,7 +2923,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: Map[IRI, Set[IRI]] = getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val dependentResourceIrisPerMainResource: DependentResourcesPerMainResource = getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
@@ -2928,7 +2938,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 }.toSet
 
                 // the IRIs of all dependent resources for all main resources
-                val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
+                val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // for each main resource, create a Map of value object variables and their Iris
                 val valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
