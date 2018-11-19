@@ -100,9 +100,9 @@ State of member variables after transformation of the input query into the prequ
 
 - `mainResourceVariable`: `QueryVariable(page)`
 - `dependentResourceVariables`: `Set(QueryVariable(book))`
-- `dependentResourceVariablesConcat`: `Set(QueryVariable(book__Concat))`
+- `dependentResourceVariablesGroupConcat`: `Set(QueryVariable(book__Concat))`
 - `valueObjectVariables`: `Set(QueryVariable(book__LinkValue), QueryVariable(seqnum))`: `?book` represents the dependent resource and `?book__LinkValue` the link value connecting `?page` and `?book`.
-- `valueObjectVariablesConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
+- `valueObjectVariablesGroupConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
 
 The resulting SELECT clause of the prequery looks as follows:
 
