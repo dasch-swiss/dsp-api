@@ -21,6 +21,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionD
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.responders.admin.PermissionsResponderADM
 import spray.json._
 
 
@@ -545,7 +546,13 @@ case class NewObjectAccessPermissionADM(forResource: Option[IRI],
   * @param forProperty
   * @param hasPermissions
   */
-case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionADM])
+case class DefaultObjectAccessPermissionADM(iri: IRI, forProject: IRI, forGroup: Option[IRI], forResourceClass: Option[IRI], forProperty: Option[IRI], hasPermissions: Set[PermissionADM]) {
+
+    /**
+      * @return a simple string representing the permission which can be used as the cache key.
+      */
+    def cacheKey: String = PermissionsResponderADM.getDefaultObjectAccessPermissionADMKey(forProject, forGroup, forResourceClass, forProperty)
+}
 
 /**
   * Represents information needed during default object access permission creation.
