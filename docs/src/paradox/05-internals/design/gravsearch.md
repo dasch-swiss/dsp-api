@@ -46,7 +46,7 @@ When iterating over the statements of the input query, the transformer class's t
 
 ### Prequery
 
-The purpose of the prequery is to get an ordered collection of results. 
+The purpose of the prequery is to get an ordered collection of results representing only the IRIs of one page of matching resources and values.
 Sort criteria can be submitted by the user, but the result is always deterministic also without sort criteria.
 This is necessary to support paging. 
 A prequery is a SPARQL SELECT query.
@@ -59,13 +59,16 @@ The transformation of the Gravsearch query's WHERE clause relies on the implemen
 `AbstractSparqlTransformer` contains members whose state is changed during the iteration over the statements of the input query. 
 They can then by used to create the converted query.
 
--  `mainResourceVariable: Option[QueryVariable]`: variable representing the main resource of the input query. Used in the prequery's SELECT clause.
-- `dependentResourceVariables: mutable.Set[QueryVariable]`: a set of variables representing dependent resources in the input query.
-- `dependentResourceVariablesGroupConcat: Set[QueryVariable]`: variables representing dependent resources' IRIs in the prequery's SELECT clause.
-- `valueObjectVariables: mutable.Set[QueryVariable]`: variables representing value objects.
-- `valueObjectVarsGroupConcat: Set[QueryVariable]`: variables representing value objects' IRIs in the prequery's SELECT clause.
+-  `mainResourceVariable: Option[QueryVariable]`: SPARQL variable representing the main resource of the input query. Present in the prequery's SELECT clause.
+- `dependentResourceVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing dependent resources in the input query. Used in an aggregation function in the prequery's SELECT clause (see below).
+- `dependentResourceVariablesGroupConcat: Set[QueryVariable]`: a set of SPARQL variables representing an aggregation of dependent resources. Present in the prequery's SELECT clause.
+- `valueObjectVariables: mutable.Set[QueryVariable]`: a set of SPARQL variables representing value objects. Used in an aggregation function in the prequery's SELECT clause (see below).
+- `valueObjectVarsGroupConcat: Set[QueryVariable]`: a set of SPARQL variables representing an aggregation of value objects. Present in the prequery's SELECT clause.
 
-The following Gravsearch query looks for pages with sequence number 10 that are part of a book:
+The variables mentioned above are present in the prequery's result rows because they are part of the prequery's SELECT clause.
+
+The following example illustrates the handling of variables.
+The following Gravsearch query looks for pages with a sequence number of 10 that are part of a book:
 
 ```sparql
 PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
@@ -92,13 +95,13 @@ PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
     }
 ```
 
-The prequery's SELECT clause is built using the member vars defined in `AbstractSparqlTransformer`.
-State of member vars after analysis:
+The prequery's SELECT clause is built using the member variables defined in `AbstractSparqlTransformer`.
+State of member variables after transformation of the input query into the prequery:
 
 - `mainResourceVariable`: `QueryVariable(page)`
 - `dependentResourceVariables`: `Set(QueryVariable(book))`
 - `dependentResourceVariablesConcat`: `Set(QueryVariable(book__Concat))`
-- `valueObjectVariables`: `Set(QueryVariable(book__LinkValue), QueryVariable(seqnum))`
+- `valueObjectVariables`: `Set(QueryVariable(book__LinkValue), QueryVariable(seqnum))`: `?book` represents the dependent resource and `?book__LinkValue` the link value connecting `?page` and `?book`.
 - `valueObjectVariablesConcat`: `Set(QueryVariable(seqnum__Concat), QueryVariable(book__LinkValue__Concat))`
 
 The resulting SELECT clause of the prequery looks as follows:
@@ -114,11 +117,21 @@ SELECT DISTINCT
     ORDER BY ASC(?page)
     LIMIT 25
 ```
+`?page` represents the main resource. When accessing the prequery's result rows, `?page` contains the Iri of the main resource. 
+The prequery's results are grouped by the main resource so that there is exactly one result row per matching main resource. 
+`?page` is also used as a sort criterion although none has been defined in the input query. 
+This is necessary to make paging work: results always have to be returned in the same order (the prequery is always deterministic). 
+Like this, results can be fetched page by page using LIMIT and OFFSET.
 
-The variables `?page`, `?book__Concat`, `?seqnum__Concat`, and `?book__LinkValue__Concat` 
-are accessible in the result rows and contain the IRIs of the resources and values that matched the search criteria.
-`?book`, `?seqnum`, and `?book__LinkValue` are only used inside the aggregation function. Aggregation is necessary to make paging work: 
-results are grouped by main resource to ensure that the same main resource is only returned once.
+Grouping by main resource requires other results to be aggregated using the function `GROUP_CONCAT`. 
+`?book` is used as an argument of the aggregation function. 
+The aggregation's result is accessible in the prequery's result rows as `?book__Concat`. 
+The variable `?book` is bound to an Iri. 
+Since more than one Iri could be bound to a variable representing a dependent resource, the results have to be aggregated. 
+`GROUP_CONCAT` takes two arguments: a collection of strings (Iris in our use case) and a separator. 
+When accessing `?book__Concat` in the prequery's results containing the Iris of dependent resources, the string has to be split with the separator used in the aggregation function.
+The result is a collection of Iris representing dependent resources.
+The same logic applies to value objects.
 
 ### Main Query
 

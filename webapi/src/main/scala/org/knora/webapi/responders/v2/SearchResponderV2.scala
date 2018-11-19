@@ -157,7 +157,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       */
     abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
 
-        // Contains the variable representing the main resource: knora-base:isMainResource
+        // Contains the variable representing the input query's main resource: knora-base:isMainResource
         protected var mainResourceVariable: Option[QueryVariable] = None
 
         // getter method for public access
@@ -167,25 +167,25 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         // in order to prevent duplicates
         protected val processedTypeInformationKeysWhereClause = mutable.Set.empty[TypeableEntity]
 
-        // Contains the variables of dependent resources
+        // variables representing dependent resources
         protected var dependentResourceVariables: mutable.Set[QueryVariable] = mutable.Set.empty
 
         // separator used by GroupConcat
         val groupConcatSeparator: Char = StringFormatter.INFORMATION_SEPARATOR_ONE
 
-        // contains variables representing group concatenated dependent resource IRIs
+        // variables representing aggregated dependent resources
         protected var dependentResourceVariablesGroupConcat: Set[QueryVariable] = Set.empty
 
         // getter method for public access
         def getDependentResourceVariablesGroupConcat: Set[QueryVariable] = dependentResourceVariablesGroupConcat
 
-        // contains the variables of value objects (including those for link values)
+        // variables representing value objects (including those for link values)
         protected var valueObjectVariables: mutable.Set[QueryVariable] = mutable.Set.empty
 
-        // contains variables representing group concatenated value objects IRIs
+        // variables representing aggregated value objects
         protected var valueObjectVarsGroupConcat: Set[QueryVariable] = Set.empty
 
-        // get method for public access
+        // getter method for public access
         def getValueObjectVarsGroupConcat: Set[QueryVariable] = valueObjectVarsGroupConcat
 
         // suffix appended to variables that are returned by a SPARQL aggregation function.
