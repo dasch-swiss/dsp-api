@@ -2738,40 +2738,59 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                           typeInspectionResult: GravsearchTypeInspectionResult): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
 
             // sort out those value objects that the user did not ask for in the input query's CONSTRUCT clause
+            // those are present in the input query's WHERE clause but not in its CONSTRUCT clause
+
+            // for each resource variable (both main and dependent resources),
+            // collect the value object variables associated with it in the input query's CONSTRUCT clause
+            // resource variables from types inspection are used
+            //
+            // Example: the statement "?page incunabula:seqnum ?seqnum ." is contained in the input query's CONSTRUCT clause.
+            // ?seqnum (?seqnum__Concat) is a requested value and is associated with the resource variable ?page.
             val requestedValueObjectVariablesForAllResVars: Set[QueryVariable] = allResourceVariablesFromTypeInspection.flatMap {
-                depResVar =>
-                    collectValueVariablesForResource(inputQuery.constructClause, depResVar, typeInspectionResult, transformer.groupConcatVariableSuffix)
+                resVar =>
+                    collectValueVariablesForResource(inputQuery.constructClause, resVar, typeInspectionResult, transformer.groupConcatVariableSuffix)
             }
 
+            // for each resource Iri (only dependent resources),
+            // collect the value object variables associated with it in the input query's CONSTRUCT clause
+            // dependent resource Iris from types inspection are used
+            //
+            // Example: the statement "<http://rdfh.ch/5e77e98d2603> incunabula:title ?title ." is contained in the input query's CONSTRUCT clause.
+            // ?title (?title__Concat) is a requested value and is associated with the dependent resource Iri <http://rdfh.ch/5e77e98d2603>.
             val requestedValueObjectVariablesForDependentResIris: Set[QueryVariable] = dependentResourceIrisFromTypeInspection.flatMap {
                 depResIri =>
                     collectValueVariablesForResource(inputQuery.constructClause, IriRef(iri = depResIri.toSmartIri), typeInspectionResult, transformer.groupConcatVariableSuffix)
             }
 
+            // combine all value object variables into one set
             val allRequestedValueObjectVariables: Set[QueryVariable] = requestedValueObjectVariablesForAllResVars ++ requestedValueObjectVariablesForDependentResIris
 
-            // collect requested value object IRIs for each resource
-            val requestedValObjIrisPerResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.keySet.map {
-                resIri =>
+            // collect requested value object Iris for each main resource
+            val requestedValObjIrisPerMainResource: Map[IRI, Set[IRI]] = queryResultsWithFullGraphPattern.keySet.map {
+                mainResIri =>
 
-                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(resIri)
+                    // get all value object variables and Iris for the current main resource
+                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(mainResIri)
 
+                    // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
                     val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
                         requestedQueryVar: QueryVariable =>
-                            valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $resIri"))
+                            valueObjIrisForRes.getOrElse(requestedQueryVar, throw AssertionException(s"key $requestedQueryVar is absent in prequery's value object IRIs collection for resource $mainResIri"))
                     }
 
-                    resIri -> valObjIrisRequestedForRes
+                    mainResIri -> valObjIrisRequestedForRes
             }.toMap
 
+            // for each main resource, get only the requested value objects
             queryResultsWithFullGraphPattern.map {
-                case (resIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
+                case (mainResIri: IRI, assertions: ConstructResponseUtilV2.ResourceWithValueRdfData) =>
 
-                    // get the IRIs of all the value objects requested for this resource
-                    val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerResource.getOrElse(resIri, throw AssertionException(s"key $resIri is absent in requested value object IRIs collection for resource $resIri"))
+                    // get the Iris of all the value objects requested for the current main resource
+                    val valueObjIrisRequestedForRes: Set[IRI] = requestedValObjIrisPerMainResource.getOrElse(mainResIri, throw AssertionException(s"key $mainResIri is absent in requested value object IRIs collection for resource $mainResIri"))
 
                     /**
-                      * Filter out those values that the user does not want to see.
+                      * Recursively filters out those values that the user does not want to see.
+                      * Starts with the values of the main resource and also processes link values, possibly containing dependent resources with values.
                       *
                       * @param values the values to be filtered.
                       * @return filtered values.
@@ -2783,7 +2802,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                 // filter values for the current resource
                                 val valuesFiltered: Seq[ConstructResponseUtilV2.ValueRdfData] = values.filter {
                                     valueObj: ConstructResponseUtilV2.ValueRdfData =>
-                                        // only return those value objects whose IRIs are contained in valueObjIrisRequestedForRes
+                                        // only return those value objects whose Iris are contained in valueObjIrisRequestedForRes
                                         valueObjIrisRequestedForRes(valueObj.valueObjectIri)
                                 }
 
@@ -2807,24 +2826,27 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                         }
                                 }
 
-                                // ignore properties if there are no value object to be displayed
+                                // ignore properties if there are no value objects to be displayed.
+                                // if the user does not want to see a value, the property pointing to that value has to be ignored.
                                 if (valuesFilteredRecursively.nonEmpty) {
                                     acc + (propIri -> valuesFilteredRecursively)
                                 } else {
                                     // ignore this property since there are no value objects
+                                    // Example: the input query's WHERE clause contains the statement "?page incunabula:seqnum ?seqnum .",
+                                    // but the statement is not present in its CONSTRUCT clause. Therefore, the property incunabula:seqnum can be ignored
+                                    // since no value objects are returned for it.
                                     acc
                                 }
-
-
                         }
                     }
 
-                    val requestedValuePropertyAssertions = traverseAndFilterValues(assertions)
+                    // filter values for the current main resource
+                    val requestedValuePropertyAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = traverseAndFilterValues(assertions)
 
-                    resIri -> assertions.copy(
+                    // only return the requested values for the current main resource
+                    mainResIri -> assertions.copy(
                         valuePropertyAssertions = requestedValuePropertyAssertions
                     )
-
             }
         }
 
