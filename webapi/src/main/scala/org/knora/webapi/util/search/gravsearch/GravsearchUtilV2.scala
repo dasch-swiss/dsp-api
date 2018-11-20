@@ -72,10 +72,6 @@ object GravsearchUtilV2 {
         }
     }
 
-    object FullTextSearchCount {
-
-    }
-
     object Gravsearch {
 
         /**
@@ -127,10 +123,6 @@ object GravsearchUtilV2 {
             // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
             val dateTypes = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
         }
-
-    }
-
-    object GravsearchCount {
 
     }
 
