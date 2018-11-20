@@ -84,7 +84,7 @@ the target ontology schema:
 
 @@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraResponseV2 }
 
-The implementation of this method constructs a `JsonLDDocument` object,
+The implementation of this method constructs a `JsonLDDocument`,
 in which all object keys are full IRIs (no prefixes are used), but in which
 the JSON-LD context also specifies the prefixes that will be used when the
 document is returned to the client. The function `JsonLDUtil.makeContext`

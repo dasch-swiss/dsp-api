@@ -89,12 +89,12 @@ data, but they suffer from a number of
 of SPARQL, aims to provide the benefits of a SPARQL endpoint, while avoiding these
 problems. It provides:
 
-- Filtering of queried data according to the user's permissions
-- Support for Knora's built-in versioning of data
+- Filtering of queried data according to the user's permissions.
+- Support for Knora's built-in versioning of data.
 - Support for Knora's humanities-focused data types, such as
-  @ref:[calendar-independent dates](../../../02-knora-ontologies/knora-base.md#DateValue)
-  and @ref:[standoff text markup](../../../02-knora-ontologies/knora-base.md#text-with-standoff-markup)
-- Built-in paging of search results to improve scalability
+  @ref:[calendar-independent dates](../../../02-knora-ontologies/knora-base.md#datevalue)
+  and @ref:[standoff text markup](../../../02-knora-ontologies/knora-base.md#text-with-standoff-markup).
+- Built-in paging of search results to improve scalability.
 
 ### Ontology Construction
 
