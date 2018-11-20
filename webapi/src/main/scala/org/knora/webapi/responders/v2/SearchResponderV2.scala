@@ -2645,15 +2645,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             valueObjVarConcat -> valueObjIris
                     }.toMap
 
-                    acc + (mainResIri -> valueObjVarToIris)
+                    val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
+                    acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
             }
 
-            val valueObjVarsAndIrisErrorHandlingMap: Map[IRI, Map[QueryVariable, Set[IRI]]] = valueObjVarsAndIris.map {
-                case (mainRes: IRI, varMap: Map[QueryVariable, Set[IRI]]) =>
-                   mainRes -> new ErrorHandlingMap(varMap, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
-            }
-
-            ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIrisErrorHandlingMap, { key => throw GravsearchException(s"main resource not found: $key") }))
+            ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key => throw GravsearchException(s"main resource not found: $key") }))
         }
 
         /**
