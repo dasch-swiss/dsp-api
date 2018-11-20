@@ -2864,14 +2864,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
           */
-        case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: ErrorHandlingMap[IRI, Set[IRI]])
+        case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: Map[IRI, Set[IRI]])
 
         /**
           * Represents value object variables and value object Iris organized by main resource.
           *
           * @param valueObjectVariblesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
           */
-        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: ErrorHandlingMap[IRI, ErrorHandlingMap[QueryVariable, Set[IRI]]])
+        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
 
 
         for {
