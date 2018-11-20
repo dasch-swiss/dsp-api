@@ -55,8 +55,8 @@ external schemas, in either direction:
 
 @@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraContentV2 }
 
-Since read wrappers are used only for output, they only need to be able convert
-themselves from the internal schema to an external schema. Each read wrapper class
+Since read wrappers are used only for output, they need to be able convert
+themselves only from the internal schema to an external schema. Each read wrapper class
 should extend `KnoraReadV2`, and thus have a method for doing this:
 
 @@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }

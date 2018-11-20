@@ -45,7 +45,7 @@ import scala.concurrent.Future
   * The API v2 ontology responder reads ontologies from two sources:
   *
   * - The triplestore.
-  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraApiV2Simple]] and [[KnoraApiV2WithValueObjects]].
+  * - The constant knora-api v2 ontologies that are defined in Scala rather than in the triplestore, [[KnoraApiV2SimpleTransformationRules]] and [[KnoraApiV2WithValueObjectsTransformationRules]].
   *
   * It maintains an in-memory cache of all ontology data. This cache can be refreshed by sending a [[LoadOntologiesRequestV2]].
   *
@@ -1091,7 +1091,7 @@ class OntologyResponderV2 extends Responder {
             classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, classIri) =>
                     // Is this class IRI hard-coded in the requested schema?
-                    if (KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.contains(classIri) || KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.contains(classIri)) {
+                    if (KnoraApiV2SimpleTransformationRules.knoraApiClassesToAdd.contains(classIri) || KnoraApiV2WithValueObjectsTransformationRules.knoraApiClassesToAdd.contains(classIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1099,11 +1099,7 @@ class OntologyResponderV2 extends Responder {
                         classIri.getOntologySchema.get match {
                             case apiV2Schema: ApiV2Schema =>
                                 val internalClassIri = classIri.toOntologySchema(InternalSchema)
-
-                                val knoraBaseClassesToRemove = apiV2Schema match {
-                                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove
-                                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove
-                                }
+                                val knoraBaseClassesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBaseClassesToRemove
 
                                 if (knoraBaseClassesToRemove.contains(internalClassIri)) {
                                     // Yes. Include it in the set of unavailable classes.
@@ -1121,7 +1117,7 @@ class OntologyResponderV2 extends Responder {
             propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
                 case (acc, propertyIri) =>
                     // Is this property IRI hard-coded in the requested schema?
-                    if (KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.contains(propertyIri) || KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.contains(propertyIri)) {
+                    if (KnoraApiV2SimpleTransformationRules.knoraApiPropertiesToAdd.contains(propertyIri) || KnoraApiV2WithValueObjectsTransformationRules.knoraApiPropertiesToAdd.contains(propertyIri)) {
                         // Yes, so it's available.
                         acc
                     } else {
@@ -1129,11 +1125,7 @@ class OntologyResponderV2 extends Responder {
                         propertyIri.getOntologySchema.get match {
                             case apiV2Schema: ApiV2Schema =>
                                 val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
-
-                                val knoraBasePropertiesToRemove = apiV2Schema match {
-                                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
-                                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
-                                }
+                                val knoraBasePropertiesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBasePropertiesToRemove
 
                                 if (knoraBasePropertiesToRemove.contains(internalPropertyIri)) {
                                     // Yes. Include it in the set of unavailable properties.
@@ -1156,11 +1148,11 @@ class OntologyResponderV2 extends Responder {
 
             // See if any of the requested entities are hard-coded for knora-api.
 
-            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris) ++
-                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd.filterKeys(classIris)
+            hardCodedKnoraApiClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraApiV2SimpleTransformationRules.knoraApiClassesToAdd.filterKeys(classIris) ++
+                KnoraApiV2WithValueObjectsTransformationRules.knoraApiClassesToAdd.filterKeys(classIris)
 
-            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris) ++
-                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd.filterKeys(propertyIris)
+            hardCodedKnoraApiPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraApiV2SimpleTransformationRules.knoraApiPropertiesToAdd.filterKeys(propertyIris) ++
+                KnoraApiV2WithValueObjectsTransformationRules.knoraApiPropertiesToAdd.filterKeys(propertyIris)
 
             // Convert the remaining external entity IRIs to internal ones.
 

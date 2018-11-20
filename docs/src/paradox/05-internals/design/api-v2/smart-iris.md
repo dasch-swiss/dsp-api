@@ -73,7 +73,7 @@ received from a client request, it is better just to validate it using
 
 The smart IRI implementation, `SmartIriImpl`, is nested in the
 `StringFormatter` class, because it uses Knora's
-hostname, which isn't available until the Akka ActorSystem has started.
+hostname, which isn't available until the Akka `ActorSystem` has started.
 However, this means that the Scala type of a `SmartIriImpl` instance is
 dependent on the instance of `StringFormatter` that constructed it.
 Therefore, instances of `SmartIriImpl` created by different instances of
@@ -88,7 +88,8 @@ There are in fact two instances of `StringFormatter`:
   Knora API server.
 - one returned by `StringFormatter.getInstanceForConstantOntologies`,
   which is available before Akka has started, and is used only by the
-  hard-coded constant `knora-api` ontologies.
+  hard-coded constant `knora-api` ontologies (see
+  @ref:[Generation of Ontologies in External Schemas](ontology-schemas.md#generation-of-ontologies-in-external-schemas)).
 
 This is the reason for the existence of the `SmartIri` trait, which is a
 top-level definition and has its own `equals` and `hashCode` methods.
