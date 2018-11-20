@@ -34,11 +34,11 @@ has been partly implemented, but is not currently supported.
 
 ### Can a project use classes or properties defined in another project's ontology?
 
-Knora does not allow this to be done with ordinary user-created ontologies.
+Knora does not allow this to be done with project-specific ontologies.
 Each project must be free to change its own ontologies, but this is not possible
 if they have been used in ontologies or data created by other projects.
 
-An ontology can be defined as shared, meaning that it can be used by multiple
+A user-created ontology can be defined as shared, meaning that it can be used by multiple
 projects, and that its creators promise not to change it in ways that could
 affect other ontologies or data that are based on it. See
 @ref:[Shared Ontologies](03-apis/api-v2/knora-iris.md#shared-ontologies) for details.
