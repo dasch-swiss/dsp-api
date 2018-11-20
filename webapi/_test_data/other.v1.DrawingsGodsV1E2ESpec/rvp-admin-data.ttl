@@ -19,6 +19,7 @@
 
 ### parole-religieuse user
 <http://rdfh.ch/users/parole-religieuse-test-user1> a knora-base:User ;
+        knora-base:username "parole"^^xsd:string ;
         knora-base:email "parole@unil.ch"^^xsd:string ;
         knora-base:givenName "parole"^^xsd:string ;
         knora-base:familyName "parole"^^xsd:string ;
