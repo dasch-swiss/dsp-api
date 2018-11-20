@@ -2552,7 +2552,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param prequeryResponse the results returned by the prequery.
           * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
           * @param mainResourceVar  the variable representing the main resource.
-          * @return A Map of main resource Iris to a Set of Iris representing dependent resources.
+          * @return a [[DependentResourcesPerMainResource]].
           */
         def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
                                                     transformer: NonTriplestoreSpecificConstructToSelectTransformer,
@@ -2605,16 +2605,16 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @param prequeryResponse the results returned by the prequery.
           * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
           * @param mainResourceVar  the variable representing the main resource.
-          * @return A Map of main resource Iris to a Map of value variables to value object Iris.
+          * @return [[ValueObjectVariablesAndValueObjectIris]].
           */
         def getValueObjectVarsAndIrisPerMainResource(prequeryResponse: SparqlSelectResponse,
                                                      transformer: NonTriplestoreSpecificConstructToSelectTransformer,
-                                                     mainResourceVar: QueryVariable): Map[IRI, Map[QueryVariable, Set[IRI]]] = {
+                                                     mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
 
             // value objects variables present in the prequery's WHERE clause
             val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
 
-            prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+            val valueObjVarsAndIris = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
                 (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
 
                     // the main resource's Iri
@@ -2645,8 +2645,11 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             valueObjVarConcat -> valueObjIris
                     }.toMap
 
+                    // val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
                     acc + (mainResIri -> valueObjVarToIris)
             }
+
+            ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key => throw GravsearchException(s"main resource not found: $key") }))
         }
 
         /**
@@ -2661,7 +2664,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         def getMainQueryResultsWithFullGraphPattern(mainQueryResponse: SparqlConstructResponse,
                                                     dependentResourceIrisPerMainResource: DependentResourcesPerMainResource,
-                                                    valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]]): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
+                                                    valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris): Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = {
 
             // separate main resources and value objects (dependent resources are nested)
             // this method removes resources and values the requesting users has insufficient permissions on (missing view permissions).
@@ -2677,7 +2680,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // println(expectedDependentResources)
 
                     // check for presence of value objects: valueObjectIrisPerMainResource
-                    val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource(mainResIri).values.flatten.toSet
+                    val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris(mainResIri).values.flatten.toSet
 
                     // value property assertions for the current main resource
                     val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
@@ -2733,7 +2736,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           * @return results with only the values the user asked for in the input query's CONSTRUCT clause.
           */
         def getRequestedValuesFromResultsWithFullGraphPattern(queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData],
-                                          valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]],
+                                          valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris,
                                           allResourceVariablesFromTypeInspection: Set[QueryVariable],
                                           dependentResourceIrisFromTypeInspection: Set[IRI],
                                           transformer: NonTriplestoreSpecificConstructToSelectTransformer,
@@ -2772,7 +2775,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 mainResIri =>
 
                     // get all value object variables and Iris for the current main resource
-                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource(mainResIri)
+                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris(mainResIri)
 
                     // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
                     val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
@@ -2859,6 +2862,13 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: ErrorHandlingMap[IRI, Set[IRI]])
 
+        /**
+          * Represents value object variables and value object Iris organized by main resource.
+          *
+          * @param valueObjectVariblesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
+          */
+        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: ErrorHandlingMap[IRI, Map[QueryVariable, Set[IRI]]])
+
 
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
@@ -2941,10 +2951,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // for each main resource, create a Map of value object variables and their Iris
-                val valueObjectVarsAndIrisPerMainResource: Map[IRI, Map[QueryVariable, Set[IRI]]] = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
-                val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.values.foldLeft(Set.empty[IRI]) {
+                val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
                     case (acc: Set[IRI], valObjIrisForQueryVar: Map[QueryVariable, Set[IRI]]) =>
                         acc ++ valObjIrisForQueryVar.values.flatten.toSet
                 }
