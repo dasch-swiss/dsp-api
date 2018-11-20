@@ -91,15 +91,17 @@ document is returned to the client. The function `JsonLDUtil.makeContext`
 is a convenient way to construct the JSON-LD context.
 
 Since `toJsonLDDocument` has to return an object that uses the specified
-ontology schema, the recommended design is to separate IRI schema conversion from
-JSON-LD generation. To handle IRI schema conversion, the response message can implement
-`KnoraReadV2`:
+ontology schema, the recommended design is to separate schema conversion as much
+as possible from JSON-LD generation. As a first step, schema conversion (or at the very
+least, the conversion of Knora type IRIs to the target schema) can be done via an
+implementation of `KnoraReadV2`:
 
 @@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }
 
 This means that the response message class has the method `toOntologySchema`, which returns
-a copy of the same message, with IRIs adjusted for the target schema (by calling
-`SmartIri.toOntologySchema` on each `SmartIri` instance).
+a copy of the same message, with Knora type IRIs (and perhaps other content) adjusted
+for the target schema. (See @ref:[Smart IRIs](smart-iris.md) on how to convert Knora
+type IRIs to the target schema.)
 
 The response message class could then have a private method called `generateJsonLD`, which
 generates a `JsonLDDocument` that has the correct structure for the target schema, like
@@ -130,7 +132,7 @@ If the route only supports one schema, it can specify the schema directly instea
 
 ## Generating Other RDF Formats
 
-`RouteUtilV2.runRdfRoute` implements
+`RouteUtilV2.runRdfRouteWithFuture` implements
 @extref[HTTP content negotiation](rfc:7231#section-5.3.2), and converts JSON-LD
 responses into [Turtle](https://www.w3.org/TR/turtle/)
 or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/) as appropriate.
