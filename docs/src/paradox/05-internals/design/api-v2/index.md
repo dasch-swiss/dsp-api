@@ -26,5 +26,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [API v2 Design Overview](overview.md)
 - [Smart IRIs](smart-iris.md)
 - [JSON-LD Parsing and Formatting](json-ld.md)
+- [Content Wrappers](content-wrappers.md)
 
 @@@

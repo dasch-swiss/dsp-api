@@ -63,6 +63,7 @@ case class SuccessResponseV2(message: String) extends KnoraResponseV2 {
     }
 }
 
+// #KnoraContentV2
 /**
   * A trait for content classes that can convert themselves between internal and internal schemas.
   *
@@ -72,6 +73,7 @@ trait KnoraContentV2[C <: KnoraContentV2[C]] {
     this: C =>
     def toOntologySchema(targetSchema: OntologySchema): C
 }
+// #KnoraContentV2
 
 // #KnoraReadV2
 /**

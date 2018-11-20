@@ -95,7 +95,7 @@ ontology schema, the recommended design is to separate IRI schema conversion fro
 JSON-LD generation. To handle IRI schema conversion, the response message can implement
 `KnoraReadV2`:
 
-@@snip [KnoraReadV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }
+@@snip [KnoraResponseV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraResponseV2.scala) { #KnoraReadV2 }
 
 This means that the response message class has the method `toOntologySchema`, which returns
 a copy of the same message, with IRIs adjusted for the target schema (by calling
