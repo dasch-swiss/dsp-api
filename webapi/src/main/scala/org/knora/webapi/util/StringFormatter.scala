@@ -701,7 +701,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         """^(\p{L}+)=(.+)$""".r
 
     // A regex for matching a string containing an email address.
-    private val EmailAddressRegex: Regex = ("""^.*@.*$""").r
+    private val EmailAddressRegex: Regex = """^.+@.+$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
