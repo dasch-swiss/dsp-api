@@ -57,9 +57,9 @@ write prefixed names for IRIs:
 
 ![Figure 3](introduction-fig3.dot.png "Figure 3")
 
-## Built-in Ontologies and Project-specific Ontologies
+## Built-in Ontologies and User-Created Ontologies
 
 To ensure the interoperability of data produced by different projects,
 each project must describe its data model by creating ontologies that
-extend Knora\'s built-in ontologies. The main built-in ontology in Knora
+extend Knora's built-in ontologies. The main built-in ontology in Knora
 is @ref:[knora-base](knora-base.md).

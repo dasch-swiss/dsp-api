@@ -28,5 +28,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Smart IRIs](smart-iris.md)
 - [Content Wrappers](content-wrappers.md)
 - [JSON-LD Parsing and Formatting](json-ld.md)
+- [Ontology Management](ontology-management.md)
 
 @@@

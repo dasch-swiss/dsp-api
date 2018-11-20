@@ -34,7 +34,7 @@ has been partly implemented, but is not currently supported.
 
 ### Can a project use classes or properties defined in another project's ontology?
 
-Knora does not allow this to be done with ordinary project-specific ontologies.
+Knora does not allow this to be done with ordinary user-created ontologies.
 Each project must be free to change its own ontologies, but this is not possible
 if they have been used in ontologies or data created by other projects.
 
@@ -93,7 +93,7 @@ checks, if the obstacles to its adoption can be overcome
 For further discussion of these issues, see
 [SHACL and OWL Compared](http://spinrdf.org/shacl-and-owl.html).
 
-### Can a project-specific property be an `owl:TransitiveProperty`?
+### Can a user-created property be an `owl:TransitiveProperty`?
 
 No, because in Knora, a resource controls its properties. This basic
 assumption is what allows Knora to enforce permissions and transaction

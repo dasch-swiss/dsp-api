@@ -33,7 +33,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 The ontology responder provides information derived from all the
 ontologies in the repository, including Knora ontologies as well as
-project-specific ontologies. Most importantly, it provides information
+user-created ontologies. Most importantly, it provides information
 about resource classes and properties. This includes the cardinalities
 defined on each resource class, and takes into account the rules of
 cardinality inheritance, as described in the section **OWL

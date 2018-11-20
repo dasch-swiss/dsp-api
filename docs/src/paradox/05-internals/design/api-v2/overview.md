@@ -56,7 +56,7 @@ server has to do per request:
 
 ### Support for Different Types of Clients
 
-- By default, RDF data is represented by in [JSON-LD](https://json-ld.org/),
+- By default, RDF data is represented in [JSON-LD](https://json-ld.org/),
   using meaningful prefixes to shorten IRIs. This is intended to facilitate
   two use cases:
   1. A simple web site that is designed to use data from a specific project
@@ -101,5 +101,5 @@ problems. It provides:
 Writing ontologies by hand to conform to
 @ref:[the Knora base ontology](../../../02-knora-ontologies/knora-base.md) can
 be a complex task. Knora API v2 therefore supports
-@ref:[the creation and editing of ontologies](../../../03-apis/api-v2/ontology-information.md),
+@ref:[the creation and editing of ontologies](../../../03-apis/api-v2/ontology-information.md#ontology-updates),
 while ensuring that these ontologies meet Knora's requirements.

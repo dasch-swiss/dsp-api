@@ -60,10 +60,10 @@ Each of these rule objects implements this trait:
 
 @@snip [KnoraBaseTransformationRules.scala]($src$/org/knora/webapi/messages/v2/responder/ontologymessages/KnoraBaseTransformationRules.scala) { #KnoraBaseTransformationRules }
 
-These rules are applied to `knora-base` as well as to project-specific ontologies.
+These rules are applied to `knora-base` as well as to user-created ontologies.
 For example, `knora-base:Resource` has different cardinalities depending on its
 schema (`knora-api:Resource` has an additional cardinality on `knora-api:hasIncomingLink`),
-and this is therefore also true of its project-specific subclasses. The transformation
+and this is therefore also true of its user-created subclasses. The transformation
 is implemented:
 
 - In the implementations of the `toOntologySchema` method in classes defined in
