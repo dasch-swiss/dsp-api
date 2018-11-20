@@ -2680,7 +2680,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                     // println(expectedDependentResources)
 
                     // check for presence of value objects: valueObjectIrisPerMainResource
-                    val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris(mainResIri).values.flatten.toSet
+                    val expectedValueObjects: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri).values.flatten.toSet
 
                     // value property assertions for the current main resource
                     val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
@@ -2775,7 +2775,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 mainResIri =>
 
                     // get all value object variables and Iris for the current main resource
-                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris(mainResIri)
+                    val valueObjIrisForRes: Map[QueryVariable, Set[IRI]] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris(mainResIri)
 
                     // get those value object Iris from the results that the user asked for in the input query's CONSTRUCT clause
                     val valObjIrisRequestedForRes: Set[IRI] = allRequestedValueObjectVariables.flatMap {
@@ -2865,9 +2865,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
         /**
           * Represents value object variables and value object Iris organized by main resource.
           *
-          * @param valueObjectVariblesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
+          * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
           */
-        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
+        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
 
 
         for {
@@ -2954,7 +2954,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
-                val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariblesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
+                val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
                     case (acc: Set[IRI], valObjIrisForQueryVar: Map[QueryVariable, Set[IRI]]) =>
                         acc ++ valObjIrisForQueryVar.values.flatten.toSet
                 }
