@@ -2614,7 +2614,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // value objects variables present in the prequery's WHERE clause
             val valueObjectVariablesConcat = transformer.getValueObjectVarsGroupConcat
 
-            val valueObjVarsAndIris = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
+            val valueObjVarsAndIris: Map[IRI, Map[QueryVariable, Set[IRI]]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Map[QueryVariable, Set[IRI]]]) {
                 (acc: Map[IRI, Map[QueryVariable, Set[IRI]]], resultRow: VariableResultsRow) =>
 
                     // the main resource's Iri
@@ -2645,11 +2645,15 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                             valueObjVarConcat -> valueObjIris
                     }.toMap
 
-                    // val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
                     acc + (mainResIri -> valueObjVarToIris)
             }
 
-            ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key => throw GravsearchException(s"main resource not found: $key") }))
+            val valueObjVarsAndIrisErrorHandlingMap: Map[IRI, ErrorHandlingMap[QueryVariable, Set[IRI]]] = valueObjVarsAndIris.map {
+                case (mainRes: IRI, varMap: Map[QueryVariable, Set[IRI]]) =>
+                   mainRes -> new ErrorHandlingMap(varMap, { key: QueryVariable => throw GravsearchException(s"variable not found: $key") })
+            }
+
+            ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIrisErrorHandlingMap, { key => throw GravsearchException(s"main resource not found: $key") }))
         }
 
         /**
@@ -2867,7 +2871,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           *
           * @param valueObjectVariblesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
           */
-        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: ErrorHandlingMap[IRI, Map[QueryVariable, Set[IRI]]])
+        case class ValueObjectVariablesAndValueObjectIris(valueObjectVariblesAndValueObjectIris: ErrorHandlingMap[IRI, ErrorHandlingMap[QueryVariable, Set[IRI]]])
 
 
         for {
