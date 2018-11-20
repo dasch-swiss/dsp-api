@@ -26,12 +26,12 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
-import org.knora.webapi.responders.v2.SearchResponderV2Constants.GravsearchConstants
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
 import org.knora.webapi.util.search.gravsearch._
 
 import scala.collection.mutable
@@ -43,98 +43,6 @@ import scala.concurrent.Future
 object SearchResponderV2Constants {
 
     val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
-
-    /**
-      * Constants for fulltext query.
-      *
-      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-      */
-    object FullTextSearchConstants {
-
-        // SPARQL variable representing the concatenated IRIs of value objects matching the search criteria
-        val valueObjectConcatVar: QueryVariable = QueryVariable("valueObjectConcat")
-
-        // SPARQL variable representing the resources matching the search criteria
-        val resourceVar: QueryVariable = QueryVariable("resource")
-
-        // SPARQL variable representing the predicates of a resource
-        val resourcePropVar: QueryVariable = QueryVariable("resourceProp")
-
-        // SPARQL variable representing the objects of a resource
-        val resourceObjectVar: QueryVariable = QueryVariable("resourceObj")
-
-        // SPARQL variable representing the property pointing to a value object from a resource
-        val resourceValueProp: QueryVariable = QueryVariable("resourceValueProp")
-
-        // SPARQL variable representing the value objects of a resource
-        val resourceValueObject: QueryVariable = QueryVariable("resourceValueObject")
-
-        // SPARQL variable representing the predicates of a value object
-        val resourceValueObjectProp: QueryVariable = QueryVariable("resourceValueObjectProp")
-
-        // SPARQL variable representing the objects of a value object
-        val resourceValueObjectObj: QueryVariable = QueryVariable("resourceValueObjectObj")
-
-        // SPARQL variable representing the standoff nodes of a (text) value object
-        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-
-        // SPARQL variable representing the predicates of a standoff node of a (text) value object
-        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-
-        // SPARQL variable representing the objects of a standoff node of a (text) value object
-        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
-    }
-
-    /**
-      * Constants used in the processing of Gravsearch queries.
-      *
-      * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-      */
-    object GravsearchConstants {
-
-        // SPARQL variable representing the main resource and its properties
-        val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
-
-        // SPARQL variable representing main and dependent resources
-        val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
-
-        // SPARQL variable representing the predicates of the main and dependent resources
-        val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
-
-        // SPARQL variable representing the objects of the main and dependent resources
-        val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
-
-        // SPARQL variable representing the value objects of the main and dependent resources
-        val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
-
-        // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
-        val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
-
-        // SPARQL variable representing the predicates of value objects of the main and dependent resources
-        val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectProp")
-
-        // SPARQL variable representing the objects of value objects of the main and dependent resources
-        val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
-
-        // SPARQL variable representing the standoff nodes of a (text) value object
-        val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-
-        // SPARQL variable representing the predicates of a standoff node of a (text) value object
-        val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-
-        // SPARQL variable representing the objects of a standoff node of a (text) value object
-        val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
-
-        // SPARQL variable representing a list node pointed to by a (list) value object
-        val listNode: QueryVariable = QueryVariable("listNode")
-
-        // SPARQL variable representing the label of a list node pointed to by a (list) value object
-        val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
-
-        // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-        val dateTypes = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
-    }
-
 }
 
 class SearchResponderV2 extends ResponderWithStandoffV2 {
@@ -1766,7 +1674,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       */
     private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
-        import SearchResponderV2Constants.FullTextSearchConstants._
+        import org.knora.webapi.util.search.gravsearch.GravsearchUtilV2.FulltextSearch.FullTextSearchConstants._
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
@@ -2436,7 +2344,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
           */
         def createMainQuery(mainResourceIris: Set[IriRef], dependentResourceIris: Set[IriRef], valueObjectIris: Set[IRI]): ConstructQuery = {
 
-            import SearchResponderV2Constants.GravsearchConstants._
+            import GravsearchConstants._
 
             // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
             val wherePatternsForMainResource = Seq(
