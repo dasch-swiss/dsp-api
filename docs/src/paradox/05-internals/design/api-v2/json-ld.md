@@ -47,13 +47,13 @@ sent to the Knora responder that will handle the request.
 This is done in a `Future`, because the processing of JSON-LD input
 could in itself involve sending messages to responders.
 
-Each request message class (in this case `CreateValueRequestV2`) has a companion object
+Each request message case class (in this case `CreateValueRequestV2`) has a companion object
 that implements the `KnoraJsonLDRequestReaderV2` trait:
 
 @@snip [KnoraRequestV2.scala]($src$/org/knora/webapi/messages/v2/responder/KnoraRequestV2.scala) { #KnoraJsonLDRequestReaderV2 }
 
 This means that the companion object has a method `fromJsonLD` that takes a
-`JsonLDDocument` and returns an instance of the companion object. The `fromJsonLD` method
+`JsonLDDocument` and returns an instance of the case class. The `fromJsonLD` method
 can use the functionality of the `JsonLDDocument` data structure for extracting
 and validating the content of the request. For example, `JsonLDObject.requireStringWithValidation`
 gets a required member of a JSON-LD object, and validates it using a function
