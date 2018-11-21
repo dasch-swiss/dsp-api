@@ -3821,9 +3821,15 @@
     "@id" : "knora-api:User",
     "@type" : "owl:Class",
     "rdfs:comment" : "Represents a Knora user",
-    "rdfs:subClassOf" : {
+    "rdfs:subClassOf" : [ {
       "@id" : "http://xmlns.com/foaf/0.1/Person"
-    }
+    }, {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:username"
+      }
+    } ]
   }, {
     "@id" : "knora-api:Value",
     "@type" : "owl:Class",
@@ -5257,6 +5263,16 @@
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:valueHas"
     }
+  }, {
+    "@id" : "knora-api:username",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:User"
+    },
+    "rdfs:comment" : "The username and login name of a user of Knora"
   }, {
     "@id" : "knora-api:valueAsString",
     "@type" : "owl:ObjectProperty",

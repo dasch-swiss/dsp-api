@@ -26,7 +26,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
@@ -269,7 +269,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(maybeIri = Some(userIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten
@@ -322,7 +322,7 @@ class ProjectsResponderADM extends Responder {
             }
 
             maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map {
-                userIri => (responderManager ? UserGetADM(maybeIri = Some(userIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                userIri => (responderManager ? UserGetADM(identifier = UserIdentifierADM(userIri), userInformationTypeADM = UserInformationTypeADM.RESTRICTED, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
             }
             maybeUsers: Seq[Option[UserADM]] <- Future.sequence(maybeUserFutures)
             users: Seq[UserADM] = maybeUsers.flatten

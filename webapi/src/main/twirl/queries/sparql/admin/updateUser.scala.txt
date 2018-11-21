@@ -27,6 +27,7 @@
  * @param triplestore        the name of the triplestore being used. The template uses this value to exclude inferred
                              results from the WHERE clause of the update.
  * @param userIri            the IRI of the user we want to update.
+ * @param maybeUsername      the new optional value for username.
  * @param maybeEmail         the new optional value for email.
  * @param maybeGivenName     the new optional value for given name.
  * @param maybeFamilyName    the new optional value for family name.
@@ -41,6 +42,7 @@
 @(adminNamedGraphIri: IRI,
   triplestore: String,
   userIri: IRI,
+  maybeUsername: Option[String],
   maybeEmail: Option[String],
   maybeGivenName: Option[String],
   maybeFamilyName: Option[String],
@@ -61,6 +63,10 @@ WITH <@adminNamedGraphIri>
 DELETE {
 
     @* Delete current values, for which we have a new one. *@
+
+    @if(maybeUsername.nonEmpty) {
+        ?user knora-base:username ?currentUsername .
+    }
 
     @if(maybeEmail.nonEmpty) {
         ?user knora-base:email ?currentEmail .
@@ -105,6 +111,10 @@ DELETE {
 } INSERT {
 
     @* Add the new values. *@
+
+    @if(maybeUsername.nonEmpty) {
+        ?user knora-base:username "@maybeUsername.get"^^xsd:string .
+    }
 
     @if(maybeEmail.nonEmpty) {
         ?user knora-base:email "@maybeEmail.get"^^xsd:string .
@@ -174,6 +184,8 @@ WHERE {
     BIND(IRI("@userIri") AS ?user)
 
     @* Get all current defined values. *@
+
+    ?user knora-base:username ?currentUsername .
 
     ?user knora-base:email ?currentEmail .
 
