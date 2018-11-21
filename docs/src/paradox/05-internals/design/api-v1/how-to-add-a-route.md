@@ -47,10 +47,10 @@ Write an Akka actor class that extends `ResponderV1`, and add it to the
 Give your responder a `receive()` method that handles each of your
 request message types by generating a `Future` containing a response
 message, and passing the `Future` to `ActorUtils.futureToMessage()`. See
-@ref:[Futures with Akka](futures-with-akka.md) and
-@ref:[Error Handling](design-overview.md#error-handling) for details.
+@ref:[Futures with Akka](../principles/futures-with-akka.md) and
+@ref:[Error Handling](../principles/design-overview.md#error-handling) for details.
 
-See @ref:[Triplestore Access](design-overview.md#triplestore-access) for details of how
+See @ref:[Triplestore Access](../principles/design-overview.md#triplestore-access) for details of how
 to access the triplestore in your responder.
 
 Add an actor pool for your responder to `application.conf`, under

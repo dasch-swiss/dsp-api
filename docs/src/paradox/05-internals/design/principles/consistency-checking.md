@@ -42,7 +42,7 @@ two reasons:
     triplestore, bypassing Knora.
 
 The design of the `knora-base` ontology supports two ways of specifying
-constraints on data (see @ref:[knora-base: Consistency Checking](../../02-knora-ontologies/knora-base.md#consistency-checking)
+constraints on data (see @ref:[knora-base: Consistency Checking](../../../02-knora-ontologies/knora-base.md#consistency-checking)
 for details):
 
 1.  A property definition should specify the types that are allowed as

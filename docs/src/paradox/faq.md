@@ -124,6 +124,6 @@ of the link, its creation date, its permissions, and so on
 Finally, if an update to one resource could modify another
 resource, this would violate Knora's model of transaction integrity, in which
 each transaction can modify only one resource
-(see @ref:[Application-level Locking](05-internals/design/triplestore-updates.md#application-level-locking)). Knora
+(see @ref:[Application-level Locking](05-internals/design/principles/triplestore-updates.md#application-level-locking)). Knora
 would then be unable to ensure that concurrent transactions do not
 interfere with each other.

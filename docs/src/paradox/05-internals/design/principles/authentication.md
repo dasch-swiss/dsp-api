@@ -27,7 +27,7 @@ Authentication is the process of making sure that if someone is
 accessing something then this someone is actually also the someone he
 pretends to be. The process of making sure that someone is authorized,
 i.e. has the permission to access something, is handled as described in
-@ref:[Authorisation](../../02-knora-ontologies/knora-base.md#authorisation)).
+@ref:[Authorisation](../../../02-knora-ontologies/knora-base.md#authorisation)).
 
 ## Implementation
 

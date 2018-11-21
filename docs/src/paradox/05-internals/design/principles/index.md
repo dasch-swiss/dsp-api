@@ -17,15 +17,19 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Design
+# Knora Design Principles
 
 @@toc { depth=1 }
 
 @@@ index
 
-- [Knora Design Principles](principles/index.md)
-- [API v1 Design](api-v1/index.md)
-- [API v2 Design](api-v2/index.md)
-- [Admin API Design](api-admin/index.md)
+- [Design Overview](design-overview.md)
+- [Futures with Akka](futures-with-akka.md)
+- [HTTP Module](http-module.md)
+- [Store Module](store-module.md)
+- [Shared Packages](shared-packages.md)
+- [Triplestore Updates](triplestore-updates.md)
+- [Consistency Checking](consistency-checking.md)
+- [Authentication](authentication.md)
 
 @@@

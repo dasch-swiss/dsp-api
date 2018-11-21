@@ -137,7 +137,7 @@ To coordinate necessary startup tasks, the application goes through a few states
   - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
   - Running: Running state. All APIs are open.
 
-                                                
+
 
 ## Concurrency
 
@@ -335,31 +335,3 @@ of sending the message to `ResponderManagerV1` and returning a response
 to the client. Any exceptions thrown befor calling
 `org.knora.webapi.routing.RouteUtils.runJsonRoute()` are handled by the
 `KnoraExceptionHandler`.
-
-See @ref:[How to Add an API Route](how-to-add-a-route.md) for an example.
-
-## JSON
-
-Knora parses and generates JSON using the
-[spray-json](https://github.com/spray/spray-json) library.
-
-The triplestore returns results in JSON, and these are parsed into
-`SparqlSelectResponse` objects in the `store` package (by `SparqlUtils`,
-which can be used by any actor in that package). A
-`SparqlSelectResponse` has a structure that's very close to the JSON
-returned by a triplestore via the [SPARQL 1.1
-Protocol](http://www.w3.org/TR/sparql11-protocol/): it contains a header
-(listing the variables that were used in the query) and a body
-(containing rows of query results). Each row of query results is
-represented by a `VariableResultsRow`, which contains a `Map[String,
-String]` of variable names to values.
-
-The `Jsonable` trait marks classes that can convert themselves into
-spray-json AST objects when you call their `toJsValue` method; it
-returns a `JsValue` object, which can then be converted to text by
-calling its `prettyPrint` or `compactPrint` methods. Case classes
-representing complete API responses extend the `KnoraResponseV1` trait,
-which extends `Jsonable`. Case classes representing Knora values extend
-the `ApiValueV1` trait, which also extends `Jsonable`. To make the
-responders reusable, the JSON for API responses is generated only at the
-last moment, by the `RouteUtils.runJsonRoute()` function.

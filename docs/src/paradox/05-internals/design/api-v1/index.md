@@ -17,15 +17,13 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Design
+# Knora API v1 Design
 
 @@toc { depth=1 }
 
 @@@ index
 
-- [Knora Design Principles](principles/index.md)
-- [API v1 Design](api-v1/index.md)
-- [API v2 Design](api-v2/index.md)
-- [Admin API Design](api-admin/index.md)
+- [JSON in API v1](json.md)
+- [How to Add an API v1 Route](how-to-add-a-route.md)
 
 @@@
