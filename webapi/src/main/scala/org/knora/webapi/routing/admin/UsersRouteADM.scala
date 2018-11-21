@@ -49,7 +49,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
     val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(
@@ -105,38 +105,30 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
         }
     }
 
-    @Path("/{IRI}")
-    @ApiOperation(value = "Return a single user identified by IRI or Email", notes = "", nickname = "getUser", httpMethod = "GET")
+    @Path("/{USER_IDENTIFIER}")
+    @ApiOperation(value = "Return a single user identified by IRI, Username, or Email", notes = "", nickname = "getUser", httpMethod = "GET")
     @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "name", value = "Name of person to greet", required = false, dataType = "string", paramType = "path")
+        new ApiImplicitParam(name = "USER_IDENTIFIER", value = "The users IRI, Username, or Email", required = true, dataType = "string", paramType = "path")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 200, message = "Return User", response = classOf[UserResponseADM]),
         new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* return a single user identified by iri or email */
+    /* return a single user identified by iri, username, or email */
     def getUser: Route = path("admin" / "users" / Segment) { value =>
         get {
-            parameters("identifier" ? "iri") { identifier: String =>
-                requestContext =>
-                    /* check if email or iri was supplied */
-                    val requestMessage: Future[UserGetRequestADM] = for {
-                        requestingUser <- getUserADM(requestContext)
-                    } yield if (identifier == "email") {
-                        UserGetRequestADM(maybeIri = None, maybeEmail = Some(value), UserInformationTypeADM.RESTRICTED, requestingUser)
-                    } else {
-                        val userIri = stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid user IRI $value"))
-                        UserGetRequestADM(maybeIri = Some(userIri), maybeEmail = None, UserInformationTypeADM.RESTRICTED, requestingUser)
-                    }
+            requestContext =>
+                val requestMessage: Future[UserGetRequestADM] = for {
+                    requestingUser <- getUserADM(requestContext)
+                } yield UserGetRequestADM(UserIdentifierADM(value = value), UserInformationTypeADM.RESTRICTED, requestingUser)
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessage,
-                        requestContext,
-                        settings,
-                        responderManager,
-                        log
-                    )
-            }
+                RouteUtilADM.runJsonRoute(
+                    requestMessage,
+                    requestContext,
+                    settings,
+                    responderManager,
+                    log
+                )
         }
     }
 
