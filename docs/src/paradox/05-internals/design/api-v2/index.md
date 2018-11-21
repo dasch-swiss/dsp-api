@@ -25,5 +25,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 - [API v2 Design Overview](overview.md)
 - [Knora and Sipi](sipi.md)
+- [Gravsearch](gravsearch.md)
 
 @@@
