@@ -2482,7 +2482,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             // check if key exists: the variable representing dependent resources
                             // could be contained in an OPTIONAL or a UNION and be unbound
-                            // It would be suppressed by `TriplestoreMessages` in that case.
+                            // It would be suppressed by `VariableResultsRow` in that case.
                             //
                             // Example: the query contains a dependent resource variable ?book within an OPTIONAL or a UNION.
                             // If the query returns results for the dependent resource ?book (Iris of resources that match the given criteria),
@@ -2534,7 +2534,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                             // check if key exists: the variable representing value objects
                             // could be contained in an OPTIONAL or a UNION and be unbound
-                            // It would be suppressed by `TriplestoreMessages` in that case.
+                            // It would be suppressed by `VariableResultsRow` in that case.
 
                             // this logic works like in the case of dependent resources, see `getDependentResourceIrisPerMainResource` above.
                             val valueObjIrisOption: Option[IRI] = resultRow.rowMap.get(valueObjVarConcat.variableName)
