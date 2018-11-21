@@ -113,6 +113,7 @@ trait KnoraService {
       */
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
+    // #supervisors
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
@@ -122,6 +123,7 @@ trait KnoraService {
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+    // #supervisors
 
     /**
       * Timeout definition
@@ -169,6 +171,7 @@ trait KnoraService {
         log
     ))
 
+    // #startService
     /**
       * Starts the Knora API server.
       */
@@ -195,6 +198,7 @@ trait KnoraService {
             }
         }
     }
+    // #startService
 
     /**
       * Stops Knora.

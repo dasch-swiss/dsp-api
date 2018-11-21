@@ -3349,6 +3349,7 @@ class OntologyResponderV2 extends Responder {
       * @param ignoreKnoraConstraints if true, ignores the use of the entity in Knora subject or object constraints.
       */
     private def isEntityUsed(entityIri: SmartIri, errorFun: => Nothing, ignoreKnoraConstraints: Boolean = false): Future[Unit] = {
+        // #sparql-select
         for {
             isEntityUsedSparql <- Future(queries.sparql.v2.txt.isEntityUsed(
                 triplestore = settings.triplestoreType,
@@ -3357,6 +3358,7 @@ class OntologyResponderV2 extends Responder {
             ).toString())
 
             isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
+            // #sparql-select
 
             _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
                 errorFun
