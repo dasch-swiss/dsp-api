@@ -72,5 +72,4 @@ class NonTriplestoreSpecificConstructToSelectTransformerCountQuery(typeInspectio
         // count queries do not consider offsets since there is only one result row
         0
     }
-
 }
