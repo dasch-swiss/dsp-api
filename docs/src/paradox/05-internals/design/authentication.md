@@ -101,35 +101,35 @@ valid.
 
 ### Login and Logout
 
-A client sends a POST request (e.g., `{"email":"usersemail",
+A client sends a POST request (e.g., `{"identifier":"usersemail",
 "password":"userspassword"}`) to the **/v2/authentication** route with
-*email* and *password* in the body. If the credentials are valid, a
-[JSON WEB Token](https://jwt.io) (JWT) will be sent back in the response
-(e.g., `{"token": "eyJ0eXAiOiJ..."}`). On all subsequent calls to any
-route, this token can be sent with each request (instead of
-*email*/*password*). If the token is successfully validated, then the
-user is deemed authenticated.
+*identifier* and *password* in the body. The identifier can be the user's IRI,
+username, or email. If the credentials are valid, a [JSON WEB Token](https://jwt.io) (JWT)
+will be sent back in the response (e.g., `{"token": "eyJ0eXAiOiJ..."}`).
+On all subsequent calls to any route, this token can be sent with each request (instead of
+*identifier*/*password*). If the token is successfully validated, then the user is deemed
+authenticated.
 
-To **logout** the client sends a DELETE request to the same route
-**/v2/authentication** and the token (either as an URL parameter or
-authorization header). This will invalidate the token.
+To **logout**, the client sends a DELETE request to the same route **/v2/authentication**
+and the token (either as an URL parameter or authorization header). This will invalidate
+the token.
 
 ### Submitting Credentials
 
-When accessing any route and *email*/*password* credentials would
+When accessing any route and *identifier*/*password* credentials would
 need to be sent, we support two options to do so:
 
-- in the URL submitting the parameters `email` and `password`
-  (e.g., <http://knora-host/v1/resources/resIri?email=userUrlEncodedEmail&password=pw>)
+- in the URL submitting the parameters `identifier` and `password`
+  (e.g., <http://knora-host/v1/resources/resIri?identifier=userUrlEncodedEmail&password=pw>),
+  where the identifier can be the user's IRI, username, or email, and
 - in the HTTP header ([HTTP basic
-  authentication](https://en.wikipedia.org/wiki/Basic_access_authentication))
-  when doing a HTTP request to the API When using Python's module
-  `requests`, the credentials can simply be submitted as a tuple
-  with each request using the param `auth` ([python
-  requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).
+  authentication](https://en.wikipedia.org/wiki/Basic_access_authentication)), where the
+  identifier can be the user's username or email (IRI not supported).
 
-When accessing any route and the *token* would need to be sent, we
-support two options to do so:
+When using Python's module `requests`, the credentials can simply be submitted as a tuple with
+each request using the param `auth` ([python requests](http://docs.python-requests.org/en/master/user/authentication/#basic-authentication)).
+
+When accessing any route and the *token* would need to be sent, we support two options to do so:
 
 - in the URL submitting the parameter `token` (e.g.,
   <http://knora-host/v1/resources/resIri?token=1234567890>)
@@ -138,9 +138,8 @@ support two options to do so:
 
 ### Checking Credentials
 
-To check the credentials, there is a special route called
-**/v1/authenticate**, which can be used to check if the credentials are
-valid.
+To check the credentials, send a GET request to **/v2/authentication** with the credentials
+supplied as URL parameters or HTTP authentication headers as described before, .
 
 ### Usage Scenarios
 

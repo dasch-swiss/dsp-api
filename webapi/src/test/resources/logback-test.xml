@@ -92,7 +92,8 @@
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>
-    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="DEBUG"/>
+    <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
+    <logger name="org.knora.webapi.responders.admin.PermissionsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.OntologiesResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ProjectsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
@@ -116,6 +117,7 @@
     <logger name="org.knora.webapi.e2e.v2.AuthenticationV2E2ESpec" level="INFO"/>
 
     <!-- Admin -->
+    <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsAdminResponderSpec" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.UsersResponderADMSpec" level="INFO"/>
     <logger name="org.knora.webapi.e2e.HealthRouteE2ESpec" level="INFO"/>

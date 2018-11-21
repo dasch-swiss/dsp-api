@@ -532,3 +532,8 @@ knora-api:seqnum a owl:DatatypeProperty;
 knora-api:subjectType a rdf:Property;
   rdfs:comment "Specifies the required type of the subjects of a property";
   rdfs:label "Subject type" .
+
+knora-api:username a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:User;
+  rdfs:comment "The username and login name of a user of Knora" .

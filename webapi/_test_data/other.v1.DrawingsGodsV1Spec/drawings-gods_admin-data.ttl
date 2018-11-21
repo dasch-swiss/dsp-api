@@ -48,7 +48,7 @@
 
 
 <http://rdfh.ch/users/drawings-gods-test-ddd1> a knora-base:User ;
-        knora-base:userid "ddd1"^^xsd:string ;
+        knora-base:username "ddd1"^^xsd:string ;
         knora-base:givenName "ddd1"^^xsd:string ;
         knora-base:familyName "ddd1"^^xsd:string ;
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -60,7 +60,7 @@
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-test-ddd2> a knora-base:User ;
-        knora-base:userid "ddd2"^^xsd:string ;
+        knora-base:username "ddd2"^^xsd:string ;
         knora-base:givenName "ddd2"^^xsd:string ;
         knora-base:familyName "ddd2"^^xsd:string ;
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -73,7 +73,7 @@
 
 
 <http://rdfh.ch/users/drawings-gods-test-user-metaannotator> a knora-base:User ;
-        knora-base:userid "metaannotator"^^xsd:string ;
+        knora-base:username "metaannotator"^^xsd:string ;
         knora-base:givenName "metaannotator"^^xsd:string ;
         knora-base:familyName "metaannotator"^^xsd:string ;
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -85,7 +85,7 @@
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-user-adddrawings> a knora-base:User ;
-        knora-base:userid "adddrawings"^^xsd:string ;
+        knora-base:username "adddrawings"^^xsd:string ;
         knora-base:givenName "adddrawings"^^xsd:string ;
         knora-base:familyName "adddrawings"^^xsd:string ;
         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -97,7 +97,7 @@
         knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 #
 #<http://rdfh.ch/users/drawings-gods-user-projectmember> a knora-base:User ;
-#        knora-base:userid "projectmember"^^xsd:string ;
+#        knora-base:username "projectmember"^^xsd:string ;
 #        knora-base:givenName "projectmember"^^xsd:string ;
 #        knora-base:familyName "projectmember"^^xsd:string ;
 #        knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
