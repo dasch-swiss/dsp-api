@@ -191,6 +191,9 @@ Knora supports the storage of certain types of data as files, using
 Knora API v2 currently supports using Sipi to store image files. Support for
 other types of files will be added in the near future.
 
+Warning: image file values created by API v2 currently do not work with
+API v1 (@github[#1068](#1068)).
+
 The following sections describe the steps for creating a file value.
 
 ### Upload Files to Sipi
