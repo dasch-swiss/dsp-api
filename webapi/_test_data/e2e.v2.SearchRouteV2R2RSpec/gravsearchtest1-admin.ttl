@@ -18,7 +18,7 @@
 # --- Utilisateurs ---
 
 <http://rdfh.ch/users/0666-test-user1> a knora-base:User ;
-  knora-base:userid "test"^^xsd:string ;
+  knora-base:username "test"^^xsd:string ;
   knora-base:email "test@unil.ch"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
   knora-base:givenName "test"^^xsd:string ;

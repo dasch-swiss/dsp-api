@@ -23,7 +23,7 @@ import akka.actor.Status
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserResponseADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetRequestADM, UserIdentifierADM, UserResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
@@ -163,13 +163,16 @@ class ProjectsResponderV1 extends Responder {
 
             userADM: UserADM <- userProfile match {
                 case Some(profile) =>
-                    if (profile.isAnonymousUser) {
-                        FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
-                    } else {
-                        (responderManager ? UserGetRequestADM(
-                            maybeIri = profile.userData.user_id,
-                            maybeEmail = profile.userData.email,
-                            requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[UserResponseADM].map(_.user)
+                    profile.userData.user_id match {
+                        case Some(user_iri) => {
+                            (responderManager ? UserGetRequestADM(
+                                identifier = UserIdentifierADM(user_iri),
+                                requestingUser = KnoraSystemInstances.Users.SystemUser
+                            )).mapTo[UserResponseADM].map(_.user)
+                        }
+                        case None => {
+                            FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
+                        }
                     }
 
                 case None => FastFuture.successful(KnoraSystemInstances.Users.AnonymousUser)
