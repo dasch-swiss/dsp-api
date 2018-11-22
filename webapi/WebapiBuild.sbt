@@ -4,6 +4,7 @@ import sbt.io.IO
 import sbtassembly.MergeStrategy
 import sbtassembly.MergeStrategy._
 import sbt.librarymanagement.Resolver
+import com.typesafe.sbt.packager.docker._
 
 connectInput in run := true
 
@@ -106,35 +107,10 @@ lazy val webapi = (project in file(".")).
             IntegrationTest / packageBin / publishArtifact := true
         ).
         settings(
-//            // enabled deployment staging with `sbt stage`. uses fat jar assembly.
-//            // we specify the name for our fat jars (main, test, it)
-//            assembly / assemblyJarName := s"assembly-${name.value}-main-${version.value}.jar",
-//            Test / assembly / assemblyJarName := s"assembly-${name.value}-test-${version.value}.jar",
-//            IntegrationTest / assembly / assemblyJarName := s"assembly-${name.value}-it-${version.value}.jar",
-//
-//            // disable running of tests before fat jar assembly!
-//            assembly / test := {},
-//            // test in (Test, assembly) := {},
-//            // test in (IntegrationTest, assembly) := {},
-//
-//            // need to use our custom merge strategy because of aop.xml (AspectJ)
-//            assembly / assemblyMergeStrategy := customMergeStrategy,
-//
-//            // Skip packageDoc task on stage
+            // prepare for publishing
+
+            // Skip packageDoc task on stage
             Compile / packageDoc / mappings := Seq(),
-//
-//            Universal / mappings := {
-//                // removes all jar mappings in universal and appends the fat jar
-//                // universalMappings: Seq[(File,String)]
-//                val universalMappings = (mappings in Universal).value
-//                val fatJar = (assembly in Compile).value
-//                // removing means filtering
-//                val filtered = universalMappings filter {
-//                    case (file, name) =>  ! name.endsWith(".jar")
-//                }
-//                // add the fat jar
-//                filtered :+ (fatJar -> ("lib/" + fatJar.getName))
-//            },
 
             Universal / mappings ++= {
                 // copy the scripts folder
@@ -144,11 +120,8 @@ lazy val webapi = (project in file(".")).
                 // copy configuration files to config directory
                 contentOf("src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
-//                contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
+                // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
-
-            // the bash scripts classpath only needs the fat jar
-//            scriptClasspath := Seq( (assemblyJarName in assembly).value ),
 
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
@@ -160,7 +133,28 @@ lazy val webapi = (project in file(".")).
             Compile / mainClass := Some("org.knora.webapi.Main"),
             Compile / run / mainClass := Some("org.knora.webapi.Main"),
             Test / mainClass := Some("org.scalatest.tools.Runner"),
-            IntegrationTest / mainClass := Some("org.scalatest.tools.Runner")
+            IntegrationTest / mainClass := Some("org.scalatest.tools.Runner"),
+
+            // add dockerCommands used to create the image
+            // docker:stage, docker:publishLocal, docker:publish, docker:clean
+            Docker / maintainer := "ivan.subotic@unibas.ch",
+            Docker / packageName := packageName.value,
+            Docker / version := version.value,
+            Docker / dockerBaseImage := "openjdk:10-jre-slim-sid",
+            Docker / dockerRepository := Some("dhlabbasel"),
+            // Docker / dockerLabels := Map["MAINTAINER", s""""${maintainer.value}""""],
+            Docker / dockerExposedPorts := Seq(3333, 10001),
+            Docker / dockerCommands ++= Seq(
+                Cmd("FROM", "openjdk:10-jre-slim-sid"),
+                Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+                ExecCmd("CMD", "echo", "Hello, World from Docker"),
+                // install wget
+                ExecCmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
+                // install yourkit profiler
+                ExecCmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
+            ),
+            Docker / dockerEntrypoint := Seq("/opt/bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all")
+
         ).
         settings(
             buildInfoKeys ++= Seq[BuildInfoKey](
@@ -170,10 +164,11 @@ lazy val webapi = (project in file(".")).
             ),
             buildInfoPackage := "org.knora.webapi"
         ).
-        enablePlugins(SbtTwirl). // Enable the sbt-twirl plugin
-        enablePlugins(JavaAppPackaging). // Enable the sbt-native-packager plugin
+        enablePlugins(SbtTwirl). // enable the sbt-twirl plugin
+        enablePlugins(JavaAppPackaging). // enable the sbt-native-packager plugin
+        enablePlugins(DockerPlugin). // enable docker for the sbt-native-packager plugin
         enablePlugins(GatlingPlugin). // load testing
-        enablePlugins(JavaAgent). // Adds AspectJ Weaver configuration
+        enablePlugins(JavaAgent). // adds AspectJ Weaver configuration
         enablePlugins(RevolverPlugin).
         enablePlugins(BuildInfoPlugin) // allows generation of scala code with version information
 
