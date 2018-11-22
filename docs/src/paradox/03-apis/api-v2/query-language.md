@@ -138,6 +138,37 @@ main resources and those for B as dependent resources. The main resource
 must be represented by a variable, marked with `knora-api:isMainResource`,
 as explained under @ref:[CONSTRUCT Clause](#construct-clause).
 
+## Virtual incoming Links
+
+Depending on the ontology design, a resource A points to B or vice versa. 
+For example, a page A is part of a book B using the property  `incunabula:partOf`. 
+If A is marked as the main resource, then B is nested as a dependent resource 
+in its link value `incunabula:partOfValue`. But in case B is marked as the main resource,
+B does not have a link value pointing to A because in fact B is pointed to by A. 
+Instead, B has a virtual property `knora-api:hasIncomingLink` containing A's link value:
+
+```
+"knora-api:hasIncomingLink" : {
+    "@id" : "http://rdfh.ch/A/values/xy",
+    "@type" : "knora-api:LinkValue",
+    "knora-api:linkValueHasSource" : {
+      "@id" : "http://rdfh.ch/A",
+      "@type" : "incunabula:page",
+      "incunabula:partOfValue" : {
+        "@id" : "http://rdfh.ch/A/values/xy",
+        "@type" : "knora-api:LinkValue",
+        "knora-api:linkValueHasTargetIri" : {
+          "@id" : "http://rdfh.ch/B"
+        }
+      }
+    }
+  },
+``` 
+Note that the virtually inserted link value inverts the relation by using `knora-api:linkValueHasSource`.
+The source of the link is A and its link to B is only represented by an Iri (`knora-api:linkValueHasTargetIri`)
+since B is the main resource. 
+
+
 ## Graph Patterns and Result Graphs
 
 The WHERE clause of a Gravsearch query specifies a graph pattern. Each query
