@@ -20,11 +20,11 @@ import java.util.UUID
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.resourcemessages.{ResourceCreateRequestV1, ResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.valuemessages.{CreateValueV1WithComment, TextValueSimpleV1, _}
-import org.knora.webapi.util.MutableUserADM
+import org.knora.webapi.util.{MutableUserADM, StringFormatter}
 
 import scala.concurrent.duration._
 
@@ -42,6 +42,8 @@ object DrawingsGodsV1Spec {
 class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with TriplestoreJsonProtocol {
 
     private val timeout = 5.seconds
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
@@ -67,13 +69,13 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         val ddd2 = new MutableUserADM
 
         "retrieve the drawings gods user's profile" in {
-            responderManager ! UserGetADM(maybeIri = Some(rootUserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(rootUserIri), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             rootUser.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(maybeIri = Some(ddd1UserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(ddd1UserIri), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             ddd1.set(expectMsgType[Option[UserADM]](timeout).get)
 
-            responderManager ! UserGetADM(maybeIri = Some(ddd2UserIri), maybeEmail = None, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            responderManager ! UserGetADM(UserIdentifierADM(ddd2UserIri), userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             ddd2.set(expectMsgType[Option[UserADM]](timeout).get)
         }
 

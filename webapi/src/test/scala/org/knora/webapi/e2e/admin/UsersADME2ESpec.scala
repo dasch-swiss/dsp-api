@@ -132,7 +132,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
             "return all users" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -158,11 +158,12 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             val donaldIri = new MutableTestIri
 
-            "create the user and return it's profile if the supplied email is unique " in {
+            "create the user if the supplied email is unique " in {
 
                 val params =
                     s"""
                    |{
+                   |    "username": "donald.duck",
                    |    "email": "donald.duck@example.org",
                    |    "givenName": "Donald",
                    |    "familyName": "Duck",
@@ -180,6 +181,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
 
                 val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.username should be("donald.duck")
                 result.email should be("donald.duck@example.org")
                 result.givenName should be("Donald")
                 result.familyName should be("Duck")
@@ -195,6 +197,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 val params =
                     s"""
                     {
+                        "username": "donald.big.duck",
                         "email": "donald.big.duck@example.org",
                         "givenName": "Big Donald",
                         "familyName": "Duckmann",
@@ -209,6 +212,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
 
                 val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.username should be("donald.big.duck")
                 result.email should be("donald.big.duck@example.org")
                 result.givenName should be("Big Donald")
                 result.familyName should be("Duckmann")

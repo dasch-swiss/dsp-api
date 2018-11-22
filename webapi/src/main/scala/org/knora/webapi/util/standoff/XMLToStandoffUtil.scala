@@ -27,7 +27,7 @@ import com.sksamuel.diffpatch.DiffMatchPatch
 import com.sksamuel.diffpatch.DiffMatchPatch._
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.transform.stream.StreamSource
-import org.apache.commons.lang3.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import org.knora.webapi._
 import org.knora.webapi.util.{ErrorHandlingMap, KnoraIdUtil, StringFormatter}
 
@@ -842,11 +842,14 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     /**
       * Recursively generates XML text representing [[IndexedStandoffTag]] objects.
       *
-      * @param text        the text that has been marked up.
-      * @param groupedTags a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by
-      *                    parent tag index.
-      * @param siblings    a sequence of tags having the same parent.
-      * @param xmlString   the resulting XML text.
+      * @param text              the text that has been marked up.
+      * @param groupedTags       a [[Map]] of all the [[IndexedStandoffTag]] objects that refer to the text, grouped by
+      *                          parent tag index.
+      * @param posBeforeSiblings the last position that was processed before this method was called. If there is
+      *                          any text before `siblings`, this position will be less than the position of the
+      *                          first sibling..
+      * @param siblings          a sequence of tags having the same parent.
+      * @param xmlString         the resulting XML text.
       */
     private def standoffTags2XmlString(text: String,
                                        groupedTags: Map[Option[Int], Seq[IndexedStandoffTag]],
@@ -955,7 +958,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
                     attributesAndNamespaces2Xml(tag)
                     xmlString.append(">")
 
-                    val maybeChildren = groupedTags.get(Some(tag.index))
+                    val maybeChildren: Option[Seq[IndexedStandoffTag]] = groupedTags.get(Some(tag.index))
 
                     val posAfterChildren = maybeChildren match {
                         case Some(children) =>
@@ -977,10 +980,34 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
                     xmlString.append(s"</$prefixedTagName>")
                 } else {
-                    // Empty tag
-                    xmlString.append(s"<$prefixedTagName")
-                    attributesAndNamespaces2Xml(tag)
-                    xmlString.append("/>")
+                    // Does this tag have children?
+                    val maybeChildren: Option[Seq[IndexedStandoffTag]] = groupedTags.get(Some(tag.index))
+
+                    maybeChildren match {
+                        case Some(children) =>
+                            // Yes. Make a start tag.
+                            xmlString.append(s"<$prefixedTagName")
+                            attributesAndNamespaces2Xml(tag)
+                            xmlString.append(">")
+
+                            // Recurse to process the empty children.
+                            standoffTags2XmlString(
+                                text = text,
+                                groupedTags = groupedTags,
+                                posBeforeSiblings = tag.startPosition,
+                                siblings = children,
+                                xmlString = xmlString
+                            )
+
+                            // Make an end tag.
+                            xmlString.append(s"</$prefixedTagName>")
+
+                        case None =>
+                            // This tag has no children.
+                            xmlString.append(s"<$prefixedTagName")
+                            attributesAndNamespaces2Xml(tag)
+                            xmlString.append("/>")
+                    }
                 }
 
                 tag.endPosition

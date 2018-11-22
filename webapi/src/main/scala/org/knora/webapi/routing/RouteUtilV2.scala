@@ -341,6 +341,7 @@ object RouteUtilV2 {
 
                 HttpResponse(
                     status = StatusCodes.OK,
+
                     entity = HttpEntity(
                         contentType,
                         stringWriter.toString

@@ -327,6 +327,7 @@ object OntologyConstants {
 
         /* User */
         val User: IRI = KnoraBasePrefixExpansion + "User"
+        val Username: IRI = KnoraBasePrefixExpansion + "username"
         val Email: IRI = KnoraBasePrefixExpansion + "email"
         val GivenName: IRI = KnoraBasePrefixExpansion + "givenName"
         val FamilyName: IRI = KnoraBasePrefixExpansion + "familyName"
