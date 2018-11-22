@@ -671,7 +671,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                     savedValues.zip(expectedValues).foreach {
                         case (savedValue, expectedValue) =>
-                            if (!(savedValue.valueContent.wouldDuplicateCurrentVersion(expectedValue.valueContent) &&
+                            val unescapedExpectedValueContent = expectedValue.valueContent.unescape
+
+                            if (!(unescapedExpectedValueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                                 savedValue.permissions == expectedValue.permissions &&
                                 savedValue.attachedToUser == requestingUser.id)) {
                                 throw AssertionException(s"Resource <$resourceIri> was saved, but one or more of its values are not correct")

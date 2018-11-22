@@ -374,7 +374,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = value.unescape,
+            value = value,
             permissions = valuePermissions
         )
     }
@@ -430,7 +430,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-            value = linkValueContent.unescape,
+            value = linkValueContent,
             permissions = valuePermissions
         )
     }
@@ -983,7 +983,7 @@ class ValuesResponderV2 extends Responder {
 
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = newValueVersion.unescape,
+            value = newValueVersion,
             permissions = valuePermissions
         )
     }
@@ -1053,7 +1053,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            value = newLinkValue.unescape,
+            value = newLinkValue,
             permissions = valuePermissions
         )
     }
@@ -1502,15 +1502,16 @@ class ValuesResponderV2 extends Responder {
 
             propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
+            expectedUnescapedValueContent: ValueContentV2 = unverifiedValue.value.unescape
 
-            _ = if (!(unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
+            _ = if (!(expectedUnescapedValueContent.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
                 valueInTriplestore.permissions == unverifiedValue.permissions &&
                 valueInTriplestore.attachedToUser == requestingUser.id)) {
                 /*
                 import org.knora.webapi.util.MessageUtil
                 println("==============================")
                 println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.value))
+                println(MessageUtil.toSource(expectedUnescapedValueContent))
                 println
                 println("==============================")
                 println("Saved value:")
