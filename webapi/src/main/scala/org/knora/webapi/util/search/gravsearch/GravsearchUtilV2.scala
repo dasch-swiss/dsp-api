@@ -34,10 +34,13 @@ object GravsearchUtilV2 {
 
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    /**
+      * Methods and classes for Sparql transformation.
+      */
     object SparqlTransformation {
 
         /**
-          * Transform the the Knora explicit graph name to GraphDB explicit graph name.
+          * Transforms the the Knora explicit graph name to GraphDB explicit graph name.
           *
           * @param statement the given statement whose graph name has to be renamed.
           * @return the statement with the renamed graph, if given.
@@ -58,6 +61,9 @@ object GravsearchUtilV2 {
             Seq(transformedPattern)
         }
 
+        /**
+          * Transforms a non triplestore specific SELECT query to a query for GraphDB.
+          */
         class GraphDBSelectToSelectTransformer extends SelectToSelectTransformer {
             def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
@@ -69,6 +75,9 @@ object GravsearchUtilV2 {
 
         }
 
+        /**
+          * Transforms non triplestore specific SELECT query to a query for a triplestore other than GraphDB (e.g., Fuseki, TODO: to be implemented)
+          */
         class NoInferenceSelectToSelectTransformer extends SelectToSelectTransformer {
             def transformStatementInSelect(statementPattern: StatementPattern): Seq[StatementPattern] = Seq(statementPattern)
 
