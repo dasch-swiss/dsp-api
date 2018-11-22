@@ -35,6 +35,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.responders._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util._
+import spray.json.JsValue
 
 import scala.concurrent.duration._
 
@@ -864,23 +865,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "return a region with a comment containing standoff information" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/047db418ae06", userADM = SharedTestDataADM.incunabulaMemberUser)
-
-            expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 =>
-                // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
-            }
-        }
-
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
-            val response = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
-
-            // println(response)
+            val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
             response should be (ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
         }

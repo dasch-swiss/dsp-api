@@ -1296,4 +1296,5 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
 	knora-base:dimX 512 ;
 	knora-base:dimY 256 ;
+	knora-base:qualityLevel 100 ;
 	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" .

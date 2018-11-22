@@ -2390,7 +2390,7 @@
                                      ] ,
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :qualityLevel ;
-                                       owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                                       owl:cardinality "1"^^xsd:nonNegativeInteger
                                      ] ,
                                      [ rdf:type owl:Restriction ;
                                        owl:onProperty :dimX ;

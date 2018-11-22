@@ -83,14 +83,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @return a Sipi IIIF URL.
       */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
-        if (!imageFileValueV1.isPreview) {
-            // not a thumbnail
-            // calculate the correct size from the source image depending on the given dimensions
-            s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
-        } else {
-            // thumbnail
-            makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
-        }
+        s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
     }
 
     /**
