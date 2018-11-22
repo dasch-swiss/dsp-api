@@ -2,7 +2,7 @@
 .gitignore
 .idea
 docs
-travis
+private
 project
 salsah
 target
