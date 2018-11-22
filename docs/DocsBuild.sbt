@@ -16,7 +16,9 @@ lazy val docs = (project in file(".")).
     ).
     settings(
         // Set version string
-        version in ParadoxSite := "v3.0.0-SNAPSHOT",
+        // override dynver generated version string because docker hub rejects '+' in tags
+        version in ThisBuild ~= (_.replace('+', '-')),
+        dynver in ThisBuild ~= (_.replace('+', '-')),
 
         // Ghpages settings
         ghpagesNoJekyll := true,

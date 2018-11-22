@@ -10,7 +10,9 @@ connectInput in run := true
 lazy val webApiCommonSettings = Seq(
     organization := "org.knora",
     name := "webapi",
-    version := "v3.0.0-SNAPSHOT",
+    // override dynver generated version string because docker hub rejects '+' in tags
+    version in ThisBuild ~= (_.replace('+', '-')),
+    dynver in ThisBuild ~= (_.replace('+', '-')),
     scalaVersion := "2.12.4"
 )
 
