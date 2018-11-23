@@ -460,7 +460,7 @@ case class UpdateValueV2(resourceIri: IRI,
   * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
   *
   * @param newValueIri the IRI that was assigned to the new value.
-  * @param value       the content of the new value.
+  * @param value       the content of the new value (still escaped as it was for the update).
   */
 case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
