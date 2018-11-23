@@ -59,9 +59,9 @@ jobs:
         - rm -rf $HOME/.ivy2
         - cd $TRAVIS_BUILD_DIR && sbt webapi/clean webapi/compile webapi/stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
-        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
-        # - docker push $WEBAPI_REPO
+        - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        - sbt webapi/docker:publish
+        - sbt salsah1/docker:publish
     # unit and e2e tests
     - stage: test
       script:
@@ -153,9 +153,7 @@ jobs:
         # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TRAVIS_BRANCH
-        - docker tag $WEBAPI_REPO:$TRAVIS_BRANCH $WEBAPI_REPO:latest
-        - docker push $WEBAPI_REPO
+        - sbt webapi/docker:publish
         # salsah1
         - docker build $TRAVIS_BUILD_DIR/salsah1/ -t $SALSAH1_REPO:$TRAVIS_BRANCH
         - docker tag $SALSAH1_REPO:$TRAVIS_BRANCH $SALSAH1_REPO:latest

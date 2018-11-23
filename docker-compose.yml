@@ -42,30 +42,21 @@ services:
     container_name: sipi
 
   webapi:
-    image: dhlabbasel/scala-sbt
+    image: dhlabbasel/webapi:3.0.0-SNAPSHOT-10-d97f3928-20181123-1705
     ports:
     - "3333:3333"
     - "10001:10001"
     volumes:
     - /tmp:/tmp
-    - ${HOME}/.sbt:/root/.sbt:delegated
-    - ${HOME}/.ivy2:/root/.ivy2:delegated
-    - ${PWD}:/src:delegated
     networks:
     - knora-net
     environment:
     - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
     - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-    command: [
-      "sh", "-c",
-      "cd webapi && sbt clean && sbt stage && cd target/universal/stage && ./bin/webapi -J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all -J-Xms1G J-Xmx1G"
-    ]
     container_name: webapi
 
   salsah1:
-    build:
-      context: salsah1/
-    image: dhlabbasel/salsah1
+    image: dhlabbasel/salsah1:3.0.0-SNAPSHOT-10-d97f3928-20181123-1705
     ports:
     - "3335:3335"
     networks:

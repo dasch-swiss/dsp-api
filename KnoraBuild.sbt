@@ -1,4 +1,6 @@
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerRepository
+import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import sbt._
 
 //////////////////////////////////////
@@ -154,18 +156,41 @@ lazy val salsah1 = (project in file("salsah1")).
         settings( // enable deployment staging with `sbt stage`
             mappings in Universal ++= {
                 // copy the public folder
-                directory("src/public") ++
+                directory("salsah1/src/public") ++
                 // copy the configuration files to config directory
-                contentOf("configs").toMap.mapValues("config/" + _) ++
+                contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+                contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
             },
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
-            // add license
-            licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
             // need this here, but why?
-            mainClass in Compile := Some("org.knora.salsah.Main")).
+            mainClass in Compile := Some("org.knora.salsah.Main"),
+
+            // add dockerCommands used to create the image
+            // docker:stage, docker:publishLocal, docker:publish, docker:clean
+
+            dockerRepository := Some("dhlabbasel"),
+
+            maintainer := "ivan.subotic@unibas.ch",
+
+            Docker / dockerCommands := Seq(
+                Cmd("FROM", "openjdk:10-jre-slim-sid"),
+                Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+
+                Cmd("ENV", """LANG="en_US.UTF-8""""),
+                Cmd("ENV", """JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8""""),
+                Cmd("ENV", "KNORA_SALSAH1_DEPLOYED=true"),
+                Cmd("ENV", "KNORA_SALSAH1_WORKDIR=/salsah"),
+
+                Cmd("ADD", "opt/docker", "/salsah"),
+                Cmd("WORKDIR", "/salsah"),
+
+                Cmd("EXPOSE", "3335"),
+
+                ExecCmd("ENTRYPOINT", "bin/salsah"),
+            )
+        ).
         settings(Revolver.settings: _*).
         enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
 
@@ -323,20 +348,17 @@ lazy val webapi = (project in file("webapi")).
 
             Universal / mappings ++= {
                 // copy the scripts folder
-                directory("scripts") ++
+                directory("webapi/scripts") ++
                 // copy the configuration files to config directory
-                contentOf("configs").toMap.mapValues("config/" + _) ++
+                contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
-                contentOf("src/main/resources").toMap.mapValues("config/" + _)
+                contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
                 // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
 
-            // add 'config' directory first in the classpath of the start script,
-            scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
-
-            // add license
-            licenses := Seq(("GNU AGPL", url("https://www.gnu.org/licenses/agpl-3.0"))),
+            // add 'config' directory to the classpath of the start script,
+            Universal / scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
 
             // need this here, so that the Manifest inside the jars has the correct main class set.
             Compile / mainClass := Some("org.knora.webapi.Main"),
@@ -347,22 +369,26 @@ lazy val webapi = (project in file("webapi")).
             // add dockerCommands used to create the image
             // docker:stage, docker:publishLocal, docker:publish, docker:clean
 
-            // wipe out all default docker commands
-            dockerCommands := Seq(),
+            dockerRepository := Some("dhlabbasel"),
 
             maintainer := "ivan.subotic@unibas.ch",
-            packageName := packageName.value,
-            dockerRepository := Some("dhlabbasel"),
-            dockerBaseImage := "openjdk:10-jre-slim-sid",
-            dockerExposedPorts := Seq(3333, 10001),
-            //dockerCommands ++= Seq(
-            //    // install wget
-            //    ExecCmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
-            //    // install yourkit profiler
-            //    ExecCmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
-            //),
-            dockerEntrypoint := Seq("/opt/bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all")
 
+            Docker / dockerCommands := Seq(
+                Cmd("FROM", "openjdk:10-jre-slim-sid"),
+                Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
+                // install wget
+                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
+                // install yourkit profiler
+                Cmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
+
+                Cmd("ADD", "opt/docker", "/webapi"),
+                Cmd("WORKDIR", "/webapi"),
+
+                Cmd("EXPOSE", "3333"),
+                Cmd("EXPOSE", "10001"),
+
+                ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
+            )
         ).
         settings(
             buildInfoKeys ++= Seq[BuildInfoKey](

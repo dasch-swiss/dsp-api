@@ -30,49 +30,51 @@ Knora's complete build definition is defined in `KnoraBuild.sbt`:
 
 ## Building Deployment Packages
 
-### Webapi
+Deployment packages for `salsah1` and `webapi` can be built by using the following SBT tasks:
 
-### Salsah1
+- `$ sbt stage` - Stages the app so that it can be run locally without having the app packaged.
+- `$ sbt universal:packageBin` - Generates a universal zip file
+- `$ sbt universal:packageZipTarball` - Generates a universal tgz file
+
+The tasks can be scoped by prefixing `salsah1/` or `webapi/`, e.g., to only run `sbt stage`
+for the `webapi` project, run:
+```bash
+$ sbt webapi/stage
+```
 
 
 ## Building Docker Images
 
-### Webapi
+Docker images for `salsah1` and `webapi` can be built by using the following SBT tasks:
 
-### Salsah1
+- `$ sbt docker:stage` - Generates a directory with the Dockerfile and environment prepared for creating a Docker image.
+- `$ sbt docker:publishLocal` - Builds an image using the local Docker server.
+- `$ sbt docker:publish` - Builds an image using the local Docker server, and pushes it to the configured remote repository.
+- `$ sbt docker:clean` - Removes the built image from the local Docker server.
 
+The tasks can be scoped by prefixing `salsah1/` or `webapi/`, e.g., to only run `sbt docker:stage`
+for the `webapi` project, run:
+```bash
+$ sbt webapi/docker:stage
+```` 
 
 ## Building Documentation
 
-The complete Knora documentation site is built by invoking the following command:
+The complete Knora documentation site is built by invoking the following tasks:
 
-```
-$ sbt docs/makeSite
-```
+- `$ sbt docs/makeSite` - generates the documentation which can be found under `docs/target/site/`
+- `$ sbt docs/previewSite` - previews the generated site by launching a static web server
+- `$ sbt docs/previewAuto` - previews the generated site by launching a dynamic server updating its content at each modification in your source files.
 
-The generated documentation can be found under `docs/target/site/`. To preview your
-generated site, you can run the following command:
+Both preview tasks launch the server on port `4000` and attempt to connect your browser to `http://localhost:4000/`.
 
-```
-$ sbt docs/previewSite
-```
 
-which launches a static web server, or:
+## Publishing Documentation
 
-```
-$ sbt docs/previewAuto
-```
+To publish the documentation, you need to be on the `develop` branch and then execute the following task:
 
-which launches a dynamic server updating its content at each modification in your source files. Both launch the server
-on port `4000` and attempt to connect your browser to `http://localhost:4000/`.
-
-## 3 Publishing
-
-To publish the documentation, you need to be on the `develop` branch inside the `docs` folder and then execute the following
-command:
-
-```
+```bash
 $ sbt docs/ghpagesPushSite
 ```
 
-This command will build all documentation and publish it to the `gh-pages` branch.
+This task will build all documentation and publish it to the `gh-pages` branch.
