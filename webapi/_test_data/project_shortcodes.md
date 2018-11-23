@@ -19,4 +19,5 @@
    - dokubib: `0804`
    - ubkvp: `0805` // University of Basel Kings Valley Project
    - lhtt: `0806` // Living Histories of Theban Tombs
+   - mls: `0807` // Musikalisches Lexikon der Schweiz
    - webern: `08AE`
