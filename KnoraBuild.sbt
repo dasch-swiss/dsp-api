@@ -1,5 +1,5 @@
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import sbt._
-import NativePackagerHelper._
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
@@ -21,8 +21,8 @@ inThisBuild(List(
     scalaVersion := "2.12.4"
 ))
 
-lazy val akkaVersion = "2.5.13"
-lazy val akkaHttpVersion = "10.1.3"
+lazy val akkaVersion = "2.5.18"
+lazy val akkaHttpVersion = "10.1.5"
 
 //////////////////////////////////////
 // DOCS (./docs)
@@ -219,12 +219,8 @@ lazy val salsahLibs = Seq(
 //////////////////////////////////////
 
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
-import com.typesafe.sbt.packager.docker._
 import sbt._
-import sbt.io.IO
 import sbt.librarymanagement.Resolver
-import sbtassembly.MergeStrategy
-import sbtassembly.MergeStrategy._
 
 connectInput in run := true
 
@@ -350,23 +346,22 @@ lazy val webapi = (project in file("webapi")).
 
             // add dockerCommands used to create the image
             // docker:stage, docker:publishLocal, docker:publish, docker:clean
-            Docker / maintainer := "ivan.subotic@unibas.ch",
-            Docker / packageName := packageName.value,
-            Docker / version := version.value,
-            Docker / dockerBaseImage := "openjdk:10-jre-slim-sid",
-            Docker / dockerRepository := Some("dhlabbasel"),
-            // Docker / dockerLabels := Map["MAINTAINER", s""""${maintainer.value}""""],
-            Docker / dockerExposedPorts := Seq(3333, 10001),
-            Docker / dockerCommands ++= Seq(
-                Cmd("FROM", "openjdk:10-jre-slim-sid"),
-                Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
-                ExecCmd("CMD", "echo", "Hello, World from Docker"),
-                // install wget
-                ExecCmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
-                // install yourkit profiler
-                ExecCmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
-            ),
-            Docker / dockerEntrypoint := Seq("/opt/bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all")
+
+            // wipe out all default docker commands
+            dockerCommands := Seq(),
+
+            maintainer := "ivan.subotic@unibas.ch",
+            packageName := packageName.value,
+            dockerRepository := Some("dhlabbasel"),
+            dockerBaseImage := "openjdk:10-jre-slim-sid",
+            dockerExposedPorts := Seq(3333, 10001),
+            //dockerCommands ++= Seq(
+            //    // install wget
+            //    ExecCmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
+            //    // install yourkit profiler
+            //    ExecCmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
+            //),
+            dockerEntrypoint := Seq("/opt/bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all")
 
         ).
         settings(
@@ -523,7 +518,7 @@ lazy val library =
         val gwtServlet             = "com.google.gwt"                % "gwt-servlet"              % "2.8.0"
         val saxonHE                = "net.sf.saxon"                  % "Saxon-HE"                 % "9.7.0-14"
 
-        val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.0"
+        val scalaXml               = "org.scala-lang.modules"       %% "scala-xml"                % "1.1.1"
         val scalaArm               = "com.jsuereth"                  % "scala-arm_2.12"           % "2.0"
         val scalaJava8Compat       = "org.scala-lang.modules"        % "scala-java8-compat_2.12"  % "0.8.0"
 
