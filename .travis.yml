@@ -144,8 +144,8 @@ jobs:
     # testing docker images
     - stage: test
       script:
-        - docker build $TRAVIS_BUILD_DIR/webapi/
-        - docker build $TRAVIS_BUILD_DIR/salsah1/
+        - sbt webapi/docker:publishLocal
+        - sbt salsah1/docker:publishLocal
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
