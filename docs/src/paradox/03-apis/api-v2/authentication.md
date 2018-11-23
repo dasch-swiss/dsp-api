@@ -21,7 +21,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@toc
 
-### Login and Logout
+## Login and Logout
 
 A client sends a POST request (e.g., `{"identifier":"usersemail",
 "password":"userspassword"}`) to the **/v2/authentication** route with
@@ -36,7 +36,7 @@ To **logout**, the client sends a DELETE request to the same route **/v2/authent
 and the token (either as an URL parameter or authorization header). This will invalidate
 the token.
 
-### Submitting Credentials
+## Submitting Credentials
 
 When accessing any route and *identifier*/*password* credentials would
 need to be sent, we support two options to do so:
@@ -58,13 +58,17 @@ When accessing any route and the *token* would need to be sent, we support two o
 - in the HTTP authorization header with the
   @extref[HTTP bearer scheme](rfc:6750#section-2.1).
 
-### Checking Credentials
+## Checking Credentials
 
 To check the credentials, send a GET request to **/v2/authentication** with the credentials
 supplied as URL parameters or HTTP authentication headers as described before, .
 
-### Usage Scenarios
+## Usage Scenarios
 
 1.  Create token by logging-in, send token on each subsequent request,
     and logout when finished.
 2.  Send email/password credentials on every request.
+
+## Sipi (Media Server)
+
+TODO (Should all be done with JWT)

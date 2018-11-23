@@ -21,13 +21,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@toc
 
-[Ontotext GraphDB](https://ontotext.com/products/graphdb/) provides a
-mechanism for checking the consistency of data in a repository each time
-an update transaction is committed. Knora provides GraphDB-specific
-consistency rules that take advantage of this feature to provide an
-extra layer of consistency checks, in addition to the checks that are
-implemented in Knora.
-
 ## Requirements
 
 Knora is designed to prevent inconsistencies in RDF data,
@@ -110,6 +103,13 @@ property `isDeleted`. This must be taken into account as follows:
     consistency checking.)
 
 ## Design
+
+[Ontotext GraphDB](https://ontotext.com/products/graphdb/) provides a
+mechanism for checking the consistency of data in a repository each time
+an update transaction is committed. Knora provides GraphDB-specific
+consistency rules that take advantage of this feature to provide an
+extra layer of consistency checks, in addition to the checks that are
+implemented in Knora.
 
 When a repository is created in GraphDB, a set of consistency rules can
 be provided, and GraphDB's consistency checker can be turned on to

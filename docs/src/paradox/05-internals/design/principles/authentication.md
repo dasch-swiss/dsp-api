@@ -53,23 +53,3 @@ accessible.
 There is the possibility to turn skipping authentication on and use a
 hardcoded user (Test User). In **application.conf** set the
 `skip-authentication = true` and Test User will be always assumed.
-
-## Sipi (Media Server)
-
-For authentication to work with the media server, we need to add support
-for cookies. At the moment the SALSAH-App would set BasicAuth heathers,
-but this only works for AJAX requests using `SALSAH.ApiGet` (`Put`,
-etc.). Since the medias are embedded as source tags, the browser would
-get them on his own, and doesn't know anything about the needed
-AuthHeathers. With cookies, the browser would send those automatically
-with every request. The media server can use the credentials of the user
-requesting something for accessing the RepresentationsRouteV1, i.e. make
-this request in the name of the user so to speak, then the
-RepresentationResponderV1 should have all the information it needs to
-filter the result based on the users permissions.
-
-## Improving Security
-
-In the first iteration, the email/password would be sent in clear text.
-Since we will use HTTPS this shouldn't be a problem. The second
-iteration, could encrypt the email/password.

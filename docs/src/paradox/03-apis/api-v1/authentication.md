@@ -21,7 +21,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@toc
 
-### Login and Logout
+## Login and Logout
 
 When a client accesses the **/v1/session?login** route successfully, it
 gets back headers requesting that a cookie is created, which will store
@@ -35,7 +35,7 @@ To **logout** the client can call the same route and provide the logout
 parameter **/v1/session?logout**. This will invalidate the session token
 and return headers for removing the cookie on the client.
 
-### Submitting Credentials
+## Submitting Credentials
 
 For **login**, credentials in form of *email* and *password* need to be
 sent with the request.
@@ -56,14 +56,21 @@ An alternative way for accessing all routes is to simply supply the
 *email* and *password* credentials on each request either as URL
 parameters or in the HTTP authorization header.
 
-### Checking Credentials
+## Checking Credentials
 
 To check the credentials, there is a special route called
 **/v1/authenticate**, which can be used to check if the credentials are
 valid.
 
-### Usage Scenarios
+## Usage Scenarios
 
 1.  Create session by logging-in, send session token on each subsequent
     request, and logout when finished.
 2.  Send email/password credentials on every request.
+
+## Sipi (Media Server)
+
+TODO: document these Sipi routes:
+
+- `/Knora_login`
+- `/Knora_logout`
