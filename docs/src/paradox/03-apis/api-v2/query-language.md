@@ -165,7 +165,7 @@ Instead, B has a virtual property `knora-api:hasIncomingLink` containing A's lin
   },
 ``` 
 Note that the virtually inserted link value inverts the relation by using `knora-api:linkValueHasSource`.
-The source of the link is A and its link to B is only represented by an Iri (`knora-api:linkValueHasTargetIri`)
+The source of the link is A and its target B is only represented by an Iri (`knora-api:linkValueHasTargetIri`)
 since B is the main resource. 
 
 
