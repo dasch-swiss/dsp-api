@@ -324,10 +324,10 @@ lazy val webapi = (project in file("webapi")).
             Universal / mappings ++= {
                 // copy the scripts folder
                 directory("scripts") ++
-                        // copy the configuration files to config directory
-                        contentOf("configs").toMap.mapValues("config/" + _) ++
-                        // copy configuration files to config directory
-                        contentOf("src/main/resources").toMap.mapValues("config/" + _)
+                // copy the configuration files to config directory
+                contentOf("configs").toMap.mapValues("config/" + _) ++
+                // copy configuration files to config directory
+                contentOf("src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
                 // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
