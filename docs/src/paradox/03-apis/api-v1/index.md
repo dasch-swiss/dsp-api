@@ -24,6 +24,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 @@@ index
 
 - [Introduction](introduction.md)
+- [Authentication](authentication.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
 - [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [Adding Resources](adding-resources.md)
