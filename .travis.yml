@@ -57,7 +57,7 @@ jobs:
       script:
         - rm -rf $HOME/.sbt
         - rm -rf $HOME/.ivy2
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt compile stage
+        - cd $TRAVIS_BUILD_DIR && sbt webapi/clean webapi/compile webapi/stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
