@@ -1510,7 +1510,7 @@ class ValuesResponderV2 extends Responder {
                 import org.knora.webapi.util.MessageUtil
                 println("==============================")
                 println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.value))
+                println(MessageUtil.toSource(unverifiedValue.valueContent))
                 println
                 println("==============================")
                 println("Saved value:")
