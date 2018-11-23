@@ -76,7 +76,7 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt clean coverage test coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/test webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
     # integration tests
@@ -93,7 +93,7 @@ jobs:
         # start the sipi container (with production config)
         - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt clean coverage it:test coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
         # upload code coverage report
         # - sbt codacyCoverage
     # testing docs generation
@@ -117,7 +117,7 @@ jobs:
         # install jekyll dependencies
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (paradox, typescript, jekyll)
-        - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
+        - cd $TRAVIS_BUILD_DIR/ && sbt docs/makeSite
     # Salsah browser tests
     #- stage: test
     #  script:
