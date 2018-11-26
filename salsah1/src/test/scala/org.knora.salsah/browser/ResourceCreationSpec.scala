@@ -87,7 +87,7 @@ class ResourceCreationSpec extends SalsahSpec {
             page.doLogout()
 
         }
-/*
+
         "create a resource of type images:person" in {
 
             page.open()
@@ -121,7 +121,7 @@ class ResourceCreationSpec extends SalsahSpec {
             page.doLogout()
 
         }
-*/
+
         "create a resource of type anything:thing" in {
 
             page.open()
@@ -179,9 +179,9 @@ class ResourceCreationSpec extends SalsahSpec {
             page.doLogout()
 
         }
-/*
+
         "close the browser" in {
             page.quit()
-        }*/
+        }
     }
 }
