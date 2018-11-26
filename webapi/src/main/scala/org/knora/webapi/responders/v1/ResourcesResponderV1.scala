@@ -63,7 +63,7 @@ class ResourcesResponderV1 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: Receive = {
         case ResourceInfoGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getResourceInfoResponseV1(resourceIri, userProfile), log)
         case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => future2Message(sender(), getFullResponseV1(resourceIri, userProfile, getIncoming), log)
         case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => future2Message(sender(), getContextResponseV1(resourceIri, userProfile, resinfo), log)

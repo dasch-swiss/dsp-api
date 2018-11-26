@@ -32,7 +32,7 @@ import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2.compareJSONLDForResourcesRes
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDUtil}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -311,7 +311,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         }
 
         "create a resource with values" in {
-            val jsonLdEntity =
+            val jsonLDEntity =
                 """{
                   |  "@type" : "anything:Thing",
                   |  "anything:hasBoolean" : {
@@ -408,7 +408,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |  }
                   |}""".stripMargin
 
-            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+        }
+
+        "create a resource containing escaped text" in {
+            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
             val response: HttpResponse = singleAwaitingRequest(request)
             assert(response.status == StatusCodes.OK, response.toString)
             val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)

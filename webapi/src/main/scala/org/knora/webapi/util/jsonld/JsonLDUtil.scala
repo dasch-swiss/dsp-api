@@ -794,7 +794,12 @@ object JsonLDUtil {
       * @return a [[JsonLDDocument]].
       */
     def parseJsonLD(jsonLDString: String): JsonLDDocument = {
-        val jsonObject: AnyRef = JsonUtils.fromString(jsonLDString)
+        val jsonObject: AnyRef = try {
+            JsonUtils.fromString(jsonLDString)
+        } catch {
+            case e: com.fasterxml.jackson.core.JsonParseException => throw BadRequestException(s"Couldn't parse JSON-LD: ${e.getMessage}")
+        }
+
         val context: java.util.HashMap[String, Any] = new java.util.HashMap[String, Any]()
         val options: JsonLdOptions = new JsonLdOptions()
         val compact: java.util.Map[IRI, AnyRef] = JsonLdProcessor.compact(jsonObject, context, options)

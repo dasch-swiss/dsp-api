@@ -19,6 +19,7 @@
 
 package org.knora.webapi.e2e.v2
 
+import java.io.File
 import java.net.URLEncoder
 import java.time.Instant
 
@@ -51,6 +52,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     private val intValueIri = new MutableTestIri
     private val commentValueIri = new MutableTestIri
     private val thingTextValueIri = new MutableTestIri
+    private val thingTextValueWithEscapeIri = new MutableTestIri
     private val decimalValueIri = new MutableTestIri
     private val dateValueIri = new MutableTestIri
     private val booleanValueIri = new MutableTestIri
@@ -335,7 +337,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 """.stripMargin
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
 
             val jsonLDEntity =
                 s"""{
@@ -374,6 +376,86 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
             val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
             savedTextValueAsXml.contains("salsah-link") should ===(true)
+        }
+
+        "create a text value with standoff containing a URL" in {
+            val resourceIri: IRI = aThingIri
+
+            val textValueAsXml: String =
+                """<?xml version="1.0" encoding="UTF-8"?>
+                  |<text>
+                  |   This text links to <a href="http://www.knora.org">a web site</a>.
+                  |</text>
+                """.stripMargin
+
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+
+            val jsonLDEntity =
+                s"""{
+                   |  "@id" : "$resourceIri",
+                   |  "@type" : "anything:Thing",
+                   |  "anything:hasText" : {
+                   |    "@type" : "knora-api:TextValue",
+                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+                   |    "knora-api:textValueHasMapping" : {
+                   |      "@id": "$standardMappingIri"
+                   |    }
+                   |  },
+                   |  "@context" : {
+                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                   |  }
+                   |}""".stripMargin
+
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            val valueType: SmartIri = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.TYPE, stringFormatter.toSmartIriWithErr)
+            valueType should ===(OntologyConstants.KnoraApiV2WithValueObjects.TextValue.toSmartIri)
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = resourceIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = valueIri,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
+            savedTextValueAsXml.contains("href") should ===(true)
+        }
+
+        "create a text value with standoff containing escaped text" in {
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+            val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            thingTextValueWithEscapeIri.set(valueIri)
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = aThingIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = valueIri,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
+
+            val expectedText =
+                """<p>
+                  | test</p>""".stripMargin
+
+            assert(savedTextValueAsXml.contains(expectedText))
         }
 
         "create a text value with a comment" in {
@@ -1389,7 +1471,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                 """.stripMargin
 
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
-            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(zeitglöckleinIri, anythingUserEmail)
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
 
             val jsonLDEntity =
                 s"""{
@@ -1430,6 +1512,36 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
             val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
             savedTextValueAsXml.contains("updated text") should ===(true)
             savedTextValueAsXml.contains("salsah-link") should ===(true)
+        }
+
+        "update a text value with standoff containing escaped text" in {
+            val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(aThingIri, anythingUserEmail)
+            val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+            val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", thingTextValueWithEscapeIri.get)
+            val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val valueIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            thingTextValueWithEscapeIri.set(valueIri)
+            val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
+
+            val savedValue: JsonLDObject = getValue(
+                resourceIri = aThingIri,
+                maybePreviousLastModDate = maybeResourceLastModDate,
+                propertyIriForGravsearch = propertyIri,
+                propertyIriInResult = propertyIri,
+                expectedValueIri = valueIri,
+                userEmail = anythingUserEmail
+            )
+
+            val savedTextValueAsXml: String = savedValue.requireString(OntologyConstants.KnoraApiV2WithValueObjects.TextValueAsXml)
+
+            val expectedText =
+                """<p>
+                  | test update</p>""".stripMargin
+
+            assert(savedTextValueAsXml.contains(expectedText))
         }
 
         "update a text value with a comment" in {

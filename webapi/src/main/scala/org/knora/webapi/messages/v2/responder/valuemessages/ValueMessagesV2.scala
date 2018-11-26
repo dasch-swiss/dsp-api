@@ -528,10 +528,10 @@ case class UpdateValueV2(resourceIri: IRI,
 /**
   * The IRI and content of a new value or value version whose existence in the triplestore needs to be verified.
   *
-  * @param newValueIri the IRI that was assigned to the new value.
-  * @param value       the content of the new value.
+  * @param newValueIri  the IRI that was assigned to the new value.
+  * @param valueContent the content of the new value (unescaped, as it would be read from the triplestore).
   */
-case class UnverifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
+case class UnverifiedValueV2(newValueIri: IRI, valueContent: ValueContentV2, permissions: String)
 
 /**
   * The content of the value of a Knora property.

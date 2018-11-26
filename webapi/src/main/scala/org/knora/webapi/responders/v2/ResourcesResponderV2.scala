@@ -60,8 +60,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       *                                       the resource.
       * @param values                         the resource's values for verification.
       */
-    case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
-                                     values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]])
+    private case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
+                                             values: Map[SmartIri, Seq[UnverifiedValueV2]])
 
     override def receive: Receive = {
         case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
@@ -335,7 +335,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 resourceClassIri = internalCreateResource.resourceClassIri.toString,
                 resourceLabel = internalCreateResource.label
             ),
-            values = valuesWithValidatedPermissions
+            values = sparqlForValuesResponse.unverifiedValues
         )
     }
 
@@ -674,7 +674,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             _ = resource.values.foreach {
                 case (propertyIri: SmartIri, savedValues: Seq[ReadValueV2]) =>
-                    val expectedValues: Seq[GenerateSparqlForValueInNewResourceV2] = resourceReadyToCreate.values(propertyIri)
+                    val expectedValues: Seq[UnverifiedValueV2] = resourceReadyToCreate.values(propertyIri)
 
                     if (expectedValues.size != savedValues.size) {
                         throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong values")
@@ -682,7 +682,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                     savedValues.zip(expectedValues).foreach {
                         case (savedValue, expectedValue) =>
-                            if (!(savedValue.valueContent.wouldDuplicateCurrentVersion(expectedValue.valueContent) &&
+                            if (!(expectedValue.valueContent.wouldDuplicateCurrentVersion(savedValue.valueContent) &&
                                 savedValue.permissions == expectedValue.permissions &&
                                 savedValue.attachedToUser == requestingUser.id)) {
                                 throw AssertionException(s"Resource <$resourceIri> was saved, but one or more of its values are not correct")
