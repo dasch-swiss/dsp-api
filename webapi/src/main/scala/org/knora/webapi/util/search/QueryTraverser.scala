@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util.search
 
-import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionResult
+import org.knora.webapi.util.search.sparql.gravsearch.GravsearchTypeInspectionResult
 
 /**
   * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.

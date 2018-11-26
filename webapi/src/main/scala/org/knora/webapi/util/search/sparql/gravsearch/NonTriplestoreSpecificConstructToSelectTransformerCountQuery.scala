@@ -1,4 +1,4 @@
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
 import org.knora.webapi.util.search._

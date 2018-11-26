@@ -43,7 +43,7 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 import org.knora.webapi.util.search.ConstructQuery
-import org.knora.webapi.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.util.search.sparql.gravsearch.GravsearchParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

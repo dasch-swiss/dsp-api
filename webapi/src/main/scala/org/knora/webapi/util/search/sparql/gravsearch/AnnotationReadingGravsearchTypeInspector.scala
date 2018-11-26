@@ -17,14 +17,14 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.util.search.sparql.gravsearch
 
 import akka.actor.ActorSystem
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionUtil.{TypeAnnotationProperties, TypeAnnotationProperty}
+import org.knora.webapi.util.search.sparql.gravsearch.GravsearchTypeInspectionUtil.{TypeAnnotationProperties, TypeAnnotationProperty}
 
 import scala.concurrent.Future
 

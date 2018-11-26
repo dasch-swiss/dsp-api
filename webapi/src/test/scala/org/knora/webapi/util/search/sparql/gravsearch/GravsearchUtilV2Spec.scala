@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, OntologyConstants}

@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.query.parser.sparql._

@@ -1,9 +1,9 @@
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi._
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.search._
-import org.knora.webapi.util.search.gravsearch.GravsearchUtilV2.SparqlTransformation.createUniqueVariableNameFromEntityAndProperty
+import org.knora.webapi.util.search.sparql.gravsearch.GravsearchUtilV2.SparqlTransformation.createUniqueVariableNameFromEntityAndProperty
 import org.knora.webapi.util.IriConversions._
 
 /**

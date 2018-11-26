@@ -38,7 +38,7 @@ import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
-import org.knora.webapi.util.search.gravsearch.GravsearchParser
+import org.knora.webapi.util.search.sparql.gravsearch.GravsearchParser
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future
