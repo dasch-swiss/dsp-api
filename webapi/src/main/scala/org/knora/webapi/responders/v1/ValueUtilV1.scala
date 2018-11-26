@@ -298,7 +298,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                             }.foldLeft(Map.empty[String, String]) {
                                 // for each standoff node, we want to have just one Map
                                 // this foldLeft turns a Sequence of Maps into one Map (a predicate can only occur once)
-                                case (nodeValues: Map[String, String], (value: Map[String, String])) =>
+                                case (nodeValues: Map[String, String], value: Map[String, String]) =>
                                     nodeValues ++ value
                             }
 
