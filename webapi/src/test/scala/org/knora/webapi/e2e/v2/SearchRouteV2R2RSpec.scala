@@ -34,7 +34,7 @@ import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{SearchRouteV2, StandoffRouteV2}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.search.SparqlQueryConstants
+import org.knora.webapi.util.search.sparql._
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContextExecutor

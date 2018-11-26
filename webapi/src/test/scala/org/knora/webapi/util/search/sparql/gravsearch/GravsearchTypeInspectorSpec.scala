@@ -23,7 +23,7 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}

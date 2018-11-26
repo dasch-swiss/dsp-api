@@ -23,7 +23,7 @@ import akka.actor.{ActorSelection, ActorSystem}
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.{KnoraDispatchers, Settings}
 
 import scala.concurrent.{ExecutionContext, Future}

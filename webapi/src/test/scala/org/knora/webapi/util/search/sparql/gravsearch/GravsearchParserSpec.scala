@@ -21,7 +21,7 @@ package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.{ApiV2Simple, ApiV2WithValueObjects, CoreSpec, GravsearchException}
 
 /**

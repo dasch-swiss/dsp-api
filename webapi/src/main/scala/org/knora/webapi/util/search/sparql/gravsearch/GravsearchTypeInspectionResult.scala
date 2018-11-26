@@ -20,7 +20,7 @@
 package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.search.{Entity, IriRef, QueryVariable}
+import org.knora.webapi.util.search.sparql.{Entity, IriRef, QueryVariable}
 
 /**
   * Represents the type information that was found concerning a Gravsearch entity.

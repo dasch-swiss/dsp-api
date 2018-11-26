@@ -21,7 +21,7 @@ package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, OntologyConstants}
-import org.knora.webapi.util.search.{IriRef, QueryVariable, XsdLiteral}
+import org.knora.webapi.util.search.sparql.{IriRef, QueryVariable, XsdLiteral}
 import org.knora.webapi.util.IriConversions._
 
 /**

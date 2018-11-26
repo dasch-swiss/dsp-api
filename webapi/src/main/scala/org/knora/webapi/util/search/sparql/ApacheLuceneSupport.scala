@@ -1,4 +1,4 @@
-package org.knora.webapi.util.search
+package org.knora.webapi.util.search.sparql
 
 
 /**

@@ -25,7 +25,7 @@ import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
-import org.knora.webapi.util.search.ConstructQuery
+import org.knora.webapi.util.search.sparql.ConstructQuery
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.

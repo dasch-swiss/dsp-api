@@ -20,7 +20,7 @@
 package org.knora.webapi.util.search.sparql.gravsearch
 
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 
 /**

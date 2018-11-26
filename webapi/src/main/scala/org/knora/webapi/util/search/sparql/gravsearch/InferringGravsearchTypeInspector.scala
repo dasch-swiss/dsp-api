@@ -27,7 +27,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.annotation.tailrec

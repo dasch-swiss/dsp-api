@@ -13,7 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.jsonld._
-import org.knora.webapi.util.search.SparqlQueryConstants
+import org.knora.webapi.util.search.sparql.SparqlQueryConstants
 
 class ValuesRouteV2E2ESpec extends E2ESpec {
 

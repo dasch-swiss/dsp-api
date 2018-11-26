@@ -25,7 +25,7 @@ import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.util.{SmartIri, StringFormatter, search}
 
 import scala.collection.JavaConverters._
@@ -130,7 +130,7 @@ object GravsearchParser {
             }
 
             // Convert each ConstructStatementWithConstants to a StatementPattern for use in the CONSTRUCT clause.
-            val constructStatements: Seq[search.StatementPattern] = constructStatementsWithConstants.toVector.map {
+            val constructStatements: Seq[StatementPattern] = constructStatementsWithConstants.toVector.map {
                 (constructStatementWithConstant: ConstructStatementWithConstants) =>
                     StatementPattern(
                         subj = makeEntityFromVar(nameToVar(constructStatementWithConstant.subj)),

@@ -3,8 +3,8 @@ package org.knora.webapi.util.search.sparql.gravsearch
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
-import org.knora.webapi.util.search._
+import org.knora.webapi.util.search.sparql.ApacheLuceneSupport.CombineSearchTerms
+import org.knora.webapi.util.search.sparql._
 import org.knora.webapi.util.search.sparql.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
 import org.knora.webapi.util.search.sparql.gravsearch.GravsearchUtilV2.SparqlTransformation._
 import org.knora.webapi.util.IriConversions._
