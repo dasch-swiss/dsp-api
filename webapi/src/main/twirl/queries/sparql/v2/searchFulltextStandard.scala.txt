@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.search.sparql.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.responders.v2.search.sparql.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search using standard SPARQL (except for the interface to Lucene, which is

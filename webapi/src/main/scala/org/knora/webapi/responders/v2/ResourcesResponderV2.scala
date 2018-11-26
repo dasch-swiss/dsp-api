@@ -42,8 +42,8 @@ import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformatio
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
-import org.knora.webapi.util.search.sparql.ConstructQuery
-import org.knora.webapi.util.search.sparql.gravsearch.GravsearchParser
+import org.knora.webapi.responders.v2.search.sparql.ConstructQuery
+import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

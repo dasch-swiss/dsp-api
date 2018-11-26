@@ -17,13 +17,13 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.sparql.gravsearch
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.search.sparql._
+import org.knora.webapi.responders.v2.search.sparql._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
