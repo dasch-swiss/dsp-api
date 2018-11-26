@@ -1,30 +1,68 @@
+
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
-import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.dockerRepository
+import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerRepository}
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
-import sbt._
 
 //////////////////////////////////////
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-inThisBuild(List(
-    // These are normal sbt settings to configure for release, skip if already defined
-    licenses := Seq("AGPL-3.0" -> url("https://opensource.org/licenses/AGPL-3.0")),
-    homepage := Some(url("https://github.com/dhlab-basel/Knora")),
-    scmInfo := Some(ScmInfo(url("https://github.com/dhlab-basel/Knora"), "scm:git:git@github.com:dhlab-basel/Knora.git")),
-
-    // override dynver generated version string because docker hub rejects '+' in tags
-    version in ThisBuild ~= (_.replace('+', '-')),
-    dynver in ThisBuild ~= (_.replace('+', '-')),
-
-    cancelable in Global := true, // use Ctrl-c to stop current task and not quit SBT
-
-    organization := "org.knora",
-    scalaVersion := "2.12.4"
-))
-
 lazy val akkaVersion = "2.5.18"
 lazy val akkaHttpVersion = "10.1.5"
+
+lazy val sysProps = settingKey[String]("all system properties")
+lazy val sysEnvs = settingKey[String]("all system environment variables")
+
+lazy val graphDBHomePath = settingKey[String]("Path to the GraphDB home directory")
+lazy val graphDBLicensePath = settingKey[String]("Path to the GraphDB license")
+lazy val graphDBImage = settingKey[String]("The GraphDB docker image")
+
+
+// gather  docker settings from sub-projects
+// docker <<= (docker in salsah1, docker in webapi) map {(image, _) => image}
+
+
+lazy val knora = (project in file(".")).
+        enablePlugins(DockerComposePlugin)
+        .settings(
+
+            // values set for all sub-projects
+            // These are normal sbt settings to configure for release, skip if already defined
+
+            ThisBuild / licenses := Seq("AGPL-3.0" -> url("https://opensource.org/licenses/AGPL-3.0")),
+            ThisBuild / homepage := Some(url("https://github.com/dhlab-basel/Knora")),
+            ThisBuild / scmInfo := Some(ScmInfo(url("https://github.com/dhlab-basel/Knora"), "scm:git:git@github.com:dhlab-basel/Knora.git")),
+
+            // override dynver generated version string because docker hub rejects '+' in tags
+            ThisBuild / version ~= (_.replace('+', '-')),
+            ThisBuild / dynver ~= (_.replace('+', '-')),
+
+            Global / cancelable := true, // use Ctrl-c to stop current task and not quit SBT
+
+            ThisBuild / organization := "org.knora",
+            ThisBuild / scalaVersion := "2.12.4",
+
+            publish / skip := true,
+
+            sysProps := sys.props.toString(),
+            sysEnvs := sys.env.toString(),
+
+            graphDBHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
+            graphDBLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
+            graphDBImage := sys.env.getOrElse("KNORA_GDB_IMAGE", "ontotext/graphdb:8.5.0-se"),
+
+            variablesForSubstitution := Map(
+                "KNORA_GDB_HOME" -> graphDBHomePath.value,
+                "KNORA_GDB_LICENSE " -> graphDBLicensePath.value,
+                "KNORA_GDB_IMAGE" -> graphDBImage.value
+            ),
+
+            dockerImageCreationTask := Seq(
+                (salsah1 / Docker / publishLocal).value,
+                (webapi / Docker / publishLocal).value
+            )
+        )
+
 
 //////////////////////////////////////
 // DOCS (./docs)
@@ -36,17 +74,17 @@ import scala.sys.process._
 lazy val ParadoxSite = config("paradox")
 
 lazy val docs = (project in file("docs")).
-        configs(
+        enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
+        .configs(
             ParadoxSite
-        ).
-        enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin).
-        settings(
+        )
+        .settings(
             // Apply default settings to our two custom configuration instances
             ParadoxSitePlugin.paradoxSettings(ParadoxSite),
             ParadoxMaterialThemePlugin.paradoxMaterialThemeGlobalSettings, // paradoxTheme and version
             ParadoxMaterialThemePlugin.paradoxMaterialThemeSettings(ParadoxSite)
-        ).
-        settings(
+        )
+        .settings(
 
             // Ghpages settings
             ghpagesNoJekyll := true,
@@ -126,22 +164,26 @@ docs / buildPrequisites := {
 //////////////////////////////////////
 
 lazy val salsahCommonSettings = Seq(
-    name := "salsah",
+    name := "salsah"
 )
 
 lazy val salsah1 = (project in file("salsah1")).
-        configs(
+        enablePlugins(JavaAppPackaging, DockerPlugin, DockerComposePlugin)
+        .configs(
             HeadlessTest
-        ).
-        settings(salsahCommonSettings:  _*).
-        settings(inConfig(HeadlessTest)(
+        )
+        .settings(
+            salsahCommonSettings,
+            Revolver.settings
+        )
+        .settings(inConfig(HeadlessTest)(
             Defaults.testTasks ++ Seq(
                 fork := true,
                 javaOptions ++= javaHeadlessTestOptions,
                 testOptions += Tests.Argument("-oDF") // show full stack traces and test case durations
             )
-        ): _*).
-        settings(
+        ): _*)
+        .settings(
             libraryDependencies ++= salsahLibs,
             logLevel := Level.Info,
             fork in run := true,
@@ -152,8 +194,8 @@ lazy val salsah1 = (project in file("salsah1")).
             parallelExecution in Test := false,
             /* show full stack traces and test case durations */
             testOptions in Test += Tests.Argument("-oDF")
-        ).
-        settings( // enable deployment staging with `sbt stage`
+        )
+        .settings( // enable deployment staging with `sbt stage`
             mappings in Universal ++= {
                 // copy the public folder
                 directory("salsah1/src/public") ++
@@ -189,10 +231,11 @@ lazy val salsah1 = (project in file("salsah1")).
                 Cmd("EXPOSE", "3335"),
 
                 ExecCmd("ENTRYPOINT", "bin/salsah"),
-            )
-        ).
-        settings(Revolver.settings: _*).
-        enablePlugins(JavaAppPackaging) // Enable the sbt-native-packager plugin
+            ),
+
+
+        )
+        .settings()
 
 lazy val javaRunOptions = Seq(
     // "-showversion",
@@ -262,8 +305,13 @@ lazy val FusekiTest = config("fuseki") extend Test
 lazy val FusekiIt = config("fuseki-it") extend IntegrationTest
 lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 
+// GatlingPlugin - load testing
+// JavaAgent - adds AspectJ Weaver configuration
+// BuildInfoPlugin - allows generation of scala code with version information
+
 lazy val webapi = (project in file("webapi")).
-        configs(
+        enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
+        .configs(
             IntegrationTest,
             Gatling,
             GatlingIt,
@@ -274,15 +322,15 @@ lazy val webapi = (project in file("webapi")).
             FusekiTest,
             FusekiIt,
             EmbeddedJenaTDBTest
-        ).
-        settings(
+        )
+        .settings(
             webApiCommonSettings,
             resolvers ++= Seq(
                 Resolver.bintrayRepo("hseeberger", "maven")
             ),
             libraryDependencies ++= webApiLibs
-        ).
-        settings(
+        )
+        .settings(
             inConfig(Test)(Defaults.testTasks ++ baseAssemblySettings),
             inConfig(IntegrationTest)(Defaults.testSettings),
             inConfig(Gatling)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
@@ -294,8 +342,8 @@ lazy val webapi = (project in file("webapi")).
             inConfig(FusekiTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
             inConfig(FusekiIt)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value)),
             inConfig(EmbeddedJenaTDBTest)(Defaults.testTasks ++ Seq(forkOptions := Defaults.forkOptionsTask.value))
-        ).
-        settings(
+        )
+        .settings(
             scalacOptions ++= Seq("-feature", "-unchecked", "-deprecation", "-Yresolve-term-conflict:package"),
 
             logLevel := Level.Info,
@@ -339,8 +387,8 @@ lazy val webapi = (project in file("webapi")).
             // enable publishing the jar produced by `sbt test:package` and `sbt it:package`
             Test / packageBin / publishArtifact := true,
             IntegrationTest / packageBin / publishArtifact := true
-        ).
-        settings(
+        )
+        .settings(
             // prepare for publishing
 
             // Skip packageDoc task on stage
@@ -389,22 +437,15 @@ lazy val webapi = (project in file("webapi")).
 
                 ExecCmd("ENTRYPOINT", "bin/webapi", "-J-agentpath:/usr/local/YourKit-JavaProfiler-2018.04/bin/linux-x86-64/libyjpagent.so=port=10001,listen=all"),
             )
-        ).
-        settings(
+        )
+        .settings(
             buildInfoKeys ++= Seq[BuildInfoKey](
                 name,
                 version,
                 "akkaHttp" -> akkaHttpVersion
             ),
             buildInfoPackage := "org.knora.webapi"
-        ).
-        enablePlugins(SbtTwirl). // enable the sbt-twirl plugin
-        enablePlugins(JavaAppPackaging). // enable the sbt-native-packager plugin
-        enablePlugins(DockerPlugin). // enable docker for the sbt-native-packager plugin
-        enablePlugins(GatlingPlugin). // load testing
-        enablePlugins(JavaAgent). // adds AspectJ Weaver configuration
-        enablePlugins(RevolverPlugin).
-        enablePlugins(BuildInfoPlugin) // allows generation of scala code with version information
+        )
 
 
 

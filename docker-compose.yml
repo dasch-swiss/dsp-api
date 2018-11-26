@@ -1,9 +1,9 @@
-# Please define the following environment variables:
+#  Defined in KnoraBuild.sbt:
 # - KNORA_GDB_LICENSE - path to the GraphDB-SE license file
 # - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data
+# - KNORA_GDB_IMAGE - the GraphDB image used
 #
-# - KNORA_GDB_IMAGE - is defined in the .env file in this directory. If you would like to use GraphDB-Free, then
-# set environment variable with something like KNORA_GDB_IMAGE=dhlabbasel/graphdb-free:8.3.1
+# To run: $ sbt dockerComposeUp
 
 version: '3'
 
@@ -23,7 +23,6 @@ services:
     - GDB_HEAP_SIZE=2G
     - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
     command: ["/graphdb/bin/graphdb"]
-    container_name: graphdb
 
   sipi:
     image: dhlabbasel/sipi:develop
@@ -39,10 +38,9 @@ services:
     - knora-net
     restart: unless-stopped
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
-    container_name: sipi
 
   webapi:
-    image: dhlabbasel/webapi:3.0.0-SNAPSHOT-10-d97f3928-20181123-1705
+    image: dhlabbasel/webapi:latest<localBuild>
     ports:
     - "3333:3333"
     - "10001:10001"
@@ -53,10 +51,9 @@ services:
     environment:
     - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
     - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-    container_name: webapi
 
   salsah1:
-    image: dhlabbasel/salsah1:3.0.0-SNAPSHOT-10-d97f3928-20181123-1705
+    image: dhlabbasel/salsah1:latest<localBuild>
     ports:
     - "3335:3335"
     networks:
@@ -66,7 +63,6 @@ services:
     - KNORA_SALSAH1_PORT=3335
     - KNORA_SALSAH1_WEBAPI=http://0.0.0.0:3333
     - KNORA_SALSAH1_SIPI=http://0.0.0.0:1024
-    container_name: salsah1
 
 networks:
   knora-net:

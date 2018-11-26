@@ -7,6 +7,8 @@ resolvers ++= Seq(
 
 // Knora
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "3.1.0")
+addSbtPlugin("com.tapad" % "sbt-docker-compose" % "1.0.34")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.1")
 
 // docs
 addSbtPlugin("com.lightbend.paradox" % "sbt-paradox" % "0.3.2")
@@ -18,7 +20,7 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.6.2")
 addSbtPlugin("io.spray" % "sbt-revolver" % "0.9.1")
 addSbtPlugin("com.typesafe.sbt" % "sbt-twirl" % "1.3.13")
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.5")
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.1")
+
 addSbtPlugin("com.lightbend.sbt" % "sbt-javaagent" % "0.1.4")
 addSbtPlugin("io.kamon" % "sbt-aspectj-runner" % "1.1.0")
 addSbtPlugin("io.gatling" % "gatling-sbt" % "2.2.2")
