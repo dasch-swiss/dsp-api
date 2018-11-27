@@ -428,7 +428,7 @@ class SearchAndEditSpec extends SalsahSpec {
             // get a list of editing fields
             val editFields = page.getEditingFieldsFromMetadataSection(metadataSection)
 
-            val pubdateField = editFields(6)
+            val pubdateField = editFields(7)
 
             page.clickEditButton(pubdateField)
 
