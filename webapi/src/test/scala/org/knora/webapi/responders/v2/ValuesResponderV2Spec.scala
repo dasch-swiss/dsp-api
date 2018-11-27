@@ -1858,7 +1858,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 dimY = 256
             )
 
-            // Knora will accept this request.
+            // Knora will accept this request, but the mock Sipi responder will say it failed to move the file to permanent storage.
             actorUnderTest ! CreateValueRequestV2(
                 CreateValueV2(
                     resourceIri = resourceIri,

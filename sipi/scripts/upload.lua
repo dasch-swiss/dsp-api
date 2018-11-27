@@ -41,29 +41,29 @@ if token == nil then
   return
 end
 
+-- Create the temporary directory if necessary.
+
+local temp_dir = config.imgroot .. '/tmp/'
+local success, exists = server.fs.exists(temp_dir)
+
+if not success then
+    send_error(500, exists)
+    return
+end
+
+if not exists then
+    local success, error_msg = server.fs.mkdir(temp_dir, 511)
+    if not success then
+        send_error(500, error_msg)
+        return
+    end
+end
+
 -- A table of data about each file that was uploaded.
 local file_upload_data = {}
 
 -- Process the uploaded files.
 for image_index, image_params in pairs(server.uploads) do
-    -- Create the temporary directory if necessary.
-
-    local temp_dir = config.imgroot .. '/tmp/'
-    local success, exists = server.fs.exists(temp_dir)
-
-    if not success then
-        send_error(500, exists)
-        return
-    end
-
-    if not exists then
-        local success, error_msg = server.fs.mkdir(temp_dir, 511)
-        if not success then
-            send_error(500, error_msg)
-            return
-        end
-    end
-
     -- Check that the file is an image (TODO: support other file types.)
 
     local success, mime_info = server.file_mimetype(image_index)

@@ -25,6 +25,7 @@ function get_knora_token()
     local token = get_token()
 
     if token == nil then
+        send_error(401, "Not a Knora token")
         return nil
     end
 
@@ -52,8 +53,6 @@ function get_token()
         send_error(401, "Invalid token")
         return nil
     end
-
-    -- TODO: test with a token signed with the wrong secret.
 
     local expiration_date = token["exp"]
 
