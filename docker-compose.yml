@@ -1,7 +1,7 @@
 #  Defined in KnoraBuild.sbt:
-# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file
-# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data
-# - KNORA_GDB_IMAGE - the GraphDB image used
+# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file (can be overriden through environment variable KNORA_GDB_LICENSE)
+# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data can be overriden through environment variable KNORA_GDB_HOME)
+# - KNORA_GDB_IMAGE - the GraphDB image used (can be overridden, by setting the value in SBT)
 #
 # To run: $ sbt dockerComposeUp
 
@@ -25,7 +25,7 @@ services:
     command: ["/graphdb/bin/graphdb"]
 
   sipi:
-    image: dhlabbasel/sipi:develop
+    image: dhlabbasel/sipi:${SIPI_VERSION_TAG}
     ports:
     - "1024:1024"
     volumes:
