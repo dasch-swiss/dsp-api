@@ -271,10 +271,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Geometrie"@de ,
-                  "Géométrie"@fr ,
-                  "Geometria"@it ,
-                  "Geometry"@en ;
+       rdfs:label "Geoname"@de ,
+                  "Geoname"@fr ,
+                  "Geoname"@it ,
+                  "Geoname"@en ;
 
        knora-base:subjectClassConstraint :Thing ;
 
