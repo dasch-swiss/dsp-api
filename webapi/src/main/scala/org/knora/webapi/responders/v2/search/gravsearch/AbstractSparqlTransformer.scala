@@ -1,13 +1,14 @@
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
-import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi.responders.v2.search.sparql.ApacheLuceneSupport.CombineSearchTerms
-import org.knora.webapi.responders.v2.search.sparql._
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.SparqlTransformation._
+import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
+import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.SparqlTransformation._
+import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.mutable
 

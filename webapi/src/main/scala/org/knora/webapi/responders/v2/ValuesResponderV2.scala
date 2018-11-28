@@ -33,12 +33,12 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchParser
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
 
 import scala.concurrent.Future

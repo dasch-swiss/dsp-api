@@ -33,10 +33,10 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchParser
 import org.knora.webapi.util.{MutableTestIri, PermissionUtilADM, SmartIri, StringFormatter}
 
 import scala.concurrent.duration._

@@ -25,13 +25,14 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
+import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.SparqlTransformation._
+import org.knora.webapi.responders.v2.search.gravsearch._
+import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil, _}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
-import org.knora.webapi.responders.v2.search.sparql.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
-import org.knora.webapi.responders.v2.search.sparql._
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.SparqlTransformation._
-import org.knora.webapi.responders.v2.search.sparql.gravsearch._
 
 import scala.concurrent.Future
 
@@ -128,8 +129,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       */
     private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
-        import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.FulltextSearch._
-        import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.FulltextSearch.FullTextSearchConstants._
+        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.FulltextSearch.FullTextSearchConstants._
+        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.FulltextSearch._
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
@@ -362,7 +363,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       */
     private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
 
-        import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchUtilV2.Gravsearch._
+        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch._
 
         for {
             // Do type inspection and remove type annotations from the WHERE clause.

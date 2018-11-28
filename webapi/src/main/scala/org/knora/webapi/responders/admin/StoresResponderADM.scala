@@ -28,8 +28,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
   * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the

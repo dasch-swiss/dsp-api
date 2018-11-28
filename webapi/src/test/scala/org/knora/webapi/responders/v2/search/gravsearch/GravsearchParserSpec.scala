@@ -17,11 +17,11 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch
 
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.responders.v2.search.sparql._
 import org.knora.webapi.{ApiV2Simple, ApiV2WithValueObjects, CoreSpec, GravsearchException}
 
 /**

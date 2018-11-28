@@ -17,10 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.responders.v2.search.sparql._
 import org.knora.webapi.{AssertionException, GravsearchException, IRI, OntologyConstants}
 
 /**

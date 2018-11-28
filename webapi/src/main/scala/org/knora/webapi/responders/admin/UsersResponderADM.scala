@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 import scala.concurrent.Future

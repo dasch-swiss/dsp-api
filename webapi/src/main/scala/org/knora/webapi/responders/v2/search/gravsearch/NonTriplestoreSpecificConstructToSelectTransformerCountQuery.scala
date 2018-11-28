@@ -1,8 +1,9 @@
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch
 
-import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
-import org.knora.webapi.responders.v2.search.sparql._
+import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
 
 /**
   * Transforms a preprocessed CONSTRUCT query into a SELECT query that returns only the IRIs and sort order of the main resources that matched

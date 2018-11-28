@@ -30,11 +30,11 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{SearchRouteV2, StandoffRouteV2}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.responders.v2.search.sparql._
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContextExecutor

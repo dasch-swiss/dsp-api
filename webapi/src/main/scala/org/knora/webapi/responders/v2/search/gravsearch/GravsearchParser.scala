@@ -17,15 +17,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch
 
 import org.eclipse.rdf4j
 import org.eclipse.rdf4j.query.parser.sparql._
 import org.eclipse.rdf4j.query.parser.{ParsedQuery, QueryParser}
 import org.eclipse.rdf4j.query.{MalformedQueryException, algebra}
 import org.knora.webapi._
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.responders.v2.search.sparql._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.JavaConverters._

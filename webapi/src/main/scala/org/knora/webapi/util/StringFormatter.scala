@@ -26,7 +26,6 @@ import java.time.temporal.TemporalAccessor
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
-import jodd.mail.{Email, EmailAddress}
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.validator.routines.UrlValidator
 import org.joda.time.DateTime

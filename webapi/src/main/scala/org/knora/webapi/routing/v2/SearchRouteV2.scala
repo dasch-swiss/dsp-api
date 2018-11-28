@@ -27,9 +27,9 @@ import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.concurrent.{ExecutionContext, Future}

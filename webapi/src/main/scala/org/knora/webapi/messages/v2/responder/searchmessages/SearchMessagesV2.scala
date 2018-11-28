@@ -19,13 +19,13 @@
 
 package org.knora.webapi.messages.v2.responder.searchmessages
 
-import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
+import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.util.SmartIri
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDInt, JsonLDObject, JsonLDString}
-import org.knora.webapi.responders.v2.search.sparql.ConstructQuery
+import org.knora.webapi.{ApiV2Schema, IRI, OntologyConstants, SettingsImpl}
 
 /**
   * An abstract trait for messages that can be sent to `SearchResponderV2`.

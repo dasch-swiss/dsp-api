@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search.sparql.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.types
 
 import akka.actor.ActorSystem
 import akka.event.{LogSource, LoggingAdapter}
@@ -26,8 +26,8 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.KnoraReadV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{EntityInfoGetRequestV2, EntityInfoGetResponseV2, ReadClassInfoV2, ReadPropertyInfoV2}
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.responders.v2.search.sparql._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.annotation.tailrec

@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.responders.v2.search.sparql.ApacheLuceneSupport.MatchStringWhileTyping
+@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
