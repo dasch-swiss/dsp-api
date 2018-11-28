@@ -1781,7 +1781,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalMimeType ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :internalFilename ;
@@ -1793,7 +1793,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalFilename ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 

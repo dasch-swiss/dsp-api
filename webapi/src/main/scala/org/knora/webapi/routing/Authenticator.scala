@@ -29,19 +29,19 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import io.igl.jwt._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
 import org.slf4j.LoggerFactory
-import spray.json.{JsNumber, JsObject, JsString}
+import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
+import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -650,34 +650,31 @@ object Authenticator {
     }
 }
 
+/**
+  * Provides functions for creating, decoding, and validating JWT tokens.
+  */
 object JWTHelper {
 
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 
-    // the encryption algorithm we chose to use.
-    val algorithm = Algorithm.HS256
+    private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
 
-    // the headers which need to be present inside the JWT
-    val requiredHeaders: Set[HeaderField] = Set[HeaderField](Typ)
-
-    // the claims that need to be present inside the JWT
-    // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
-    val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp, Jti)
+    private val header: String = """{"typ":"JWT","alg":"HS256"}"""
 
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Create a JWT.
+      * Creates a JWT.
       *
       * @param userIri   the user IRI that will be encoded into the token.
-      * @param secretKey the secret key used for encoding.
-      * @param longevity the token's longevity in days.
-      * @return a [[String]] containg the JWT.
+      * @param secret    the secret key used for encoding.
+      * @param longevity the token's longevity.
+      * @param content   any other content to be included in the token.
+      * @return a [[String]] containing the JWT.
       */
-    def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration): String = {
+    def createToken(userIri: IRI, secret: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
 
-        // create required headers
-        val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
+        val knoraIdUtil = new KnoraIdUtil
 
         // now in seconds
         val now: Long = System.currentTimeMillis() / 1000l
@@ -685,66 +682,118 @@ object JWTHelper {
         // calculate expiration time (seconds)
         val nowPlusLongevity: Long = now + longevity.toSeconds
 
-        val identifier: String = UUID.randomUUID().toString()
+        val identifier: String = knoraIdUtil.base64EncodeUuid(UUID.randomUUID)
 
-        // Add required claims
-        // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
-        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity), Jti(identifier))
+        val claim: String = JwtClaim(
+            content = JsObject(content).compactPrint,
+            issuer = Some("Knora"),
+            subject = Some(userIri),
+            audience = Some(Set("Knora", "Sipi")),
+            issuedAt = Some(now),
+            expiration = Some(nowPlusLongevity),
+            jwtId = Some(identifier)
+        ).toJson
 
-        val jwt = new DecodedJwt(headers, claims)
-
-        jwt.encodedAndSigned(secretKey)
+        JwtSprayJson.encode(
+            header = header,
+            claim = claim,
+            key = secret,
+            algorithm = algorithm
+        )
     }
 
     /**
-      * Validates a JWT by also taking the invalidation cache into account. The invalidation cache holds invalidated
-      * tokens, which would otherwise validate. Further, it makes sure that the required headers and claims are present.
+      * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+      * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+      * present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
       * @return a [[Boolean]].
       */
     def validateToken(token: String, secret: String): Boolean = {
-
         if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
             // token invalidated so no need to decode
             log.debug("validateToken - token found in invalidation cache, so not valid")
             false
         } else {
-            DecodedJwt.validateEncodedJwt(
-                jwt = token,
-                key = secret,
-                requiredAlg = algorithm,
-                requiredHeaders = requiredHeaders,
-                requiredClaims = requiredClaims,
-                iss = Some(Iss("webapi")),
-                aud = Some(Aud("webapi"))
-            ).isSuccess
+            decodeToken(token, secret).isDefined
         }
     }
 
     /**
-      * Extract the encoded user IRI. Further, it makes sure that the required headers and claims are present.
+      * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
       * @return an optional [[IRI]].
       */
     def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
-
-        DecodedJwt.validateEncodedJwt(
-            jwt = token,
-            key = secret,
-            requiredAlg = algorithm,
-            requiredHeaders = requiredHeaders,
-            requiredClaims = requiredClaims,
-            iss = Some(Iss("webapi")),
-            aud = Some(Aud("webapi"))
-        ) match {
-            case Success(jwt) => jwt.getClaim[Sub].map(_.value)
-            case _ => None
+        decodeToken(token, secret) match {
+            case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
+            case None => None
         }
     }
 
-}
+    /**
+      * Extracts application-specific content from a JWT token.  This method also makes sure that the required headers
+      * and claims are present.
+      *
+      * @param token       the JWT.
+      * @param secret      the secret used to encode the token.
+      * @param contentName the name of the content field to be extracted.
+      * @return the string value of the specified content field.
+      */
+    def extractContentFromToken(token: String, secret: String, contentName: String): Option[String] = {
+        decodeToken(token, secret) match {
+            case Some((_: JwtHeader, claim: JwtClaim)) =>
+                claim.content.parseJson.asJsObject.fields.get(contentName) match {
+                    case Some(jsString: JsString) => Some(jsString.value)
+                    case _ => None
+                }
 
+            case None => None
+        }
+    }
+
+    /**
+      * Decodes and validates a JWT token.
+      *
+      * @param token  the token to be decoded.
+      * @param secret the secret used to encode the token.
+      * @return the token's header and claim, or `None` if the token is invalid.
+      */
+    private def decodeToken(token: String, secret: String): Option[(JwtHeader, JwtClaim)] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
+            case Success((header: JwtHeader, claim: JwtClaim, _)) =>
+                val missingRequiredContent: Boolean = Set(
+                    header.typ.isDefined,
+                    claim.issuer.isDefined,
+                    claim.subject.isDefined,
+                    claim.jwtId.isDefined,
+                    claim.issuedAt.isDefined,
+                    claim.expiration.isDefined,
+                    claim.audience.isDefined
+                ).contains(false)
+
+                if (!missingRequiredContent) {
+                    Try(stringFormatter.validateAndEscapeIri(claim.subject.get, throw BadRequestException("Invalid user IRI in JWT"))) match {
+                        case Success(_) => Some(header, claim)
+
+                        case Failure(e) =>
+                            log.debug(e.getMessage)
+                            None
+                    }
+                } else {
+                    log.debug("Missing required content in JWT")
+                    None
+                }
+
+            case Failure(_) =>
+                log.debug("Invalid JWT")
+                None
+        }
+    }
+}

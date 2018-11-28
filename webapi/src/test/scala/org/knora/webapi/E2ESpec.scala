@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.StringReader
+import java.io.{File, StringReader}
 
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
@@ -32,7 +32,7 @@ import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json._
@@ -140,5 +140,22 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with Triplest
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+    }
+
+    /**
+      * Reads or writes a test data file.
+      *
+      * @param responseAsString the API response received from Knora.
+      * @param file             the file in which the expected API response is stored.
+      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+      * @return the expected response.
+      */
+    protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+        if (writeFile) {
+            FileUtil.writeTextFile(file, responseAsString)
+            responseAsString
+        } else {
+            FileUtil.readTextFile(file)
+        }
     }
 }

@@ -223,6 +223,7 @@ clauses use the following patterns, with the specified restrictions:
     argument of a comparison operator must be a query variable.
     A Knora ontology entity IRI used in a `FILTER` must be a property IRI.
   - `FILTER NOT EXISTS`
+  - `MINUS`
   - `OFFSET`: the `OFFSET` is needed for paging. It does not actually
     refer to the number of triples to be returned, but to the
     requested page of results. The default value is 0, which refers

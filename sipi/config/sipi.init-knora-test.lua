@@ -42,9 +42,9 @@ function pre_flight(prefix,identifier,cookie)
     --
 
     if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. prefix .. '/' .. 'Leaves.jpg'
+        filepath = config.imgroot .. '/' .. prefix .. '/' .. 'Leaves.jp2'
     else
-        filepath = config.imgroot .. '/' .. 'Leaves.jpg'
+        filepath = config.imgroot .. '/' .. 'Leaves.jp2'
     end
 
     if prefix == "thumbs" then
@@ -53,8 +53,8 @@ function pre_flight(prefix,identifier,cookie)
     end
 
     if prefix == "tmp" then
-        -- always deny access to tmp folder
-        return 'deny'
+        -- always allow access to tmp folder
+        return 'allow'
     end
 
 

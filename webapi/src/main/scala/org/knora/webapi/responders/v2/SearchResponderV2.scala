@@ -267,17 +267,19 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             // _ = println(mappingsAsMap)
 
-
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = resourceIris.size,
-            resources = ConstructResponseUtilV2.createSearchResponse(
+            resources: Vector[ReadResourceV2] <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = resourceIris,
                 mappings = mappingsAsMap,
-                forbiddenResource = forbiddenResourceOption
+                forbiddenResource = forbiddenResourceOption,
+                responderManager = responderManager,
+                requestingUser = requestingUser
             )
-        )
 
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = resourceIris.size,
+            resources = resources
+        )
 
     }
 
@@ -523,15 +525,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparatedWithFullGraphPattern, requestingUser)
 
-
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = mainResourceIris.size,
-            resources = ConstructResponseUtilV2.createSearchResponse(
+            resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparatedWithFullGraphPattern,
                 orderByResourceIri = mainResourceIris,
                 mappings = mappingsAsMap,
-                forbiddenResource = forbiddenResourceOption
+                forbiddenResource = forbiddenResourceOption,
+                responderManager = responderManager,
+                requestingUser = requestingUser
             )
+
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = mainResourceIris.size,
+            resources = resources
         )
     }
 
@@ -640,14 +645,18 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
             //_ = println(queryResultsSeparated)
 
-        } yield ReadResourcesSequenceV2(
-            numberOfResources = queryResultsSeparated.size,
-            resources = ConstructResponseUtilV2.createSearchResponse(
+            resources <- ConstructResponseUtilV2.createSearchResponse(
                 searchResults = queryResultsSeparated,
                 orderByResourceIri = mainResourceIris.toSeq.sorted,
-                forbiddenResource = forbiddenResourceOption)
-        )
+                forbiddenResource = forbiddenResourceOption,
+                responderManager = responderManager,
+                requestingUser = requestingUser
+            )
 
+        } yield ReadResourcesSequenceV2(
+            numberOfResources = queryResultsSeparated.size,
+            resources = resources
+        )
 
     }
 

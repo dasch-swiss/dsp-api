@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import java.util.UUID
 
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -28,6 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
@@ -45,6 +47,7 @@ object ResourcesResponderV2Spec {
 
     private val defaultAnythingResourcePermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
+    private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
 
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
 
@@ -416,6 +419,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val graphTestData = new GraphTestData
 
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V2_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV2)))
+
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -462,7 +467,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(outputResource.resourceClassIri == inputResource.resourceClassIri)
         assert(outputResource.label == inputResource.label)
         assert(outputResource.attachedToUser == requestingUser.id)
-        assert(outputResource.attachedToProject == inputResource.projectADM.id)
+        assert(outputResource.projectADM.id == inputResource.projectADM.id)
 
         val expectedPermissions = inputResource.permissions.getOrElse(defaultResourcePermissions)
         assert(outputResource.permissions == expectedPermissions)
@@ -918,6 +923,58 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 outputResource = outputResource,
                 defaultResourcePermissions = defaultAnythingResourcePermissions,
                 defaultValuePermissions = defaultAnythingValuePermissions,
+                requestingUser = anythingUserProfile
+            )
+        }
+
+        "create a resource with a still image file value" in {
+            // Create the resource.
+
+            val resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+            val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+                OntologyConstants.KnoraApiV2WithValueObjects.HasStillImageFileValue.toSmartIri -> Seq(
+                    CreateValueInNewResourceV2(
+                        valueContent = StillImageFileValueContentV2(
+                            ontologySchema = ApiV2WithValueObjects,
+                            fileValue = FileValueV2(
+                                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+                                internalMimeType = "image/jp2",
+                                originalFilename = "test.tiff",
+                                originalMimeType = "image/tiff"
+                            ),
+                            dimX = 512,
+                            dimY = 256
+                        )
+                    )
+                )
+            )
+
+            val inputResource = CreateResourceV2(
+                resourceIri = resourceIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+                label = "test thing picture",
+                values = inputValues,
+                projectADM = SharedTestDataADM.anythingProject
+            )
+
+            actorUnderTest ! CreateResourceRequestV2(
+                createResource = inputResource,
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgType[ReadResourcesSequenceV2]
+
+            // Get the resource from the triplestore and check it.
+
+            val outputResource = getResource(resourceIri, anythingUserProfile)
+
+            checkCreateResource(
+                inputResource = inputResource,
+                outputResource = outputResource,
+                defaultResourcePermissions = defaultAnythingResourcePermissions,
+                defaultValuePermissions = defaultStillImageFileValuePermissions,
                 requestingUser = anythingUserProfile
             )
         }
@@ -1390,7 +1447,5 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
         }
-
-
     }
 }

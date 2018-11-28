@@ -20,13 +20,14 @@
 package org.knora.webapi.e2e.v2
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-import org.knora.webapi.messages.v1.responder.sessionmessages.{AuthenticationV2JsonProtocol, LoginResponse}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import org.knora.webapi.util.MutableTestString
 import org.knora.webapi.{E2ESpec, SharedTestDataADM}
 
@@ -49,9 +50,9 @@ object AuthenticationV2E2ESpec {
   */
 class AuthenticationV2E2ESpec extends E2ESpec(AuthenticationV2E2ESpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
+    private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     private val rootIri = SharedTestDataADM.rootUser.id
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")

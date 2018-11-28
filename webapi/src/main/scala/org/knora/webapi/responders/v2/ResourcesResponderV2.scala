@@ -47,6 +47,7 @@ import org.knora.webapi.responders.v2.search.sparql.gravsearch.GravsearchParser
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
@@ -82,7 +83,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         def makeTaskFuture: Future[ReadResourcesSequenceV2] = {
             for {
                 // Convert the resource to the internal ontology schema.
-                internalCreateResource <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+                internalCreateResource: CreateResourceV2 <- Future(createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
 
                 // Check standoff link targets and list nodes that should exist.
 
@@ -176,7 +177,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             } yield previewOfCreatedResource
         }
 
-        for {
+        val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
             // Don't allow anonymous users to create resources.
             _ <- Future {
                 if (createResourceRequestV2.requestingUser.isAnonymousUser) {
@@ -218,6 +219,16 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 () => makeTaskFuture
             )
         } yield taskResult
+
+
+        // If the request includes file values, tell Sipi to move the files to permanent storage if the update
+        // succeeded, or to delete the temporary files if the update failed.
+        doSipiPostUpdateForResources(
+            updateFuture = triplestoreUpdateFuture,
+            createResources = Seq(createResourceRequestV2.createResource),
+            requestingUser = createResourceRequestV2.requestingUser
+        )
+
     }
 
     /**
@@ -645,7 +656,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
-            _ = if (resource.attachedToProject != projectIri) {
+            _ = if (resource.projectADM.id != projectIri) {
                 throw AssertionException(s"Resource <$resourceIri> was saved, but it is attached to the wrong user")
             }
 
@@ -682,6 +693,35 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             numberOfResources = 1,
             resources = Seq(resource.copy(values = Map.empty))
         )
+    }
+
+    /**
+      * After the attempted creation of one or more resources, looks for file values among the values that were supposed
+      * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
+      * temporary files if the update failed.
+      *
+      * @param updateFuture    the operation that was supposed to create the resources.
+      * @param createResources the resources that were supposed to be created.
+      * @param requestingUser  the user making the request.
+      */
+    private def doSipiPostUpdateForResources[T](updateFuture: Future[T], createResources: Seq[CreateResourceV2], requestingUser: UserADM): Future[T] = {
+        val allValues: Seq[ValueContentV2] = createResources.flatMap(_.flatValues).map(_.valueContent)
+
+        val resultFutures: Seq[Future[T]] = allValues.map {
+            valueContent =>
+                ValueUtilV2.doSipiPostUpdate(
+                    updateFuture = updateFuture,
+                    valueContent = valueContent,
+                    requestingUser = requestingUser,
+                    responderManager = responderManager,
+                    log = log
+                )
+        }
+
+        Future.sequence(resultFutures).transformWith {
+            case Success(_) => updateFuture
+            case Failure(e) => Future.failed(e)
+        }
     }
 
     /**
@@ -738,10 +778,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             // get the mappings
             mappingsAsMap <- getMappingsFromQueryResultsSeparated(queryResultsSeparated, requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = mappingsAsMap)
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = mappingsAsMap,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -762,10 +810,18 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         for {
             queryResultsSeparated: Map[IRI, ResourceWithValueRdfData] <- getResourcesFromTriplestore(resourceIris = resourceIris, preview = true, requestingUser = requestingUser)
 
-            resourcesResponse: Vector[ReadResourceV2] = resourceIrisDistinct.map {
+            resourcesResponseFutures: Vector[Future[ReadResourceV2]] = resourceIrisDistinct.map {
                 resIri: IRI =>
-                    ConstructResponseUtilV2.createFullResourceResponse(resIri, queryResultsSeparated(resIri), mappings = Map.empty[IRI, MappingAndXSLTransformation])
+                    ConstructResponseUtilV2.createFullResourceResponse(
+                        resourceIri = resIri,
+                        resourceRdfData = queryResultsSeparated(resIri),
+                        mappings = Map.empty[IRI, MappingAndXSLTransformation],
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
             }.toVector
+
+            resourcesResponse <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
@@ -783,7 +839,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         val gravsearchUrlFuture = for {
             gravsearchResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(gravsearchTemplateIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            gravsearchFileValue: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
+            gravsearchFileValueContent: TextFileValueContentV2 = gravsearchResponseV2.resources.headOption match {
                 case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.TextRepresentation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
@@ -800,11 +856,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(gravsearchFileValue.internalMimeType == "text/plain" && gravsearchFileValue.originalFilename.endsWith(".txt"))) {
+            _ = if (!(gravsearchFileValueContent.fileValue.internalMimeType == "text/plain" && gravsearchFileValueContent.fileValue.originalFilename.endsWith(".txt"))) {
                 throw BadRequestException(s"$gravsearchTemplateIri does not have a file value referring to an XSL transformation")
             }
 
-            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValue.internalFilename}"
+            gravSearchUrl: String = s"${settings.internalSipiFileServerGetUrl}/${gravsearchFileValueContent.fileValue.internalFilename}"
 
         } yield gravSearchUrl
 
@@ -908,21 +964,28 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
                         // convert all dates to Gregorian calendar dates (standardization)
                         valueObj: ReadValueV2 =>
-                            valueObj.valueContent match {
-                                case dateContent: DateValueContentV2 =>
-                                    // date value
+                            valueObj match {
+                                case readNonLinkValueV2: ReadNonLinkValueV2 =>
+                                    readNonLinkValueV2.valueContent match {
+                                        case dateContent: DateValueContentV2 =>
+                                            // date value
 
-                                    valueObj.copy(
-                                        valueContent = dateContent.copy(
-                                            // act as if this was a Gregorian date
-                                            valueHasCalendar = CalendarNameGregorian
-                                        )
-                                    )
+                                            readNonLinkValueV2.copy(
+                                                valueContent = dateContent.copy(
+                                                    // act as if this was a Gregorian date
+                                                    valueHasCalendar = CalendarNameGregorian
+                                                )
+                                            )
 
-                                case linkContent: LinkValueContentV2 if linkContent.nestedResource.nonEmpty =>
+                                        case _ => valueObj
+                                    }
+
+                                case readLinkValueV2: ReadLinkValueV2 if readLinkValueV2.valueContent.nestedResource.nonEmpty =>
                                     // recursively process the values of the nested resource
 
-                                    valueObj.copy(
+                                    val linkContent = readLinkValueV2.valueContent
+
+                                    readLinkValueV2.copy(
                                         valueContent = linkContent.copy(
                                             nestedResource = Some(
                                                 linkContent.nestedResource.get.copy(
@@ -936,7 +999,6 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                 case _ => valueObj
                             }
                     }
-
             }
         }
 

@@ -47,8 +47,8 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     if prefix == "tmp" then
-        -- always deny access to tmp folder
-        return 'deny'
+        -- always allow access to tmp folder
+        return 'allow', filepath
     end
 
 
