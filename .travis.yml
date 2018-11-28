@@ -44,7 +44,7 @@ before_install:
 stages:
   - compile and stage
   - test
-  - name: publish
+  - name: publish # generally, only publish if we are on 'develop' or tagged
     if: branch = develop OR tag IS present
 
 jobs:
@@ -54,7 +54,7 @@ jobs:
       script:
         - rm -rf $HOME/.sbt
         - rm -rf $HOME/.ivy2
-        - cd $TRAVIS_BUILD_DIR && sbt clean docker:stage
+        - cd $TRAVIS_BUILD_DIR && sbt clean stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # - sbt webapi/docker:publish
