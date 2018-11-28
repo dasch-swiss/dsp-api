@@ -18,11 +18,8 @@ lazy val buildSettings = Dependencies.Versions ++ Seq(
 lazy val root = Project(id = "knora", file("."))
         .aggregate(aggregatedProjects: _*)
         .enablePlugins(DockerComposePlugin)
+        .settings(Dependencies.Versions)
         .settings(
-
-            // we need to bring the values into scope
-            Dependencies.Versions,
-
             // values set for all sub-projects
             // These are normal sbt settings to configure for release, skip if already defined
 
@@ -44,11 +41,12 @@ lazy val root = Project(id = "knora", file("."))
             ThisBuild / Dependencies.gdbHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
             ThisBuild / Dependencies.gdbLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
 
-            ThisBuild / variablesForSubstitution := Map(
+            variablesForSubstitution := Map(
                 "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
                 "KNORA_GDB_LICENSE " -> Dependencies.gdbLicensePath.value,
                 "KNORA_GDB_IMAGE" -> Dependencies.gdbImage.value,
-                "SIPI_VERSION_TAG" -> Dependencies.sipiVersion.value
+                "SIPI_VERSION_TAG" -> Dependencies.sipiVersion.value,
+                "KNORA_VERSION_TAG" -> version.value
             ),
 
             dockerImageCreationTask := Seq(
@@ -158,7 +156,7 @@ docs / buildPrequisites := {
 //////////////////////////////////////
 
 lazy val salsahCommonSettings = Seq(
-    name := "salsah"
+    name := "salsah1"
 )
 
 lazy val salsah1 = knoraModule("salsah1")
@@ -193,10 +191,10 @@ lazy val salsah1 = knoraModule("salsah1")
             mappings in Universal ++= {
                 // copy the public folder
                 directory("salsah1/src/public") ++
-                        // copy the configuration files to config directory
-                        contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
-                        // copy configuration files to config directory
-                        contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
+                // copy the configuration files to config directory
+                contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
+                // copy configuration files to config directory
+                contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
             },
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
@@ -224,7 +222,7 @@ lazy val salsah1 = knoraModule("salsah1")
 
                 Cmd("EXPOSE", "3335"),
 
-                ExecCmd("ENTRYPOINT", "bin/salsah"),
+                ExecCmd("ENTRYPOINT", "bin/salsah1"),
             ),
 
 

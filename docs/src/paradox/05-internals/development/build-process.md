@@ -58,6 +58,17 @@ for the `webapi` project, run:
 $ sbt webapi/docker:stage
 ```` 
 
+## Running the Knora Stack (graphdb, webapi, salsah1, sipi)
+
+The complete knora stack (graphdb, webapi, salsah1, sipi) can be started by invoking the following SBT task:
+
+```bash
+$ sbt dockerComposeUp
+```
+
+This will build, publish locally and use the docker images for `webapi` and `salsah1`.
+
+
 ## Building Documentation
 
 The complete Knora documentation site is built by invoking the following tasks:

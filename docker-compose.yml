@@ -40,7 +40,7 @@ services:
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
 
   webapi:
-    image: dhlabbasel/webapi:latest<localBuild>
+    image: dhlabbasel/webapi:${KNORA_VERSION_TAG}<localBuild>
     ports:
     - "3333:3333"
     - "10001:10001"
@@ -53,7 +53,7 @@ services:
     - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
 
   salsah1:
-    image: dhlabbasel/salsah1:latest<localBuild>
+    image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>
     ports:
     - "3335:3335"
     networks:

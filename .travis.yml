@@ -56,9 +56,9 @@ jobs:
         - rm -rf $HOME/.ivy2
         - cd $TRAVIS_BUILD_DIR && sbt clean docker:stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
-        - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        - sbt webapi/docker:publish
-        - sbt salsah1/docker:publish
+        # - docker login -u $DOCKER_USER -p $DOCKER_PASS
+        # - sbt webapi/docker:publish
+        # - sbt salsah1/docker:publish
     # unit and e2e tests
     - stage: test
       script:
@@ -152,9 +152,7 @@ jobs:
         # webapi
         - sbt webapi/docker:publish
         # salsah1
-        - docker build $TRAVIS_BUILD_DIR/salsah1/ -t $SALSAH1_REPO:$TRAVIS_BRANCH
-        - docker tag $SALSAH1_REPO:$TRAVIS_BRANCH $SALSAH1_REPO:latest
-        - docker push $SALSAH1_REPO
+        - sbt webapi/salsah1:publish
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
         - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
