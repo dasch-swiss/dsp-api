@@ -41,4 +41,4 @@ representing complete API responses extend the `KnoraResponseV1` trait,
 which extends `Jsonable`. Case classes representing Knora values extend
 the `ApiValueV1` trait, which also extends `Jsonable`. To make the
 responders reusable, the JSON for API responses is generated only at the
-last moment, by the `RouteUtils.runJsonRoute()` function.
+last moment, by the `RouteUtilV1.runJsonRoute()` function.

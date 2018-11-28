@@ -90,7 +90,7 @@ object SampleRouteV1 extends Authenticator {
                 val userProfile = getUserProfileV1(requestContext)
                 val requestMessage = makeRequestMessage(iri, userProfile)
 
-                RouteUtils.runJsonRoute(
+                RouteUtilV1.runJsonRoute(
                     requestMessage,
                     requestContext,
                     settings,
