@@ -92,7 +92,7 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
 }
 
 /**
-  * Represents an binary file that has been temporarily stored by Sipi (GUI-case). Knora route recieved a request telling it about
+  * Represents an binary file that has been temporarily stored by Sipi (GUI-case). Knora route received a request telling it about
   * a file that is already managed by Sipi. The binary file data have already been sent to Sipi by the client (browser-based GUI).
   * Knora has to tell Sipi about the name of the file to be converted.
   * For further details, please read the docs: Sipi -> Interaction Between Sipi and Knora.

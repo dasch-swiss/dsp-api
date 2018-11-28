@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Interaction Between Sipi and Knora
 
+TODO: reorganise this to make clear that it describes Knora API v1.
+
 ## General Remarks
 
 Knora and Sipi (Simple Image Presentation Interface) are two

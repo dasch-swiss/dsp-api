@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import resource._

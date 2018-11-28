@@ -124,7 +124,8 @@ sipi = {
     knora_port = '3333',
 
     --
-    -- loglevel, one of "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG"
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
     --
     loglevel = "DEBUG"
 
@@ -173,6 +174,21 @@ routes = {
         method = 'POST',
         route = '/Knora_logout',
         script = 'Knora_logout.lua'
+    },
+    {
+        method = 'POST',
+        route = '/upload',
+        script = 'upload.lua'
+    },
+    {
+        method = 'POST',
+        route = '/store',
+        script = 'store.lua'
+    },
+    {
+        method = 'DELETE',
+        route = '/delete_temp_file',
+        script = 'delete_temp_file.lua'
     }
 
 }

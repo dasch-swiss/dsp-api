@@ -34,7 +34,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
 - [Administration](administration.md)
-- [API v2](api-v2.md)
-- [Gravsearch](gravsearch.md)
+- [API v2](api-v2/index.md)
 
 @@@

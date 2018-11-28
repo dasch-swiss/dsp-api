@@ -759,11 +759,11 @@ class ResourcesResponderV1 extends Responder {
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
           * @param id            the file value IRI
-          * @param permissioCode the current user's permission code on the file value.
+          * @param permissionCode the current user's permission code on the file value.
           * @param image         a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                                       permissioCode: Option[Int],
+                                       permissionCode: Option[Int],
                                        image: StillImageFileValueV1)
 
 
@@ -791,7 +791,7 @@ class ResourcesResponderV1 extends Responder {
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
-                        permissioCode = fileValuePermission,
+                        permissionCode = fileValuePermission,
                         image = StillImageFileValueV1(
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
@@ -943,23 +943,19 @@ class ResourcesResponderV1 extends Responder {
                     // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
                     sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
-
                     contextItems = sourceObjectsWithPermissions.map {
-                        (sourceObj: SourceObject) =>
+                        sourceObj: SourceObject =>
 
-                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && fileVal.image.isPreview) match {
-                                case Some(preview: StillImageFileValue) =>
-                                    Some(valueUtilV1.fileValueV12LocationV1(preview.image))
-                                case None => None
-                            }
+                            // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                            // a IIIF preview URL from the full-size image.
 
-                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && !fileVal.image.isPreview) match {
+                            val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (Option[LocationV1], Option[Seq[LocationV1]]) = sourceObj.fileValues.find(fileVal => fileVal.permissionCode.nonEmpty && !fileVal.image.isPreview) match {
                                 case Some(full: StillImageFileValue) =>
-                                    val fileVals = createMultipleImageResolutions(full.image)
-                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1))
+                                    val preview: LocationV1 = valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(full.image))
+                                    val fileVals: Seq[LocationV1] = createMultipleImageResolutions(full.image).map(valueUtilV1.fileValueV12LocationV1)
+                                    (Some(preview), Some(Vector(preview) ++ fileVals))
 
-                                case None => None
+                                case None => (None, None)
                             }
 
                             ResourceContextItemV1(
@@ -969,9 +965,6 @@ class ResourcesResponderV1 extends Responder {
                                 firstprop = sourceObj.firstprop
                             )
                     }
-
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
-
 
                 } yield contextItems
             } else {
@@ -2337,16 +2330,20 @@ class ResourcesResponderV1 extends Responder {
 
                 fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 
-                (previewFileValues, fullFileValues) = fileValues.partition {
-                    case fileValue: StillImageFileValueV1 => fileValue.isPreview
-                    case _ => false
+                // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                // a IIIF preview URL from the full-size image.
+
+                fullSizeImageFileValues: Seq[StillImageFileValueV1] = fileValues.collect {
+                    case fileValue: StillImageFileValueV1 if !fileValue.isPreview => fileValue
                 }
 
-                // Convert the preview file value into a LocationV1 as required by Knora API v1.
-                preview: Option[LocationV1] = previewFileValues.headOption.map(fileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1))
+                preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
+                    fullSizeImageFileValue: StillImageFileValueV1 =>
+                        valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
+                }
 
                 // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-                locations: Seq[LocationV1] = preview.toVector ++ fullFileValues.flatMap {
+                locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap {
                     fileValueV1 => createMultipleImageResolutions(fileValueV1).map(oneResolution => valueUtilV1.fileValueV12LocationV1(oneResolution))
                 }
 
@@ -2766,5 +2763,25 @@ class ResourcesResponderV1 extends Responder {
 
             case otherFileValueV1 => Vector(otherFileValueV1)
         }
+    }
+
+    /**
+      * Converts a full-size still image file value to a preview image.
+      *
+      * @param fullSizeImageFileValue the full-size image.
+      * @return a corresponding preview image.
+      */
+    private def fullSizeImageFileValueToPreview(fullSizeImageFileValue: StillImageFileValueV1): StillImageFileValueV1 = {
+        val proportion = fullSizeImageFileValue.dimY.toDouble / 128.0
+        val previewHeight = 128
+        val previewWidth = (fullSizeImageFileValue.dimX.toDouble / proportion).round.toInt
+
+        fullSizeImageFileValue.copy(
+            dimX = previewWidth,
+            dimY = previewHeight,
+            qualityLevel = 10,
+            isPreview = true,
+            qualityName = Some(SipiConstants.StillImage.thumbnailQuality)
+        )
     }
 }

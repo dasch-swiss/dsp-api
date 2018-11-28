@@ -171,8 +171,6 @@ class DateUtilV1Spec extends WordSpec with Matchers {
             ))
 
             val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
-            println(reverseConvertedDateValueV1)
-            println(dateValueV1)
             reverseConvertedDateValueV1 should be(dateValueV1)
         }
 
