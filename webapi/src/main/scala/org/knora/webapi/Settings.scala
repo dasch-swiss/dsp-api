@@ -64,7 +64,7 @@ class SettingsImpl(config: Config) extends Extension {
             val _tmpDataDir = new File(tmpDataDir)
             _tmpDataDir.mkdir()
         } catch {
-            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
+            case e: Throwable => throw FileWriteException(s"Tmp data directory $tmpDataDir could not be created: ${e.getMessage}")
         }
     }
 
@@ -74,12 +74,12 @@ class SettingsImpl(config: Config) extends Extension {
             val _dataDir = new File(dataDir)
             _dataDir.mkdir()
         } catch {
-            case e: Throwable => throw FileWriteException(s"Tmp data directory ${tmpDataDir} could not be created: ${e.getMessage}")
+            case e: Throwable => throw FileWriteException(s"Tmp data directory $tmpDataDir could not be created: ${e.getMessage}")
         }
     }
 
     val imageMimeTypes: Vector[String] = config.getList("app.sipi.image-mime-types").iterator.asScala.map {
-        (mType: ConfigValue) => mType.unwrapped.toString
+        mType: ConfigValue => mType.unwrapped.toString
     }.toVector
 
     val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
@@ -103,13 +103,16 @@ class SettingsImpl(config: Config) extends Extension {
     val internalSipiFileServerGetUrl: String = s"$internalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
     val externalSipiFileServerGetUrl: String = s"$externalSipiBaseUrl/$sipiFileServerPrefix/$sipiPrefix"
 
-    val internalSipiImageConversionUrl: String = s"$internalSipiBaseUrl"
+    val internalSipiImageConversionUrlV1: String = s"$internalSipiBaseUrl"
+    val sipiPathConversionRouteV1: String = config.getString("app.sipi.v1.path-conversion-route")
+    val sipiFileConversionRouteV1: String = config.getString("app.sipi.v1.file-conversion-route")
 
-    val sipiPathConversionRoute: String = config.getString("app.sipi.path-conversion-route")
-    val sipiFileConversionRoute: String = config.getString("app.sipi.file-conversion-route")
+    val sipiFileMetadataRouteV2: String = config.getString("app.sipi.v2.file-metadata-route")
+    val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
+    val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
 
     val caches: Vector[KnoraCacheConfig] = config.getList("app.caches").iterator.asScala.map {
-        (cacheConfigItem: ConfigValue) =>
+        cacheConfigItem: ConfigValue =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]].asScala
             KnoraCacheConfig(cacheConfigMap("cache-name").asInstanceOf[String],
                 cacheConfigMap("max-elements-in-memory").asInstanceOf[Int],
@@ -145,23 +148,23 @@ class SettingsImpl(config: Config) extends Extension {
     val triplestorePort: Int = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getInt("app.triplestore.graphdb.port")
         case TriplestoreTypes.HttpFuseki => config.getInt("app.triplestore.fuseki.port")
-        case other => 9999
+        case _ => 9999
     }
 
     val triplestoreDatabaseName: String = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.repository-name")
         case TriplestoreTypes.HttpFuseki => config.getString("app.triplestore.fuseki.repository-name")
-        case other => ""
+        case _ => ""
     }
 
     val triplestoreUsername: String = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.username")
-        case other => ""
+        case _ => ""
     }
 
     val triplestorePassword: String = triplestoreType match {
         case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => config.getString("app.triplestore.graphdb.password")
-        case other => ""
+        case _ => ""
     }
 
     //used in the store package
@@ -188,7 +191,7 @@ class SettingsImpl(config: Config) extends Extension {
     val profileQueries: Boolean = config.getBoolean("app.triplestore.profile-queries")
 
     val routesToReject: Seq[String] = config.getList("app.routes-to-reject").iterator.asScala.map {
-        (mType: ConfigValue) => mType.unwrapped.toString
+        mType: ConfigValue => mType.unwrapped.toString
     }.toSeq
 
     // monitoring reporters
@@ -205,7 +208,7 @@ class SettingsImpl(config: Config) extends Extension {
 
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {
 
-    override def lookup() = Settings
+    override def lookup(): Settings.type = Settings
 
     override def createExtension(system: ExtendedActorSystem) =
         new SettingsImpl(system.settings.config)

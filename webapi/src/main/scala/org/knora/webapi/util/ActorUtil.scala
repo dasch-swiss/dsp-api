@@ -63,7 +63,7 @@ object ActorUtil {
     def future2Message[ReplyT](sender: ActorRef, future: Future[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
         future.onComplete {
             tryObj: Try[ReplyT] =>
-                try2message(
+                try2Message(
                     sender = sender,
                     tryObj = tryObj,
                     log = log
@@ -78,7 +78,7 @@ object ActorUtil {
       * @param tryObj a [[Try]] that will provide the result of the sender's request.
       * @param log    a [[LoggingAdapter]] for logging non-serializable exceptions.
       */
-    def try2message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
+    def try2Message[ReplyT](sender: ActorRef, tryObj: Try[ReplyT], log: LoggingAdapter)(implicit executionContext: ExecutionContext): Unit = {
         tryObj match {
             case Success(result) => sender ! result
 

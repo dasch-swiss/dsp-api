@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2 Design
+# API v2 Design Overview
 
 @@toc
 
@@ -57,7 +57,7 @@ provided.
 
 Each schema has its own type IRIs, which are derived from the ones used
 in the triplestore. For details of these different IRI formats, see
-@ref:[Knora IRIs](../../03-apis/api-v2/knora-iris.md).
+@ref:[Knora IRIs](../../../03-apis/api-v2/knora-iris.md).
 
 ## Implementation
 

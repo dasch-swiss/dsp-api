@@ -84,6 +84,8 @@ package object responders {
     val LISTS_V2_ACTOR_NAME: String = "listsV2"
     val LISTS_V2_ACTOR_PATH: String = RESPONDER_MANAGER_ACTOR_PATH + "/" + LISTS_V2_ACTOR_NAME
 
+    val SIPI_ROUTER_V2_ACTOR_NAME: String = "sipiRouterV2"
+    val SIPI_ROUTER_V2_ACTOR_PATH: String = RESPONDER_MANAGER_ACTOR_PATH + "/" + SIPI_ROUTER_V2_ACTOR_NAME
 
     // ------------------------------------------------------------------------------------------
     // ------------------------------------- Admin Routers --------------------------------------

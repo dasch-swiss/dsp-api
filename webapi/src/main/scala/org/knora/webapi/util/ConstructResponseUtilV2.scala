@@ -21,7 +21,12 @@ package org.knora.webapi.util
 
 import java.time.Instant
 
+import akka.actor.ActorSelection
+import akka.http.scaladsl.util.FastFuture
+import akka.pattern._
+import akka.util.Timeout
 import org.knora.webapi._
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlConstructResponse
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
@@ -32,6 +37,8 @@ import org.knora.webapi.twirl._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameV2, DatePrecisionV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
+
+import scala.concurrent.{ExecutionContext, Future}
 
 
 object ConstructResponseUtilV2 {
@@ -47,7 +54,7 @@ object ConstructResponseUtilV2 {
       * @param valueObjectIri   the value object's IRI.
       * @param valueObjectClass the type (class) of the value object.
       * @param nestedResource   the nested resource in case of a link value (either the source or the target of a link value, depending on [[isIncomingLink]]).
-      * @param isIncomingLink     indicates if it is an incoming or outgoing link in case of a link value.
+      * @param isIncomingLink   indicates if it is an incoming or outgoing link in case of a link value.
       * @param assertions       the value objects assertions.
       * @param standoff         standoff assertions, if any.
       * @param listNode         assertions about the referred list node, if the value points to a list node.
@@ -434,13 +441,173 @@ object ConstructResponseUtilV2 {
     }
 
     /**
-      * Given a [[ValueRdfData]], create a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
+      * Given a [[ValueRdfData]], constructs a [[TextValueContentV2]].
+      *
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[TextValueContentV2]].
+      */
+    private def makeTextValueContentV2(valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
+        // Any knora-base:TextValue may have a language
+        val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
+
+        if (valueObject.standoff.nonEmpty) {
+            // standoff nodes given
+            // get the IRI of the mapping
+            val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
+
+            val mapping: MappingAndXSLTransformation = mappings(mappingIri)
+
+            val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
+
+            FastFuture.successful(TextValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasString = valueObjectValueHasString,
+                valueHasLanguage = valueLanguageOption,
+                standoffAndMapping = Some(
+                    StandoffAndMapping(
+                        standoff = standoffTags,
+                        mappingIri = mappingIri,
+                        mapping = mapping.mapping,
+                        xslt = mapping.XSLTransformation
+                    )
+                ),
+                comment = valueCommentOption
+            ))
+
+        } else {
+            // no standoff nodes given
+            FastFuture.successful(TextValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasString = valueObjectValueHasString,
+                valueHasLanguage = valueLanguageOption,
+                standoffAndMapping = None,
+                comment = valueCommentOption
+            ))
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[FileValueContentV2]].
+      *
+      * @param valueType                 the IRI of the file value type
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[FileValueContentV2]].
+      */
+    private def makeFileValueContentV2(valueType: IRI,
+                                       valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueContentV2] = {
+        val fileValue = FileValueV2(
+            internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
+            internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
+            originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
+            originalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.OriginalMimeType)
+        )
+
+        valueType match {
+            case OntologyConstants.KnoraBase.StillImageFileValue =>
+
+                FastFuture.successful(StillImageFileValueContentV2(
+                    ontologySchema = InternalSchema,
+                    fileValue = fileValue,
+                    dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
+                    dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
+                    comment = valueCommentOption
+                ))
+
+            case OntologyConstants.KnoraBase.TextFileValue =>
+
+                FastFuture.successful(TextFileValueContentV2(
+                    ontologySchema = InternalSchema,
+                    fileValue = fileValue,
+                    comment = valueCommentOption
+                ))
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[LinkValueContentV2]].
+      *
+      * @param valueObject               the given [[ValueRdfData]].
+      * @param valueObjectValueHasString the value's `knora-base:valueHasString`.
+      * @param valueCommentOption        the value's comment, if any.
+      * @param mappings                  the mappings needed for standoff conversions and XSL transformations.
+      * @param responderManager          the Knora responder manager.
+      * @param requestingUser            the user making the request.
+      * @return a [[LinkValueContentV2]].
+      */
+    private def makeLinkValueContentV2(valueObject: ValueRdfData,
+                                       valueObjectValueHasString: String,
+                                       valueCommentOption: Option[String],
+                                       mappings: Map[IRI, MappingAndXSLTransformation],
+                                       responderManager: ActorSelection,
+                                       requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
+        val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
+            valueObject.assertions(OntologyConstants.Rdf.Subject)
+        } else {
+            valueObject.assertions(OntologyConstants.Rdf.Object)
+        }
+
+        val linkValue = LinkValueContentV2(
+            ontologySchema = InternalSchema,
+            referredResourceIri = referredResourceIri,
+            isIncomingLink = valueObject.isIncomingLink,
+            nestedResource = None,
+            comment = valueCommentOption
+        )
+
+        valueObject.nestedResource match {
+
+            case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
+
+                // add information about the referred resource
+
+                for {
+                    nestedResource <- constructReadResourceV2(
+                        resourceIri = referredResourceIri,
+                        resourceWithValueRdfData = nestedResourceAssertions,
+                        mappings = mappings,
+                        responderManager = responderManager,
+                        requestingUser = requestingUser
+                    )
+                } yield linkValue.copy(
+                    nestedResource = Some(nestedResource) // construct a `ReadResourceV2`
+                )
+
+
+            case None => FastFuture.successful(linkValue) // do not include information about the referred resource
+        }
+    }
+
+    /**
+      * Given a [[ValueRdfData]], constructs a [[ValueContentV2]], considering the specific type of the given [[ValueRdfData]].
       *
       * @param valueObject the given [[ValueRdfData]].
       * @param mappings    the mappings needed for standoff conversions and XSL transformations.
       * @return a [[ValueContentV2]] representing a value.
       */
-    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ValueContentV2 = {
+    def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
+                                             mappings: Map[IRI, MappingAndXSLTransformation],
+                                             responderManager: ActorSelection,
+                                             requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         // every knora-base:Value (any of its subclasses) has a string representation
@@ -449,55 +616,25 @@ object ConstructResponseUtilV2 {
         // every knora-base:value (any of its subclasses) may have a comment
         val valueCommentOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasComment)
 
-        val valueType = valueObject.valueObjectClass
+        val valueType: IRI = valueObject.valueObjectClass
 
         valueType match {
             case OntologyConstants.KnoraBase.TextValue =>
-                // Any knora-base:TextValue may have a language
-                val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
-
-                if (valueObject.standoff.nonEmpty) {
-                    // standoff nodes given
-                    // get the IRI of the mapping
-                    val mappingIri: IRI = valueObject.assertions.getOrElse(OntologyConstants.KnoraBase.ValueHasMapping, throw InconsistentTriplestoreDataException(s"no mapping IRI associated with standoff belonging to textValue ${valueObject.valueObjectIri}"))
-
-                    val mapping: MappingAndXSLTransformation = mappings(mappingIri)
-
-                    val standoffTags: Vector[StandoffTagV2] = StandoffTagUtilV2.createStandoffTagsV2FromSparqlResults(mapping.standoffEntities, valueObject.standoff)
-
-                    TextValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasString = valueObjectValueHasString,
-                        valueHasLanguage = valueLanguageOption,
-                        standoffAndMapping = Some(
-                            StandoffAndMapping(
-                                standoff = standoffTags,
-                                mappingIri = mappingIri,
-                                mapping = mapping.mapping,
-                                xslt = mapping.XSLTransformation
-                            )
-                        ),
-                        comment = valueCommentOption
-                    )
-
-                } else {
-                    // no standoff nodes given
-                    TextValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasString = valueObjectValueHasString,
-                        valueHasLanguage = valueLanguageOption,
-                        standoffAndMapping = None,
-                        comment = valueCommentOption
-                    )
-                }
-
+                makeTextValueContentV2(
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
+                )
 
             case OntologyConstants.KnoraBase.DateValue =>
                 val startPrecisionStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartPrecision)
                 val endPrecisionStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndPrecision)
                 val calendarNameStr = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasCalendar)
 
-                DateValueContentV2(
+                FastFuture.successful(DateValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasStartJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasStartJDN).toInt,
                     valueHasEndJDN = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasEndJDN).toInt,
@@ -505,56 +642,56 @@ object ConstructResponseUtilV2 {
                     valueHasEndPrecision = DatePrecisionV2.parse(endPrecisionStr, throw InconsistentTriplestoreDataException(s"Invalid date precision: $endPrecisionStr")),
                     valueHasCalendar = CalendarNameV2.parse(calendarNameStr, throw InconsistentTriplestoreDataException(s"Invalid calendar name: $calendarNameStr")),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.IntValue =>
-                IntegerValueContentV2(
+                FastFuture.successful(IntegerValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasInteger = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasInteger).toInt,
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.DecimalValue =>
-                DecimalValueContentV2(
+                FastFuture.successful(DecimalValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasDecimal = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasDecimal)),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.BooleanValue =>
-                BooleanValueContentV2(
+                FastFuture.successful(BooleanValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasBoolean = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasBoolean).toBoolean,
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.UriValue =>
-                UriValueContentV2(
+                FastFuture.successful(UriValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasUri = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasUri),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.ColorValue =>
-                ColorValueContentV2(
+                FastFuture.successful(ColorValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasColor = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasColor),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.GeomValue =>
-                GeomValueContentV2(
+                FastFuture.successful(GeomValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasGeometry = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeometry),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.GeonameValue =>
-                GeonameValueContentV2(
+                FastFuture.successful(GeonameValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasGeonameCode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasGeonameCode),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.ListValue =>
 
@@ -563,84 +700,44 @@ object ConstructResponseUtilV2 {
                     case None => throw InconsistentTriplestoreDataException(s"Expected ${OntologyConstants.Rdfs.Label} in assertions for a value object of type list value.")
                 }
 
-                HierarchicalListValueContentV2(
+                FastFuture.successful(HierarchicalListValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasListNode = valueObject.assertions(OntologyConstants.KnoraBase.ValueHasListNode),
                     listNodeLabel = Some(listNodeLabel),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.IntervalValue =>
-                IntervalValueContentV2(
+                FastFuture.successful(IntervalValueContentV2(
                     ontologySchema = InternalSchema,
                     valueHasIntervalStart = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalStart)),
                     valueHasIntervalEnd = BigDecimal(valueObject.assertions(OntologyConstants.KnoraBase.ValueHasIntervalEnd)),
                     comment = valueCommentOption
-                )
+                ))
 
             case OntologyConstants.KnoraBase.LinkValue =>
-
-                val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
-                    valueObject.assertions(OntologyConstants.Rdf.Subject)
-                } else {
-                    valueObject.assertions(OntologyConstants.Rdf.Object)
-                }
-
-                val linkValue = LinkValueContentV2(
-                    ontologySchema = InternalSchema,
-                    referredResourceIri = referredResourceIri,
-                    isIncomingLink = valueObject.isIncomingLink,
-                    nestedResource = None,
-                    comment = valueCommentOption
+                makeLinkValueContentV2(
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
                 )
 
-                valueObject.nestedResource match {
-
-                    case Some(nestedResourceAssertions: ResourceWithValueRdfData) =>
-
-                        // add information about the referred resource
-                        linkValue.copy(
-                            nestedResource = Some(constructReadResourceV2(referredResourceIri, nestedResourceAssertions, mappings)) // construct a `ReadResourceV2`
-                        )
-
-                    case None => linkValue // do not include information about the referred resource
-
-                }
-
-
-            case OntologyConstants.KnoraBase.StillImageFileValue =>
-
-                val isPreviewStr = valueObject.assertions.get(OntologyConstants.KnoraBase.IsPreview)
-                val isPreview = stringFormatter.optionStringToBoolean(isPreviewStr, throw InconsistentTriplestoreDataException(s"Invalid boolean for ${OntologyConstants.KnoraBase.IsPreview}: $isPreviewStr"))
-
-                StillImageFileValueContentV2(
-                    ontologySchema = InternalSchema,
-                    internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
-                    internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
-                    originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
-                    originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
-                    dimX = valueObject.assertions(OntologyConstants.KnoraBase.DimX).toInt,
-                    dimY = valueObject.assertions(OntologyConstants.KnoraBase.DimY).toInt,
-                    qualityLevel = valueObject.assertions(OntologyConstants.KnoraBase.QualityLevel).toInt,
-                    isPreview = isPreview,
-                    comment = valueCommentOption
+            case fileValueClass: IRI if OntologyConstants.KnoraBase.FileValueClasses.contains(fileValueClass) =>
+                makeFileValueContentV2(
+                    valueType = fileValueClass,
+                    valueObject = valueObject,
+                    valueObjectValueHasString = valueObjectValueHasString,
+                    valueCommentOption = valueCommentOption,
+                    mappings = mappings,
+                    responderManager = responderManager,
+                    requestingUser = requestingUser
                 )
 
-            case OntologyConstants.KnoraBase.TextFileValue =>
-
-                TextFileValueContentV2(
-                    ontologySchema = InternalSchema,
-                    internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
-                    internalFilename = valueObject.assertions(OntologyConstants.KnoraBase.InternalFilename),
-                    originalFilename = valueObject.assertions(OntologyConstants.KnoraBase.OriginalFilename),
-                    originalMimeType = valueObject.assertions.get(OntologyConstants.KnoraBase.OriginalMimeType),
-                    comment = valueCommentOption
-                )
-
-            case other =>
-                throw NotImplementedException(s"not implemented yet: $other")
+            case other => throw NotImplementedException(s"Not implemented yet: $other")
         }
-
     }
 
     /**
@@ -651,7 +748,11 @@ object ConstructResponseUtilV2 {
       * @param resourceWithValueRdfData the Rdf data belonging to the resource.
       * @return a [[ReadResourceV2]].
       */
-    def constructReadResourceV2(resourceIri: IRI, resourceWithValueRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
+    def constructReadResourceV2(resourceIri: IRI,
+                                resourceWithValueRdfData: ResourceWithValueRdfData,
+                                mappings: Map[IRI, MappingAndXSLTransformation],
+                                responderManager: ActorSelection,
+                                requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         def getDeletionInfo(entityIri: IRI, assertions: Map[IRI, String]): Option[DeletionInfo] = {
@@ -687,9 +788,9 @@ object ConstructResponseUtilV2 {
         val resourceDeletionInfo = getDeletionInfo(entityIri = resourceIri, assertions = resourceAssertionsMap)
 
         // get the resource's values
-        val valueObjects: Map[SmartIri, Seq[ReadValueV2]] = resourceWithValueRdfData.valuePropertyAssertions.map {
+        val valueObjectFutures: Map[SmartIri, Seq[Future[ReadValueV2]]] = resourceWithValueRdfData.valuePropertyAssertions.map {
             case (property: IRI, valObjs: Seq[ValueRdfData]) =>
-                val readValues: Seq[ReadValueV2] = valObjs.sortBy(_.valueObjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
+                val readValues: Seq[Future[ReadValueV2]] = valObjs.sortBy(_.valueObjectIri).sortBy { // order values by value IRI, then by knora-base:valueHasOrder
                     valObj: ValueRdfData =>
 
                         valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
@@ -700,36 +801,58 @@ object ConstructResponseUtilV2 {
 
                 }.map {
                     valObj: ValueRdfData =>
-                        val valueContent: ValueContentV2 = createValueContentV2FromValueRdfData(valObj, mappings = mappings)
-                        val valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
-                        val valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
-                        val maybeValueHasRefCountStr: Option[String] = valObj.assertions.get(OntologyConstants.KnoraBase.ValueHasRefCount)
-                        val valueHasRefCount: Option[Int] = maybeValueHasRefCountStr.map(refCountStr => stringFormatter.validateInt(refCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $refCountStr")))
-                        val previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
-                        val valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
+                        for {
+                            valueContent: ValueContentV2 <- createValueContentV2FromValueRdfData(
+                                valueObject = valObj,
+                                mappings = mappings,
+                                responderManager = responderManager,
+                                requestingUser = requestingUser
+                            )
 
-                        ReadValueV2(
-                            valueIri = valObj.valueObjectIri,
-                            attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
-                            permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
-                            valueCreationDate = valueCreationDate,
-                            valueContent = valueContent,
-                            valueHasRefCount = valueHasRefCount,
-                            previousValueIri = previousValueIri,
-                            deletionInfo = valueDeletionInfo
-                         )
+                            valueCreationDateStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueCreationDate)
+                            valueCreationDate: Instant = stringFormatter.toInstant(valueCreationDateStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueCreationDate in value <${valObj.valueObjectIri}>: $valueCreationDateStr"))
+                            valueDeletionInfo = getDeletionInfo(entityIri = valObj.valueObjectIri, assertions = valObj.assertions)
+                        } yield valueContent match {
+                            case linkValueContentV2: LinkValueContentV2 =>
+                                val valueHasRefCountStr: String = valObj.assertions(OntologyConstants.KnoraBase.ValueHasRefCount)
+                                val valueHasRefCount: Int = stringFormatter.validateInt(valueHasRefCountStr, throw InconsistentTriplestoreDataException(s"Couldn't parse knora-base:valueHasRefCount in value <${valObj.valueObjectIri}>: $valueHasRefCountStr"))
+                                val previousValueIri: Option[IRI] = valObj.assertions.get(OntologyConstants.KnoraBase.PreviousValue)
+
+                                ReadLinkValueV2(
+                                    valueIri = valObj.valueObjectIri,
+                                    attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
+                                    permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                                    valueCreationDate = valueCreationDate,
+                                    valueContent = linkValueContentV2,
+                                    valueHasRefCount = valueHasRefCount,
+                                    previousValueIri = previousValueIri,
+                                    deletionInfo = valueDeletionInfo
+                                )
+
+                            case nonLinkValueContentV2: NonLinkValueContentV2 =>
+                                ReadNonLinkValueV2(
+                                    valueIri = valObj.valueObjectIri,
+                                    attachedToUser = valObj.assertions(OntologyConstants.KnoraBase.AttachedToUser),
+                                    permissions = valObj.assertions(OntologyConstants.KnoraBase.HasPermissions),
+                                    valueCreationDate = valueCreationDate,
+                                    valueContent = nonLinkValueContentV2,
+                                    deletionInfo = valueDeletionInfo
+                                )
+                        }
                 }
 
                 property.toSmartIri -> readValues
         }
 
-
-        ReadResourceV2(
+        for {
+            projectResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(maybeIri = Some(resourceAttachedToProject), requestingUser = requestingUser)).mapTo[ProjectGetResponseADM]
+            valueObjects <- ActorUtil.sequenceSeqFuturesInMap(valueObjectFutures)
+        } yield ReadResourceV2(
             resourceIri = resourceIri,
             resourceClassIri = resourceClass,
             label = resourceLabel,
             attachedToUser = resourceAttachedToUser,
-            attachedToProject = resourceAttachedToProject,
+            projectADM = projectResponse.project,
             permissions = resourcePermissions,
             values = valueObjects,
             creationDate = resourceCreationDate,
@@ -746,10 +869,19 @@ object ConstructResponseUtilV2 {
       * @param mappings        the mappings needed for standoff conversions and XSL transformations.
       * @return a [[ReadResourceV2]].
       */
-    def createFullResourceResponse(resourceIri: IRI, resourceRdfData: ResourceWithValueRdfData, mappings: Map[IRI, MappingAndXSLTransformation]): ReadResourceV2 = {
+    def createFullResourceResponse(resourceIri: IRI,
+                                   resourceRdfData: ResourceWithValueRdfData,
+                                   mappings: Map[IRI, MappingAndXSLTransformation],
+                                   responderManager: ActorSelection,
+                                   requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
-        constructReadResourceV2(resourceIri, resourceRdfData, mappings = mappings)
-
+        constructReadResourceV2(
+            resourceIri = resourceIri,
+            resourceWithValueRdfData = resourceRdfData,
+            mappings = mappings,
+            responderManager = responderManager,
+            requestingUser = requestingUser
+        )
     }
 
     /**
@@ -759,12 +891,17 @@ object ConstructResponseUtilV2 {
       * @param orderByResourceIri the order in which the resources should be returned.
       * @return a collection of [[ReadResourceV2]] representing the search results.
       */
-    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData], orderByResourceIri: Seq[IRI], mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation], forbiddenResource: Option[ReadResourceV2]): Vector[ReadResourceV2] = {
+    def createSearchResponse(searchResults: Map[IRI, ResourceWithValueRdfData],
+                             orderByResourceIri: Seq[IRI],
+                             mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
+                             forbiddenResource: Option[ReadResourceV2],
+                             responderManager: ActorSelection,
+                             requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
 
         if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")
 
         // iterate over orderByResourceIris and construct the response in the correct order
-        orderByResourceIri.map {
+        val readResourceFutures: Vector[Future[ReadResourceV2]] = orderByResourceIri.map {
             resourceIri: IRI =>
 
                 // the user may not have the permissions to see the resource
@@ -773,14 +910,21 @@ object ConstructResponseUtilV2 {
                     case Some(assertions: ResourceWithValueRdfData) =>
                         // sufficient permissions
                         // add the resource to the list of results
-                        constructReadResourceV2(resourceIri, assertions, mappings = mappings)
+                        constructReadResourceV2(
+                            resourceIri = resourceIri,
+                            resourceWithValueRdfData = assertions,
+                            mappings = mappings,
+                            responderManager = responderManager,
+                            requestingUser = requestingUser
+                        )
 
                     case None =>
                         // include the forbidden resource instead of skipping (the amount of results should be constant -> limit)
-                        forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None"))
+                        Future(forbiddenResource.getOrElse(throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")))
 
                 }
         }.toVector
 
+        Future.sequence(readResourceFutures)
     }
 }

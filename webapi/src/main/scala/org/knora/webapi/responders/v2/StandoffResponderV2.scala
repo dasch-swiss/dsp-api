@@ -86,7 +86,7 @@ class StandoffResponderV2 extends Responder {
 
             textRepresentationResponseV2: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(resourceIris = Vector(xslTransformationIri), requestingUser = requestingUser)).mapTo[ReadResourcesSequenceV2]
 
-            xsltFileValue: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
+            xsltFileValueContent: TextFileValueContentV2 = textRepresentationResponseV2.resources.headOption match {
                 case Some(resource: ReadResourceV2) if resource.resourceClassIri.toString == OntologyConstants.KnoraBase.XSLTransformation =>
                     resource.values.get(OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
                         case Some(values: Seq[ReadValueV2]) if values.size == 1 => values.head match {
@@ -103,11 +103,11 @@ class StandoffResponderV2 extends Responder {
             }
 
             // check if `xsltFileValue` represents an XSL transformation
-            _ = if (!(xsltFileValue.internalMimeType == "text/xml" && xsltFileValue.originalFilename.endsWith(".xsl"))) {
+            _ = if (!(xsltFileValueContent.fileValue.internalMimeType == "text/xml" && xsltFileValueContent.fileValue.originalFilename.endsWith(".xsl"))) {
                 throw BadRequestException(s"$xslTransformationIri does not have a file value referring to an XSL transformation")
             }
 
-            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValue.internalFilename}"
+            xsltUrl: String = s"${settings.internalSipiFileServerGetUrl}/${xsltFileValueContent.fileValue.internalFilename}"
 
         } yield xsltUrl
 

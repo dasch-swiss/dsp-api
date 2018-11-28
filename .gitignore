@@ -34,3 +34,4 @@ docs/_format_docu_v2
 webapi/_fuseki/run
 triplestores/graphdb-se-7
 idea.vmoptions
+sipi/test

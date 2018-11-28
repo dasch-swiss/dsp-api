@@ -84,7 +84,7 @@ object Dependencies {
         // authentication
         val bcprov                 = "org.bouncycastle"                         % "bcprov-jdk15on"           % "1.59"
         val springSecurityCore     = "org.springframework.security"             % "spring-security-core"     % "4.2.5.RELEASE" exclude("commons-logging", "commons-logging") exclude("org.springframework", "spring-aop")
-        val jwt                    = "io.igl"                                  %% "jwt"                      % "1.2.2" exclude("commons-codec", "commons-codec")
+        val jwtSprayJson           = "com.pauldijou"                            %% "jwt-spray-json"          % "0.19.0"
 
         // caching
         val ehcache                = "net.sf.ehcache"                           % "ehcache"                  % "2.10.3"
@@ -208,7 +208,7 @@ object Dependencies {
         jodaConvert,
         jenaLibs.value,
         jenaText.value,
-        jwt,
+        jwtSprayJson,
         //library.kamonCore,
         //library.kamonAkka,
         //library.kamonAkkaHttp,

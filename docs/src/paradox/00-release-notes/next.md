@@ -16,3 +16,5 @@ Also, please change the "HINT" to the appropriate level:
 - [FIX] Incorrect standoff to XML conversion if empty tag has empty child tag (@github[#1054](#1054))
 - [FEATURE] Add default permission caching (@github[#1062](#1062))
 - [FIX] Fix unescaping in update check and reading standoff URL (@github[#1074](#1074))
+- [FIX] Incorrect standoff to XML conversion if empty tag has empty child tag (@github[#1054](#1054))
+- [FEATURE] Create image file values in API v2 (@github[#1011](#1011)). Requires Sipi with tagged commit `v1.4.1-SNAPSHOT` or later.
