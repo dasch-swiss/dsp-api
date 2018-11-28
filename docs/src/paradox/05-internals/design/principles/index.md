@@ -27,7 +27,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Futures with Akka](futures-with-akka.md)
 - [HTTP Module](http-module.md)
 - [Store Module](store-module.md)
-- [Shared Packages](shared-packages.md)
 - [Triplestore Updates](triplestore-updates.md)
 - [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
