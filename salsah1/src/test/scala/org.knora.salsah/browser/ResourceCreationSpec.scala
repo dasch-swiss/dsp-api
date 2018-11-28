@@ -122,13 +122,11 @@ class ResourceCreationSpec extends SalsahSpec {
 
         }
 
-        "create two resources of type anything:thing in two different projects as the multi-project user" in {
+        "create a resource of type anything:thing" in {
 
             page.open()
 
-            page.doLogin(email = multiUserEmail, password = testPassword, fullName = multiUserFullName)
-
-            page.selectProject(anythingProjectIri)
+            page.doLogin(email = anythingUserEmail, password = testPassword, fullName = anythingUserFullName)
 
             page.clickAddResourceButton()
 
@@ -177,28 +175,6 @@ class ResourceCreationSpec extends SalsahSpec {
             val resource1Window = page.getWindowByID(1)
 
             page.closeWindow(resource1Window)
-
-            page.selectProject(incunabulaProjectIri)
-
-            page.clickAddResourceButton()
-
-            page.selectVocabulary("0") // select all
-
-            page.selectRestype("http://www.knora.org/ontology/0001/anything#Thing")
-
-            val resource2Label: WebElement = page.getFormFieldByName("__LABEL__")
-
-            resource2Label.sendKeys("ein zweites Testding")
-
-            val resource2FloatVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasDecimal")
-
-            resource2FloatVal.sendKeys("5.7")
-
-            val resource2TextVal = page.getFormFieldByName("http://www.knora.org/ontology/0001/anything#hasText")
-
-            resource2TextVal.sendKeys("Dies ist auch ein Test")
-
-            page.clickSaveButtonForResourceCreationForm()
 
             page.doLogout()
 

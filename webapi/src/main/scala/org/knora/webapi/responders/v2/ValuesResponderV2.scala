@@ -237,7 +237,7 @@ class ValuesResponderV2 extends Responder {
 
             } yield CreateValueResponseV2(
                 valueIri = unverifiedValue.newValueIri,
-                valueType = unverifiedValue.value.valueType
+                valueType = unverifiedValue.valueContent.valueType
             )
         }
 
@@ -374,7 +374,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = value.unescape,
+            valueContent = value.unescape,
             permissions = valuePermissions
         )
     }
@@ -430,7 +430,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdate.newLinkValueIri,
-            value = linkValueContent.unescape,
+            valueContent = linkValueContent.unescape,
             permissions = valuePermissions
         )
     }
@@ -554,7 +554,7 @@ class ValuesResponderV2 extends Responder {
             insertSparql = insertSparql,
             unverifiedValue = UnverifiedValueV2(
                 newValueIri = newValueIri,
-                value = valueToCreate.valueContent,
+                valueContent = valueToCreate.valueContent.unescape,
                 permissions = valueToCreate.permissions
             )
         )
@@ -813,7 +813,7 @@ class ValuesResponderV2 extends Responder {
 
             } yield UpdateValueResponseV2(
                 valueIri = unverifiedValue.newValueIri,
-                valueType = unverifiedValue.value.valueType
+                valueType = unverifiedValue.valueContent.valueType
             )
         }
 
@@ -983,7 +983,7 @@ class ValuesResponderV2 extends Responder {
 
         } yield UnverifiedValueV2(
             newValueIri = newValueIri,
-            value = newValueVersion.unescape,
+            valueContent = newValueVersion.unescape,
             permissions = valuePermissions
         )
     }
@@ -1053,7 +1053,7 @@ class ValuesResponderV2 extends Responder {
             _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
         } yield UnverifiedValueV2(
             newValueIri = sparqlTemplateLinkUpdateForNewLink.newLinkValueIri,
-            value = newLinkValue.unescape,
+            valueContent = newLinkValue.unescape,
             permissions = valuePermissions
         )
     }
@@ -1503,14 +1503,14 @@ class ValuesResponderV2 extends Responder {
             propertyValues = resource.values.getOrElse(propertyIriInResult, throw UpdateNotPerformedException())
             valueInTriplestore: ReadValueV2 = propertyValues.find(_.valueIri == unverifiedValue.newValueIri).getOrElse(throw UpdateNotPerformedException())
 
-            _ = if (!(unverifiedValue.value.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
+            _ = if (!(unverifiedValue.valueContent.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
                 valueInTriplestore.permissions == unverifiedValue.permissions &&
                 valueInTriplestore.attachedToUser == requestingUser.id)) {
                 /*
                 import org.knora.webapi.util.MessageUtil
                 println("==============================")
                 println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.value))
+                println(MessageUtil.toSource(unverifiedValue.valueContent))
                 println
                 println("==============================")
                 println("Saved value:")
