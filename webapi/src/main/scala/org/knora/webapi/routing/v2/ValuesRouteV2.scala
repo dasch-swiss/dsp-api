@@ -66,6 +66,7 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage
@@ -96,6 +97,7 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage

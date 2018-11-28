@@ -23,83 +23,179 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## General Principles
 
-The design of Knora API v2 is intended to provide:
+  - Knora API v2 requests and responses are RDF documents. Any API v2
+    response can be returned as [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
+    [Turtle](https://www.w3.org/TR/turtle/),
+    or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/).
+  - Each class or property used in a request or response has a
+    definition in an ontology, which Knora can serve.
+  - Response formats are reused for different requests whenever
+    possible, to minimise the number of different response formats a
+    client has to handle. For example, any request for one or more
+    resources (such as a search result, or a request for one specific
+    resource) returns a response in the same format.
+  - Response size is limited by design. Large amounts of data must be
+    retrieved by requesting small pages of data, one after the other.
+  - Responses that provide data are distinct from responses that provide
+    definitions (i.e. ontology entities). Data responses indicate which
+    types are used, and the client can request information about these
+    types separately.
 
-- Scalability
-- Support for the development of different types of clients:
-  - Simple, project-specific web sites
-  - Powerful virtual research environments
-  - Clients that are designed to work with Linked Open Data but know as little
-    as possible about Knora
-- The benefits of a SPARQL endpoint for searches, along with better scalability,
-  as well as support for filtering of data according to permissions, versioning of data,
-  and Knora's humanities-focused data types.
-- The ability to query, create, and edit ontologies via the API
+## API Schemas
 
-### Scalability
+The types used in the triplestore are not exposed directly in the API.
+Instead, they are mapped onto API 'schemas'. Two schemas are currently
+provided.
 
-To favour scalability, API v2 aims to minimise the amount of work the
-server has to do per request:
+  - A complex schema, which is suitable both for reading and for editing
+    data. The complex schema represents values primarily as complex
+    objects.
+  - A simple schema, which is suitable for reading data but not for
+    editing it. The simple schema facilitates interoperability between
+    Knora ontologies and non-Knora ontologies, since it represents
+    values primarily as literals.
 
-- Responses are small by design. Large amounts of data must be
-  retrieved by requesting small pages of data, one after the other.
-  For example, the paging of search results is enforced.
-- Responses that provide data are distinct from responses that provide
-  definitions (i.e. ontology entities). Data responses indicate which
-  types are used, and the client can request ontology information about these
-  types separately.
-- Knora caches ontology information, so requests for this information are
-  relatively inexpensive (they do not involve the triplestore). A separate
-  caching service also could be put in front of Knora so that these requests
-  would not involve Knora at all. Clients can also cache ontology information
-  that they receive from Knora.
+Each schema has its own type IRIs, which are derived from the ones used
+in the triplestore. For details of these different IRI formats, see
+@ref:[Knora IRIs](../../../03-apis/api-v2/knora-iris.md).
 
-### Support for Different Types of Clients
+## Implementation
 
-- By default, RDF data is represented in [JSON-LD](https://json-ld.org/),
-  using meaningful prefixes to shorten IRIs. This is intended to facilitate
-  two use cases:
-  1. A simple web site that is designed to use data from a specific project
-     in Knora can be written by treating the JSON-LD as ordinary JSON, without
-     considering it as RDF data.
-  2. A more powerful client, designed to work with data from multiple projects,
-     can use the [JSON-LD API](https://www.w3.org/TR/json-ld-api/) to process
-     Knora API responses as RDF data.
-     - For clients that work with RDF but not JSON-LD, any API v2
-       response can also be returned as [Turtle](https://www.w3.org/TR/turtle/),
-       or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/), using HTTP
-       content negotiation.
-- The same response formats are reused for different requests whenever
-  possible, to minimise the number of different response formats a
-  client has to handle.
-- Responses are available in different @ref:[schemas](../../../03-apis/api-v2/introduction.md#api-schema):
-  - A simple schema that supports read-only access, simplifies the use of Knora
-    data as Linked Open Data, and facilitates the use of standard ontologies.
-    With the simple schema, the need for detailed knowledge about Knora is
-    minimised.
-  - A complex schema, for read-write access that takes advantage of all
-    of Knora's capabilities.
+### JSON-LD Parsing and Formatting
 
-### Improving on the SPARQL Endpoint
+Each API response is represented by a class that extends
+`KnoraResponseV2`, which has a method `toJsonLDDocument` that specifies
+the target schema. It is currently up to each route to determine what
+the appropriate response schema should be. Some routes will support only
+one response schema. Others will allow the client to choose, and there
+will be one or more standard ways for the client to specify the desired
+response schema.
 
-SPARQL endpoints offer powerful, standards-based search capabilities for RDF
-data, but they suffer from a number of
-[drawbacks](https://daverog.wordpress.com/2013/06/04/the-enduring-myth-of-the-sparql-endpoint/).
-@ref:[Gravsearch](../../../03-apis/api-v2/query-language.md), Knora's built-in dialect
-of SPARQL, aims to provide the benefits of a SPARQL endpoint, while avoiding these
-problems. It provides:
+A route calls `RouteUtilV2.runRdfRoute`, passing a request message and
+a response schema. When `RouteUtilV2` gets the response message from the
+responder, it calls `toJsonLDDocument` on it, specifying that schema.
+The response message returns a `JsonLDDocument`, which is a simple data
+structure that is then converted to Java objects and passed to the
+JSON-LD Java library for formatting. In general, `toJsonLDDocument` is
+implemented in two stages: first the object converts itself to the
+target schema, and then the resulting object is converted to a
+`JsonLDDocument`.
 
-- Filtering of queried data according to the user's permissions.
-- Support for Knora's built-in versioning of data.
-- Support for Knora's humanities-focused data types, such as
-  @ref:[calendar-independent dates](../../../02-knora-ontologies/knora-base.md#datevalue)
-  and @ref:[standoff text markup](../../../02-knora-ontologies/knora-base.md#text-with-standoff-markup).
-- Built-in paging of search results to improve scalability.
+A route that receives JSON-LD requests should use
+`JsonLDUtil.parseJsonLD` to convert each request to a `JsonLDDocument`.
 
-### Ontology Construction
+### Generation of Other RDF Formats
 
-Writing ontologies by hand to conform to
-@ref:[the Knora base ontology](../../../02-knora-ontologies/knora-base.md) can
-be a complex task. Knora API v2 therefore supports
-@ref:[the creation and editing of ontologies](../../../03-apis/api-v2/ontology-information.md#ontology-updates),
-while ensuring that these ontologies meet Knora's requirements.
+`RouteUtilV2.runRdfRoute` implements
+@extref[HTTP content negotiation](rfc:7231#section-5.3.2), and converts JSON-LD
+responses into [Turtle](https://www.w3.org/TR/turtle/)
+or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/) as appropriate.
+
+### Operation Wrappers
+
+Whenever possible, the same data structures are used for input and
+output. Often more data is available in output than in input. For
+example, when a value is read from the triplestore, its IRI is
+available, but when it is being created, it does not yet have an IRI. In
+such cases, there is a class like `ValueContentV2`, which represents the
+data that is used both for input and for output. When a value is read, a
+`ValueContentV2` is wrapped in a `ReadValueV2`, which additionally
+contains the value's IRI. When a value is created, it is wrapped in a
+`CreateValueV2`, which has the resource IRI and the property IRI, but
+not the value IRI.
+
+A `Read*` wrapper can be wrapped in another `Read*` wrapper; for
+example, a `ReadResourceV2` contains `ReadValueV2` objects.
+
+Each `*Content*` class should extend `KnoraContentV2` and thus have a
+`toOntologySchema` method or converting itself between internal and
+external schemas, in either direction.
+
+Each `Read*` wrapper class should have a method for converting itself to
+JSON-LD in a particular external schema. If the `Read*` wrapper is a
+`KnoraResponseV2`, this method is `toJsonLDDocument`.
+
+### Smart IRIs
+
+#### Usage
+
+The `SmartIri` trait can be used to parse and validate IRIs, and in
+particular for converting Knora type IRIs between internal and external
+schemas. It validates each IRI it parses. To use it, import the
+following:
+
+```scala
+import org.knora.webapi.util.{SmartIri, StringFormatter}
+import org.knora.webapi.util.IriConversions._
+```
+
+Ensure that an implicit instance of `StringFormatter` is in scope:
+
+```scala
+implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+```
+
+Then, if `iriStr` is a string representing an IRI, you can can convert
+it to a `SmartIri` like this:
+
+```scala
+val iri: SmartIri = iriStr.toSmartIri
+```
+
+If the IRI came from a request, use this method to throw a specific
+exception if the IRI is invalid:
+
+```scala
+val iri: SmartIri = iriStr.toSmartIriWithErr(
+    () => throw BadRequestException(s"Invalid IRI: $iriStr")
+)
+```
+
+You can then use methods such as `SmartIri.isKnoraApiV2EntityIri` and
+`SmartIri.getProjectCode` to obtain information about the IRI. To
+convert it to another schema, call `SmartIri.toOntologySchema`.
+Converting a non-Knora IRI returns the same IRI.
+
+If the IRI represents a Knora internal value class such as
+`knora-base:TextValue`, converting it to the `ApiV2Simple` schema will
+return the corresponding simplified type, such as `xsd:string`. But this
+conversion is not performed in the other direction (external to
+internal), since this would require knowledge of the context in which
+the IRI is being used.
+
+The performance penalty for using a `SmartIri` instead of a string is
+very small. Instances are automatically cached once they are
+constructed. Parsing and caching a `SmartIri` instance takes about 10-20
+µs, and retrieving a cached `SmartIri` takes about 1 µs.
+
+There is no advantage to using `SmartIri` for data IRIs, since they are
+not schema-specific (and are not cached). If a data IRI has been
+received from a client request, it is better just to validate it using
+`StringFormatter.validateAndEscapeIri`.
+
+#### Implementation
+
+The smart IRI implementation, `SmartIriImpl`, is nested in the
+`StringFormatter` class, because it uses Knora's
+hostname, which isn't available until the Akka ActorSystem has started.
+However, this means that the type of a `SmartIriImpl` instance is
+dependent on the instance of `StringFormatter` that constructed it.
+Therefore, instances of `SmartIriImpl` created by different instances of
+`StringFormatter` can't be compared directly.
+
+There are in fact two instances of `StringFormatter`:
+
+  - one returned by `StringFormatter.getGeneralInstance` which is
+    available after Akka has started and has the API server's hostname
+    (and can therefore provide `SmartIri` instances capable of parsing
+    IRIs containing that hostname). This instance is used throughout the
+    Knora API server.
+  - one returned by `StringFormatter.getInstanceForConstantOntologies`,
+    which is available before Akka has started, and is used only by the
+    hard-coded constant `knora-api` ontologies.
+
+This is the reason for the existence of the `SmartIri` trait, which is a
+top-level definition and has its own `equals` and `hashCode` methods.
+Instances of `SmartIri` can thus be compared (e.g. to use them as unique
+keys in collections), regardless of which instance of `StringFormatter`
+created them.

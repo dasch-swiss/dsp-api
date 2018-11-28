@@ -914,28 +914,6 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         )
     )
 
-    private val FileValueIsPreview: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview,
-        propertyType = OntologyConstants.Owl.DatatypeProperty,
-        subPropertyOf = Set(OntologyConstants.KnoraApiV2WithValueObjects.ValueHas),
-        subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.FileValue),
-        objectType = Some(OntologyConstants.Xsd.Boolean),
-        predicates = Seq(
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Label,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "File value is preview"
-                )
-            ),
-            makePredicate(
-                predicateIri = OntologyConstants.Rdfs.Comment,
-                objectsWithLang = Map(
-                    LanguageCodes.EN -> "Indicates whether this is file value is a preview."
-                )
-            )
-        )
-    )
-
     private val FileValueAsUrl: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1245,7 +1223,6 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     private val FileValueCardinalities = Map(
-        OntologyConstants.KnoraApiV2WithValueObjects.FileValueIsPreview -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.FileValueAsUrl -> Cardinality.MustHaveOne,
         OntologyConstants.KnoraApiV2WithValueObjects.FileValueHasFilename -> Cardinality.MustHaveOne
     )
@@ -1469,7 +1446,6 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         ColorValueAsColor,
         UriValueAsUri,
         GeonameValueAsGeonameCode,
-        FileValueIsPreview,
         FileValueAsUrl,
         FileValueHasFilename,
         StillImageFileValueHasDimX,

@@ -36,5 +36,12 @@ class MockableResponderManager(mockResponders: Map[String, ActorRef]) extends Re
       * Initialised to the value of the key [[SIPI_ROUTER_V1_ACTOR_NAME]] in `mockResponders` if provided, otherwise
       * the default Akka router provided by the base class for the Sipi responder.
       */
-    override lazy val sipiRouterV1 = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouterV1)
+    override lazy val sipiRouterV1: ActorRef = mockResponders.getOrElse(SIPI_ROUTER_V1_ACTOR_NAME, makeDefaultSipiRouterV1)
+
+    /**
+      * Initialised to the value of the key [[SIPI_ROUTER_V2_ACTOR_NAME]] in `mockResponders` if provided, otherwise
+      * the default Akka router provided by the base class for the Sipi responder.
+      */
+    override lazy val sipiRouterV2: ActorRef = mockResponders.getOrElse(SIPI_ROUTER_V2_ACTOR_NAME, makeDefaultSipiRouterV2)
+
 }

@@ -92,6 +92,7 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -363,6 +364,7 @@ object CreatePropertyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateProperty
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreatePropertyRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -456,6 +458,7 @@ object CreateClassRequestV2 extends KnoraJsonLDRequestReaderV2[CreateClassReques
                             requestingUser: UserADM,
                             storeManager: ActorSelection,
                             responderManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateClassRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -530,6 +533,7 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[AddCardinalitiesToClassRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -598,6 +602,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeCardinalitiesRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -705,6 +710,7 @@ object ChangePropertyLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangePropertyLabelsOrCommentsRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -776,6 +782,7 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeClassLabelsOrCommentsRequestV2] = {
         Future {
             fromJsonLDSync(
@@ -845,6 +852,7 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ChangeOntologyMetadataRequestV2] = {
         Future {
             fromJsonLDSync(

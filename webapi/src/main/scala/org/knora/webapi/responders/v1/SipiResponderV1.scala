@@ -61,8 +61,8 @@ class SipiResponderV1 extends Responder {
       */
     def receive: PartialFunction[Any, Unit] = {
         case SipiFileInfoGetRequestV1(fileValueIri, userProfile) => future2Message(sender(), getFileInfoForSipiV1(fileValueIri, userProfile), log)
-        case convertPathRequest: SipiResponderConversionPathRequestV1 => try2message(sender(), convertPathV1(convertPathRequest), log)
-        case convertFileRequest: SipiResponderConversionFileRequestV1 => try2message(sender(), convertFileV1(convertFileRequest), log)
+        case convertPathRequest: SipiResponderConversionPathRequestV1 => try2Message(sender(), convertPathV1(convertPathRequest), log)
+        case convertFileRequest: SipiResponderConversionFileRequestV1 => try2Message(sender(), convertFileV1(convertFileRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -115,7 +115,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Try[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiPathConversionRoute}"
+        val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiPathConversionRouteV1}"
 
         callSipiConvertRoute(url, conversionRequest)
 
@@ -129,7 +129,7 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
       */
     private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Try[SipiResponderConversionResponseV1] = {
-        val url = s"${settings.internalSipiImageConversionUrl}/${settings.sipiFileConversionRoute}"
+        val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiFileConversionRouteV1}"
 
         callSipiConvertRoute(url, conversionRequest)
     }
@@ -146,13 +146,13 @@ class SipiResponderV1 extends Responder {
     private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Try[SipiResponderConversionResponseV1] = {
 
         val conversionResultFuture: Future[HttpResponse] = for {
-            request <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
+            requestEntity <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
 
             response <- Http().singleRequest(
                 HttpRequest(
                     method = HttpMethods.POST,
                     uri = url,
-                    entity = request
+                    entity = requestEntity
                 )
             )
         } yield response

@@ -29,6 +29,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Content Wrappers](content-wrappers.md)
 - [JSON-LD Parsing and Formatting](json-ld.md)
 - [Ontology Management](ontology-management.md)
+- [Knora and Sipi](sipi.md)
 - [Gravsearch](gravsearch.md)
 
 @@@

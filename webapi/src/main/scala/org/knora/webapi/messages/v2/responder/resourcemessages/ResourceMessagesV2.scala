@@ -199,7 +199,7 @@ sealed trait ResourceV2 {
   * @param label                the resource's label.
   * @param resourceClassIri     the class the resource belongs to.
   * @param attachedToUser       the user that created the resource.
-  * @param attachedToProject    the project that the resource belongs to.
+  * @param projectADM           the project that the resource belongs to.
   * @param permissions          the permissions that the resource grants to user groups.
   * @param values               a map of property IRIs to values.
   * @param creationDate         the date when this resource was created.
@@ -211,7 +211,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           label: String,
                           resourceClassIri: SmartIri,
                           attachedToUser: IRI,
-                          attachedToProject: IRI,
+                          projectADM: ProjectADM,
                           permissions: String,
                           values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
@@ -255,14 +255,14 @@ case class ReadResourceV2(resourceIri: IRI,
 
         val propertiesAndValuesAsJsonLD: Map[IRI, JsonLDArray] = values.map {
             case (propIri: SmartIri, readValues: Seq[ReadValueV2]) =>
-                val valuesAsJsonLD: Seq[JsonLDValue] = readValues.map(_.toJsonLD(targetSchema, settings))
+                val valuesAsJsonLD: Seq[JsonLDValue] = readValues.map(_.toJsonLD(targetSchema, projectADM, settings))
                 propIri.toString -> JsonLDArray(valuesAsJsonLD)
         }
 
         val metadataForComplexSchema: Map[IRI, JsonLDValue] = if (targetSchema == ApiV2WithValueObjects) {
             val requiredMetadataForComplexSchema: Map[IRI, JsonLDValue] = Map(
                 OntologyConstants.KnoraApiV2WithValueObjects.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
-                OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(attachedToProject),
+                OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
                 OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions -> JsonLDString(permissions),
                 OntologyConstants.KnoraApiV2WithValueObjects.CreationDate -> JsonLDObject(
                     Map(
@@ -381,6 +381,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                             requestingUser: UserADM,
                             responderManager: ActorSelection,
                             storeManager: ActorSelection,
+                            settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
         // #getGeneralInstance
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -431,6 +432,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                         jsonLDObject = valueJsonLDObject,
                                         requestingUser = requestingUser,
                                         responderManager = responderManager,
+                                        settings = settings,
                                         log = log
                                     )
 
