@@ -8,9 +8,20 @@ import org.knora.Dependencies
 // GLOBAL SETTINGS
 //////////////////////////////////////
 
-lazy val knora = (project in file(".")).
-        enablePlugins(DockerComposePlugin)
+lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi)
+
+lazy val buildSettings = Dependencies.Versions ++ Seq(
+    organization := "org.knora",
+    version := (ThisBuild / version).value
+)
+
+lazy val root = Project(id = "knora", file("."))
+        .aggregate(aggregatedProjects: _*)
+        .enablePlugins(DockerComposePlugin)
         .settings(
+
+            // we need to bring the values into scope
+            Dependencies.Versions,
 
             // values set for all sub-projects
             // These are normal sbt settings to configure for release, skip if already defined
@@ -25,9 +36,6 @@ lazy val knora = (project in file(".")).
 
             Global / cancelable := true, // use Ctrl-c to stop current task and not quit SBT
 
-            ThisBuild / organization := "org.knora",
-            ThisBuild / scalaVersion := "2.12.4",
-
             publish / skip := true,
 
             Dependencies.sysProps := sys.props.toString(),
@@ -35,8 +43,6 @@ lazy val knora = (project in file(".")).
 
             ThisBuild / Dependencies.gdbHomePath := sys.env.getOrElse("KNORA_GDB_HOME", sys.props("user.dir") + "/triplestores/graphdb/home"),
             ThisBuild / Dependencies.gdbLicensePath := sys.env.getOrElse("KNORA_GDB_LICENSE", sys.props("user.dir") + "/triplestores/graphdb/graphdb.license"),
-            ThisBuild / Dependencies.gdbImage := "ontotext/graphdb:8.5.0-se",
-            ThisBuild / Dependencies.sipiVersion := "v1.4.2-SNAPSHOT",
 
             ThisBuild / variablesForSubstitution := Map(
                 "KNORA_GDB_HOME" -> Dependencies.gdbHomePath.value,
@@ -61,8 +67,8 @@ import scala.sys.process._
 // Define `Configuration` instances representing our different documentation trees
 lazy val ParadoxSite = config("paradox")
 
-lazy val docs = (project in file("docs")).
-        enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
+lazy val docs = knoraModule("docs")
+        .enablePlugins(JekyllPlugin, ParadoxPlugin, ParadoxSitePlugin, ParadoxMaterialThemePlugin, GhpagesPlugin)
         .configs(
             ParadoxSite
         )
@@ -155,8 +161,8 @@ lazy val salsahCommonSettings = Seq(
     name := "salsah"
 )
 
-lazy val salsah1 = (project in file("salsah1")).
-        enablePlugins(JavaAppPackaging, DockerPlugin, DockerComposePlugin)
+lazy val salsah1 = knoraModule("salsah1")
+        .enablePlugins(JavaAppPackaging, DockerPlugin, DockerComposePlugin)
         .configs(
             HeadlessTest
         )
@@ -176,7 +182,7 @@ lazy val salsah1 = (project in file("salsah1")).
             logLevel := Level.Info,
             fork in run := true,
             javaOptions in run ++= javaRunOptions,
-            mainClass in (Compile, run) := Some("org.knora.salsah.Main"),
+            mainClass in(Compile, run) := Some("org.knora.salsah.Main"),
             fork in Test := true,
             javaOptions in Test ++= javaTestOptions,
             parallelExecution in Test := false,
@@ -187,10 +193,10 @@ lazy val salsah1 = (project in file("salsah1")).
             mappings in Universal ++= {
                 // copy the public folder
                 directory("salsah1/src/public") ++
-                // copy the configuration files to config directory
-                contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
-                // copy configuration files to config directory
-                contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
+                        // copy the configuration files to config directory
+                        contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
+                        // copy configuration files to config directory
+                        contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
             },
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
@@ -245,7 +251,7 @@ lazy val javaTestOptions = Seq(
 )
 
 
-lazy val HeadlessTest = config("headless") extend(Test)
+lazy val HeadlessTest = config("headless") extend (Test)
 lazy val javaHeadlessTestOptions = Seq(
     "-Dconfig.resource=headless-testing.conf"
 ) ++ javaTestOptions
@@ -279,8 +285,8 @@ lazy val EmbeddedJenaTDBTest = config("tdb") extend Test
 // JavaAgent - adds AspectJ Weaver configuration
 // BuildInfoPlugin - allows generation of scala code with version information
 
-lazy val webapi = (project in file("webapi")).
-        enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
+lazy val webapi = knoraModule("webapi")
+        .enablePlugins(SbtTwirl, JavaAppPackaging, DockerPlugin, GatlingPlugin, JavaAgent, RevolverPlugin, BuildInfoPlugin)
         .configs(
             IntegrationTest,
             Gatling,
@@ -324,7 +330,7 @@ lazy val webapi = (project in file("webapi")).
 
             reStart / javaOptions ++= resolvedJavaAgents.value map { resolved =>
                 "-javaagent:" + resolved.artifact.absolutePath + resolved.agent.arguments
-            },// allows sbt-javaagent to work with sbt-revolver
+            }, // allows sbt-javaagent to work with sbt-revolver
             reStart / javaOptions ++= webapiJavaRunOptions,
 
             javaAgents += Dependencies.Compile.aspectJWeaver,
@@ -367,10 +373,10 @@ lazy val webapi = (project in file("webapi")).
             Universal / mappings ++= {
                 // copy the scripts folder
                 directory("webapi/scripts") ++
-                // copy the configuration files to config directory
-                contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
-                // copy configuration files to config directory
-                contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
+                        // copy the configuration files to config directory
+                        contentOf("webapi/configs").toMap.mapValues("config/" + _) ++
+                        // copy configuration files to config directory
+                        contentOf("webapi/src/main/resources").toMap.mapValues("config/" + _)
                 // copy the aspectj weaver jar
                 // contentOf("vendor").toMap.mapValues("aspectjweaver/" + _)
             },
@@ -440,3 +446,7 @@ lazy val webapiJavaTestOptions = Seq(
     //"-XX:MaxGCPauseMillis=500",
     //"-XX:MaxMetaspaceSize=4096m"
 )
+
+def knoraModule(name: String): Project =
+    Project(id = name, base = file(name))
+            .settings(buildSettings)

@@ -19,8 +19,8 @@
 
 package org.knora
 
+import sbt.Keys._
 import sbt.{Def, _}
-import Keys._
 
 object Dependencies {
 
@@ -37,10 +37,17 @@ object Dependencies {
     lazy val jenaVersion = settingKey[String]("The Jena library version")
     lazy val metricsVersion = settingKey[String]("The metrics library version")
 
-    akkaVersion := "2.5.18"
-    akkaHttpVersion := "10.1.5"
-    jenaVersion := "3.4.0"
-    metricsVersion := "4.0.1"
+    val Versions = Seq(
+        scalaVersion := "2.12.4",
+        akkaVersion := "2.5.18",
+        akkaHttpVersion := "10.1.5",
+        jenaVersion := "3.4.0",
+        metricsVersion := "4.0.1",
+        sipiVersion := "v1.4.2-SNAPSHOT",
+        gdbImage := "ontotext/graphdb:8.5.0-se"
+    )
+
+
 
     object Compile {
         // akka
