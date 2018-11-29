@@ -14,5 +14,8 @@ These are the release notes for each version of Knora.
 * [v1.6.0](v1.6.0.md)
 * [v1.7.0](v1.7.0.md)
 * [v2.x.x](v2.x.x.md)
+* [v3.x.x](v3.x.x.md)
+* [NEXT RELEASE](next.md)
+* [MIGRATION NOTES](migration.md)
 
 @@@

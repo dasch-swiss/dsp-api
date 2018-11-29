@@ -16,9 +16,8 @@ docs/env
 docs/_build
 docs/_format_docu
 docs/_format_docu_v2
-/project/
-*/project/target/
-*/project/project/
+**/project/target/
+**/project/project/
 /target/
 *.aux
 *.bbl

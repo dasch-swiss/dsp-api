@@ -14,7 +14,7 @@ This folder contains the sources to the Knora documentation website published un
 All the different documentations are build by invoking the following command:
 
 ```
-$ sbt makeSite
+$ sbt docs/makeSite
 ```
 
 The generated documentation can be found under `target/site/`. To open it locally, load `target/site/paradox/index.html`.
@@ -24,13 +24,13 @@ The generated documentation can be found under `target/site/`. To open it locall
 To preview your generated site, you can run the following command:
 
 ```
-$ sbt previewSite
+$ sbt docs/previewSite
 ```
 
 which launches a static web server, or:
 
 ```
-$ sbt previewAuto
+$ sbt docs/previewAuto
 ```
 
 which launches a dynamic server updating its content at each modification in your source files. Both launch the server
@@ -42,7 +42,7 @@ To publish the documentation, you need to be on the `develop` branch inside the 
 command:
 
 ```
-$ sbt ghpagesPushSite
+$ sbt docs/ghpagesPushSite
 ```
 
 This command will build all documentation and publish it to the `gh-pages` branch.
