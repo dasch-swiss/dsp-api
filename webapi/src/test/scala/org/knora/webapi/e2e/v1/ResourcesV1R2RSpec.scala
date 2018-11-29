@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
-import org.knora.webapi.util.{AkkaHttpUtils, FileUtil, MutableTestIri}
+import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import resource._
@@ -970,6 +970,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
                 // make sure that the correct standoff links and references
                 // xml3 contains a link to google.ch and to incunabulaBookBiechlin
+
                 val xml = XML.loadString(xmlString)
 
                 val links: NodeSeq = xml \ "a"
@@ -977,10 +978,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 // there should be two links
                 assert(links.length == 2)
 
+                assert(links.head.attributes.asAttrMap.keySet.size == 1) // The URL has no class attribute
                 val linkToGoogle: Seq[Node] = links.head.attributes("href")
 
                 assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
 
+                assert(links(1).attributes.asAttrMap("class") == "salsah-link") // The link to a resource IRI has class="salsah-link"
                 val linkKnoraResource: Seq[Node] = links(1).attributes("href")
 
                 assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)

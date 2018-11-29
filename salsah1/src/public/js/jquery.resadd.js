@@ -371,6 +371,7 @@
 							prop_status[propname].count = 0;
 							prop_status[propname].td = td;
 
+
 							switch (rtinfo.properties[pinfo].gui_name) {
 								case 'text':
 									{
@@ -536,7 +537,7 @@
 											$.each(attrs, function() {
 
 												var curAttr = this.split('=');
-												
+
 												if (curAttr[0] == 'restypeid') {
 													restype_id = curAttr[1];
 												}
@@ -849,7 +850,7 @@
 											}
 											break;
 
-									}	
+									}
 									case 'spinbox':
 										{
 											ele = form.find('[name="' + propname + '"]');
@@ -1036,7 +1037,7 @@
 												filename: sipi_response["filename"]
 											};
 
-											
+
 											break;
 										}
 									case 'colorpicker':
@@ -1102,12 +1103,12 @@
 										{
 											ele = form.find('[name="' + propname + '"]');
 											if (ele.length == 1) {
-												propvals[propname].value = ele.geonames('value');
+												propvals[propname] = [{geoname_value: ele.geonames('value')}];
 											} else if (ele.length > 1) {
 												propvals[propname] = [];
 												ele.each(function() {
 													vv = {
-														value: $(this).geonames('value')
+														geoname_value: $(this).geonames('value')
 													};
 													propvals[propname].push(vv);
 												});

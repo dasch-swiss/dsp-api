@@ -123,23 +123,18 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       */
     private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
         val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
-            case (Some(createdResources: JsArray)) =>
+            case Some(createdResources: JsArray) =>
                 createdResources.elements.find {
-                    case createdRes: JsValue =>
+                    case res: JsObject =>
+                        res.fields.get("clientResourceID") match {
+                            case Some(JsString(id)) if id == clientID => true
 
-                        createdRes match {
-                            case res: JsObject =>
-                                res.fields.get("clientResourceID") match {
-                                    case Some(JsString(id)) if id == clientID => true
-
-                                    case other => false
-                                }
                             case other => false
                         }
-
+                    case _ => false
                 }
 
-            case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            case _ => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
         }
 
         if (resIriOption.nonEmpty) {

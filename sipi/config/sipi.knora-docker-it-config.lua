@@ -153,7 +153,8 @@ sipi = {
     logfile = "sipi.log",
 
     --
-    -- loglevel, one of "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG"
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
     --
     loglevel = "DEBUG"
 }
@@ -213,6 +214,21 @@ routes = {
         method = 'GET',
         route = '/test_knora_session_cookie',
         script = 'test_knora_session_cookie.lua'
+    },
+    {
+        method = 'POST',
+        route = '/upload',
+        script = 'upload.lua'
+    },
+    {
+        method = 'POST',
+        route = '/store',
+        script = 'store.lua'
+    },
+    {
+        method = 'DELETE',
+        route = '/delete_temp_file',
+        script = 'delete_temp_file.lua'
     }
 
 }
