@@ -21,12 +21,14 @@ package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.Cookie
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.messages.v1.responder.sipimessages.{FilesResponse, SipiJsonProtocol}
+import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
 
 import scala.concurrent.Await
@@ -46,14 +48,10 @@ object SipiV1E2ESpec {
   *
   * This spec tests the 'v1/files'.
   */
-class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol with TriplestoreJsonProtocol {
+class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol with SessionJsonProtocol with TriplestoreJsonProtocol {
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    private val rootIri = SharedTestDataV1.rootUser.userData.user_id.get
-    private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
-    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
-    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
     private val anythingAdminEmail = SharedTestDataV1.anythingAdminUser.userData.email.get
     private val anythingAdminEmailEnc = java.net.URLEncoder.encode(anythingAdminEmail, "utf-8")
     private val normalUserEmail = SharedTestDataV1.normalUser.userData.email.get
@@ -64,9 +62,24 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    "The Files Route ('v1/files') using session credentials" should {
+    def sessionLogin(email: String, password: String): String = {
 
-        "return V (2) permission code if user has the necessary permission" in {
+        val request = Get(baseApiUrl + s"/v1/session?login&email=$email&password=$password")
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status == StatusCodes.OK)
+
+        val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
+        sr.sid
+    }
+
+    def sessionLogout(sessionId: String): Unit = {
+        Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+    }
+
+
+    "The Files Route ('v1/files') using token credentials" should {
+
+        "return CR (8) permission code" in {
             /* anything image */
             val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -77,15 +90,55 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
 
             val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
 
-            (fr.permissionCode >= 2) should be (true)
+            (fr.permissionCode === 8) should be (true)
         }
 
-        "return RV (1) permission code corresponding to the user's permission" in {
+        "return RV (1) permission code" in {
             /* anything image */
             val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$normalUserEmailEnc&password=$testPass")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             // println(response.toString)
+
+            assert(response.status == StatusCodes.OK)
+
+            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+
+            (fr.permissionCode === 1) should be (true)
+        }
+    }
+
+    "The Files Route ('v1/files') using session credentials" should {
+
+        "return CR (8) permission code" in {
+            /* login */
+            val sessionId = sessionLogin(anythingAdminEmailEnc, testPass)
+
+            /* anything image */
+            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            println(response.toString)
+
+            assert(response.status == StatusCodes.OK)
+
+            val fr: FilesResponse = Await.result(Unmarshal(response.entity).to[FilesResponse], 1.seconds)
+
+            (fr.permissionCode === 8) should be (true)
+
+            /* logout */
+            sessionLogout(sessionId)
+        }
+
+        "return RV (1) permission code" in {
+            /* login */
+            val sessionId = sessionLogin(normalUserEmailEnc, testPass)
+            
+            /* anything image */
+            val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            println(response.toString)
 
             assert(response.status == StatusCodes.OK)
 
