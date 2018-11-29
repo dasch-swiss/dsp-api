@@ -133,7 +133,7 @@ class SipiV1E2ESpec extends E2ESpec(SipiV1E2ESpec.config) with SipiJsonProtocol 
         "return RV (1) permission code" in {
             /* login */
             val sessionId = sessionLogin(normalUserEmailEnc, testPass)
-            
+
             /* anything image */
             val request = Get(baseApiUrl + s"/v1/files/B1D0OkEgfFp-Cew2Seur7Wi.jp2")~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
             val response: HttpResponse = singleAwaitingRequest(request)

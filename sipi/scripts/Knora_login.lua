@@ -25,17 +25,17 @@ if not success then
     return
 end
 
-sessionId = server.post['sid']
+knoraToken = server.post['token']
 
-if sessionId == nil then
+if knoraToken == nil then
 
-    send_error(400, "no sid given")
+    send_error(400, "no token given")
 
     return
 end
 
 -- set the cookie HttpOnly
-local success, errormsg = server.sendHeader("Set-Cookie", "sid=" .. sessionId .. ";HttpOnly")
+local success, errormsg = server.sendHeader("Set-Cookie", "KnoraToken=" .. knoraToken .. "; HttpOnly; Path=/")
 if not success then
     print(errormsg)
 end

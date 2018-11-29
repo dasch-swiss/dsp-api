@@ -740,7 +740,7 @@ object PermissionUtilADM {
             }
         }
 
-        println(s"getUserPermissionV1: $maybePermissionLevel, $userProfile")
+        // println(s"getUserPermissionV1: $maybePermissionLevel, $userProfile")
 
         maybePermissionLevel.map(_.toInt)
     }

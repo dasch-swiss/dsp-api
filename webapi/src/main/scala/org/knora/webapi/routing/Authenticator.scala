@@ -282,7 +282,7 @@ trait Authenticator {
             for {
                 userADM <- getUserADMThroughCredentialsV2(credentials)
                 userProfile: UserProfileV1 = userADM.asUserProfileV1
-                _ = log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfile.toString)
+                _ = log.debug("Authenticator - getUserProfileV1 - userProfile: {}", userProfile)
 
                 /* we return the userProfileV1 without sensitive information */
             } yield userProfile.ofType(UserProfileTypeV1.RESTRICTED)
@@ -316,7 +316,7 @@ trait Authenticator {
 
             for {
                 user: UserADM <- getUserADMThroughCredentialsV2(credentials)
-                _ = log.debug("getUserADM - I got a getUserADM: {}", user.toString)
+                _ = log.debug("Authenticator - getUserADM - user: {}", user)
 
                 /* we return the complete UserADM */
             } yield user.ofType(UserInformationTypeADM.FULL)
@@ -578,7 +578,7 @@ object Authenticator {
 
             user: UserADM <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                    log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
+                    // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
                     getUserByIdentifier(passCreds.identifier)
                 }
                 case Some(tokenCreds: KnoraTokenCredentialsV2) => {
@@ -589,7 +589,7 @@ object Authenticator {
                             throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         }
                     }
-                    log.debug("getUserADMThroughCredentialsV2 - used token")
+                    // log.debug("getUserADMThroughCredentialsV2 - used token")
                     getUserByIdentifier(UserIdentifierADM(userIri))
                 }
                 case Some(sessionCreds: KnoraSessionCredentialsV2) => {
@@ -600,15 +600,15 @@ object Authenticator {
                             throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         }
                     }
-                    log.debug("getUserADMThroughCredentialsV2 - used session token")
+                    // log.debug("getUserADMThroughCredentialsV2 - used session token")
                     getUserByIdentifier(UserIdentifierADM(userIri))
                 }
                 case None => {
-                    log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+                    // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
                     throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
                 }
             }
-
+            
         } yield user
     }
 
@@ -640,7 +640,7 @@ object Authenticator {
                         throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                     }
                 }
-                _ = log.debug(s"getUserByIdentifier - user: $user")
+                // _ = log.debug(s"getUserByIdentifier - user: $user")
             } yield user
 
             userADMFuture

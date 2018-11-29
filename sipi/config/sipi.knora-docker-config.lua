@@ -67,7 +67,7 @@ sipi = {
     -- thousand files in a unix directory (your mileage may vay depending on the
     -- file system used).
     --
-    subdir_levels = 1,
+    subdir_levels = 0,
 
     --
     -- if subdir_levels is > 0 and if prefix_as_path is true, all prefixes will be

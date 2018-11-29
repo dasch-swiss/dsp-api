@@ -16,7 +16,7 @@ services:
       extra_hosts:
         - webapi:$DOCKERHOST
       restart: unless-stopped
-      command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+      command: --config=/sipi/config/sipi.knora-docker-config.lua
 
   sipi-no-auth:
       image: dhlabbasel/sipi:develop

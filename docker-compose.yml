@@ -37,7 +37,7 @@ services:
     networks:
     - knora-net
     restart: unless-stopped
-    command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+    command: --config=/sipi/config/sipi.knora-docker-config.lua
 
   webapi:
     image: dhlabbasel/webapi:${KNORA_VERSION_TAG}<localBuild>
