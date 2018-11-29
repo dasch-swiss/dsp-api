@@ -416,7 +416,7 @@ lazy val webapi = knoraModule("webapi")
             buildInfoKeys ++= Seq[BuildInfoKey](
                 name,
                 version,
-                "akkaHttp" -> Dependencies.akkaHttpVersion
+                "akkaHttp" -> Dependencies.akkaHttpVersion.value
             ),
             buildInfoPackage := "org.knora.webapi"
         )
@@ -448,3 +448,30 @@ lazy val webapiJavaTestOptions = Seq(
 def knoraModule(name: String): Project =
     Project(id = name, base = file(name))
             .settings(buildSettings)
+
+// helper tasks
+
+lazy val seDockerInitKnoraTest = taskKey[Unit]("Task running webapi/scripts/graphdb-se-docker-init-knora-test.sh.")
+
+webapi / seDockerInitKnoraTest  := {
+    val s: TaskStreams = streams.value
+
+    val execDir: Option[File] = if (sys.props("user.dir").endsWith("webapi/scripts")) {
+        None
+    } else {
+        // running from project root directory
+        Some(new File(sys.props("user.dir") + "/webapi/scripts"))
+    }
+
+    val shell: Seq[String] = if (sys.props("os.name").contains("Windows")) Seq("cmd", "/c") else Seq("bash", "-c")
+    val run: Seq[String] = shell :+ "graphdb-se-docker-init-knora-test.sh"
+
+    s.log.info(s"loading test data ($execDir)...")
+
+    if ((Process(run, execDir) !) == 0) {
+        Thread.sleep(500)
+        s.log.success("test data loaded successfully")
+    } else {
+        throw new IllegalStateException("failed to load test data")
+    }
+}

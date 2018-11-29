@@ -73,7 +73,7 @@ function pre_flight(prefix, identifier, cookie)
 
         knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/v1/files/' .. identifier
 
-        --print("knora_url: " .. knora_url)
+        print("knora_url: " .. knora_url)
 
         success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
 
@@ -95,8 +95,8 @@ function pre_flight(prefix, identifier, cookie)
             return 'deny'
         end
 
-        --print("status: " .. response_json.status)
-        --print("permission code: " .. response_json.permissionCode)
+        print("status: " .. response_json.status)
+        print("permission code: " .. response_json.permissionCode)
 
         if response_json.status ~= 0 then
             -- something went wrong with the request, Knora returned a non zero status
