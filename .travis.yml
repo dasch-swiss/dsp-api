@@ -152,7 +152,7 @@ jobs:
         # webapi
         - sbt webapi/docker:publish
         # salsah1
-        - sbt webapi/salsah1:publish
+        - sbt salsah1/docker:publish
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
         - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
