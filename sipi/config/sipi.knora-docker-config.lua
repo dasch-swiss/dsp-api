@@ -26,9 +26,10 @@ sipi = {
     -- userid = '_www',
 
     --
-    -- sipi's hostname as reported in the thumbnail response, default is "localhost"
+    -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
+    -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    -- hostname = 'localhost',
+    hostname = 'localhost',
 
     --
     -- port number the server is listening to
@@ -122,6 +123,18 @@ sipi = {
     -- Port of Knora Application
     --
     knora_port = '3333',
+
+    --
+    -- The secret for generating JWT's (JSON Web Tokens) (42 characters)
+    --
+    jwt_secret = 'UP 4888, nice 4-8-4 steam engine',
+    --            12345678901234567890123456789012
+
+    --
+    -- Name of the logfile (a ".txt" is added...)
+    --
+    -- logfile = "sipi.log",
+
 
     --
     -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",

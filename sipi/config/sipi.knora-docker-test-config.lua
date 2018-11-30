@@ -25,6 +25,10 @@ sipi = {
     --
     -- userid = '_www',
 
+    --
+    -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
+    -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
+    --
     hostname = 'localhost',
 
     --

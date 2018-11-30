@@ -77,3 +77,16 @@ $ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/con
 
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
 not aks Knora about the user's permission on the requested file.
+
+## Using Sipi production behind proxy
+
+For SIPI to work with Salsah1 (non-angular) GUI, we need to define an additional set of
+environment variables if we want to run SIPI behind a proxy:
+
+- `SIPI_EXTERNAL_PROTOCOL=https`
+- `SIPI_EXTERNAL_HOSTNAME=iiif.example.org`
+- `SIPI_EXTERNAL_PORT=443`
+
+These variables are only used by `make_thumbnail.lua`:
+
+@@snip[make_thumbnail.lua](../../../../sipi/scripts/make_thumbnail.lua) { #snip_marker }
