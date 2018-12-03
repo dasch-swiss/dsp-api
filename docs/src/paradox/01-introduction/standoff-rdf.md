@@ -45,25 +45,24 @@ such as XML:
 In Knora's Standoff/RDF, a tag is an RDF entity that is linked to a @ref:[text value](../02-knora-ontologies/knora-base.md#textvalue). Each tag points to a substring
 of the text, and has semantic properties of its own. You can define your own tag classes
 in your ontology by making subclasses of `knora-base:StandoffTag`, and attach your own
-properties to them.
+properties to them. You can then search for those properties using Knora's search language, @ref:[Gravsearch](../03-apis/api-v2/query-language.md).
 
 The built-in @ref:[knora-base](../02-knora-ontologies/knora-base.md) and `standoff` ontologies
 provide some basic tags that can be reused or extended. These include tags that represent
 Knora data types. For example, `knora-base:StandoffDateTag` represents a date in exactly the
 same way as a Knora @ref:[date value](../02-knora-ontologies/knora-base.md#datevalue), i.e. as a
 calendar-independent astronomical date. You can use this tag as-is, or extend it by making
-a subclass, to represent dates in texts. Knora's search language, @ref:[Gravsearch](../03-apis/api-v2/query-language.md), provides built-in functionality for
-searching for these data type tags. Thus you can search for text containing a date that
+a subclass, to represent dates in texts. Gravsearch includes built-in functionality for
+searching for these data type tags. For example, you can search for text containing a date that
 falls within a certain @ref:[date range](../03-apis/api-v2/query-language.md#matching-standoff-dates).
 
 Knora's APIs support automatic conversion between XML and Standoff/RDF. To make this work,
 Standoff/RDF stores the order of tags and their hierarchical relationships. You must define an @ref:[XML-to-Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md) for your standoff tag classes and properties.
 Then you can import an XML document into Knora, which will store it as Standoff/RDF. The text and markup
-can then be searched using @ref:[Gravsearch](../03-apis/api-v2/query-language.md). When you retrieve
-the document, Knora converts it back to the original XML.
+can then be searched using Gravsearch. When you retrieve the document, Knora converts it back to the
+original XML.
 
-To represent overlapping or non-hierarchical markup, Knora supports [CLIX](http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6) tags in imported
-and exported XML.
+To represent overlapping or non-hierarchical markup in exported and imported XML, Knora supports [CLIX](http://conferences.idealliance.org/extreme/html/2004/DeRose01/EML2004DeRose01.html#t6) tags.
 
 Future plans for Standoff/RDF include:
 
