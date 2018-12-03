@@ -21,6 +21,26 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@toc { depth=2 }
 
+## Data Formats
+
+### What data formats does Knora store?
+
+See @ref:[Data Formats in Knora](01-introduction/data-formats.md).
+
+### Does Knora store XML files?
+
+XML files do not lend themselves to searching and linking. Knora's RDF storage
+is better suited to its goal of facilitating data reuse.
+
+If your XML files represent text with markup (e.g. [TEI/XML](http://www.tei-c.org/)),
+the recommended approach is to allow Knora to store it as
+@ref:[Standoff/RDF](01-introduction/standoff-rdf.md). This will allow both text and
+markup to be searched using @ref:[Gravsearch](03-apis/api-v2/query-language.md). Knora
+can also regenerate the original XML document at any time.
+
+If you have XML that simply represents structured data (rather than text documents),
+we recommend converting it to Knora resources, which are stored as RDF.
+
 ## Triplestores
 
 ### Which triplestores can be used with Knora?

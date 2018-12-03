@@ -32,8 +32,8 @@ It is not practical to maintain all the software that was used to create and
 read old data files.
 
 Instead of preserving a multitude of different data formats, Knora supports
-the conversion of all sorts of data to a small number of formats that are
-suitable for long-term preservation, and that maintain the data's meaning and
+the conversion of all sorts of data to a @ref:[small number of formats](data-formats.md)
+that are suitable for long-term preservation, and that maintain the data's meaning and
 structure:
 
 - Non-binary data is stored as
@@ -71,8 +71,8 @@ it possible to search for a date in one calendar, and get search results in othe
 
 Commonly used text markup systems, such as [TEI/XML](http://www.tei-c.org/),
 have to represent a text as a hierarchy, and therefore have trouble supporting
-overlapping markup. Knora supports 'standoff' markup: the markup is stored
-separately from the text, allowing for overlapping markup. Knora's RDF-based standoff
+overlapping markup. Knora supports @ref:[Standoff/RDF markup](standoff-rdf.md): the markup is stored
+as RDF data, separately from the text, allowing for overlapping markup. Knora's RDF-based standoff
 is designed to support the needs of complex digital critical editions. Knora
 can import any XML document (including TEI/XML) for storage as standoff/RDF,
 and can regenerate the original XML document at any time.
