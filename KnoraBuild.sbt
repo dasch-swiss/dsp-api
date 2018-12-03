@@ -192,7 +192,7 @@ lazy val salsah1 = knoraModule("salsah1")
                 // copy the public folder
                 directory("salsah1/src/public") ++
                 // copy the configuration files to config directory
-                contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
+                // contentOf("salsah1/configs").toMap.mapValues("config/" + _) ++
                 // copy configuration files to config directory
                 contentOf("salsah1/src/main/resources").toMap.mapValues("config/" + _)
             },
