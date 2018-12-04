@@ -214,6 +214,7 @@
 					SALSAH.userprofile = data.userProfile;
 					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
 
+					/* Not needed anymore
 					$.ajax({
 						url: SIPI_URL + SIPI_LOGIN_ROUTE,
 						type: "POST",
@@ -233,6 +234,7 @@
 							}
 						}
 					});
+					*/
 
 					$('#dologin').simpledialog('loginbox', 'close');
 

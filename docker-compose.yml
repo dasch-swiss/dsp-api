@@ -41,7 +41,7 @@ services:
       - SIPI_EXTERNAL_PROTOCOL=http
       - SIPI_EXTERNAL_HOSTNAME=localhost
       - SIPI_EXTERNAL_PORT=1024
-    command: --config=/sipi/config/sipi.knora-docker-config.lua
+    command: --config=/sipi/config/sipi.knora-docker-it-config.lua
 
   webapi:
     image: dhlabbasel/webapi:${KNORA_VERSION_TAG}<localBuild>
@@ -57,7 +57,6 @@ services:
       - KNORA_AKKA_STDOUT_LOGLEVEL=INFO
       - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
-
 
   salsah1:
     image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>

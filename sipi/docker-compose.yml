@@ -1,5 +1,6 @@
 version: '3'
 
+# sipi using default (production-like) configuration
 services:
   sipi:
       image: dhlabbasel/sipi:develop
@@ -22,6 +23,29 @@ services:
         - SIPI_EXTERNAL_PORT=1024
       command: --config=/sipi/config/sipi.knora-docker-config.lua
 
+# sipi using the integration testing config which defines additional routes
+  sipi-it:
+    image: dhlabbasel/sipi:develop
+    container_name: sipi
+    ports:
+      - "1024:1024"
+    volumes:
+      - $PWD/config:/sipi/config
+      - $PWD/scripts:/sipi/scripts
+      - /tmp:/tmp
+      - $HOME:$HOME
+      - $PWD/images:/sipi/images
+      - $PWD/server:/sipi/server
+    extra_hosts:
+      - webapi:$DOCKERHOST
+    restart: unless-stopped
+    environment:
+      - SIPI_EXTERNAL_PROTOCOL=http
+      - SIPI_EXTERNAL_HOSTNAME=localhost
+      - SIPI_EXTERNAL_PORT=1024
+    command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+
+# sipi using configuration which disables authentication
   sipi-no-auth:
       image: dhlabbasel/sipi:develop
       container_name: sipi-no-auth

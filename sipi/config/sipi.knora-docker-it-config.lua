@@ -16,7 +16,7 @@
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 --
--- configuration file for use with Knora
+-- ATTENTION: This configuration file should only be used for integration testing. It has additional routes defined!!!
 --
 sipi = {
     --
@@ -158,9 +158,7 @@ fileserver = {
 }
 
 --
--- here we define routes that are handled by lua scripts. A route is a defined url:
--- http://<server-DNS>/<route>
--- executes the given script defined below
+-- Custom routes. Each route is URL path associated with a Lua script.
 --
 routes = {
     {
@@ -188,6 +186,21 @@ routes = {
     --    route = '/Knora_logout',
     --    script = 'Knora_logout.lua'
     --},
+    {
+        method = 'GET',
+        route = '/test_functions',
+        script = 'test_functions.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_mediatype',
+        script = 'test_mediatype.lua'
+    },
+    {
+        method = 'GET',
+        route = '/test_knora_session_cookie',
+        script = 'test_knora_session_cookie.lua'
+    },
     {
         method = 'POST',
         route = '/upload',

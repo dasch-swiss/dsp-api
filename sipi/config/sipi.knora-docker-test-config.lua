@@ -193,16 +193,16 @@ routes = {
         route = '/convert_from_file',
         script = 'convert_from_file.lua'
     },
-    {
-        method = 'POST',
-        route = '/Knora_login',
-        script = 'Knora_login.lua'
-    },
-    {
-        method = 'POST',
-        route = '/Knora_logout',
-        script = 'Knora_logout.lua'
-    },
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_login',
+    --    script = 'Knora_login.lua'
+    --},
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_logout',
+    --    script = 'Knora_logout.lua'
+    --},
     {
         method = 'POST',
         route = '/admin_upload',
