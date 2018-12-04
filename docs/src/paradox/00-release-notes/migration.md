@@ -1,6 +1,6 @@
 # Migration Notes
 
-## v2.1.0 -> NEXT
+## v2.1.0 -> v3.0.0
 
 ### Data
 
