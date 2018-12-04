@@ -65,8 +65,8 @@ services:
     environment:
     - KNORA_SALSAH1_HOSTNAME=0.0.0.0
     - KNORA_SALSAH1_PORT=3335
-    - KNORA_SALSAH1_WEBAPI=http://0.0.0.0:3333
-    - KNORA_SALSAH1_SIPI=http://0.0.0.0:1024
+    - KNORA_SALSAH1_WEBAPI=http://localhost:3333
+    - KNORA_SALSAH1_SIPI=http://localhost:1024
 
 networks:
   knora-net:

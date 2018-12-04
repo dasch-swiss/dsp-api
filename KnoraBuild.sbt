@@ -215,10 +215,10 @@ lazy val salsah1 = knoraModule("salsah1")
                 Cmd("ENV", """LANG="en_US.UTF-8""""),
                 Cmd("ENV", """JAVA_OPTS="-Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8""""),
                 Cmd("ENV", "KNORA_SALSAH1_DEPLOYED=true"),
-                Cmd("ENV", "KNORA_SALSAH1_WORKDIR=/salsah"),
+                Cmd("ENV", "KNORA_SALSAH1_WORKDIR=/salsah1"),
 
-                Cmd("ADD", "opt/docker", "/salsah"),
-                Cmd("WORKDIR", "/salsah"),
+                Cmd("ADD", "opt/docker", "/salsah1"),
+                Cmd("WORKDIR", "/salsah1"),
 
                 Cmd("EXPOSE", "3335"),
 
