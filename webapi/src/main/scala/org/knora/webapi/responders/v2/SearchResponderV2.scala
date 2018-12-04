@@ -27,8 +27,9 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.SparqlTransformation._
+import org.knora.webapi.responders.v2.search.SparqlTransformer
 import org.knora.webapi.responders.v2.search.gravsearch._
+import org.knora.webapi.responders.v2.search.gravsearch.prequery.{NonTriplestoreSpecificGravsearchToPrequeryGenerator, NonTriplestoreSpecificGravsearchToCountPrequeryGenerator}
 import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil, _}
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
@@ -191,10 +192,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                     if (settings.triplestoreType.startsWith("graphdb")) {
                         // GraphDB
-                        new GraphDBConstructToConstructTransformer
+                        new SparqlTransformer.GraphDBConstructToConstructTransformer
                     } else {
                         // Other
-                        new NoInferenceConstructToConstructTransformer
+                        new SparqlTransformer.NoInferenceConstructToConstructTransformer
                     }
                 }
 
@@ -227,7 +228,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
 
                                     // all value objects contained in `valuePropAssertions`
-                                    val resAndValueObjIris: ResourceIrisAndValueObjectIris = traverseValuePropertyAssertions(valuePropAssertions)
+                                    val resAndValueObjIris: GravsearchUtilV2.ResourceIrisAndValueObjectIris = GravsearchUtilV2.traverseValuePropertyAssertions(valuePropAssertions)
 
                                     // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
                                     val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
@@ -305,14 +306,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Validate schemas and predicates in the CONSTRUCT clause.
-            _ = checkConstructClause(
+            _ = GravsearchUtilV2.checkConstructClause(
                 constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult
             )
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformerCountQuery = new NonTriplestoreSpecificConstructToSelectTransformerCountQuery(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryGenerator = new NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
             )
@@ -326,10 +327,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer
                 } else {
                     // Other
-                    new NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
                 }
             }
 
@@ -372,14 +373,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Validate schemas and predicates in the CONSTRUCT clause.
-            _ = checkConstructClause(
+            _ = GravsearchUtilV2.checkConstructClause(
                 constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult
             )
 
             // Create a Select prequery
 
-            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificConstructToSelectTransformer = new NonTriplestoreSpecificConstructToSelectTransformer(
+            nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToPrequeryGenerator = new NonTriplestoreSpecificGravsearchToPrequeryGenerator(
                 typeInspectionResult = typeInspectionResult,
                 querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
                 settings = settings
@@ -398,10 +399,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             triplestoreSpecificQueryPatternTransformerSelect: SelectToSelectTransformer = {
                 if (settings.triplestoreType.startsWith("graphdb")) {
                     // GraphDB
-                    new GraphDBSelectToSelectTransformer
+                    new SparqlTransformer.GraphDBSelectToSelectTransformer
                 } else {
                     // Other
-                    new NoInferenceSelectToSelectTransformer
+                    new SparqlTransformer.NoInferenceSelectToSelectTransformer
                 }
             }
 
@@ -466,10 +467,10 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                     if (settings.triplestoreType.startsWith("graphdb")) {
                         // GraphDB
-                        new GraphDBConstructToConstructTransformer
+                        new SparqlTransformer.GraphDBConstructToConstructTransformer
                     } else {
                         // Other
-                        new NoInferenceConstructToConstructTransformer
+                        new SparqlTransformer.NoInferenceConstructToConstructTransformer
                     }
                 }
 

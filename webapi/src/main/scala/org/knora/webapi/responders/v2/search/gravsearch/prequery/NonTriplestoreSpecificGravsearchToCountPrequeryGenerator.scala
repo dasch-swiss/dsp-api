@@ -1,4 +1,4 @@
-package org.knora.webapi.responders.v2.search.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
@@ -12,7 +12,7 @@ import org.knora.webapi.{ApiV2Schema, GravsearchException, OntologyConstants}
   *
   * @param typeInspectionResult the result of type inspection of the original query.
   */
-class NonTriplestoreSpecificConstructToSelectTransformerCountQuery(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractSparqlTransformer(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
+class NonTriplestoreSpecificGravsearchToCountPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
     def handleStatementInConstruct(statementPattern: StatementPattern): Unit = {
         // Just identify the main resource variable and put it in mainResourceVariable.

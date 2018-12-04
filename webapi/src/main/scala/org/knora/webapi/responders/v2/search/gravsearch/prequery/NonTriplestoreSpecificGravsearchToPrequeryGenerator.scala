@@ -1,8 +1,7 @@
-package org.knora.webapi.responders.v2.search.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.responders.v2.search._
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.SparqlTransformation._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.SmartIri
@@ -16,7 +15,8 @@ import org.knora.webapi.util.SmartIri
   * @param querySchema ontology schema used in the input query.
   * @param settings application settings.
   */
-class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema, settings: SettingsImpl) extends AbstractSparqlTransformer(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
+class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema, settings: SettingsImpl)
+    extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {
 
     /**
       * Collects information from a statement pattern in the CONSTRUCT clause of the input query, e.g. variables
@@ -136,7 +136,7 @@ class NonTriplestoreSpecificConstructToSelectTransformer(typeInspectionResult: G
                         }
 
                         // Generate the variable name.
-                        val variableForLiteral: QueryVariable = createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+                        val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
 
                         // Generate a statement to get the literal value.
                         val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)

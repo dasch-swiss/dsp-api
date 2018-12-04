@@ -17,17 +17,16 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2.search.gravsearch
+package org.knora.webapi.responders.v2.search
 
-import org.knora.webapi.responders.v2.search.{IriRef, QueryVariable, XsdLiteral}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.{CoreSpec, OntologyConstants}
 
 /**
-  * Tests [[GravsearchUtilV2]].
+  * Tests [[SparqlTransformer]].
   */
-class GravsearchUtilV2Spec extends CoreSpec() {
+class SparqlTransformerSpec extends CoreSpec() {
 
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -35,7 +34,7 @@ class GravsearchUtilV2Spec extends CoreSpec() {
 
         "create a syntactically valid base name from a given variable" in {
 
-            val baseName = GravsearchUtilV2.SparqlTransformation.escapeEntityForVariable(QueryVariable("book"))
+            val baseName = SparqlTransformer.escapeEntityForVariable(QueryVariable("book"))
 
             baseName should ===("book")
 
@@ -43,7 +42,7 @@ class GravsearchUtilV2Spec extends CoreSpec() {
 
         "create a syntactically valid base name from a given data IRI" in {
 
-            val baseName = GravsearchUtilV2.SparqlTransformation.escapeEntityForVariable(IriRef("http://rdfh.ch/users/91e19f1e01".toSmartIri))
+            val baseName = SparqlTransformer.escapeEntityForVariable(IriRef("http://rdfh.ch/users/91e19f1e01".toSmartIri))
 
             baseName should ===("httprdfhchusers91e19f1e01")
 
@@ -51,7 +50,7 @@ class GravsearchUtilV2Spec extends CoreSpec() {
 
         "create a syntactically valid base name from a given ontology IRI" in {
 
-            val baseName = GravsearchUtilV2.SparqlTransformation.escapeEntityForVariable(IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri))
+            val baseName = SparqlTransformer.escapeEntityForVariable(IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri))
 
             baseName should ===("httpwwwknoraorgontology0803incunabulabook")
 
@@ -59,7 +58,7 @@ class GravsearchUtilV2Spec extends CoreSpec() {
 
         "create a syntactically valid base name from a given string literal" in {
 
-            val baseName = GravsearchUtilV2.SparqlTransformation.escapeEntityForVariable(XsdLiteral("dumm", OntologyConstants.Xsd.String.toSmartIri))
+            val baseName = SparqlTransformer.escapeEntityForVariable(XsdLiteral("dumm", OntologyConstants.Xsd.String.toSmartIri))
 
             baseName should ===("dumm")
 
@@ -67,7 +66,7 @@ class GravsearchUtilV2Spec extends CoreSpec() {
 
         "create a unique variable name based on an entity and a property" in {
             val generatedQueryVar =
-                GravsearchUtilV2.SparqlTransformation.createUniqueVariableNameFromEntityAndProperty(
+                SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
                     QueryVariable("linkingProp1"),
                     OntologyConstants.KnoraBase.HasLinkToValue
                 )

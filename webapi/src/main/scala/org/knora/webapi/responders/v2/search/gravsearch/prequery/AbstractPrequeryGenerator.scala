@@ -1,11 +1,11 @@
-package org.knora.webapi.responders.v2.search.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
-import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.responders.v2.search.{SparqlTransformer, _}
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.SparqlTransformation._
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -13,9 +13,12 @@ import org.knora.webapi.util.{SmartIri, StringFormatter}
 import scala.collection.mutable
 
 /**
-  * An abstract base class providing shared methods for [[WhereTransformer]] instances.
+  * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
+  *
+  * @param typeInspectionResult the result of running type inspection on the Gravsearch input.
+  * @param querySchema the ontology schema used in the input Gravsearch query.
   */
-abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
+abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
 
     protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -119,7 +122,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
       * @return a unique variable.
       */
     protected def createUniqueVariableFromStatement(baseStatement: StatementPattern, suffix: String): QueryVariable = {
-        QueryVariable(escapeEntityForVariable(baseStatement.subj) + "__" + escapeEntityForVariable(baseStatement.pred) + "__" + escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
+        QueryVariable(SparqlTransformer.escapeEntityForVariable(baseStatement.subj) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.pred) + "__" + SparqlTransformer.escapeEntityForVariable(baseStatement.obj) + "__" + suffix)
     }
 
     /**
@@ -206,7 +209,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
       */
     private def generateStatementsForLinkValue(linkSource: Entity, linkPred: Entity, linkTarget: Entity): Seq[StatementPattern] = {
         // Generate a variable name representing the link value
-        val linkValueObjVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+        val linkValueObjVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
             base = linkTarget,
             propertyIri = OntologyConstants.KnoraBase.LinkValue
         )
@@ -438,14 +441,14 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
     )
 
     /**
-      * Calls [[checkStatement]], then converts the specified statement pattern to the internal schema.
+      * Calls [[GravsearchUtilV2.checkStatement]], then converts the specified statement pattern to the internal schema.
       *
       * @param statementPattern     the statement pattern to be converted.
       * @param typeInspectionResult the type inspection result.
       * @return the converted statement pattern.
       */
     protected def statementPatternToInternalSchema(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): StatementPattern = {
-        checkStatement(
+        GravsearchUtilV2.checkStatement(
             statementPattern = statementPattern,
             querySchema = querySchema,
             typeInspectionResult = typeInspectionResult
@@ -461,7 +464,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
       * @return variable representing the corresponding link value property.
       */
     protected def createlinkValuePropertyVariableFromLinkingPropertyVariable(linkingPropertyQueryVariable: QueryVariable): QueryVariable = {
-        createUniqueVariableNameFromEntityAndProperty(
+        SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
             base = linkingPropertyQueryVariable,
             propertyIri = OntologyConstants.KnoraBase.HasLinkToValue
         )
@@ -544,7 +547,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
             throw GravsearchException(s"Invalid operator '$comparisonOperator' in expression (allowed operators in this context are ${validComparisonOperators.map(op => "'" + op + "'").mkString(", ")})")
 
         // Generate a variable name representing the literal attached to the value object
-        val valueObjectLiteralVar: QueryVariable = createUniqueVariableNameFromEntityAndProperty(
+        val valueObjectLiteralVar: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(
             base = queryVar,
             propertyIri = valueHasProperty
         )
@@ -593,13 +596,13 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
         val dateValueContent = DateValueContentV2.parse(dateStr)
 
         // Generate a variable name representing the period's start
-        val dateValueHasStartVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
+        val dateValueHasStartVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasStartJDN)
 
         // sort dates by their period's start (in the prequery)
         addGeneratedVariableForValueLiteral(queryVar, dateValueHasStartVar)
 
         // Generate a variable name representing the period's end
-        val dateValueHasEndVar = createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
+        val dateValueHasEndVar = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = queryVar, propertyIri = OntologyConstants.KnoraBase.ValueHasEndJDN)
 
         // connects the value object with the periods start variable
         val dateValStartStatement = StatementPattern.makeExplicit(subj = queryVar, pred = IriRef(OntologyConstants.KnoraBase.ValueHasStartJDN.toSmartIri), obj = dateValueHasStartVar)
@@ -870,7 +873,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
         }
 
         // Generate a variable name representing the language of the text value
-        val textValHasLanguage: QueryVariable = createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasLanguage)
+        val textValHasLanguage: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(langFunctionCall.textValueVar, OntologyConstants.KnoraBase.ValueHasLanguage)
 
         // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
         // if that statement hasn't been added already.
@@ -927,7 +930,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
             }
 
             // Generate a variable name representing the string literal
-            val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+            val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = regexFunctionCall.textVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
             // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
             // if that statement hasn't been added already.
@@ -991,7 +994,7 @@ abstract class AbstractSparqlTransformer(typeInspectionResult: GravsearchTypeIns
             case _ => throw GravsearchException(s"${textValueVar.toSparql} must be an xsd:string")
         }
 
-        val textValHasString: QueryVariable = createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
+        val textValHasString: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(base = textValueVar, propertyIri = OntologyConstants.KnoraBase.ValueHasString)
 
         // Add a statement to assign the literal to a variable, which we'll use in the transformed FILTER expression,
         // if that statement hasn't been added already.
