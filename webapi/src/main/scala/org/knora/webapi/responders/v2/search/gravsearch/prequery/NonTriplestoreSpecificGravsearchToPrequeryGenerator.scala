@@ -1,3 +1,22 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
@@ -12,8 +31,8 @@ import org.knora.webapi.util.SmartIri
   * query to get the actual results for the page.
   *
   * @param typeInspectionResult the result of type inspection of the original query.
-  * @param querySchema ontology schema used in the input query.
-  * @param settings application settings.
+  * @param querySchema          ontology schema used in the input query.
+  * @param settings             application settings.
   */
 class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema, settings: SettingsImpl)
     extends AbstractPrequeryGenerator(typeInspectionResult, querySchema) with ConstructToSelectTransformer {

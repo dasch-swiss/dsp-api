@@ -25,12 +25,12 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.{CombineSearchTerms, MatchStringWhileTyping}
+import org.knora.webapi.responders.v2.search.ApacheLuceneSupport._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.SparqlTransformer
 import org.knora.webapi.responders.v2.search.gravsearch._
-import org.knora.webapi.responders.v2.search.gravsearch.prequery.{NonTriplestoreSpecificGravsearchToPrequeryGenerator, NonTriplestoreSpecificGravsearchToCountPrequeryGenerator}
-import org.knora.webapi.responders.v2.search.gravsearch.types.{GravsearchTypeInspectionRunner, GravsearchTypeInspectionUtil, _}
+import org.knora.webapi.responders.v2.search.gravsearch.prequery._
+import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
@@ -129,9 +129,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def fulltextSearchV2(searchValue: String, offset: Int, limitToProject: Option[IRI], limitToResourceClass: Option[SmartIri], limitToStandoffClass: Option[SmartIri], requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-
-        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.FulltextSearch.FullTextSearchConstants._
-        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.FulltextSearch._
+        import FullTextMainQueryGenerator.FullTextSearchConstants
 
         val groupConcatSeparator = StringFormatter.INFORMATION_SEPARATOR_ONE
 
@@ -159,7 +157,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             // a sequence of resource IRIs that match the search criteria
             // attention: no permission checking has been done so far
             resourceIris: Seq[IRI] = prequeryResponse.results.bindings.map {
-                resultRow: VariableResultsRow => resultRow.rowMap(resourceVar.variableName)
+                resultRow: VariableResultsRow => resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
             }
 
             // make sure that the prequery returned some results
@@ -169,9 +167,9 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val valueObjectIrisPerResource: Map[IRI, Set[IRI]] = prequeryResponse.results.bindings.foldLeft(Map.empty[IRI, Set[IRI]]) {
                     (acc: Map[IRI, Set[IRI]], resultRow: VariableResultsRow) =>
 
-                        val mainResIri: IRI = resultRow.rowMap(resourceVar.variableName)
+                        val mainResIri: IRI = resultRow.rowMap(FullTextSearchConstants.resourceVar.variableName)
 
-                        resultRow.rowMap.get(valueObjectConcatVar.variableName) match {
+                        resultRow.rowMap.get(FullTextSearchConstants.valueObjectConcatVar.variableName) match {
 
                             case Some(valObjIris) =>
 
@@ -187,7 +185,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val allValueObjectIris = valueObjectIrisPerResource.values.flatten.toSet
 
                 // create CONSTRUCT queries to query resources and their values
-                val mainQuery = createMainQuery(resourceIris.toSet, allValueObjectIris)
+                val mainQuery = FullTextMainQueryGenerator.createMainQuery(resourceIris.toSet, allValueObjectIris)
 
                 val triplestoreSpecificQueryPatternTransformerConstruct: ConstructToConstructTransformer = {
                     if (settings.triplestoreType.startsWith("graphdb")) {
@@ -228,7 +226,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
 
                                     // all value objects contained in `valuePropAssertions`
-                                    val resAndValueObjIris: GravsearchUtilV2.ResourceIrisAndValueObjectIris = GravsearchUtilV2.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
+                                    val resAndValueObjIris: MainQueryResultProcessor.ResourceIrisAndValueObjectIris = MainQueryResultProcessor.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
 
                                     // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
                                     val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
@@ -363,8 +361,8 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
       * @return a [[ReadResourcesSequenceV2]] representing the resources that have been found.
       */
     private def gravsearchV2(inputQuery: ConstructQuery, requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
-
-        import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch._
+        import org.knora.webapi.responders.v2.search.MainQueryResultProcessor
+        import org.knora.webapi.responders.v2.search.gravsearch.mainquery.GravsearchMainQueryGenerator
 
         for {
             // Do type inspection and remove type annotations from the WHERE clause.
@@ -430,7 +428,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 // at least one resource matched the prequery
 
                 // get all the IRIs for variables representing dependent resources per main resource
-                val dependentResourceIrisPerMainResource: DependentResourcesPerMainResource = getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val dependentResourceIrisPerMainResource: MainQueryResultProcessor.DependentResourcesPerMainResource = MainQueryResultProcessor.getDependentResourceIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all variables representing resources
                 val allResourceVariablesFromTypeInspection: Set[QueryVariable] = typeInspectionResult.entities.collect {
@@ -448,7 +446,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                 val allDependentResourceIris: Set[IRI] = dependentResourceIrisPerMainResource.dependentResourcesPerMainResource.values.flatten.toSet ++ dependentResourceIrisFromTypeInspection
 
                 // for each main resource, create a Map of value object variables and their Iris
-                val valueObjectVarsAndIrisPerMainResource: ValueObjectVariablesAndValueObjectIris = getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
+                val valueObjectVarsAndIrisPerMainResource: MainQueryResultProcessor.ValueObjectVariablesAndValueObjectIris = MainQueryResultProcessor.getValueObjectVarsAndIrisPerMainResource(prequeryResponse, nonTriplestoreSpecificConstructToSelectTransformer, mainResourceVar)
 
                 // collect all value objects IRIs (for all main resources and for all value object variables)
                 val allValueObjectIris: Set[IRI] = valueObjectVarsAndIrisPerMainResource.valueObjectVariablesAndValueObjectIris.values.foldLeft(Set.empty[IRI]) {
@@ -458,7 +456,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                 // create the main query
                 // it is a Union of two sets: the main resources and the dependent resources
-                val mainQuery: ConstructQuery = createMainQuery(
+                val mainQuery: ConstructQuery = GravsearchMainQueryGenerator.createMainQuery(
                     mainResourceIris = mainResourceIris.map(iri => IriRef(iri.toSmartIri)).toSet,
                     dependentResourceIris = allDependentResourceIris.map(iri => IriRef(iri.toSmartIri)),
                     valueObjectIris = allValueObjectIris
@@ -490,14 +488,14 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
 
                     // for each main resource, check if all dependent resources and value objects are still present after permission checking
                     // this ensures that the user has sufficient permissions on the whole graph pattern
-                    queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = getMainQueryResultsWithFullGraphPattern(
+                    queryResultsWithFullGraphPattern: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getMainQueryResultsWithFullGraphPattern(
                         mainQueryResponse = mainQueryResponse,
                         dependentResourceIrisPerMainResource = dependentResourceIrisPerMainResource,
                         valueObjectVarsAndIrisPerMainResource = valueObjectVarsAndIrisPerMainResource,
                         requestingUser = requestingUser)
 
                     // filter out those value objects that the user does not want to be returned by the query (not present in the input query's CONSTRUCT clause)
-                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = getRequestedValuesFromResultsWithFullGraphPattern(
+                    queryResWithFullGraphPatternOnlyRequestedValues: Map[IRI, ConstructResponseUtilV2.ResourceWithValueRdfData] = MainQueryResultProcessor.getRequestedValuesFromResultsWithFullGraphPattern(
                         queryResultsWithFullGraphPattern,
                         valueObjectVarsAndIrisPerMainResource,
                         allResourceVariablesFromTypeInspection,

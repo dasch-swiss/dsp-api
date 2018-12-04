@@ -1,11 +1,29 @@
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.knora.webapi.responders.v2.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
-import org.knora.webapi.responders.v2.search.{SparqlTransformer, _}
-import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchQueryChecker, GravsearchUtilV2}
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
+import org.knora.webapi.responders.v2.search._
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchQueryChecker
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -16,7 +34,7 @@ import scala.collection.mutable
   * An abstract base class for [[WhereTransformer]] instances that generate SPARQL prequeries from Gravsearch input.
   *
   * @param typeInspectionResult the result of running type inspection on the Gravsearch input.
-  * @param querySchema the ontology schema used in the input Gravsearch query.
+  * @param querySchema          the ontology schema used in the input Gravsearch query.
   */
 abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeInspectionResult, querySchema: ApiV2Schema) extends WhereTransformer {
 
@@ -55,6 +73,9 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
     // suffix appended to variables that are returned by a SPARQL aggregation function.
     val groupConcatVariableSuffix = "__Concat"
+
+    // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
+    val dateTypes: Set[IRI] = Set(OntologyConstants.KnoraApiV2WithValueObjects.DateValue, OntologyConstants.KnoraApiV2WithValueObjects.StandoffTag)
 
     /**
       * A container for a generated variable representing a value literal.
@@ -1311,7 +1332,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
         typeInspectionResult.getTypeOfEntity(dateBaseVar) match {
             case Some(nonPropInfo: NonPropertyTypeInfo) =>
-                if (!GravsearchConstants.dateTypes.contains(nonPropInfo.typeIri.toString)) {
+                if (!dateTypes.contains(nonPropInfo.typeIri.toString)) {
                     throw GravsearchException(s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag")
                 }
 

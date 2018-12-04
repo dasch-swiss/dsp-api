@@ -1,5 +1,23 @@
-package org.knora.webapi.responders.v2.search
+/*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
+package org.knora.webapi.responders.v2.search
 
 /**
   * Provides some functionality to pre-process a given search string so it supports the Apache Lucene Query Parser syntax.
@@ -16,7 +34,7 @@ object ApacheLuceneSupport {
     /**
       * Searches for a resource by its rdfs:label as the user is typing.
       *
-      * @param terms the terms to search for.
+      * @param terms    the terms to search for.
       * @param lastTerm the last term the user is entering at the moment.
       */
     case class MatchStringWhileTyping(terms: Seq[String], lastTerm: String) {
@@ -56,7 +74,7 @@ object ApacheLuceneSupport {
           *
           * This matches all the strings that contain the exact phrase and the term with the wildcard.
           * Example: "Reise ins" "Heili" -> "Reise ins" AND Heili*
-
+          *
           * @return a string literal.
           */
         def generateLiteralForLuceneIndexWithExactSequence: String = {
@@ -109,7 +127,6 @@ object ApacheLuceneSupport {
             } else {
                 new MatchStringWhileTyping(List.empty[String], searchStringSegments.head)
             }
-
 
 
         }
