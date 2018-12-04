@@ -78,7 +78,7 @@ $ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/con
 Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
 not aks Knora about the user's permission on the requested file.
 
-## Using Sipi production behind proxy
+## Using Sipi in production behind a proxy
 
 For SIPI to work with Salsah1 (non-angular) GUI, we need to define an additional set of
 environment variables if we want to run SIPI behind a proxy:
