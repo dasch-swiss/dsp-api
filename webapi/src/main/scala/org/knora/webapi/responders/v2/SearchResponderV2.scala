@@ -228,7 +228,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
                                     val valuePropAssertions: Map[IRI, Seq[ConstructResponseUtilV2.ValueRdfData]] = values.valuePropertyAssertions
 
                                     // all value objects contained in `valuePropAssertions`
-                                    val resAndValueObjIris: GravsearchUtilV2.ResourceIrisAndValueObjectIris = GravsearchUtilV2.traverseValuePropertyAssertions(valuePropAssertions)
+                                    val resAndValueObjIris: GravsearchUtilV2.ResourceIrisAndValueObjectIris = GravsearchUtilV2.collectResourceIrisAndValueObjectIrisFromMainQueryResult(valuePropAssertions)
 
                                     // check if the client has sufficient permissions on all value objects IRIs present in the graph pattern
                                     val allValueObjects: Boolean = resAndValueObjIris.valueObjectIris.intersect(expectedValueObjects) == expectedValueObjects
@@ -306,7 +306,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Validate schemas and predicates in the CONSTRUCT clause.
-            _ = GravsearchUtilV2.checkConstructClause(
+            _ = GravsearchQueryChecker.checkConstructClause(
                 constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult
             )
@@ -373,7 +373,7 @@ class SearchResponderV2 extends ResponderWithStandoffV2 {
             whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(inputQuery.whereClause)
 
             // Validate schemas and predicates in the CONSTRUCT clause.
-            _ = GravsearchUtilV2.checkConstructClause(
+            _ = GravsearchQueryChecker.checkConstructClause(
                 constructClause = inputQuery.constructClause,
                 typeInspectionResult = typeInspectionResult
             )

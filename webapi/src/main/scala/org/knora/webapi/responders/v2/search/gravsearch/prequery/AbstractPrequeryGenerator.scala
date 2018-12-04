@@ -4,7 +4,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages.DateValueContentV2
 import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
 import org.knora.webapi.responders.v2.search.{SparqlTransformer, _}
-import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2
+import org.knora.webapi.responders.v2.search.gravsearch.{GravsearchQueryChecker, GravsearchUtilV2}
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchUtilV2.Gravsearch.GravsearchConstants
 import org.knora.webapi.responders.v2.search.gravsearch.types._
 import org.knora.webapi.util.IriConversions._
@@ -441,14 +441,14 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
     )
 
     /**
-      * Calls [[GravsearchUtilV2.checkStatement]], then converts the specified statement pattern to the internal schema.
+      * Calls [[GravsearchQueryChecker.checkStatement]], then converts the specified statement pattern to the internal schema.
       *
       * @param statementPattern     the statement pattern to be converted.
       * @param typeInspectionResult the type inspection result.
       * @return the converted statement pattern.
       */
     protected def statementPatternToInternalSchema(statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): StatementPattern = {
-        GravsearchUtilV2.checkStatement(
+        GravsearchQueryChecker.checkStatement(
             statementPattern = statementPattern,
             querySchema = querySchema,
             typeInspectionResult = typeInspectionResult
