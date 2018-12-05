@@ -44,7 +44,7 @@ object Dependencies {
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
         sipiVersion := "v1.4.2-SNAPSHOT",
-        gdbImage := "ontotext/graphdb:8.5.0-se"
+        gdbImage := "ontotext/graphdb:8.7.2-se"
     )
 
 
