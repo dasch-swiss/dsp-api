@@ -36,7 +36,7 @@ If your XML files represent text with markup (e.g. [TEI/XML](http://www.tei-c.or
 the recommended approach is to allow Knora to store it as
 @ref:[Standoff/RDF](01-introduction/standoff-rdf.md). This will allow both text and
 markup to be searched using @ref:[Gravsearch](03-apis/api-v2/query-language.md). Knora
-can also regenerate the original XML document at any time.
+can also regenerate, at any time, an XML document that is equivalent to the original one.
 
 If you have XML that simply represents structured data (rather than text documents),
 we recommend converting it to Knora resources, which are stored as RDF.
@@ -58,10 +58,10 @@ Knora does not allow this to be done with ordinary project-specific ontologies.
 Each project must be free to change its own ontologies, but this is not possible
 if they have been used in ontologies or data created by other projects.
 
-An ontology can be defined as shared, meaning that it can be used by multiple
+However, an ontology can be defined as shared, meaning that it can be used by multiple
 projects, and that its creators promise not to change it in ways that could
 affect other ontologies or data that are based on it. See
-@ref:[Shared Ontologies](03-apis/api-v2/knora-iris.md#shared-ontologies) for details.
+@ref:[Shared Ontologies](02-knora-ontologies/introduction.md#shared-ontologies) for details.
 
 There will be a standardisation process for shared ontologies
 (issue @github[#523](#523)).

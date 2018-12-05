@@ -26,12 +26,25 @@ a content management system for the long-term preservation and reuse of
 humanities data. It is designed to accommodate data with a complex internal
 structure, including data that could be stored in relational databases.
 
-A key problem in the long-term preservation of data is the multitude of
-data formats in use, many of which are proprietary and quickly become obsolete.
-It is not practical to maintain all the software that was used to create and
-read old data files.
+Knora aims to solve key problems in the long-term preservation and reuse
+of humanities data:
 
-Instead of preserving a multitude of different data formats, Knora supports
+First, traditional archives preserve data, but do not facilitate reuse. Typically,
+only metadata can be searched, not the data itself. You have to first identify
+an information package that might be of interest, then download it, and only
+then can you find out what's really in it. This is time-consuming, and
+makes it impractical to reuse data from many different sources.
+
+Knora solves this problem by keeping the data alive. You can query all the data
+in a Knora repository, not just the metadata. You can import thousands of databases into
+Knora, and run queries that search through all of them at once.
+
+Another problem is that researchers use a multitude of different data formats, many of
+which are proprietary and quickly become obsolete. It is not practical to maintain
+all the programs that were used to create and read old data files, or even
+all the operating systems that these programs ran on.
+
+Instead of preserving all these data formats, Knora supports
 the conversion of all sorts of data to a @ref:[small number of formats](data-formats.md)
 that are suitable for long-term preservation, and that maintain the data's meaning and
 structure:
@@ -116,6 +129,7 @@ on the web.
 ## Build Your Own Application
 
 Knora can be used with a general-purpose, browser-based VRE called
-[SALSAH](https://dhlab-basel.github.io/Salsah/). Using the Knora API, a project
-can also create its own VRE or project-specific web site, optionally
-reusing components from SALSAH.
+[SALSAH](https://dhlab-basel.github.io/Salsah/).
+Using the Knora API and [Knora-ui](https://github.com/dhlab-basel/Knora-ui), a set of
+reusable user-interface components, you can also create your own VRE or project-specific
+web site.
