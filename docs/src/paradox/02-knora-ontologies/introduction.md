@@ -57,9 +57,30 @@ write prefixed names for IRIs:
 
 ![Figure 3](introduction-fig3.dot.png "Figure 3")
 
-## Built-in Ontologies and Project-specific Ontologies
+## Built-in Ontologies and User-Created Ontologies
 
 To ensure the interoperability of data produced by different projects,
-each project must describe its data model by creating ontologies that
-extend Knora\'s built-in ontologies. The main built-in ontology in Knora
+each project must describe its data model by creating one or more ontologies that
+extend Knora's built-in ontologies. The main built-in ontology in Knora
 is @ref:[knora-base](knora-base.md).
+
+## Shared Ontologies
+
+Knora does not normally allow a project to use classes or properties defined in
+an ontology that belongs to another project. Each project must be free to change
+its own ontologies, but this is not possible if they have been used in ontologies
+or data created by other projects.
+
+However, an ontology can be defined as shared, meaning that it can be used by
+multiple projects, and that its creators will not change it in ways that could
+affect other ontologies or data that are based on it. Specifically, in a shared
+ontology, existing classes and properties cannot safely be changed, but new ones
+can be added. (It is not even safe to add an optional cardinality to an existing
+class, because this could cause subclasses to violate the rule that a class cannot
+have a cardinality on property P as well as a cardinality on a subproperty of P;
+see @ref:[Restrictions on Classes](knora-base.md#restrictions-on-classes).)
+
+A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
+
+For more details about shared ontologies, see
+@ref:[Shared Ontology IRIs](../03-apis/api-v2/knora-iris.md#shared-ontology-iris).

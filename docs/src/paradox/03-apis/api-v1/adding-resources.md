@@ -35,10 +35,10 @@ describing the resource to be created.
 Creating resources requires authentication since only known users may
 add resources.
 
-## Adding Resources Without a Digital Representation
+## Adding Resources Without Image Files
 
-The format of the JSON used to create a resource without a digital
-representation is described in the TypeScript interface
+The format of the JSON used to create a resource without an image file is
+described in the TypeScript interface
 `createResourceWithoutRepresentationRequest` in module
 `createResourceFormats`. It requires the IRI of the resource class the
 new resource belongs to, a label describing the new resource, the IRI of
@@ -47,19 +47,19 @@ assigned to the new resource.
 
 The request header's content type has to be set to `application/json`.
 
-## Adding Resources with a Digital Representation
+## Adding Resources with Image Files
 
-Certain resource classes allow for digital representations (e.g. an
-image). There are two ways to attach a file to a resource: Either by
-submitting directly the binaries of the file in a HTTP Multipart request
-or by indicating the location of the file. The two cases are referred to
+Certain resource classes can have attached image files. There are two ways to
+attach a file to a resource: Either by submitting directly the binaries of the file in a
+an HTTP Multipart request, or by indicating the location of the file. The two cases are referred to
 as non-GUI case and GUI case (see @ref:[Sipi and Knora](../../07-sipi/sipi-and-knora.md)).
 
 ### Including the binaries (non-GUI case)
 
 In order to include the binaries, a HTTP Multipart request has to be
 sent. One part contains the JSON (same format as described for
-[Adding Resources Without a Digital Representation](#adding-resources-without-a-digital-representation)) and has to be named `json`. The other part contains the file's name, its binaries, and its mime type
+[Adding Resources Without Images Files](#adding-resources-without-a-digital-representation))
+and has to be named `json`. The other part contains the file's name, its binaries, and its mime type
 and has to be named `file`. The following example illustrates how to
 make this type of request using Python 3:
 
@@ -102,12 +102,12 @@ would be read in text mode).
 ### Indicating the location of a file (GUI case)
 
 This request works similarly to
-[Adding Resources Without a Digital Representation](#adding-resources-without-a-digital-representation). The JSON format is described
+[Adding Resources Without Image Files](#adding-resources-without-a-digital-representation). The JSON format is described
 in the TypeScript interface `createResourceWithRepresentationRequest` in
 module `createResourceFormats`. The request header's content type has to
 set to `application/json`.
 
-In addition to [Adding Resources Without a Digital Representation](#adding-resources-without-a-digital-representation), the
+In addition to [Adding Resources Without Image Files](#adding-resources-without-a-digital-representation), the
 (temporary) name of the file, its original name, and mime type have to
 be provided (see @ref:[GUI Case](../../07-sipi/sipi-and-knora.md#gui-case)).
 
@@ -121,7 +121,7 @@ Knora API V1 operations.
 The JSON format of the response is described in the TypeScript interface
 `createResourceResponse` in module `createResourceFormats`.
 
-## Changing a resource's label
+## Changing a Resource's Label
 
 A resource's label can be changed by making a PUT request to the path
 segments `resources/label`. The resource's Iri has to be provided in the
@@ -149,18 +149,21 @@ update in a single database transaction.
 
 Only system or project administrators may use the bulk import.
 
-The procedure for using this feature is as follows:
+The procedure for using this feature is as follows
+(see the @ref:[example below](#bulk-import-example)).
 
-1.  Make a request to Knora to get XML schemas describing
+1.  Make an HTTP GET request to Knora to @ref:[get XML schemas](#1-get-xml-schemas) describing
     the XML to be provided for the import.
-2.  Convert your data into XML, including the filesystem paths of any
-    files that should be attached to the resources to be created.
-3.  Use an XML schema validator such as [Apache
-    Xerces](http://xerces.apache.org) or
-    [Saxon](http://www.saxonica.com), or an XML development environment
-    such as [Oxygen](https://www.oxygenxml.com), to check that your XML
-    is valid according to the schemas you got from Knora.
-4.  Submit your XML to Knora.
+2.  @ref:[Generate an XML import document](#2-generate-xml-import-document) representing the
+    data to be imported, following the Knora import schemas that were generated in step 1.
+    You will probably want to write a script to do this. Knora is not involved in this step.
+    If you are also importing image files, this XML document needs to
+    @ref:[contain the filesystem paths](#bulk-import-with-image-files) of those files.
+3.  @ref:[Validate your XML import document](#3-validate-xml-import-document), using an XML schema validator such as
+    [Apache Xerces](http://xerces.apache.org) or [Saxon](http://www.saxonica.com), or an
+    XML development environment such as [Oxygen](https://www.oxygenxml.com). This will
+    help ensure that the data you submit to Knora is correct. Knora is not involved in this step.
+4.  @ref:[Submit the XML import document to Knora](#4-submit-xml-import-document-to-knora).
 
 In this procedure, the person responsible for generating the XML import
 data need not be familiar with RDF or with the ontologies involved.
@@ -174,42 +177,48 @@ examples.
 
 ### Bulk Import Example
 
-Suppose we have a project with existing data (but no digital
-representations), which we want to import into Knora. We have created an
-ontology called `http://www.knora.org/ontology/0802/biblio` for the
+Suppose we have a project with existing data (but no image files),
+which we want to import into Knora. We have created an
+ontology called `http://www.knora.org/ontology/0801/biblio` for the
 project, and this ontology also uses definitions from another ontology,
 called `http://www.knora.org/ontology/0801/beol`.
 
-#### Get XML Schemas
+#### 1. Get XML Schemas
 
 To get XML schemas for an import, we use the following route, specifying
-the IRI of our project's main ontology (in this case
-`http://www.knora.org/ontology/0802/biblio`):
+the (URL-encoded) IRI of our project's main ontology (in this case
+`http://www.knora.org/ontology/0801/biblio`):
 
 ```
 HTTP GET to http://host/v1/resources/xmlimportschemas/ontologyIRI
 ```
 
-This returns a Zip archive called `p0802-biblio-xml-schemas.zip`,
+In our example, the URL could be:
+
+```
+http://localhost:3333/v1/resources/xmlimportschemas/http%3A%2F%2Fwww.knora.org%2Fontology%2F0801%2Fbiblio
+```
+
+This returns a Zip archive called `p0801-biblio-xml-schemas.zip`,
 containing three files:
 
-- `p0802-biblio.xsd`: The schema for our main ontology.
+- `p0801-biblio.xsd`: The schema for our main ontology.
 
 - `p0801-beol.xsd`: A schema for another ontology that our main ontology depends on.
 
 - `knoraXmlImport.xsd`: The standard Knora XML import schema, used by all XML imports.
 
-#### Generate XML
+#### 2. Generate XML Import Document
 
 We now convert our existing data to XML, probably by writing a custom
-script. The XML looks like this:
+script. The resulting XML import document could look like this:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
-    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
+    xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
     xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
     xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
     <p0801-beol:person id="abel">
@@ -223,31 +232,31 @@ script. The XML looks like this:
         <p0801-beol:hasFamilyName knoraType="richtext_value">Holmes</p0801-beol:hasFamilyName>
         <p0801-beol:hasGivenName knoraType="richtext_value">Sherlock</p0801-beol:hasGivenName>
     </p0801-beol:person>
-    <p0802-biblio:Journal id="math_intelligencer">
+    <p0801-biblio:Journal id="math_intelligencer">
         <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
-        <p0802-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0802-biblio:hasName>
-    </p0802-biblio:Journal>
-    <p0802-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+        <p0801-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0801-biblio:hasName>
+    </p0801-biblio:Journal>
+    <p0801-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
         <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
-        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
+        <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
             <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
-        </p0802-biblio:p0801-beol__comment>
-        <p0802-biblio:endPage knoraType="richtext_value">73</p0802-biblio:endPage>
-        <p0802-biblio:isPartOfJournal>
-            <p0802-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
-        </p0802-biblio:isPartOfJournal>
-        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
-        <p0802-biblio:publicationHasAuthor>
+        </p0801-biblio:p0801-beol__comment>
+        <p0801-biblio:endPage knoraType="richtext_value">73</p0801-biblio:endPage>
+        <p0801-biblio:isPartOfJournal>
+            <p0801-biblio:Journal knoraType="link_value" target="math_intelligencer" linkType="ref"/>
+        </p0801-biblio:isPartOfJournal>
+        <p0801-biblio:journalVolume knoraType="richtext_value">27</p0801-biblio:journalVolume>
+        <p0801-biblio:publicationHasAuthor>
             <p0801-beol:person knoraType="link_value" linkType="ref" target="abel"/>
-        </p0802-biblio:publicationHasAuthor>
-        <p0802-biblio:publicationHasAuthor>
+        </p0801-biblio:publicationHasAuthor>
+        <p0801-biblio:publicationHasAuthor>
             <p0801-beol:person knoraType="link_value" linkType="ref" target="holmes"/>
-        </p0802-biblio:publicationHasAuthor>
-        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</p0802-biblio:publicationHasDate>
-        <p0802-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0802-biblio:publicationHasTitle>
-        <p0802-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0802-biblio:publicationHasTitle>
-        <p0802-biblio:startPage knoraType="richtext_value">48</p0802-biblio:startPage>
-    </p0802-biblio:JournalArticle>
+        </p0801-biblio:publicationHasAuthor>
+        <p0801-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1976</p0801-biblio:publicationHasDate>
+        <p0801-biblio:publicationHasTitle knoraType="richtext_value" lang="en">Strings in the 16th and 17th Centuries</p0801-biblio:publicationHasTitle>
+        <p0801-biblio:publicationHasTitle knoraType="richtext_value">An alternate title</p0801-biblio:publicationHasTitle>
+        <p0801-biblio:startPage knoraType="richtext_value">48</p0801-biblio:startPage>
+    </p0801-biblio:JournalArticle>
 </knoraXmlImport:resources>
 ```
 
@@ -260,8 +269,8 @@ This illustrates several aspects of XML imports:
     returned by Knora.
 
   - We have copied and pasted
-    `xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"`
-    from the main XML schema, `p0802-biblio.xsd`. This enables the Knora
+    `xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"`
+    from the main XML schema, `p0801-biblio.xsd`. This enables the Knora
     API server to identify the main ontology we are using.
 
   - We have used `xsi:schemaLocation` to indicate the main schema's
@@ -302,7 +311,7 @@ This illustrates several aspects of XML imports:
   - There is a specfic syntax for referring to properties from other
     ontologies. In the example, `p0801-beol:comment` is defined in the
     ontology `http://www.knora.org/ontology/0001/beol`. In the XML, we
-    refer to it as `p0802-biblio:p0801-beol__comment`.
+    refer to it as `p0801-biblio:p0801-beol__comment`.
 
   - A text value can contain XML markup. If it does:
 
@@ -327,11 +336,33 @@ This illustrates several aspects of XML imports:
   - A text value can have a `lang` attribute, whose value is an ISO 639-1
     code specifying the language of the text.
 
-To create these resources, we use the following route, specifying the
-IRI of the project in which the resources should be created:
+#### 3. Validate XML Import Document
+
+You can use an XML schema validator such as [Apache Xerces](http://xerces.apache.org) or
+[Saxon](http://saxon.sourceforge.net/), or an XML development environment
+such as [Oxygen](https://www.oxygenxml.com), to check that your XML import document
+is valid according to the schemas you got from Knora.
+
+For example, using Saxon:
+
+```
+java -cp ./saxon9ee.jar com.saxonica.Validate -xsd:p0801-biblio.xsd -s:data.xml
+```
+
+#### 4. Submit XML Import Document to Knora
+
+To create these resources in Knora, make an HTTP post request with the XML import document
+as the request body. The URL must specify the (URL-encoded) IRI of the project in which
+the resources should be created:
 
 ```
 HTTP POST to http://host/v1/resources/xmlimport/projectIRI
+```
+
+For example, using [curl](https://curl.haxx.se/):
+
+```
+curl -v -u root@example.com:test --data @data.xml --header "Content-Type: application/xml" http://localhost:3333/v1/resources/xmlimport/http%3A%2F%2Frdfh.ch%2Fprojects%2F0801
 ```
 
 ### Bulk Import with Links to Existing Resources
@@ -341,29 +372,29 @@ with links to the data that is now in the triplestore:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://api.knora.org/ontology/0802/biblio/xml-import/v1# p0802-biblio.xsd"
-    xmlns:p0802-biblio="http://api.knora.org/ontology/0802/biblio/xml-import/v1#"
+    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
+    xmlns:p0801-biblio="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
     xmlns:p0801-beol="http://api.knora.org/ontology/0801/beol/xml-import/v1#"
     xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-    <p0802-biblio:JournalArticle id="strings_in_the_18th_century">
+    <p0801-biblio:JournalArticle id="strings_in_the_18th_century">
         <knoraXmlImport:label>Strings in the 18th Century</knoraXmlImport:label>
-        <p0802-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
+        <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
             <text xmlns="">The most <strong>boring</strong> article in <a class="salsah-link" href="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A">Math Intelligencer</a>.</text>
-        </p0802-biblio:p0801-beol__comment>
-        <p0802-biblio:endPage knoraType="richtext_value">76</p0802-biblio:endPage>
-        <p0802-biblio:isPartOfJournal>
-            <p0802-biblio:Journal knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
-        </p0802-biblio:isPartOfJournal>
-        <p0802-biblio:journalVolume knoraType="richtext_value">27</p0802-biblio:journalVolume>
-        <p0802-biblio:publicationHasAuthor>
+        </p0801-biblio:p0801-beol__comment>
+        <p0801-biblio:endPage knoraType="richtext_value">76</p0801-biblio:endPage>
+        <p0801-biblio:isPartOfJournal>
+            <p0801-biblio:Journal knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/QMDEHvBNQeOdw85Z2NSi9A"/>
+        </p0801-biblio:isPartOfJournal>
+        <p0801-biblio:journalVolume knoraType="richtext_value">27</p0801-biblio:journalVolume>
+        <p0801-biblio:publicationHasAuthor>
             <p0801-beol:person knoraType="link_value" linkType="iri" target="http://rdfh.ch/biblio/c-xMB3qkRs232pWyjdUUvA"/>
-        </p0802-biblio:publicationHasAuthor>
-        <p0802-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0802-biblio:publicationHasDate>
-        <p0802-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0802-biblio:publicationHasTitle>
-        <p0802-biblio:startPage knoraType="richtext_value">52</p0802-biblio:startPage>
-    </p0802-biblio:JournalArticle>
+        </p0801-biblio:publicationHasAuthor>
+        <p0801-biblio:publicationHasDate knoraType="date_value">GREGORIAN:1977</p0801-biblio:publicationHasDate>
+        <p0801-biblio:publicationHasTitle knoraType="richtext_value">Strings in the 18th Century</p0801-biblio:publicationHasTitle>
+        <p0801-biblio:startPage knoraType="richtext_value">52</p0801-biblio:startPage>
+    </p0801-biblio:JournalArticle>
 </knoraXmlImport:resources>
 ```
 
@@ -371,9 +402,9 @@ Note that in the link elements referring to existing resources, the
 `linkType` attribute has the value `iri`, and the `target` attribute
 contains the IRI of the target resource.
 
-### Bulk Import of Resources with Digital Representations
+### Bulk Import with Image Files
 
-To attach a digital representation to a resource, we must provide the
+To attach an image file to a resource, we must provide the
 element `knoraXmlImport:file` before the property elements. In this
 element, we must give the absolute filesystem path to the file that
 should be attached to the resource, along with its MIME type:
