@@ -323,4 +323,4 @@ var SALSAH_API_LEGACY = {
  */
 SALSAH.vocabularyId2shortName = function(ontologyid) {
 	return ontologyid.substr(ontologyid.lastIndexOf('/') + 1)
-}
+};

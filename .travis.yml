@@ -88,7 +88,7 @@ jobs:
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the sipi container (with production config)
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi
+        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi-it
         # start the integration tests
         - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
         # upload code coverage report

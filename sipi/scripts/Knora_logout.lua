@@ -25,7 +25,7 @@ if not success then
 end
 
 -- invalidate cookie
-local success, errormsg = server.sendHeader("Set-Cookie", "sid=deleted;Expires=Thu, 01 Jan 1970 00:00:00 GMT")
+local success, errormsg = server.sendHeader("Set-Cookie", "KnoraToken=deleted;Expires=Thu, 01 Jan 1970 00:00:00 GMT")
 if not success then
     print(errormsg)
 end
