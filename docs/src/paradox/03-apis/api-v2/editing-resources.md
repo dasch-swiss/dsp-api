@@ -172,3 +172,7 @@ To create a resource, the user must have permission to create resources in the s
 The response is a JSON-LD document containing a
 @ref:[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
 of the resource.
+
+## Modifying a Resource
+
+To modify a resource, you can modify its values; see @ref:[Editing Values](editing-values.md).

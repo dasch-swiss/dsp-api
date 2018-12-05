@@ -173,23 +173,12 @@ has the following IRIs:
   - `http://HOST[:PORT]/ontology/0001/example/simple/v2#ExampleThing`
     (in the API v2 simple schema)
 
-### Shared Ontologies
+### Shared Ontology IRIs
 
-Knora does not normally allow a project to use classes or properties defined in
-an ontology that belongs to another project. Each project must be free to change
-its own ontologies, but this is not possible if they have been used in ontologies
-or data created by other projects.
-
-However, an ontology can be defined as shared, meaning that it can be used by
+As explained in @ref:[Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies),
+a user-created ontology can be defined as shared, meaning that it can be used by
 multiple projects, and that its creators will not change it in ways that could
-affect other ontologies or data that are based on it. Specifically, in a shared
-ontology, existing classes and properties cannot safely be changed, but new ones
-can be added. (It is not even safe to add an optional cardinality to an existing
-class, because this could cause subclasses to violate the rule that a class cannot
-have a cardinality on property P as well as a cardinality on a subproperty of P;
-see @ref:[Restrictions on Classes](../../02-knora-ontologies/knora-base.md#restrictions-on-classes).)
-
-A standardisation process for shared ontologies is planned (issue @github[#523](#523)).
+affect other ontologies or data that are based on it.
 
 There is currently one project for shared ontologies:
 
