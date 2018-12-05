@@ -26,9 +26,10 @@ sipi = {
     -- userid = '_www',
 
     --
-    -- sipi's hostname as reported in the thumbnail response, default is "localhost"
+    -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
+    -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
     --
-    -- hostname = 'localhost',
+    hostname = 'localhost',
 
     --
     -- port number the server is listening to
@@ -181,16 +182,16 @@ routes = {
         route = '/Knora_login',
         script = 'Knora_login.lua'
     },
-    {
-        method = 'POST',
-        route = '/Knora_logout',
-        script = 'Knora_logout.lua'
-    },
-    {
-        method = 'POST',
-        route = '/upload',
-        script = 'upload.lua'
-    },
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_logout',
+    --    script = 'Knora_logout.lua'
+    --},
+    --{
+    --    method = 'POST',
+    --    route = '/upload',
+    --    script = 'upload.lua'
+    --},
     {
         method = 'POST',
         route = '/store',
