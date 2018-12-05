@@ -11,3 +11,4 @@ Also, please change the "HINT" to the appropriate level:
 
 ## HINT => LEVEL
 
+- MAJOR CHANGE: mapping creation request and response formats have changed (@github[#1094](#1094)).
