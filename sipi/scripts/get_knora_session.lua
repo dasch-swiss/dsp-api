@@ -36,7 +36,9 @@ function get_session_id(cookie)
     -- ";" is expected to separate different key value pairs (https://tools.ietf.org/html/rfc6265#section-4.2.1)
     -- space is also treated as a separator
     -- returns nil if it cannot find the session id (pattern does not match)
-    session_id = string.match(cookie, "sid=([^%s;]+)")
+    server.log("extracted cookie: " .. cookie, server.loglevel.LOG_DEBUG)
+    print("extracted cookie: " .. cookie)
+    session_id = string.match(cookie, "KnoraAuthentication=([^%s;]+)")
 
     return session_id
 

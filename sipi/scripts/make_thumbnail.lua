@@ -154,16 +154,47 @@ for imgindex, imgparam in pairs(server.uploads) do
         return -1
     end
 
+    -- #snip_marker
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_PROTOCOL environment variable and use its value.
+    --
+    local external_protocol = os.getenv("SIPI_EXTERNAL_PROTOCOL")
+    if external_protocol == nil then
+        external_protocol = "http"
+    end
+    server.log("make_thumbnail - external_protocol: " .. external_protocol, server.loglevel.LOG_DEBUG)
+
+    --
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_HOSTNAME environment variable and use its value.
+    --
+    local external_hostname = os.getenv("SIPI_EXTERNAL_HOSTNAME")
+    if external_hostname == nil then
+        external_hostname = config.hostname
+    end
+    server.log("make_thumbnail - external_hostname: " .. external_hostname, server.loglevel.LOG_DEBUG)
+
+    --
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_PORT environment variable and use its value.
+    --
+    local external_port = os.getenv("SIPI_EXTERNAL_PORT")
+    if external_port == nil then
+        external_port = config.port
+    end
+    server.log("make_thumbnail - external_port: " .. external_port, server.loglevel.LOG_DEBUG)
+
     answer = {
         nx_thumb = dims.nx,
         ny_thumb = dims.ny,
         mimetype_thumb = 'image/jpeg',
-        preview_path = "http://" .. config.hostname .. ":" .. config.port .."/thumbs/" .. thumbName .. "/full/full/0/default.jpg",
+        preview_path =  external_protocol .. "://" .. external_hostname .. ":" .. external_port .."/thumbs/" .. thumbName .. "/full/full/0/default.jpg",
         filename = tmpName, -- make this a IIIF URL
         original_mimetype = submitted_mimetype.mimetype,
         original_filename = filename,
         file_type = 'IMAGE'
     }
+    -- #snip_marker
 
 end
 

@@ -28,36 +28,43 @@ end
 
 local test_cookie_headers = {
     {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
     },
     {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b ",
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b ",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
     },
     {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b;",
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b;",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b; ",
+    },
+    {
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b; ",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b;other=true;",
+    },
+    {
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b;other=true;",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b; other=true;",
+    },
+    {
+        header = "KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b; other=true;",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "other=true; sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
+    },
+    {
+        header = "other=true; KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "other=true;sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
+    },
+    {
+        header = "other=true;KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "other=true;sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b;other2=true",
+    },
+    {
+        header = "other=true;KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b;other2=true",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
-    }, {
-        header = "other=true;sid=2cdbbac3-77d3-454d-8e30-e75e6952a81b; other2=true",
+    },
+    {
+        header = "other=true;KnoraAuthentication=2cdbbac3-77d3-454d-8e30-e75e6952a81b; other2=true",
         session_id = "2cdbbac3-77d3-454d-8e30-e75e6952a81b"
     }
 }
