@@ -67,10 +67,3 @@ valid.
 1.  Create session by logging-in, send session token on each subsequent
     request, and logout when finished.
 2.  Send email/password credentials on every request.
-
-## Sipi (Media Server)
-
-TODO: document these Sipi routes:
-
-- `/Knora_login`
-- `/Knora_logout`
