@@ -11,3 +11,4 @@ Also, please change the "HINT" to the appropriate level:
 
 ## HINT => LEVEL
 
+- [MINOR CHANGE] Update technical user docs (@github[#1085](#1085))

@@ -198,14 +198,17 @@ be generated for different triplestores; the Twirl template function
 then takes the name of the triplestore as a parameter, and may delegate
 to triplestore-specific templates.
 
-Responders is not expected to know which triplestore is being used or how it
-is accessed. To perform a SPARQL query, a responder sends a message to the
-`storeManager` actor, like this:
+Responders are not expected to know which triplestore is being used or how it
+is accessed. To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
+message to the `storeManager` actor, like this:
 
 @@snip [OntologyResponderV2.scala]($src$/org/knora/webapi/responders/v2/OntologyResponderV2.scala) { #sparql-select }
 
 The reply message, `SparqlSelectResponse`, is a data structure containing the rows
 that were returned as the query result.
+
+To perform a SPARQL CONSTRUCT query, you can use `SparqlExtendedConstructRequest`,
+and the response will be a `SparqlExtendedConstructResponse`.
 
 ## Error Handling
 

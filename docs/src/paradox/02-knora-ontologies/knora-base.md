@@ -177,43 +177,48 @@ of users; see @ref:[Authorisation](#authorisation).
 It is not practical to store all data in RDF. In particular, RDF is not
 a good storage medium for binary data such as images. Therefore, Knora
 stores such data outside the triplestore, in ordinary files. A resource
-can have one or more files attached to it. For each file, there is a
+can have metadata about a file attached to it. The technical term for such a
+resource in Knora is a **Representation**. For each file, there is a
 `kb:FileValue` in the triplestore containing metadata about the file
-(see @ref:[FileValue](#filevalue). A resource that has file
-values must belong to one of the subclasses of `kb:Representation`. The
-base class `Representation`, which is not intended to be used directly,
-has this property:
+(see @ref:[FileValue](#filevalue)). Knora uses [Sipi](https://github.com/dhlab-basel/Sipi)
+to store files. The @ref:[Knora APIs](../03-apis/index.md) provide ways
+to create file values using Knora and Sipi.
+
+A resource that has a file value must belong to one of the subclasses of
+`kb:Representation`. Its subclasses, which are intended to be used directly in data,
+include:
+
+`StillImageRepresentation`
+
+:   A representation containing a still image file.
+
+`MovingImageRepresentation`
+
+:   A representation containing a video file.
+
+`AudioRepresentation`
+
+:   A representation containing an audio file.
+
+`DDDrepresentation`
+
+:   A representation containing a 3D image file.
+
+`TextRepresentation`
+
+:   A representation containing a formatted text file, such as an XML file.
+
+`DocumentRepresentation`
+
+:   A representation containing a document (such as a PDF file) that is
+    not a text file.
+
+The base class of all these classes is `Representation`, which is not intended to
+be used directly. It has this property, which its subclasses override:
 
 `hasFileValue` (1-n)
 
 :   Points to one or more file values.
-
-Its subclasses, which are intended to be used directly in data, include:
-
-`StillImageRepresentation`
-
-:   A representation containing still image files.
-
-`MovingImageRepresentation`
-
-:   A representation containing video files.
-
-`AudioRepresentation`
-
-:   A representation containing audio files.
-
-`DDDrepresentation`
-
-:   A representation containing 3D images.
-
-`TextRepresentation`
-
-:   A representation containing formatted text files, such as XML files.
-
-`DocumentRepresentation`
-
-:   A representation containing documents (such as PDF files) that are
-    not text files.
 
 There are two ways for a project to design classes for representations.
 The simpler way is to create a resource class that represents a thing in
@@ -222,10 +227,10 @@ the world (such as `ex:Painting`) and also belongs to a subclass of
 of file attached to it. For example, if paintings are represented only
 by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
-version 1 of the Knora API.
+@ref:[Knora API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is allowed by the Knora base ontology
-and will be supported by version 2 of the Knora API, is for each
+The more flexible approach, which is supported by
+@ref:[Knora API v2](../03-apis/api-v2/index.md), is for each
 `ex:Painting` to use the `kb:hasRepresentation` property to point to
 other resources containing files that represent the painting. Each of
 these other resources can extend a different subclass of
@@ -585,17 +590,6 @@ data, include:
 Each of these classes contains properties that are specific to the type
 of file it describes. For example, still image files have dimensions,
 video files have frame rates, and so on.
-
-The files in a given representation must be semantically equivalent,
-meaning that coordinates that relate to one file must also be valid for
-other files in the same representation. Coordinates in Knora are
-expressed as fractions of the size of the object on some dimension; for
-example, image coordinates are expressed as fractions of its width and
-height, rather than in pixels. Therefore, the image files in a
-`StillImageRepresentation` must have the same aspect ratio, but they
-need not have the same dimensions in pixels. Similarly, the audio and
-video files in an `AudioRepresentation` or `MovingImageRepresentation`
-must have the same length in seconds, but may have different bitrates.
 
 `FileValue` objects are versioned like other values, and the actual
 files stored by Knora are also versioned. Version 1 of the Knora API
@@ -1015,7 +1009,7 @@ For links to a `kb:Resource`, see @ref:[StandoffLinkTag](#standofflinktag).
 A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements
 (with or without a class) and attributes and standoff classes and
-properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v1/xml-to-standoff-mapping.md)).
+properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains
 one or more `kb:MappingElement`. A `kb:MappingElement` maps an XML

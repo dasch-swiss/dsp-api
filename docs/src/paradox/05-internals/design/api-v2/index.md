@@ -27,6 +27,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 - [Ontology Schemas](ontology-schemas.md)
 - [Smart IRIs](smart-iris.md)
 - [Content Wrappers](content-wrappers.md)
+- [How to Add an API v2 Route](how-to-add-a-route.md)
 - [JSON-LD Parsing and Formatting](json-ld.md)
 - [Ontology Management](ontology-management.md)
 - [Knora and Sipi](sipi.md)
