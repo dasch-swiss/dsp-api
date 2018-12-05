@@ -115,8 +115,8 @@ lazy val docs = knoraModule("docs")
                         .withCopyright("Copyright 2015-2018 the contributors (see Contributors.md)")
             },
             mappings in makeSite ++= Seq(
-                file("src/api-admin/index.html") -> "api-admin/index.html",
-                file("src/api-admin/swagger.json") -> "api-admin/swagger.json"
+                file("docs/src/api-admin/index.html") -> "api-admin/index.html",
+                file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
             ),
             makeSite := makeSite.dependsOn(buildPrequisites).value
         )
