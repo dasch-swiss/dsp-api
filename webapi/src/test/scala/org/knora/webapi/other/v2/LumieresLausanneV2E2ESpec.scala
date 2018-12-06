@@ -59,7 +59,6 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
             val params =
                 s"""
                    |{
-                   |    {
                    |    "@type": "onto:User",
                    |    "rdfs:label": "Test",
                    |    "knora-api:attachedToProject": {

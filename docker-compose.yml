@@ -57,6 +57,7 @@ services:
       - KNORA_AKKA_STDOUT_LOGLEVEL=INFO
       - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
       - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
+      - KNORA_WEBAPI_TRIPLESTORE_GRAPHDB_REPOSITORY_NAME=knora-test
 
   salsah1:
     image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>
