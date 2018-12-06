@@ -1004,7 +1004,7 @@ case class OntologyMetadataGetByProjectRequestV2(projectIris: Set[SmartIri] = Se
 /**
   * Requests metadata about ontologies by ontology IRI.
   *
-  * @param ontologyIris    the IRIs of the ontologies to be queried. If this set is empty, information
+  * @param ontologyIris   the IRIs of the ontologies to be queried. If this set is empty, information
   *                       about all ontologies is returned.
   * @param requestingUser the user making the request.
   */
@@ -1062,6 +1062,9 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
       * @return the converted [[ReadOntologyV2]].
       */
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyV2 = {
+        // Get rules for transforming knora-base entities to knora-api entities in the target schema.
+        val transformationRules = KnoraBaseTransformationRules.getTransformationRules(targetSchema)
+
         // If we're converting to the API v2 simple schema, filter out link value properties.
         val propertiesConsideringLinkValueProps = targetSchema match {
             case ApiV2Simple =>
@@ -1075,50 +1078,24 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // If we're converting knora-base to knora-api, filter classes and properties that don't exist in the target
         // schema.
 
-        val classesFilteredForTargetSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
-            targetSchema match {
-                case ApiV2WithValueObjects =>
-                    classes.filterNot {
-                        case (classIri, _) => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri)
-                    }
-
-                case ApiV2Simple =>
-                    classes.filterNot {
-                        case (classIri, classDef) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(classIri) || classDef.isStandoffClass
-                    }
-
-                case _ => classes
+        val (classesFilteredForTargetSchema, propsFilteredForTargetSchema) = if (ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+            val filteredClasses = classes.filterNot {
+                case (classIri, classDef) => transformationRules.knoraBaseClassesToRemove.contains(classIri) || (targetSchema == ApiV2Simple && classDef.isStandoffClass)
             }
-        } else {
-            classes
-        }
 
-        val propsFilteredForTargetSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
-            targetSchema match {
-                case ApiV2WithValueObjects =>
-                    propertiesConsideringLinkValueProps.filterNot {
-                        case (propertyIri, _) => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(propertyIri)
-                    }
-
-                case ApiV2Simple =>
-                    propertiesConsideringLinkValueProps.filterNot {
-                        case (propertyIri, _) => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(propertyIri)
-                    }
-
-                case _ => propertiesConsideringLinkValueProps
+            val filteredProps = propertiesConsideringLinkValueProps.filterNot {
+                case (propertyIri, _) => transformationRules.knoraBasePropertiesToRemove.contains(propertyIri)
             }
+
+            (filteredClasses, filteredProps)
         } else {
-            propertiesConsideringLinkValueProps
+            (classes, propertiesConsideringLinkValueProps)
         }
 
         // Convert everything to the target schema.
 
         val ontologyMetadataInTargetSchema = if (ontologyMetadata.ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
-            targetSchema match {
-                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.OntologyMetadata
-                case ApiV2Simple => KnoraApiV2Simple.OntologyMetadata
-                case _ => ontologyMetadata.toOntologySchema(targetSchema)
-            }
+            transformationRules.ontologyMetadata
         } else {
             ontologyMetadata.toOntologySchema(targetSchema)
         }
@@ -1138,32 +1115,10 @@ case class ReadOntologyV2(ontologyMetadata: OntologyMetadataV2,
         // If we're converting knora-base to knora-api, and this is the whole ontology, add classes and properties that exist in the target schema but
         // not in the source schema.
 
-        val classesWithExtraOnesForSchema = if (isWholeOntology) {
-            ontologyMetadataInTargetSchema.ontologyIri.toString match {
-                case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri =>
-                    classesInTargetSchema ++ KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiClassesToAdd
-
-                case OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri =>
-                    classesInTargetSchema ++ KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiClassesToAdd
-
-                case _ => classesInTargetSchema
-            }
+        val (classesWithExtraOnesForSchema, propertiesWithExtraOnesForSchema) = if (isWholeOntology && ontologyMetadata.ontologyIri.toString == OntologyConstants.KnoraBase.KnoraBaseOntologyIri) {
+            (classesInTargetSchema ++ transformationRules.knoraApiClassesToAdd, propertiesInTargetSchema ++ transformationRules.knoraApiPropertiesToAdd)
         } else {
-            classesInTargetSchema
-        }
-
-        val propertiesWithExtraOnesForSchema = if (isWholeOntology) {
-            ontologyMetadataInTargetSchema.ontologyIri.toString match {
-                case OntologyConstants.KnoraApiV2WithValueObjects.KnoraApiOntologyIri =>
-                    propertiesInTargetSchema ++ KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd
-
-                case OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri =>
-                    propertiesInTargetSchema ++ KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiPropertiesToAdd
-
-                case _ => propertiesInTargetSchema
-            }
-        } else {
-            propertiesInTargetSchema
+            (classesInTargetSchema, propertiesInTargetSchema)
         }
 
         copy(
@@ -2096,6 +2051,9 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
     }
 
     override def toOntologySchema(targetSchema: ApiV2Schema): ReadClassInfoV2 = {
+        // Get rules for transforming knora-base entities to knora-api entities in the target schema.
+        val transformationRules = KnoraBaseTransformationRules.getTransformationRules(targetSchema)
+
         // If we're converting to the simplified API v2 schema, remove references to link value properties.
 
         val linkValuePropsForSchema = if (targetSchema == ApiV2Simple) {
@@ -2128,25 +2086,13 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         // Remove inherited cardinalities for knora-base properties that don't exist in the target schema.
 
-        val knoraBasePropertiesToRemove: Set[SmartIri] = targetSchema match {
-            case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
-            case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
-            case _ => Set.empty[SmartIri]
-        }
-
         val inheritedCardinalitiesFilteredForTargetSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesConsideringLinkValueProps.filterNot {
-            case (propertyIri, _) => knoraBasePropertiesToRemove.contains(propertyIri)
+            case (propertyIri, _) => transformationRules.knoraBasePropertiesToRemove.contains(propertyIri)
         }
 
         // Remove base classes that don't exist in the target schema.
 
-        val allBaseClassesFilteredForTargetSchema = allBaseClasses.filterNot {
-            baseClass =>
-                targetSchema match {
-                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(baseClass)
-                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(baseClass)
-                }
-        }
+        val allBaseClassesFilteredForTargetSchema = allBaseClasses.diff(transformationRules.knoraBaseClassesToRemove)
 
         // Convert all IRIs to the target schema.
 
@@ -2169,21 +2115,9 @@ case class ReadClassInfoV2(entityInfoContent: ClassInfoContentV2,
 
         val baseClassesInTargetSchema = allBaseClasses.map(_.toOntologySchema(targetSchema))
 
-        val inheritedCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = targetSchema match {
-            case ApiV2WithValueObjects =>
-                baseClassesInTargetSchema.flatMap {
-                    baseClassIri =>
-                        KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
-                }.toMap
-
-            case ApiV2Simple =>
-                baseClassesInTargetSchema.flatMap {
-                    baseClassIri =>
-                        KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
-                }.toMap
-
-            case _ => Map.empty[SmartIri, KnoraCardinalityInfo]
-        }
+        val inheritedCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = baseClassesInTargetSchema.flatMap {
+            baseClassIri => transformationRules.knoraApiCardinalitiesToAdd.getOrElse(baseClassIri, Map.empty[SmartIri, KnoraCardinalityInfo])
+        }.toMap
 
         val inheritedCardinalitiesWithExtraOnesForSchema: Map[SmartIri, KnoraCardinalityInfo] = inheritedCardinalitiesInTargetSchema ++ inheritedCardinalitiesToAdd
 
@@ -2472,11 +2406,16 @@ case class ClassInfoContentV2(classIri: SmartIri,
     override def toOntologySchema(targetSchema: OntologySchema): ClassInfoContentV2 = {
         val classIriInTargetSchema = classIri.toOntologySchema(targetSchema)
 
+        // Get rules for transforming knora-base entities to knora-api entities in the target schema, if relevant.
+        val maybeTransformationRules: Option[KnoraBaseTransformationRules] = targetSchema match {
+            case apiV2Schema: ApiV2Schema => Some(KnoraBaseTransformationRules.getTransformationRules(apiV2Schema))
+            case InternalSchema => None
+        }
+
         // Remove cardinalities for knora-base properties that don't exist in the target schema.
 
-        val knoraBasePropertiesToRemove: Set[SmartIri] = targetSchema match {
-            case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
-            case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove
+        val knoraBasePropertiesToRemove: Set[SmartIri] = maybeTransformationRules match {
+            case Some(transformationRules) => transformationRules.knoraBasePropertiesToRemove
             case _ => Set.empty[SmartIri]
         }
 
@@ -2486,10 +2425,9 @@ case class ClassInfoContentV2(classIri: SmartIri,
 
         val subClassOfFilteredForTargetSchema = subClassOf.filterNot {
             baseClass =>
-                targetSchema match {
-                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(baseClass)
-                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBaseClassesToRemove.contains(baseClass)
-                    case InternalSchema => false
+                maybeTransformationRules match {
+                    case Some(transformationRules) => transformationRules.knoraBaseClassesToRemove.contains(baseClass)
+                    case None => false
                 }
         }
 
@@ -2501,20 +2439,14 @@ case class ClassInfoContentV2(classIri: SmartIri,
 
         // Add any cardinalities that this class has in knora-api but not in knora-base.
 
-        val cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = targetSchema match {
-            case ApiV2WithValueObjects =>
-                KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(
+        val cardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = maybeTransformationRules match {
+            case Some(transformationRules) =>
+                transformationRules.knoraApiCardinalitiesToAdd.getOrElse(
                     classIriInTargetSchema,
                     Map.empty[SmartIri, KnoraCardinalityInfo]
                 )
 
-            case ApiV2Simple =>
-                KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraApiCardinalitiesToAdd.getOrElse(
-                    classIriInTargetSchema,
-                    Map.empty[SmartIri, KnoraCardinalityInfo]
-                )
-
-            case _ => Map.empty[SmartIri, KnoraCardinalityInfo]
+            case None => Map.empty[SmartIri, KnoraCardinalityInfo]
         }
 
         val directCardinalitiesWithExtraOnesForSchema: Map[SmartIri, KnoraCardinalityInfo] = directCardinalitiesInTargetSchema ++ cardinalitiesToAdd
@@ -2748,12 +2680,17 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
         }
 
         // Remove any references to base properties that don't exist in the target schema.
+
+        val maybeTransformationRules: Option[KnoraBaseTransformationRules] = targetSchema match {
+            case apiV2Schema: ApiV2Schema => Some(KnoraBaseTransformationRules.getTransformationRules(apiV2Schema))
+            case InternalSchema => None
+        }
+
         val subPropertyOfFilteredForTargetSchema = subPropertyOf.filterNot {
             baseProperty =>
-                targetSchema match {
-                    case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(baseProperty)
-                    case ApiV2Simple => KnoraApiV2Simple.KnoraBaseTransformationRules.KnoraBasePropertiesToRemove.contains(baseProperty)
-                    case _ => false
+                maybeTransformationRules match {
+                    case Some(transformationRules) => transformationRules.knoraBasePropertiesToRemove.contains(baseProperty)
+                    case None => false
                 }
         }
 
@@ -2961,8 +2898,7 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
         if (ontologyIri == OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri) {
             targetSchema match {
                 case InternalSchema => this
-                case ApiV2Simple => KnoraApiV2Simple.OntologyMetadata
-                case ApiV2WithValueObjects => KnoraApiV2WithValueObjects.OntologyMetadata
+                case apiV2Schema: ApiV2Schema => KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).ontologyMetadata
             }
         } else {
             copy(

@@ -233,8 +233,8 @@ object StringFormatter {
     /**
       * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
       * can't parse project-specific API v2 ontology IRIs. This instance is used
-      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2Simple]]
-      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjects]].
+      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2SimpleTransformationRules]]
+      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjectsTransformationRules]].
       */
     private val instanceForConstantOntologies = new StringFormatter(None)
 

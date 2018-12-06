@@ -53,10 +53,12 @@ trait Responder extends Actor with ActorLogging {
       */
     protected implicit val timeout: Timeout = settings.defaultTimeout
 
+    // #executionContext
     /**
-      * The Akka actor system's execution context for futures.
+      * The execution context for futures created in Knora actors.
       */
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    // #executionContext
 
     /**
       * A reference to the application state actor.
