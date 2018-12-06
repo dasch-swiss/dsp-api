@@ -32,8 +32,8 @@ import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.util.{FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json._
 

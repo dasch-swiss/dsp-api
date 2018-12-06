@@ -19,14 +19,11 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
+import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.{OntologyConstants, Settings}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
 
 
 object ResourcesResponderV1SpecFullData {
