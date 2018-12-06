@@ -32,7 +32,7 @@ The triplestore support is implemented in the
 
 At the top level, the store package houses the `StoreManager`-Actor
 which is started when Knora starts. The `StoreManager`
-then starts the `TripleStoreManagerActor` which in turn starts the
+then starts the `TriplestoreManager` which in turn starts the
 correct actor implementation (e.g., GraphDB, Fuseki, embedded Jena,
 etc.).
 
@@ -41,11 +41,11 @@ etc.).
 HTTP-based triplestore support is implemented in the
 `org.knora.webapi.triplestore.http` package.
 
-An HTTP-based triplestore is one that is accessed remotly over the HTTP
-protocol. We have implemented support for the following triplestores:
+An HTTP-based triplestore is one that is accessed remotely over the HTTP
+protocol. `HttpTriplestoreConnector` supports the following triplestores:
 
    - Ontotext GraphDB
-   - Fuseki 2
+   - Fuseki 2 (not currently supported)
 
 ### GraphDB
 
@@ -53,7 +53,7 @@ protocol. We have implemented support for the following triplestores:
 
 ## Embedded Triplestores
 
-Embedded triplestores is implemented in the
+Embedded triplestores are implemented in the
 `org.knora.webapi.triplestore.embedded` package.
 
 An embedded triplestore is one that runs in the same JVM as the Knora

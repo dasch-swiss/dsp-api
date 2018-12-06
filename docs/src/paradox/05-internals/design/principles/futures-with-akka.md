@@ -196,21 +196,20 @@ In the current design, Knora almost never blocks to wait
 for a future to complete. The normal flow of control works like this:
 
 1.  Incoming HTTP requests are handled by an actor called
-    `KnoraHttpService`, which delegates them to routing functions (in
+    `KnoraService`, which delegates them to routing functions (in
     the `routing` package).
-2.  For each request, a routing function gets a `spray-http`
-    `RequestContext`, and calls `RouteUtils.runJsonRoute` to send a
-    message to a supervisor actor to fulfil the request. Having sent the
-    message, the `runJsonRoute` gets a future in return. It does not
-    block to wait for the future to complete, but instead registers a
-    callback to process the result of the future when it becomes
-    available.
-3.  The supervisor forwards the message to be handled by the next
-    available actor in a pool of responder actors that are able to
-    handle that type of message.
+2.  For each request, a routing function gets an Akka HTTP
+    `RequestContext`, and calls `RouteUtilV1.runJsonRoute` (in API v1)
+    or `RouteUtilV2.runRdfRouteWithFuture` (in API v2) to send a
+    message to a supervisor actor to fulfil the request. This creates
+    a `Future` that will complete when the relevant responder sends
+    its reply. The routing utility registers a callback on this `Future`
+    to handle the reply message when it becomes available.
+3.  The supervisor forwards the message to be handled by the appropriate
+    responder.
 4.  The responder's `receive` method receives the message, and calls
-    some private method that produces a reply message inside a future.
-    This usually involves sending messages to other actors using `ask`,
+    some private method that produces a reply message inside a `Future`.
+    This may involve sending messages to other actors using `ask`,
     getting futures back, and combining them into a single future
     containing the reply message.
 5.  The responder passes that future to `ActorUtils.future2Message`,
@@ -218,9 +217,8 @@ for a future to complete. The normal flow of control works like this:
     in another thread), the callback sends the reply message. In the
     meantime, the responder doesn't block, so it can start handling the
     next request.
-6.  When the responder's reply becomes available (causing the future
-    created by `RouteUtils.runJsonRoute` to complete), the callback
-    registered in (2) calls `complete` on the `RequestContext`, which
+6.  When the responder's reply becomes available, the routing utility's
+    callback registered in (2) calls `complete` on the `RequestContext`, which
     sends an HTTP response to the client.
 
 The basic rule of thumb is this: if you're writing a method in an actor,
@@ -281,13 +279,7 @@ If you don't have an execution context in scope, you'll get a compile
 error asking you to include one, and suggesting that you could use
 `import scala.concurrent.ExecutionContext.Implicits.global`. Don't do
 this, because the global Scala execution context is not the most
-efficient option. Instead, you can use the one provided by the Akka
-`ActorSystem`:
+efficient option. Instead, Knora's `Responder` trait provides a suitable
+implicit execution context:
 
-```scala
-implicit val executionContext = system.dispatcher
-```
-
-Akka's execution contexts can be configured (see [Dispatchers](https://doc.akka.io/docs/akka/snapshot/dispatchers.html?language=scala)).
-You can see a [Listing of the Reference
-Configuration](https://doc.akka.io/docs/akka/snapshot/general/configuration.html#listing-of-the-reference-configuration).
+@@snip [Responder.scala]($src$/org/knora/webapi/responders/Responder.scala) { #executionContext }

@@ -82,7 +82,7 @@ means of the `kb:isInProject` property, as described in
 
 ### Ontologies
 
-Each project-specific ontology must be defined as an `owl:Ontology` with the
+Each user-created ontology must be defined as an `owl:Ontology` with the
 properties `rdfs:label` and `kb:attachedToProject`.
 
 ### Resources
@@ -111,7 +111,7 @@ facilitate searches across projects. Each property definition must
 specify the types that its subjects and objects must belong to (see
 @ref:[Constraints on the Types of Property Subjects and Objects](#constraints-on-the-types-of-property-subjects-and-objects) for details).
 
-Each project-specific resource class definition must use OWL cardinality
+Each user-created resource class definition must use OWL cardinality
 restrictions to specify the properties that resources of that class can
 have (see @ref:[OWL Cardinalities](#owl-cardinalities) for details).
 
@@ -272,11 +272,11 @@ project:
 The Knora base ontology defines a set of OWL classes that are derived
 from `kb:Value` and represent different types of structured values found
 in humanities data. This set of classes may not be extended by
-project-specific ontologies.
+user-created ontologies.
 
 A value is always part of one particular resource, which points to it
 using some property derived from `hasValue`. For example, a
-project-specific ontology could specify a `Book` class with a property
+user-created ontology could specify a `Book` class with a property
 `hasSummary` (derived from `hasValue`), and that property could have a
 `knora-base:objectClassConstraint` of `TextValue`. This would mean that
 the summary of each book is represented as a `TextValue`.
@@ -1187,7 +1187,7 @@ properties:
 
 `isInGroup` (0-n)
 
-:   Project-specific groups that the user is a member of.
+:   user-created groups that the user is a member of.
 
 `foaf:familyName` (1)
 
@@ -1223,7 +1223,7 @@ users). There are four built-in groups:
     automatically assigned to this group if he is the creator of the
     object.
 
-A project-specific ontology can define additional groups, which must
+A user-created ontology can define additional groups, which must
 belong to the OWL class `kb:UserGroup`.
 
 There is one built-in `SystemUser`, which is the creator of link values
@@ -1296,7 +1296,7 @@ V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
 ### Consistency Checking
 
 Knora tries to enforce repository consistency by checking constraints
-that are specified in the Knora base ontology and in project-specific
+that are specified in the Knora base ontology and in user-created
 ontologies. Three types of consistency rules are enforced:
 
 -   Cardinalities in OWL class definitions must be satisfied.
@@ -1390,7 +1390,7 @@ Primer](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/).
 
 ### Constraints on the Types of Property Subjects and Objects
 
-When a project-specific ontology defines a property, it must indicate
+When a user-created ontology defines a property, it must indicate
 the types that are allowed as objects (and, if possible, as subjects) of
 the property. This is done using the following Knora-specific
 properties:
@@ -1428,7 +1428,7 @@ See also @ref:[Why doesn’t Knora use rdfs:domain and rdfs:range for consistenc
 
 ### Consistency Constraint Example
 
-A project-specific ontology could define consistency constraints as in
+A user-created ontology could define consistency constraints as in
 this simplified example:
 
 ```
@@ -1450,7 +1450,7 @@ this simplified example:
     knora-base:objectClassConstraint knora-base:TextValue .
 ```
 
-## Summary of Restrictions on Project-Specific Ontologies
+## Summary of Restrictions on User-Created Ontologies
 
 An ontology can refer to a Knora ontology in another project only if the other
 ontology is built-in or shared
@@ -1460,7 +1460,7 @@ ontology is built-in or shared
 
 -   Each class must be a subclass of either `kb:Resource` or
     `kb:StandoffTag`, but not both (note that this forbids
-    project-specific subclasses of `kb:Value`).
+    user-created subclasses of `kb:Value`).
 -   All the cardinalities that a class defines directly (i.e. does not
     inherit from `kb:Resource`) must be on properties that are defined
     in the triplestore.
@@ -1502,7 +1502,7 @@ ontology is built-in or shared
 
 The [DaSCH](http://dasch.swiss/) intends to coordinate the
 standardisation of generally useful entities proposed in
-project-specific ontologies. We envisage a process in which two or more
+user-created ontologies. We envisage a process in which two or more
 projects would initiate the process by starting a public discussion on
 proposed entities to be shared. Once a consensus was reached, the
 [DaSCH](http://dasch.swiss/) would publish these entities in an ontology

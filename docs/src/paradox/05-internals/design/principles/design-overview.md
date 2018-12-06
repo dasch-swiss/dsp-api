@@ -23,18 +23,45 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 ## Introduction
 
-Knora implements Knora's web-based Application
-Programming Interface (API). It is responsible for receiving HTTP
-requests from clients (which may be web browsers or other software),
-performing authentication and authorisation, querying and updating the
-RDF triplestore, transforming the results of SPARQL queries into Knora
-API responses, and returning these responses to the client. It is
-written in [Scala](http://www.scala-lang.org/), using the
+Knora's responsibilities include:
+
+- Receiving, validating, authenticating, and authorising HTTP requests from
+  clients (which may be web browsers or other software) to query or update
+  data in a Knora repository.
+- Querying and updating the repository on behalf of clients.
+- Filtering query results according to the user's permissions.
+- Transforming query results into Knora API responses.
+- Ensuring that ontologies and data in the triplestore are consistent and
+  conform to the requirements of the
+  @ref:[knora-base](../../../02-knora-ontologies/knora-base.md) ontology.
+- Managing the versioning of data in the triplestore.
+- Working with [Sipi](http://sipi.io) to store files that cannot be stored
+  as RDF data.
+
+Knora is written in [Scala](http://www.scala-lang.org/), using the
 [Akka](http://akka.io/) framework for message-based concurrency. It is
-designed to work with any standards-compliant triplestore. It can
-communicate with triplestores either via the [SPARQL 1.1
-Protocol](http://www.w3.org/TR/sparql11-protocol/) or by embedding the
-triplestore in the API server as a library.
+designed to work with any standards-compliant triplestore via
+the [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/), but is currently
+tested only with [Ontotext GraphDB](http://graphdb.ontotext.com/) (with support
+for other triplestores coming soon).
+
+## Knora APIs
+
+Knora supports different versions of its API for working with humanities data:
+
+- @ref:[Knora API v2](../../../03-apis/api-v2/index.md), a standards-based
+  API currently under development.
+- @ref:[Knora API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
+  that focuses on maintaining compatibility with applications that used
+  Knora's prototype software.
+
+There is also a @ref:[Knora admin API](../../../03-apis/api-admin/index.md) for
+administering Knora repositories.
+
+The Knora code base includes some functionality that is shared by these different
+APIs, as well as separate packages for each API. Internally, Knora APIs v1 and v2 both
+use functionality in the admin API. Knora API v1 uses some functionality from
+API v2, but API v2 does not depend on API v1.
 
 ## Design Diagram
 
@@ -44,83 +71,60 @@ triplestore in the API server as a library.
 
 ### HTTP Module
 
-  - `org.knora.webapi.http`
-  - `org.knora.webapi.routes`
+- `org.knora.webapi.routing`: Knora's [Akka HTTP](https://akka.io/akka-http/) routes.
+  Each routing class matches URL patterns for requests involving some particular
+  type of data in the repository. Routes are API-specific. For example,
+  `ResourcesRouteV2` matches URL paths starting with `/v2/resources`, which
+  represent requests involving Knora resources.
+- `org.knora.webapi.http`: a few HTTP-related constants and utilities.
 
 ### Responders Module
 
-  - `org.knora.webapi.responders`
+- `org.knora.webapi.responders`: Each responder is an actor that is responsible for managing
+  some particular type of data in the repository. A responder receives messages from
+  a route, does some work (e.g. querying the triplestore), and returns a reply
+  message. Responders are API-specific and can communicate with other responders
+  via messages. For example, in API v2, `ResourcesResponderV2` handles requests
+  involving resources, and delegates some of its tasks to `ValuesResponderV2`,
+  which is responsible for requests involving values.
 
 ### Store Module
 
-  - `org.knora.store`
+- `org.knora.webapi.store`: Contains actors that connect to triplestores. The
+  most important one is `HttpTriplestoreConnector`, which communicates with
+  triplestores via the
+  [SPARQL 1.1 Protocol](http://www.w3.org/TR/sparql11-protocol/).
 
 ### Shared Between Modules
 
-  - `org.knora.webapi`
-  - `org.knora.webapi.util`
-  - `org.knora.webapi.messages`
+- `org.knora.webapi`: Contains core classes such as `Main`, which starts the
+  Knora server, and `SettingsImpl`, which represents the application settings
+  that are loaded using the [Typesafe Config](https://github.com/lightbend/config)
+  library.
+- `org.knora.webapi.util`: Utilities needed by different parts of the application,
+  such as parsing and formatting tools.
+- `org.knora.webapi.messages`: The Akka messages used by each responder.
+- `org.knora.webapi.twirl`: Text-generation templates for use with
+  [the Twirl template engine](https://github.com/playframework/twirl). Knora
+  uses Twirl to generate SPARQL requests and other types of text documents.
 
 ## Actor Supervision and Creation
 
 At system start, the supervisor actors are created in
 `KnoraService.scala`:
 
-```scala
-val responderManager = system.actorOf(Props(new ResponderManagerV1 with LiveActorMaker), name = "responderManager")
-val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = "storeManager")
-```
+@@snip [KnoraService.scala]($src$/org/knora/webapi/KnoraService.scala) { #supervisors }
 
-Each supervisor creates and maintains a pool of workers, with [an Akka
-router](http://doc.akka.io/docs/akka/snapshot/scala/routing.html) that
-dispatches messages to the workers according to some strategy. For now,
-all the pools use the 'round-robin' strategy. The pools and routers are
-configured in `application.conf`:
+In most cases, there is only one instance of each supervised actor; such
+actors do their work asynchronously in futures, so there would be no
+advantage in using an actor pool. A few actors do have pools of instances,
+because they do their work synchronously; this allows concurrency to be controlled
+by setting the size of each pool. These pools are configured in `application.conf`
+under `akka.actor.deployment`.
 
-```
-actor {
-    deployment {
-        user/storeManager/triplestoreRouter {
-            router = round-robin-pool
-            nr-of-instances = 50
-        }
+`KnoraService` also starts the HTTP service:
 
-        user/responderManager/resourcesRouter {
-            router = round-robin-pool
-            nr-of-instances = 20
-        }
-
-        user/responderManager/valuesRouter {
-            router = round-robin-pool
-            nr-of-instances = 20
-        }
-
-        user/responderManager/representationsRouter {
-            router = round-robin-pool
-            nr-of-instances = 20
-        }
-
-        user/responderManager/usersRouter {
-            router = round-robin-pool
-            nr-of-instances = 20
-        }
-    }
-}
-```
-
-Additionally, in `KnoraService` also the `akka-http` layer is started:
-
-```scala
-val host = settings.httpInterface
-val port = settings.httpPort
-val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), host, port)
-println(s"Knora API Server started. You can access it on http://${settings.httpInterface}:${settings.httpPort}.")
-
-bindingFuture.onFailure {
-    case ex: Exception =>
-    log.error(ex, s"Failed to bind to ${settings.httpInterface}:${settings.httpPort}!")
-}
-```
+@@snip [KnoraService.scala]($src$/org/knora/webapi/KnoraService.scala) { #startService }
 
 ## Coordinated Application Startup
 
@@ -137,25 +141,11 @@ To coordinate necessary startup tasks, the application goes through a few states
   - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
   - Running: Running state. All APIs are open.
 
-                                                
-
 ## Concurrency
 
-Except for a bit of caching, Knora is written in a purely
-functional style and has no mutable state, shared or otherwise, not even
-within actors. This makes it easier to reason about concurrency, and
+In general, Knora is written in a functional style, avoiding shared mutable
+state. This makes it easier to reason about concurrency, and
 eliminates an important potential source of bugs (see [Out of the Tar Pit](http://curtclifton.net/papers/MoseleyMarks06a.pdf)).
-
-There is a pool of HTTP workers that handle HTTP requests concurrently
-using the spray routes in the `routing` package. Each spray route
-constructs a request message and sends it to `ResponderManagerV1`, which
-forwards it to a worker actor in one of its pools. So the size of the
-HTTP worker pool sets the maximum number of concurrent HTTP requests,
-and the size of the worker pool for each responder sets the maximum
-number of concurrent messages for that responder. Whenever a responder
-needs to do a SPARQL query, it sends a message to the store manager,
-which forwards it to a triplestore actor. The size of the pool(s) of
-triplestore actors sets the maximum number of concurrent SPARQL queries.
 
 The routes and actors in Knora use Akka's `ask` pattern,
 rather than the `tell` pattern, to send messages and receive responses,
@@ -171,22 +161,18 @@ We use Akka's asynchronous logging interface (see [Akka Logging](http://doc.akka
 
 ## What the Responders Do
 
-In Knora, a 'responder' is an actor that receives a
-request message (a Scala case class) in the `ask` pattern, gets data
-from the triplestore, and turns that data into a reply message (another
-case class). These reply messages are are defined in the `schemas`
-package. A responder can produce a reply representing a complete API
+In Knora, a responder is an actor that receives a
+request message (a Scala case class) in the `ask` pattern, does some work
+(e.g. getting data from the triplestore), and returns a reply message (another
+case class). These reply messages are are defined in `org.knora.webapi.messages`.
+A responder can produce a reply representing a complete API
 response, or part of a response that will be used by another responder.
-If it's a complete API response, it will extend `KnoraJsonResponse`,
-which can be converted directly into JSON by calling its `toJsValue`
-method (see the section on JSON below).
-
-All messages to responders go through the responder supervisor actor
-(`ResponderManagerV1`).
+If it's a complete API response, there is an API-specific mechanism for
+converting it into the response format that the client expects.
 
 ## Store Module (org.knora.webapi.store package)
 
-The Store module is used for accessing the triplestore and other
+The store module is used for accessing the triplestore and other
 external storage providers.
 
 All access to the Store module goes through the `StoreManager`
@@ -197,9 +183,9 @@ The contents of the `store` package are not used directly by other
 packages, which interact with the `store` package only by sending
 messages to `StoreManager`.
 
-Generation and parsing of SPARQL are handled by this module.
+Parsing of SPARQL query results is handled by this module.
 
-See @ref:[Store Module](store-module.md) for a deeper discussion.
+See @ref:[Store Module](store-module.md) for a more detailed discussion.
 
 ## Triplestore Access
 
@@ -207,31 +193,22 @@ SPARQL queries are generated from templates, using the
 [Twirl](https://github.com/playframework/twirl) template engine. For
 example, if we're querying a resource, the template will contain a
 placeholder for the resource's IRI. The templates can be found under
-`src/main/twirl/queries/sparql/v1`. So far we have been able to avoid
-generating different SPARQL for different triplestores.
+`src/main/twirl/queries/sparql`. In many cases, different SPARQL must
+be generated for different triplestores; the Twirl template function
+then takes the name of the triplestore as a parameter, and may delegate
+to triplestore-specific templates.
 
-The `org.knora.webapi.store` package contains actors for communicating
-with triplestores in different ways: a triplestore can be accessed over
-HTTP via the [SPARQL 1.1
-Protocol](http://www.w3.org/TR/sparql11-protocol/), or it can be
-embedded in Knora. However, a responder is not expected
-to know which triplestore is being used or how the triplestore is
-accessed. To perform a SPARQL query, a responder sends a message to the
-`storeManager` actor, like this:
+Responders are not expected to know which triplestore is being used or how it
+is accessed. To perform a SPARQL SELECT query, a responder sends a `SparqlSelectRequest`
+message to the `storeManager` actor, like this:
 
-```scala
-private val storeManager = context.actorSelection("/user/storeManager")
+@@snip [OntologyResponderV2.scala]($src$/org/knora/webapi/responders/v2/OntologyResponderV2.scala) { #sparql-select }
 
-// ...
+The reply message, `SparqlSelectResponse`, is a data structure containing the rows
+that were returned as the query result.
 
-private def getSomeValue(resourceIri: IRI): Future[String] = {
-    for {
-        sparqlQuery <- Future(queries.sparql.v1.txt.someTemplate(resourceIri).toString())
-        queryResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
-        someValue = // get some value from the query response
-    } yield someValue
-}
-```
+To perform a SPARQL CONSTRUCT query, you can use `SparqlExtendedConstructRequest`,
+and the response will be a `SparqlExtendedConstructResponse`.
 
 ## Error Handling
 
@@ -321,7 +298,7 @@ To simplify the coding of routing functions, they are contained in
 objects that extend `org.knora.webapi.routing.Authenticator`. Each
 routing function performs the following operations:
 
-1.  `Authenticator.getUserProfileV1` is called to authenticate the user.
+1.  `Authenticator.getUserADM` is called to authenticate the user.
 2.  The request parameters are interpreted and validated, and a request
     message is constructed to send to the responder. If the request is
     invalid, `BadRequestException` is thrown. If the request message is
@@ -329,37 +306,8 @@ routing function performs the following operations:
     `UUID.randomUUID`, so the responder can obtain a write lock on the
     resource being updated.
 
-The routing function then passes the message to
-`org.knora.webapi.routing.RouteUtils.runJsonRoute()`, which takes care
-of sending the message to `ResponderManagerV1` and returning a response
-to the client. Any exceptions thrown befor calling
-`org.knora.webapi.routing.RouteUtils.runJsonRoute()` are handled by the
-`KnoraExceptionHandler`.
-
-See @ref:[How to Add an API Route](how-to-add-a-route.md) for an example.
-
-## JSON
-
-Knora parses and generates JSON using the
-[spray-json](https://github.com/spray/spray-json) library.
-
-The triplestore returns results in JSON, and these are parsed into
-`SparqlSelectResponse` objects in the `store` package (by `SparqlUtils`,
-which can be used by any actor in that package). A
-`SparqlSelectResponse` has a structure that's very close to the JSON
-returned by a triplestore via the [SPARQL 1.1
-Protocol](http://www.w3.org/TR/sparql11-protocol/): it contains a header
-(listing the variables that were used in the query) and a body
-(containing rows of query results). Each row of query results is
-represented by a `VariableResultsRow`, which contains a `Map[String,
-String]` of variable names to values.
-
-The `Jsonable` trait marks classes that can convert themselves into
-spray-json AST objects when you call their `toJsValue` method; it
-returns a `JsValue` object, which can then be converted to text by
-calling its `prettyPrint` or `compactPrint` methods. Case classes
-representing complete API responses extend the `KnoraResponseV1` trait,
-which extends `Jsonable`. Case classes representing Knora values extend
-the `ApiValueV1` trait, which also extends `Jsonable`. To make the
-responders reusable, the JSON for API responses is generated only at the
-last moment, by the `RouteUtils.runJsonRoute()` function.
+The routing function then passes the message to a function in an API-specific
+routing utility: `RouteUtilV1`, `RouteUtilV2`, or `RouteUtilADM`.
+This utility function sends the message to `ResponderManager` (which
+forwards it to the relevant responder), returns a response to the client
+in the appropriate format, and handles any errors.

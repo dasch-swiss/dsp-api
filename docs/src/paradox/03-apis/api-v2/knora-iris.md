@@ -32,7 +32,7 @@ Knora project regardless of where it is hosted. The IRIs of ontologies that
 are built into Knora do not contain shortcodes; these ontologies implicitly
 belong to the Knora system project.
 
-A project-specific ontology IRI must always include its project shortcode.
+A user-created ontology IRI must always include its project shortcode.
 
 Project ID `0000` is reserved for shared ontologies
 (see @ref:[Shared Ontologies](#shared-ontologies)).
@@ -51,8 +51,8 @@ Knora makes a distinction between internal and external ontologies. Internal
 ontologies are used in the triplestore, while external ontologies are used in
 API v2. For each internal ontology, there is a corresponding external ontology. Some
 internal ontologies are built into Knora, while others are
-project-specific. Knora automatically generates external
-ontologies based on project-specific internal ontologies.
+user-created. Knora automatically generates external
+ontologies based on user-created internal ontologies.
 
 Each internal ontology has an IRI, which is also the IRI of the named
 graph that contains the ontology in the triplestore. An internal
@@ -78,7 +78,7 @@ The following names are reserved for built-in internal Knora ontologies:
   - `salsah-gui`
 
 Names starting with `knora` are reserved for future built-in Knora
-ontologies. A project-specific ontology name may not start with the
+ontologies. A user-created ontology name may not start with the
 letter `v` followed by a digit, and may not contain these reserved
 words:
 
