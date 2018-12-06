@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search
+package org.knora.webapi.responders.v2.search
 
 import akka.http.scaladsl.model.{HttpCharsets, MediaType}
 import org.knora.webapi._
