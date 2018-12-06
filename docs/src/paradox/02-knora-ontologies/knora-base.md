@@ -82,7 +82,7 @@ means of the `kb:isInProject` property, as described in
 
 ### Ontologies
 
-Each project-specific ontology must be defined as an `owl:Ontology` with the
+Each user-created ontology must be defined as an `owl:Ontology` with the
 properties `rdfs:label` and `kb:attachedToProject`.
 
 ### Resources
@@ -111,7 +111,7 @@ facilitate searches across projects. Each property definition must
 specify the types that its subjects and objects must belong to (see
 @ref:[Constraints on the Types of Property Subjects and Objects](#constraints-on-the-types-of-property-subjects-and-objects) for details).
 
-Each project-specific resource class definition must use OWL cardinality
+Each user-created resource class definition must use OWL cardinality
 restrictions to specify the properties that resources of that class can
 have (see @ref:[OWL Cardinalities](#owl-cardinalities) for details).
 
@@ -177,43 +177,48 @@ of users; see @ref:[Authorisation](#authorisation).
 It is not practical to store all data in RDF. In particular, RDF is not
 a good storage medium for binary data such as images. Therefore, Knora
 stores such data outside the triplestore, in ordinary files. A resource
-can have one or more files attached to it. For each file, there is a
+can have metadata about a file attached to it. The technical term for such a
+resource in Knora is a **Representation**. For each file, there is a
 `kb:FileValue` in the triplestore containing metadata about the file
-(see @ref:[FileValue](#filevalue). A resource that has file
-values must belong to one of the subclasses of `kb:Representation`. The
-base class `Representation`, which is not intended to be used directly,
-has this property:
+(see @ref:[FileValue](#filevalue)). Knora uses [Sipi](https://github.com/dhlab-basel/Sipi)
+to store files. The @ref:[Knora APIs](../03-apis/index.md) provide ways
+to create file values using Knora and Sipi.
+
+A resource that has a file value must belong to one of the subclasses of
+`kb:Representation`. Its subclasses, which are intended to be used directly in data,
+include:
+
+`StillImageRepresentation`
+
+:   A representation containing a still image file.
+
+`MovingImageRepresentation`
+
+:   A representation containing a video file.
+
+`AudioRepresentation`
+
+:   A representation containing an audio file.
+
+`DDDrepresentation`
+
+:   A representation containing a 3D image file.
+
+`TextRepresentation`
+
+:   A representation containing a formatted text file, such as an XML file.
+
+`DocumentRepresentation`
+
+:   A representation containing a document (such as a PDF file) that is
+    not a text file.
+
+The base class of all these classes is `Representation`, which is not intended to
+be used directly. It has this property, which its subclasses override:
 
 `hasFileValue` (1-n)
 
 :   Points to one or more file values.
-
-Its subclasses, which are intended to be used directly in data, include:
-
-`StillImageRepresentation`
-
-:   A representation containing still image files.
-
-`MovingImageRepresentation`
-
-:   A representation containing video files.
-
-`AudioRepresentation`
-
-:   A representation containing audio files.
-
-`DDDrepresentation`
-
-:   A representation containing 3D images.
-
-`TextRepresentation`
-
-:   A representation containing formatted text files, such as XML files.
-
-`DocumentRepresentation`
-
-:   A representation containing documents (such as PDF files) that are
-    not text files.
 
 There are two ways for a project to design classes for representations.
 The simpler way is to create a resource class that represents a thing in
@@ -222,10 +227,10 @@ the world (such as `ex:Painting`) and also belongs to a subclass of
 of file attached to it. For example, if paintings are represented only
 by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
-version 1 of the Knora API.
+@ref:[Knora API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is allowed by the Knora base ontology
-and will be supported by version 2 of the Knora API, is for each
+The more flexible approach, which is supported by
+@ref:[Knora API v2](../03-apis/api-v2/index.md), is for each
 `ex:Painting` to use the `kb:hasRepresentation` property to point to
 other resources containing files that represent the painting. Each of
 these other resources can extend a different subclass of
@@ -267,11 +272,11 @@ project:
 The Knora base ontology defines a set of OWL classes that are derived
 from `kb:Value` and represent different types of structured values found
 in humanities data. This set of classes may not be extended by
-project-specific ontologies.
+user-created ontologies.
 
 A value is always part of one particular resource, which points to it
 using some property derived from `hasValue`. For example, a
-project-specific ontology could specify a `Book` class with a property
+user-created ontology could specify a `Book` class with a property
 `hasSummary` (derived from `hasValue`), and that property could have a
 `knora-base:objectClassConstraint` of `TextValue`. This would mean that
 the summary of each book is represented as a `TextValue`.
@@ -585,17 +590,6 @@ data, include:
 Each of these classes contains properties that are specific to the type
 of file it describes. For example, still image files have dimensions,
 video files have frame rates, and so on.
-
-The files in a given representation must be semantically equivalent,
-meaning that coordinates that relate to one file must also be valid for
-other files in the same representation. Coordinates in Knora are
-expressed as fractions of the size of the object on some dimension; for
-example, image coordinates are expressed as fractions of its width and
-height, rather than in pixels. Therefore, the image files in a
-`StillImageRepresentation` must have the same aspect ratio, but they
-need not have the same dimensions in pixels. Similarly, the audio and
-video files in an `AudioRepresentation` or `MovingImageRepresentation`
-must have the same length in seconds, but may have different bitrates.
 
 `FileValue` objects are versioned like other values, and the actual
 files stored by Knora are also versioned. Version 1 of the Knora API
@@ -1015,7 +1009,7 @@ For links to a `kb:Resource`, see @ref:[StandoffLinkTag](#standofflinktag).
 A mapping allows for the conversion of an XML document to RDF-standoff
 and back. A mapping defines one-to-one relations between XML elements
 (with or without a class) and attributes and standoff classes and
-properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v1/xml-to-standoff-mapping.md)).
+properties (see @ref:[XML to Standoff Mapping](../03-apis/api-v2/xml-to-standoff-mapping.md)).
 
 A mapping is represented by a `kb:XMLToStandoffMapping` which contains
 one or more `kb:MappingElement`. A `kb:MappingElement` maps an XML
@@ -1193,7 +1187,7 @@ properties:
 
 `isInGroup` (0-n)
 
-:   Project-specific groups that the user is a member of.
+:   user-created groups that the user is a member of.
 
 `foaf:familyName` (1)
 
@@ -1229,7 +1223,7 @@ users). There are four built-in groups:
     automatically assigned to this group if he is the creator of the
     object.
 
-A project-specific ontology can define additional groups, which must
+A user-created ontology can define additional groups, which must
 belong to the OWL class `kb:UserGroup`.
 
 There is one built-in `SystemUser`, which is the creator of link values
@@ -1302,7 +1296,7 @@ V knora-base:UnknownUser,knora-base:KnownUser|M knora-base:ProjectMember
 ### Consistency Checking
 
 Knora tries to enforce repository consistency by checking constraints
-that are specified in the Knora base ontology and in project-specific
+that are specified in the Knora base ontology and in user-created
 ontologies. Three types of consistency rules are enforced:
 
 -   Cardinalities in OWL class definitions must be satisfied.
@@ -1396,7 +1390,7 @@ Primer](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/).
 
 ### Constraints on the Types of Property Subjects and Objects
 
-When a project-specific ontology defines a property, it must indicate
+When a user-created ontology defines a property, it must indicate
 the types that are allowed as objects (and, if possible, as subjects) of
 the property. This is done using the following Knora-specific
 properties:
@@ -1434,7 +1428,7 @@ See also @ref:[Why doesn’t Knora use rdfs:domain and rdfs:range for consistenc
 
 ### Consistency Constraint Example
 
-A project-specific ontology could define consistency constraints as in
+A user-created ontology could define consistency constraints as in
 this simplified example:
 
 ```
@@ -1456,7 +1450,7 @@ this simplified example:
     knora-base:objectClassConstraint knora-base:TextValue .
 ```
 
-## Summary of Restrictions on Project-Specific Ontologies
+## Summary of Restrictions on User-Created Ontologies
 
 An ontology can refer to a Knora ontology in another project only if the other
 ontology is built-in or shared
@@ -1466,7 +1460,7 @@ ontology is built-in or shared
 
 -   Each class must be a subclass of either `kb:Resource` or
     `kb:StandoffTag`, but not both (note that this forbids
-    project-specific subclasses of `kb:Value`).
+    user-created subclasses of `kb:Value`).
 -   All the cardinalities that a class defines directly (i.e. does not
     inherit from `kb:Resource`) must be on properties that are defined
     in the triplestore.
@@ -1508,7 +1502,7 @@ ontology is built-in or shared
 
 The [DaSCH](http://dasch.swiss/) intends to coordinate the
 standardisation of generally useful entities proposed in
-project-specific ontologies. We envisage a process in which two or more
+user-created ontologies. We envisage a process in which two or more
 projects would initiate the process by starting a public discussion on
 proposed entities to be shared. Once a consensus was reached, the
 [DaSCH](http://dasch.swiss/) would publish these entities in an ontology

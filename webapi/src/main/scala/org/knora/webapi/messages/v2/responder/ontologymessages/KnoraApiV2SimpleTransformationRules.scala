@@ -26,13 +26,13 @@ import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 /**
-  * Represents the `knora-api` ontology, version 2, in the [[ApiV2Simple]] schema.
+  * Rules for converting `knora-base` into `knora-api` in the [[ApiV2Simple]] schema.
   */
-object KnoraApiV2Simple {
+object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-    val OntologyMetadata = OntologyMetadataV2(
+    override val ontologyMetadata = OntologyMetadataV2(
         ontologyIri = OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri.toSmartIri,
         projectIri = Some(OntologyConstants.KnoraBase.SystemProject.toSmartIri),
         label = Some("The knora-api ontology in the simple schema")
@@ -278,224 +278,218 @@ object KnoraApiV2Simple {
         )
     )
 
+    private val ResourceCardinalites = Map(
+        OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany
+    )
+
     /**
-      * Rules for transforming entities from `knora-base` into the corresponding entities from `knora-api`
-      * in the [[ApiV2Simple]] schema.
+      * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
       */
-    object KnoraBaseTransformationRules {
-        private val ResourceCardinalites = Map(
-            OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany
-        )
+    override val knoraBasePropertiesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.KnoraBase.IsEditable,
+        OntologyConstants.KnoraBase.CanBeInstantiated,
+        OntologyConstants.KnoraBase.HasPermissions,
+        OntologyConstants.KnoraBase.AttachedToUser,
+        OntologyConstants.KnoraBase.AttachedToProject,
+        OntologyConstants.KnoraBase.IsDeleted,
+        OntologyConstants.KnoraBase.DeleteDate,
+        OntologyConstants.KnoraBase.DeleteComment,
+        OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
+        OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
+        OntologyConstants.KnoraBase.ObjectClassConstraint,
+        OntologyConstants.KnoraBase.SubjectClassConstraint,
+        OntologyConstants.KnoraBase.StandoffParentClassConstraint,
+        OntologyConstants.KnoraBase.ValueHasLanguage,
+        OntologyConstants.KnoraBase.ValueHasStandoff,
+        OntologyConstants.KnoraBase.ValueHasMapping,
+        OntologyConstants.KnoraBase.HasMappingElement,
+        OntologyConstants.KnoraBase.MappingHasStandoffClass,
+        OntologyConstants.KnoraBase.MappingHasStandoffProperty,
+        OntologyConstants.KnoraBase.MappingHasXMLClass,
+        OntologyConstants.KnoraBase.MappingHasXMLNamespace,
+        OntologyConstants.KnoraBase.MappingHasXMLTagname,
+        OntologyConstants.KnoraBase.MappingHasXMLAttribute,
+        OntologyConstants.KnoraBase.MappingHasXMLAttributename,
+        OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation,
+        OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass,
+        OntologyConstants.KnoraBase.MappingElementRequiresSeparator,
+        OntologyConstants.KnoraBase.StandoffTagHasLink,
+        OntologyConstants.KnoraBase.StandoffTagHasInternalReference,
+        OntologyConstants.KnoraBase.StandoffTagHasStart,
+        OntologyConstants.KnoraBase.StandoffTagHasEnd,
+        OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
+        OntologyConstants.KnoraBase.StandoffTagHasStartParent,
+        OntologyConstants.KnoraBase.StandoffTagHasStartAncestor,
+        OntologyConstants.KnoraBase.StandoffTagHasEndParent,
+        OntologyConstants.KnoraBase.StandoffTagHasUUID,
+        OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
+        OntologyConstants.KnoraBase.IsRootNode,
+        OntologyConstants.KnoraBase.HasRootNode,
+        OntologyConstants.KnoraBase.HasSubListNode,
+        OntologyConstants.KnoraBase.ListNodeName,
+        OntologyConstants.KnoraBase.ListNodePosition,
+        OntologyConstants.KnoraBase.ValueCreationDate,
+        OntologyConstants.KnoraBase.ValueHas,
+        OntologyConstants.KnoraBase.ValueHasComment,
+        OntologyConstants.KnoraBase.ValueHasCalendar,
+        OntologyConstants.KnoraBase.ValueHasColor,
+        OntologyConstants.KnoraBase.ValueHasStartJDN,
+        OntologyConstants.KnoraBase.ValueHasEndJDN,
+        OntologyConstants.KnoraBase.ValueHasStartPrecision,
+        OntologyConstants.KnoraBase.ValueHasEndPrecision,
+        OntologyConstants.KnoraBase.ValueHasDecimal,
+        OntologyConstants.KnoraBase.ValueHasGeometry,
+        OntologyConstants.KnoraBase.ValueHasGeonameCode,
+        OntologyConstants.KnoraBase.ValueHasInteger,
+        OntologyConstants.KnoraBase.ValueHasBoolean,
+        OntologyConstants.KnoraBase.ValueHasUri,
+        OntologyConstants.KnoraBase.ValueHasIntervalStart,
+        OntologyConstants.KnoraBase.ValueHasIntervalEnd,
+        OntologyConstants.KnoraBase.ValueHasListNode,
+        OntologyConstants.KnoraBase.Duration,
+        OntologyConstants.KnoraBase.DimX,
+        OntologyConstants.KnoraBase.DimY,
+        OntologyConstants.KnoraBase.Fps,
+        OntologyConstants.KnoraBase.QualityLevel,
+        OntologyConstants.KnoraBase.InternalFilename,
+        OntologyConstants.KnoraBase.InternalMimeType,
+        OntologyConstants.KnoraBase.OriginalFilename,
+        OntologyConstants.KnoraBase.OriginalMimeType,
+        OntologyConstants.KnoraBase.IsPreview,
+        OntologyConstants.KnoraBase.ValueHasOrder,
+        OntologyConstants.KnoraBase.PreviousValue,
+        OntologyConstants.KnoraBase.ValueHasRefCount,
+        OntologyConstants.KnoraBase.ValueHasString,
+        OntologyConstants.KnoraBase.PreviousValue,
+        OntologyConstants.KnoraBase.HasExtResValue,
+        OntologyConstants.KnoraBase.ExtResAccessInfo,
+        OntologyConstants.KnoraBase.ExtResId,
+        OntologyConstants.KnoraBase.ExtResProvider,
+        OntologyConstants.KnoraBase.MapEntryKey,
+        OntologyConstants.KnoraBase.MapEntryValue,
+        OntologyConstants.KnoraBase.IsInMap,
+        OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
+        OntologyConstants.KnoraBase.ForGroup,
+        OntologyConstants.KnoraBase.ForResourceClass,
+        OntologyConstants.KnoraBase.ForProperty,
+        OntologyConstants.KnoraBase.Address,
+        OntologyConstants.KnoraBase.Email,
+        OntologyConstants.KnoraBase.GivenName,
+        OntologyConstants.KnoraBase.FamilyName,
+        OntologyConstants.KnoraBase.Password,
+        OntologyConstants.KnoraBase.UsersActiveProject,
+        OntologyConstants.KnoraBase.Status,
+        OntologyConstants.KnoraBase.PreferredLanguage,
+        OntologyConstants.KnoraBase.IsInProject,
+        OntologyConstants.KnoraBase.IsInProjectAdminGroup,
+        OntologyConstants.KnoraBase.IsInGroup,
+        OntologyConstants.KnoraBase.IsInSystemAdminGroup,
+        OntologyConstants.KnoraBase.InstitutionDescription,
+        OntologyConstants.KnoraBase.InstitutionName,
+        OntologyConstants.KnoraBase.InstitutionWebsite,
+        OntologyConstants.KnoraBase.Phone,
+        OntologyConstants.KnoraBase.KnoraProject,
+        OntologyConstants.KnoraBase.ProjectShortname,
+        OntologyConstants.KnoraBase.ProjectShortcode,
+        OntologyConstants.KnoraBase.ProjectLongname,
+        OntologyConstants.KnoraBase.ProjectDescription,
+        OntologyConstants.KnoraBase.ProjectKeyword,
+        OntologyConstants.KnoraBase.ProjectLogo,
+        OntologyConstants.KnoraBase.BelongsToInstitution,
+        OntologyConstants.KnoraBase.HasSelfJoinEnabled,
+        OntologyConstants.KnoraBase.GroupName,
+        OntologyConstants.KnoraBase.GroupDescription,
+        OntologyConstants.KnoraBase.BelongsToProject
+    ).map(_.toSmartIri)
 
-        /**
-          * Properties to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema.
-          */
-        val KnoraBasePropertiesToRemove: Set[SmartIri] = Set(
-            OntologyConstants.KnoraBase.IsEditable,
-            OntologyConstants.KnoraBase.CanBeInstantiated,
-            OntologyConstants.KnoraBase.HasPermissions,
-            OntologyConstants.KnoraBase.AttachedToUser,
-            OntologyConstants.KnoraBase.AttachedToProject,
-            OntologyConstants.KnoraBase.IsDeleted,
-            OntologyConstants.KnoraBase.DeleteDate,
-            OntologyConstants.KnoraBase.DeleteComment,
-            OntologyConstants.KnoraBase.ObjectCannotBeMarkedAsDeleted,
-            OntologyConstants.KnoraBase.ObjectDatatypeConstraint,
-            OntologyConstants.KnoraBase.ObjectClassConstraint,
-            OntologyConstants.KnoraBase.SubjectClassConstraint,
-            OntologyConstants.KnoraBase.StandoffParentClassConstraint,
-            OntologyConstants.KnoraBase.ValueHasLanguage,
-            OntologyConstants.KnoraBase.ValueHasStandoff,
-            OntologyConstants.KnoraBase.ValueHasMapping,
-            OntologyConstants.KnoraBase.HasMappingElement,
-            OntologyConstants.KnoraBase.MappingHasStandoffClass,
-            OntologyConstants.KnoraBase.MappingHasStandoffProperty,
-            OntologyConstants.KnoraBase.MappingHasXMLClass,
-            OntologyConstants.KnoraBase.MappingHasXMLNamespace,
-            OntologyConstants.KnoraBase.MappingHasXMLTagname,
-            OntologyConstants.KnoraBase.MappingHasXMLAttribute,
-            OntologyConstants.KnoraBase.MappingHasXMLAttributename,
-            OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation,
-            OntologyConstants.KnoraBase.MappingHasStandoffDataTypeClass,
-            OntologyConstants.KnoraBase.MappingElementRequiresSeparator,
-            OntologyConstants.KnoraBase.StandoffTagHasLink,
-            OntologyConstants.KnoraBase.StandoffTagHasInternalReference,
-            OntologyConstants.KnoraBase.StandoffTagHasStart,
-            OntologyConstants.KnoraBase.StandoffTagHasEnd,
-            OntologyConstants.KnoraBase.StandoffTagHasStartIndex,
-            OntologyConstants.KnoraBase.StandoffTagHasEndIndex,
-            OntologyConstants.KnoraBase.StandoffTagHasStartParent,
-            OntologyConstants.KnoraBase.StandoffTagHasStartAncestor,
-            OntologyConstants.KnoraBase.StandoffTagHasEndParent,
-            OntologyConstants.KnoraBase.StandoffTagHasUUID,
-            OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID,
-            OntologyConstants.KnoraBase.IsRootNode,
-            OntologyConstants.KnoraBase.HasRootNode,
-            OntologyConstants.KnoraBase.HasSubListNode,
-            OntologyConstants.KnoraBase.ListNodeName,
-            OntologyConstants.KnoraBase.ListNodePosition,
-            OntologyConstants.KnoraBase.ValueCreationDate,
-            OntologyConstants.KnoraBase.ValueHas,
-            OntologyConstants.KnoraBase.ValueHasComment,
-            OntologyConstants.KnoraBase.ValueHasCalendar,
-            OntologyConstants.KnoraBase.ValueHasColor,
-            OntologyConstants.KnoraBase.ValueHasStartJDN,
-            OntologyConstants.KnoraBase.ValueHasEndJDN,
-            OntologyConstants.KnoraBase.ValueHasStartPrecision,
-            OntologyConstants.KnoraBase.ValueHasEndPrecision,
-            OntologyConstants.KnoraBase.ValueHasDecimal,
-            OntologyConstants.KnoraBase.ValueHasGeometry,
-            OntologyConstants.KnoraBase.ValueHasGeonameCode,
-            OntologyConstants.KnoraBase.ValueHasInteger,
-            OntologyConstants.KnoraBase.ValueHasBoolean,
-            OntologyConstants.KnoraBase.ValueHasUri,
-            OntologyConstants.KnoraBase.ValueHasIntervalStart,
-            OntologyConstants.KnoraBase.ValueHasIntervalEnd,
-            OntologyConstants.KnoraBase.ValueHasListNode,
-            OntologyConstants.KnoraBase.Duration,
-            OntologyConstants.KnoraBase.DimX,
-            OntologyConstants.KnoraBase.DimY,
-            OntologyConstants.KnoraBase.Fps,
-            OntologyConstants.KnoraBase.QualityLevel,
-            OntologyConstants.KnoraBase.InternalFilename,
-            OntologyConstants.KnoraBase.InternalMimeType,
-            OntologyConstants.KnoraBase.OriginalFilename,
-            OntologyConstants.KnoraBase.OriginalMimeType,
-            OntologyConstants.KnoraBase.IsPreview,
-            OntologyConstants.KnoraBase.ValueHasOrder,
-            OntologyConstants.KnoraBase.PreviousValue,
-            OntologyConstants.KnoraBase.ValueHasRefCount,
-            OntologyConstants.KnoraBase.ValueHasString,
-            OntologyConstants.KnoraBase.PreviousValue,
-            OntologyConstants.KnoraBase.HasExtResValue,
-            OntologyConstants.KnoraBase.ExtResAccessInfo,
-            OntologyConstants.KnoraBase.ExtResId,
-            OntologyConstants.KnoraBase.ExtResProvider,
-            OntologyConstants.KnoraBase.MapEntryKey,
-            OntologyConstants.KnoraBase.MapEntryValue,
-            OntologyConstants.KnoraBase.IsInMap,
-            OntologyConstants.KnoraBase.ForProject, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-            OntologyConstants.KnoraBase.ForGroup,
-            OntologyConstants.KnoraBase.ForResourceClass,
-            OntologyConstants.KnoraBase.ForProperty,
-            OntologyConstants.KnoraBase.Address,
-            OntologyConstants.KnoraBase.Email,
-            OntologyConstants.KnoraBase.GivenName,
-            OntologyConstants.KnoraBase.FamilyName,
-            OntologyConstants.KnoraBase.Password,
-            OntologyConstants.KnoraBase.UsersActiveProject,
-            OntologyConstants.KnoraBase.Status,
-            OntologyConstants.KnoraBase.PreferredLanguage,
-            OntologyConstants.KnoraBase.IsInProject,
-            OntologyConstants.KnoraBase.IsInProjectAdminGroup,
-            OntologyConstants.KnoraBase.IsInGroup,
-            OntologyConstants.KnoraBase.IsInSystemAdminGroup,
-            OntologyConstants.KnoraBase.InstitutionDescription,
-            OntologyConstants.KnoraBase.InstitutionName,
-            OntologyConstants.KnoraBase.InstitutionWebsite,
-            OntologyConstants.KnoraBase.Phone,
-            OntologyConstants.KnoraBase.KnoraProject,
-            OntologyConstants.KnoraBase.ProjectShortname,
-            OntologyConstants.KnoraBase.ProjectShortcode,
-            OntologyConstants.KnoraBase.ProjectLongname,
-            OntologyConstants.KnoraBase.ProjectDescription,
-            OntologyConstants.KnoraBase.ProjectKeyword,
-            OntologyConstants.KnoraBase.ProjectLogo,
-            OntologyConstants.KnoraBase.BelongsToInstitution,
-            OntologyConstants.KnoraBase.HasSelfJoinEnabled,
-            OntologyConstants.KnoraBase.GroupName,
-            OntologyConstants.KnoraBase.GroupDescription,
-            OntologyConstants.KnoraBase.BelongsToProject
-        ).map(_.toSmartIri)
+    /**
+      * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema. Standoff classes
+      * are removed, too, but aren't included here, because this is taken care of in [[ReadOntologyV2]].
+      */
+    override val knoraBaseClassesToRemove: Set[SmartIri] = Set(
+        OntologyConstants.KnoraBase.ValueBase,
+        OntologyConstants.KnoraBase.DateBase,
+        OntologyConstants.KnoraBase.UriBase,
+        OntologyConstants.KnoraBase.BooleanBase,
+        OntologyConstants.KnoraBase.IntBase,
+        OntologyConstants.KnoraBase.DecimalBase,
+        OntologyConstants.KnoraBase.IntervalBase,
+        OntologyConstants.KnoraBase.ColorBase,
+        OntologyConstants.KnoraBase.Value,
+        OntologyConstants.KnoraBase.TextValue,
+        OntologyConstants.KnoraBase.IntValue,
+        OntologyConstants.KnoraBase.BooleanValue,
+        OntologyConstants.KnoraBase.UriValue,
+        OntologyConstants.KnoraBase.DecimalValue,
+        OntologyConstants.KnoraBase.DateValue,
+        OntologyConstants.KnoraBase.ColorValue,
+        OntologyConstants.KnoraBase.GeomValue,
+        OntologyConstants.KnoraBase.ListValue,
+        OntologyConstants.KnoraBase.IntervalValue,
+        OntologyConstants.KnoraBase.LinkValue,
+        OntologyConstants.KnoraBase.GeonameValue,
+        OntologyConstants.KnoraBase.FileValue,
+        OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
+        OntologyConstants.KnoraBase.MappingElement,
+        OntologyConstants.KnoraBase.MappingComponent,
+        OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
+        OntologyConstants.KnoraBase.MappingXMLAttribute,
+        OntologyConstants.KnoraBase.XMLToStandoffMapping,
+        OntologyConstants.KnoraBase.ExternalResource,
+        OntologyConstants.KnoraBase.ExternalResValue,
+        OntologyConstants.KnoraBase.Map,
+        OntologyConstants.KnoraBase.MapEntry,
+        OntologyConstants.KnoraBase.User, // TODO: remove admin stuff from here when it's moved to a separate ontology.
+        OntologyConstants.KnoraBase.KnoraProject,
+        OntologyConstants.KnoraBase.ListNode,
+        OntologyConstants.KnoraBase.Permission,
+        OntologyConstants.KnoraBase.UserGroup,
+        OntologyConstants.KnoraBase.Institution,
+        OntologyConstants.KnoraBase.AdministrativePermission
+    ).map(_.toSmartIri)
 
-        /**
-          * Classes to remove from `knora-base` before converting it to the [[ApiV2Simple]] schema. Standoff classes
-          * are removed, too, but aren't included here, because this is taken care of in [[ReadOntologyV2]].
-          */
-        val KnoraBaseClassesToRemove: Set[SmartIri] = Set(
-            OntologyConstants.KnoraBase.ValueBase,
-            OntologyConstants.KnoraBase.DateBase,
-            OntologyConstants.KnoraBase.UriBase,
-            OntologyConstants.KnoraBase.BooleanBase,
-            OntologyConstants.KnoraBase.IntBase,
-            OntologyConstants.KnoraBase.DecimalBase,
-            OntologyConstants.KnoraBase.IntervalBase,
-            OntologyConstants.KnoraBase.ColorBase,
-            OntologyConstants.KnoraBase.Value,
-            OntologyConstants.KnoraBase.TextValue,
-            OntologyConstants.KnoraBase.IntValue,
-            OntologyConstants.KnoraBase.BooleanValue,
-            OntologyConstants.KnoraBase.UriValue,
-            OntologyConstants.KnoraBase.DecimalValue,
-            OntologyConstants.KnoraBase.DateValue,
-            OntologyConstants.KnoraBase.ColorValue,
-            OntologyConstants.KnoraBase.GeomValue,
-            OntologyConstants.KnoraBase.ListValue,
-            OntologyConstants.KnoraBase.IntervalValue,
-            OntologyConstants.KnoraBase.LinkValue,
-            OntologyConstants.KnoraBase.GeonameValue,
-            OntologyConstants.KnoraBase.FileValue,
-            OntologyConstants.KnoraBase.DefaultObjectAccessPermission,
-            OntologyConstants.KnoraBase.MappingElement,
-            OntologyConstants.KnoraBase.MappingComponent,
-            OntologyConstants.KnoraBase.MappingStandoffDataTypeClass,
-            OntologyConstants.KnoraBase.MappingXMLAttribute,
-            OntologyConstants.KnoraBase.XMLToStandoffMapping,
-            OntologyConstants.KnoraBase.ExternalResource,
-            OntologyConstants.KnoraBase.ExternalResValue,
-            OntologyConstants.KnoraBase.Map,
-            OntologyConstants.KnoraBase.MapEntry,
-            OntologyConstants.KnoraBase.User, // TODO: remove admin stuff from here when it's moved to a separate ontology.
-            OntologyConstants.KnoraBase.KnoraProject,
-            OntologyConstants.KnoraBase.ListNode,
-            OntologyConstants.KnoraBase.Permission,
-            OntologyConstants.KnoraBase.UserGroup,
-            OntologyConstants.KnoraBase.Institution,
-            OntologyConstants.KnoraBase.AdministrativePermission
-        ).map(_.toSmartIri)
-
-        /**
-          * After `knora-base` has been converted to the [[ApiV2Simple]] schema, these cardinalities must be
-          * added to the specified classes to obtain `knora-api`.
-          */
-        val KnoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
-            OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
-        ).map {
-            case (classIri, cardinalities) =>
-                classIri.toSmartIri.toOntologySchema(ApiV2Simple) -> cardinalities.map {
-                    case (propertyIri, cardinality) =>
-                        propertyIri.toSmartIri.toOntologySchema(ApiV2Simple) -> Cardinality.KnoraCardinalityInfo(cardinality)
-                }
-        }
-
-        /**
-          * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
-          */
-        val KnoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
-            File,
-            Date,
-            Color,
-            Interval,
-            Geoname,
-            Geom
-        ).map {
-            classInfo => classInfo.entityInfoContent.classIri -> classInfo
-        }.toMap
-
-        /**
-          * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
-          */
-        val KnoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
-            Result,
-            Error,
-            HasValue,
-            ResourceProperty,
-            SubjectType,
-            ObjectType
-        ).map {
-            propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
-        }.toMap
+    /**
+      * After `knora-base` has been converted to the [[ApiV2Simple]] schema, these cardinalities must be
+      * added to the specified classes to obtain `knora-api`.
+      */
+    override val knoraApiCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = Map(
+        OntologyConstants.KnoraBase.Resource -> ResourceCardinalites
+    ).map {
+        case (classIri, cardinalities) =>
+            classIri.toSmartIri.toOntologySchema(ApiV2Simple) -> cardinalities.map {
+                case (propertyIri, cardinality) =>
+                    propertyIri.toSmartIri.toOntologySchema(ApiV2Simple) -> Cardinality.KnoraCardinalityInfo(cardinality)
+            }
     }
+
+    /**
+      * Classes that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
+      */
+    override val knoraApiClassesToAdd: Map[SmartIri, ReadClassInfoV2] = Set(
+        File,
+        Date,
+        Color,
+        Interval,
+        Geoname,
+        Geom
+    ).map {
+        classInfo => classInfo.entityInfoContent.classIri -> classInfo
+    }.toMap
+
+    /**
+      * Properties that need to be added to `knora-base`, after converting it to the [[ApiV2Simple]] schema, to obtain `knora-api`.
+      */
+    override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
+        Result,
+        Error,
+        HasValue,
+        ResourceProperty,
+        SubjectType,
+        ObjectType
+    ).map {
+        propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
+    }.toMap
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Convenience functions for building ontology entities, to make the code above more concise.

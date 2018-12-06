@@ -76,6 +76,9 @@ class SipiResponderV1 extends Responder {
       * @return a [[SipiFileInfoGetResponseV1]].
       */
     private def getFileInfoForSipiV1(filename: String, userProfile: UserProfileV1): Future[SipiFileInfoGetResponseV1] = {
+
+        log.debug(s"SipiResponderV1 - getFileInfoForSipiV1: filename: $filename, user: ${userProfile.userData.email}")
+
         for {
             sparqlQuery <- Future(queries.sparql.v1.txt.getFileValue(
                 triplestore = settings.triplestoreType,
@@ -96,14 +99,19 @@ class SipiResponderV1 extends Responder {
 
             valueProps = valueUtilV1.createValueProps(filename, rows)
 
-            permissionCode: Option[Int] = PermissionUtilADM.getUserPermissionWithValuePropsV1(
+            maybePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionWithValuePropsV1(
                 valueIri = filename,
                 valueProps = valueProps,
                 entityProject = None, // no need to specify this here, because it's in valueProps
                 userProfile = userProfile
             )
+
+            _ = log.debug(s"SipiResponderV1 - getFileInfoForSipiV1 - maybePermissionCode: $maybePermissionCode, requestingUser: ${userProfile.userData.email}")
+
+            permissionCode: Int = maybePermissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
+
         } yield SipiFileInfoGetResponseV1(
-            permissionCode = permissionCode.getOrElse(0) // Sipi expects a permission code from 0 to 8
+            permissionCode = permissionCode
         )
     }
 

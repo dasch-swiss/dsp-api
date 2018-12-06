@@ -77,7 +77,7 @@ API server can authenticate the user making the request. When using the
 SALSAH web interface, after logging in a session is established (cookie
 based). When using the API with another client application, credentials
 can be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/authentication.md)).
+@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 Also when reading resources authentication my be needed as resources and
 their values may have restricted view permissions.
