@@ -30,12 +30,13 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### Beta stage
 
+* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 * [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
 * Distribution packaging using [Docker](https://www.docker.com/)
 
 ### New features under development
 
-* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
+* Additional functionality for [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 
 ## Requirements
 

@@ -3385,7 +3385,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not delete a value if the requesting user does not have DeletePermission on the value" in {
             val resourceIri: IRI = aThingIri
+            // #toSmartIri
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
+            // #toSmartIri
 
             actorUnderTest ! DeleteValueRequestV2(
                 resourceIri = resourceIri,
