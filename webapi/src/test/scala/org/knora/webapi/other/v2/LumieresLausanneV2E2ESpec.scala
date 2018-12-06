@@ -87,11 +87,13 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
 
             log.debug(response.toString())
 
-            assert(response.status === StatusCodes.OK)
-            val resId = ResourceResponseExtractorMethods.getResIriFromJsonResponse(response)
+            // assert(response.status === StatusCodes.OK)
+            // val resId = ResourceResponseExtractorMethods.getResIriFromJsonResponse(response)
 
-            newLLUserIri.set(resId)
-            log.debug(s"LL-UserIRI: ${newLLUserIri.get}")
+            // newLLUserIri.set(resId)
+            // log.debug(s"LL-UserIRI: ${newLLUserIri.get}")
+
+            assert(response.status === StatusCodes.OK)
         }
     }
 }
