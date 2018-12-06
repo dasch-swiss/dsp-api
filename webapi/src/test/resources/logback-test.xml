@@ -88,7 +88,7 @@
 
     <!-- V2 -->
 
-    <logger name="org.knora.webapi.util.search.gravsearch" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v2.search.gravsearch" level="INFO"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.responders.admin.GroupsResponderADM" level="INFO"/>

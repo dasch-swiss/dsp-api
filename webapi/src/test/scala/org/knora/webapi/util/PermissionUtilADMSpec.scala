@@ -21,10 +21,10 @@ package org.knora.webapi.util
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.PermissionUtilADM._
-import org.knora.webapi._
 
 import scala.collection.Map
 

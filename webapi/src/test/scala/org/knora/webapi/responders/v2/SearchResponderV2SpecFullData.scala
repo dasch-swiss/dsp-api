@@ -6,10 +6,10 @@ import akka.actor.ActorSystem
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.util.search._
 import org.knora.webapi.{ApiV2Simple, InternalSchema, Settings, SharedTestDataADM}
 
 class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {

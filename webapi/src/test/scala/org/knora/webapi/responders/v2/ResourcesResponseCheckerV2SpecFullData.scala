@@ -2,13 +2,12 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import org.knora.webapi.{InternalSchema, SharedTestDataADM}
-import org.knora.webapi.messages.v1.responder.valuemessages.{KnoraCalendarV1, KnoraPrecisionV1}
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.date.{CalendarNameJulian, DatePrecisionYear}
+import org.knora.webapi.{InternalSchema, SharedTestDataADM}
 
 class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFormatter) {
 

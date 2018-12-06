@@ -20,7 +20,7 @@
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
 @import org.knora.webapi.GravsearchException
-@import org.knora.webapi.util.search.ApacheLuceneSupport.CombineSearchTerms
+@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.CombineSearchTerms
 
 @*
  * Performs a simple full-text search using GraphDB.
