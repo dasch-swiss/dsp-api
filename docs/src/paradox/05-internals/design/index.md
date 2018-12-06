@@ -23,17 +23,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 @@@ index
 
-- [Design Overview](design-overview.md)
-- [Futures with Akka](futures-with-akka.md)
-- [HTTP Module](http-module.md)
-- [Responders Module](responders-module.md)
-- [Store Module](store-module.md)
-- [Shared Packages](shared-packages.md)
-- [How to Add a Route](how-to-add-a-route.md)
-- [Triplestore Updates](triplestore-updates.md)
-- [Consistency Checking](consistency-checking.md)
-- [Authentication](authentication.md)
-- [Administration](administration.md)
-- [API v2](api-v2/index.md)
+- [Knora Design Principles](principles/index.md)
+- [API v1 Design](api-v1/index.md)
+- [API v2 Design](api-v2/index.md)
+- [Admin API Design](api-admin/index.md)
 
 @@@

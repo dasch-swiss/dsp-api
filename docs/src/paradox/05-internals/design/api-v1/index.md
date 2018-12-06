@@ -17,22 +17,13 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2
+# Knora API v1 Design
 
 @@toc { depth=1 }
 
 @@@ index
 
-- [Introduction](introduction.md)
-- [Authentication](authentication.md)
-- [Knora IRIs](knora-iris.md)
-- [Reading and Searching Resources](reading-and-searching-resources.md)
-- [Getting Lists](getting-lists.md)
-- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
-- [Gravsearch: Virtual Graph Search](query-language.md)
-- [Editing Resources](editing-resources.md)
-- [Editing Values](editing-values.md)
-- [Querying, Creating, and Updating Ontologies](ontology-information.md)
-- [TEI/XML](tei-xml.md)
+- [JSON in API v1](json.md)
+- [How to Add an API v1 Route](how-to-add-a-route.md)
 
 @@@

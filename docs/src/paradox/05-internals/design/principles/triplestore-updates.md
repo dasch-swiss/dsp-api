@@ -66,11 +66,10 @@ cannot require this in Knora.)
 ### Permissions
 
 To create a new value (as opposed to a new version of an existing
-value), the user must have `knora-base:hasModifyPermission` on the
-containing resource.
+value), the user must have permission to modify the containing resource.
 
 To create a new version of an existing value, the user needs only to
-have `knora-base:hasModifyPermission` on the current version of the
+have permission to modify the current version of the
 value; no permissions on the resource are needed.
 
 Since changing a link requires deleting the old link and creating a new
@@ -78,12 +77,9 @@ one (as described in @ref:[Linking](#linking)), a user wishing
 to change a link must have modify permission on both the containing
 resource and the `knora-base:LinkValue` for the existing link.
 
-When a new value is created, it is given the default permissions
-specified in the definition of its property. These are subproperties of
-`knora-base:hasDefaultPermission`, and are converted into the
-corresponding subproperties of `knora-base:hasPermission`. Similarly,
-when a new resource is created, it is given the default permissions
-specified in the definition of its OWL class.
+When a new resource or value is created, it can be given default permissions
+specified the project's admin data, or (only in API v2) custom permissions
+can be specified.
 
 ### Ontology Constraints
 
@@ -169,8 +165,7 @@ or value.
 
 ### Linking
 
-Knora API v1 treats a link between two resources as a value, but in RDF,
-links must be treated differently to other types of values. Knora needs
+Links must be treated differently to other types of values. Knora needs
 to maintain information about the link, including permissions and a
 version history. Since the link does not have a unique IRI of its own,
 Knora uses RDF
@@ -236,13 +231,14 @@ given the same permissions as the text value containing the reference.
 
 ### Responsibilities of Responders
 
-`ResourcesResponderV1` has sole responsibility for generating SPARQL to
-create and updating resources, and `ValuesResponderV1` has sole
-responsibility for generating SPARQL to create and update values. When a
-new resource is created with its values, `ValuesResponderV1` generates
-SPARQL statements that can be included in the `WHERE` and `INSERT`
-clauses of a SPARQL update to create the values, and
-`ResourcesResponderV1` adds these statements to the SPARQL update that
+The resources responder (`ResourcesResponderV1` in API v1, `ResourcesResponderV2`
+in API v2) has sole responsibility for generating SPARQL to
+create and updating resources, and the values responder (`ValuesResponderV1`
+or `ValuesResponderV2`) has sole responsibility for generating SPARQL to create
+and update values. When a new resource is created with its values, the values responder
+generates SPARQL statements that can be included in the `INSERT`
+clause of a SPARQL update to create the values, and
+the resources responder adds these statements to the SPARQL update that
 creates the resource. This ensures that the resource and its values are
 created in a single SPARQL update operation, and hence in a single
 triplestore transaction.

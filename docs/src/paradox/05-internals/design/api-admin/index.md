@@ -17,6 +17,12 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Shared Packages
+# Admin API Design
 
-TODO
+@@toc { depth=1 }
+
+@@@ index
+
+- [Administration](administration.md)
+
+@@@

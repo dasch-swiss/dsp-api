@@ -98,7 +98,9 @@ lazy val docs = knoraModule("docs")
                 "project.name" -> "Knora Documentation",
                 "github.base_url" -> "https://github.com/dhlab-basel/Knora",
                 "image.base_url" -> ".../assets/images",
-                "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s"
+                "extref.rfc.base_url" -> "http://tools.ietf.org/html/rfc%s",
+                "snip.src.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "main" / "scala").getAbsolutePath,
+                "snip.test.base_dir" -> ((baseDirectory in ThisBuild).value / "webapi" / "src" / "test" / "scala").getAbsolutePath
             ),
 
             // Paradox Material Theme Settings

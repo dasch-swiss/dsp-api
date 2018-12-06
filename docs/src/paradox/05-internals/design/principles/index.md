@@ -17,22 +17,18 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2
+# Knora Design Principles
 
 @@toc { depth=1 }
 
 @@@ index
 
-- [Introduction](introduction.md)
+- [Design Overview](design-overview.md)
+- [Futures with Akka](futures-with-akka.md)
+- [HTTP Module](http-module.md)
+- [Store Module](store-module.md)
+- [Triplestore Updates](triplestore-updates.md)
+- [Consistency Checking](consistency-checking.md)
 - [Authentication](authentication.md)
-- [Knora IRIs](knora-iris.md)
-- [Reading and Searching Resources](reading-and-searching-resources.md)
-- [Getting Lists](getting-lists.md)
-- [XML to Standoff Mapping](xml-to-standoff-mapping.md)
-- [Gravsearch: Virtual Graph Search](query-language.md)
-- [Editing Resources](editing-resources.md)
-- [Editing Values](editing-values.md)
-- [Querying, Creating, and Updating Ontologies](ontology-information.md)
-- [TEI/XML](tei-xml.md)
 
 @@@
