@@ -1,0 +1,370 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix lumieres-lausanne: <http://www.knora.org/ontology/0113/lumieres-lausanne#> .
+
+
+
+
+
+# --- Administrative permissions ---
+
+# Permissions à ajuster
+
+
+# Administrative Permissions on User group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a001> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-user> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted"^^xsd:string .
+
+# Administrative Permissions on Student group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a002> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Note,http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Position,http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship,http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership,http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription"^^xsd:string .
+
+# Administrative Permissions on Researcher group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a003> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Note,http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Position,http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship,http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership,http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription,http://www.knora.org/ontology/0113/lumieres-lausanne#TranscriptionRestricted"^^xsd:string .
+
+# Administrative Permissions on PhdStudent group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a004> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResource,http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResourceRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Document,http://www.knora.org/ontology/0113/lumieres-lausanne#Image,http://www.knora.org/ontology/0113/lumieres-lausanne#Note,http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Position,http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship,http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership,http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription,http://www.knora.org/ontology/0113/lumieres-lausanne#TranscriptionRestricted"^^xsd:string .
+
+
+# Administrative Permissions on Director group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a005> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-director> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResource,http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResourceRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftPerson,http://www.knora.org/ontology/0113/lumieres-lausanne#Document,http://www.knora.org/ontology/0113/lumieres-lausanne#Image,http://www.knora.org/ontology/0113/lumieres-lausanne#Note,http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Person,http://www.knora.org/ontology/0113/lumieres-lausanne#Position,http://www.knora.org/ontology/0113/lumieres-lausanne#Project,http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship,http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership,http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription,http://www.knora.org/ontology/0113/lumieres-lausanne#TranscriptionRestricted"^^xsd:string .
+
+# Administrative Permissions on Administrator group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-a006> rdf:type knora-base:AdministrativePermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
+                      knora-base:hasPermissions "ProjectResourceCreateRestrictedPermission http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResource,http://www.knora.org/ontology/0113/lumieres-lausanne#AdditionalResourceRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#BibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#Collection,http://www.knora.org/ontology/0113/lumieres-lausanne#CollectionRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Contribution,http://www.knora.org/ontology/0113/lumieres-lausanne#Dissemination,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftBibliographicNotice,http://www.knora.org/ontology/0113/lumieres-lausanne#DraftPerson,http://www.knora.org/ontology/0113/lumieres-lausanne#Document,http://www.knora.org/ontology/0113/lumieres-lausanne#Finding,http://www.knora.org/ontology/0113/lumieres-lausanne#FreeContent,http://www.knora.org/ontology/0113/lumieres-lausanne#Image,http://www.knora.org/ontology/0113/lumieres-lausanne#News,http://www.knora.org/ontology/0113/lumieres-lausanne#Note,http://www.knora.org/ontology/0113/lumieres-lausanne#NoteRestricted,http://www.knora.org/ontology/0113/lumieres-lausanne#Person,http://www.knora.org/ontology/0113/lumieres-lausanne#Position,http://www.knora.org/ontology/0113/lumieres-lausanne#Project,http://www.knora.org/ontology/0113/lumieres-lausanne#Relationship,http://www.knora.org/ontology/0113/lumieres-lausanne#SocietyMembership,http://www.knora.org/ontology/0113/lumieres-lausanne#Transcription,http://www.knora.org/ontology/0113/lumieres-lausanne#TranscriptionRestricted"^^xsd:string .
+
+
+
+
+# --- Default Object Access Permissions on Groups ---
+
+
+
+
+# Default Object Access Permissions on User group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o001> rdf:type knora-base:DefaultObjectAccessPermission ;
+                      knora-base:forProject <http://rdfh.ch/projects/0113> ;
+                      knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-user> ;
+                      knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+# Default Object Access Permissions on Student group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o002> rdf:type knora-base:DefaultObjectAccessPermission ;
+				     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+				     knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-student> ;
+				     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+# Default Object Access Permissions on Researcher group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o003> rdf:type knora-base:DefaultObjectAccessPermission ;
+				     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+				     knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> ;
+				     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+# Default Object Access Permissions on PhdStudent group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o004> rdf:type knora-base:DefaultObjectAccessPermission ;
+				     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+				     knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent>;
+				     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+# Default Object Access Permissions on Director group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o005> rdf:type knora-base:DefaultObjectAccessPermission ;
+				     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+				     knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-director> ;
+				     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+# Default Object Access Permissions on Administrator group
+<http://rdfh.ch/permissions/0113/lumieres-lausanne-o006> rdf:type knora-base:DefaultObjectAccessPermission ;
+				     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+				     knora-base:forGroup <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> ;
+				     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+
+
+# --- Default Object Access Permissions on Resource classes
+
+
+
+
+### Default Object Access Permissions on resource class BibliographicNotice
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o011> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:BibliographicNotice ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher|V http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+     ### Default Object Access Permissions on resource class Contribution
+     <http://rdfh.ch/permissions//0113/lumieres-lausanne-o012> rdf:type knora-base:DefaultObjectAccessPermission ;
+          knora-base:forProject <http://rdfh.ch/projects/0113> ;
+          knora-base:forResourceClass lumieres-lausanne:Contribution ;
+          knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher|V http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on resource class Person
+# Inutile compte-tenu des DOAP sur les groupes.
+# <http://rdfh.ch/permissions//0113/lumieres-lausanne-o012> rdf:type knora-base:DefaultObjectAccessPermission ;
+#          knora-base:forProject <http://rdfh.ch/projects/0113> ;
+#          knora-base:forResourceClass lumieres-lausanne:Person ;
+#          knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student|V http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+#### Default Object Access Permissions on resource class Note
+# Inutile compte-tenu des DOAP sur les groupes.
+#<http://rdfh.ch/permissions//0113/lumieres-lausanne-o013> rdf:type knora-base:DefaultObjectAccessPermission ;
+#     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+#     knora-base:forResourceClass lumieres-lausanne:Note ;
+#     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher|V http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Transcription
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o013> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Transcription ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class TranscriptionRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o016> rdf:type knora-base:DefaultObjectAccessPermission ;
+         knora-base:forProject <http://rdfh.ch/projects/0113> ;
+         knora-base:forResourceClass lumieres-lausanne:TranscriptionRestricted ;
+         knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent"^^xsd:string .
+
+### Default Object Access Permissions on resource class NoteRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o014> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:NoteRestricted ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent"^^xsd:string .
+
+### Default Object Access Permissions on resource class CollectionRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o015> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:CollectionRestricted ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator|D knora-base:Creator"^^xsd:string .
+
+### Default Object Access Permissions on resource class AdditionalResourceRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o017> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:AdditionalResourceRestricted ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent"^^xsd:string .
+
+### Default Object Access Permissions on resource class ImageRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o018> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:ImageRestricted ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent"^^xsd:string .
+
+### Default Object Access Permissions on resource class DocumentRestricted
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o019> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:DocumentRestricted ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent"^^xsd:string .
+
+### Default Object Access Permissions on resource class DraftBibliographicNotice
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o020> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftBibliographicNotice ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher|V http://rdfh.ch/groups/0113/lumieres-lausanne-student"^^xsd:string .
+
+### Default Object Access Permissions on resource class DraftPerson
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o021> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student"^^xsd:string .
+
+### Default Object Access Permissions on resource class Collection
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o022> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Collection ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user"^^xsd:string .
+
+### Default Object Access Permissions on resource class AdditionalResource
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o023> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:AdditionalResource ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Image
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o024> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Image ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Document
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o025> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:Document ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Finding
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o026> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:Finding ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class FreeContent
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o027> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:FreeContent ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Dissemination
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o028> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:Dissemination ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class News
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o029> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:News ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on resource class Project
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o030> rdf:type knora-base:DefaultObjectAccessPermission ;
+        knora-base:forProject <http://rdfh.ch/projects/0113> ;
+        knora-base:forResourceClass lumieres-lausanne:Project ;
+        knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+
+
+
+
+# --- Default Object Access Permissions on Resource classes and Properties combination
+
+
+
+
+
+### Default Object Access Permissions on Person for mayHaveBiography
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o301> rdf:type knora-base:DefaultObjectAccessPermission ;
+     knora-base:forProject <http://rdfh.ch/projects/0113> ;
+     knora-base:forResourceClass lumieres-lausanne:Person ;
+     knora-base:forProperty lumieres-lausanne:mayHaveBiography ;
+     knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on Project for hasDiffusionType
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o302> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Project ;
+    knora-base:forProperty lumieres-lausanne:hasDiffusionType ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator"^^xsd:string .
+
+### Default Object Access Permissions on Transcription for hasDiffusionType
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o303> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Transcription ;
+    knora-base:forProperty lumieres-lausanne:hasDiffusionType ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator"^^xsd:string .
+
+### Default Object Access Permissions on Note for hasDiffusionType
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o304> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Note ;
+    knora-base:forProperty lumieres-lausanne:hasDiffusionType ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator"^^xsd:string .
+
+### Default Object Access Permissions on BibliographicNotice for isInProject
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o305> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:BibliographicNotice ;
+    knora-base:forProperty lumieres-lausanne:isInProject ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on BibliographicNotice for isInProjectValue
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o306> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:BibliographicNotice ;
+    knora-base:forProperty lumieres-lausanne:isInProjectValue ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on Person for isInProject
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o307> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Person ;
+    knora-base:forProperty lumieres-lausanne:isInProject ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on Person for isInProjectValue
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o308> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Person ;
+    knora-base:forProperty lumieres-lausanne:isInProjectValue ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on Person for noticeIsValid
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o309> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Person ;
+    knora-base:forProperty lumieres-lausanne:noticeIsValid ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on Person for hasName
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o310> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:Person ;
+    knora-base:forProperty lumieres-lausanne:hasName ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftPerson for noticeIsValid
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o311> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:forProperty lumieres-lausanne:noticeIsValid ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftPerson for hasName
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o312> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:forProperty lumieres-lausanne:hasName ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftBibliographicNotice for isInProject
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o313> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftBibliographicNotice ;
+    knora-base:forProperty lumieres-lausanne:isInProject ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftBibliographicNotice for isInProjectValue
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o314> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftBibliographicNotice ;
+    knora-base:forProperty lumieres-lausanne:isInProjectValue ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftPerson for isInProject
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o315> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:forProperty lumieres-lausanne:isInProject ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftPerson for isInProjectValue
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o316> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:forProperty lumieres-lausanne:isInProjectValue ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|M http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent|V http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on DraftPerson for mayHaveBiography
+<http://rdfh.ch/permissions//0113/lumieres-lausanne-o317> rdf:type knora-base:DefaultObjectAccessPermission ;
+    knora-base:forProject <http://rdfh.ch/projects/0113> ;
+    knora-base:forResourceClass lumieres-lausanne:DraftPerson ;
+    knora-base:forProperty lumieres-lausanne:mayHaveBiography ;
+    knora-base:hasPermissions "CR http://rdfh.ch/groups/0113/lumieres-lausanne-administrator,http://rdfh.ch/groups/0113/lumieres-lausanne-director|D knora-base:Creator|V http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent,http://rdfh.ch/groups/0113/lumieres-lausanne-researcher,http://rdfh.ch/groups/0113/lumieres-lausanne-student,http://rdfh.ch/groups/0113/lumieres-lausanne-user,knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
