@@ -1281,7 +1281,7 @@
 	knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
 	knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
 	rdfs:label "A thing with a picture" ;
-	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" ;
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|RV knora-base:UnknownUser" ;
 	knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTimeStamp ;
     knora-base:hasStillImageFileValue <http://rdfh.ch/0001/a-thing-picture/values/file1> .
 
@@ -1297,4 +1297,4 @@
 	knora-base:dimX 512 ;
 	knora-base:dimY 256 ;
 	knora-base:qualityLevel 100 ;
-	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser" .
+	knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|RV knora-base:UnknownUser" .
