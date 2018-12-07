@@ -7214,7 +7214,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:mappingHasName": "HTMLMapping",
-                   |    "knora-api:attachedToProject": "$anythingProjectIri",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$anythingProjectIri"
+                   |    },
                    |    "rdfs:label": "mapping for HTML",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
