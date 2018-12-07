@@ -96,7 +96,9 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:mappingHasName": "LetterMapping",
-                   |    "knora-api:attachedToProject": "$ANYTHING_PROJECT_IRI",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$ANYTHING_PROJECT_IRI"
+                   |    },
                    |    "rdfs:label": "letter mapping",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
