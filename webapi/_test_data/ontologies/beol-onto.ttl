@@ -1943,6 +1943,18 @@
                           "Transcription"@en ; .
 
 ### ###########################################
+### beol:manuscriptEntry
+
+:manuscriptEntry rdf:type owl:Class ;
+
+        rdfs:subClassOf :writtenSource ;
+
+        rdfs:label "Eintrag in einem Manuskript"@de ,
+                   "Entry in a manuscript"@en ;
+
+        rdfs:comment "An entry in a manuscript"@en .
+
+### ###########################################
 ### beol:person
 
 :person rdf:type owl:Class ;
@@ -2129,7 +2141,6 @@
 #
 ##########################################################
 
-# TODO: remove this standoff class one it is not referenced anymore (biblio mapping)
 ###  http://www.knora.org/ontology/0801/beol#StandoffHtmlTag
 :StandoffHtmlTag rdf:type owl:Class ;
 
