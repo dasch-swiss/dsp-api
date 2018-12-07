@@ -17,9 +17,9 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search
+package org.knora.webapi.responders.v2.search
 
-import org.knora.webapi.util.search.gravsearch.GravsearchTypeInspectionResult
+import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
 
 /**
   * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.

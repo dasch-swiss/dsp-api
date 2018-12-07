@@ -21,9 +21,9 @@ package org.knora.webapi.store
 
 import akka.actor._
 import akka.event.LoggingReceive
+import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.store.triplestore.TriplestoreManager
-import org.knora.webapi._
 
 /**
   * This actor receives messages for different stores, and forwards them to corresponding store manager. At the moment only triple stores are implemented,
