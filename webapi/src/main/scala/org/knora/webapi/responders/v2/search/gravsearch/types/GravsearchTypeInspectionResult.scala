@@ -17,10 +17,10 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.util.search.gravsearch
+package org.knora.webapi.responders.v2.search.gravsearch.types
 
+import org.knora.webapi.responders.v2.search.{Entity, IriRef, QueryVariable}
 import org.knora.webapi.util.SmartIri
-import org.knora.webapi.util.search.{Entity, IriRef, QueryVariable}
 
 /**
   * Represents the type information that was found concerning a Gravsearch entity.

@@ -53,6 +53,9 @@ JSON-LD specification).
 
 In the complex schema, dependent resources, i.e. resources that are referred
 to by other resources on the top level, are nested in link value objects.
+If resources on the top level are referred to by other resources and 
+these links are part of the response, virtual incoming links are generated,
+see @ref:[Gravsearch: Virtual Graph Search](query-language.md)) 
 
 See the interfaces `Resource` and `ResourcesSequence` in module
 `ResourcesResponse` (exists for both API schemas: `ApiV2Simple` and

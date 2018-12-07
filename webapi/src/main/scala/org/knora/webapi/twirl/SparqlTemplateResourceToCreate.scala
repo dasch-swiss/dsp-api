@@ -21,7 +21,6 @@
 package org.knora.webapi.twirl
 
 import org.knora.webapi._
-import org.knora.webapi.messages.v1.responder.valuemessages.GenerateSparqlToCreateMultipleValuesResponseV1
 
 /**
   * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
