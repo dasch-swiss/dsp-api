@@ -208,6 +208,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
+            _ = println(s"==============================================\nPermissions for requestingUser ${createResourceRequestV2.requestingUser.email}:\n")
+            _ = println(MessageUtil.toSource(createResourceRequestV2.requestingUser.permissions))
             _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(createResourceRequestV2.createResource.resourceClassIri.toString), projectIri, None)) {
                 throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }

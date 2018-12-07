@@ -89,7 +89,9 @@ object MessageUtil {
 
                 val fieldMap: Map[String, Any] = (Map[String, Any]() /: caseClass.getClass.getDeclaredFields) {
                     (acc, field) =>
-                        if (field.getName.contains("$") || fieldsToSkip.contains(field.getName.trim)) { // ridiculous hack
+                        val fieldName = field.getName.trim
+
+                        if (fieldName.contains("$") || fieldName.endsWith("Format") || fieldsToSkip.contains(fieldName)) { // ridiculous hack
                             acc
                         } else {
                             field.setAccessible(true)
@@ -117,162 +119,27 @@ object MessageUtil {
                 val instanceMirror = runtimeMirror.reflect(obj)
                 val objType: ru.Type = runtimeMirror.classSymbol(objClass).toType
 
-                val members: Iterable[String] = objType.members.filter(member => !member.isMethod).map {
+                val members: Iterable[String] = objType.members.filter(member => !member.isMethod).flatMap {
                     member =>
                         val memberName = member.name.toString.trim
 
-                        val fieldMirror = try {
-                            instanceMirror.reflectField(member.asTerm)
-                        } catch {
-                            case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
-                        }
+                        if (!(memberName.contains("$") || memberName.endsWith("Format"))) {
+                            val fieldMirror = try {
+                                instanceMirror.reflectField(member.asTerm)
+                            } catch {
+                                case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
+                            }
 
-                        val memberValue = fieldMirror.get
-                        val memberValueString = toSource(memberValue)
-                        s"$memberName = $memberValueString"
+                            val memberValue = fieldMirror.get
+                            val memberValueString = toSource(memberValue)
+                            Some(s"$memberName = $memberValueString")
+                        } else {
+                            None
+                        }
                 }
 
                 val maybeNewLine = maybeMakeNewLine(members.size)
                 members.mkString(objClassName + "(" + maybeNewLine, ", " + maybeNewLine, maybeNewLine + ")")
         }
     }
-
-    /**
-      * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
-      * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
-      * added to a new resource.
-      *
-      * @param resourceIri   the IRI of the created resource.
-      * @param creatorIri    the creator of the resource.
-      * @param propertyIri   the property the valueResponse belongs to.
-      * @param valueResponse the value that has been attached to the resource.
-      * @return a [[ResourceCreateValueResponseV1]] representing the created value.
-      */
-    def convertCreateValueResponseV1ToResourceCreateValueResponseV1(resourceIri: IRI,
-                                                                    creatorIri: IRI,
-                                                                    propertyIri: IRI,
-                                                                    valueResponse: CreateValueResponseV1): ResourceCreateValueResponseV1 = {
-
-        // TODO: see resource responder's convertPropertyV1toPropertyGetV1 that also deals with valuetypes
-
-        val basicObjectResponse = ResourceCreateValueObjectResponseV1(
-            textval = Map(LiteralValueType.StringValue -> valueResponse.value.toString),
-            resource_id = Map(LiteralValueType.StringValue -> resourceIri),
-            property_id = Map(LiteralValueType.StringValue -> propertyIri),
-            person_id = Map(LiteralValueType.StringValue -> creatorIri),
-            order = Map(LiteralValueType.IntegerValue -> 1) // TODO: include correct order: valueHasOrder
-        )
-
-        val objectResponse = valueResponse.value match {
-            case integerValue: IntegerValueV1 =>
-                basicObjectResponse.copy(
-                    ival = Some(Map(LiteralValueType.IntegerValue -> integerValue.ival))
-                )
-
-            case decimalValue: DecimalValueV1 =>
-                basicObjectResponse.copy(
-                    dval = Some(Map(LiteralValueType.DecimalValue -> decimalValue.dval))
-                )
-
-            case dateValue: DateValueV1 =>
-                val julianDayCountValue = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValue)
-                basicObjectResponse.copy(
-                    dateval1 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval1)),
-                    dateval2 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval2)),
-                    dateprecision1 = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.dateprecision1)),
-                    dateprecision2 = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.dateprecision2)),
-                    calendar = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.calendar))
-                )
-
-            case textValue: TextValueV1 => basicObjectResponse
-
-            case linkValue: LinkV1 => basicObjectResponse
-
-            case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
-
-            case textFileValue: TextFileValueV1 => basicObjectResponse
-
-            case hlistValue: HierarchicalListValueV1 => basicObjectResponse
-
-            case colorValue: ColorValueV1 => basicObjectResponse
-
-            case geomValue: GeomValueV1 => basicObjectResponse
-
-            case intervalValue: IntervalValueV1 =>
-                basicObjectResponse.copy(
-                    timeval1 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval1)),
-                    timeval2 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval2))
-                )
-
-            case geonameValue: GeonameValueV1 => basicObjectResponse
-
-            case booleanValue: BooleanValueV1 => basicObjectResponse
-
-            case uriValue: UriValueV1 => basicObjectResponse
-
-            case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
-        }
-
-        ResourceCreateValueResponseV1(
-            value = objectResponse,
-            id = valueResponse.id
-        )
-
-    }
-
-    /*
-
-    import org.knora.rapier.messages.v1respondermessages.searchmessages.FulltextSearchGetRequestV1
-    import org.knora.rapier.messages.v1respondermessages.usermessages.{UserDataV1, UserProfileV1}
-
-    private val userData = UserDataV1(
-        email = Some("test@test.ch"),
-        lastname = Some("Test"),
-        firstname = Some("User"),
-        username = Some("testuser"),
-        token = None,
-        user_id = Some("http://rdfh.ch/users/b83acc5f05"),
-        lang = "de"
-    )
-
-    private val userProfile = UserProfileV1(
-        projects = Vector("http://rdfh.ch/projects/77275339"),
-        groups = Nil,
-        userData = userData
-    )
-
-    private val searchForTitleWord = FulltextSearchGetRequestV1(
-        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
-        filterByProject = None,
-        searchValue = "Zeitglöcklein",
-        startAt = 0,
-        showNRows = 25,
-        userProfile = userProfile
-    )
-
-    println(toSource(searchForTitleWord))
-
-    private val generated = FulltextSearchGetRequestV1(
-        userProfile = UserProfileV1(
-            projects = Vector("http://rdfh.ch/projects/77275339"),
-            groups = Nil,
-            userData = UserDataV1(
-                email = Some("test@test.ch"),
-                lastname = Some("Test"),
-                firstname = Some("User"),
-                username = Some("testuser"),
-                token = None,
-                user_id = Some("http://rdfh.ch/users/b83acc5f05"),
-                lang = "de"
-            )
-        ),
-        showNRows = 25,
-        startAt = 0,
-        filterByProject = None,
-        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
-        searchValue = "Zeitglöcklein"
-    )
-
-    println(s"The generated source code equals the original: ${generated == searchForTitleWord}")
-    */
 }
