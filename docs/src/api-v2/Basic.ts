@@ -33,4 +33,9 @@ export module Basic {
 
     }
 
+    export interface DatatypeObject {
+        "@type": string;
+        "@value": string;
+    }
+
 }

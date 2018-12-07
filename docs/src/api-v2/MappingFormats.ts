@@ -28,7 +28,7 @@ export module MappingFormats {
         /**
          * The project the mapping belongs to.
          */
-        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": Basic.KnoraIri;
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": Basic.IriObject;
 
         /**
          * The mapping's label.
@@ -54,7 +54,7 @@ export module MappingFormats {
         /**
          * The project the mapping belongs to.
          */
-        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": Basic.KnoraIri;
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": Basic.IriObject;
 
         /**
          * The created mapping's label.
