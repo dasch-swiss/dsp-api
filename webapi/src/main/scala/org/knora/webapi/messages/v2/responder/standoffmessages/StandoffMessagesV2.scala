@@ -29,7 +29,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.ontologymessages.StandoffEntityInfoGetResponseV2
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDRequestReaderV2, KnoraRequestV2, KnoraResponseV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.jsonld.{JsonLDConstants, JsonLDDocument, JsonLDObject, JsonLDString}
+import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
 import scala.collection.immutable.SortedSet
@@ -88,7 +88,7 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
 
         val label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
 
-        val projectIri: SmartIri = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
+        val projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
         val mappingName: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName, stringFormatter.toSparqlEncodedString)
 
@@ -124,7 +124,7 @@ case class CreateMappingResponseV2(mappingIri: IRI, label: String, projectIri: S
             JsonLDConstants.ID -> JsonLDString(mappingIri),
             JsonLDConstants.TYPE -> JsonLDString(OntologyConstants.KnoraBase.XMLToStandoffMapping.toSmartIri.toOntologySchema(targetSchema).toString),
             "rdfs:label" -> JsonLDString(label),
-            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDString(projectIri.toString)
+            OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject.toSmartIri.toOntologySchema(targetSchema).toString -> JsonLDUtil.iriToJsonLDObject(projectIri.toString)
         ))
 
         val context = JsonLDObject(Map(

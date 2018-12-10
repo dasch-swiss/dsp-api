@@ -30,6 +30,11 @@ export module ListResponse {
         "http://www.w3.org/2000/01/rdf-schema#label": string;
 
         /**
+         * The list's rdfs:comment.
+         */
+        "http://www.w3.org/2000/01/rdf-schema#comment"?: string;
+
+        /**
          * The project the list belongs to.
          */
         "http://api.knora.org/ontology/knora-api/v2#attachedToProject": Basic.IriObject;

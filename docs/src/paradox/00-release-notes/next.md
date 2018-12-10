@@ -11,4 +11,5 @@ Also, please change the "HINT" to the appropriate level:
 
 ## HINT => LEVEL
 
-- [MINOR CHANGE] Update technical user docs (@github[#1085](#1085))
+- MAJOR CHANGE: mapping creation request and response formats have changed (@github[#1094](#1094)).
+- MINOR CHANGE: Update technical user docs (@github[#1085](#1085))
