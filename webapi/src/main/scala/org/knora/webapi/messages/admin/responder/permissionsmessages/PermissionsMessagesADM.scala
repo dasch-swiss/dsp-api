@@ -419,7 +419,7 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
       */
     def hasPermissionFor(operation: OperationADM, insideProject: IRI, objectAccessPermissions: Option[Set[PermissionADM]]): Boolean = {
 
-        //println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
+        // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
 
         if (this.isSystemAdmin) {
             /* A member of the SystemAdmin group is allowed to perform any operation */
