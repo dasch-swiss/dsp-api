@@ -20,8 +20,8 @@ services:
     networks:
       - knora-net
     environment:
-      - GDB_HEAP_SIZE=2G
-      - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
+    - GDB_HEAP_SIZE=2G
+    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
     command: ["/graphdb/bin/graphdb"]
 
   sipi:
