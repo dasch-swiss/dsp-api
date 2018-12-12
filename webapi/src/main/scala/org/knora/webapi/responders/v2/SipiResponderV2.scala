@@ -22,6 +22,7 @@ package org.knora.webapi.responders.v2
 import java.util
 
 import akka.stream.ActorMaterializer
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
@@ -46,8 +47,17 @@ import scala.util.Try
 class SipiResponderV2 extends Responder {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-    private val targetHost: HttpHost = new HttpHost(s"${settings.internalSipiHost}", settings.internalSipiPort, "http")
-    private val httpClient: CloseableHttpClient = HttpClients.createDefault()
+    private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")
+
+    private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
+
+    private val sipiRequestConfig = RequestConfig.custom()
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build()
+
+    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)

@@ -84,9 +84,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val queryRequestConfig = RequestConfig.custom()
         .setConnectTimeout(queryTimeoutMillis)
         .setConnectionRequestTimeout(queryTimeoutMillis)
-        .setSocketTimeout(queryTimeoutMillis).build()
+        .setSocketTimeout(queryTimeoutMillis)
+        .build
 
-    private val queryHttpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(queryRequestConfig).build
+    private val queryHttpClient: CloseableHttpClient = HttpClients.custom
+        .setDefaultCredentialsProvider(credsProvider)
+        .setDefaultRequestConfig(queryRequestConfig)
+        .build
 
     // An update for a bulk import could take a while.
     private val updateTimeoutMillis = settings.triplestoreUpdateTimeout.toMillis.toInt
@@ -94,9 +98,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val updateTimeoutConfig = RequestConfig.custom()
         .setConnectTimeout(updateTimeoutMillis)
         .setConnectionRequestTimeout(updateTimeoutMillis)
-        .setSocketTimeout(updateTimeoutMillis).build()
+        .setSocketTimeout(updateTimeoutMillis)
+        .build
 
-    private val updateHttpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(updateTimeoutConfig).build
+    private val updateHttpClient: CloseableHttpClient = HttpClients.custom
+        .setDefaultCredentialsProvider(credsProvider)
+        .setDefaultRequestConfig(updateTimeoutConfig)
+        .build
 
     private val queryPath: String = s"/repositories/${settings.triplestoreDatabaseName}"
     private val updatePath: String = s"/repositories/${settings.triplestoreDatabaseName}/statements"

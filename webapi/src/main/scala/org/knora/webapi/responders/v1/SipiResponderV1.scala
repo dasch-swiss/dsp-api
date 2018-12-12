@@ -24,6 +24,7 @@ import java.util
 import akka.actor.Status
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
@@ -58,8 +59,17 @@ class SipiResponderV1 extends Responder {
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
 
-    private val targetHost: HttpHost = new HttpHost(s"${settings.internalSipiHost}", settings.internalSipiPort, "http")
-    private val httpClient: CloseableHttpClient = HttpClients.createDefault()
+    private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")
+
+    private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
+
+    private val sipiRequestConfig = RequestConfig.custom
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build
+
+    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     /**
       * Receives a message of type [[SipiResponderRequestV1]], and returns an appropriate response message, or
