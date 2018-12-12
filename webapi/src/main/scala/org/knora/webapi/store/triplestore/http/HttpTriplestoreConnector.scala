@@ -73,7 +73,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
 
     private val triplestoreType = settings.triplestoreType
 
-    private val targetHost: HttpHost = new HttpHost(s"${settings.triplestoreHost}", settings.triplestorePort, "http")
+    private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
     private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
     credsProvider.setCredentials(new AuthScope(targetHost.getHostName, targetHost.getPort), new UsernamePasswordCredentials(settings.triplestoreUsername, settings.triplestorePassword))
