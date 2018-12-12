@@ -13,3 +13,4 @@ Also, please change the "HINT" to the appropriate level:
 
 - MAJOR CHANGE: mapping creation request and response formats have changed (@github[#1094](#1094)).
 - MINOR CHANGE: Update technical user docs (@github[#1085](#1085))
+- BUGFIX CHANGE: Fix permission checking in API v2 resource creation (@github[#1104](#1104))
