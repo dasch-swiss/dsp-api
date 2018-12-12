@@ -30,6 +30,7 @@
  *@
 @(triplestore: String,
   maybeIri: Option[IRI],
+  maybeUsername: Option[String],
   maybeEmail: Option[String])
 
 prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -44,6 +45,10 @@ WHERE {
 
     @if(maybeIri.nonEmpty) {
         BIND(IRI("@maybeIri") as ?s)
+    }
+
+    @if(maybeUsername.nonEmpty) {
+        ?s knora-base:username "@maybeUsername.get"^^xsd:string .
     }
 
     @if(maybeEmail.nonEmpty) {

@@ -165,10 +165,14 @@ The format of the object of `knora-api:hasPermissions` is described in
 @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 
 If permissions are not given, configurable default permissions are used
-(see @ref:[Default Object Access Permissions](../../05-internals/design/administration.md#default-object-access-permissions)).
+(see @ref:[Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)).
 
 To create a resource, the user must have permission to create resources in the specified project.
 
 The response is a JSON-LD document containing a
 @ref:[preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-its-iri)
 of the resource.
+
+## Modifying a Resource
+
+To modify a resource, you can modify its values; see @ref:[Editing Values](editing-values.md).

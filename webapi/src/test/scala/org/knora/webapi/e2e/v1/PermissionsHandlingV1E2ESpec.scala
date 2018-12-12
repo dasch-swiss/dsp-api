@@ -24,9 +24,6 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import spray.json._
-
-import scala.concurrent.duration._
 
 object PermissionsHandlingV1E2ESpec {
     val config = ConfigFactory.parseString(

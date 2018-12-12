@@ -153,6 +153,7 @@ object ResourcesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage
@@ -179,18 +180,20 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
-                    val requestMessage: Future[ResourcesGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
+                    // #use-requested-schema
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
                         log,
                         RouteUtilV2.getOntologySchema(requestContext)
                     )
+                    // #use-requested-schema
                 }
             }
         } ~ path("v2" / "resourcespreview" / Segments) { resIris: Seq[String] =>
@@ -203,12 +206,12 @@ object ResourcesRouteV2 extends Authenticator {
                             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
                     }
 
-                    val requestMessage: Future[ResourcesPreviewGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourcesPreviewGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourcesPreviewGetRequestV2(resourceIris = resourceIris, requestingUser = requestingUser)
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -235,7 +238,7 @@ object ResourcesRouteV2 extends Authenticator {
 
                     val headerXSLTIri = getHeaderXSLTIriFromParams(params)
 
-                    val requestMessage: Future[ResourceTEIGetRequestV2] = for {
+                    val requestMessageFuture: Future[ResourceTEIGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield ResourceTEIGetRequestV2(
                         resourceIri = resourceIri,
@@ -247,7 +250,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runTEIXMLRoute(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,
@@ -282,7 +285,7 @@ object ResourcesRouteV2 extends Authenticator {
                         case other => throw BadRequestException(s"Invalid direction: $other")
                     }
 
-                    val requestMessage: Future[GraphDataGetRequestV2] = for {
+                    val requestMessageFuture: Future[GraphDataGetRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield GraphDataGetRequestV2(
                         resourceIri = resourceIri,
@@ -294,7 +297,7 @@ object ResourcesRouteV2 extends Authenticator {
                     )
 
                     RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessage,
+                        requestMessageFuture,
                         requestContext,
                         settings,
                         responderManager,

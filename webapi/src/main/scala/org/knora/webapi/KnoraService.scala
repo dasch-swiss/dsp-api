@@ -29,6 +29,7 @@ import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
+import org.knora.webapi.http.ServerVersion.addServerHeader
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
@@ -112,6 +113,7 @@ trait KnoraService {
       */
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
+    // #supervisors
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
       */
@@ -121,6 +123,7 @@ trait KnoraService {
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+    // #supervisors
 
     /**
       * Timeout definition
@@ -135,7 +138,7 @@ trait KnoraService {
     /**
       * All routes composed together and CORS activated.
       */
-    private val apiRoutes: Route = CORS(
+    private val apiRoutes: Route = addServerHeader(CORS(
         new HealthRoute(system, settings).knoraApiPath ~
             new RejectingRoute(system, settings).knoraApiPath() ~
             ResourcesRouteV1.knoraApiPath(system, settings, log) ~
@@ -166,8 +169,9 @@ trait KnoraService {
             new SwaggerApiDocsRoute(system, settings, log).knoraApiPath,
         settings,
         log
-    )
+    ))
 
+    // #startService
     /**
       * Starts the Knora API server.
       */
@@ -194,6 +198,7 @@ trait KnoraService {
             }
         }
     }
+    // #startService
 
     /**
       * Stops Knora.

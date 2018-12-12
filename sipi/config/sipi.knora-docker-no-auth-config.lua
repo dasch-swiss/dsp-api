@@ -25,6 +25,10 @@ sipi = {
     --
     -- userid = '_www',
 
+    --
+    -- Sipi's hostname as returned in the thumbnail response, default is "localhost".
+    -- If sipi is run behind a proxy, then this external FQDN needs to be set here.
+    --
     hostname = 'localhost',
 
     --
@@ -153,7 +157,8 @@ sipi = {
     logfile = "sipi.log",
 
     --
-    -- loglevel, one of "EMERGENCY", "ALERT", "CRITICAL", "ERROR", "WARNING", "NOTICE", "INFORMATIONAL", "DEBUG"
+    -- loglevel, one of "DEBUG", "INFO", "NOTICE", "WARNING", "ERR",
+    -- "CRIT", "ALERT", "EMERG"
     --
     loglevel = "DEBUG"
 }
@@ -189,16 +194,16 @@ routes = {
         route = '/convert_from_file',
         script = 'convert_from_file.lua'
     },
-    {
-        method = 'POST',
-        route = '/Knora_login',
-        script = 'Knora_login.lua'
-    },
-    {
-        method = 'POST',
-        route = '/Knora_logout',
-        script = 'Knora_logout.lua'
-    },
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_login',
+    --    script = 'Knora_login.lua'
+    --},
+    --{
+    --    method = 'POST',
+    --    route = '/Knora_logout',
+    --    script = 'Knora_logout.lua'
+    --},
     {
         method = 'GET',
         route = '/test_functions',
@@ -213,6 +218,21 @@ routes = {
         method = 'GET',
         route = '/test_knora_session_cookie',
         script = 'test_knora_session_cookie.lua'
+    },
+    {
+        method = 'POST',
+        route = '/upload',
+        script = 'upload.lua'
+    },
+    {
+        method = 'POST',
+        route = '/store',
+        script = 'store.lua'
+    },
+    {
+        method = 'DELETE',
+        route = '/delete_temp_file',
+        script = 'delete_temp_file.lua'
     }
 
 }

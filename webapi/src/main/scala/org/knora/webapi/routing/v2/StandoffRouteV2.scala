@@ -101,6 +101,7 @@ object StandoffRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
 

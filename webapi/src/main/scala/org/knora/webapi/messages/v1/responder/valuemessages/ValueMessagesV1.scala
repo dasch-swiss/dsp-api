@@ -23,6 +23,7 @@ import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
@@ -31,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
-import org.knora.webapi._
 import spray.json._
 
 

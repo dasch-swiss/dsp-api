@@ -19,6 +19,8 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Interaction Between Sipi and Knora
 
+TODO: reorganise this to make clear that it describes Knora API v1.
+
 ## General Remarks
 
 Knora and Sipi (Simple Image Presentation Interface) are two
@@ -311,14 +313,12 @@ in two cookies, is the fact that cookies can not be shared among
 different domains. Since Knora and Sipi are likely to be running under
 different domains, this solution offers the necessary flexibility.
 
-### Sharing the Session ID with Sipi
 
-Whenever a file is requested, Sipi asks Knora about the currents user's
-permissions on the given file. This is achieved by sharing the Knora
-session id with Sipi. When the user logs in to Knora using his browser,
-a request is sent to Sipi submitting the session id the user got back
-from Knora, setting a second session cookie. Now the user has two
-session cookies containing the same session id: one for the
-communication with Knora and one for the communication with Sipi.
-However, Sipi does not handle sessions. It just sends the given Knora
-session id to Knora.
+## Authentication of users with Sipi
+
+Whenever a file is requested, Sipi asks Knora about the currents user's permissions on the given file.
+This is achieved by sharing the Knora session id with Sipi. When the user logs in to Knora using his
+browser (with Salsah1), a session cookie containing a JWT token representing the user is stored in the
+user's client. This session cookie is then read by Sipi and used to query for the user's image permissions.
+
+Currently this only works for Salsah1. Authentication of users using Salsah2 is still under development.

@@ -30,11 +30,11 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerR2RV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.routing.RouteUtilV2
 import org.knora.webapi.routing.v1.ValuesRouteV1
 import org.knora.webapi.routing.v2.{SearchRouteV2, StandoffRouteV2}
 import org.knora.webapi.util.FileUtil
-import org.knora.webapi.util.search.SparqlQueryConstants
 import spray.json.JsString
 
 import scala.concurrent.ExecutionContextExecutor
@@ -71,23 +71,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
     private val writeTestDataFiles = false
-
-    /**
-      * Reads or writes a test data file.
-      *
-      * @param responseAsString the API response received from Knora.
-      * @param file             the file in which the expected API response is stored.
-      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-      * @return the expected response.
-      */
-    private def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
-        if (writeFile) {
-            FileUtil.writeTextFile(file, responseAsString)
-            responseAsString
-        } else {
-            FileUtil.readTextFile(file)
-        }
-    }
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -1694,7 +1677,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }
@@ -4259,7 +4242,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }
@@ -6178,7 +6161,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
                 // this is the second page of results
-                checkSearchResponseNumberOfResults(responseAs[String], 16)
+                checkSearchResponseNumberOfResults(responseAs[String], 17)
             }
 
         }
@@ -7231,7 +7214,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                 s"""
                    |{
                    |    "knora-api:mappingHasName": "HTMLMapping",
-                   |    "knora-api:attachedToProject": "$anythingProjectIri",
+                   |    "knora-api:attachedToProject": {
+                   |      "@id": "$anythingProjectIri"
+                   |    },
                    |    "rdfs:label": "mapping for HTML",
                    |    "@context": {
                    |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",

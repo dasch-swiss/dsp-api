@@ -232,8 +232,8 @@ object StringFormatter {
     /**
       * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
       * can't parse project-specific API v2 ontology IRIs. This instance is used
-      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2Simple]]
-      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjects]].
+      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2SimpleTransformationRules]]
+      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjectsTransformationRules]].
       */
     private val instanceForConstantOntologies = new StringFormatter(None)
 
@@ -698,6 +698,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // Parses an object of salsa-gui:guiAttribute.
     private val SalsahGuiAttributeRegex: Regex =
         """^(\p{L}+)=(.+)$""".r
+
+    // A regex for matching a string containing an email address.
+    private val EmailAddressRegex: Regex = """^.+@.+$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -1413,6 +1416,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Returns `true` if an IRI string looks like a Knora user IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraUserIriStr(iri: IRI): Boolean = {
+        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
+    }
+
+    /**
       * Checks that a string represents a valid resource identifier in a standoff link.
       *
       * @param s               the string to be checked.
@@ -2066,5 +2078,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             case Some(value) => value
             case None => errorFun
         }
+    }
+
+    /**
+      * Given an email address, checks if it is in a valid format.
+      *
+      * @param email the email.
+      * @return the email
+      */
+    def validateEmail(email: String): Option[String] = {
+        EmailAddressRegex.findFirstIn(email)
     }
 }

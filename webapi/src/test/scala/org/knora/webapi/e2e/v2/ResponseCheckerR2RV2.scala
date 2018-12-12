@@ -124,7 +124,7 @@ object ResponseCheckerR2RV2 {
         // check that the actual amount of resources returned is correct
         // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
         // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
-        assert(expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size, s"received list of resources has wrong length")
+        assert(expectedResourcesAsArray.value.size == receivedResourcesAsArray.value.size, s"received list of resources has wrong length (expected ${expectedResourcesAsArray.value.size}, got ${receivedResourcesAsArray.value.size})")
 
         // loop over all the given resources and compare them (order of resources is determined by request)
         expectedResourcesAsArray.value.zip(receivedResourcesAsArray.value).foreach {

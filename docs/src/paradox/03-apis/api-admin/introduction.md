@@ -66,7 +66,7 @@ For all API operations that target at changing resources or values, the
 client has to provide credentials (username and password) so that the
 API server can authenticate the user making the request. Credentials can
 be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/authentication.md)).
+@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 ## OpenAPI/Swagger
 

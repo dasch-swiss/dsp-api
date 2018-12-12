@@ -21,6 +21,7 @@ package org.knora.webapi.messages.v2.routing.authenticationmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.BadRequestException
+import org.knora.webapi.messages.admin.responder.usersmessages.UserIdentifierADM
 import spray.json._
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -29,14 +30,14 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to authenticate the user and create a JWT token
   *
-  * @param email    the user's email.
-  * @param password the user's password.
+  * @param identifier   the user's IRI, username, or email.
+  * @param password     the user's password.
   */
-case class LoginApiRequestPayloadV2(email: String,
+case class LoginApiRequestPayloadV2(identifier: String,
                                     password: String) {
 
     // email and password need to be supplied
-    if (email.isEmpty || password.isEmpty) throw BadRequestException("Both email and password need to be supplied.")
+    if (identifier.isEmpty || password.isEmpty) throw BadRequestException("Both identifier and password need to be supplied.")
 }
 
 /**
@@ -45,12 +46,12 @@ case class LoginApiRequestPayloadV2(email: String,
 sealed abstract class KnoraCredentialsV2()
 
 /**
-  * Represents email/password credentials that a user can supply within the authorization header or as URL parameters.
+  * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
   *
-  * @param email    the supplied email.
-  * @param password the supplied password.
+  * @param identifier   the supplied id.
+  * @param password     the supplied password.
   */
-case class KnoraPasswordCredentialsV2(email: String, password: String) extends KnoraCredentialsV2
+case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String) extends KnoraCredentialsV2
 
 /**
   * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
@@ -67,6 +68,14 @@ case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
   */
 case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
 
+/**
+  * Represents a response Knora returns when communicating with the 'v2/authentication' route during the 'login' operation.
+  *
+  * @param token is the returned json web token.
+  */
+case class LoginResponse(token: String)
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -75,6 +84,6 @@ case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
   * A spray-json protocol for generating Knora API v2 JSON for property values.
   */
 trait AuthenticationV2JsonProtocol extends DefaultJsonProtocol with NullOptions with SprayJsonSupport {
-
     implicit val loginApiRequestPayloadV2Format: RootJsonFormat[LoginApiRequestPayloadV2] = jsonFormat2(LoginApiRequestPayloadV2)
+    implicit val SessionResponseFormat: RootJsonFormat[LoginResponse] = jsonFormat1(LoginResponse.apply)
 }

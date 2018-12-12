@@ -20,15 +20,11 @@
 package org.knora.webapi.responders.v1
 
 
-import akka.actor.Props
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
+import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.listmessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
-import org.knora.webapi.responders._
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
 

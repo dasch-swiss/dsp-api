@@ -83,14 +83,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
       * @return a Sipi IIIF URL.
       */
     def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
-        if (!imageFileValueV1.isPreview) {
-            // not a thumbnail
-            // calculate the correct size from the source image depending on the given dimensions
-            s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
-        } else {
-            // thumbnail
-            makeSipiImagePreviewGetUrlFromFilename(imageFileValueV1.internalFilename)
-        }
+        s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
     }
 
     /**
@@ -298,7 +291,7 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                             }.foldLeft(Map.empty[String, String]) {
                                 // for each standoff node, we want to have just one Map
                                 // this foldLeft turns a Sequence of Maps into one Map (a predicate can only occur once)
-                                case (nodeValues: Map[String, String], (value: Map[String, String])) =>
+                                case (nodeValues: Map[String, String], value: Map[String, String]) =>
                                     nodeValues ++ value
                             }
 

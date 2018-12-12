@@ -108,16 +108,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
       * method first returns `Failure` to the sender, then throws an exception.
       */
     def receive: PartialFunction[Any, Unit] = {
-        case SparqlSelectRequest(sparql) => try2message(sender(), sparqlHttpSelect(sparql), log)
-        case SparqlConstructRequest(sparql) => try2message(sender(), sparqlHttpConstruct(sparql), log)
-        case SparqlExtendedConstructRequest(sparql) => try2message(sender(), sparqlHttpExtendedConstruct(sparql), log)
-        case SparqlUpdateRequest(sparql) => try2message(sender(), sparqlHttpUpdate(sparql), log)
-        case SparqlAskRequest(sparql) => try2message(sender(), sparqlHttpAsk(sparql), log)
-        case ResetTriplestoreContent(rdfDataObjects) => try2message(sender(), resetTripleStoreContent(rdfDataObjects), log)
-        case DropAllTriplestoreContent() => try2message(sender(), dropAllTriplestoreContent(), log)
-        case InsertTriplestoreContent(rdfDataObjects) => try2message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
+        case SparqlSelectRequest(sparql) => try2Message(sender(), sparqlHttpSelect(sparql), log)
+        case SparqlConstructRequest(sparql) => try2Message(sender(), sparqlHttpConstruct(sparql), log)
+        case SparqlExtendedConstructRequest(sparql) => try2Message(sender(), sparqlHttpExtendedConstruct(sparql), log)
+        case SparqlUpdateRequest(sparql) => try2Message(sender(), sparqlHttpUpdate(sparql), log)
+        case SparqlAskRequest(sparql) => try2Message(sender(), sparqlHttpAsk(sparql), log)
+        case ResetTriplestoreContent(rdfDataObjects) => try2Message(sender(), resetTripleStoreContent(rdfDataObjects), log)
+        case DropAllTriplestoreContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
+        case InsertTriplestoreContent(rdfDataObjects) => try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
         case HelloTriplestore(msg) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
-        case CheckRepositoryRequest() => try2message(sender(), checkRepository(), log)
+        case CheckRepositoryRequest() => try2Message(sender(), checkRepository(), log)
         case other => sender ! Status.Failure(UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
     }
 

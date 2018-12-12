@@ -30,12 +30,13 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### Beta stage
 
+* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 * [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
 * Distribution packaging using [Docker](https://www.docker.com/)
 
 ### New features under development
 
-* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
+* Additional functionality for [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 
 ## Requirements
 
@@ -72,14 +73,14 @@ $ cd webapi/scripts
 $ ./graphdb-free-docker-init-knora-test.sh
 ```
 
-Then go back to the webapi root directory and use SBT to start the API server:
+Then go back to the Knora root directory and use SBT to start the API server:
 
 ```
-$ cd ..
+$ cd ../..
 $ sbt
-> compile
-> set reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
-> reStart
+> webapi / compile
+> set webapi / reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
+> webapi / reStart
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
@@ -87,7 +88,7 @@ Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc505
 To shut down the Knora API server:
 
 ```
-> reStop
+> webapi / reStop
 ```
 
 ### Run the automated tests
@@ -102,7 +103,7 @@ $ ./graphdb-free-init-knora-test-unit.sh
 Then at the SBT prompt:
 
 ```
-> GDBFree / test
+> webapi / GDBFree / test
 ```
 
 ## How to Contribute

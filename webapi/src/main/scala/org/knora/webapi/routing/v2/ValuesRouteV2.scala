@@ -49,12 +49,15 @@ object ValuesRouteV2 extends Authenticator {
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
         val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
 
+        // #post-value-parse-jsonld
         path("v2" / "values") {
             post {
                 entity(as[String]) { jsonRequest =>
                     requestContext => {
                         val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+                        // #post-value-parse-jsonld
 
+                        // #post-value-create-message
                         val requestMessageFuture: Future[CreateValueRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                             requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
@@ -63,10 +66,13 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage
+                        // #post-value-create-message
 
+                        // #specify-response-schema
                         RouteUtilV2.runRdfRouteWithFuture(
                             requestMessageFuture,
                             requestContext,
@@ -75,6 +81,7 @@ object ValuesRouteV2 extends Authenticator {
                             log,
                             ApiV2WithValueObjects
                         )
+                        // #specify-response-schema
                     }
                 }
             } ~ put {
@@ -90,6 +97,7 @@ object ValuesRouteV2 extends Authenticator {
                                 requestingUser = requestingUser,
                                 responderManager = responderManager,
                                 storeManager = storeManager,
+                                settings = settings,
                                 log = log
                             )
                         } yield requestMessage

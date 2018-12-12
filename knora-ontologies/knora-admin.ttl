@@ -445,6 +445,19 @@
 
 
 
+###  http://www.knora.org/ontology/knora-base#username
+
+:username rdf:type owl:DatatypeProperty ;
+
+          rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+          rdfs:comment "The username and login name of a user of Knora"@en ;
+
+          :subjectClassConstraint :User ;
+
+          :objectDatatypeConstraint xsd:string .
+
+
 
 ###  http://www.knora.org/ontology/knora-base#email
 
@@ -517,6 +530,10 @@
 :User rdf:type owl:Class ;
 
       rdfs:subClassOf foaf:Person ,
+                      [ rdf:type owl:Restriction ;
+                        owl:onProperty :username ;
+                        owl:cardinality "1"^^xsd:nonNegativeInteger
+                      ] ,
                       [ rdf:type owl:Restriction ;
                         owl:onProperty :email ;
                         owl:cardinality "1"^^xsd:nonNegativeInteger
@@ -707,6 +724,7 @@
 ###  http://www.knora.org/ontology/knora-base#SystemUser
 :SystemUser rdf:type :User ;
             rdfs:comment "A built-in system user."@en ;
+            :username "system";
             :email "system@localhost" ;
             :givenName "Knora" ;
             :familyName "System" ;
@@ -718,6 +736,7 @@
 ###  http://www.knora.org/ontology/knora-base#AnonymousUser
 :AnonymousUser rdf:type :User ;
             rdfs:comment "A built-in anonymous user."@en ;
+            :username "anonymous" ;
             :email "anonymous@localhost" ;
             :givenName "Knora" ;
             :familyName "Anonymous" ;

@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.util.StringFormatter
 import spray.json._
 
 
@@ -39,6 +40,7 @@ import spray.json._
 /**
   * Represents an API request payload that asks the Knora API server to create a new user.
   *
+  * @param username    the username of the user to be created (unique).
   * @param email       the email of the user to be created (unique).
   * @param givenName   the given name of the user to be created.
   * @param familyName  the family name of the user to be created
@@ -47,7 +49,8 @@ import spray.json._
   * @param lang        the default language of the user to be created.
   * @param systemAdmin the system admin membership.
   */
-case class CreateUserApiRequestADM(email: String,
+case class CreateUserApiRequestADM(username: String,
+                                   email: String,
                                    givenName: String,
                                    familyName: String,
                                    password: String,
@@ -56,6 +59,13 @@ case class CreateUserApiRequestADM(email: String,
                                    systemAdmin: Boolean) {
 
     def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
+
+    // check for required information
+    if (username.isEmpty) throw BadRequestException("Username cannot be empty")
+    if (email.isEmpty) throw BadRequestException("Email cannot be empty")
+    if (password.isEmpty) throw BadRequestException("Password cannot be empty")
+    if (givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
+    if (familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
 }
 
 /**
@@ -63,6 +73,7 @@ case class CreateUserApiRequestADM(email: String,
   * be changed include the user's email, given name, family name, language, password, user status, and system admin
   * membership.
   *
+  * @param username          the new username. Needs to be unique on the server.
   * @param email             the new email address. Needs to be unique on the server.
   * @param givenName         the new given name.
   * @param familyName        the new family name.
@@ -72,7 +83,8 @@ case class CreateUserApiRequestADM(email: String,
   * @param status            the new user status (active = true, inactive = false).
   * @param systemAdmin       the new system admin membership status.
   */
-case class ChangeUserApiRequestADM(email: Option[String] = None,
+case class ChangeUserApiRequestADM(username: Option[String] = None,
+                                   email: Option[String] = None,
                                    givenName: Option[String] = None,
                                    familyName: Option[String] = None,
                                    lang: Option[String] = None,
@@ -82,6 +94,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
                                    systemAdmin: Option[Boolean] = None) {
 
     val parametersCount: Int = List(
+        username,
         email,
         givenName,
         familyName,
@@ -120,7 +133,7 @@ case class ChangeUserApiRequestADM(email: Option[String] = None,
     }
 
     // change basic user information case
-    if (parametersCount > 4) throw BadRequestException("To many parameters sent for basic user information change.")
+    if (parametersCount > 5) throw BadRequestException("To many parameters sent for basic user information change.")
 
     def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
@@ -154,46 +167,36 @@ case class UsersGetRequestADM(userInformationTypeADM: UserInformationTypeADM = U
                               requestingUser: UserADM) extends UsersResponderRequestADM
 
 /**
-  * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserADM]].
+  * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[UserADM]].
   *
-  * @param maybeIri               the IRI of the user to be queried.
-  * @param maybeEmail             the email of the user to be queried.
+  * @param identifier             the IRI, email, or username of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
   * @param requestingUser         the user initiating the request.
   */
-case class UserGetADM(maybeIri: Option[IRI],
-                      maybeEmail: Option[String],
+case class UserGetADM(identifier: UserIdentifierADM,
                       userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                       requestingUser: UserADM) extends UsersResponderRequestADM {
 
-    // need either user IRI or email
-    if (maybeIri.isEmpty && maybeEmail.isEmpty) {
-        throw BadRequestException("Need to provide the user IRI and/or email.")
+    // need either user IRI username, or email
+    if (identifier.isEmpty) {
+        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
     }
 }
 
 /**
-  * A message that requests a user's profile either by IRI or email. A successful response will be a [[UserResponseADM]].
+  * A message that requests a user's profile either by IRI, username, or email. A successful response will be a [[UserResponseADM]].
   *
-  * @param maybeIri               the IRI of the user to be queried.
-  * @param maybeEmail             the email of the user to be queried.
+  * @param identifier             the IRI, email, or username of the user to be queried.
   * @param userInformationTypeADM the extent of the information returned.
   * @param requestingUser         the user initiating the request.
   */
-case class UserGetRequestADM(maybeIri: Option[IRI],
-                             maybeEmail: Option[String],
+case class UserGetRequestADM(identifier: UserIdentifierADM,
                              userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
                              requestingUser: UserADM) extends UsersResponderRequestADM {
 
-    // need either user IRI or email
-    if (maybeIri.isEmpty && maybeEmail.isEmpty) {
-        try {
-            throw new Exception("foo")
-        } catch {
-            case e: Exception => e.printStackTrace()
-        }
-
-        throw BadRequestException("Need to provide the user IRI and/or email. GAGA 2")
+    // need either user IRI, username, or email
+    if (identifier.isEmpty) {
+        throw BadRequestException("Need to provide the user IRI, username, and/or email.")
     }
 }
 
@@ -437,6 +440,7 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   * Represents a user's profile.
   *
   * @param id          The user's IRI.
+  * @param username    The user's username (unique).
   * @param email       The user's email address.
   * @param password    The user's hashed password.
   * @param token       The API token. Can be used instead of email/password for authentication.
@@ -450,6 +454,7 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   * @param permissions The user's permissions.
   */
 case class UserADM(id: IRI,
+                   username: String,
                    email: String,
                    password: Option[String] = None,
                    token: Option[String] = None,
@@ -460,7 +465,8 @@ case class UserADM(id: IRI,
                    groups: Seq[GroupADM] = Vector.empty[GroupADM],
                    projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
                    sessionId: Option[String] = None,
-                   permissions: PermissionsDataADM = PermissionsDataADM()) extends Ordered[UserADM] {
+                   permissions: PermissionsDataADM = PermissionsDataADM()
+                  ) extends Ordered[UserADM] {
 
     /**
       * Allows to sort collections of UserADM. Sorting is done by the id.
@@ -496,39 +502,42 @@ case class UserADM(id: IRI,
 
                 UserADM(
                     id = id,
+                    username = username,
                     email = email,
-                    password = None, // remove password
-                    token = None, // remove token
+                    password = None,
+                    token = None,
                     givenName = givenName,
                     familyName = familyName,
                     status = status,
                     lang = lang,
-                    groups = Seq.empty[GroupADM], // removed groups
-                    projects = Seq.empty[ProjectADM], // removed projects
-                    sessionId = None, // removed sessionId
-                    permissions = PermissionsDataADM() // removed permissions
+                    groups = Seq.empty[GroupADM],
+                    projects = Seq.empty[ProjectADM],
+                    sessionId = None,
+                    permissions = PermissionsDataADM()
                 )
             }
             case UserInformationTypeADM.RESTRICTED => {
 
                 UserADM(
                     id = id,
+                    username = username,
                     email = email,
-                    password = None, // remove password
-                    token = None, // remove token
+                    password = None,
+                    token = None,
                     givenName = givenName,
                     familyName = familyName,
                     status = status,
                     lang = lang,
                     groups = groups,
                     projects = projects,
-                    sessionId = None, // removed sessionId
+                    sessionId = None,
                     permissions = permissions
                 )
             }
             case UserInformationTypeADM.FULL => {
                 UserADM(
                     id = id,
+                    username = username,
                     email = email,
                     password = password,
                     token = token,
@@ -567,6 +576,7 @@ case class UserADM(id: IRI,
     def setSessionId(sessionId: String): UserADM = {
         UserADM(
             id = id,
+            username = username,
             email = email,
             password = password,
             token = token,
@@ -576,8 +586,8 @@ case class UserADM(id: IRI,
             lang = lang,
             groups = groups,
             projects = projects,
-            permissions = permissions,
-            sessionId = Some(sessionId)
+            sessionId = Some(sessionId),
+            permissions = permissions
         )
     }
 
@@ -671,11 +681,96 @@ object UserInformationTypeADM extends Enumeration {
     }
 }
 
+object UserIdentifierType extends Enumeration {
+
+    type UserIdentifierType
+
+    val IRI = Value(0, "iri")
+    val EMAIL = Value(1, "email")
+    val USERNAME = Value(3, "username")
+}
+
+
+/**
+  * Represents the user's identifier. It can be an IRI, email, or username.
+  * @param value the user's identifier.
+  */
+case class UserIdentifierADM(value: String)(implicit stringFormatter: StringFormatter) {
+
+    // throws an exception if an empty string is used as an identifier value
+    if (value.isEmpty) {
+        throw BadRequestException("Empty user identifier is not allowed.")
+    }
+
+    def nonEmpty: Boolean = value.nonEmpty
+
+    def isEmpty: Boolean = value.isEmpty
+
+    def hasType: UserIdentifierType.Value = {
+
+        if (stringFormatter.isKnoraUserIriStr(value)) {
+            UserIdentifierType.IRI
+        } else if (stringFormatter.validateEmail(value).isDefined) {
+            UserIdentifierType.EMAIL
+        } else if (value.nonEmpty) {
+            UserIdentifierType.USERNAME
+        } else {
+            // this can actually never happen
+            throw BadRequestException("Empty user identifier is not allowed.")
+        }
+    }
+
+    /**
+      * Tries to return the value as an IRI.
+      */
+    def toIri: IRI = {
+        if (this.hasType == UserIdentifierType.IRI) {
+            stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI."))
+        } else {
+            throw DataConversionException(s"Identifier $value is not of the required 'UserIdentifierType.IRI' type.")
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toIriOption: Option[IRI] = {
+        if (this.hasType == UserIdentifierType.IRI) {
+            Some(stringFormatter.validateAndEscapeIri(value, throw DataConversionException(s"Could not convert $value to an IRI.")))
+        } else {
+            None
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toEmailOption: Option[IRI] = {
+        if (this.hasType == UserIdentifierType.EMAIL) {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+    /**
+      * Returns an optional value of the identifier.
+      */
+    def toUsernameOption: Option[IRI] = {
+        if (this.hasType == UserIdentifierType.USERNAME) {
+            Some(value)
+        } else {
+            None
+        }
+    }
+
+}
 
 /**
   * Payload used for updating of an existing user.
   *
   * @param email         the new email address. Needs to be unique on the server.
+  * @param username      the new username.
   * @param givenName     the new given name.
   * @param familyName    the new family name.
   * @param password      the new password.
@@ -686,7 +781,8 @@ object UserInformationTypeADM extends Enumeration {
   * @param groups        the new group memberships list.
   * @param systemAdmin   the new system admin membership
   */
-case class UserUpdatePayloadADM(email: Option[String] = None,
+case class UserUpdatePayloadADM(username: Option[String] = None,
+                                email: Option[String] = None,
                                 givenName: Option[String] = None,
                                 familyName: Option[String] = None,
                                 password: Option[String] = None,
@@ -762,9 +858,9 @@ case class UserUpdatePayloadADM(email: Option[String] = None,
   */
 object UsersADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with ProjectsADMJsonProtocol with GroupsADMJsonProtocol with PermissionsADMJsonProtocol {
 
-    implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat12(UserADM)
-    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat7(CreateUserApiRequestADM)
-    implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "email", "givenName", "familyName", "lang", "requesterPassword", "newPassword", "status", "systemAdmin")
+    implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
+    implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat8(CreateUserApiRequestADM)
+    implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "requesterPassword", "newPassword", "status", "systemAdmin")
     implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
     implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
     implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] = jsonFormat1(UserProjectMembershipsGetResponseADM)

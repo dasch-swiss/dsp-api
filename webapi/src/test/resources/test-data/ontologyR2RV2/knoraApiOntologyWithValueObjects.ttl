@@ -232,10 +232,6 @@ knora-api:AudioFileValue a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
       owl:onProperty knora-api:hasPermissions
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -275,9 +271,6 @@ knora-api:FileValue a owl:Class;
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:fileValueHasFilename
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -319,13 +312,6 @@ knora-api:fileValueHasFilename a owl:DatatypeProperty;
   knora-api:subjectType knora-api:FileValue;
   rdfs:comment "The name of the file that a file value represents.";
   rdfs:label "File value has filename";
-  rdfs:subPropertyOf knora-api:valueHas .
-
-knora-api:fileValueIsPreview a owl:DatatypeProperty;
-  knora-api:objectType xsd:boolean;
-  knora-api:subjectType knora-api:FileValue;
-  rdfs:comment "Indicates whether this is file value is a preview.";
-  rdfs:label "File value is preview";
   rdfs:subPropertyOf knora-api:valueHas .
 
 knora-api:valueAsString a owl:ObjectProperty;
@@ -633,10 +619,6 @@ knora-api:DDDFileValue a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
       owl:onProperty knora-api:hasPermissions
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -822,14 +804,6 @@ knora-api:DateValue a owl:Class;
   rdfs:subClassOf knora-api:DateBase, knora-api:Value, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:dateValueHasStartEra
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:dateValueHasStartMonth
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasStartYear
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -887,6 +861,14 @@ knora-api:DateValue a owl:Class;
       knora-api:isInherited true;
       owl:maxCardinality 1;
       owl:onProperty knora-api:dateValueHasStartDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartMonth
     ] .
 
 knora-api:DecimalBase a owl:Class;
@@ -965,10 +947,6 @@ knora-api:DocumentFileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:fileValueHasFilename
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -1535,10 +1513,6 @@ knora-api:MovingImageFileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:fileValueHasFilename
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2348,10 +2322,6 @@ knora-api:StillImageFileValue a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
       owl:onProperty knora-api:hasPermissions
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2491,10 +2461,6 @@ knora-api:TextFileValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:fileValueHasFilename
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:fileValueIsPreview
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2713,7 +2679,15 @@ knora-api:UriValue a owl:Class;
 
 knora-api:User a owl:Class;
   rdfs:comment "Represents a Knora user";
-  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person> .
+  rdfs:subClassOf <http://xmlns.com/foaf/0.1/Person>, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:username
+    ] .
+
+knora-api:username a owl:DatatypeProperty;
+  knora-api:objectType xsd:string;
+  knora-api:subjectType knora-api:User;
+  rdfs:comment "The username and login name of a user of Knora" .
 
 knora-api:XSLTransformation a owl:Class;
   knora-api:isResourceClass true;

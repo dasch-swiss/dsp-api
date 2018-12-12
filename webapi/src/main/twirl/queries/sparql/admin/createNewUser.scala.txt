@@ -26,6 +26,7 @@
                       results from the WHERE clause of the update.
  * @param userIri the Iri of the new user
  * @param userClassIri the IRI of the OWL class that the new user should belong to.
+ * @param username the new user's username.
  * @param email the new user's email address.
  * @param password the new user's password.
  * @param givenName the new user's given name.
@@ -39,6 +40,7 @@
   triplestore: String,
   userIri: IRI,
   userClassIri: IRI,
+  username: String,
   email: String,
   password: String,
   givenName: String,
@@ -56,6 +58,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 INSERT {
     GRAPH ?adminNamedGraphIri {
         ?userIri rdf:type ?userClassIri .
+
+        ?userIri knora-base:username "@username"^^xsd:string .
 
         ?userIri knora-base:email "@email"^^xsd:string .
 
@@ -91,5 +95,6 @@ WHERE {
     BIND(IRI("@userIri") AS ?userIri)
     BIND(IRI("@userClassIri") AS ?userClassIri)
 
+    FILTER NOT EXISTS { ?s knora-base:username "@username"^^xsd:string . }
     FILTER NOT EXISTS { ?s knora-base:email "@email"^^xsd:string . }
 }

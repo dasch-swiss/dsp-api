@@ -61,8 +61,8 @@ class UsersResponderADM extends Responder {
     def receive = {
         case UsersGetADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetADM(userInformationTypeADM, requestingUser), log)
         case UsersGetRequestADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetRequestADM(userInformationTypeADM, requestingUser), log)
-        case UserGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
-        case UserGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(maybeUserIri, maybeEmail, userInformationTypeADM, requestingUser), log)
+        case UserGetADM(identifier, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(identifier, userInformationTypeADM, requestingUser), log)
+        case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(identifier, userInformationTypeADM, requestingUser), log)
         case UserCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), createNewUserADM(createRequest, requestingUser, apiRequestID), log)
         case UserChangeBasicUserInformationRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicUserInformationADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
         case UserChangePasswordRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changePasswordADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
@@ -85,7 +85,7 @@ class UsersResponderADM extends Responder {
       * Gets all the users and returns them as a sequence of [[UserADM]].
       *
       * @param userInformationType the extent of the information returned.
-      * @param requestingUser the user initiating the request.
+      * @param requestingUser      the user initiating the request.
       * @return all the users as a sequence of [[UserADM]].
       */
     private def usersGetADM(userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Seq[UserADM]] = {
@@ -98,6 +98,7 @@ class UsersResponderADM extends Responder {
             sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = None,
+                maybeUsername = None,
                 maybeEmail = None
             ).toString())
 
@@ -105,19 +106,19 @@ class UsersResponderADM extends Responder {
 
             statements = usersResponse.statements.toList
 
-            // _ = log.debug("usersGetADM - statements: {}", statements)
+            _ = log.debug("usersGetADM - statements: {}", statements)
 
             users: Seq[UserADM] = statements.map {
                 case (userIri: SubjectV2, propsMap: Map[IRI, Seq[LiteralV2]]) =>
 
                     UserADM(
                         id = userIri.toString,
+                        username = propsMap.getOrElse(OntologyConstants.KnoraBase.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                         status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                        lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value
-                    )
+                        lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferedLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value)
             }
 
         } yield users.sorted
@@ -127,7 +128,7 @@ class UsersResponderADM extends Responder {
       * Gets all the users and returns them as a [[UsersGetResponseV1]].
       *
       * @param userInformationType the extent of the information returned.
-      * @param requestingUser the user initiating the request.
+      * @param requestingUser      the user initiating the request.
       * @return all the users as a [[UsersGetResponseV1]].
       */
     private def usersGetRequestADM(userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[UsersGetResponseADM] = {
@@ -146,39 +147,37 @@ class UsersResponderADM extends Responder {
       * from the cache. If not, it retrieves it from the triplestore and writes it to the cache. Writes to the cache
       * are always `UserInformationTypeADM.FULL`.
       *
-      * @param maybeUserIri     the IRI of the user.
-      * @param maybeUserEmail the email of the user.
+      * @param identifier          the IRI, email, or username of the user.
       * @param userInformationType the type of the requested profile (restricted of full).
-      * @param requestingUser the user initiating the request.
+      * @param requestingUser      the user initiating the request.
       * @return a [[UserADM]] describing the user.
       */
-    private def userGetADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
-        // log.debug(s"userGetADM: maybeUserIri: {}, maybeUserEmail: {}, userInformationType: {}, requestingUser: {}", maybeUserIri, maybeUserEmail, userInformationType, requestingUser )
+    private def userGetADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[Option[UserADM]] = {
+        log.debug(s"userGetADM: identifier: {}, userInformationType: {}, requestingUser: {}", identifier, userInformationType, requestingUser )
 
         // ToDO: need to have certain permissions to allow access (#961)
 
-        val userFromCache = if (maybeUserIri.nonEmpty) {
-            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserIri.get)
-        } else if (maybeUserEmail.nonEmpty) {
-            CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, maybeUserEmail.get)
-        } else {
-            throw BadRequestException("Need to provide the user IRI and/or email.")
+        val maybeUserFromCache = identifier.hasType match {
+            case UserIdentifierType.IRI => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.toIri)
+            case UserIdentifierType.EMAIL => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
+            case UserIdentifierType.USERNAME => CacheUtil.get[UserADM](USER_ADM_CACHE_NAME, identifier.value)
         }
 
-        val maybeUserADM: Future[Option[UserADM]] = userFromCache match {
+        val maybeUserADM: Future[Option[UserADM]] = maybeUserFromCache match {
             case Some(user) =>
                 // found a user profile in the cache
-                log.debug("userGetADM - cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
+                log.debug("userGetADM - cache hit for: {}", identifier.value)
                 FastFuture.successful(Some(user.ofType(userInformationType)))
 
             case None =>
                 // didn't find a user profile in the cache
-                log.debug("userGetADM - no cache hit for: {}", List(maybeUserIri, maybeUserEmail).flatten.head)
+                log.debug("userGetADM - no cache hit for: {}", identifier.value)
                 for {
                     sparqlQueryString <- Future(queries.sparql.admin.txt.getUsers(
                         triplestore = settings.triplestoreType,
-                        maybeIri = maybeUserIri,
-                        maybeEmail = maybeUserEmail
+                        maybeIri = identifier.toIriOption,
+                        maybeUsername = identifier.toUsernameOption,
+                        maybeEmail = identifier.toEmailOption
                     ).toString())
 
                     userQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQueryString)).mapTo[SparqlExtendedConstructResponse]
@@ -205,18 +204,17 @@ class UsersResponderADM extends Responder {
     /**
       * Gets information about a Knora user, and returns it as a [[UserResponseADM]].
       *
-      * @param maybeUserIri     the IRI of the user.
-      * @param maybeUserEmail the email of the user.
+      * @param identifier          the IRI, username, or email of the user.
       * @param userInformationType the type of the requested profile (restricted of full).
-      * @param requestingUser the user initiating the request.
+      * @param requestingUser      the user initiating the request.
       * @return a [[UserResponseADM]]
       */
-    private def userGetRequestADM(maybeUserIri: Option[IRI], maybeUserEmail: Option[String], userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[UserResponseADM] = {
+    private def userGetRequestADM(identifier: UserIdentifierADM, userInformationType: UserInformationTypeADM, requestingUser: UserADM): Future[UserResponseADM] = {
         for {
-            maybeUserADM <- userGetADM(maybeUserIri, maybeUserEmail, userInformationType, requestingUser)
+            maybeUserADM <- userGetADM(identifier, userInformationType, requestingUser)
             result = maybeUserADM match {
                 case Some(user) => UserResponseADM(user = user)
-                case None => throw NotFoundException(s"User '${Seq(maybeUserIri, maybeUserEmail).flatten.head}' not found")
+                case None => throw NotFoundException(s"User '${identifier.value}' not found")
             }
         } yield result
     }
@@ -229,8 +227,8 @@ class UsersResponderADM extends Responder {
       *                     - https://crackstation.net/hashing-security.htm
       *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
       *
-      * @param createRequest a [[CreateUserApiRequestADM]] object containing information about the new user to be created.
-      * @param requestingUser   a [[UserADM]] object containing information about the requesting user.
+      * @param createRequest  a [[CreateUserApiRequestADM]] object containing information about the new user to be created.
+      * @param requestingUser a [[UserADM]] object containing information about the requesting user.
       * @return a future containing the [[UserOperationResponseADM]].
       */
     private def createNewUserADM(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -240,24 +238,25 @@ class UsersResponderADM extends Responder {
           */
         def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) = for {
             // check if required information is supplied
-            _ <- Future(if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty"))
+            _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
+            _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
             _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
             _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
             _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
 
-            // check if the supplied email for the new user is unique, i.e. not already registered
-            sparqlQueryString <- Future(queries.sparql.v1.txt.getUserByEmail(
-                triplestore = settings.triplestoreType,
-                email = createRequest.email
-            ).toString())
-            //_ = log.debug(s"createNewUser - check duplicate email: $sparqlQueryString")
-            userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResponse]
+            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
-            //_ = log.debug(MessageUtil.toSource(userDataQueryResponse))
+            _ = if (usernameTaken) {
+                throw DuplicateValueException(s"User with the username: '${createRequest.username}' already exists")
+            }
 
-            _ = if (userDataQueryResponse.results.bindings.nonEmpty) {
+            emailTaken: Boolean <- userByEmailExists(createRequest.email)
+
+            _ = if (emailTaken) {
                 throw DuplicateValueException(s"User with the email: '${createRequest.email}' already exists")
             }
+
+            usernameTaken: Boolean <- userByUsernameExists(createRequest.username)
 
             userIri = knoraIdUtil.makeRandomPersonIri
 
@@ -270,6 +269,7 @@ class UsersResponderADM extends Responder {
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
                 userClassIri = OntologyConstants.KnoraBase.User,
+                username = createRequest.username,
                 email = createRequest.email,
                 password = hashedPassword,
                 givenName = createRequest.givenName,
@@ -286,6 +286,7 @@ class UsersResponderADM extends Responder {
             sparqlQuery = queries.sparql.admin.txt.getUsers(
                 triplestore = settings.triplestoreType,
                 maybeIri = Some(userIri),
+                maybeUsername = None,
                 maybeEmail = None
             ).toString()
             userDataQueryResponse <- (storeManager ? SparqlExtendedConstructRequest(sparqlQuery)).mapTo[SparqlExtendedConstructResponse]
@@ -314,7 +315,7 @@ class UsersResponderADM extends Responder {
     }
 
     /**
-      * Updates an existing user. Only basic user data information (email, givenName, familyName, lang)
+      * Updates an existing user. Only basic user data information (username, email, givenName, familyName, lang)
       * can be changed. For changing the password or user status, use the separate methods.
       *
       * @param userIri           the IRI of the existing user that we want to update.
@@ -346,10 +347,16 @@ class UsersResponderADM extends Responder {
             // check if necessary information is present
             _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
-            parametersCount = List(changeUserRequest.email, changeUserRequest.givenName, changeUserRequest.familyName, changeUserRequest.lang).flatten.size
+            parametersCount = List(changeUserRequest.username, changeUserRequest.email, changeUserRequest.givenName, changeUserRequest.familyName, changeUserRequest.lang).flatten.size
             _ = if (parametersCount == 0) throw BadRequestException("At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
 
+            // FIXME: Check username and email
+            // get current user information
+            // if current username is different from the new then check if new username is free
+            // if current email is different from the new then check if new email is free
+
             userUpdatePayload = UserUpdatePayloadADM(
+                username = changeUserRequest.username,
                 email = changeUserRequest.email,
                 givenName = changeUserRequest.givenName,
                 familyName = changeUserRequest.familyName,
@@ -534,14 +541,14 @@ class UsersResponderADM extends Responder {
     /**
       * Returns user's project memberships as a sequence of [[ProjectADM]].
       *
-      * @param userIri the IRI of the user.
+      * @param userIri        the IRI of the user.
       * @param requestingUser the requesting user.
-      * @param apiRequestID the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a sequence of [[ProjectADM]]
       */
     def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
         for {
-            maybeUser <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUser <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = maybeUser match {
                 case Some(userADM) => userADM.projects
                 case None => Seq.empty[ProjectADM]
@@ -575,10 +582,10 @@ class UsersResponderADM extends Responder {
     /**
       * Adds a user to a project.
       *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
+      * @param userIri        the user's IRI.
+      * @param projectIri     the project's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return
       */
     def userProjectMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -647,10 +654,10 @@ class UsersResponderADM extends Responder {
     /**
       * Removes a user from a project.
       *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
+      * @param userIri        the user's IRI.
+      * @param projectIri     the project's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return
       */
     def userProjectMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -717,9 +724,9 @@ class UsersResponderADM extends Responder {
     /**
       * Returns the user's project admin group memberships as a sequence of [[IRI]]
       *
-      * @param userIri       the user's IRI.
+      * @param userIri        the user's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
     def userProjectAdminMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
@@ -761,9 +768,9 @@ class UsersResponderADM extends Responder {
       * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
       * is a member of the project admin group.
       *
-      * @param userIri       the user's IRI.
+      * @param userIri        the user's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
     def userProjectAdminMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
@@ -784,10 +791,10 @@ class UsersResponderADM extends Responder {
     /**
       * Adds a user to the project admin group of a project.
       *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
+      * @param userIri        the user's IRI.
+      * @param projectIri     the project's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return
       */
     def userProjectAdminMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -856,10 +863,10 @@ class UsersResponderADM extends Responder {
     /**
       * Removes a user from project admin group of a project.
       *
-      * @param userIri       the user's IRI.
-      * @param projectIri    the project's IRI.
+      * @param userIri        the user's IRI.
+      * @param projectIri     the project's IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID  the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return
       */
     def userProjectAdminMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -927,16 +934,15 @@ class UsersResponderADM extends Responder {
     /**
       * Returns the user's group memberships as a sequence of [[GroupADM]]
       *
-      *
-      * @param userIri the IRI of the user.
+      * @param userIri        the IRI of the user.
       * @param requestingUser the requesting user.
-      * @param apiRequestID the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a sequence of [[GroupADM]].
       */
     def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
-            maybeUserADM: Option[UserADM] <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
+            maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             groups: Seq[GroupADM] = maybeUserADM match {
                 case Some(user) => user.groups
                 case None => Seq.empty[GroupADM]
@@ -948,10 +954,9 @@ class UsersResponderADM extends Responder {
     /**
       * Returns the user's group memberships as a [[UserGroupMembershipsGetResponseADM]]
       *
-      *
-      * @param userIri the IRI of the user.
+      * @param userIri        the IRI of the user.
       * @param requestingUser the requesting user.
-      * @param apiRequestID the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a [[UserGroupMembershipsGetResponseADM]].
       */
     def userGroupMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseADM] = {
@@ -966,10 +971,10 @@ class UsersResponderADM extends Responder {
     /**
       * Adds a user to a group.
       *
-      * @param userIri the user's IRI.
-      * @param groupIri the group IRI.
+      * @param userIri        the user's IRI.
+      * @param groupIri       the group IRI.
       * @param requestingUser the requesting user.
-      * @param apiRequestID the unique api request ID.
+      * @param apiRequestID   the unique api request ID.
       * @return a [[UserOperationResponseADM]].
       */
     def userGroupMembershipAddRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -1146,6 +1151,7 @@ class UsersResponderADM extends Responder {
                 adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
                 triplestore = settings.triplestoreType,
                 userIri = userIri,
+                maybeUsername = userUpdatePayload.username,
                 maybeEmail = userUpdatePayload.email,
                 maybeGivenName = userUpdatePayload.givenName,
                 maybeFamilyName = userUpdatePayload.familyName,
@@ -1164,10 +1170,14 @@ class UsersResponderADM extends Responder {
             _ = invalidateCachedUserADM(Some(userIri), userUpdatePayload.email)
 
             /* Verify that the user was updated. */
-            maybeUpdatedUserADM <- userGetADM(maybeUserIri = Some(userIri), maybeUserEmail = None, requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
+            maybeUpdatedUserADM <- userGetADM(identifier = UserIdentifierADM(userIri), requestingUser = requestingUser, userInformationType = UserInformationTypeADM.FULL)
             updatedUserADM = maybeUpdatedUserADM.getOrElse(throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
 
             //_ = log.debug(s"apiUpdateRequest: $apiUpdateRequest /  updatedUserdata: $updatedUserData")
+
+            _ = if (userUpdatePayload.username.isDefined) {
+                if (updatedUserADM.username != userUpdatePayload.username.get) throw UpdateNotPerformedException("User's 'username' was not updated. Please report this as a possible bug.")
+            }
 
             _ = if (userUpdatePayload.email.isDefined) {
                 if (updatedUserADM.email != userUpdatePayload.email.get) throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
@@ -1313,15 +1323,14 @@ class UsersResponderADM extends Responder {
                 /* construct the user profile from the different parts */
                 user = UserADM(
                     id = userIri,
+                    username = propsMap.getOrElse(OntologyConstants.KnoraBase.Username, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'username' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     email = propsMap.getOrElse(OntologyConstants.KnoraBase.Email, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'email' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     password = propsMap.get(OntologyConstants.KnoraBase.Password).map(_.head.asInstanceOf[StringLiteralV2].value),
                     token = None,
                     givenName = propsMap.getOrElse(OntologyConstants.KnoraBase.GivenName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'givenName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     familyName = propsMap.getOrElse(OntologyConstants.KnoraBase.FamilyName, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'familyName' defined.")).head.asInstanceOf[StringLiteralV2].value,
                     status = propsMap.getOrElse(OntologyConstants.KnoraBase.Status, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'status' defined.")).head.asInstanceOf[BooleanLiteralV2].value,
-                    lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value,
-                    groups = groups,
-                    projects = projects,
+                    lang = propsMap.getOrElse(OntologyConstants.KnoraBase.PreferredLanguage, throw InconsistentTriplestoreDataException(s"User: $userIri has no 'preferredLanguage' defined.")).head.asInstanceOf[StringLiteralV2].value, groups = groups, projects = projects,
                     sessionId = None,
                     permissions = permissionData
                 )
@@ -1343,7 +1352,41 @@ class UsersResponderADM extends Responder {
       */
     def userExists(userIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
+            askString <- Future(queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
+            // _ = log.debug("userExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if an username is already registered.
+      *
+      * @param username the username of the user.
+      * @return a [[Boolean]].
+      */
+    def userByUsernameExists(username: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
+            // _ = log.debug("userExists - query: {}", askString)
+
+            checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+            result = checkUserExistsResponse.result
+
+        } yield result
+    }
+
+    /**
+      * Helper method for checking if an email is already registered.
+      *
+      * @param email the email of the user.
+      * @return a [[Boolean]].
+      */
+    def userByEmailExists(email: String): Future[Boolean] = {
+        for {
+            askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1399,12 +1442,21 @@ class UsersResponderADM extends Responder {
 
         val email = user.email
 
-        CacheUtil.put(USER_ADM_CACHE_NAME, iri, user)
+        val username = user.username
 
+        // write to cache identified by IRI
+        CacheUtil.put(USER_ADM_CACHE_NAME, iri, user)
         if (CacheUtil.get(USER_ADM_CACHE_NAME, iri).isEmpty) {
             throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
         }
 
+        // write to cache identified by username
+        CacheUtil.put(USER_ADM_CACHE_NAME, username, user)
+        if (CacheUtil.get(USER_ADM_CACHE_NAME, username).isEmpty) {
+            throw ApplicationCacheException("Writing the user's profile to cache was not successful.")
+        }
+
+        // write to cache identified by email
         CacheUtil.put(USER_ADM_CACHE_NAME, email, user)
         if (CacheUtil.get(USER_ADM_CACHE_NAME, email).isEmpty) {
             throw ApplicationCacheException("Writing the user's profile to cache was not successful.")

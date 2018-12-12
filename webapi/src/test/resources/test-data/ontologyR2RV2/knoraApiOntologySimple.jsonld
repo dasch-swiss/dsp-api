@@ -983,6 +983,16 @@
     "@type" : "rdf:Property",
     "rdfs:comment" : "Specifies the required type of the subjects of a property",
     "rdfs:label" : "Subject type"
+  }, {
+    "@id" : "knora-api:username",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:string"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:User"
+    },
+    "rdfs:comment" : "The username and login name of a user of Knora"
   } ],
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",

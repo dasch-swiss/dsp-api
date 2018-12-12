@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.v1.responder.sessionmessages
 
-import spray.json.DefaultJsonProtocol
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 /**
   * Represents a response Knora returns when communicating with the 'v1/session' route during the 'login' operation.
@@ -35,5 +35,5 @@ case class SessionResponse(status: Int, message: String, sid: String)
   * 'v1/session' route into a case classes for easier testing.
   */
 trait SessionJsonProtocol extends DefaultJsonProtocol {
-    implicit val SessionResponseFormat = jsonFormat3(SessionResponse.apply)
+    implicit val SessionResponseFormat: RootJsonFormat[SessionResponse] = jsonFormat3(SessionResponse.apply)
 }

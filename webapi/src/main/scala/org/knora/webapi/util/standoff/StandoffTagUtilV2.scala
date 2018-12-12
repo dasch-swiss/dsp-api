@@ -304,7 +304,7 @@ object StandoffTagUtilV2 {
         }
 
         textWithStandoff.standoff.map {
-            case standoffNodeFromXML: StandoffTag =>
+            standoffNodeFromXML: StandoffTag =>
 
                 val xmlNamespace = standoffNodeFromXML.xmlNamespace match {
                     case None => noNamespace
@@ -750,7 +750,8 @@ object StandoffTagUtilV2 {
                                 case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Boolean))) =>
                                     StandoffTagBooleanAttributeV2(standoffPropertyIri = propIri, value = value.toBoolean)
 
-                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) => StandoffTagIriAttributeV2(standoffPropertyIri = propIri, value = value)
+                                case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
+                                    StandoffTagUriAttributeV2(standoffPropertyIri = propIri, value = value)
 
                                 case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
 

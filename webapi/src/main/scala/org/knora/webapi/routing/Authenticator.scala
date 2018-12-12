@@ -29,19 +29,19 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.{ByteString, Timeout}
 import com.typesafe.scalalogging.Logger
-import io.igl.jwt._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserInformationTypeADM}
+import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.CacheUtil
+import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
 import org.slf4j.LoggerFactory
-import spray.json.{JsNumber, JsObject, JsString}
+import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}
+import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Success
+import scala.util.{Failure, Success, Try}
 
 /**
   * This trait is used in routes that need authentication support. It provides methods that use the [[RequestContext]]
@@ -108,7 +108,7 @@ trait Authenticator {
 
         settings = Settings(system)
 
-        userADM <- getUserADMByEmail(credentials.email)
+        userADM <- getUserByIdentifier(credentials.identifier)
 
         token = JWTHelper.createToken(userADM.id, settings.jwtSecretKey, settings.jwtLongevity)
 
@@ -208,7 +208,7 @@ trait Authenticator {
                 CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionCreds.token, sessionCreds.token)
 
                 HttpResponse(
-                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,
@@ -282,7 +282,7 @@ trait Authenticator {
             for {
                 userADM <- getUserADMThroughCredentialsV2(credentials)
                 userProfile: UserProfileV1 = userADM.asUserProfileV1
-                _ = log.debug("getUserProfileV1 - I got a UserProfileV1: {}", userProfile.toString)
+                _ = log.debug("Authenticator - getUserProfileV1 - userProfile: {}", userProfile)
 
                 /* we return the userProfileV1 without sensitive information */
             } yield userProfile.ofType(UserProfileTypeV1.RESTRICTED)
@@ -316,7 +316,7 @@ trait Authenticator {
 
             for {
                 user: UserADM <- getUserADMThroughCredentialsV2(credentials)
-                _ = log.debug("getUserADM - I got a getUserADM: {}", user.toString)
+                _ = log.debug("Authenticator - getUserADM - user: {}", user)
 
                 /* we return the complete UserADM */
             } yield user.ofType(UserInformationTypeADM.FULL)
@@ -345,6 +345,8 @@ object Authenticator {
     implicit val timeout: Timeout = Duration(5, SECONDS)
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
+    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
     /**
       * Tries to authenticate the supplied credentials (email/password or token). In the case of email/password,
       * authentication is performed checking if the supplied email/password combination is valid by retrieving the
@@ -366,7 +368,7 @@ object Authenticator {
             result <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
                     for {
-                        user <- getUserADMByEmail(passCreds.email)
+                        user <- getUserByIdentifier(passCreds.identifier)
 
                         /* check if the user is active, if not, then no need to check the password */
                         _ = if (!user.isActive) {
@@ -444,11 +446,13 @@ object Authenticator {
 
         val params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
 
-        val maybeEmail: Option[String] = params get "email" map (_.head)
+        // check for email (old name) or identifier (new name) parameters
+        val identifierList: Iterable[String] = params.get("email").map(_.head) ++ params.get("identifier").map(_.head)
+        val maybeIdentifier: Option[String] = identifierList.headOption
         val maybePassword: Option[String] = params get "password" map (_.head)
 
-        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-            Some(KnoraPasswordCredentialsV2(maybeEmail.get, maybePassword.get))
+        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
+            Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
         } else {
             None
         }
@@ -508,8 +512,8 @@ object Authenticator {
                 // in v2 we support the basic scheme
                 val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
 
-                // try to decode email/password
-                val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
+                // try to decode identifier/password
+                val (maybeIdentifier, maybePassword) = maybeBasicAuthValue match {
                     case Some(value) =>
                         val trimmedValue = value.substring(5).trim() // remove 'Basic '
                     val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
@@ -519,8 +523,8 @@ object Authenticator {
                         (None, None)
                 }
 
-                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-                    Some(KnoraPasswordCredentialsV2(maybeEmail.get, maybePassword.get))
+                val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeIdentifier.nonEmpty && maybePassword.nonEmpty) {
+                    Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeIdentifier.get), maybePassword.get))
                 } else {
                     None
                 }
@@ -574,8 +578,8 @@ object Authenticator {
 
             user: UserADM <- credentials match {
                 case Some(passCreds: KnoraPasswordCredentialsV2) => {
-                    log.debug("getUserADMThroughCredentialsV2 - used email")
-                    getUserADMByEmail(passCreds.email)
+                    // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
+                    getUserByIdentifier(passCreds.identifier)
                 }
                 case Some(tokenCreds: KnoraTokenCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
@@ -585,8 +589,8 @@ object Authenticator {
                             throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         }
                     }
-                    log.debug("getUserADMThroughCredentialsV2 - used token")
-                    getUserADMByIri(userIri)
+                    // log.debug("getUserADMThroughCredentialsV2 - used token")
+                    getUserByIdentifier(UserIdentifierADM(userIri))
                 }
                 case Some(sessionCreds: KnoraSessionCredentialsV2) => {
                     val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
@@ -596,15 +600,15 @@ object Authenticator {
                             throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
                         }
                     }
-                    log.debug("getUserADMThroughCredentialsV2 - used session token")
-                    getUserADMByIri(userIri)
+                    // log.debug("getUserADMThroughCredentialsV2 - used session token")
+                    getUserByIdentifier(UserIdentifierADM(userIri))
                 }
                 case None => {
-                    log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
+                    // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
                     throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
                 }
             }
-
+            
         } yield user
     }
 
@@ -613,56 +617,30 @@ object Authenticator {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-      * Get a user profile with the specific IRI from the triple store
+      * Tries to get a [[UserADM]] from the cache or from the triple store matching the identifier.
       *
-      * @param iri              the IRI of the user to be queried
-      * @param system           the current akka actor system
-      * @param timeout          the timeout of the query
-      * @param executionContext the current execution context
-      * @return a [[UserADM]]
-      * @throws BadCredentialsException when no user can be found with the supplied IRI.
-      */
-    private def getUserADMByIri(iri: IRI)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val userADMFuture = for {
-            maybeUser <- (responderManager ? UserGetADM(maybeIri = Some(iri), maybeEmail = None, UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
-            user = maybeUser match {
-                case Some(userADM) => userADM
-                case None => {
-                    log.debug(s"getUserADMByIri - supplied IRI not found - throwing exception")
-                    throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
-                }
-            }
-        } yield user
-
-        userADMFuture
-    }
-
-    /**
-      * Tries to get a [[UserADM]] from the cache or from the triple store matching the email.
-      *
-      * @param email            the email of the user to be queried
+      * @param identifier       the IRI, email, or username of the user to be queried
       * @param system           the current akka actor system
       * @param timeout          the timeout of the query
       * @param executionContext the current execution context
       * @return a [[UserADM]]
       * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
       */
-    private def getUserADMByEmail(email: String)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
+    private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
-        if (email.nonEmpty) {
+        if (identifier.nonEmpty) {
             val userADMFuture = for {
-                maybeUserADM <- (responderManager ? UserGetADM(maybeIri = None, maybeEmail = Some(email), UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
+                maybeUserADM <- (responderManager ? UserGetADM(identifier = identifier, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]
                 user = maybeUserADM match {
                     case Some(u) => u
                     case None => {
-                        log.debug(s"getUserADMByEmail - supplied email not found - throwing exception")
+                        log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
                         throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
                     }
                 }
-                _ = log.debug(s"getUserADMByEmail - user: $user")
+                // _ = log.debug(s"getUserByIdentifier - user: $user")
             } yield user
 
             userADMFuture
@@ -672,34 +650,31 @@ object Authenticator {
     }
 }
 
+/**
+  * Provides functions for creating, decoding, and validating JWT tokens.
+  */
 object JWTHelper {
 
     import Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 
-    // the encryption algorithm we chose to use.
-    val algorithm = Algorithm.HS256
+    private val algorithm: JwtAlgorithm = JwtAlgorithm.HS256
 
-    // the headers which need to be present inside the JWT
-    val requiredHeaders: Set[HeaderField] = Set[HeaderField](Typ)
-
-    // the claims that need to be present inside the JWT
-    // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
-    val requiredClaims: Set[ClaimField] = Set[ClaimField](Iss, Sub, Aud, Iat, Exp, Jti)
+    private val header: String = """{"typ":"JWT","alg":"HS256"}"""
 
     val log = Logger(LoggerFactory.getLogger(this.getClass))
 
     /**
-      * Create a JWT.
+      * Creates a JWT.
       *
       * @param userIri   the user IRI that will be encoded into the token.
-      * @param secretKey the secret key used for encoding.
-      * @param longevity the token's longevity in days.
-      * @return a [[String]] containg the JWT.
+      * @param secret    the secret key used for encoding.
+      * @param longevity the token's longevity.
+      * @param content   any other content to be included in the token.
+      * @return a [[String]] containing the JWT.
       */
-    def createToken(userIri: IRI, secretKey: String, longevity: FiniteDuration): String = {
+    def createToken(userIri: IRI, secret: String, longevity: FiniteDuration, content: Map[String, JsValue] = Map.empty): String = {
 
-        // create required headers
-        val headers = Seq[HeaderValue](Typ("JWT"), Alg(algorithm))
+        val knoraIdUtil = new KnoraIdUtil
 
         // now in seconds
         val now: Long = System.currentTimeMillis() / 1000l
@@ -707,66 +682,118 @@ object JWTHelper {
         // calculate expiration time (seconds)
         val nowPlusLongevity: Long = now + longevity.toSeconds
 
-        val identifier: String = UUID.randomUUID().toString()
+        val identifier: String = knoraIdUtil.base64EncodeUuid(UUID.randomUUID)
 
-        // Add required claims
-        // Iss: issuer, Sub: subject, Aud: audience, Iat: ussued at, Exp: expier date, Jti: unique identifier
-        val claims = Seq[ClaimValue](Iss("webapi"), Sub(userIri), Aud("webapi"), Iat(now), Exp(nowPlusLongevity), Jti(identifier))
+        val claim: String = JwtClaim(
+            content = JsObject(content).compactPrint,
+            issuer = Some("Knora"),
+            subject = Some(userIri),
+            audience = Some(Set("Knora", "Sipi")),
+            issuedAt = Some(now),
+            expiration = Some(nowPlusLongevity),
+            jwtId = Some(identifier)
+        ).toJson
 
-        val jwt = new DecodedJwt(headers, claims)
-
-        jwt.encodedAndSigned(secretKey)
+        JwtSprayJson.encode(
+            header = header,
+            claim = claim,
+            key = secret,
+            algorithm = algorithm
+        )
     }
 
     /**
-      * Validates a JWT by also taking the invalidation cache into account. The invalidation cache holds invalidated
-      * tokens, which would otherwise validate. Further, it makes sure that the required headers and claims are present.
+      * Validates a JWT, taking the invalidation cache into account. The invalidation cache holds invalidated
+      * tokens, which would otherwise validate. This method also makes sure that the required headers and claims are
+      * present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
       * @return a [[Boolean]].
       */
     def validateToken(token: String, secret: String): Boolean = {
-
         if (CacheUtil.get[UserADM](AUTHENTICATION_INVALIDATION_CACHE_NAME, token).nonEmpty) {
             // token invalidated so no need to decode
             log.debug("validateToken - token found in invalidation cache, so not valid")
             false
         } else {
-            DecodedJwt.validateEncodedJwt(
-                jwt = token,
-                key = secret,
-                requiredAlg = algorithm,
-                requiredHeaders = requiredHeaders,
-                requiredClaims = requiredClaims,
-                iss = Some(Iss("webapi")),
-                aud = Some(Aud("webapi"))
-            ).isSuccess
+            decodeToken(token, secret).isDefined
         }
     }
 
     /**
-      * Extract the encoded user IRI. Further, it makes sure that the required headers and claims are present.
+      * Extracts the encoded user IRI. This method also makes sure that the required headers and claims are present.
       *
       * @param token  the JWT.
       * @param secret the secret used to encode the token.
       * @return an optional [[IRI]].
       */
     def extractUserIriFromToken(token: String, secret: String): Option[IRI] = {
-
-        DecodedJwt.validateEncodedJwt(
-            jwt = token,
-            key = secret,
-            requiredAlg = algorithm,
-            requiredHeaders = requiredHeaders,
-            requiredClaims = requiredClaims,
-            iss = Some(Iss("webapi")),
-            aud = Some(Aud("webapi"))
-        ) match {
-            case Success(jwt) => jwt.getClaim[Sub].map(_.value)
-            case _ => None
+        decodeToken(token, secret) match {
+            case Some((_: JwtHeader, claim: JwtClaim)) => claim.subject
+            case None => None
         }
     }
 
-}
+    /**
+      * Extracts application-specific content from a JWT token.  This method also makes sure that the required headers
+      * and claims are present.
+      *
+      * @param token       the JWT.
+      * @param secret      the secret used to encode the token.
+      * @param contentName the name of the content field to be extracted.
+      * @return the string value of the specified content field.
+      */
+    def extractContentFromToken(token: String, secret: String, contentName: String): Option[String] = {
+        decodeToken(token, secret) match {
+            case Some((_: JwtHeader, claim: JwtClaim)) =>
+                claim.content.parseJson.asJsObject.fields.get(contentName) match {
+                    case Some(jsString: JsString) => Some(jsString.value)
+                    case _ => None
+                }
 
+            case None => None
+        }
+    }
+
+    /**
+      * Decodes and validates a JWT token.
+      *
+      * @param token  the token to be decoded.
+      * @param secret the secret used to encode the token.
+      * @return the token's header and claim, or `None` if the token is invalid.
+      */
+    private def decodeToken(token: String, secret: String): Option[(JwtHeader, JwtClaim)] = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        JwtSprayJson.decodeAll(token, secret, Seq(JwtAlgorithm.HS256)) match {
+            case Success((header: JwtHeader, claim: JwtClaim, _)) =>
+                val missingRequiredContent: Boolean = Set(
+                    header.typ.isDefined,
+                    claim.issuer.isDefined,
+                    claim.subject.isDefined,
+                    claim.jwtId.isDefined,
+                    claim.issuedAt.isDefined,
+                    claim.expiration.isDefined,
+                    claim.audience.isDefined
+                ).contains(false)
+
+                if (!missingRequiredContent) {
+                    Try(stringFormatter.validateAndEscapeIri(claim.subject.get, throw BadRequestException("Invalid user IRI in JWT"))) match {
+                        case Success(_) => Some(header, claim)
+
+                        case Failure(e) =>
+                            log.debug(e.getMessage)
+                            None
+                    }
+                } else {
+                    log.debug("Missing required content in JWT")
+                    None
+                }
+
+            case Failure(_) =>
+                log.debug("Invalid JWT")
+                None
+        }
+    }
+}
