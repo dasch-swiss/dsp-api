@@ -619,6 +619,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
+    private val valueUtilV1 = new ValueUtilV1(settings)
+
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -705,7 +707,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                         )
 
                         // convert CreateValueResponseV1 to a ResourceCreateValueResponseV1
-                        MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
+                        valueUtilV1.convertCreateValueResponseV1ToResourceCreateValueResponseV1(
                             resourceIri = "http://www.knora.org/test",
                             creatorIri = "http://rdfh.ch/users/b83acc5f05",
                             propertyIri = propIri,

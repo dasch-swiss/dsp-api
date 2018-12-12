@@ -208,8 +208,11 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(createResourceRequestV2.createResource.resourceClassIri.toString), projectIri, None)) {
-                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permissions to create a resource in project <$projectIri>")
+
+            internalResourceClassIri: SmartIri = createResourceRequestV2.createResource.resourceClassIri.toOntologySchema(InternalSchema)
+
+            _ = if (!createResourceRequestV2.requestingUser.permissions.hasPermissionFor(ResourceCreateOperation(internalResourceClassIri.toString), projectIri, None)) {
+                throw ForbiddenException(s"User ${createResourceRequestV2.requestingUser.email} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
             }
 
             // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
@@ -575,7 +578,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Gets the default permissions for resource classs in a project.
       *
       * @param projectIri        the IRI of the project.
-      * @param resourceClassIris the IRIs of the resource classes.
+      * @param resourceClassIris the internal IRIs of the resource classes.
       * @param requestingUser    the user making the request.
       * @return a map of resource class IRIs to default permission strings.
       */
@@ -599,9 +602,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * Gets the default permissions for properties in a resource class in a project.
       *
       * @param projectIri              the IRI of the project.
-      * @param resourceClassProperties a map of resource class IRIs to sets of property IRIs.
+      * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
       * @param requestingUser          the user making the request.
-      * @return a map of resource class IRIs to maps of property IRIs to default permission strings.
+      * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
       */
     private def getDefaultPropertyPermissions(projectIri: IRI, resourceClassProperties: Map[SmartIri, Set[SmartIri]], requestingUser: UserADM): Future[Map[SmartIri, Map[SmartIri, String]]] = {
         val permissionsFutures: Map[SmartIri, Future[Map[SmartIri, String]]] = resourceClassProperties.map {
