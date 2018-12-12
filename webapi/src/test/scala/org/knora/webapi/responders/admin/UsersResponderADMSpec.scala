@@ -25,7 +25,6 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -33,12 +32,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectAdminMembersGetRequestADM, ProjectAdminMembersGetResponseADM, ProjectMembersGetRequestADM, ProjectMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
 import org.knora.webapi.routing.Authenticator
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.duration._
 
@@ -57,8 +53,6 @@ object UsersResponderADMSpec {
   */
 class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with ImplicitSender with Authenticator {
 
-    private implicit val executionContext = system.dispatcher
-
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataADM.rootUser
@@ -71,18 +65,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
     private val actorUnderTest = TestActorRef[UsersResponderADM]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
 
-    private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
     "The UsersResponder " when {
 
         "asked about all users" should {
@@ -90,7 +75,16 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (21)
+                response.users.size should be (18)
+            }
+
+            "not return the system and anonymous users" in {
+                actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
+                val response = expectMsgType[UsersGetResponseADM](timeout)
+                response.users.nonEmpty should be (true)
+                response.users.size should be (18)
+                response.users.count(_.id == KnoraSystemInstances.Users.AnonymousUser.id) should be (0)
+                response.users.count(_.id == KnoraSystemInstances.Users.SystemUser.id) should be (0)
             }
         }
 
@@ -98,8 +92,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = Some(rootUser.id),
-                    maybeEmail = None,
+                    identifier = UserIdentifierADM(rootUser.id),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -108,28 +101,64 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (incunabula user) is known" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = Some(incunabulaUser.id),
-                    maybeEmail = None,
+                    identifier = UserIdentifierADM(incunabulaUser.id),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
             }
 
-            "return 'NotFoundException' when the user is unknown " in {
+            "return 'NotFoundException' when the user is unknown" in {
                 actorUnderTest ! UserGetRequestADM(
-                    maybeIri = Some("http://rdfh.ch/users/notexisting"),
-                    maybeEmail = None,
+                    identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
                 expectMsg(Failure(NotFoundException(s"User 'http://rdfh.ch/users/notexisting' not found")))
             }
 
-            "return 'None' when the user is unknown " in {
+            "return 'None' when the user is unknown" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = Some("http://rdfh.ch/users/notexisting"),
-                    maybeEmail = None,
+                    identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(None)
+            }
+        }
+
+        "asked about an user identified by 'username'" should {
+
+            "return a profile if the user (root user) is known" in {
+                actorUnderTest ! UserGetADM(
+                    identifier = UserIdentifierADM(rootUser.username),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
+            }
+
+            "return a profile if the user (incunabula user) is known" in {
+                actorUnderTest ! UserGetADM(
+                    identifier = UserIdentifierADM(incunabulaUser.username),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
+            }
+
+            "return 'NotFoundException' when the user is unknown" in {
+                actorUnderTest ! UserGetRequestADM(
+                    identifier = UserIdentifierADM("userwrong"),
+                    userInformationTypeADM = UserInformationTypeADM.FULL,
+                    requestingUser = KnoraSystemInstances.Users.SystemUser
+                )
+                expectMsg(Failure(NotFoundException(s"User 'userwrong' not found")))
+            }
+
+            "return 'None' when the user is unknown" in {
+                actorUnderTest ! UserGetADM(
+                    identifier = UserIdentifierADM("userwrong"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -141,8 +170,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (root user) is known" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = None,
-                    maybeEmail = Some(rootUser.email),
+                    identifier = UserIdentifierADM(rootUser.email),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -151,8 +179,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return a profile if the user (incunabula user) is known" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = None,
-                    maybeEmail = Some(incunabulaUser.email),
+                    identifier = UserIdentifierADM(incunabulaUser.email),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -161,8 +188,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'NotFoundException' when the user is unknown" in {
                 actorUnderTest ! UserGetRequestADM(
-                    maybeIri = None,
-                    maybeEmail = Some("userwrong@example.com"),
+                    identifier = UserIdentifierADM("userwrong@example.com"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -171,8 +197,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'None' when the user is unknown" in {
                 actorUnderTest ! UserGetADM(
-                    maybeIri = None,
-                    maybeEmail = Some("userwrong@example.com"),
+                    identifier = UserIdentifierADM("userwrong@example.com"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
                 )
@@ -185,6 +210,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "CREATE the user and return it's profile if the supplied email is unique " in {
                 actorUnderTest ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
+                        username = "donald.duck",
                         email = "donald.duck@example.com",
                         givenName = "Donald",
                         familyName = "Duck",
@@ -198,6 +224,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 )
                 expectMsgPF(timeout) {
                     case UserOperationResponseADM(newUser) => {
+                        assert(newUser.username.equals("donald.duck"))
                         assert(newUser.givenName.equals("Donald"))
                         assert(newUser.familyName.equals("Duck"))
                         assert(newUser.email.equals("donald.duck@example.com"))
@@ -206,9 +233,28 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 }
             }
 
+            "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
+                actorUnderTest ! UserCreateRequestADM(
+                    createRequest = CreateUserApiRequestADM(
+                        username = "root",
+                        email = "root2@example.com",
+                        givenName = "Donal",
+                        familyName = "Duck",
+                        password = "test",
+                        status = true,
+                        lang = "en",
+                        systemAdmin = false
+                    ),
+                    SharedTestDataADM.anonymousUser,
+                    UUID.randomUUID
+                )
+                expectMsg(Failure(DuplicateValueException(s"User with the username: 'root' already exists")))
+            }
+
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
                 actorUnderTest ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
+                        username = "root2",
                         email = "root@example.com",
                         givenName = "Donal",
                         familyName = "Duck",
@@ -221,73 +267,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID
                 )
                 expectMsg(Failure(DuplicateValueException(s"User with the email: 'root@example.com' already exists")))
-            }
-
-            "return 'BadRequestException' if 'email' or 'password' or 'givenName' or 'familyName' are missing" in {
-
-                /* missing email */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        email = "",
-                        givenName = "Donald",
-                        familyName = "Duck",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Email cannot be empty")))
-
-                /* missing password */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        email = "donald.duck@example.com",
-                        givenName = "Donald",
-                        familyName = "Duck",
-                        password = "",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Password cannot be empty")))
-
-                /* missing givenName */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        email = "donald.duck@example.com",
-                        givenName = "",
-                        familyName = "Duck",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Given name cannot be empty")))
-
-                /* missing familyName */
-                actorUnderTest ! UserCreateRequestADM(
-                    createRequest = CreateUserApiRequestADM(
-                        email = "donald.duck@example.com",
-                        givenName = "Donald",
-                        familyName = "",
-                        password = "test",
-                        status = true,
-                        lang = "en",
-                        systemAdmin = false
-                    ),
-                    SharedTestDataADM.anonymousUser,
-                    UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Family name cannot be empty")))
             }
         }
 
@@ -360,7 +339,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test123456")))
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test123456")))
 
                 resF map { res => assert(res) }
             }
@@ -379,7 +358,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(normalUser.email, "test654321")))
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test654321")))
 
                 resF map { res => assert(res) }
             }
@@ -474,6 +453,30 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(ForbiddenException("User's system admin membership can only be changed by a system administrator")))
+            }
+
+            "return 'BadRequest' if system user is requested to change" in {
+
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = KnoraSystemInstances.Users.SystemUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
+            }
+
+            "return 'BadRequest' if anonymous user is requested to change" in {
+
+                actorUnderTest ! UserChangeStatusRequestADM(
+                    userIri = KnoraSystemInstances.Users.AnonymousUser.id,
+                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+                    requestingUser = SharedTestDataADM.superUser,
+                    UUID.randomUUID()
+                )
+
+                expectMsg(Failure(BadRequestException("Changes to built-in users are not allowed.")))
             }
 
             "return 'BadRequest' if nothing would be changed during the update" in {

@@ -1,13 +1,12 @@
 package org.knora.webapi.store.triplestore
 
-import akka.actor.Props
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK, SparqlUpdateRequest}
-import org.knora.webapi.store._
-import org.knora.webapi.{CoreSpec, LiveActorMaker, TriplestoreResponseException}
+import org.knora.webapi.{CoreSpec, TriplestoreResponseException}
 
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 /**
   * Tests the GraphDB triplestore consistency checking rules in webapi/scripts/KnoraRules.pie.
@@ -15,20 +14,19 @@ import scala.concurrent.duration._
 class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyCheckingSpec.config) with ImplicitSender {
     import GraphDBConsistencyCheckingSpec._
 
-    val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), STORE_MANAGER_ACTOR_NAME)
-
     private val timeout = 30.seconds
 
-    val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
+    override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        storeManager ! ResetTriplestoreContent(rdfDataObjects)
+        expectMsg(5 minutes, ResetTriplestoreContentACK())
+    }
+
     if (settings.triplestoreType.startsWith("graphdb")) {
-        "Load test data" in {
-            storeManager ! ResetTriplestoreContent(rdfDataObjects)
-            expectMsg(300.seconds, ResetTriplestoreContentACK())
-        }
 
         "not create a new resource with a missing property that has owl:cardinality 1" in {
             storeManager ! SparqlUpdateRequest(missingPartOf)
@@ -2540,7 +2538,7 @@ object GraphDBConsistencyCheckingSpec {
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/wrongTargetClass") AS ?resource0)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass0)
+          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label0)
@@ -2611,7 +2609,7 @@ object GraphDBConsistencyCheckingSpec {
           |WHERE {
           |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/twoLabels") AS ?resource)
-          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#Thing") AS ?resourceClass)
+          |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
           |    BIND(IRI("http://rdfh.ch/projects/0001") AS ?projectIri)
           |    BIND(str("Test Thing") AS ?label)

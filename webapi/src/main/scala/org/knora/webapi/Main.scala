@@ -44,16 +44,16 @@ object Main extends App with LiveCore with KnoraService {
     if (arglist.contains("-r")) applicationStateActor ! SetAllowReloadOverHTTPState(true)
 
     // starts prometheus monitoring reporter
-    if (arglist.contains("-p")) applicationStateActor ! SetPrometheusReporterState(true)
+    // if (arglist.contains("-p")) applicationStateActor ! SetPrometheusReporterState(true)
 
     // starts zipkin monitoring reporter
-    if (arglist.contains("-z")) applicationStateActor ! SetZipkinReporterState(true)
+    // if (arglist.contains("-z")) applicationStateActor ! SetZipkinReporterState(true)
 
     // starts zipkin monitoring reporter
-    if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
+    // if (arglist.contains("-j")) applicationStateActor ! SetZipkinReporterState(true)
 
     // print config on startup
-    if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigState(true)
+    // if (arglist.contains("-c")) applicationStateActor ! SetPrintConfigExtendedState(true)
 
     if (arglist.contains("--help")) {
         println(
@@ -79,9 +79,9 @@ object Main extends App with LiveCore with KnoraService {
             """.stripMargin)
     } else {
         /* Start the HTTP layer, allowing access */
-        startService()
+        startService(true)
 
         /* add the method for shutting down our application to the shutdown hook, so that we can clean up */
-        sys.addShutdownHook(stopService())
+        scala.sys.addShutdownHook(stopService())
     }
 }

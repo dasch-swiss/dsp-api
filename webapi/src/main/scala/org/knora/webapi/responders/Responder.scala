@@ -21,16 +21,16 @@ package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
 import akka.util.Timeout
-import org.knora.webapi.Settings
 import org.knora.webapi.app._
 import org.knora.webapi.store._
 import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.{KnoraDispatchers, Settings}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 /**
-  * A trait providing values that are commonly used in Knora API v1 responders.
+  * A trait providing values that are commonly used in Knora responders.
   */
 trait Responder extends Actor with ActorLogging {
     /**
@@ -51,12 +51,14 @@ trait Responder extends Actor with ActorLogging {
     /**
       * The application's default timeout for `ask` messages.
       */
-    protected implicit val timeout: Timeout = settings.defaultRestoreTimeout
+    protected implicit val timeout: Timeout = settings.defaultTimeout
 
+    // #executionContext
     /**
-      * The Akka actor system's execution context for futures.
+      * The execution context for futures created in Knora actors.
       */
-    protected implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    // #executionContext
 
     /**
       * A reference to the application state actor.

@@ -24,9 +24,6 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import spray.json._
-
-import scala.concurrent.duration._
 
 object PermissionsHandlingV1E2ESpec {
     val config = ConfigFactory.parseString(
@@ -52,20 +49,13 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
 
     private val password = "test"
 
-    private val rdfDataObjects: List[RdfDataObject] = List(
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
 
-    "Load test data" in {
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
-
-
     "The Permissions Handling" should {
-
 
         "allow a project member to create a resource" in {
 

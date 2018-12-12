@@ -1,22 +1,19 @@
+-- Copyright © 2015-2018 the contributors (see Contributors.md).
 --
--- Copyright © 2016 Lukas Rosenthaler, Andrea Bianco, Benjamin Geer,
--- Ivan Subotic, Tobias Schweizer, André Kilchenmann, and André Fatton.
--- This file is part of Sipi.
--- Sipi is free software: you can redistribute it and/or modify
+-- This file is part of Knora.
+--
+-- Knora is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU Affero General Public License as published
 -- by the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
--- Sipi is distributed in the hope that it will be useful,
+--
+-- Knora is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
--- Additional permission under GNU AGPL version 3 section 7:
--- If you modify this Program, or any covered work, by linking or combining
--- it with Kakadu (or a modified version of that library), containing parts
--- covered by the terms of the Kakadu Software Licence, the licensors of this
--- Program grant you additional permission to convey the resulting work.
--- See the GNU Affero General Public License for more details.
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU Affero General Public License for more details.
+--
 -- You should have received a copy of the GNU Affero General Public
--- License along with Sipi.  If not, see <http://www.gnu.org/licenses/>.
+-- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 -- Knora GUI-case: create a thumbnail
 
@@ -157,16 +154,47 @@ for imgindex, imgparam in pairs(server.uploads) do
         return -1
     end
 
+    -- #snip_marker
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_PROTOCOL environment variable and use its value.
+    --
+    local external_protocol = os.getenv("SIPI_EXTERNAL_PROTOCOL")
+    if external_protocol == nil then
+        external_protocol = "http"
+    end
+    server.log("make_thumbnail - external_protocol: " .. external_protocol, server.loglevel.LOG_DEBUG)
+
+    --
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_HOSTNAME environment variable and use its value.
+    --
+    local external_hostname = os.getenv("SIPI_EXTERNAL_HOSTNAME")
+    if external_hostname == nil then
+        external_hostname = config.hostname
+    end
+    server.log("make_thumbnail - external_hostname: " .. external_hostname, server.loglevel.LOG_DEBUG)
+
+    --
+    -- We need to be able to run behind a proxy and to configure this easily.
+    -- Allows to set SIPI_EXTERNAL_PORT environment variable and use its value.
+    --
+    local external_port = os.getenv("SIPI_EXTERNAL_PORT")
+    if external_port == nil then
+        external_port = config.port
+    end
+    server.log("make_thumbnail - external_port: " .. external_port, server.loglevel.LOG_DEBUG)
+
     answer = {
         nx_thumb = dims.nx,
         ny_thumb = dims.ny,
         mimetype_thumb = 'image/jpeg',
-        preview_path = "http://" .. config.hostname .. ":" .. config.port .."/thumbs/" .. thumbName .. "/full/full/0/default.jpg",
+        preview_path =  external_protocol .. "://" .. external_hostname .. ":" .. external_port .."/thumbs/" .. thumbName .. "/full/full/0/default.jpg",
         filename = tmpName, -- make this a IIIF URL
         original_mimetype = submitted_mimetype.mimetype,
         original_filename = filename,
         file_type = 'IMAGE'
     }
+    -- #snip_marker
 
 end
 

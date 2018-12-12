@@ -21,20 +21,18 @@ package org.knora.webapi.responders.v1
 
 import java.util.UUID
 
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.responders._
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.MutableTestIri
 
@@ -87,15 +85,15 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     import ValuesResponderV1Spec._
 
-    val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
 
-    val rdfDataObjects = Vector(
+    override lazy val rdfDataObjects = Vector(
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
+
     private val actorUnderTest = TestActorRef[ValuesResponderV1]
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
     // The default timeout for receiving reply messages from actors.
     private val timeout = 30.seconds
 
@@ -252,15 +250,6 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         received.locations.foreach {
             location: LocationV1 => assert(location.origname == request.file.originalFilename, "wrong original file name")
         }
-    }
-
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(30.seconds, LoadOntologiesResponse())
     }
 
     "The values responder" should {
@@ -1288,8 +1277,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "create a link between two resources" in {
+            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val lastModBeforeUpdate = getLastModificationDate(resourceIri)
+
             val createValueRequest = CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/cb1a74e3e2f6",
+                resourceIri = resourceIri,
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
                     targetResourceIri = zeitglöckleinIri
@@ -1311,7 +1303,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/cb1a74e3e2f6",
+                subjectIri = resourceIri,
                 predicateIri = OntologyConstants.KnoraBase.HasLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -1325,6 +1317,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                     rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
                     rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
             }
+
+            // Check that the resource's last modification date got updated.
+            val lastModAfterUpdate = getLastModificationDate(resourceIri)
+            lastModBeforeUpdate != lastModAfterUpdate should ===(true)
         }
 
         "not create a duplicate link" in {

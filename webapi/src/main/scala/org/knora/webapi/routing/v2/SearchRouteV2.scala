@@ -24,15 +24,15 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
+import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
-import org.knora.webapi.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.util.{SmartIri, StringFormatter}
-import org.knora.webapi._
-import org.knora.webapi.routing.v2.ResourcesRouteV2.getUserADM
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Provides a function for API routes that deal with search.
@@ -142,10 +142,10 @@ object SearchRouteV2 extends Authenticator {
 
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection("/user/responderManager")
+        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {
@@ -165,7 +165,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-                    val requestMessage = for {
+                    val requestMessage: Future[FullTextSearchCountRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield FullTextSearchCountRequestV2(
                         searchValue = searchString,
@@ -204,7 +204,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-                    val requestMessage = for {
+                    val requestMessage: Future[FulltextSearchRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield FulltextSearchRequestV2(
                         searchValue = searchString,
@@ -230,7 +230,7 @@ object SearchRouteV2 extends Authenticator {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
                         val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val requestMessage = for {
+                        val requestMessage: Future[GravsearchCountRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
@@ -250,7 +250,8 @@ object SearchRouteV2 extends Authenticator {
 
                 requestContext => {
                     val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                    val requestMessage = for {
+
+                    val requestMessage: Future[GravsearchCountRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield GravsearchCountRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
@@ -269,7 +270,7 @@ object SearchRouteV2 extends Authenticator {
                 entity(as[String]) { gravsearchQuery =>
                     requestContext => {
                         val constructQuery = GravsearchParser.parseQuery(gravsearchQuery)
-                        val requestMessage = for {
+                        val requestMessage: Future[GravsearchRequestV2] = for {
                             requestingUser <- getUserADM(requestContext)
                         } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
@@ -289,7 +290,7 @@ object SearchRouteV2 extends Authenticator {
 
                 requestContext => {
                     val constructQuery = GravsearchParser.parseQuery(sparql)
-                    val requestMessage = for {
+                    val requestMessage: Future[GravsearchRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield GravsearchRequestV2(constructQuery = constructQuery, requestingUser = requestingUser)
 
@@ -322,7 +323,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = for {
+                    val requestMessage: Future[SearchResourceByLabelCountRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourceByLabelCountRequestV2(
                         searchValue = searchString,
@@ -359,7 +360,7 @@ object SearchRouteV2 extends Authenticator {
 
                     val limitToResourceClass: Option[SmartIri] = getResourceClassFromParams(params)
 
-                    val requestMessage = for {
+                    val requestMessage: Future[SearchResourceByLabelRequestV2] = for {
                         requestingUser <- getUserADM(requestContext)
                     } yield SearchResourceByLabelRequestV2(
                         searchValue = searchString,

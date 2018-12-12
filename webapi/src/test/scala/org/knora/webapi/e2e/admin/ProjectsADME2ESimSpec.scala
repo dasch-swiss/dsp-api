@@ -34,7 +34,7 @@ import scala.concurrent.duration._
   */
 class ProjectsADME2ESimSpec extends E2ESimSpec {
 
-    override val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
+    override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
 
     val protobolBuilder = http
             .baseURL("http://localhost:3333")

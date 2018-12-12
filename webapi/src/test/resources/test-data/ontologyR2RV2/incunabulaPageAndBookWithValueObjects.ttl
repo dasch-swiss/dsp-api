@@ -25,6 +25,18 @@ incunabula:book a owl:Class;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:lastModificationDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
+      salsah-gui:guiOrder 1;
+      owl:minCardinality 1;
+      owl:onProperty incunabula:title
+    ], [ a owl:Restriction;
       salsah-gui:guiOrder 2;
       owl:maxCardinality 1;
       owl:onProperty incunabula:description
@@ -53,6 +65,10 @@ incunabula:book a owl:Class;
       owl:maxCardinality 1;
       owl:onProperty incunabula:location
     ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
       salsah-gui:guiOrder 7;
       owl:maxCardinality 1;
       owl:onProperty incunabula:url
@@ -65,13 +81,17 @@ incunabula:book a owl:Class;
       owl:minCardinality 0;
       owl:onProperty incunabula:note
     ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:creationDate
-    ], [ a owl:Restriction;
       salsah-gui:guiOrder 12;
       owl:minCardinality 0;
       owl:onProperty incunabula:book_comment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
@@ -90,16 +110,8 @@ incunabula:book a owl:Class;
       owl:onProperty knora-api:hasStandoffLinkToValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:lastModificationDate
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      salsah-gui:guiOrder 1;
-      owl:minCardinality 1;
-      owl:onProperty incunabula:title
+      owl:onProperty knora-api:isDeleted
     ] .
 
 incunabula:page a owl:Class;
@@ -122,6 +134,14 @@ incunabula:page a owl:Class;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteComment
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:deleteDate
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
@@ -140,6 +160,10 @@ incunabula:page a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasStillImageFileValue
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:isDeleted
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:maxCardinality 1;

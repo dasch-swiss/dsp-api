@@ -31,13 +31,14 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetReq
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec
@@ -227,7 +228,6 @@ class ValuesResponderV1 extends Responder {
                 comment = createValueRequest.comment,
                 valueCreator = userIri,
                 valuePermissions = defaultObjectAccessPermissions.permissionLiteral,
-                updateResourceLastModificationDate = true,
                 userProfile = createValueRequest.userProfile)
 
             // Verify that it was created.
@@ -370,7 +370,7 @@ class ValuesResponderV1 extends Responder {
                         val realTargetIri = stringFormatter.toRealStandoffLinkTargetResourceIri(iri = targetIri, clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris)
 
                         SparqlTemplateLinkUpdate(
-                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                            linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
                             directLinkExists = false,
                             insertDirectLink = true,
                             deleteDirectLink = false,
@@ -444,7 +444,7 @@ class ValuesResponderV1 extends Responder {
                                         // Construct a SparqlTemplateLinkUpdate to tell the SPARQL templates how to create
                                         // the link and its LinkValue.
                                         val sparqlTemplateLinkUpdate = SparqlTemplateLinkUpdate(
-                                            linkPropertyIri = propertyIri,
+                                            linkPropertyIri = propertyIri.toSmartIri,
                                             directLinkExists = false,
                                             insertDirectLink = true,
                                             deleteDirectLink = false,
@@ -593,7 +593,7 @@ class ValuesResponderV1 extends Responder {
         // Convert our Map full of Futures into one Future, which will provide a Map of all the results
         // when they're available.
         for {
-            valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFuturesInMap(valueVerificationFutures)
+            valueVerificationResponses: Map[IRI, Seq[CreateValueResponseV1]] <- ActorUtil.sequenceFutureSeqsInMap(valueVerificationFutures)
         } yield VerifyMultipleValueCreationResponseV1(verifiedValues = valueVerificationResponses)
     }
 
@@ -1942,15 +1942,14 @@ class ValuesResponderV1 extends Responder {
       * Creates a new value (either an ordinary value or a link), using an existing transaction, assuming that
       * pre-update checks have already been done.
       *
-      * @param dataNamedGraph                     the named graph in which the value is to be created.
-      * @param projectIri                         the IRI of the project in which to create the value.
-      * @param resourceIri                        the IRI of the resource in which to create the value.
-      * @param propertyIri                        the IRI of the property that will point from the resource to the value.
-      * @param value                              the value to create.
-      * @param valueCreator                       the IRI of the new value's owner.
-      * @param valuePermissions                   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile                        the profile of the user making the request.
+      * @param dataNamedGraph   the named graph in which the value is to be created.
+      * @param projectIri       the IRI of the project in which to create the value.
+      * @param resourceIri      the IRI of the resource in which to create the value.
+      * @param propertyIri      the IRI of the property that will point from the resource to the value.
+      * @param value            the value to create.
+      * @param valueCreator     the IRI of the new value's owner.
+      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+      * @param userProfile      the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
     private def createValueV1AfterChecks(dataNamedGraph: IRI,
@@ -1961,7 +1960,6 @@ class ValuesResponderV1 extends Responder {
                                          comment: Option[String],
                                          valueCreator: IRI,
                                          valuePermissions: String,
-                                         updateResourceLastModificationDate: Boolean,
                                          userProfile: UserADM): Future[UnverifiedValueV1] = {
         value match {
             case linkUpdateV1: LinkUpdateV1 =>
@@ -1973,7 +1971,6 @@ class ValuesResponderV1 extends Responder {
                     comment = comment,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
-                    updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
                 )
 
@@ -1986,7 +1983,6 @@ class ValuesResponderV1 extends Responder {
                     comment = comment,
                     valueCreator = valueCreator,
                     valuePermissions = valuePermissions,
-                    updateResourceLastModificationDate = updateResourceLastModificationDate,
                     userProfile = userProfile
                 )
         }
@@ -1995,14 +1991,13 @@ class ValuesResponderV1 extends Responder {
     /**
       * Creates a link, using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param dataNamedGraph                     the named graph in which the link is to be created.
-      * @param resourceIri                        the resource in which the link is to be created.
-      * @param propertyIri                        the link property.
-      * @param linkUpdateV1                       a [[LinkUpdateV1]] specifying the target resource.
-      * @param valueCreator                       the IRI of the new link value's owner.
-      * @param valuePermissions                   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
-      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile                        the profile of the user making the request.
+      * @param dataNamedGraph   the named graph in which the link is to be created.
+      * @param resourceIri      the resource in which the link is to be created.
+      * @param propertyIri      the link property.
+      * @param linkUpdateV1     a [[LinkUpdateV1]] specifying the target resource.
+      * @param valueCreator     the IRI of the new link value's owner.
+      * @param valuePermissions the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
+      * @param userProfile      the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
     private def createLinkValueV1AfterChecks(dataNamedGraph: IRI,
@@ -2012,7 +2007,6 @@ class ValuesResponderV1 extends Responder {
                                              comment: Option[String],
                                              valueCreator: IRI,
                                              valuePermissions: String,
-                                             updateResourceLastModificationDate: Boolean,
                                              userProfile: UserADM): Future[UnverifiedValueV1] = {
         for {
             sparqlTemplateLinkUpdate <- incrementLinkValue(
@@ -2027,7 +2021,6 @@ class ValuesResponderV1 extends Responder {
             currentTime: String = Instant.now.toString
 
             // Generate a SPARQL update string.
-            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createLink(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
@@ -2054,13 +2047,12 @@ class ValuesResponderV1 extends Responder {
     /**
       * Creates an ordinary value (i.e. not a link), using an existing transaction, assuming that pre-update checks have already been done.
       *
-      * @param resourceIri                        the resource in which the value is to be created.
-      * @param propertyIri                        the property that should point to the value.
-      * @param value                              an [[UpdateValueV1]] describing the value.
-      * @param valueCreator                       the IRI of the new value's owner.
-      * @param valuePermissions                   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
-      * @param updateResourceLastModificationDate if true, update the resource's `knora-base:lastModificationDate`.
-      * @param userProfile                        the profile of the user making the request.
+      * @param resourceIri      the resource in which the value is to be created.
+      * @param propertyIri      the property that should point to the value.
+      * @param value            an [[UpdateValueV1]] describing the value.
+      * @param valueCreator     the IRI of the new value's owner.
+      * @param valuePermissions the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
+      * @param userProfile      the profile of the user making the request.
       * @return an [[UnverifiedValueV1]].
       */
     private def createOrdinaryValueV1AfterChecks(dataNamedGraph: IRI,
@@ -2070,7 +2062,6 @@ class ValuesResponderV1 extends Responder {
                                                  comment: Option[String],
                                                  valueCreator: IRI,
                                                  valuePermissions: String,
-                                                 updateResourceLastModificationDate: Boolean,
                                                  userProfile: UserADM): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
@@ -2103,7 +2094,6 @@ class ValuesResponderV1 extends Responder {
             }
 
             // Generate a SPARQL update string.
-            //resourceIndex = 0 because this method isn't used when creating multiple resources
             sparqlUpdate = queries.sparql.v1.txt.createValue(
                 dataNamedGraph = dataNamedGraph,
                 triplestore = settings.triplestoreType,
@@ -2392,7 +2382,7 @@ class ValuesResponderV1 extends Responder {
       * refer to. Here there are two possibilities:
       *    - If there is currently a `knora-base:hasStandoffLinkTo` link between the source and target resources, with a
       * corresponding `LinkValue`, a new version of the `LinkValue` will be made, with an incremented reference count.
-      *    - If there that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
+      *    - If that link and `LinkValue` don't yet exist, they will be created, and the `LinkValue` will be given
       * a reference count of 1.
       *
       * @param sourceResourceIri the IRI of the source resource.
@@ -2433,7 +2423,7 @@ class ValuesResponderV1 extends Responder {
                     val insertDirectLink = !linkValueQueryResult.directLinkExists
 
                     SparqlTemplateLinkUpdate(
-                        linkPropertyIri = linkPropertyIri,
+                        linkPropertyIri = linkPropertyIri.toSmartIri,
                         directLinkExists = linkValueQueryResult.directLinkExists,
                         insertDirectLink = insertDirectLink,
                         deleteDirectLink = false,
@@ -2451,7 +2441,7 @@ class ValuesResponderV1 extends Responder {
                     // There's no LinkValue for links between these two resources, so create one, and give it
                     // a reference count of 1.
                     SparqlTemplateLinkUpdate(
-                        linkPropertyIri = linkPropertyIri,
+                        linkPropertyIri = linkPropertyIri.toSmartIri,
                         directLinkExists = false,
                         insertDirectLink = true,
                         deleteDirectLink = false,
@@ -2520,7 +2510,7 @@ class ValuesResponderV1 extends Responder {
                     val newLinkValueIri = knoraIdUtil.makeRandomValueIri(sourceResourceIri)
 
                     SparqlTemplateLinkUpdate(
-                        linkPropertyIri = linkPropertyIri,
+                        linkPropertyIri = linkPropertyIri.toSmartIri,
                         directLinkExists = linkValueQueryResult.directLinkExists,
                         insertDirectLink = false,
                         deleteDirectLink = deleteDirectLink,

@@ -66,7 +66,7 @@ For all API operations that target at changing resources or values, the
 client has to provide credentials (username and password) so that the
 API server can authenticate the user making the request. Credentials can
 be sent as a part of the HTTP header or as parts of the URL (see
-@ref:[Authentication in Knora](../../05-internals/design/authentication.md)).
+@ref:[Authentication in Knora](../../05-internals/design/principles/authentication.md)).
 
 ## OpenAPI/Swagger
 
@@ -76,7 +76,7 @@ documentation purposes. To try it out, run webapi and open
 http://host/api-docs/swagger.json in <http://petstore.swagger.io> .
 Alternatively, the documentation can be looked at by using
 [ReDoc](https://github.com/Rebilly/ReDoc), which is provided in
-`knora/docs/redoc/index.html`.
+`knora/docs/redoc/index.html` and is published under <https://docs.knora.org/api-admin/index.html>.
 
 ## Admin API Endpoints
 

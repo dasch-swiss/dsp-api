@@ -1781,7 +1781,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalMimeType ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :internalFilename ;
@@ -1793,7 +1793,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :originalFilename ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] .
 
 
@@ -2018,7 +2018,11 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :attachedToProject ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                          ] ;
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty rdfs:label ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger
+                          ];
 
           rdfs:comment "Represents a flat or hierarchical list"@en .
 

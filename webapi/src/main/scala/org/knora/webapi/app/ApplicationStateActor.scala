@@ -3,13 +3,17 @@ package org.knora.webapi.app
 import akka.actor.{Actor, ActorLogging}
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.{Settings, SettingsImpl}
+import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl}
+
+import scala.concurrent.ExecutionContext
 
 class ApplicationStateActor extends Actor with ActorLogging {
 
     log.debug("entered the ApplicationStateActor constructor")
 
-    // the prometheus, zipkin, jaeger, and printConfig flags can be set via application.conf and via command line parameter
+    val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+
+    // the prometheus, zipkin, jaeger, datadog, and printConfig flags can be set via application.conf and via command line parameter
     val settings: SettingsImpl = Settings(context.system)
 
     private var appState: AppState = AppState.Stopped
@@ -57,13 +61,13 @@ class ApplicationStateActor extends Actor with ActorLogging {
             log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
             sender ! (jaegerReporterState | settings.jaegerReporter)
         }
-        case SetPrintConfigState(value) => {
-            log.debug("ApplicationStateActor - SetPrintConfigState - value: {}", value)
+        case SetPrintConfigExtendedState(value) => {
+            log.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
             printConfigState = value
         }
-        case GetPrintConfigState() => {
-            log.debug("ApplicationStateActor - GetPrintConfigState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printConfig)
+        case GetPrintConfigExtendedState() => {
+            log.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
+            sender ! (printConfigState | settings.printExtendedConfig)
         }
         case SetAppState(value: AppState) => {
             log.debug("ApplicationStateActor - SetAppState - value {}", value)

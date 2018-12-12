@@ -271,10 +271,10 @@
 
        rdfs:subPropertyOf knora-base:hasValue ;
 
-       rdfs:label "Geometrie"@de ,
-                  "Géométrie"@fr ,
-                  "Geometria"@it ,
-                  "Geometry"@en ;
+       rdfs:label "Geoname"@de ,
+                  "Geoname"@fr ,
+                  "Geoname"@it ,
+                  "Geoname"@en ;
 
        knora-base:subjectClassConstraint :Thing ;
 
@@ -508,28 +508,16 @@
                       ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasBlueThing ;
+                         owl:onProperty :hasGeometry ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger
+                         salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
                       ] ,
                       [
                          rdf:type owl:Restriction ;
-                         owl:onProperty :hasBlueThingValue ;
+                         owl:onProperty :hasGeoname ;
                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                         salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+                         salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
                       ] ;
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeometry ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "11"^^xsd:nonNegativeInteger
-                      #] ,
-                      #[
-                      #   rdf:type owl:Restriction ;
-                      #   owl:onProperty :hasGeoname ;
-                      #   owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                      #   salsah-gui:guiOrder "12"^^xsd:nonNegativeInteger
-                      #] ;
 
       knora-base:resourceIcon "thing.png" ;
 
@@ -545,7 +533,19 @@
 
 :BlueThing rdf:type owl:Class ;
 
-      rdfs:subClassOf :Thing ;
+      rdfs:subClassOf :Thing ,
+      [
+         rdf:type owl:Restriction ;
+         owl:onProperty :hasBlueThing ;
+         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+         salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger
+      ] ,
+      [
+         rdf:type owl:Restriction ;
+         owl:onProperty :hasBlueThingValue ;
+         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+         salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+      ] ;
 
       rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
 
@@ -574,6 +574,23 @@
                                "maxlength=255" .
 
 
+:ThingWithSeqnum rdf:type owl:Class ;
+
+    rdfs:subClassOf :Thing ,
+        [
+           rdf:type owl:Restriction ;
+           owl:onProperty knora-base:seqnum ;
+           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+           salsah-gui:guiOrder "100"^^xsd:nonNegativeInteger
+        ] ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein Ding mit einer Sequenznummer"""@de ;
+
+    rdfs:label "Ding mit Sequenznummer"@de ,
+               "Chose avec numéro de séquence"@fr ,
+               "Cosa con numero di sequenza"@it ,
+               "Thing with sequence number"@en .
+
 
 :ThingPicture rdf:type owl:Class ;
 
@@ -592,6 +609,20 @@
                "Picture of a thing"@en ;
 
     rdfs:comment """Diese Resource-Klasse beschreibt ein Bild eines Dinges"""@de .
+
+
+:TrivialThing rdf:type owl:Class ;
+
+    rdfs:subClassOf knora-base:Resource ;
+
+    knora-base:resourceIcon "thing.png" ;
+
+    rdfs:label "Unbedeutendes Ding"@de ,
+               "Chose sans importance"@fr ,
+               "Cosa senza importanza"@it ,
+               "Trivial thing"@en ;
+
+    rdfs:comment """Diese Resource-Klasse beschreibt ein unbedeutendes Ding"""@de .
 
 
 #################################################################

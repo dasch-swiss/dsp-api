@@ -25,11 +25,10 @@ import akka.http.scaladsl.model.headers.{`Set-Cookie`, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.{SessionJsonProtocol, SessionResponse}
 import org.knora.webapi.routing.Authenticator.KNORA_AUTHENTICATION_COOKIE_NAME
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -52,8 +51,6 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
 
     private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
     private val rootIri = SharedTestDataV1.rootUser.userData.user_id.get
     private val rootIriEnc = java.net.URLEncoder.encode(rootIri, "utf-8")
     private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
@@ -63,12 +60,6 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
     private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
     private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
 
     "The Authentication Route ('v1/authenticate') with credentials supplied via URL parameters" should {
 
@@ -161,7 +152,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
-            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "deleted", expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
         }
 
         "fail authentication with provided session cookie after logout" in {

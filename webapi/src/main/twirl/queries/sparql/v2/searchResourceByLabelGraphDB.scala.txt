@@ -19,7 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.SparqlGenerationException
-@import org.knora.webapi.util.search.ApacheLuceneSupport.MatchStringWhileTyping
+@import org.knora.webapi.responders.v2.search.ApacheLuceneSupport.MatchStringWhileTyping
 
 @*
  * Performs a search for resources by their label.
@@ -42,47 +42,61 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 @if(!countQuery) {
-CONSTRUCT {
-    ?resource rdfs:label ?label ;
-        a knora-base:Resource ;
-        knora-base:isMainResource true ;
-		a ?resourceType ;
-        knora-base:attachedToUser ?resourceCreator ;
-        knora-base:hasPermissions ?resourcePermissions ;
-        knora-base:attachedToProject ?referredResourceProject .
+    CONSTRUCT {
+        ?resource rdfs:label ?label ;
+            a knora-base:Resource ;
+            knora-base:isMainResource true ;
+            knora-base:isDeleted false ;
+            a ?resourceType ;
+            knora-base:attachedToUser ?resourceCreator ;
+            knora-base:hasPermissions ?resourcePermissions ;
+            knora-base:attachedToProject ?resourceProject  ;
+            knora-base:creationDate ?creationDate ;
+            knora-base:lastModificationDate ?lastModificationDate ;
+            knora-base:deleteDate ?deleteDate ;
+            knora-base:deleteComment ?deleteComment .
 
         # include this inferred information in the results, needed to identify value properties
-    ?resource knora-base:hasValue ?valueObject ;
-        ?resourceValueProperty ?valueObject .
-    ?valueObject ?valueObjectProperty ?valueObjectValue .
+        ?resource knora-base:hasValue ?valueObject ;
+            ?resourceValueProperty ?valueObject .
+        ?valueObject ?valueObjectProperty ?valueObjectValue .
 
-} WHERE {
-    {
-        @{
-        queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
-            searchTerm = searchTerm,
-            limitToProject = limitToProject,
-            limitToResourceClass = limitToResourceClass,
-            limit = limit,
-            offset = offset,
-            countQuery = countQuery)
-        }
-    }
-
-    {
-        GRAPH <http://www.ontotext.com/explicit> {
-            ?resource a ?resourceType .
+    } WHERE {
+        {
+            @{
+                queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
+                    searchTerm = searchTerm,
+                    limitToProject = limitToProject,
+                    limitToResourceClass = limitToResourceClass,
+                    limit = limit,
+                    offset = offset,
+                    countQuery = countQuery)
+            }
         }
 
-        ?resource knora-base:attachedToUser ?resourceCreator ;
+        {
+            GRAPH <http://www.ontotext.com/explicit> {
+                ?resource a ?resourceType .
+            }
+
+            ?resource knora-base:attachedToUser ?resourceCreator ;
                 knora-base:hasPermissions ?resourcePermissions ;
-                knora-base:attachedToProject ?referredResourceProject  .
-    }
-    # there might by resources that have neither values nor links
-    UNION {
+                knora-base:attachedToProject ?resourceProject ;
+                knora-base:creationDate ?creationDate ;
+                rdfs:label ?label .
 
+            OPTIONAL {
+                ?resource knora-base:lastModificationDate ?lastModificationDate .
+            }
+
+            OPTIONAL {
+                ?resource knora-base:deleteDate ?deleteDate ;
+                    knora-base:deleteComment ?deleteComment .
+            }
+        }
+        # there might by resources that have neither values nor links
+        UNION {
             ?resource knora-base:hasValue ?valueObject .
-
             ?valueObject a knora-base:Value .
 
             GRAPH <http://www.ontotext.com/explicit> {
@@ -94,16 +108,16 @@ CONSTRUCT {
             }
 
             FILTER(?valueObjectType != knora-base:LinkValue)
+        }
     }
-}
 } else {
     @{
-            queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
-                searchTerm = searchTerm,
-                limitToProject = limitToProject,
-                limitToResourceClass = limitToResourceClass,
-                limit = limit,
-                offset = offset,
-                countQuery = countQuery)
-            }
+        queries.sparql.v2.txt.searchResourceByLabelSubQuerySelectGraphDB(
+            searchTerm = searchTerm,
+            limitToProject = limitToProject,
+            limitToResourceClass = limitToResourceClass,
+            limit = limit,
+            offset = offset,
+            countQuery = countQuery)
+    }
 }

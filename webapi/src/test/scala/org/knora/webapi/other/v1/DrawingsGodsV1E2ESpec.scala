@@ -27,9 +27,6 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 import org.knora.webapi.util.{MutableTestIri, ResourceResponseExtractorMethods, ValuesResponseExtractorMethods}
-import spray.json._
-
-import scala.concurrent.duration._
 
 object DrawingsGodsV1E2ESpec {
     val config = ConfigFactory.parseString(
@@ -46,20 +43,15 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects: List[RdfDataObject] = List(
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1E2ESpec/rvp-permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
         RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/0105/drawings-gods"),
-        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods")
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods"),
+        RdfDataObject(path = "_test_data/other.v1.DrawingsGodsV1Spec/parole-religieuse-dummy-onto.ttl", name = "http://www.knora.org/ontology/0106/parole-religieuse")
     )
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
 
     /**
       *  1a. parole-religieuse user creates a resource
@@ -81,7 +73,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
             val params =
                 s"""
                    |{
-                   |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
+                   |    "restype_id": "http://www.knora.org/ontology/0106/parole-religieuse#Thing",
                    |    "label": "A thing",
                    |    "project_id": "http://rdfh.ch/projects/0106",
                    |    "properties": {}
@@ -104,7 +96,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                   |    "int_value": 1234
                   |}
                 """.stripMargin
@@ -124,7 +116,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                   |{
                   |    "res_id": "${thingIri.get}",
-                  |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                  |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                   |    "int_value": 1111
                   |}
                 """.stripMargin
@@ -145,7 +137,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                 s"""
                    |{
                    |    "res_id": "${thingIri.get}",
-                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
+                   |    "prop": "http://www.knora.org/ontology/0106/parole-religieuse#hasInteger",
                    |    "int_value": 2222
                    |}
                 """.stripMargin

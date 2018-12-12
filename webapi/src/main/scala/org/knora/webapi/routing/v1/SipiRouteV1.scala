@@ -25,24 +25,23 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiFileInfoGetRequestV1
-import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 /**
-  * Provides a spray-routing function for the API routes that Sipi connects to.
+  * Provides a routing function for the API that Sipi connects to.
   */
 object SipiRouteV1 extends Authenticator {
 
     /**
-      * A spray-routing function for the API routes that Sipi connects to.
+      * A routing function for the API that Sipi connects to.
       */
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance

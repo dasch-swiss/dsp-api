@@ -19,14 +19,11 @@
 
 package org.knora.webapi.responders.v1
 
-import java.util.UUID
-
 import akka.actor.ActorSystem
+import org.knora.webapi.Settings
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.{OntologyConstants, Settings}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, XMLTag}
 
 
 object ResourcesResponderV1SpecFullData {
@@ -429,11 +426,11 @@ object ResourcesResponderV1SpecFullData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
                         origname = "ad+s167_druck1=0001.tif",
-                        format_name = "JPEG"
+                        format_name = "JPEG2000"
                     ),
                     LocationV1(
                         protocol = "file",
@@ -765,11 +762,11 @@ object ResourcesResponderV1SpecFullData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                    path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
                     origname = "ad+s167_druck1=0001.tif",
-                    format_name = "JPEG"
+                    format_name = "JPEG2000"
                 ),
                 LocationV1(
                     protocol = "file",
@@ -836,11 +833,11 @@ object ResourcesResponderV1SpecFullData {
                 protocol = "file",
                 duration = 0,
                 fps = 0,
-                path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                 ny = Some(128),
                 nx = Some(95),
                 origname = "ad+s167_druck1=0001.tif",
-                format_name = "JPEG"
+                format_name = "JPEG2000"
             )),
             restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
             restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
@@ -855,265 +852,5 @@ object ResourcesResponderV1SpecFullData {
     val dummyMapping = MappingXMLtoStandoff(
         namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
         defaultXSLTransformation = None
-    )
-
-    val expectedRegionFullResource = ResourceFullResponseV1(
-        access = "OK",
-        incoming = Vector(
-            IncomingV1(
-                value = Some("Gleicher Holzschnitt"),
-                resinfo = ResourceInfoV1(
-                    firstproperty = Some("Gleicher Holzschnitt"),
-                    value_of = 0,
-                    lastmod = "0000-00-00 00:00:00",
-                    resclass_has_location = false,
-                    resclass_name = "object",
-                    locdata = None,
-                    locations = None,
-                    preview = None,
-                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
-                    restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
-                    restype_label = Some("Verknüpfungsobjekt"),
-                    restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
-                    restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://rdfh.ch/users/91e19f1e01",
-                    project_id = "http://rdfh.ch/projects/0803"
-                ),
-                ext_res_id = ExternalResourceIDV1(
-                    pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://rdfh.ch/faa4d435a9f7"
-                )
-            ),
-            IncomingV1(
-                value = Some("Gleicher Holzschnitt wie in deutscher Ausgabe Seite b8v"),
-                resinfo = ResourceInfoV1(
-                    firstproperty = Some("Gleicher Holzschnitt wie in deutscher Ausgabe Seite b8v"),
-                    value_of = 0,
-                    lastmod = "0000-00-00 00:00:00",
-                    resclass_has_location = false,
-                    resclass_name = "object",
-                    locdata = None,
-                    locations = None,
-                    preview = None,
-                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
-                    restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
-                    restype_label = Some("Region"),
-                    restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
-                    restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    person_id = "http://rdfh.ch/users/91e19f1e01",
-                    project_id = "http://rdfh.ch/projects/0803"
-                ),
-                ext_res_id = ExternalResourceIDV1(
-                    pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://rdfh.ch/c5cf5a2bc6be"
-                )
-            ),
-            IncomingV1(
-                value = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
-                resinfo = ResourceInfoV1(
-                    firstproperty = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
-                    value_of = 0,
-                    lastmod = "0000-00-00 00:00:00",
-                    resclass_has_location = false,
-                    resclass_name = "object",
-                    locdata = None,
-                    locations = None,
-                    preview = None,
-                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
-                    restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
-                    restype_label = Some("Region"),
-                    restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
-                    restype_id = "http://www.knora.org/ontology/knora-base#Region",
-                    person_id = "http://rdfh.ch/users/1458b20f08",
-                    project_id = "http://rdfh.ch/projects/0803"
-                ),
-                ext_res_id = ExternalResourceIDV1(
-                    pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
-                    id = "http://rdfh.ch/c9824353ae06"
-                )
-            ),
-            IncomingV1(
-                value = Some("Der Holzschnitt wird auf Seite b8v der deutschen Ausgabe des Narrenschiffs und c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
-                resinfo = ResourceInfoV1(
-                    firstproperty = Some("Der Holzschnitt wird auf Seite b8v der deutschen Ausgabe des Narrenschiffs und c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
-                    value_of = 0,
-                    lastmod = "0000-00-00 00:00:00",
-                    resclass_has_location = false,
-                    resclass_name = "object",
-                    locdata = None,
-                    locations = None,
-                    preview = None,
-                    restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/link.gif"),
-                    restype_description = Some("Verknüpfung mehrerer Resourcen (Systemobject)"),
-                    restype_label = Some("Verknüpfungsobjekt"),
-                    restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
-                    restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
-                    person_id = "http://rdfh.ch/users/1458b20f08",
-                    project_id = "http://rdfh.ch/projects/0803"
-                ),
-                ext_res_id = ExternalResourceIDV1(
-                    pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
-                    id = "http://rdfh.ch/8e88d28dae06"
-                )
-            )
-        ),
-        props = Some(PropsV1(properties = Vector(
-            PropertyV1(
-                locations = Nil,
-                value_rights = Vector(Some(6)),
-                value_firstprops = Vector(None),
-                value_iconsrcs = Vector(None),
-                value_restype = Vector(None),
-                comments = Vector(None),
-                value_ids = Vector("http://rdfh.ch/047db418ae06/values/7331b94196a104"),
-                values = Vector(TextValueWithStandoffV1(
-                    resource_reference = Set("http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"), // TODO: Why is this a Value onject IRI?
-                    standoff =
-                        Vector(StandoffTagV2(
-                            standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag,
-                            endPosition = 94,
-                            startPosition = 0,
-                            uuid = UUID.randomUUID().toString,
-                            originalXMLID = None,
-                            startIndex = 0
-                        ),
-                            StandoffTagV2(
-                                standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag,
-                                dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-                                endPosition = 39,
-                                startPosition = 36,
-                                attributes = Vector(StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink, value = "http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103")),
-                                uuid = UUID.randomUUID().toString,
-                                originalXMLID = None,
-                                startIndex = 0
-                            )
-                        ),
-                    utf8str = "Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet.\r",
-                    mapping = dummyMapping,
-                    mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
-                )),
-                occurrence = Some("1-n"),
-                attributes = "",
-                label = Some("Kommentar"),
-                is_annotation = "0",
-                guielement = None,
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#TextValue"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasComment"
-            ),
-            PropertyV1(
-                locations = Nil,
-                value_rights = Vector(Some(6)),
-                value_firstprops = Vector(None),
-                value_iconsrcs = Vector(None),
-                value_restype = Vector(None),
-                comments = Vector(None),
-                value_ids = Vector("http://rdfh.ch/047db418ae06/values/cca179c00527"),
-                values = Vector(ColorValueV1(color = "#ff3333")),
-                occurrence = Some("1"),
-                attributes = "ncolors=8",
-                label = Some("Farbe"),
-                is_annotation = "0",
-                guielement = Some("colorpicker"),
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#ColorValue"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasColor"
-            ),
-            PropertyV1(
-                locations = Nil,
-                value_rights = Vector(Some(6)),
-                value_firstprops = Vector(None),
-                value_iconsrcs = Vector(None),
-                value_restype = Vector(None),
-                comments = Vector(None),
-                value_ids = Vector("http://rdfh.ch/047db418ae06/values/097826870527"),
-                values = Vector(GeomValueV1(geom = "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.24285714285714285,\"y\":0.1712962962962963},{\"x\":0.8678571428571429,\"y\":0.16666666666666666},{\"x\":0.8892857142857142,\"y\":0.7222222222222222},{\"x\":0.25,\"y\":0.7361111111111112},{\"x\":0.2392857142857143,\"y\":0.16898148148148148}],\"type\":\"polygon\"}")),
-                occurrence = Some("1-n"),
-                attributes = "width=95%;rows=4;wrap=soft",
-                label = Some("Geometrie"),
-                is_annotation = "0",
-                guielement = Some("geometry"),
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#GeomValue"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasGeometry"
-            ),
-            PropertyV1(
-                locations = Nil,
-                value_rights = Vector(Some(6)),
-                value_firstprops = Vector(Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet.")),
-                value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif")),
-                value_restype = Vector(Some("Region")),
-                comments = Vector(None),
-                value_ids = Vector("http://rdfh.ch/047db418ae06/values/2428fc96-1383-4457-9704-077b37256103"),
-                values = Vector(LinkV1(
-                    valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
-                    valueResourceClassLabel = Some("Region"),
-                    valueResourceClass = Some("http://www.knora.org/ontology/knora-base#Region"),
-                    valueLabel = Some("Derselbe Holzschnitt wird auch auf Seite b8v der deutschen Ausgabe des Narrenschiffs verwendet."),
-                    targetResourceIri = "http://rdfh.ch/c9824353ae06"
-                )),
-                occurrence = None,
-                attributes = "",
-                label = None,
-                is_annotation = "0",
-                guielement = None,
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#Resource"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"
-            ),
-            PropertyV1(
-                locations = Nil,
-                value_rights = Vector(Some(6)),
-                value_firstprops = Vector(Some("b8v")),
-                value_iconsrcs = Vector(Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif")),
-                value_restype = Vector(Some("Seite")),
-                comments = Vector(None),
-                value_ids = Vector("http://rdfh.ch/047db418ae06/values/2335c869-b649-4dd8-b4b5-e82c88449d62"),
-                values = Vector(LinkV1(
-                    valueResourceClassIcon = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
-                    valueResourceClassLabel = Some("Seite"),
-                    valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#page"),
-                    valueLabel = Some("b8v"),
-                    targetResourceIri = "http://rdfh.ch/883be8542e03"
-                )),
-                occurrence = Some("1"),
-                attributes = "",
-                label = None,
-                is_annotation = "0",
-                guielement = None,
-                guiorder = None,
-                valuetype_id = Some("http://www.knora.org/ontology/knora-base#Representation"),
-                regular_property = 1,
-                pid = "http://www.knora.org/ontology/knora-base#isRegionOf"
-            )
-        ))),
-        resdata = Some(ResourceDataV1(
-            rights = Some(6),
-            iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
-            restype_label = Some("Region"),
-            restype_name = "http://www.knora.org/ontology/knora-base#Region",
-            res_id = "http://rdfh.ch/047db418ae06"
-        )),
-        resinfo = Some(ResourceInfoV1(
-            firstproperty = Some("Derselbe Holzschnitt wird auf Seite c7r der lateinischen Ausgabe des Narrenschiffs verwendet."),
-            value_of = 0,
-            lastmod = "0000-00-00 00:00:00",
-            resclass_has_location = false,
-            resclass_name = "object",
-            locdata = None,
-            locations = None,
-            preview = None,
-            restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "knora-base/region.gif"),
-            restype_description = Some("This Resource represents a geometric region of a resource. The geometry is represented currently as JSON string."),
-            restype_label = Some("Region"),
-            restype_name = Some("http://www.knora.org/ontology/knora-base#Region"),
-            restype_id = "http://www.knora.org/ontology/knora-base#Region",
-            person_id = "http://rdfh.ch/users/1458b20f08",
-            project_id = "http://rdfh.ch/projects/0803"
-        ))
     )
 }

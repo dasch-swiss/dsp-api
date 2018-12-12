@@ -2,27 +2,65 @@
   "@graph" : [ {
     "@id" : "http://rdfh.ch/021ec18f1735",
     "@type" : "knora-api:Region",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:55Z"
+    },
     "knora-api:hasColor" : {
       "@id" : "http://rdfh.ch/021ec18f1735/values/10ea6976338201",
       "@type" : "knora-api:ColorValue",
-      "knora-api:colorValueAsColor" : "#ff3333"
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:colorValueAsColor" : "#ff3333",
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"
     },
     "knora-api:hasComment" : {
       "@id" : "http://rdfh.ch/021ec18f1735/values/8a96c303338201",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Siehe Seite c5v"
     },
     "knora-api:hasGeometry" : {
       "@id" : "http://rdfh.ch/021ec18f1735/values/4dc0163d338201",
       "@type" : "knora-api:GeomValue",
-      "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"
     },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
       "@type" : "knora-api:LinkValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/91e19f1e01"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "knora-api:attachedToProject" : {
+          "@id" : "http://rdfh.ch/projects/0803"
+        },
+        "knora-api:attachedToUser" : {
+          "@id" : "http://rdfh.ch/users/91e19f1e01"
+        },
+        "knora-api:creationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2016-03-02T15:05:43Z"
+        },
+        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "rdfs:label" : "u1r"
       }
     },
@@ -30,27 +68,65 @@
   }, {
     "@id" : "http://rdfh.ch/b6b64a62b006",
     "@type" : "knora-api:Region",
+    "knora-api:attachedToProject" : {
+      "@id" : "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:attachedToUser" : {
+      "@id" : "http://rdfh.ch/users/b83acc5f05"
+    },
+    "knora-api:creationDate" : {
+      "@type" : "xsd:dateTimeStamp",
+      "@value" : "2016-03-02T15:05:54Z"
+    },
     "knora-api:hasColor" : {
       "@id" : "http://rdfh.ch/b6b64a62b006/values/8da571610f27",
       "@type" : "knora-api:ColorValue",
-      "knora-api:colorValueAsColor" : "#ff3333"
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/b83acc5f05"
+      },
+      "knora-api:colorValueAsColor" : "#ff3333",
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"
     },
     "knora-api:hasComment" : {
       "@id" : "http://rdfh.ch/b6b64a62b006/values/0752cbee0e27",
       "@type" : "knora-api:TextValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/b83acc5f05"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:valueAsString" : "Derselbe Holzschnitt wird auf Seite c5v verwendet."
     },
     "knora-api:hasGeometry" : {
       "@id" : "http://rdfh.ch/b6b64a62b006/values/ca7b1e280f27",
       "@type" : "knora-api:GeomValue",
-      "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.0989010989010989,\"y\":0.18055555555555555},{\"x\":0.7252747252747253,\"y\":0.7245370370370371}],\"type\":\"rectangle\"}"
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/b83acc5f05"
+      },
+      "knora-api:geometryValueAsGeometry" : "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.0989010989010989,\"y\":0.18055555555555555},{\"x\":0.7252747252747253,\"y\":0.7245370370370371}],\"type\":\"rectangle\"}",
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser"
     },
+    "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
     "knora-api:isRegionOfValue" : {
       "@id" : "http://rdfh.ch/b6b64a62b006/values/d2893190-53ae-452f-adca-e8a0c68c4df6",
       "@type" : "knora-api:LinkValue",
+      "knora-api:attachedToUser" : {
+        "@id" : "http://rdfh.ch/users/b83acc5f05"
+      },
+      "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:UnknownUser,knora-base:KnownUser",
       "knora-api:linkValueHasTarget" : {
         "@id" : "http://rdfh.ch/9d626dc76c03",
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page",
+        "knora-api:attachedToProject" : {
+          "@id" : "http://rdfh.ch/projects/0803"
+        },
+        "knora-api:attachedToUser" : {
+          "@id" : "http://rdfh.ch/users/91e19f1e01"
+        },
+        "knora-api:creationDate" : {
+          "@type" : "xsd:dateTimeStamp",
+          "@value" : "2016-03-02T15:05:43Z"
+        },
+        "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
         "rdfs:label" : "u1r"
       }
     },
@@ -59,6 +135,7 @@
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
   }
 }

@@ -11,6 +11,5 @@ _build/
 
 # ignore default sipi folders
 /test/.cache/
-/images/
 /test/_test_data/images/thumbs/
 /test/_test_data/images/tmp/

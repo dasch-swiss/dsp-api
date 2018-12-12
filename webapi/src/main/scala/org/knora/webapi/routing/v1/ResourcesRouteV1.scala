@@ -49,7 +49,6 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonPro
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.routing.v1.ResourcesRouteV1.getUserADM
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
@@ -63,7 +62,7 @@ import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
@@ -78,7 +77,7 @@ object ResourcesRouteV1 extends Authenticator {
 
         implicit val system: ActorSystem = _system
         implicit val materializer: ActorMaterializer = ActorMaterializer()
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -382,6 +381,15 @@ object ResourcesRouteV1 extends Authenticator {
                         userProfile = userProfile
                     )).mapTo[EntityInfoGetResponseV1]
 
+                    // Look at the base classes of all the resource classes in the initial ontology. Make a set of
+                    // the ontologies containing the definitions of those classes, not including including the initial ontology itself
+                    // or any other ontologies we've already looked at.
+                    ontologyIrisFromBaseClasses: Set[IRI] = entityInfoResponse.resourceClassInfoMap.foldLeft(Set.empty[IRI]) {
+                        case (acc, (resourceClassIri, resourceClassInfo)) =>
+                            val subClassOfOntologies: Set[IRI] = resourceClassInfo.subClassOf.map(_.toSmartIri).filter(_.isKnoraDefinitionIri).map(_.getOntologyFromEntity.toString)
+                            acc ++ subClassOfOntologies
+                    } -- intermediateResults.keySet - initialOntologyIri
+
                     // Look at the properties that have cardinalities in the resource classes in the initial ontology.
                     // Make a set of the ontologies containing the definitions of those properties, not including the initial ontology itself
                     // or any other ontologies we've already looked at.
@@ -406,7 +414,7 @@ object ResourcesRouteV1 extends Authenticator {
                     }.toSet -- intermediateResults.keySet - initialOntologyIri
 
                     // Make a set of all the ontologies referenced by the initial ontology.
-                    referencedOntologies: Set[IRI] = ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
+                    referencedOntologies: Set[IRI] = ontologyIrisFromBaseClasses ++ ontologyIrisFromCardinalities ++ ontologyIrisFromObjectClassConstraints
 
                     // Recursively get NamedGraphEntityInfoV1 instances for each of those ontologies.
                     lastResults: Map[IRI, NamedGraphEntityInfoV1] <- referencedOntologies.foldLeft(FastFuture.successful(intermediateResults + (initialOntologyIri -> initialNamedGraphInfo))) {
@@ -1218,7 +1226,6 @@ object ResourcesRouteV1 extends Authenticator {
                             log = loggingAdapter
                         )(timeout = 1.hour, executionContext = executionContext)
                 }
-
             }
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
             get {

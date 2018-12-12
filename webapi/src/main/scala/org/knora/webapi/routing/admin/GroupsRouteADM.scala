@@ -29,12 +29,12 @@ import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.routing.v2.SearchRouteV2.getUserADM
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 /**
   * Provides a spray-routing function for API routes that deal with groups.
@@ -45,9 +45,9 @@ import scala.concurrent.ExecutionContextExecutor
 class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with GroupsADMJsonProtocol {
 
     implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection("/user/responderManager")
+    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     def knoraApiPath: Route = {

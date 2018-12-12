@@ -27,13 +27,11 @@ import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi.messages.v1.responder.projectmessages._
-import org.knora.webapi.routing.v1.ListsRouteV1.getUserADM
-import org.knora.webapi.routing.v1.ProjectsRouteV1.getUserProfileV1
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.ExecutionContext
 
 object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
 
@@ -43,7 +41,7 @@ object ProjectsRouteV1 extends Authenticator with ProjectV1JsonProtocol {
     def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         val responderManager = system.actorSelection("/user/responderManager")
         val stringFormatter = StringFormatter.getGeneralInstance

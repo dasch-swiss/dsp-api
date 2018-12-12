@@ -54,37 +54,21 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     private val firstPageIri = new MutableTestIri
     private val secondPageIri = new MutableTestIri
 
-    // creates tmp directory if not found
-    createTmpFileDir()
-
-    "Check if Sipi is running" in {
-        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-    }
-
     "Calling Knora Sipi Scripts" should {
 
         "successfully call C++ functions from Lua scripts" in {
             val request = Get(baseSipiUrl + "/test_functions" )
-            val response = singleAwaitingRequest(request)
-
-            response.status should be (StatusCodes.OK)
+            getResponseString(request)
         }
 
         "successfully call Lua functions for mediatype handling" in {
             val request = Get(baseSipiUrl + "/test_mediatype" )
-            val response = singleAwaitingRequest(request)
-
-            response.status should be (StatusCodes.OK)
+            getResponseString(request)
         }
 
         "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
             val request = Get(baseSipiUrl + "/test_knora_session_cookie" )
-            val response = singleAwaitingRequest(request)
-
-            response.status should be (StatusCodes.OK)
+            getResponseString(request)
         }
 
         "successfully call make_thumbnail.lua sipi script" in {

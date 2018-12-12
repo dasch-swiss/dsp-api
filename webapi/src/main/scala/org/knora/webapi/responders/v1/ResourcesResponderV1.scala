@@ -34,12 +34,13 @@ import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
 import scala.collection.immutable
@@ -62,7 +63,7 @@ class ResourcesResponderV1 extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
+    def receive: Receive = {
         case ResourceInfoGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getResourceInfoResponseV1(resourceIri, userProfile), log)
         case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => future2Message(sender(), getFullResponseV1(resourceIri, userProfile, getIncoming), log)
         case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => future2Message(sender(), getContextResponseV1(resourceIri, userProfile, resinfo), log)
@@ -758,11 +759,11 @@ class ResourcesResponderV1 extends Responder {
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
           * @param id            the file value IRI
-          * @param permissioCode the current user's permission code on the file value.
+          * @param permissionCode the current user's permission code on the file value.
           * @param image         a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
-                                       permissioCode: Option[Int],
+                                       permissionCode: Option[Int],
                                        image: StillImageFileValueV1)
 
 
@@ -790,7 +791,7 @@ class ResourcesResponderV1 extends Responder {
 
                     Some(StillImageFileValue(
                         id = fileValueIri,
-                        permissioCode = fileValuePermission,
+                        permissionCode = fileValuePermission,
                         image = StillImageFileValueV1(
                             internalMimeType = row.rowMap("internalMimeType"),
                             internalFilename = row.rowMap("internalFilename"),
@@ -942,23 +943,19 @@ class ResourcesResponderV1 extends Responder {
                     // Filter the source objects by eliminating the ones that the user doesn't have permission to see.
                     sourceObjectsWithPermissions = sourceObjects.filter(sourceObj => sourceObj.permissionCode.nonEmpty)
 
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(sourceObjectsWithPermissions))
-
                     contextItems = sourceObjectsWithPermissions.map {
-                        (sourceObj: SourceObject) =>
+                        sourceObj: SourceObject =>
 
-                            val preview: Option[LocationV1] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && fileVal.image.isPreview) match {
-                                case Some(preview: StillImageFileValue) =>
-                                    Some(valueUtilV1.fileValueV12LocationV1(preview.image))
-                                case None => None
-                            }
+                            // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                            // a IIIF preview URL from the full-size image.
 
-                            val locations: Option[Seq[LocationV1]] = sourceObj.fileValues.find(fileVal => fileVal.permissioCode.nonEmpty && !fileVal.image.isPreview) match {
+                            val (preview: Option[LocationV1], locations: Option[Seq[LocationV1]]): (Option[LocationV1], Option[Seq[LocationV1]]) = sourceObj.fileValues.find(fileVal => fileVal.permissionCode.nonEmpty && !fileVal.image.isPreview) match {
                                 case Some(full: StillImageFileValue) =>
-                                    val fileVals = createMultipleImageResolutions(full.image)
-                                    Some(preview.toVector ++ fileVals.map(valueUtilV1.fileValueV12LocationV1))
+                                    val preview: LocationV1 = valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(full.image))
+                                    val fileVals: Seq[LocationV1] = createMultipleImageResolutions(full.image).map(valueUtilV1.fileValueV12LocationV1)
+                                    (Some(preview), Some(Vector(preview) ++ fileVals))
 
-                                case None => None
+                                case None => (None, None)
                             }
 
                             ResourceContextItemV1(
@@ -968,9 +965,6 @@ class ResourcesResponderV1 extends Responder {
                                 firstprop = sourceObj.firstprop
                             )
                     }
-
-                    //_ = println(ScalaPrettyPrinter.prettyPrint(contextItems))
-
 
                 } yield contextItems
             } else {
@@ -1266,11 +1260,21 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+                throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+            }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
 
             // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
             clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
-                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)).toMap,
+                toWrap = resourcesToCreate.map(resRequest => resRequest.clientResourceID -> knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)).toMap,
                 errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
                 errorFun = { errorMsg => throw BadRequestException(errorMsg) }
             )
@@ -1285,6 +1289,19 @@ class ResourcesResponderV1 extends Responder {
             // Get ontology information about all the resource classes and properties used in the request.
 
             resourceClasses: Set[IRI] = resourcesToCreate.map(_.resourceTypeIri).toSet
+
+            // Ensure that none of the resource classes is from a non-shared ontology in another project.
+
+            resourceClassOntologyIris: Set[SmartIri] = resourceClasses.map(_.toSmartIri.getOntologyFromEntity)
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, userProfile)).mapTo[ReadOntologyMetadataV2]
+
+            _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
+                val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
+
+                if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
+                    throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared")
+                }
+            }
 
             resourceClassesEntityInfoResponse: EntityInfoGetResponseV1 <- (responderManager ? EntityInfoGetRequestV1(
                 resourceClassIris = resourceClasses,
@@ -1412,7 +1429,7 @@ class ResourcesResponderV1 extends Responder {
                         }
 
                         // generate sparql for every resource
-                        generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+                        generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                             projectIri = projectIri,
                             resourceIri = resourceIri,
                             resourceClassIri = resourceCreateRequest.resourceTypeIri,
@@ -1428,7 +1445,7 @@ class ResourcesResponderV1 extends Responder {
                     } yield SparqlTemplateResourceToCreate(
                         resourceIri = resourceIri,
                         permissions = defaultObjectAccessPermissions,
-                        generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                        sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
                         resourceLabel = resourceCreateRequest.label
                     )
@@ -1818,7 +1835,7 @@ class ResourcesResponderV1 extends Responder {
             // Make a timestamp for the resource and its values.
             currentTime: String = Instant.now.toString
 
-            generateSparqlForValuesResponse <- generateSparqlForValuesOfNewResource(
+            generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceClassIri,
@@ -1834,7 +1851,7 @@ class ResourcesResponderV1 extends Responder {
             resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
                 resourceIri = resourceIri,
                 permissions = defaultResourceClassAccessPermissions,
-                generateSparqlForValuesResponse = generateSparqlForValuesResponse,
+                sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                 resourceClassIri = resourceClassIri,
                 resourceLabel = label)
             )
@@ -1896,20 +1913,39 @@ class ResourcesResponderV1 extends Responder {
                 )
             }.mapTo[ProjectInfoResponseV1]
 
+            // Ensure that the project isn't the system project or the shared ontologies project.
+
+            resourceProjectIri: IRI = projectInfoResponse.project_info.id
+
+            _ = if (resourceProjectIri == OntologyConstants.KnoraBase.SystemProject || resourceProjectIri == OntologyConstants.KnoraBase.DefaultSharedOntologiesProject) {
+                throw BadRequestException(s"Resources cannot be created in project $resourceProjectIri")
+            }
+
+            // Ensure that the resource class isn't from a non-shared ontology in another project.
+
+            resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
+            readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(Set(resourceClassOntologyIri), userProfile)).mapTo[ReadOntologyMetadataV2]
+            ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
+            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
+
+            _ = if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
+                throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
+            }
+
             namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraph(projectInfoResponse.project_info)
-            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info)
+            resourceIri: IRI = knoraIdUtil.makeRandomResourceIri(projectInfoResponse.project_info.shortcode)
 
             // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
             // create a new resource in the given project.
-            _ = if (!userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)) {
-                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $projectIri")
+            _ = if (!userProfile.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), resourceProjectIri, None)) {
+                throw ForbiddenException(s"User $userIri does not have permissions to create a resource in project $resourceProjectIri")
             }
 
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
                 () => createResourceAndCheck(resourceClassIri,
-                    projectIri,
+                    resourceProjectIri,
                     label,
                     resourceIri,
                     values,
@@ -1927,7 +1963,7 @@ class ResourcesResponderV1 extends Responder {
                 sipiConversionRequest match {
                     case Some(conversionRequest) =>
                         conversionRequest match {
-                            case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
                                 // a tmp file has been created by the resources route (non GUI-case), delete it
                                 FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                             case _ => ()
@@ -2294,16 +2330,20 @@ class ResourcesResponderV1 extends Responder {
 
                 fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
 
-                (previewFileValues, fullFileValues) = fileValues.partition {
-                    case fileValue: StillImageFileValueV1 => fileValue.isPreview
-                    case _ => false
+                // Because of #1068, we ignore file values representing preview images. Instead, we generate
+                // a IIIF preview URL from the full-size image.
+
+                fullSizeImageFileValues: Seq[StillImageFileValueV1] = fileValues.collect {
+                    case fileValue: StillImageFileValueV1 if !fileValue.isPreview => fileValue
                 }
 
-                // Convert the preview file value into a LocationV1 as required by Knora API v1.
-                preview: Option[LocationV1] = previewFileValues.headOption.map(fileValueV1 => valueUtilV1.fileValueV12LocationV1(fileValueV1))
+                preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
+                    fullSizeImageFileValue: StillImageFileValueV1 =>
+                        valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
+                }
 
                 // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-                locations: Seq[LocationV1] = preview.toVector ++ fullFileValues.flatMap {
+                locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap {
                     fileValueV1 => createMultipleImageResolutions(fileValueV1).map(oneResolution => valueUtilV1.fileValueV12LocationV1(oneResolution))
                 }
 
@@ -2723,5 +2763,25 @@ class ResourcesResponderV1 extends Responder {
 
             case otherFileValueV1 => Vector(otherFileValueV1)
         }
+    }
+
+    /**
+      * Converts a full-size still image file value to a preview image.
+      *
+      * @param fullSizeImageFileValue the full-size image.
+      * @return a corresponding preview image.
+      */
+    private def fullSizeImageFileValueToPreview(fullSizeImageFileValue: StillImageFileValueV1): StillImageFileValueV1 = {
+        val proportion = fullSizeImageFileValue.dimY.toDouble / 128.0
+        val previewHeight = 128
+        val previewWidth = (fullSizeImageFileValue.dimX.toDouble / proportion).round.toInt
+
+        fullSizeImageFileValue.copy(
+            dimX = previewWidth,
+            dimY = previewHeight,
+            qualityLevel = 10,
+            isPreview = true,
+            qualityName = Some(SipiConstants.StillImage.thumbnailQuality)
+        )
     }
 }

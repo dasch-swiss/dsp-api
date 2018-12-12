@@ -19,14 +19,14 @@
 
 package org.knora.webapi
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 
 object SettingsSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
         akka {
-            # akka.loglevel = "DEBUG"
-            # akka.stdout-loglevel = "DEBUG"
+            akka.loglevel = "DEBUG"
+            akka.stdout-loglevel = "DEBUG"
         }
         """.stripMargin)
 }
@@ -64,9 +64,11 @@ class SettingsSpec extends CoreSpec("SettingsActorTestSystem", SettingsSpec.conf
             settings.internalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
             settings.externalSipiFileServerGetUrl should be ("http://localhost:1024/server/knora")
 
-            settings.internalSipiImageConversionUrl should be ("http://localhost:1024")
+            settings.internalSipiImageConversionUrlV1 should be ("http://localhost:1024")
 
-
+            settings.prometheusReporter should be (false)
+            settings.zipkinReporter should be (false)
+            settings.jaegerReporter should be (false)
         }
     }
 }

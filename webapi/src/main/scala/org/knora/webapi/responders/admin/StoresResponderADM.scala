@@ -28,8 +28,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRe
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
   * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
@@ -55,23 +54,19 @@ class StoresResponderADM extends Responder {
       */
     private def resetTriplestoreContent(rdfDataObjects: Seq[RdfDataObject]): Future[ResetTriplestoreContentResponseADM] = {
 
-        log.info(s"resetTriplestoreContent - called")
-        log.debug(s"resetTriplestoreContent called with: {}", rdfDataObjects.toString)
-        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
-        log.debug(s"StartupFlags.allowReloadOverHTTP = {}", allowReloadOverHTTP)
+        log.debug(s"resetTriplestoreContent - called")
 
         for {
             value: Boolean <- (applicationStateActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
             _ = if (!value) {
-                //println("resetTriplestoreContent - will throw ForbiddenException")
                 throw ForbiddenException("The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
             }
 
             resetResponse <- (storeManager ? ResetTriplestoreContent(rdfDataObjects)).mapTo[ResetTriplestoreContentACK]
-            _ = log.info(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
+            _ = log.debug(s"resetTriplestoreContent - triplestore reset done - {}", resetResponse.toString)
 
             loadOntologiesResponse <- (responderManager ? LoadOntologiesRequest(systemUser)).mapTo[LoadOntologiesResponse]
-            _ = log.info(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
+            _ = log.debug(s"resetTriplestoreContent - load ontology done - {}", loadOntologiesResponse.toString)
 
             result = ResetTriplestoreContentResponseADM(message = "success")
 

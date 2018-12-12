@@ -20,7 +20,6 @@
 package org.knora.webapi.e2e.v1
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
@@ -28,7 +27,6 @@ import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.duration._
 
@@ -49,7 +47,7 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
@@ -66,30 +64,23 @@ class ListsV1E2ESpec extends E2ESpec(ListsV1E2ESpec.config) with SessionJsonProt
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
 
-    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
-    val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
+    private val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
+    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
-    val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
+    private val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
+    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-    val wrongEmail = "wrong@example.com"
+    private val wrongEmail = "wrong@example.com"
     val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
 
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
     val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
-    val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
-
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
+    private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
+    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
     "The HList Route ('v1/hlists')" when {
 

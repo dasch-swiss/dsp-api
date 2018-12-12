@@ -24,10 +24,25 @@ package org.knora.webapi
   * 'SettingsConstants' contains constants of strings, we would generally expect to find in
   * the 'application.conf' file, which can be accessed by the application 'Settings'
   */
-object SettingsConstants {
 
-    val EMBEDDED_JENA_TDB_TS_TYPE = "embedded-jena-tdb"
-    val EMBEDDED_GRAPH_DB_TS_TYPE = "embedded-jena-graphdb"
-    val HTTP_GRAPH_DB_TS_TYPE = "graphdb"
-    val HTTP_FUSEKI_TS_TYPE = "fuseki"
+object TriplestoreTypes {
+
+    val EmbeddedJenaTdb = "embedded-jena-tdb"
+    val EmbeddedGraphDBSE= "embedded-jena-graphdb"
+    val HttpGraphDBSE = "graphdb-se"
+    val HttpGraphDBFree = "graphdb-free"
+    val HttpFuseki = "fuseki"
+}
+
+object KnoraDispatchers {
+
+    /**
+      * All normal actors should run on this dispatcher (non-blocking)
+      */
+    val KnoraActorDispatcher = "knora-actor-dispatcher"
+
+    /**
+      * All blocking operations should run on this dispatcher (blocking)
+      */
+    val KnoraBlockingDispatcher = "knora-blocking-dispatcher"
 }

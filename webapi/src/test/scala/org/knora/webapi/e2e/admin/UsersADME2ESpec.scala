@@ -24,16 +24,15 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsV1
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
-import org.knora.webapi.{E2ESpec, IRI, SharedTestDataADM, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.duration._
 
@@ -55,8 +54,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
     val rootCreds = CredentialsV1(
         SharedTestDataV1.rootUser.userData.user_id.get,
         SharedTestDataV1.rootUser.userData.email.get,
@@ -69,26 +66,25 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
         "test"
     )
 
-    val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
+    private val inactiveUserEmailEnc = java.net.URLEncoder.encode(SharedTestDataV1.inactiveUser.userData.email.get, "utf-8")
 
+    private val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
+    private val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
 
-    val normalUserIri = SharedTestDataV1.normalUser.userData.user_id.get
-    val normalUserIriEnc = java.net.URLEncoder.encode(normalUserIri, "utf-8")
+    private val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
+    private val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
 
-    val multiUserIri = SharedTestDataV1.multiuserUser.userData.user_id.get
-    val multiUserIriEnc = java.net.URLEncoder.encode(multiUserIri, "utf-8")
+    private val wrongEmail = "wrong@example.com"
+    private val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
 
-    val wrongEmail = "wrong@example.com"
-    val wrongEmailEnc = java.net.URLEncoder.encode(wrongEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
 
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val wrongPass = java.net.URLEncoder.encode("wrong", "utf-8")
+    private val imagesProjectIri = SharedTestDataADM.imagesProject.id
+    private val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
 
-    val imagesProjectIri = SharedTestDataADM.imagesProject.id
-    val imagesProjectIriEnc = java.net.URLEncoder.encode(imagesProjectIri, "utf-8")
-
-    val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
-    val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
+    private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+    private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
     /**
       * Convenience method returning the users project memberships.
@@ -129,13 +125,6 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
         AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[Seq[GroupADM]]
     }
 
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        // log.debug(s"request: ${request.toString}")
-        singleAwaitingRequest(request, 300.seconds)
-    }
-
     "The Users Route ('v1/users')" when {
 
         "used to query user information" should {
@@ -143,7 +132,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
             "return all users" in {
                 val request = Get(baseApiUrl + s"/admin/users") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
                 val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
+                log.debug(s"response: ${response.toString}")
                 response.status should be(StatusCodes.OK)
             }
 
@@ -169,11 +158,12 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
 
             val donaldIri = new MutableTestIri
 
-            "create the user and return it's profile if the supplied email is unique " in {
+            "create the user if the supplied email is unique " in {
 
                 val params =
                     s"""
                    |{
+                   |    "username": "donald.duck",
                    |    "email": "donald.duck@example.org",
                    |    "givenName": "Donald",
                    |    "familyName": "Duck",
@@ -191,6 +181,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
 
                 val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.username should be("donald.duck")
                 result.email should be("donald.duck@example.org")
                 result.givenName should be("Donald")
                 result.familyName should be("Duck")
@@ -206,6 +197,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 val params =
                     s"""
                     {
+                        "username": "donald.big.duck",
                         "email": "donald.big.duck@example.org",
                         "givenName": "Big Donald",
                         "familyName": "Duckmann",
@@ -220,6 +212,7 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 response.status should be(StatusCodes.OK)
 
                 val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+                result.username should be("donald.big.duck")
                 result.email should be("donald.big.duck@example.org")
                 result.givenName should be("Big Donald")
                 result.familyName should be("Duckmann")
@@ -312,6 +305,65 @@ class UsersADME2ESpec extends E2ESpec(UsersADME2ESpec.config) with ProjectsADMJs
                 // log.debug(jsonResult)
 
             }
+
+            "not allow changing the system user" in {
+
+                val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Put(baseApiUrl + s"/admin/users/" + systemUserIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow changing the anonymous user" in {
+
+                val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Put(baseApiUrl + s"/admin/users/" + anonymousUserIriEncoded, HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow deleting the system user" in {
+                val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+
+                val params =
+                    s"""
+                    {
+                        "status": false
+                    }
+                    """.stripMargin
+
+
+                val request = Delete(baseApiUrl + s"/admin/users/" + systemUserIriEncoded) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
+            "not allow deleting the anonymous user" in {
+                val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
+
+                val request = Delete(baseApiUrl + s"/admin/users/" + anonymousUserIriEncoded) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                response.status should be(StatusCodes.BadRequest)
+            }
+
         }
 
         "used to query project memberships" should {

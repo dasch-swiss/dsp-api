@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/dhlab-basel/Knora.svg?branch=develop)](https://travis-ci.org/dhlab-basel/Knora)
-[![codecov](https://codecov.io/gh/dhlab-basel/Knora/branch/develop/graph/badge.svg)](https://codecov.io/gh/dhlab-basel/Knora)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
 # Knora
 
 [Knora](http://www.knora.org/) (Knowledge Organization, Representation, and Annotation) is a server
@@ -30,19 +30,20 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### Beta stage
 
+* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 * [Knora Admin API](https://docs.knora.org/paradox/03-apis/api-admin/index.html)
 * Distribution packaging using [Docker](https://www.docker.com/)
 
 ### New features under development
 
-* [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
+* Additional functionality for [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
 
 ## Requirements
 
 ### For developing and testing the API server
 
-* Linux or Mac OS X
-* [Java Development Kit 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+* Linux or macOS (with some caveats)
+* [Java Development Kit 10](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html)
 * [SBT](http://www.scala-sbt.org/)
 
 [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is recommended. Support for
@@ -69,16 +70,17 @@ Then in another terminal, create a test repository and load some test data into 
 
 ```
 $ cd webapi/scripts
-$ ./graphdb-free-init-knora-test.sh
+$ ./graphdb-free-docker-init-knora-test.sh
 ```
 
-Then go back to the webapi root directory and use SBT to start the API server:
+Then go back to the Knora root directory and use SBT to start the API server:
 
 ```
-$ cd ..
+$ cd ../..
 $ sbt
-> compile
-> reStart
+> webapi / compile
+> set webapi / reStart / javaOptions ++= Seq("-Dapp.triplestore.dbtype=graphdb-free")
+> webapi / reStart
 ```
 
 Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
@@ -86,7 +88,7 @@ Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc505
 To shut down the Knora API server:
 
 ```
-> reStop
+> webapi / reStop
 ```
 
 ### Run the automated tests
@@ -101,7 +103,7 @@ $ ./graphdb-free-init-knora-test-unit.sh
 Then at the SBT prompt:
 
 ```
-> test
+> webapi / GDBFree / test
 ```
 
 ## How to Contribute
@@ -170,3 +172,28 @@ feature (resources route): add route for resource creation
 - adapt handling of resources responder
 
 ```
+
+## Release Versioning Convention
+
+The Knora project is following the Semantic Versioning convention for numbering the releases
+as defined by [http://semver.org]:
+
+> Given a version number MAJOR.MINOR.PATCH, increment the:
+>
+> * MAJOR version when you make incompatible API changes,
+> * MINOR version when you add functionality in a backwards-compatible manner, and
+> * PATCH version when you make backwards-compatible bug fixes.
+
+Additionally, we will also increment the MAJOR version in the case when any kind of changes to existing
+data would be necessary, e.g., any changes to the Knora-Base ontologies which are not backwards compatible.
+
+## Acknowledgments
+
+![](https://www.yourkit.com/images/yklogo.png)
+
+The Knora project is using YourKit for profiling.
+
+YourKit supports open source projects with its full-featured Java Profiler.
+YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
+and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
+innovative and intelligent tools for profiling Java and .NET applications.

@@ -1,0 +1,96 @@
+@*
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import java.time.Instant
+@import org.knora.webapi._
+@import org.knora.webapi.util.SmartIri
+@import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
+@import org.knora.webapi.messages.v2.responder.valuemessages._
+
+@**
+ * Generates statements to be added to the INSERT clause of a SPARQL update when creating a new value of a resource
+ * property (as opposed to a new version of an existing value). This template is used in two contexts: when creating a
+ * single value in an existing resource, and when creating a new resource with its initial values.
+ *
+ * @param resourceIri the IRI of the resource.
+ * @param propertyIri the IRI of the property for which the value is being created.
+ * @param value the value to insert.
+ * @param newValueIri the IRI of the new value.
+ * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
+ *        updated for resource references in Standoff text values. This list will be empty if the links and LinkValues
+ *        are being created separately.
+ * @param valueCreator the IRI of the user who created the value.
+ * @param valuePermissions the permissions that should be attached to the value.
+ * @param currentTime an xsd:dateTimeStamp representing the current time.
+ * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ *@
+@(resourceIri: IRI,
+  propertyIri: SmartIri,
+  value: ValueContentV2,
+  newValueIri: IRI,
+  linkUpdates: Seq[SparqlTemplateLinkUpdate],
+  valueCreator: IRI,
+  valuePermissions: String,
+  currentTime: Instant,
+  maybeValueHasOrder: Option[Int])
+
+        # Value: @newValueIri
+        # Property: @propertyIri
+
+        @* Construct the value. *@
+        <@newValueIri> rdf:type <@value.valueType> ;
+            knora-base:isDeleted false  ;
+            knora-base:valueHasString """@value.valueHasString""" .
+
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
+                                                                          newValueIri = newValueIri)
+        }
+
+        @* Insert the value's comment, if given. *@
+        @value.comment match {
+            case Some(commentStr) => {
+                <@newValueIri> knora-base:valueHasComment """@commentStr""" .
+            }
+
+            case None => {}
+        }
+
+        <@newValueIri> knora-base:attachedToUser <@valueCreator> ;
+            knora-base:hasPermissions "@valuePermissions"^^xsd:string ;
+            @maybeValueHasOrder match {
+                case Some(order) => {
+                    knora-base:valueHasOrder @order ;
+                }
+
+                case None => {
+                    knora-base:valueHasOrder ?nextOrder ;
+                }
+            }
+            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+
+        @* Insert direct links and LinkValues for resource references. *@
+        @{
+            queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
+                                                                           linkUpdates = linkUpdates,
+                                                                           currentTime = currentTime)
+        }
+
+        @* Attach the value to the resource. *@
+        <@resourceIri> <@propertyIri> <@newValueIri> .

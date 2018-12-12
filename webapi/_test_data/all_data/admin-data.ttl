@@ -16,6 +16,8 @@
 
 <http://rdfh.ch/users/root> rdf:type knora-base:User ;
 
+                                   knora-base:username "root"^^xsd:string ;
+
                                    knora-base:email "root@example.com"^^xsd:string ;
 
                                    knora-base:givenName "System"^^xsd:string ;
@@ -34,6 +36,8 @@
 
 
 <http://rdfh.ch/users/superuser> rdf:type knora-base:User ;
+
+                                        knora-base:username "superuser"^^xsd:string ;
 
                                         knora-base:email "super.user@example.com"^^xsd:string ;
 
@@ -54,6 +58,8 @@
 
 <http://rdfh.ch/users/normaluser> rdf:type knora-base:User ;
 
+                                         knora-base:username "normaluser"^^xsd:string ;
+
                                          knora-base:email "normal.user@example.com"^^xsd:string ;
 
                                          knora-base:givenName "Normal"^^xsd:string ;
@@ -72,6 +78,9 @@
 
 
 <http://rdfh.ch/users/inactiveuser> rdf:type knora-base:User ;
+
+
+                                           knora-base:username "inactiveuser"^^xsd:string ;
 
                                            knora-base:email "inactive.user@example.com"^^xsd:string ;
 
@@ -120,6 +129,8 @@
 ## Project Admin
 <http://rdfh.ch/users/c266a56709> rdf:type knora-base:User ;
 
+                                   knora-base:username "user01.user1"^^xsd:string ;
+
                                    knora-base:email "user01.user1@example.com"^^xsd:string ;
 
                                    knora-base:givenName "User01"^^xsd:string ;
@@ -142,6 +153,8 @@
 ## Project Member
 <http://rdfh.ch/users/97cec4000f> rdf:type knora-base:User ;
 
+                                   knora-base:username "user02.user"^^xsd:string ;
+
                                    knora-base:email "user02.user@example.com"^^xsd:string ;
 
                                    knora-base:givenName "User02"^^xsd:string ;
@@ -161,6 +174,8 @@
 
 ## Images Reviewer
 <http://rdfh.ch/users/images-reviewer-user> rdf:type knora-base:User ;
+
+                                         knora-base:username "images-reviewer-user"^^xsd:string ;
 
                                          knora-base:email "images-reviewer-user@example.com"^^xsd:string ;
 
@@ -252,6 +267,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Admin
 <http://rdfh.ch/users/b83acc5f05> rdf:type knora-base:User ;
 
+                                         knora-base:username "user.test"^^xsd:string ;
+
                                          knora-base:givenName "User"^^xsd:string ;
 
                                          knora-base:familyName "Test"^^xsd:string ;
@@ -274,6 +291,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 ## Project Creator and Member
 <http://rdfh.ch/users/91e19f1e01> rdf:type knora-base:User ;
 
+                                         knora-base:username "root-alt"^^xsd:string ;
+
                                          knora-base:familyName "Admin-alt"^^xsd:string ;
 
                                          knora-base:givenName "Administrator-alt"^^xsd:string ;
@@ -295,6 +314,8 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 ## Project Member
 <http://rdfh.ch/users/incunabulaMemberUser> rdf:type knora-base:User ;
+
+                                         knora-base:username "incunabulaMemberUser"^^xsd:string ;
 
                                          knora-base:familyName "User2"^^xsd:string ;
 
@@ -322,15 +343,15 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://rdfh.ch/users/multiuser> rdf:type knora-base:User ;
 
-                                        knora-base:userid "multiuser"^^xsd:string ;
+                                        knora-base:username "multiuser"^^xsd:string ;
+
+                                        knora-base:email "multi.user@example.com"^^xsd:string ;
 
                                         knora-base:givenName "Multi"^^xsd:string ;
 
                                         knora-base:familyName "User"^^xsd:string ;
 
                                         knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-
-                                        knora-base:email "multi.user@example.com"^^xsd:string ;
 
                                         knora-base:phone "123456"^^xsd:string ;
 
@@ -366,7 +387,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> a knora-base:User ;
-  knora-base:userid "anything-user"^^xsd:string ;
+  knora-base:username "anything.user01"^^xsd:string ;
   knora-base:givenName "Anything"^^xsd:string ;
   knora-base:familyName "User01"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -374,10 +395,11 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:preferredLanguage "de"^^xsd:string ;
   knora-base:status "true"^^xsd:boolean ;
   knora-base:isInProject <http://rdfh.ch/projects/0001> ;
+  knora-base:isInGroup <http://rdfh.ch/groups/0001/thing-searcher> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/AnythingAdminUser> a knora-base:User ;
-  knora-base:userid "anything-user"^^xsd:string ;
+  knora-base:username "anything.admin"^^xsd:string ;
   knora-base:givenName "Anything"^^xsd:string ;
   knora-base:familyName "Admin"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -389,7 +411,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/0001> .
 
 <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> a knora-base:User ;
-  knora-base:userid "anything-user-2" ;
+  knora-base:username "anything.user02" ;
   knora-base:givenName "Anything" ;
   knora-base:familyName "User02" ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU=" ;
@@ -398,6 +420,14 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:status "true"^^xsd:boolean ;
   knora-base:isInProject <http://rdfh.ch/projects/0001> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
+
+<http://rdfh.ch/groups/0001/thing-searcher> rdf:type knora-base:UserGroup ;
+  knora-base:groupName "Thing searcher"^^xsd:string ;
+  knora-base:groupDescription "A group for thing searchers."^^xsd:string ;
+  knora-base:belongsToProject <http://rdfh.ch/projects/0001> ;
+  knora-base:status "true"^^xsd:boolean ;
+  knora-base:hasSelfJoinEnabled "true"^^xsd:boolean .
+
 
 ###################################
 # DOKUBIB                         #
@@ -425,7 +455,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF> a knora-base:User ;
-  knora-base:userid "beol"^^xsd:string ;
+  knora-base:username "t.schweizer"^^xsd:string ;
   knora-base:familyName "BEOL"^^xsd:string ;
   knora-base:givenName "BEOL"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -436,7 +466,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGE> a knora-base:User ;
-  knora-base:userid "beol"^^xsd:string ;
+  knora-base:username "beol"^^xsd:string ;
   knora-base:familyName "BEOL"^^xsd:string ;
   knora-base:givenName "BEOL"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -446,33 +476,6 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-base:isInProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
   knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
   knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> .
-
-
-###################################
-# BIBLIO                          #
-###################################
-
-<http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> a knora-base:knoraProject ;
-  knora-base:projectShortname "biblio"^^xsd:string ;
-  knora-base:projectShortcode "0802"^^xsd:string ;
-  knora-base:projectLongname "Bibliography"^^xsd:string ;
-  knora-base:projectDescription "Bibliography"^^xsd:string ;
-  knora-base:status "true"^^xsd:boolean ;
-  knora-base:hasSelfJoinEnabled "false"^^xsd:boolean .
-
-
-<http://rdfh.ch/users/Q-6Sssu8TBWrcCGuVJ0lVw> a knora-base:User ;
-  knora-base:userid "biblio"^^xsd:string ;
-  knora-base:familyName "biblio"^^xsd:string ;
-  knora-base:givenName "biblio"^^xsd:string ;
-  knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
-  knora-base:email "biblio@example.com"^^xsd:string ;
-  knora-base:preferredLanguage "de"^^xsd:string ;
-  knora-base:status "true"^^xsd:boolean ;
-  knora-base:isInProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
-  knora-base:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-base:isInProjectAdminGroup <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> .
-
 
 
 ###################################
@@ -489,7 +492,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 ## Project Member
 <http://rdfh.ch/users/webernProjectMember> a knora-base:User ;
-  knora-base:userid "webern-nutzer"^^xsd:string ;
+  knora-base:username "webern-nutzer"^^xsd:string ;
   knora-base:familyName "Webern"^^xsd:string ;
   knora-base:givenName "Nutzer"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
@@ -501,7 +504,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 ## Project Admin
 <http://rdfh.ch/users/webernProjectAdmin> a knora-base:User ;
-  knora-base:userid "webern-admin"^^xsd:string ;
+  knora-base:username "webern-admin"^^xsd:string ;
   knora-base:familyName "Webern"^^xsd:string ;
   knora-base:givenName "Admin"^^xsd:string ;
   knora-base:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;

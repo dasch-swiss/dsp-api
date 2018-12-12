@@ -27,13 +27,13 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{FileUtil, MutableTestIri}
+import org.knora.webapi.util.MutableTestIri
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.io.Source
 import scala.xml._
 import scala.xml.transform.{RewriteRule, RuleTransformer}
@@ -53,7 +53,7 @@ object KnoraSipiIntegrationV1ITSpec {
   */
 class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config) with TriplestoreJsonProtocol {
 
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
@@ -123,23 +123,18 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
       */
     private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
         val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
-            case (Some(createdResources: JsArray)) =>
+            case Some(createdResources: JsArray) =>
                 createdResources.elements.find {
-                    case createdRes: JsValue =>
+                    case res: JsObject =>
+                        res.fields.get("clientResourceID") match {
+                            case Some(JsString(id)) if id == clientID => true
 
-                        createdRes match {
-                            case res: JsObject =>
-                                res.fields.get("clientResourceID") match {
-                                    case Some(JsString(id)) if id == clientID => true
-
-                                    case other => false
-                                }
                             case other => false
                         }
-
+                    case _ => false
                 }
 
-            case other => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
+            case _ => throw InvalidApiJsonException("bulk import response should have memeber 'createdResources'")
         }
 
         if (resIriOption.nonEmpty) {
@@ -157,21 +152,6 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
         } else {
             throw InvalidApiJsonException("expected client IRI for letter could not be found")
         }
-    }
-
-    // creates tmp directory if not found
-    createTmpFileDir()
-
-    "Check if Sipi is running" in {
-        // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-        val request = Get(baseSipiUrl + "/server/test.html")
-        val response = singleAwaitingRequest(request)
-        assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
-    }
-
-    "Load test data" in {
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
     }
 
     "Knora and Sipi" should {
@@ -773,12 +753,12 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
 
             val letterResponseBodyFuture: Future[String] = letterTEIResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-            val letterResponseBodyXML = Await.result(letterResponseBodyFuture, 5.seconds)
+            val letterResponseBodyXML: String = Await.result(letterResponseBodyFuture, 5.seconds)
 
             val xmlExpected =
                 s"""<?xml version="1.0" encoding="UTF-8"?>
                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                  |                <teiHeader>
+                  |<teiHeader>
                   |   <fileDesc>
                   |      <titleStmt>
                   |         <title>Testletter</title>
@@ -804,11 +784,10 @@ class KnoraSipiIntegrationV1ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
                   |   </profileDesc>
                   |</teiHeader>
                   |
-                  |                <text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
+                  |<text><body>                <p>[...] Viro Clarissimo.</p>                <p>Dn. Jacobo Hermanno S. S. M. C. </p>                <p>et Ph. M.</p>                <p>S. P. D. </p>                <p>J. J. Sch.</p>                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>                </p>            </body></text>
                   |</TEI>
                   |
                 """.stripMargin
-
 
             val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(letterResponseBodyXML)).withTest(Input.fromString(xmlExpected)).build()
 

@@ -23,6 +23,7 @@ import java.io.File
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionRequestV1
@@ -31,7 +32,6 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.MappingXMLtoStand
 import org.knora.webapi.twirl.{StandoffTagAttributeV2, StandoffTagInternalReferenceAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.util.{DateUtilV1, KnoraIdUtil, StringFormatter}
-import org.knora.webapi._
 import spray.json._
 
 
@@ -571,10 +571,10 @@ case class ValueObjectV1(valueObjectIri: IRI,
   * of the values of this enumeration; use `lookup` instead, because it reports errors better.
   */
 object KnoraCalendarV1 extends Enumeration {
-    val JULIAN = Value(0, "JULIAN")
-    val GREGORIAN = Value(1, "GREGORIAN")
-    val JEWISH = Value(2, "JEWISH")
-    val REVOLUTIONARY = Value(3, "REVOLUTIONARY")
+    val JULIAN: Value = Value(0, "JULIAN")
+    val GREGORIAN: Value = Value(1, "GREGORIAN")
+    val JEWISH: Value = Value(2, "JEWISH")
+    val REVOLUTIONARY: Value = Value(3, "REVOLUTIONARY")
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -762,7 +762,7 @@ case class TextValueWithStandoffV1(utf8str: String,
             case otherText: TextValueV1 =>
 
                 // unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not
-                otherText.utf8str == stringFormatter.fromSparqlEncodedString(utf8str)
+                stringFormatter.fromSparqlEncodedString(utf8str) == otherText.utf8str
             case otherValue => throw InconsistentTriplestoreDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
         }
     }
@@ -778,16 +778,17 @@ case class TextValueWithStandoffV1(utf8str: String,
     override def isRedundant(currentVersion: ApiValueV1): Boolean = {
 
         currentVersion match {
-            case textValueSimpleV1: TextValueSimpleV1 => false
+            case _: TextValueSimpleV1 => false
+
             case textValueWithStandoffV1: TextValueWithStandoffV1 =>
 
                 // compare utf8str (unescape utf8str since it contains escaped sequences while the string returned by the triplestore does not)
-                val utf8strIdentical: Boolean = textValueWithStandoffV1.utf8str == stringFormatter.fromSparqlEncodedString(utf8str)
+                val utf8strIdentical: Boolean = stringFormatter.fromSparqlEncodedString(utf8str) == textValueWithStandoffV1.utf8str
 
-                // compare standoff nodes (sort them first, since the order does not make any difference )
-                val standoffIdentical: Boolean = textValueWithStandoffV1.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition)) == this.standoff.sortBy(standoffNode => (standoffNode.standoffTagClassIri, standoffNode.startPosition))
-
-                // TODO: at the moment, the UUID is created randomly for every new standoff tag. This means that this method always returns false.
+                // Compare standoff tags.
+                val thisComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(standoff)
+                val thatComparableStandoff = StandoffTagUtilV2.makeComparableStandoffCollection(textValueWithStandoffV1.standoff)
+                val standoffIdentical: Boolean = thisComparableStandoff == thatComparableStandoff
 
                 utf8strIdentical && standoffIdentical && textValueWithStandoffV1.mappingIri == this.mappingIri
 

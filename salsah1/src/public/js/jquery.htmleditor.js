@@ -86,21 +86,26 @@
                 var htmlstr;
 				if (localdata.settings.xml !== undefined) {
 					// xml is given
-                    htmlstr = localdata.settings.xml.replace('<?xml version="1.0" encoding="UTF-8"?>', "").replace("<text>", "").replace("</text>", "")
+					htmlstr = localdata.settings.xml.replace('<?xml version="1.0" encoding="UTF-8"?>', "").replace("<text>", "").replace("</text>", "")
+					$this
+						.attr({contenteditable: false})
+						.css(localdata.settings.css)
+						.html(htmlstr);
 				} else  {
 					// text without markup is given
-                    htmlstr = localdata.settings.utf8str;
+					htmlstr = localdata.settings.utf8str;
+					$this
+						.attr({contenteditable: false})
+						.css(localdata.settings.css)
+						.text(htmlstr);
+					// above '.text' encode '<strong>' in '&lt;strong&gt;'
+					// below replaces the remaining '\n' with '<br>'
+					$this.html($this.html().replace(/\n/g, '<br>'));
                 }
 
                 //var reg = new RegExp('([^f][^=][^"])(http://[^<>\\s]+[\\w\\d])', 'g');     // replace URLs with anchor tags (but only for strings beginning with http://, not for already existing a-tags containing href="http://")
                 //htmlstr = htmlstr.replace(reg, '$1<a href="$2" target="_blank">$2</a>');
                 
-				$this
-					.attr({contenteditable: false})
-					.css(localdata.settings.css)
-					.html(htmlstr);
-					
-
 				$this.data('localdata', localdata); // initialize a local data object which is attached to the DOM object
 			});
 		},

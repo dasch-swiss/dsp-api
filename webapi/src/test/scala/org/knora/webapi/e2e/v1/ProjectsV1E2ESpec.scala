@@ -24,14 +24,13 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.messages.v1.responder.usermessages.UserDataV1
 import org.knora.webapi.messages.v1.responder.usermessages.UserV1JsonProtocol._
 import org.knora.webapi.util.AkkaHttpUtils
 import org.knora.webapi.{E2ESpec, SharedTestDataV1}
-import spray.json._
 
 import scala.concurrent.duration._
 
@@ -53,22 +52,13 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass())
 
-    private val rdfDataObjects = List.empty[RdfDataObject]
-
-    val rootEmail = SharedTestDataV1.rootUser.userData.email.get
-    val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
-    val testPass = java.net.URLEncoder.encode("test", "utf-8")
-    val projectIri = SharedTestDataV1.imagesProjectInfo.id
-    val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
-    val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
-    val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
-
-
-    "Load test data" in {
-        // send POST to 'v1/store/ResetTriplestoreContent'
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 300.seconds)
-    }
+    private val rootEmail = SharedTestDataV1.rootUser.userData.email.get
+    private val rootEmailEnc = java.net.URLEncoder.encode(rootEmail, "utf-8")
+    private val testPass = java.net.URLEncoder.encode("test", "utf-8")
+    private val projectIri = SharedTestDataV1.imagesProjectInfo.id
+    private val projectIriEnc = java.net.URLEncoder.encode(projectIri, "utf-8")
+    private val projectShortName = SharedTestDataV1.imagesProjectInfo.shortname
+    private val projectShortnameEnc = java.net.URLEncoder.encode(projectShortName, "utf-8")
 
     "The Projects Route ('v1/projects')" when {
 
@@ -83,6 +73,7 @@ class ProjectsV1E2ESpec extends E2ESpec(ProjectsV1E2ESpec.config) with SessionJs
                 // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
                 val projects: Seq[ProjectInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]]
+
                 projects.size should be (8)
 
             }

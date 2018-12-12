@@ -22,8 +22,6 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.{AppState, SetAppState}
 
-import scala.concurrent.duration._
-
 
 object HealthRouteE2ESpec {
     val config = ConfigFactory.parseString(
@@ -38,7 +36,7 @@ object HealthRouteE2ESpec {
   */
 class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
-    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds)
+    implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
     implicit override lazy val log = akka.event.Logging(system, this.getClass)
 

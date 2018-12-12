@@ -60,7 +60,7 @@ Our preferred format for data exchange is
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/). JSON-LD allows the
 Knora API server to provide responses that are relatively easy for
 automated processes to interpret, since their structure and semantics is
-explicitly defined. For example, each project-specific Knora resource
+explicitly defined. For example, each user-created Knora resource
 property is identified by an IRI, which can be dereferenced to get more
 information about it (e.g. its label in different languages). Moreover,
 each value has a type represented by an IRI. These are either standard

@@ -24,16 +24,11 @@
 package org.knora.webapi.responders.v1
 
 
-import akka.actor.Props
 import akka.actor.Status.Failure
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.{RESPONDER_MANAGER_ACTOR_NAME, ResponderManager}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 
 import scala.concurrent.duration._
 
@@ -52,7 +47,6 @@ object UsersResponderV1Spec {
   */
 class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
-    private implicit val executionContext = system.dispatcher
     private val timeout = 5.seconds
 
     private val rootUser = SharedTestDataV1.rootUser
@@ -69,18 +63,6 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
     private val imagesProjectIri = SharedTestDataV1.imagesProjectInfo.id
 
     private val actorUnderTest = TestActorRef[UsersResponderV1]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    private val rdfDataObjects = List() /* sending an empty list, will only load the default ontologies and data */
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
-    }
 
     "The UsersResponder " when {
 
@@ -90,7 +72,7 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
                 val response = expectMsgType[UsersGetResponseV1](timeout)
                 // println(response.users)
                 response.users.nonEmpty should be (true)
-                response.users.size should be (21)
+                response.users.size should be (20)
             }
         }
 

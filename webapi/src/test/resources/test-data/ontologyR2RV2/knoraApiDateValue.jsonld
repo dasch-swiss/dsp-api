@@ -18,7 +18,7 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
-      "owl:maxCardinality" : 1,
+      "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:dateValueHasCalendar"
       }
@@ -81,9 +81,30 @@
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteComment"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:maxCardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:deleteDate"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
         "@id" : "knora-api:hasPermissions"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:isDeleted"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -113,6 +134,7 @@
   "knora-api:attachedToProject" : {
     "@id" : "http://www.knora.org/ontology/knora-base#SystemProject"
   },
+  "knora-api:isBuiltIn" : true,
   "rdfs:label" : "The knora-api ontology in the complex schema",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

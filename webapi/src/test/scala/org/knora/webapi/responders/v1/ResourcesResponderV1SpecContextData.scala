@@ -40,12 +40,7 @@ object ResourcesResponderV1SpecContextData {
     in a file, and load that at runtime.
 
     */
-
-    // The file contains a placeholder, RESTYPE_ICONSRC, which we replace here with the correct value.
-    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json")).replace(
-        "RESTYPE_ICONSRC",
-        settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"
-    )
+    private val expectedBookResourceContextResponseStr = FileUtil.readTextFile(new File("src/test/resources/test-data/v1/expectedBookContextResponse.json"))
 
     val expectedBookResourceContextResponse: JsValue = JsonParser(expectedBookResourceContextResponseStr)
 
@@ -90,11 +85,11 @@ object ResourcesResponderV1SpecContextData {
                         protocol = "file",
                         duration = 0,
                         fps = 0,
-                        path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                        path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                         ny = Some(128),
                         nx = Some(95),
                         origname = "ad+s167_druck1=0001.tif",
-                        format_name = "JPEG"
+                        format_name = "JPEG2000"
                     ),
                     LocationV1(
                         protocol = "file",
@@ -161,11 +156,11 @@ object ResourcesResponderV1SpecContextData {
                     protocol = "file",
                     duration = 0,
                     fps = 0,
-                    path = "http://localhost:1024/knora/incunabula_0000000002.jpg/full/full/0/default.jpg",
+                    path = "http://localhost:1024/knora/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
                     ny = Some(128),
                     nx = Some(95),
                     origname = "ad+s167_druck1=0001.tif",
-                    format_name = "JPEG"
+                    format_name = "JPEG2000"
                 )),
                 restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
                 restype_description = Some("Eine Seite ist ein Teil eines Buchs"),

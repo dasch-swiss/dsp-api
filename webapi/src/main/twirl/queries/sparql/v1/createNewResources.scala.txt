@@ -56,7 +56,7 @@ INSERT DATA {
  				knora-base:hasPermissions "@res.permissions" ;
                 knora-base:creationDate "@currentTime"^^xsd:dateTimeStamp .
 
-            @res.generateSparqlForValuesResponse.insertSparql
+            @res.sparqlForValues
         }
     }
 }

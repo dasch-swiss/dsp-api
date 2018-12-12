@@ -13,7 +13,7 @@
             <pattern>[%date{ISO8601}] %-5level - %logger{0} - %msg%n</pattern>
         </encoder>
     </appender>
-    <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <!--<appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <File>logs/console.log</File>
         <encoder>
             <pattern>[%date{ISO8601}] %-5level %logger{0} - %X{sourceThread} - %X{akkaSource} - %msg%n</pattern>
@@ -21,14 +21,14 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>logs/console.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
         </rollingPolicy>
-    </appender>
+    </appender>-->
 
     <logger name="org.apache.jena.riot" level="ERROR"/>
     <logger name="org.apache.jena.tdb" level="ERROR"/>
     <logger name="akka" level="ERROR"/>
     <logger name="akka.event.slf4j.Slf4jLogger" level="ERROR"/>
     <logger name="net.sf.ehcache.config" level="ERROR"/>
-    <logger name="spray.can.server.HttpListener" level="ERROR"/>
+
 
     <logger name="org.knora" level="INFO"/>
     <logger name="org.knora.webapi" level="INFO"/>
@@ -50,6 +50,7 @@
     <logger name="org.knora.webapi.responders.v1.PermissionsResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ResourcesResponderV1" level="INFO"/>
     <logger name="org.knora.webapi.responders.v1.ValuesResponderV1" level="INFO"/>
+    <logger name="org.knora.webapi.responders.v1.SipiResponderV1" level="DEBUG"/>
     <logger name="org.knora.webapi.responders.admin.StoresResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.responders.admin.ListsResponderADM" level="INFO"/>
     <logger name="org.knora.webapi.viewhandlers.ResourceHtmlView" level="INFO"/>
@@ -58,6 +59,6 @@
 
     <root level="INFO">
         <appender-ref ref="stdout"/>
-        <appender-ref ref="R"/>
+        <!--<appender-ref ref="R"/>-->
     </root>
 </configuration>

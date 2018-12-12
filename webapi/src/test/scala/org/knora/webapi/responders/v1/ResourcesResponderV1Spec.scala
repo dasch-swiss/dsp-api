@@ -21,22 +21,21 @@ package org.knora.webapi.responders.v1
 
 import java.util.UUID
 
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 import akka.testkit.{ImplicitSender, TestActorRef}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{ObjectAccessPermissionADM, ObjectAccessPermissionsForResourceGetADM, PermissionADM}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v1.responder.valuemessages._
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders._
-import org.knora.webapi.store._
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util._
+import spray.json.JsValue
 
 import scala.concurrent.duration._
 
@@ -620,14 +619,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[ResourcesResponderV1]
 
-    private val responderManager = system.actorOf(Props(new TestResponderManager(Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1))))), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    private val rdfDataObjects = List(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
     )
+
+    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 60.seconds
@@ -847,16 +844,6 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
             case _ => fail("No ObjectAccessPermission returned!")
         }
-
-
-    }
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequest(SharedTestDataADM.rootUser)
-        expectMsg(10.seconds, LoadOntologiesResponse())
     }
 
     "The resources responder" should {
@@ -878,23 +865,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
-        "return a region with a comment containing standoff information" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F047db418ae06
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/047db418ae06", userADM = SharedTestDataADM.incunabulaMemberUser)
-
-            expectMsgPF(timeout) {
-                case response: ResourceFullResponseV1 =>
-                // compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedRegionFullResource)
-            }
-        }
-
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
             actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
-            val response = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
-
-            // println(response)
+            val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
             response should be (ResourcesResponderV1SpecContextData.expectedBookResourceContextResponse)
         }
@@ -1461,6 +1436,38 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             }
         }
 
+        "not create an instance of anything:Thing in the incunabula project" in {
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                label = "Test Resource",
+                projectIri = "http://rdfh.ch/projects/0803",
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = None,
+                userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "not create a resource in the default shared ontologies project" in {
+            actorUnderTest ! ResourceCreateRequestV1(
+                resourceTypeIri = "http://www.knora.org/ontology/shared/example-box#Box",
+                label = "Test Resource",
+                projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject,
+                values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
+                file = None,
+                userProfile = SharedTestDataADM.superUser,
+                apiRequestID = UUID.randomUUID
+            )
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
         "change a resource's label" in {
             val myNewLabel = "my new beautiful label"
 
@@ -1478,13 +1485,13 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         }
 
-        "not create an anything:Thing with property anything:hasBlueThing pointing to an anything:Thing" in {
+        "not create an anything:BlueThing with property anything:hasBlueThing pointing to an anything:Thing" in {
             val valuesToBeCreated = Map(
                 "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0001/a-thing")))
             )
 
             actorUnderTest ! ResourceCreateRequestV1(
-                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
+                resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
                 label = "Test Thing",
                 projectIri = "http://rdfh.ch/projects/0001",
                 values = valuesToBeCreated,

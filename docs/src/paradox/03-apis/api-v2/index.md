@@ -24,11 +24,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 @@@ index
 
 - [Introduction](introduction.md)
+- [Authentication](authentication.md)
 - [Knora IRIs](knora-iris.md)
 - [Reading and Searching Resources](reading-and-searching-resources.md)
 - [Getting Lists](getting-lists.md)
 - [XML to Standoff Mapping](xml-to-standoff-mapping.md)
 - [Gravsearch: Virtual Graph Search](query-language.md)
+- [Editing Resources](editing-resources.md)
+- [Editing Values](editing-values.md)
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
 - [TEI/XML](tei-xml.md)
 

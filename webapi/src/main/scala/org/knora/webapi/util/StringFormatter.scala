@@ -20,7 +20,9 @@
 package org.knora.webapi.util
 
 import java.text.ParseException
-import java.time.Instant
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.temporal.TemporalAccessor
 import java.util.concurrent.ConcurrentHashMap
 
 import com.google.gwt.safehtml.shared.UriUtils._
@@ -31,11 +33,11 @@ import org.joda.time.format.DateTimeFormat
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.twirl.StandoffTagV2
 import org.knora.webapi.util.JavaUtil.Optional
-import spray.json.JsonParser
+import spray.json._
 
 import scala.util.control.Exception._
 import scala.util.matching.Regex
@@ -101,6 +103,31 @@ object StringFormatter {
       * Common Era (equivalent to AD)
       */
     val Era_CE: String = "CE"
+
+    /**
+      * String representation of the name of the Gregorian calendar.
+      */
+    val CalendarGregorian: String = "GREGORIAN"
+
+    /**
+      * String representation of the name of the Julian calendar.
+      */
+    val CalendarJulian: String = "JULIAN"
+
+    /**
+      * String representation of day precision in a date.
+      */
+    val PrecisionDay: String = "DAY"
+
+    /**
+      * String representation of month precision in a date.
+      */
+    val PrecisionMonth: String = "MONTH"
+
+    /**
+      * String representation of year precision in a date.
+      */
+    val PrecisionYear: String = "YEAR"
 
     /**
       * A container for an XML import namespace and its prefix label.
@@ -205,8 +232,8 @@ object StringFormatter {
     /**
       * The instance of [[StringFormatter]] that can be used as soon as the JVM starts, but
       * can't parse project-specific API v2 ontology IRIs. This instance is used
-      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2Simple]]
-      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjects]].
+      * only to initialise the hard-coded API v2 ontologies [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2SimpleTransformationRules]]
+      * and [[org.knora.webapi.messages.v2.responder.ontologymessages.KnoraApiV2WithValueObjectsTransformationRules]].
       */
     private val instanceForConstantOntologies = new StringFormatter(None)
 
@@ -287,7 +314,8 @@ object StringFormatter {
                                     ontologyName: Option[String] = None,
                                     entityName: Option[String] = None,
                                     ontologySchema: Option[OntologySchema],
-                                    isBuiltInDef: Boolean = false)
+                                    isBuiltInDef: Boolean = false,
+                                    sharedOntology: Boolean = false)
 
     /**
       * A cache that maps IRI strings to [[SmartIri]] instances. To keep the cache from getting too large,
@@ -365,6 +393,11 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     def isKnoraBuiltInDefinitionIri: Boolean
 
     /**
+      * Returns `true` if this IRI belongs to a shared ontology.
+      */
+    def isKnoraSharedDefinitionIri: Boolean
+
+    /**
       * Returns `true` if this is an internal Knora ontology or entity IRI.
       *
       * @return
@@ -434,8 +467,8 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * `errorFun`.
       *
       * @param allowedSchema the schema to be allowed.
-      * @param errorFun a function that throws an exception. It will be called if the IRI has a different schema
-      *                 to the one specified.
+      * @param errorFun      a function that throws an exception. It will be called if the IRI has a different schema
+      *                      to the one specified.
       * @return the same IRI
       */
     def checkApiV2Schema(allowedSchema: ApiV2Schema, errorFun: => Nothing): SmartIri
@@ -533,8 +566,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // The hostname used in internal Knora IRIs.
     private val InternalIriHostname = "www.knora.org"
 
-    // The hostname used in built-in Knora API v2 IRIs.
-    private val BuiltInKnoraApiHostname = "api.knora.org"
+    // The hostname used in built-in and shared Knora API v2 IRIs.
+    private val CentralKnoraApiHostname = "api.knora.org"
 
     // The strings that Knora data IRIs can start with.
     private val DataIriStarts: Set[String] = Set(
@@ -542,10 +575,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         "http://data.knora.org/"
     )
 
+    // The project code of the default shared ontologies project.
+    private val DefaultSharedOntologiesProjectCode = "0000"
+
     // The beginnings of Knora definition IRIs that we know we can cache.
     private val KnoraDefinitionIriStarts = (Set(
         InternalIriHostname,
-        BuiltInKnoraApiHostname
+        CentralKnoraApiHostname
     ) ++ knoraApiHostAndPort).map(hostname => "http://" + hostname)
 
     // The beginnings of all definition IRIs that we know we can cache.
@@ -560,7 +596,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     private val versionSegmentWords = Set("simple", "v2")
 
     // Reserved words that cannot be used in project-specific ontology names.
-    private val reservedIriWords = Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema") ++ versionSegmentWords
+    private val reservedIriWords = Set("knora", "ontology", "rdf", "rdfs", "owl", "xsd", "schema", "shared") ++ versionSegmentWords
 
     // The expected format of a Knora date.
     // Calendar:YYYY[-MM[-DD]][ EE][:YYYY[-MM[-DD]][ EE]]
@@ -636,16 +672,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
     // A regex for a project-specific XML import namespace.
     private val ProjectSpecificXmlImportNamespaceRegex: Regex = (
-        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart + "(" +
-            ProjectIDPattern + ")/(" + NCNamePattern + ")" +
+        "^" + OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart +
+            "(shared/)?((" + ProjectIDPattern + ")/)?(" + NCNamePattern + ")" +
             OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceEnd + "$"
         ).r
 
     // In XML import data, a property from another ontology is referred to as prefixLabel__localName. The prefix label
     // may start with a project ID (prefixed with 'p') and a hyphen. This regex parses that pattern.
     private val PropertyFromOtherOntologyInXmlImportRegex: Regex = (
-
-        "^(p(" + ProjectIDPattern + ")-)(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
+        "^(p(" + ProjectIDPattern + ")-)?(" + NCNamePattern + ")__(" + NCNamePattern + ")$"
         ).r
 
     // In XML import data, a standoff link tag that refers to a resource described in the import must have the
@@ -663,6 +698,9 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     // Parses an object of salsa-gui:guiAttribute.
     private val SalsahGuiAttributeRegex: Regex =
         """^(\p{L}+)=(.+)$""".r
+
+    // A regex for matching a string containing an email address.
+    private val EmailAddressRegex: Regex = """^.+@.+$""".r
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -757,7 +795,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
                     val (ontologySchema: Option[OntologySchema], hasProjectSpecificHostname: Boolean) = hostname match {
                         case InternalIriHostname => (Some(InternalSchema), false)
-                        case BuiltInKnoraApiHostname => (Some(parseApiV2VersionSegments(segments)), false)
+                        case CentralKnoraApiHostname => (Some(parseApiV2VersionSegments(segments)), false)
 
                         case _ =>
                             // If our StringFormatter instance was initialised with the Knora API server's hostname,
@@ -794,34 +832,47 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                             case None => throw AssertionException("Unreachable code")
                         }
 
-                        // Make a Vector containing just the optional project code and the ontology name.
-                        val projectCodeAndOntologyName: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
+                        // Make a Vector containing just the optional 'shared' specification, the optional project code, and the ontology name.
+                        val ontologyPath: Vector[String] = segments.slice(2, segments.length - versionSegmentsLength)
 
-                        if (projectCodeAndOntologyName.isEmpty || projectCodeAndOntologyName.length > 2) {
+                        if (ontologyPath.isEmpty || ontologyPath.length > 3) {
                             errorFun
                         }
 
-                        if (projectCodeAndOntologyName.exists(segment => versionSegmentWords.contains(segment))) {
+                        if (ontologyPath.exists(segment => versionSegmentWords.contains(segment))) {
                             errorFun
                         }
 
-                        // Extract the project code.
-                        val projectCode: Option[String] = if (projectCodeAndOntologyName.length == 2) {
-                            Some(validateProjectShortcode(projectCodeAndOntologyName.head, errorFun))
+                        // Determine whether the ontology is shared, and get its project code, if any.
+                        val (sharedOntology: Boolean, projectCode: Option[String]) = if (ontologyPath.head == "shared") {
+                            if (ontologyPath.length == 2) {
+                                (true, Some(DefaultSharedOntologiesProjectCode)) // default shared ontologies project
+                            } else if (ontologyPath.length == 3) {
+                                (true, Some(validateProjectShortcode(ontologyPath(1), errorFun))) // other shared ontologies project
+                            } else {
+                                errorFun
+                            }
+                        } else if (ontologyPath.length == 2) {
+                            (false, Some(validateProjectShortcode(ontologyPath.head, errorFun))) // non-shared ontology with project code
                         } else {
-                            None
+                            (false, None) // built-in ontology
                         }
 
                         // Extract the ontology name.
-                        val ontologyName = projectCodeAndOntologyName.last
+                        val ontologyName = ontologyPath.last
                         val hasBuiltInOntologyName = isBuiltInOntologyName(ontologyName)
 
                         if (!hasBuiltInOntologyName) {
                             validateProjectSpecificOntologyName(ontologyName, errorFun)
                         }
 
-                        if ((hasProjectSpecificHostname && hasBuiltInOntologyName) ||
-                            (hostname == BuiltInKnoraApiHostname && !hasBuiltInOntologyName)) {
+                        // If the IRI has the hostname for project-specific ontologies, it can't refer to a built-in or shared ontology.
+                        if (hasProjectSpecificHostname && (hasBuiltInOntologyName || sharedOntology)) {
+                            errorFun
+                        }
+
+                        // If the IRI has the hostname for built-in and shared ontologies, it must refer to a built-in or shared ontology.
+                        if (hostname == CentralKnoraApiHostname && !(hasBuiltInOntologyName || sharedOntology)) {
                             errorFun
                         }
 
@@ -836,7 +887,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                             ontologyName = Some(ontologyName),
                             entityName = entityName,
                             ontologySchema = ontologySchema,
-                            isBuiltInDef = hasBuiltInOntologyName
+                            isBuiltInDef = hasBuiltInOntologyName,
+                            sharedOntology = sharedOntology
                         )
                     } else {
                         UnknownIriInfo
@@ -853,6 +905,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         override def isKnoraDataIri: Boolean = iriInfo.iriType == KnoraDataIri
 
         override def isKnoraDefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri
+
+        override def isKnoraSharedDefinitionIri: Boolean = isKnoraDefinitionIri && iriInfo.sharedOntology
 
         override def isKnoraInternalDefinitionIri: Boolean = iriInfo.iriType == KnoraDefinitionIri && iriInfo.ontologySchema.contains(InternalSchema)
 
@@ -1009,17 +1063,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
         private def externalToInternalEntityIri: SmartIri = {
             // Construct the string representation of this IRI in the target schema.
-            val ontologyName = getOntologyName
+            val internalOntologyName = externalToInternalOntologyName(getOntologyName)
             val entityName = getEntityName
 
-            val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
+            val internalOntologyIri = makeInternalOntologyIriStr(
+                internalOntologyName = internalOntologyName,
+                isShared = iriInfo.sharedOntology,
+                projectCode = iriInfo.projectCode
+            )
 
-            iriInfo.projectCode match {
-                case Some(projectCode) => internalOntologyIri.append('/').append(projectCode).append('/')
-                case None => internalOntologyIri.append('/')
-            }
-
-            val convertedIriStr = internalOntologyIri.append(externalToInternalOntologyName(ontologyName)).append("#").append(entityName).toString
+            val convertedIriStr = new StringBuilder(internalOntologyIri).append("#").append(entityName).toString
 
             // Get it from the cache, or construct it and cache it if it's not there.
             getOrCacheSmartIri(
@@ -1027,7 +1080,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
                 creationFun = {
                     () =>
                         val convertedSmartIriInfo = iriInfo.copy(
-                            ontologyName = Some(externalToInternalOntologyName(getOntologyName)),
+                            ontologyName = Some(internalOntologyName),
                             ontologySchema = Some(InternalSchema)
                         )
 
@@ -1069,6 +1122,19 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
 
             val convertedIriStr: IRI = if (isKnoraBuiltInDefinitionIri) {
                 OntologyConstants.KnoraApi.ApiOntologyStart + internalToExternalOntologyName(ontologyName) + versionSegment
+            } else if (isKnoraSharedDefinitionIri) {
+                val externalOntologyIri = new StringBuilder(OntologyConstants.KnoraApi.ApiOntologyStart).append("shared/")
+
+                iriInfo.projectCode match {
+                    case Some(projectCode) =>
+                        if (projectCode != DefaultSharedOntologiesProjectCode) {
+                            externalOntologyIri.append(projectCode).append('/')
+                        }
+
+                    case None => ()
+                }
+
+                externalOntologyIri.append(ontologyName).append(versionSegment).toString
             } else {
                 val projectSpecificApiV2OntologyStart = MaybeProjectSpecificApiV2OntologyStart match {
                     case Some(ontologyStart) => ontologyStart
@@ -1105,6 +1171,7 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         private lazy val asInternalOntologyIri: SmartIri = {
             val convertedIriStr = makeInternalOntologyIriStr(
                 internalOntologyName = externalToInternalOntologyName(getOntologyName),
+                isShared = iriInfo.sharedOntology,
                 projectCode = iriInfo.projectCode
             )
 
@@ -1349,6 +1416,15 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Returns `true` if an IRI string looks like a Knora user IRI.
+      *
+      * @param iri the IRI to be checked.
+      */
+    def isKnoraUserIriStr(iri: IRI): Boolean = {
+        iri.startsWith("http://" + KnoraIdUtil.IriDomain + "/users/")
+    }
+
+    /**
       * Checks that a string represents a valid resource identifier in a standoff link.
       *
       * @param s               the string to be checked.
@@ -1432,6 +1508,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
             SparqlEscapeOutput,
             SparqlEscapeInput
         )
+    }
+
+    /**
+      * Encodes a string for use in JSON, and encloses it in quotation marks.
+      *
+      * @param s the string to be encoded.
+      * @return the encoded string.
+      */
+    def toJsonEncodedString(s: String): String = {
+        JsString(s).compactPrint
     }
 
     /**
@@ -1557,9 +1643,17 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toInstant(s: String, errorFun: => Nothing): Instant = {
         try {
+            // Try parsing it as an ISO 8601 date in UTC.
             Instant.parse(s)
         } catch {
-            case _: Exception => errorFun
+            case _: Exception =>
+                // Try parsing it as an ISO 8601 date with an offset.
+                try {
+                    val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+                    Instant.from(creationAccessor)
+                } catch {
+                    case _: Exception => errorFun
+                }
         }
     }
 
@@ -1668,6 +1762,22 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     }
 
     /**
+      * Converts a string to a boolean.
+      *
+      * @param s        the string to be converted.
+      * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed
+      *                 as a boolean value.
+      * @return a Boolean.
+      */
+    def toBoolean(s: String, errorFun: => Nothing): Boolean = {
+        try {
+            s.toBoolean
+        } catch {
+            case _: IllegalArgumentException => errorFun
+        }
+    }
+
+    /**
       * Checks that a string is a valid XML [[https://www.w3.org/TR/1999/REC-xml-names-19990114/#NT-NCName NCName]].
       *
       * @param ncName   the string to be checked.
@@ -1732,15 +1842,23 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param projectCode          the project code.
       * @return the ontology IRI.
       */
-    private def makeInternalOntologyIriStr(internalOntologyName: String, projectCode: Option[String]): IRI = {
+    private def makeInternalOntologyIriStr(internalOntologyName: String, isShared: Boolean, projectCode: Option[String]): IRI = {
         val internalOntologyIri = new StringBuilder(OntologyConstants.KnoraInternal.InternalOntologyStart)
 
-        projectCode match {
-            case Some(code) => internalOntologyIri.append('/').append(code).append('/')
-            case None => internalOntologyIri.append('/')
+        if (isShared) {
+            internalOntologyIri.append("/shared")
         }
 
-        internalOntologyIri.append(internalOntologyName).toString
+        projectCode match {
+            case Some(code) =>
+                if (code != DefaultSharedOntologiesProjectCode) {
+                    internalOntologyIri.append('/').append(code)
+                }
+
+            case None => ()
+        }
+
+        internalOntologyIri.append('/').append(internalOntologyName).toString
     }
 
     /**
@@ -1751,8 +1869,8 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       * @param projectCode          the project code.
       * @return the ontology IRI.
       */
-    def makeProjectSpecificInternalOntologyIri(internalOntologyName: String, projectCode: String): SmartIri = {
-        toSmartIri(makeInternalOntologyIriStr(internalOntologyName, Some(projectCode)))
+    def makeProjectSpecificInternalOntologyIri(internalOntologyName: String, isShared: Boolean, projectCode: String): SmartIri = {
+        toSmartIri(makeInternalOntologyIriStr(internalOntologyName, isShared, Some(projectCode)))
     }
 
     /**
@@ -1796,8 +1914,16 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
     def internalOntologyIriToXmlNamespaceInfoV1(internalOntologyIri: SmartIri): XmlImportNamespaceInfoV1 = {
         val namespace = new StringBuilder(OntologyConstants.KnoraXmlImportV1.ProjectSpecificXmlImportNamespace.XmlImportNamespaceStart)
 
+        if (internalOntologyIri.isKnoraSharedDefinitionIri) {
+            namespace.append("shared/")
+        }
+
         internalOntologyIri.getProjectCode match {
-            case Some(projectCode) => namespace.append(projectCode).append('/')
+            case Some(projectCode) =>
+                if (projectCode != DefaultSharedOntologiesProjectCode) {
+                    namespace.append(projectCode).append('/')
+                }
+
             case None => ()
         }
 
@@ -1816,9 +1942,17 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
         namespace match {
-            case ProjectSpecificXmlImportNamespaceRegex(projectCode, ontologyName) if !isBuiltInOntologyName(ontologyName) =>
+            case ProjectSpecificXmlImportNamespaceRegex(Optional(maybeShared), _, Optional(maybeProjectCode), ontologyName) if !isBuiltInOntologyName(ontologyName) =>
+                val isShared = maybeShared.nonEmpty
+
+                val projectCode = maybeProjectCode match {
+                    case Some(code) => code
+                    case None => if (isShared) DefaultSharedOntologiesProjectCode else errorFun
+                }
+
                 makeProjectSpecificInternalOntologyIri(
                     internalOntologyName = externalToInternalOntologyName(ontologyName),
+                    isShared = isShared,
                     projectCode = projectCode
                 )
 
@@ -1851,8 +1985,18 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
       */
     def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
         prefixLabelAndLocalName match {
-            case PropertyFromOtherOntologyInXmlImportRegex(_, projectID, prefixLabel, localName) =>
-                Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+            case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
+                maybeProjectID match {
+                    case Some(projectID) =>
+                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+
+                    case None =>
+                        if (prefixLabel == OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel) {
+                            Some(s"${OntologyConstants.KnoraBase.KnoraBasePrefixExpansion}$localName")
+                        } else {
+                            throw BadRequestException(s"Invalid prefix label and local name: $prefixLabelAndLocalName")
+                        }
+                }
 
             case _ => None
         }
@@ -1936,5 +2080,13 @@ class StringFormatter private(val knoraApiHostAndPort: Option[String]) {
         }
     }
 
-
+    /**
+      * Given an email address, checks if it is in a valid format.
+      *
+      * @param email the email.
+      * @return the email
+      */
+    def validateEmail(email: String): Option[String] = {
+        EmailAddressRegex.findFirstIn(email)
+    }
 }

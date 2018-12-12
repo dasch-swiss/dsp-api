@@ -1,0 +1,74 @@
+#  Defined in KnoraBuild.sbt:
+# - KNORA_GDB_LICENSE - path to the GraphDB-SE license file (can be overriden through environment variable KNORA_GDB_LICENSE)
+# - KNORA_GDB_HOME - path to a local folder where GraphDB should store it's data can be overriden through environment variable KNORA_GDB_HOME)
+# - KNORA_GDB_IMAGE - the GraphDB image used (can be overridden, by setting the value in SBT)
+#
+# To run: $ sbt dockerComposeUp
+
+version: '3'
+
+services:
+
+  graphdb:
+    image: ${KNORA_GDB_IMAGE}
+    ports:
+      - "7200:7200"
+    volumes:
+      - ${KNORA_GDB_LICENSE}:/graphdb/GRAPHDB_SE.license
+      - ${KNORA_GDB_HOME}:/opt/graphdb/home:delegated
+      - ${PWD}/webapi/scripts/KnoraRules.pie:/graphdb/KnoraRules.pie
+    networks:
+      - knora-net
+    environment:
+    - GDB_HEAP_SIZE=2G
+    - GDB_JAVA_OPTS=-Dgraphdb.license.file=/graphdb/GRAPHDB_SE.license -Dgraphdb.home=/opt/graphdb/home
+    command: ["/graphdb/bin/graphdb"]
+
+  sipi:
+    image: dhlabbasel/sipi:${SIPI_VERSION_TAG}
+    ports:
+      - "1024:1024"
+    volumes:
+      - /tmp:/tmp
+      - ${PWD}/sipi/config:/sipi/config
+      - ${PWD}/sipi/scripts:/sipi/scripts
+      - ${PWD}/sipi/images:/sipi/images:delegated
+      - ${PWD}/sipi/server:/sipi/server:delegated
+    networks:
+      - knora-net
+    restart: unless-stopped
+    environment:
+      - SIPI_EXTERNAL_PROTOCOL=http
+      - SIPI_EXTERNAL_HOSTNAME=localhost
+      - SIPI_EXTERNAL_PORT=1024
+    command: --config=/sipi/config/sipi.knora-docker-it-config.lua
+
+  webapi:
+    image: dhlabbasel/webapi:${KNORA_VERSION_TAG}<localBuild>
+    ports:
+      - "3333:3333"
+      - "10001:10001"
+    volumes:
+      - /tmp:/tmp
+    networks:
+      - knora-net
+    environment:
+      - KNORA_AKKA_LOGLEVEL=INFO
+      - KNORA_AKKA_STDOUT_LOGLEVEL=INFO
+      - KNORA_WEBAPI_TRIPLESTORE_HOST=graphdb
+      - KNORA_WEBAPI_SIPI_INTERNAL_HOST=sipi
+
+  salsah1:
+    image: dhlabbasel/salsah1:${KNORA_VERSION_TAG}<localBuild>
+    ports:
+      - "3335:3335"
+    networks:
+      - knora-net
+    environment:
+      - KNORA_SALSAH1_HOSTNAME=0.0.0.0
+      - KNORA_SALSAH1_PORT=3335
+      - KNORA_SALSAH1_WEBAPI=http://localhost:3333
+      - KNORA_SALSAH1_SIPI=http://localhost:1024
+
+networks:
+  knora-net:

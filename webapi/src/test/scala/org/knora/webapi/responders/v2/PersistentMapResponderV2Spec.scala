@@ -21,15 +21,9 @@ package org.knora.webapi.responders.v2
 
 import java.util.{Base64, UUID}
 
-import akka.actor.Props
 import akka.testkit._
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.{ResetTriplestoreContent, ResetTriplestoreContentACK}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
-import org.knora.webapi.responders._
-import org.knora.webapi.store._
 
 import scala.concurrent.duration._
 
@@ -72,21 +66,9 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     // Construct the actors needed for this test.
     private val actorUnderTest = TestActorRef[PersistentMapResponderV2]
-    private val responderManager = system.actorOf(Props(new ResponderManager with LiveActorMaker), name = RESPONDER_MANAGER_ACTOR_NAME)
-    private val storeManager = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
-
-    val rdfDataObjects = List()
 
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
-
-    "Load test data" in {
-        storeManager ! ResetTriplestoreContent(rdfDataObjects)
-        expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-        responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
-        expectMsgType[SuccessResponseV2](10.seconds)
-    }
 
     "The persistent map responder" should {
         "store a persistent map entry, creating the map, then read the entry" in {

@@ -5,7 +5,7 @@
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix incunabula: <http://www.knora.org/ontology/0803/incunabula#> .
-
+@prefix beol: <http://www.knora.org/ontology/0801/beol#> .
 
 ##########################################################
 #
@@ -273,50 +273,28 @@
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"^^xsd:string .
 
 
-
-##########################################################
-#
-# Biblio Project Permissions
-#
-##########################################################
-
-
-### Administrative Permissions on ProjectMember
-<http://rdfh.ch/permissions/0802/007-a1>
-
-                      rdf:type knora-base:AdministrativePermission ;
-
-                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
-
-                      knora-base:forGroup knora-base:ProjectMember ;
-
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission"^^xsd:string .
-
-
-### Administrative Permissions on ProjectAdmin
-<http://rdfh.ch/permissions/0802/007-a2>
-
-                      rdf:type knora-base:AdministrativePermission ;
-
-                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
-
-                      knora-base:forGroup knora-base:ProjectAdmin ;
-
-                      knora-base:hasPermissions "ProjectResourceCreateAllPermission|ProjectAdminAllPermission"^^xsd:string .
-
-
-### Default Object Access Permissions on ProjectMember Group
-<http://rdfh.ch/permissions/0802/007-d1>
+### Default Object Access Permissions on beol:figure resource class
+<http://rdfh.ch/permissions/0801/006-d2>
 
                       rdf:type knora-base:DefaultObjectAccessPermission ;
 
-                      knora-base:forProject <http://rdfh.ch/projects/DczxPs-sR6aZN91qV92ZmQ> ;
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
 
-                      knora-base:forGroup knora-base:ProjectMember ;
+                      knora-base:forResourceClass beol:figure ;
 
                       knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
+### Default Object Access Permissions on beol:documentImage resource class
+<http://rdfh.ch/permissions/0801/006-d3>
+
+                      rdf:type knora-base:DefaultObjectAccessPermission ;
+
+                      knora-base:forProject <http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF> ;
+
+                      knora-base:forResourceClass beol:documentImage ;
+
+                      knora-base:hasPermissions "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser"^^xsd:string .
 
 
 ##########################################################

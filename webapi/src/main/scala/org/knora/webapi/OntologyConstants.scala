@@ -86,6 +86,7 @@ object OntologyConstants {
           * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
           */
         val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
+            Ontology,
             Class,
             Restriction
         )
@@ -148,6 +149,7 @@ object OntologyConstants {
         val KnoraBasePrefix: String = KnoraBaseOntologyLabel + ":"
         val KnoraBasePrefixExpansion: IRI = KnoraBaseOntologyIri + "#"
 
+        val IsShared: IRI = KnoraBasePrefixExpansion + "isShared"
         val CanBeInstantiated: IRI = KnoraBasePrefixExpansion + "canBeInstantiated"
         val IsEditable: IRI = KnoraBasePrefixExpansion + "isEditable"
 
@@ -325,6 +327,7 @@ object OntologyConstants {
 
         /* User */
         val User: IRI = KnoraBasePrefixExpansion + "User"
+        val Username: IRI = KnoraBasePrefixExpansion + "username"
         val Email: IRI = KnoraBasePrefixExpansion + "email"
         val GivenName: IRI = KnoraBasePrefixExpansion + "givenName"
         val FamilyName: IRI = KnoraBasePrefixExpansion + "familyName"
@@ -361,6 +364,15 @@ object OntologyConstants {
         val Creator: IRI = KnoraBasePrefixExpansion + "Creator"
         val SystemAdmin: IRI = KnoraBasePrefixExpansion + "SystemAdmin"
         val ProjectAdmin: IRI = KnoraBasePrefixExpansion + "ProjectAdmin"
+
+        val BuiltInGroups: Set[IRI] = Set(
+            UnknownUser,
+            KnownUser,
+            ProjectMember,
+            Creator,
+            SystemAdmin,
+            ProjectAdmin
+        )
 
         /* Institution */
         val Institution: IRI = KnoraBasePrefixExpansion + "Institution"
@@ -460,6 +472,7 @@ object OntologyConstants {
         val ForProperty: IRI = KnoraBasePrefixExpansion + "forProperty"
 
         val SystemProject: IRI = KnoraBasePrefixExpansion + "SystemProject"
+        val DefaultSharedOntologiesProject: IRI = KnoraBasePrefixExpansion + "DefaultSharedOntologiesProject"
 
         /**
           * The system user is the owner of objects that are created by the system, rather than directly by the user,
@@ -656,6 +669,9 @@ object OntologyConstants {
 
         val Result: IRI = KnoraApiV2PrefixExpansion + "result"
 
+        val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
+        val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"
+
         val SubjectType: IRI = KnoraApiV2PrefixExpansion + "subjectType"
         val ObjectType: IRI = KnoraApiV2PrefixExpansion + "objectType"
 
@@ -674,6 +690,7 @@ object OntologyConstants {
 
         val ValueAsString: IRI = KnoraApiV2PrefixExpansion + "valueAsString"
         val ValueCreationDate: IRI = KnoraApiV2PrefixExpansion + "valueCreationDate"
+        val ValueHasComment: IRI = KnoraApiV2PrefixExpansion + "valueHasComment"
 
         val AttachedToUser: IRI = KnoraApiV2PrefixExpansion + "attachedToUser"
         val AttachedToProject: IRI = KnoraApiV2PrefixExpansion + "attachedToProject"
@@ -682,6 +699,9 @@ object OntologyConstants {
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
+        val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
+        val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
@@ -797,7 +817,6 @@ object OntologyConstants {
         val LinkValueHasSourceIri: IRI = KnoraApiV2PrefixExpansion + "linkValueHasSourceIri"
 
         val FileValueAsUrl: IRI = KnoraApiV2PrefixExpansion + "fileValueAsUrl"
-        val FileValueIsPreview: IRI = KnoraApiV2PrefixExpansion + "fileValueIsPreview"
         val FileValueHasFilename: IRI = KnoraApiV2PrefixExpansion + "fileValueHasFilename"
 
         val StillImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "stillImageFileValueHasDimX"

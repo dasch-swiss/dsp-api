@@ -25,7 +25,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import spray.json._
 
 import scala.concurrent.duration._
@@ -44,6 +44,7 @@ object StoreRouteADME2ESpec {
   * This spec tests the 'v1/store' route.
   */
 class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with TriplestoreJsonProtocol {
+
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 
 	/**
@@ -57,10 +58,12 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
       *
       * and could have been supplied to the post request instead of the scala object.
       */
-    private val rdfDataObjects: List[RdfDataObject] = List(
+    /*
+    override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
+    */
 
     "The ResetTriplestoreContent Route ('admin/store/ResetTriplestoreContent')" should {
 

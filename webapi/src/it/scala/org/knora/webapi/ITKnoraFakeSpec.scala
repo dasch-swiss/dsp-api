@@ -27,6 +27,7 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.util.StringFormatter
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -49,6 +50,7 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
 
     /* needed by the core trait */
     implicit lazy val settings: SettingsImpl = Settings(system)
+
     StringFormatter.initForTest()
 
     def this(name: String, config: Config) = this(ActorSystem(name, config.withFallback(ITKnoraFakeSpec.defaultConfig)))
@@ -87,14 +89,8 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeService w
 
     protected def getResponseString(request: HttpRequest): String = {
         val response = singleAwaitingRequest(request)
-
-        //log.debug("REQUEST: {}", request)
-        //log.debug("RESPONSE: {}", response.toString())
-
-        val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
-
-        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $response")
+        val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
+        assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
         responseBodyStr
     }
 

@@ -49,10 +49,12 @@ trait StandoffTagAttributeV2 {
   *
   * @param standoffPropertyIri the IRI of the standoff property
   * @param value               the value of the standoff property.
+  * @param targetExists        `true` if the specified IRI already exists in the triplestore, `false` if it is
+  *                            being created in the same transaction.
   */
-case class StandoffTagIriAttributeV2(standoffPropertyIri: IRI, value: IRI) extends StandoffTagAttributeV2 {
+case class StandoffTagIriAttributeV2(standoffPropertyIri: IRI, value: IRI, targetExists: Boolean = true) extends StandoffTagAttributeV2 {
 
-    def stringValue = value
+    def stringValue: String = value
 
     def rdfValue = s"<$value>"
 
@@ -66,7 +68,7 @@ case class StandoffTagIriAttributeV2(standoffPropertyIri: IRI, value: IRI) exten
   */
 case class StandoffTagUriAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
-    def stringValue = value
+    def stringValue: String = value
 
     def rdfValue = s""""${stringValue.toString}"^^xsd:anyURI"""
 
@@ -80,7 +82,7 @@ case class StandoffTagUriAttributeV2(standoffPropertyIri: IRI, value: String) ex
   */
 case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
-    def stringValue = value.toString
+    def stringValue: String = value.toString
 
     def rdfValue = s"<$value>"
 
@@ -94,7 +96,7 @@ case class StandoffTagInternalReferenceAttributeV2(standoffPropertyIri: IRI, val
   */
 case class StandoffTagStringAttributeV2(standoffPropertyIri: IRI, value: String) extends StandoffTagAttributeV2 {
 
-    def stringValue = value
+    def stringValue: String = value
 
     def rdfValue = s"""\"\"\"$value\"\"\""""
 
@@ -108,7 +110,7 @@ case class StandoffTagStringAttributeV2(standoffPropertyIri: IRI, value: String)
   */
 case class StandoffTagIntegerAttributeV2(standoffPropertyIri: IRI, value: Int) extends StandoffTagAttributeV2 {
 
-    def stringValue = value.toString
+    def stringValue: String = value.toString
 
     def rdfValue = value.toString
 
@@ -122,7 +124,7 @@ case class StandoffTagIntegerAttributeV2(standoffPropertyIri: IRI, value: Int) e
   */
 case class StandoffTagDecimalAttributeV2(standoffPropertyIri: IRI, value: BigDecimal) extends StandoffTagAttributeV2 {
 
-    def stringValue = value.toString
+    def stringValue: String = value.toString
 
     def rdfValue = s""""${value.toString}"^^xsd:decimal"""
 
@@ -136,7 +138,7 @@ case class StandoffTagDecimalAttributeV2(standoffPropertyIri: IRI, value: BigDec
   */
 case class StandoffTagBooleanAttributeV2(standoffPropertyIri: IRI, value: Boolean) extends StandoffTagAttributeV2 {
 
-    def stringValue = value.toString
+    def stringValue: String = value.toString
 
     def rdfValue = value.toString
 
@@ -169,6 +171,5 @@ case class StandoffTagV2(standoffTagClassIri: IRI,
                          startParentIndex: Option[Int] = None,
                          endParentIndex: Option[Int] = None,
                          attributes: Seq[StandoffTagAttributeV2] = Seq.empty[StandoffTagAttributeV2])
-
 
 

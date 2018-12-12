@@ -19,27 +19,34 @@
 
 package org.knora.webapi
 
-import java.io.StringReader
+import java.io.{File, StringReader}
 
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.HttpResponse
 import akka.http.scaladsl.server.ExceptionHandler
 import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.pattern._
+import akka.util.Timeout
 import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
+import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
+import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
+import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.util.{CacheUtil, StringFormatter}
+import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
-
+import scala.language.postfixOps
 /**
   * Created by subotic on 08.12.15.
   */
 class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll {
 
-    def actorRefFactory = system
+    def actorRefFactory: ActorSystem = system
 
     val settings = Settings(system)
     implicit val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
@@ -47,8 +54,18 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     implicit val knoraExceptionHandler: ExceptionHandler = KnoraExceptionHandler(settings, log)
 
+    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+
+    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+
+    lazy val rdfDataObjects = List.empty[RdfDataObject]
+
     override def beforeAll {
         CacheUtil.createCaches(settings.caches)
+        loadTestData(rdfDataObjects)
     }
 
     override def afterAll {
@@ -56,7 +73,7 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     }
 
     protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = response.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
         val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
         JsonLDUtil.parseJsonLD(responseBodyStr)
     }
@@ -67,5 +84,28 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
 
     protected def parseRdfXml(rdfXmlStr: String): Model = {
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
+    }
+
+    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+        implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
+    }
+
+    /**
+      * Reads or writes a test data file.
+      *
+      * @param responseAsString the API response received from Knora.
+      * @param file             the file in which the expected API response is stored.
+      * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+      * @return the expected response.
+      */
+    protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+        if (writeFile) {
+            FileUtil.writeTextFile(file, responseAsString)
+            responseAsString
+        } else {
+            FileUtil.readTextFile(file)
+        }
     }
 }

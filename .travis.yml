@@ -1,11 +1,9 @@
 dist: trusty
+
 sudo: required
 
 addons:
   chrome: stable
-
-git:
-  depth: 1
 
 language: scala
 
@@ -13,34 +11,34 @@ scala:
   - 2.12.1
 
 jdk:
-  - openjdk8
+  - openjdk10
 
 services:
   - docker
 
 env:
   global:
-    - secure: "Sj0D8wR3Vx0J0h+LBUIh9t1PWjLJ2NEiKILf3JO5nuGdlU7dPhbFomR4w08q85O4d60km38ml7zpapC4noDQnbAFQHC6XeOe5CWPYFXCxkw7ueBoxhy/vkfSzypXp0UTNUX3S7+RcGJcTxLaZcUC9u+UaoWB0LMkmOcIlrKIDuzm3HcefMsml8gYX1xhS2TQJ8P7ZerzBmm0kERYLUabhxTnj5WAvue0d1xbUtzCzT1LpignOfsUZ9kHTagQEA15JsU0iNrMCvlDcxRWj8OzLhHRoHui4bJPQQfKEA8oMnTkPyzBRLmqafqHvmGcNQp9iGhuU04gb+FkF4gubBkLrxEvgTL/D5vIin3BHQvnZna9zSnUguZS+jw4sfEYcjZgYRzgMRPma/630ZM08FSZZ/qjSTCut4Cjua5aw2Vf9pYhf+Aad5rR0T2JmVYKp6Ik92aLhPOF9U40MacKRPPT54RIjCYcakZlmU4vl+kK37l3sYjvD57LeSs3PlqvkpSxwJzaQDhZFOZ+c7ICo+zU7DcQnWkN7k+ErKBOE7r0mIqvYuBYhdteBVKfo8a4rpDzYJDXaWzBdjc8ZKiEFQvFHngnZjR2UtKc0CAc6Y7ieCWIvBZYdMoHhKsBwFDaO1iuWwDLW3cswXaPEqENonlVAnXePu7KkQeB2acwDzPkhlI=" #DOCKER_USER
-    - secure: "iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=" #DOCKER_PASS
-    - WEBAPI_REPO=dhlabbasel/webapi
-    - SALSAH1_REPO=dhlabbasel/salsah1
-    - SALSAH2_REPO=dhlabbasel/salsah2
-    - SIPI_REPO=dhlabbasel/sipi
-    - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
-    - CHROME_BIN=google-chrome-stable
-    - GDB_HEAP_SIZE="2G"
-    - TAG=${TRAVIS_BRANCH//\//-}
-    - GRAPHDB_VERSION="8.5.0-se"
+  - secure: Sj0D8wR3Vx0J0h+LBUIh9t1PWjLJ2NEiKILf3JO5nuGdlU7dPhbFomR4w08q85O4d60km38ml7zpapC4noDQnbAFQHC6XeOe5CWPYFXCxkw7ueBoxhy/vkfSzypXp0UTNUX3S7+RcGJcTxLaZcUC9u+UaoWB0LMkmOcIlrKIDuzm3HcefMsml8gYX1xhS2TQJ8P7ZerzBmm0kERYLUabhxTnj5WAvue0d1xbUtzCzT1LpignOfsUZ9kHTagQEA15JsU0iNrMCvlDcxRWj8OzLhHRoHui4bJPQQfKEA8oMnTkPyzBRLmqafqHvmGcNQp9iGhuU04gb+FkF4gubBkLrxEvgTL/D5vIin3BHQvnZna9zSnUguZS+jw4sfEYcjZgYRzgMRPma/630ZM08FSZZ/qjSTCut4Cjua5aw2Vf9pYhf+Aad5rR0T2JmVYKp6Ik92aLhPOF9U40MacKRPPT54RIjCYcakZlmU4vl+kK37l3sYjvD57LeSs3PlqvkpSxwJzaQDhZFOZ+c7ICo+zU7DcQnWkN7k+ErKBOE7r0mIqvYuBYhdteBVKfo8a4rpDzYJDXaWzBdjc8ZKiEFQvFHngnZjR2UtKc0CAc6Y7ieCWIvBZYdMoHhKsBwFDaO1iuWwDLW3cswXaPEqENonlVAnXePu7KkQeB2acwDzPkhlI=
+  - secure: iM3Wjt3f5yUaU16yKstwBEEFA8WKx8qcTVnOwF+o9+sooD1SZ39nYJDPgpHHNwFZ1aSkre5ATPEw+dfslr7SnnwYQeYHjYldcqudB+7pq4dmY5U3rCTsjZCH1XmLnnLO45CZRy05pIAUSxWpIiX5khWoHZd704UlDncqIU/6paWWNkywPb2P4UBZ5Xeai1NTS1URHRz0A4aD+dqwKS6P+baq4CyKLC/AqjsTDI+TV4C26FXXTgS0Ly9VfBVZ55D+SdVHgCZXJaHerAixjSX6zvenfkd/87GR6NEAgJ9QofF2nDEXBZZm4jPv5d285Cc4iUvRo1HLbI1VlALya3qUA9Prbno8QQaChNdjRS7mSplkCxZZKzBItpjvI009NPl20zX6GROb/JCjWHRZ4R358cebFKKqE4W1GBArS0piVbdqZyWA/t5KANouQIdrh+lepAf/Xq5JRcDP9r+Rk2hHLk2Rmj97gv001eRf9GjSEC1Qo1kwu1FabZok1UIemJHpY7yWO4d3ZKSOCyQ0WdW6rLMFGkouoByrFVfNPBVxLqDJ3YVL/4x5jc0Q9+G5jm6omqNwQSsn60nUizZJp1fuLGQRUNj8EDvRhxLgVkOJqFf4P/4qRas47k1wkWBk2iBlpNp2eQTY42IZovPIyT+NCfbdg0yyZRyHThpfc+KfTeg=
+  - WEBAPI_REPO=dhlabbasel/webapi
+  - SALSAH1_REPO=dhlabbasel/salsah1
+  - SALSAH2_REPO=dhlabbasel/salsah2
+  - SIPI_REPO=dhlabbasel/sipi
+  - DOCKERHOST=$(ip route get 8.8.8.8 | awk '{print $NF; exit}')
+  - CHROME_BIN=google-chrome-stable
+  - GDB_HEAP_SIZE="2G"
+  - TAG=${TRAVIS_BRANCH//\//-}
+  - GRAPHDB_VERSION="8.5.0-se"
 
 before_cache:
-    - sudo chown -R travis:travis $HOME/.ivy2
-    
+  - sudo chown -R travis:travis $HOME/.ivy2
+
 cache:
   directories:
-    - $HOME/.ivy2
-
+  - "$HOME/.ivy2"
 before_install:
-  - openssl aes-256-cbc -K $encrypted_6254b38dc8d5_key -iv $encrypted_6254b38dc8d5_iv -in $TRAVIS_BUILD_DIR/private/graphdb.license.enc -out $TRAVIS_BUILD_DIR/private/graphdb.license -d
+  - openssl aes-256-cbc -K $encrypted_ec8f5e0fa991_key -iv $encrypted_ec8f5e0fa991_iv -in travis/secrets.tar.enc -out $TRAVIS_BUILD_DIR/travis/secrets.tar -d
+  - tar -C travis -xvf travis/secrets.tar
   - sudo apt-get -qq update
   - sudo apt-get install -y expect
 
@@ -55,17 +53,19 @@ jobs:
     # test sbt compile and stage
     - stage: compile and stage
       script:
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt compile stage
+        - rm -rf $HOME/.sbt
+        - rm -rf $HOME/.ivy2
+        - cd $TRAVIS_BUILD_DIR && sbt clean stage
         # only uncomment if docker image is needed for this branch. remove before merging into develop
         # - docker login -u $DOCKER_USER -p $DOCKER_PASS
-        # - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TAG
-        # - docker push $WEBAPI_REPO
+        # - sbt webapi/docker:publish
+        # - sbt salsah1/docker:publish
     # unit and e2e tests
     - stage: test
       script:
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
+        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
         - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
@@ -74,26 +74,26 @@ jobs:
         # hit graphdb with a request "waking-it-up"
         - curl http://localhost:7200/rest/repositories
         # start the built-in webapi server tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt coverage test coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/test webapi/coverageReport
         # upload code coverage report
-        - bash <(curl -s https://codecov.io/bash) -F unit_e2e
+        # - sbt codacyCoverage
     # integration tests
     - stage: test
       script:
         # prepare needed graphdb-se files
         - mkdir -p $TRAVIS_BUILD_DIR/graphdb
-        - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
+        - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/graphdb/graphdb.license
         - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
         # start and initialize graphdb-se
         - docker run -d -p 127.0.0.1:7200:7200 -v $TRAVIS_BUILD_DIR/graphdb:/graphdb -e GDB_HEAP_SIZE=$GDB_HEAP_SIZE ontotext/graphdb:$GRAPHDB_VERSION -Dgraphdb.license.file=/graphdb/graphdb.license
         - sleep 15
         - cd $TRAVIS_BUILD_DIR/webapi/scripts && ./graphdb-se-docker-init-knora-test-unit.sh
         # start the sipi container (with production config)
-        - cd $TRAVIS_BUILD_DIR/sipi/ && docker run -d --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 dhlabbasel/sipi:develop --config=/sipi/config/sipi.knora-docker-it-config.lua
+        - cd $TRAVIS_BUILD_DIR/sipi/ && docker-compose up -d sipi-it
         # start the integration tests
-        - cd $TRAVIS_BUILD_DIR/webapi/ && sbt coverage it:test coverageReport
+        - cd $TRAVIS_BUILD_DIR/ && sbt webapi/clean coverage webapi/it:test webapi/coverageReport
         # upload code coverage report
-        - bash <(curl -s https://codecov.io/bash) -F integration
+        # - sbt codacyCoverage
     # testing docs generation
     - stage: test
       script:
@@ -115,13 +115,13 @@ jobs:
         # install jekyll dependencies
         - cd $TRAVIS_BUILD_DIR/docs/src/jekyll && bundle install
         # compile and build all docs (paradox, typescript, jekyll)
-        - cd $TRAVIS_BUILD_DIR/docs && sbt makeSite
+        - cd $TRAVIS_BUILD_DIR/ && sbt docs/makeSite
     # Salsah browser tests
     #- stage: test
     #  script:
     #    # prepare needed graphdb-se files
     #    - mkdir -p $TRAVIS_BUILD_DIR/data/conf
-    #    - cp $TRAVIS_BUILD_DIR/private/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
+    #    - cp $TRAVIS_BUILD_DIR/travis/graphdb.license $TRAVIS_BUILD_DIR/data/conf/graphdb.license
     #    - mkdir -p $TRAVIS_BUILD_DIR/graphdb
     #    - cp $TRAVIS_BUILD_DIR/webapi/scripts/KnoraRules.pie $TRAVIS_BUILD_DIR/graphdb
     #    # start and initialize graphdb-se
@@ -139,6 +139,11 @@ jobs:
     #    - cd $TRAVIS_BUILD_DIR/salsah1/lib/chromedriver/ && unzip chromedriver_linux64.zip
     #    # start built-in salsah1 browser tests
     #    - cd $TRAVIS_BUILD_DIR/salsah1/ && sbt headless:test
+    # testing docker images
+    - stage: test
+      script:
+        - sbt webapi/docker:publishLocal
+        - sbt salsah1/docker:publishLocal
     - stage: publish
       script:
         # login into docker hub, build image, and push but only when on the "develop" branch or tagged
@@ -146,17 +151,14 @@ jobs:
         # when on 'tag' then $TRAVIS_BRANCH = tag, e.g., v1.2.0
         - docker login -u $DOCKER_USER -p $DOCKER_PASS
         # webapi
-        - docker build $TRAVIS_BUILD_DIR/webapi/ -t $WEBAPI_REPO:$TRAVIS_BRANCH
-        - docker tag $WEBAPI_REPO:$TRAVIS_BRANCH $WEBAPI_REPO:latest
-        - docker push $WEBAPI_REPO
+        - sbt webapi/docker:publish
         # salsah1
-        - docker build $TRAVIS_BUILD_DIR/salsah1/ -t $SALSAH1_REPO:$TRAVIS_BRANCH
-        - docker tag $SALSAH1_REPO:$TRAVIS_BRANCH $SALSAH1_REPO:latest
-        - docker push $SALSAH1_REPO
+        - sbt salsah1/docker:publish
         # sipi: get the develop sipi and tag it as 'develop-knora' so we know that this version is tested (only on the develop branch)
         - docker pull $SIPI_REPO:develop
         - docker tag $SIPI_REPO:develop $SIPI_REPO:knora-$TRAVIS_BRANCH
         - docker push $SIPI_REPO
+
 notifications:
   slack:
     secure: gaazomUbAB4q7bH2XOiZXqHvU2gd/X/jIRLAJW9vjcRbY6o48eiEdNXF2umraHG0q+5UUEJ5dfvxiPtC4PiUq8uD6J+R0fEWrWznYoIeEWEXjKxRxWplrWJ9Ke+PJb3wCV6cXBGMfxDpvYQbVjsy7n0aQmjNs4Drz+llqL5SilTdswTylwvUdufad0QaovXklL+p0w9vRHRKzQkYKa9phL10VcJa8TPI74tuFcTHnK6TcMNW6p0vzAaF6JVgzoRPzUgXnEPCw4pI8zqOF1ghPpQByNXKiYofPWt1yTFgb60LQarDEiHXunXAA/sf2gx616pWLVjDFGziXVzhiGUDUjM5I1p7hPyA2rTB63AAZustFcGeD+jbHNHIFhcvvCHVHjJfp8M7LrUR+MBqz5mJNi/9KgxyZ8I9Df28TxmKxGFaGW8t4PZdA75/49Hos0TqtIp5m+eo8mTksUJogEJJokRZUKraMBhC0cNCry0kp+EQ06F4usLoDyZTUar4OSuNSiymf+zwz6jZo8dF/cluRYellwewE9NJiNWGN4DiBhk2vGJ7OtWMDPkl1tqkG8npoqbT4s38esjxfa/XcworGfeqE+9mzugVzkIKIX2lB6QxZp0AKQVOiy7JwwdtcjVMLvceiNPEWfe8fhLMX02oqYz2uoibRmHMxKPa5CpmUIg=
