@@ -19,15 +19,15 @@
 
 package org.knora.webapi.other.v2
 
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.{MutableTestIri, ResourceResponseExtractorMethods}
 
 object LumieresLausanneV2E2ESpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -39,7 +39,7 @@ object LumieresLausanneV2E2ESpec {
   */
 class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
+    implicit override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
@@ -52,7 +52,6 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
 
         val gfUser = "gfaucherand"
         val testPass = "test"
-        val newLLUserIri = new MutableTestIri
 
         "allow user 'gfaucherand' to create a resource using V2 API" in {
 
@@ -83,15 +82,6 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
 
             val request = Post(baseApiUrl + s"/v2/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(gfUser, testPass))
             val response: HttpResponse = singleAwaitingRequest(request)
-
-            log.debug(response.toString())
-
-            // assert(response.status === StatusCodes.OK)
-            // val resId = ResourceResponseExtractorMethods.getResIriFromJsonResponse(response)
-
-            // newLLUserIri.set(resId)
-            // log.debug(s"LL-UserIRI: ${newLLUserIri.get}")
-
             assert(response.status === StatusCodes.OK)
         }
     }
