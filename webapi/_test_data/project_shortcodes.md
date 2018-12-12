@@ -11,6 +11,7 @@
 #### Lausanne range - `0100` to `07FF`
 
    - drawings gods: `0106`
+   - lumieres lausanne: `0113`
 
 
 #### Basel range - `0800` to `08FF`
