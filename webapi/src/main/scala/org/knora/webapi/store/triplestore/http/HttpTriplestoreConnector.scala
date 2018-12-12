@@ -27,6 +27,7 @@ import akka.stream.ActorMaterializer
 import org.apache.commons.lang3.StringUtils
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.AuthCache
+import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
 import org.apache.http.client.methods.{CloseableHttpResponse, HttpGet, HttpPost}
 import org.apache.http.client.protocol.HttpClientContext
@@ -77,7 +78,25 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     private val credsProvider: BasicCredentialsProvider = new BasicCredentialsProvider
     credsProvider.setCredentials(new AuthScope(targetHost.getHostName, targetHost.getPort), new UsernamePasswordCredentials(settings.triplestoreUsername, settings.triplestorePassword))
 
-    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).build
+    // Reading data should be quick.
+    private val queryTimeoutMillis = settings.triplestoreQueryTimeout.toMillis.toInt
+
+    private val queryRequestConfig = RequestConfig.custom()
+        .setConnectTimeout(queryTimeoutMillis)
+        .setConnectionRequestTimeout(queryTimeoutMillis)
+        .setSocketTimeout(queryTimeoutMillis).build()
+
+    private val queryHttpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(queryRequestConfig).build
+
+    // An update for a bulk import could take a while.
+    private val updateTimeoutMillis = settings.triplestoreUpdateTimeout.toMillis.toInt
+
+    private val updateTimeoutConfig = RequestConfig.custom()
+        .setConnectTimeout(updateTimeoutMillis)
+        .setConnectionRequestTimeout(updateTimeoutMillis)
+        .setSocketTimeout(updateTimeoutMillis).build()
+
+    private val updateHttpClient: CloseableHttpClient = HttpClients.custom.setDefaultCredentialsProvider(credsProvider).setDefaultRequestConfig(updateTimeoutConfig).build
 
     private val queryPath: String = s"/repositories/${settings.triplestoreDatabaseName}"
     private val updatePath: String = s"/repositories/${settings.triplestoreDatabaseName}/statements"
@@ -389,9 +408,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         } yield DropAllTriplestoreContentACK()
 
         response.recover {
-            case t: Exception => {
-                throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
-            }
+            case t: Exception => throw TriplestoreResponseException("Reset: Failed to execute DROP ALL", t, log)
         }
 
         response
@@ -469,7 +486,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 var maybeResponse: Option[CloseableHttpResponse] = None
 
                 try {
-                    maybeResponse = Some(httpClient.execute(targetHost, httpGet, context))
+                    maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
                     EntityUtils.toString(maybeResponse.get.getEntity)
                 } finally {
                     maybeResponse match {
@@ -521,12 +538,12 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         httpContext.setCredentialsProvider(credsProvider)
         httpContext.setAuthCache(authCache)
 
-        val httpPost: HttpPost = if (isUpdate) {
+        val (httpClient: CloseableHttpClient, httpPost: HttpPost) = if (isUpdate) {
             // Send updates as application/sparql-update (as per SPARQL 1.1 Protocol §3.2.2, "UPDATE using POST directly").
             val requestEntity = new StringEntity(sparql, ContentType.create(mimeTypeApplicationSparqlUpdate, "UTF-8"))
             val updateHttpPost = new HttpPost(updatePath)
             updateHttpPost.setEntity(requestEntity)
-            updateHttpPost
+            (updateHttpClient, updateHttpPost)
         } else {
             // Send queries as application/x-www-form-urlencoded (as per SPARQL 1.1 Protocol §2.1.2,
             // "query via POST with URL-encoded parameters"), so we can include the "infer" parameter when using GraphDB.
@@ -548,10 +565,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
                 queryHttpPost.addHeader("Accept", mimeTypeApplicationSparqlResultsJson)
             }
 
-            queryHttpPost
+            (queryHttpClient, queryHttpPost)
         }
 
-        val triplestoreResponseFuture = Try {
+        val triplestoreResponseTry = Try {
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
@@ -578,7 +595,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             }
         }
 
-        triplestoreResponseFuture.recover {
+        triplestoreResponseTry.recover {
             case tre: TriplestoreResponseException => throw tre
             case e: Exception => throw TriplestoreConnectionException("Failed to connect to triplestore", e, log)
         }
