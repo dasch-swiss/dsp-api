@@ -115,6 +115,7 @@
 
     <!-- V2 -->
     <logger name="org.knora.webapi.e2e.v2.AuthenticationV2E2ESpec" level="INFO"/>
+    <logger name="org.knora.webapi.other.v2.LumieresLausanneV2E2ESpec" level="DEBUG"/>
 
     <!-- Admin -->
     <logger name="org.knora.webapi.http.ServerVersionE2ESpec" level="INFO"/>

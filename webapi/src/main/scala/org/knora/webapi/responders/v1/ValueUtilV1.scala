@@ -26,7 +26,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.VariableResultsRow
 import org.knora.webapi.messages.v1.responder.ontologymessages._
-import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
+import org.knora.webapi.messages.v1.responder.resourcemessages.{LiteralValueType, LocationV1, ResourceCreateValueObjectResponseV1, ResourceCreateValueResponseV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.responders.v1.GroupedProps._
@@ -258,6 +258,87 @@ class ValueUtilV1(private val settings: SettingsImpl) {
                 }
             } yield ()
         }
+    }
+
+    /**
+      * Converts a [[CreateValueResponseV1]] returned by the values responder on value creation
+      * to the expected format for the resources responder [[ResourceCreateValueResponseV1]], which describes a value
+      * added to a new resource.
+      *
+      * @param resourceIri   the IRI of the created resource.
+      * @param creatorIri    the creator of the resource.
+      * @param propertyIri   the property the valueResponse belongs to.
+      * @param valueResponse the value that has been attached to the resource.
+      * @return a [[ResourceCreateValueResponseV1]] representing the created value.
+      */
+    def convertCreateValueResponseV1ToResourceCreateValueResponseV1(resourceIri: IRI,
+                                                                            creatorIri: IRI,
+                                                                            propertyIri: IRI,
+                                                                            valueResponse: CreateValueResponseV1): ResourceCreateValueResponseV1 = {
+
+        val basicObjectResponse = ResourceCreateValueObjectResponseV1(
+            textval = Map(LiteralValueType.StringValue -> valueResponse.value.toString),
+            resource_id = Map(LiteralValueType.StringValue -> resourceIri),
+            property_id = Map(LiteralValueType.StringValue -> propertyIri),
+            person_id = Map(LiteralValueType.StringValue -> creatorIri),
+            order = Map(LiteralValueType.IntegerValue -> 1) // TODO: include correct order: valueHasOrder
+        )
+
+        val objectResponse = valueResponse.value match {
+            case integerValue: IntegerValueV1 =>
+                basicObjectResponse.copy(
+                    ival = Some(Map(LiteralValueType.IntegerValue -> integerValue.ival))
+                )
+
+            case decimalValue: DecimalValueV1 =>
+                basicObjectResponse.copy(
+                    dval = Some(Map(LiteralValueType.DecimalValue -> decimalValue.dval))
+                )
+
+            case dateValue: DateValueV1 =>
+                val julianDayCountValue = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(dateValue)
+                basicObjectResponse.copy(
+                    dateval1 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval1)),
+                    dateval2 = Some(Map(LiteralValueType.StringValue -> dateValue.dateval2)),
+                    dateprecision1 = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.dateprecision1)),
+                    dateprecision2 = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.dateprecision2)),
+                    calendar = Some(Map(LiteralValueType.StringValue -> julianDayCountValue.calendar))
+                )
+
+            case textValue: TextValueV1 => basicObjectResponse
+
+            case linkValue: LinkV1 => basicObjectResponse
+
+            case stillImageFileValue: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
+
+            case textFileValue: TextFileValueV1 => basicObjectResponse
+
+            case hlistValue: HierarchicalListValueV1 => basicObjectResponse
+
+            case colorValue: ColorValueV1 => basicObjectResponse
+
+            case geomValue: GeomValueV1 => basicObjectResponse
+
+            case intervalValue: IntervalValueV1 =>
+                basicObjectResponse.copy(
+                    timeval1 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval1)),
+                    timeval2 = Some(Map(LiteralValueType.DecimalValue -> intervalValue.timeval2))
+                )
+
+            case geonameValue: GeonameValueV1 => basicObjectResponse
+
+            case booleanValue: BooleanValueV1 => basicObjectResponse
+
+            case uriValue: UriValueV1 => basicObjectResponse
+
+            case other => throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
+        }
+
+        ResourceCreateValueResponseV1(
+            value = objectResponse,
+            id = valueResponse.id
+        )
+
     }
 
     /**
