@@ -130,16 +130,6 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
 
 }
 
-/**
-  * Represents an error message returned by SIPI
-  *
-  * @param message description of the error.
-  */
-case class SipiErrorConversionResponse(message: String) {
-    override def toString() = {
-        s"Sipi error message: $message"
-    }
-}
 
 /**
   * Represents the response received from SIPI after an image conversion request.
@@ -326,7 +316,6 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
 
 
     implicit val sipiFileInfoGetResponseV1Format: RootJsonFormat[SipiFileInfoGetResponseV1] = jsonFormat1(SipiFileInfoGetResponseV1)
-    implicit val sipiErrorConversionResponseFormat: RootJsonFormat[SipiErrorConversionResponse] = jsonFormat1(SipiErrorConversionResponse)
     implicit val sipiImageConversionResponseFormat: RootJsonFormat[SipiImageConversionResponse] = jsonFormat11(SipiImageConversionResponse)
     implicit val textStoreResponseFormat: RootJsonFormat[SipiTextResponse] = jsonFormat6(SipiTextResponse)
 }

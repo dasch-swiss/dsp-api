@@ -33,12 +33,12 @@ else
     printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
 fi
 
-printf "${GREEN}Loading Data${NO_COLOUR}\n\n"
+printf "${GREEN}${DELIMITER}Loading Data${NO_COLOUR}\n\n"
 
 ./graphdb-knora-prod-data.expect $GRAPHDB
 
-printf "${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
+printf "\n${GREEN}Data Loaded.\n\n${DELIMITER}Updating Lucene Index${NO_COLOUR}\n\n"
 
 curl -X POST --data-urlencode 'update@./graphdb-knora-index-update.rq' $GRAPHDB/repositories/knora-prod/statements
 
-printf "${GREEN}Lucene Index Updated.${NO_COLOUR}"
+printf "${GREEN}Lucene Index Updated.${NO_COLOUR}\n"
