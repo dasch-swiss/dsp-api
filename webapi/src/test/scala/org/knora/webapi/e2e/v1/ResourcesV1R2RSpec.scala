@@ -109,6 +109,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
     private val mathIntelligencerIri = new MutableTestIri
     private val deutschesDingIri = new MutableTestIri
     private val standoffLangDingIri = new MutableTestIri
+    private val thingWithString = new MutableTestIri
 
     // incunabula book with title "Eyn biechlin ..."
     private val incunabulaBookBiechlin = "http://rdfh.ch/9935159f67"
@@ -1854,6 +1855,64 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             }
 
+        }
+
+        "use create a string value with chars encoded as entities but without markup in a bulk import" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
+                   |    xmlns:p0001-anything="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
+                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |    <p0001-anything:Thing id="thing_with_string">
+                   |        <knoraXmlImport:label>Thing with string</knoraXmlImport:label>
+                   |        <p0001-anything:hasText knoraType="richtext_value">test &amp; &apos; &gt; &lt; test</p0001-anything:hasText>
+                   |    </p0001-anything:Thing>
+                   |</knoraXmlImport:resources>""".stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPath ~> check {
+                val responseStr = responseAs[String]
+                
+                assert(status == StatusCodes.OK, responseStr)
+                responseStr should include("createdResources")
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+
+            }
+        }
+
+        "get the resource created by bulk import and check for entities in string value" in {
+
+            Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+                val stringVal = responseJson.fields("props")
+                    .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
+                    .asInstanceOf[JsObject].fields("values")
+                    .asInstanceOf[JsArray].elements.head
+                    .asInstanceOf[JsObject].fields("utf8str")
+
+                assert(!(responseAs[String] contains "&amp;"))
+                assert(responseAs[String] contains "&")
+
+                assert(!(responseAs[String] contains "&lt;"))
+                assert(responseAs[String] contains "<")
+
+                assert(!(responseAs[String] contains "&gt;"))
+                assert(responseAs[String] contains ">")
+
+                assert(!(responseAs[String] contains "&apos;"))
+                assert(responseAs[String] contains "'")
+
+
+            }
         }
 
 
