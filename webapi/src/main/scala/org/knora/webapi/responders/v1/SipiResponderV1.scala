@@ -41,11 +41,11 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.PermissionUtilADM
+import org.knora.webapi.util.{PermissionUtilADM, SipiUtil}
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -180,7 +180,7 @@ class SipiResponderV1 extends Responder {
         val httpPost = new HttpPost(urlPath)
         httpPost.setEntity(postEntity)
 
-        val conversionResultFuture = Try {
+        val conversionResultTry: Try[String] = Try {
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
@@ -194,13 +194,17 @@ class SipiResponderV1 extends Responder {
                 val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
-                // TODO: improve error handling
-
                 if (statusCategory != 2) {
-                    throw SipiException(s"Sipi responded with HTTP code $statusCode: $responseEntityStr")
-                }
+                    val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
 
-                responseEntityStr
+                    if (statusCategory == 4) {
+                        throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    } else {
+                        throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    }
+                } else {
+                    responseEntityStr
+                }
             } finally {
                 maybeResponse match {
                     case Some(response) => response.close()
@@ -212,15 +216,14 @@ class SipiResponderV1 extends Responder {
         //
         // handle unsuccessful requests to Sipi
         //
-        val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case sipiEx: SipiException => throw sipiEx
-
-            case err =>
-                throw SipiException(message = s"Could not connect to Sipi: ${err.toString}", e = err, log = log)
+        val recoveredConversionResultTry = conversionResultTry.recoverWith {
+            case badRequestException: BadRequestException => throw badRequestException
+            case sipiException: SipiException => throw sipiException
+            case e: Exception => throw SipiException("Failed to connect to Sipi", e, log)
         }
 
         for {
-            responseAsStr: String <- recoveredConversionResultFuture
+            responseAsStr: String <- recoveredConversionResultTry
 
             /* get json from response body */
             responseAsJson: JsValue = JsonParser(responseAsStr)
@@ -290,6 +293,5 @@ class SipiResponderV1 extends Responder {
 
         } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
-
 
 }

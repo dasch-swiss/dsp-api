@@ -30,13 +30,14 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.SipiException
+import org.knora.webapi.{BadRequestException, SipiException}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
+import org.knora.webapi.util.SipiUtil
 import spray.json._
 
 import scala.util.Try
@@ -154,7 +155,7 @@ class SipiResponderV2 extends Responder {
     private def doSipiRequest(request: HttpRequest): Try[String] = {
         val httpContext: HttpClientContext = HttpClientContext.create
 
-        val triplestoreResponseFuture = Try {
+        val sipiResponseTry = Try {
             var maybeResponse: Option[CloseableHttpResponse] = None
 
             try {
@@ -169,10 +170,16 @@ class SipiResponderV2 extends Responder {
                 val statusCategory: Int = statusCode / 100
 
                 if (statusCategory != 2) {
-                    throw SipiException(s"Sipi responded with HTTP code $statusCode: $responseEntityStr")
-                }
+                    val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
 
-                responseEntityStr
+                    if (statusCategory == 4) {
+                        throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    } else {
+                        throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    }
+                } else {
+                    responseEntityStr
+                }
             } finally {
                 maybeResponse match {
                     case Some(response) => response.close()
@@ -181,8 +188,9 @@ class SipiResponderV2 extends Responder {
             }
         }
 
-        triplestoreResponseFuture.recover {
-            case tre: SipiException => throw tre
+        sipiResponseTry.recover {
+            case badRequestException: BadRequestException => throw badRequestException
+            case sipiException: SipiException => throw sipiException
             case e: Exception => throw SipiException("Failed to connect to Sipi", e, log)
         }
     }
