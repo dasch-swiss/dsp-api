@@ -72,7 +72,27 @@ function pre_flight(prefix, identifier, cookie)
             end
         end
 
-        knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/v1/files/' .. identifier
+        -- #snip_marker
+        --
+        -- Allows to set SIPI_WEBAPI_HOSTNAME environment variable and use its value.
+        --
+        local webapi_hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
+        if webapi_hostname == nil then
+            webapi_hostname = config.knora_path
+        end
+        server.log("webapi_hostname: " .. webapi_hostname, server.loglevel.LOG_DEBUG)
+
+        --
+        -- Allows to set SIPI_WEBAPI_PORT environment variable and use its value.
+        --
+        local webapi_port = os.getenv("SIPI_WEBAPI_PORT")
+        if webapi_port == nil then
+            webapi_port = config.knora_port
+        end
+        server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
+
+        knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/v1/files/' .. identifier
+        -- #snip_marker
 
         -- print("knora_url: " .. knora_url)
         server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)

@@ -39,7 +39,7 @@ object Dependencies {
 
     val Versions = Seq(
         scalaVersion := "2.12.4",
-        akkaVersion := "2.5.18",
+        akkaVersion := "2.5.19",
         akkaHttpVersion := "10.1.5",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
