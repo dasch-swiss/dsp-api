@@ -194,7 +194,12 @@ class SipiResponderV1 extends Responder {
                 val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
                 val statusCategory: Int = statusCode / 100
 
-                if (statusCategory != 2) {
+                // Was the request successful?
+                if (statusCategory == 2) {
+                    // Yes.
+                    responseEntityStr
+                } else {
+                    // No. Throw an appropriate exception.
                     val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
 
                     if (statusCategory == 4) {
@@ -202,8 +207,6 @@ class SipiResponderV1 extends Responder {
                     } else {
                         throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
                     }
-                } else {
-                    responseEntityStr
                 }
             } finally {
                 maybeResponse match {
