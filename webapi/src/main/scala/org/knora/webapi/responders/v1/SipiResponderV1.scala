@@ -19,13 +19,19 @@
 
 package org.knora.webapi.responders.v1
 
+import java.util
+
 import akka.actor.Status
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.HttpEntity.Strict
-import akka.http.scaladsl.model._
 import akka.pattern._
 import akka.stream.ActorMaterializer
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpPost}
+import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
+import org.apache.http.{Consts, HttpHost, NameValuePair}
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
@@ -35,12 +41,11 @@ import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.ActorUtil._
-import org.knora.webapi.util.PermissionUtilADM
+import org.knora.webapi.util.{PermissionUtilADM, SipiUtil}
 import spray.json._
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future, TimeoutException}
-import scala.util.{Failure, Try}
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
@@ -53,6 +58,18 @@ class SipiResponderV1 extends Responder {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
+
+    private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")
+
+    private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
+
+    private val sipiRequestConfig = RequestConfig.custom
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build
+
+    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     /**
       * Receives a message of type [[SipiResponderRequestV1]], and returns an appropriate response message, or
@@ -142,113 +159,82 @@ class SipiResponderV1 extends Responder {
         callSipiConvertRoute(url, conversionRequest)
     }
 
-
     /**
       * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
       * containing the file values to be added to the triplestore.
       *
-      * @param url               the Sipi route to be called.
+      * @param urlPath           the Sipi route to be called.
       * @param conversionRequest the message holding the information to make the request.
       * @return a [[SipiResponderConversionResponseV1]].
       */
-    private def callSipiConvertRoute(url: String, conversionRequest: SipiResponderConversionRequestV1): Try[SipiResponderConversionResponseV1] = {
+    private def callSipiConvertRoute(urlPath: String, conversionRequest: SipiResponderConversionRequestV1): Try[SipiResponderConversionResponseV1] = {
+        val context: HttpClientContext = HttpClientContext.create
 
-        val conversionResultFuture: Future[HttpResponse] = for {
-            requestEntity <- Marshal(FormData(conversionRequest.toFormData())).to[RequestEntity]
+        val formParams = new util.ArrayList[NameValuePair]()
 
-            response <- Http().singleRequest(
-                HttpRequest(
-                    method = HttpMethods.POST,
-                    uri = url,
-                    entity = requestEntity
-                )
-            )
-        } yield response
+        for ((key, value) <- conversionRequest.toFormData()) {
+            formParams.add(new BasicNameValuePair(key, value))
+        }
+
+        val postEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+        val httpPost = new HttpPost(urlPath)
+        httpPost.setEntity(postEntity)
+
+        val conversionResultTry: Try[String] = Try {
+            var maybeResponse: Option[CloseableHttpResponse] = None
+
+            try {
+                maybeResponse = Some(httpClient.execute(targetHost, httpPost, context))
+
+                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case None => ""
+                }
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                // Was the request successful?
+                if (statusCategory == 2) {
+                    // Yes.
+                    responseEntityStr
+                } else {
+                    // No. Throw an appropriate exception.
+                    val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
+
+                    if (statusCategory == 4) {
+                        throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    } else {
+                        throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    }
+                }
+            } finally {
+                maybeResponse match {
+                    case Some(response) => response.close()
+                    case None => ()
+                }
+            }
+        }
 
         //
         // handle unsuccessful requests to Sipi
         //
-        val recoveredConversionResultFuture = conversionResultFuture.recoverWith {
-            case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                // this problem is hardly the user's fault. Create a SipiException
-                throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-            case err =>
-                throw SipiException(message = s"Unknown error: ${err.toString}", e = err, log = log)
-        }
-
-        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
-        // than the value of akka.actor.deployment./responderManager/sipiRouterV1.nr-of-instances
-        val conversionResultTry: Try[HttpResponse] = try {
-            Await.ready(recoveredConversionResultFuture, settings.sipiTimeout)
-            recoveredConversionResultFuture.value.get
-        } catch {
-            case timeoutEx: TimeoutException => Failure(TriplestoreConnectionException(s"Connection to Sipi timed out after ${settings.sipiTimeout}", timeoutEx, log))
+        val recoveredConversionResultTry = conversionResultTry.recoverWith {
+            case badRequestException: BadRequestException => throw badRequestException
+            case sipiException: SipiException => throw sipiException
+            case e: Exception => throw SipiException("Failed to connect to Sipi", e, log)
         }
 
         for {
-            conversionResultResponse: HttpResponse <- conversionResultTry
-
-            httpStatusCode: StatusCode = conversionResultResponse.status
-            statusInt: Int = httpStatusCode.intValue / 100
+            responseAsStr: String <- recoveredConversionResultTry
 
             /* get json from response body */
-            responseAsJson: JsValue <- statusInt match {
-                case 2 | 4 | 5 =>
-                    val strictEntityFuture: Future[Strict] = conversionResultResponse.entity.toStrict(5.seconds)
-                    Await.ready(strictEntityFuture, 5.seconds)
-                    val strictEntityTry = strictEntityFuture.value.get
-
-                    statusInt match {
-                        case 2 =>
-                            // Success
-
-                            strictEntityTry.map {
-                                strict: Strict =>
-                                    try {
-                                        strict.data.decodeString("UTF-8").parseJson
-                                    } catch {
-                                        // the Sipi response message could not be parsed correctly
-                                        case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = e, log = log)
-
-                                        case all: Exception => throw SipiException(message = "JSON response returned by Sipi is not valid JSON", e = all, log = log)
-                                    }
-                            }
-
-                        case 4 =>
-                            // Bad Request: it is the user's responsibility
-
-                            val errMessage: Try[SipiErrorConversionResponse] = strictEntityTry.map {
-                                strict: Strict =>
-                                    try {
-                                        strict.data.decodeString("UTF-8").parseJson.convertTo[SipiErrorConversionResponse]
-                                    } catch {
-                                        // the Sipi error message could not be parsed correctly
-                                        case e: spray.json.JsonParser.ParsingException => throw SipiException(message = "JSON error response returned by Sipi is invalid, it cannot be turned into a SipiErrorConversionResponse", e = e, log = log)
-
-                                        case all: Exception => throw SipiException(message = "JSON error response returned by Sipi is not valid JSON", e = all, log = log)
-                                    }
-                            }
-
-                            // most probably the user sent invalid data which caused a Sipi error
-                            errMessage.map(errMsg => throw BadRequestException(s"Sipi returned a non successful HTTP status code $httpStatusCode: $errMsg"))
-
-                        case 5 =>
-                            // Internal Server Error: not the user's fault
-                            val errString: Try[String] = strictEntityTry.map(_.data.decodeString("UTF-8"))
-                            errString.map(errStr => throw SipiException(s"Sipi reported an internal server error $httpStatusCode - $errStr"))
-                    }
-
-                case _ => throw SipiException(s"Sipi returned $httpStatusCode!")
-            }
-
-            // do cleanup after strict (in memory) access
-            _ = conversionResultResponse.discardEntityBytes()
+            responseAsJson: JsValue = JsonParser(responseAsStr)
 
             // get file type from Sipi response
             fileType: String = responseAsJson.asJsObject.fields.getOrElse("file_type", throw SipiException(message = "Sipi did not return a file type")) match {
                 case JsString(ftype: String) => ftype
-                case other => throw SipiException(message = s"Sipi did not return a correct file type, but: ${other}")
+                case other => throw SipiException(message = s"Sipi returned an invalid file type: $other")
             }
 
             // turn fileType returned by Sipi (a string) into an enum
@@ -310,6 +296,5 @@ class SipiResponderV1 extends Responder {
 
         } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
-
 
 }
