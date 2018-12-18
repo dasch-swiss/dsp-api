@@ -476,6 +476,66 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 }
 
 /**
+  * Represents a request to update a resource's metadata.
+  *
+  * @param maybeLabel the resource's new `rdfs:label`.
+  * @param maybePermissions the resource's new permissions.
+  * @param maybeLastModificationDate the resource's new last modification date.
+  */
+case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
+                                           maybeLabel: Option[String],
+                                           maybePermissions: Option[String],
+                                           maybeLastModificationDate: Option[Instant])
+
+object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
+    /**
+      * Converts JSON-LD input into an instance of [[UpdateResourceMetadataRequestV2]].
+      *
+      * @param jsonLDDocument   the JSON-LD input.
+      * @param apiRequestID     the UUID of the API request.
+      * @param requestingUser   the user making the request.
+      * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
+      * @param settings         the application settings.
+      * @param log              a logging adapter.
+      * @param timeout          a timeout for `ask` messages.
+      * @param executionContext an execution context for futures.
+      * @return a case class instance representing the input.
+      */
+    override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                            apiRequestID: UUID,
+                            requestingUser: UserADM,
+                            responderManager: ActorSelection,
+                            storeManager: ActorSelection,
+                            settings: SettingsImpl,
+                            log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
+
+    }
+
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument): UpdateResourceMetadataRequestV2 = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+        val resourceIri: IRI = jsonLDDocument.getIDAsKnoraDataIri.toString
+        val maybeLabel: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
+        val maybePermissions: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+
+        // TODO: Do we need this, or can we just use the current time? Also, do we need the current last modification date to prevent edit conflicts?
+        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+
+        if (Seq(maybeLabel, maybePermissions, maybeLastModificationDate).forall(_.isEmpty)) {
+            throw BadRequestException(s"No updated resource metadata provided")
+        }
+
+        UpdateResourceMetadataRequestV2(
+            resourceIri = resourceIri,
+            maybeLabel = maybeLabel,
+            maybePermissions = maybePermissions,
+            maybeLastModificationDate = maybeLastModificationDate
+        )
+    }
+}
+
+/**
   * Represents a sequence of resources read back from Knora.
   *
   * @param numberOfResources the amount of resources returned.
