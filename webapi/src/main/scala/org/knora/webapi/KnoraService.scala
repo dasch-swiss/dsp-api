@@ -316,7 +316,7 @@ trait KnoraService {
       */
     private def checkRepository(): Unit = {
 
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 2.5.seconds).asInstanceOf[CheckRepositoryResponse]
+        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 15.seconds).asInstanceOf[CheckRepositoryResponse]
         if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
             applicationStateActor ! SetAppState(AppState.RepositoryReady)
             log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)

@@ -39,7 +39,7 @@ object Dependencies {
 
     val Versions = Seq(
         scalaVersion := "2.12.4",
-        akkaVersion := "2.5.18",
+        akkaVersion := "2.5.19",
         akkaHttpVersion := "10.1.5",
         jenaVersion := "3.4.0",
         metricsVersion := "4.0.1",
@@ -133,7 +133,7 @@ object Dependencies {
 
         val icu4j                  = "com.ibm.icu"                              % "icu4j"                    % "62.1"
 
-
+        val apacheHttpClient       = "org.apache.httpcomponents"                % "httpclient"               % "4.5.6" exclude("commons-logging", "commons-logging")
     }
 
     object SalsahTest {
@@ -228,7 +228,8 @@ object Dependencies {
         swaggerAkkaHttp,
         typesafeConfig,
         xmlunitCore,
-        icu4j
+        icu4j,
+        apacheHttpClient
     )
 
 

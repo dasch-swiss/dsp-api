@@ -90,3 +90,14 @@ environment variables if we want to run SIPI behind a proxy:
 These variables are only used by `make_thumbnail.lua`:
 
 @@snip[make_thumbnail.lua](../../../../sipi/scripts/make_thumbnail.lua) { #snip_marker }
+
+## Additional Sipi Environment Variables
+
+Additionaly, these environment variables can be used to further configure sipi:
+
+- `SIPI_WEBAPI_HOSTNAME=localhost`: overrides `knora_path` in Sipi's config
+- `SIPI_WEBAPI_PORT=3333`: overrides `knora_port` in Sipi's config
+
+These variables need to be explicitly used like in `sipi.ini-knora.lua`:
+
+@@snip[sipi.init-knora.lua](../../../../sipi/config/sipi.init-knora.lua) { #snip_marker }

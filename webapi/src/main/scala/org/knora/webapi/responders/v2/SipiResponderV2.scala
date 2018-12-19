@@ -19,21 +19,27 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.util.FastFuture
+import java.util
+
 import akka.stream.ActorMaterializer
-import org.knora.webapi.SipiException
+import org.apache.http.client.config.RequestConfig
+import org.apache.http.client.entity.UrlEncodedFormEntity
+import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
+import org.apache.http.client.protocol.HttpClientContext
+import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
+import org.apache.http.message.BasicNameValuePair
+import org.apache.http.util.EntityUtils
+import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
+import org.knora.webapi.{BadRequestException, SipiException}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
 import org.knora.webapi.messages.v2.responder.sipimessages._
 import org.knora.webapi.responders.Responder
 import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
+import org.knora.webapi.util.SipiUtil
 import spray.json._
 
-import scala.concurrent.{Await, Future}
 import scala.util.Try
 
 /**
@@ -41,6 +47,18 @@ import scala.util.Try
   */
 class SipiResponderV2 extends Responder {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")
+
+    private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
+
+    private val sipiRequestConfig = RequestConfig.custom()
+        .setConnectTimeout(sipiTimeoutMillis)
+        .setConnectionRequestTimeout(sipiTimeoutMillis)
+        .setSocketTimeout(sipiTimeoutMillis)
+        .build()
+
+    private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
@@ -58,12 +76,7 @@ class SipiResponderV2 extends Responder {
     private def getFileMetadataV2(getFileMetadataRequestV2: GetImageMetadataRequestV2): Try[GetImageMetadataResponseV2] = {
         val knoraInfoUrl = getFileMetadataRequestV2.fileUrl + "/knora.json"
 
-        val request = FastFuture.successful(
-            HttpRequest(
-                method = HttpMethods.GET,
-                uri = knoraInfoUrl
-            )
-        )
+        val request = new HttpGet(knoraInfoUrl)
 
         for {
             responseStr <- doSipiRequest(request)
@@ -93,20 +106,14 @@ class SipiResponderV2 extends Responder {
 
         val moveFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiMoveFileRouteV2}?token=$token"
 
-        val formParams = Map(
-            "filename" -> moveTemporaryFileToPermanentStorageRequestV2.internalFilename
-        )
-
-        val requestFuture = for {
-            requestEntity <- Marshal(FormData(formParams)).to[RequestEntity]
-        } yield HttpRequest(
-            method = HttpMethods.POST,
-            uri = moveFileUrl,
-            entity = requestEntity
-        )
+        val formParams = new util.ArrayList[NameValuePair]()
+        formParams.add(new BasicNameValuePair("filename", moveTemporaryFileToPermanentStorageRequestV2.internalFilename))
+        val requestEntity = new UrlEncodedFormEntity(formParams, Consts.UTF_8)
+        val queryHttpPost = new HttpPost(moveFileUrl)
+        queryHttpPost.setEntity(requestEntity)
 
         for {
-            _ <- doSipiRequest(requestFuture)
+            _ <- doSipiRequest(queryHttpPost)
         } yield SuccessResponseV2("Moved file to permanent storage.")
     }
 
@@ -132,53 +139,62 @@ class SipiResponderV2 extends Responder {
         )
 
         val deleteFileUrl = s"${settings.internalSipiBaseUrl}/${settings.sipiDeleteTempFileRouteV2}/${deleteTemporaryFileRequestV2.internalFilename}?token=$token"
-
-        val requestFuture = FastFuture.successful(
-            HttpRequest(
-                method = HttpMethods.DELETE,
-                uri = deleteFileUrl
-            )
-        )
+        val request = new HttpDelete(deleteFileUrl)
 
         for {
-            _ <- doSipiRequest(requestFuture)
+            _ <- doSipiRequest(request)
         } yield SuccessResponseV2("Deleted temporary file.")
     }
 
     /**
       * Makes an HTTP request to Sipi and returns the response.
       *
-      * @param requestFuture the HTTP request.
+      * @param request the HTTP request.
       * @return Sipi's response.
       */
-    private def doSipiRequest(requestFuture: Future[HttpRequest]): Try[String] = {
-        val sipiResponseFuture: Future[HttpResponse] =
-            for {
-                request <- requestFuture
-                response <- Http().singleRequest(request)
-            } yield response
+    private def doSipiRequest(request: HttpRequest): Try[String] = {
+        val httpContext: HttpClientContext = HttpClientContext.create
 
-        // Block until Sipi responds, to ensure that the number of concurrent connections to Sipi will never be greater
-        // than the value of akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances
-        val sipiResponseTry: Try[HttpResponse] = Try {
-            Await.ready(sipiResponseFuture, settings.sipiTimeout)
-            sipiResponseFuture.value.get
-        }.flatten
+        val sipiResponseTry = Try {
+            var maybeResponse: Option[CloseableHttpResponse] = None
 
-        val sipiResponseTryRecovered: Try[HttpResponse] = sipiResponseTry.recoverWith {
-            case exception: Exception => throw SipiException(message = "Sipi error", e = exception, log = log)
+            try {
+                maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
+
+                val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+                    case Some(responseEntity) => EntityUtils.toString(responseEntity)
+                    case None => ""
+                }
+
+                val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+                val statusCategory: Int = statusCode / 100
+
+                // Was the request successful?
+                if (statusCategory == 2) {
+                    // Yes.
+                    responseEntityStr
+                } else {
+                    // No. Throw an appropriate exception.
+                    val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
+
+                    if (statusCategory == 4) {
+                        throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    } else {
+                        throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
+                    }
+                }
+            } finally {
+                maybeResponse match {
+                    case Some(response) => response.close()
+                    case None => ()
+                }
+            }
         }
 
-        for {
-            sipiResponse: HttpResponse <- sipiResponseTryRecovered
-            httpStatusCode: StatusCode = sipiResponse.status
-            strictEntityFuture: Future[HttpEntity.Strict] = sipiResponse.entity.toStrict(settings.sipiTimeout)
-            strictEntity: HttpEntity.Strict = Await.result(strictEntityFuture, settings.sipiTimeout)
-            responseStr: String = strictEntity.data.decodeString("UTF-8")
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned HTTP status code ${httpStatusCode.intValue} with message: $responseStr")
-            }
-        } yield responseStr
+        sipiResponseTry.recover {
+            case badRequestException: BadRequestException => throw badRequestException
+            case sipiException: SipiException => throw sipiException
+            case e: Exception => throw SipiException("Failed to connect to Sipi", e, log)
+        }
     }
 }
