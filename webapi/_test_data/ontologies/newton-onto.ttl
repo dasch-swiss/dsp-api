@@ -286,7 +286,7 @@
                        [
                           rdf:type owl:Restriction ;
                           owl:onProperty :hasFacsimiles ;
-                          owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
                        ] ;
 
