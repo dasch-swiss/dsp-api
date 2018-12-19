@@ -30,6 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -68,6 +69,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
         case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
+        case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => future2Message(sender(), updateResourceMetadataV2(updateResourceMetadataRequestV2), log)
         case graphDataGetRequest: GraphDataGetRequestV2 => future2Message(sender(), getGraphDataResponseV2(graphDataGetRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -232,6 +234,17 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             requestingUser = createResourceRequestV2.requestingUser
         )
 
+    }
+
+    /**
+      * Updates a resources metadata.
+      *
+      * @param updateResourceMetadataRequestV2 the update request.
+      * @return a [[SuccessResponseV2]].
+      */
+    def updateResourceMetadataV2(updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[SuccessResponseV2] = {
+        // TODO
+        Future(SuccessResponseV2("Resource metadata updated"))
     }
 
     /**

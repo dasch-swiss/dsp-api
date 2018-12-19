@@ -490,7 +490,9 @@ case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            lastModificationDate: Instant,
                                            maybeLabel: Option[String],
                                            maybePermissions: Option[String],
-                                           maybeNewModificationDate: Option[Instant])
+                                           maybeNewModificationDate: Option[Instant],
+                                           requestingUser: UserADM,
+                                           apiRequestID: UUID) extends ResourcesResponderRequestV2
 
 object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
     /**
@@ -514,10 +516,16 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
                             storeManager: ActorSelection,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
-        Future(fromJsonLDSync(jsonLDDocument))
+        Future {
+            fromJsonLDSync(
+                jsonLDDocument = jsonLDDocument,
+                requestingUser = requestingUser,
+                apiRequestID = apiRequestID
+            )
+        }
     }
 
-    def fromJsonLDSync(jsonLDDocument: JsonLDDocument): UpdateResourceMetadataRequestV2 = {
+    def fromJsonLDSync(jsonLDDocument: JsonLDDocument, requestingUser: UserADM, apiRequestID: UUID): UpdateResourceMetadataRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceIri: IRI = jsonLDDocument.getIDAsKnoraDataIri.toString
@@ -548,7 +556,9 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
             lastModificationDate = lastModificationDate,
             maybeLabel = maybeLabel,
             maybePermissions = maybePermissions,
-            maybeNewModificationDate = maybeNewModificationDate
+            maybeNewModificationDate = maybeNewModificationDate,
+            requestingUser = requestingUser,
+            apiRequestID = apiRequestID
         )
     }
 }
