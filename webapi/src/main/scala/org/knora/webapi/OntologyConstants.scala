@@ -699,6 +699,7 @@ object OntologyConstants {
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val NewModificationDate: IRI = KnoraApiV2PrefixExpansion + "newModificationDate"
         val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
         val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
         val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"

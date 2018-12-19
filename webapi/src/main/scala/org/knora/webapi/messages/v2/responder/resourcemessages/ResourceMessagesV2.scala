@@ -478,14 +478,19 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 /**
   * Represents a request to update a resource's metadata.
   *
-  * @param maybeLabel the resource's new `rdfs:label`.
-  * @param maybePermissions the resource's new permissions.
-  * @param maybeLastModificationDate the resource's new last modification date.
+  * @param resourceIri              the IRI of the resource.
+  * @param resourceClassIri         the IRI of the resource class.
+  * @param lastModificationDate     the resource's last modification date.
+  * @param maybeLabel               the resource's new `rdfs:label`.
+  * @param maybePermissions         the resource's new permissions.
+  * @param maybeNewModificationDate the resource's new last modification date.
   */
 case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
+                                           resourceClassIri: SmartIri,
+                                           lastModificationDate: Instant,
                                            maybeLabel: Option[String],
                                            maybePermissions: Option[String],
-                                           maybeLastModificationDate: Option[Instant])
+                                           maybeNewModificationDate: Option[Instant])
 
 object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateResourceMetadataRequestV2] {
     /**
@@ -509,28 +514,41 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
                             storeManager: ActorSelection,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
-
+        Future(fromJsonLDSync(jsonLDDocument))
     }
 
     def fromJsonLDSync(jsonLDDocument: JsonLDDocument): UpdateResourceMetadataRequestV2 = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val resourceIri: IRI = jsonLDDocument.getIDAsKnoraDataIri.toString
+        val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
+
+        val lastModificationDate: Instant = jsonLDDocument.requireDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.toInstant
+        )
+
         val maybeLabel: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.Rdfs.Label, stringFormatter.toSparqlEncodedString)
         val maybePermissions: Option[String] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
 
-        // TODO: Do we need this, or can we just use the current time? Also, do we need the current last modification date to prevent edit conflicts?
-        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate, stringFormatter.toInstant)
+        val maybeNewModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+            key = OntologyConstants.KnoraApiV2WithValueObjects.NewModificationDate,
+            expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+            validationFun = stringFormatter.toInstant
+        )
 
-        if (Seq(maybeLabel, maybePermissions, maybeLastModificationDate).forall(_.isEmpty)) {
+        if (Seq(maybeLabel, maybePermissions, maybeNewModificationDate).forall(_.isEmpty)) {
             throw BadRequestException(s"No updated resource metadata provided")
         }
 
         UpdateResourceMetadataRequestV2(
             resourceIri = resourceIri,
+            resourceClassIri = resourceClassIri,
+            lastModificationDate = lastModificationDate,
             maybeLabel = maybeLabel,
             maybePermissions = maybePermissions,
-            maybeLastModificationDate = maybeLastModificationDate
+            maybeNewModificationDate = maybeNewModificationDate
         )
     }
 }
@@ -604,6 +622,7 @@ case class ReadResourcesSequenceV2(numberOfResources: Int, resources: Seq[ReadRe
     def toJsonLDDocument(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDDocument = {
         toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
     }
+
     // #toJsonLDDocument
 
     /**
