@@ -487,10 +487,10 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
   */
 case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            resourceClassIri: SmartIri,
-                                           maybeLastModificationDate: Option[Instant],
-                                           maybeLabel: Option[String],
-                                           maybePermissions: Option[String],
-                                           maybeNewModificationDate: Option[Instant],
+                                           maybeLastModificationDate: Option[Instant] = None,
+                                           maybeLabel: Option[String] = None,
+                                           maybePermissions: Option[String] = None,
+                                           maybeNewModificationDate: Option[Instant] = None,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID) extends ResourcesResponderRequestV2
 

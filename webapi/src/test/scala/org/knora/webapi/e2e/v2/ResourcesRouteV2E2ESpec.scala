@@ -427,11 +427,11 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(resourceIri.toSmartIri.isKnoraDataIri)
         }
 
-        "update the label and permissions of a resource" in {
-            val dateTimeStampBeforeUpdate = Instant.now
+        "update the metadata of a resource" in {
             val resourceIri = "http://rdfh.ch/0001/a-thing"
             val newLabel = "test thing with modified label"
             val newPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember"
+            val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
 
             val jsonLDEntity =
                 s"""|{
@@ -439,6 +439,10 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |  "@type" : "anything:Thing",
                    |  "rdfs:label" : "$newLabel",
                    |  "knora-api:hasPermissions" : "$newPermissions",
+                   |  "knora-api:newModificationDate" : {
+                   |    "@type" : "xsd:dateTimeStamp",
+                   |    "@value" : "$newModificationDate"
+                   |  },
                    |  "@context" : {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -470,7 +474,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                 validationFun = stringFormatter.toInstant
             )
 
-            assert(lastModificationDate.isAfter(dateTimeStampBeforeUpdate))
+            assert(lastModificationDate == newModificationDate)
         }
     }
 }

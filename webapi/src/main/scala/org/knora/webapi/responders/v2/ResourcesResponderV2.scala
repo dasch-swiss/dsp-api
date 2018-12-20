@@ -284,7 +284,12 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfoResponse.project)
 
                 newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
-                    case Some(submittedNewModificationDate) => submittedNewModificationDate
+                    case Some(submittedNewModificationDate) =>
+                        if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
+                            throw BadRequestException(s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate")
+                        } else {
+                            submittedNewModificationDate
+                        }
                     case None => Instant.now
                 }
 

@@ -12,3 +12,4 @@ Also, please change the "HINT" to the appropriate level:
 ## HINT => LEVEL
 
 - BUGFIX CHANGE: Triplestore connection error when using dockerComposeUp (@github[#1122](#1122))
+- MINOR CHANGE: Update resource metadata in API v2 (@github[#1131](#1131))
