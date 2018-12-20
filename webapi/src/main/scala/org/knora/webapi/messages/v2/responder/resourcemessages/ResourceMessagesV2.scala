@@ -478,16 +478,16 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 /**
   * Represents a request to update a resource's metadata.
   *
-  * @param resourceIri              the IRI of the resource.
-  * @param resourceClassIri         the IRI of the resource class.
-  * @param lastModificationDate     the resource's last modification date.
-  * @param maybeLabel               the resource's new `rdfs:label`.
-  * @param maybePermissions         the resource's new permissions.
-  * @param maybeNewModificationDate the resource's new last modification date.
+  * @param resourceIri               the IRI of the resource.
+  * @param resourceClassIri          the IRI of the resource class.
+  * @param maybeLastModificationDate the resource's last modification date, if any.
+  * @param maybeLabel                the resource's new `rdfs:label`, if any.
+  * @param maybePermissions          the resource's new permissions, if any.
+  * @param maybeNewModificationDate  the resource's new last modification date, if any.
   */
 case class UpdateResourceMetadataRequestV2(resourceIri: IRI,
                                            resourceClassIri: SmartIri,
-                                           lastModificationDate: Instant,
+                                           maybeLastModificationDate: Option[Instant],
                                            maybeLabel: Option[String],
                                            maybePermissions: Option[String],
                                            maybeNewModificationDate: Option[Instant],
@@ -531,7 +531,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
         val resourceIri: IRI = jsonLDDocument.getIDAsKnoraDataIri.toString
         val resourceClassIri: SmartIri = jsonLDDocument.getTypeAsKnoraTypeIri
 
-        val lastModificationDate: Instant = jsonLDDocument.requireDatatypeValueInObject(
+        val maybeLastModificationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
             key = OntologyConstants.KnoraApiV2WithValueObjects.LastModificationDate,
             expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
             validationFun = stringFormatter.toInstant
@@ -553,7 +553,7 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
         UpdateResourceMetadataRequestV2(
             resourceIri = resourceIri,
             resourceClassIri = resourceClassIri,
-            lastModificationDate = lastModificationDate,
+            maybeLastModificationDate = maybeLastModificationDate,
             maybeLabel = maybeLabel,
             maybePermissions = maybePermissions,
             maybeNewModificationDate = maybeNewModificationDate,
