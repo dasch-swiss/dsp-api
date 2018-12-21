@@ -11,5 +11,4 @@ Also, please change the "HINT" to the appropriate level:
 
 ## HINT => LEVEL
 
-- MAJOR CHANGE: mapping creation request and response formats have changed (@github[#1094](#1094)).
-- MINOR CHANGE: Update technical user docs (@github[#1085](#1085))
+- BUGFIX CHANGE: Triplestore connection error when using dockerComposeUp (@github[#1122](#1122))

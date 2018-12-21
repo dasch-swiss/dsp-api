@@ -401,7 +401,7 @@ lazy val webapi = knoraModule("webapi")
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
                 // install wget
-                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
+                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*"),
                 // install yourkit profiler
                 Cmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
 

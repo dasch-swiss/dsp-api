@@ -1740,7 +1740,7 @@ class ResourcesResponderV1 extends Responder {
             resourceCreateValueResponses: Map[IRI, Seq[ResourceCreateValueResponseV1]] = verifyMultipleValueCreationResponse.verifiedValues.map {
                 case (propIri: IRI, values: Seq[CreateValueResponseV1]) => (propIri, values.map {
                     valueResponse: CreateValueResponseV1 =>
-                        MessageUtil.convertCreateValueResponseV1ToResourceCreateValueResponseV1(creatorIri = creatorIri,
+                        valueUtilV1.convertCreateValueResponseV1ToResourceCreateValueResponseV1(creatorIri = creatorIri,
                             propertyIri = propIri,
                             resourceIri = resourceIri,
                             valueResponse = valueResponse)
@@ -2710,7 +2710,7 @@ class ResourcesResponderV1 extends Responder {
                     comment = comment) // TODO: person_id and lastmod are not handled yet. Probably these are never used by the GUI.
         }
 
-        // TODO: try to unify this with MessageUtil's convertCreateValueResponseV1ToResourceCreateValueResponseV1
+        // TODO: try to unify this with ValueUtilV1's convertCreateValueResponseV1ToResourceCreateValueResponseV1
         PropertyGetV1(
             pid = propertyV1.pid,
             label = propertyV1.label,

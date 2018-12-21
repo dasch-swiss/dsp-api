@@ -417,9 +417,9 @@ case class PermissionsDataADM(groupsPerProject: Map[IRI, Seq[IRI]] = Map.empty[I
       * @param insideProject the IRI of the project inside which the operation will be performed.
       * @return a boolean value.
       */
-    def hasPermissionFor(operation: OperationV1, insideProject: IRI, objectAccessPermissions: Option[Set[PermissionADM]]): Boolean = {
+    def hasPermissionFor(operation: OperationADM, insideProject: IRI, objectAccessPermissions: Option[Set[PermissionADM]]): Boolean = {
 
-        //println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
+        // println(s"hasPermissionFor - administrativePermissionsPerProject: ${administrativePermissionsPerProject}, operation: $operation, insideProject: $insideProject")
 
         if (this.isSystemAdmin) {
             /* A member of the SystemAdmin group is allowed to perform any operation */
@@ -692,10 +692,10 @@ object PermissionADM {
 /**
   * An abstract trait representing operations for which the user needs Administrative Permissions.
   */
-sealed trait OperationV1
+sealed trait OperationADM
 
 /* Creating a resource of a certain class */
-case class ResourceCreateOperation(resourceClass: IRI) extends OperationV1
+case class ResourceCreateOperation(resourceClass: IRI) extends OperationADM
 
 
 /**
@@ -710,9 +710,9 @@ object PermissionDataType extends Enumeration {
 
     type PermissionProfileType = Value
 
-    val RESTRICTED = Value(0, "restricted")
+    val RESTRICTED: PermissionProfileType = Value(0, "restricted")
     // only group memberships
-    val FULL = Value(1, "full") // everything
+    val FULL: PermissionProfileType = Value(1, "full") // everything
 
     val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -738,8 +738,8 @@ object PermissionType extends Enumeration {
 
     type PermissionType = Value
 
-    val OAP = Value(0, "ObjectAccessPermission")
-    val AP = Value(1, "AdministrativePermission")
+    val OAP: PermissionType = Value(0, "ObjectAccessPermission")
+    val AP: PermissionType = Value(1, "AdministrativePermission")
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

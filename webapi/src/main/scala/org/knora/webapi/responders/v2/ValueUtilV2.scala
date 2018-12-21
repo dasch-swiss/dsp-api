@@ -43,8 +43,8 @@ object ValueUtilV2 {
       * Gets the default permissions for a new value.
       *
       * @param projectIri       the IRI of the project of the containing resource.
-      * @param resourceClassIri the IRI of the resource class.
-      * @param propertyIri      the IRI of the property that points to the value.
+      * @param resourceClassIri the internal IRI of the resource class.
+      * @param propertyIri      the internal IRI of the property that points to the value.
       * @param requestingUser   the user that is creating the value.
       * @return a permission string.
       */
