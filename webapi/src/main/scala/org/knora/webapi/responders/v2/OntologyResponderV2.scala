@@ -2368,10 +2368,8 @@ class OntologyResponderV2 extends Responder {
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                existingReadClassInfo: ReadClassInfoV2 = ontology.classes.getOrElse(internalClassIri,
-                    throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist"))
-
-                existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
+                existingClassDef: ClassInfoContentV2 = ontology.classes.getOrElse(internalClassIri,
+                    throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
 
                 // Check that the class isn't used in data, and that it has no subclasses.
 
@@ -2396,8 +2394,7 @@ class OntologyResponderV2 extends Responder {
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
-                    cacheData = cacheData,
-                    existingLinkPropsToKeep = existingReadClassInfo.linkProperties
+                    cacheData = cacheData
                 )
 
                 // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
