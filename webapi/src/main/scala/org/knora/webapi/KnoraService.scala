@@ -108,11 +108,6 @@ trait KnoraService {
 
     import scala.language.postfixOps
 
-    /**
-      * The actor used for storing the application application wide variables in a thread safe manner.
-      */
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
-
     // #supervisors
     /**
       * The supervisor actor that forwards messages to responder actors to handle API requests.
@@ -124,6 +119,11 @@ trait KnoraService {
       */
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
     // #supervisors
+
+    /**
+      * The actor used at startup, transitioning between states, and storing the application application wide variables in a thread safe manner.
+      */
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor(responderManager, storeManager)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * Timeout definition
@@ -175,7 +175,7 @@ trait KnoraService {
     /**
       * Starts the Knora API server.
       */
-    def startService(withOntologies: Boolean): Unit = {
+    def startService(skipLoadingOfOntologies: Boolean): Unit = {
 
         val bindingFuture: Future[Http.ServerBinding] = Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
 
@@ -185,12 +185,8 @@ trait KnoraService {
                 // start monitoring reporters
                 startReporters()
 
-                // Kick of startup tasks. This method returns when Running state is reached.
-                if (withOntologies) {
-                    startupTaskRunner(true)
-                } else {
-                    startupTaskRunner(false)
-                }
+                // Kick of startup procedure.
+                applicationStateActor ! InitStartUp(skipLoadingOfOntologies)
             }
             case Failure(ex) => {
                 log.error("Failed to bind to {}:{}! - {}", settings.internalKnoraApiHost, settings.internalKnoraApiPort, ex.getMessage)
@@ -243,31 +239,7 @@ trait KnoraService {
         }
     }
 
-    /**
-      * Triggers the startupChecks periodically and only returns when AppState.Running is reached.
-      */
-    private def startupTaskRunner(withOntologies: Boolean): Unit = {
 
-        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
-
-        state match {
-            case value if value == AppState.Running => {
-
-                if (settings.printShortConfig | settings.printExtendedConfig) {
-                    printWelcomeMsg()
-                }
-
-            }
-            case value => {
-                // not in running state so call startup checks again
-                startupChecks(withOntologies)
-
-                // we should wait a bit before we call ourselves again
-                Await.result(blockingFuture(), 3.5.seconds)
-                startupTaskRunner(withOntologies)
-            }
-        }
-    }
 
     /**
       * A blocking future running on the blocking dispatcher.
@@ -284,119 +256,7 @@ trait KnoraService {
         }
     }
 
-    /**
-      * Executes startup tasks in the correct order and state.
-      */
-    private def startupChecks(withOntologies: Boolean): Unit = {
-
-        val state = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
-
-        log.debug("startupChecks - state: {}", state)
-
-        state match {
-            case AppState.Stopped => applicationStateActor ! SetAppState(AppState.StartingUp)
-            case AppState.StartingUp => {
-                log.info(s"KnoraService - Startup State: {}", AppState.StartingUp)
-                checkRepository()
-            }
-            case AppState.WaitingForRepository => checkRepository() // check DB again
-            case AppState.RepositoryReady => createCaches() // create caches
-            case AppState.CachesReady => loadOntologies(withOntologies) // load ontologies
-            case AppState.OntologiesReady => {
-                // everything is up and running so set state to Running
-                applicationStateActor ! SetAppState(AppState.Running)
-                log.info(s"KnoraService - Startup State: {}", AppState.Running)
-            }
-            case value => throw UnsupportedValueException(s"The value: $value is not supported.")
-        }
-    }
-
-    /**
-      * Checks if repository is running and initialized
-      */
-    private def checkRepository(): Unit = {
-
-        val storeManagerResult = Await.result(storeManager ? CheckRepositoryRequest(), 15.seconds).asInstanceOf[CheckRepositoryResponse]
-        if (storeManagerResult.repositoryStatus == RepositoryStatus.ServiceAvailable) {
-            applicationStateActor ! SetAppState(AppState.RepositoryReady)
-            log.info(s"KnoraService - Startup State: {}", AppState.RepositoryReady)
-        } else if (storeManagerResult.repositoryStatus == RepositoryStatus.NotInitialized) {
-            log.info(s"KnoraService - checkRepository - status: {}: {}", storeManagerResult.repositoryStatus, storeManagerResult.msg)
-            log.info("Please initialize repository. Will exit now.")
-            stopService()
-        } else {
-            applicationStateActor ! SetAppState(AppState.WaitingForRepository)
-            log.info(s"KnoraService - Startup State: {}", AppState.WaitingForRepository)
-
-        }
-    }
-
-    /**
-      * Creates caches
-      */
-    private def createCaches(): Unit = {
-        applicationStateActor ! SetAppState(AppState.CreatingCaches)
-        CacheUtil.createCaches(settings.caches)
-        applicationStateActor ! SetAppState(AppState.CachesReady)
-        log.info(s"KnoraService - Startup State: {}", AppState.CachesReady)
-    }
-
-    /**
-      * Loads ontologies
-      */
-    private def loadOntologies(load: Boolean): Unit = {
-
-        // load ontologies and set OntologiesReady state
-        applicationStateActor ! SetAppState(AppState.LoadingOntologies)
-
-        if (load) {
-            val ontologyCacheFuture = responderManager ? LoadOntologiesRequestV2(systemUser)
-            Await.result(ontologyCacheFuture, timeout.duration).asInstanceOf[SuccessResponseV2]
-        }
-
-        applicationStateActor ! SetAppState(AppState.OntologiesReady)
-        log.info(s"KnoraService - Startup State: {}", AppState.OntologiesReady)
-    }
-
-    /**
-      * Prints the welcome message
-      */
-    private def printWelcomeMsg(): Unit = {
-
-        val allowReloadOverHTTP = Await.result(applicationStateActor ? GetAllowReloadOverHTTPState(), 1.second).asInstanceOf[Boolean]
-        val printExtendedConfig = Await.result(applicationStateActor ? GetPrintConfigExtendedState(), 1.second).asInstanceOf[Boolean]
-
-        println("")
-        println("================================================================")
-        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
-        println("----------------------------------------------------------------")
-
-        if (allowReloadOverHTTP) {
-            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
-            println("----------------------------------------------------------------")
-        }
-
-        // which repository are we using
-        println(s"DB-Name: ${settings.triplestoreDatabaseName}")
-        println(s"DB-Type: ${settings.triplestoreType}")
-        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
-
-
-        if (printExtendedConfig) {
-
-            println(s"DB User: ${settings.triplestoreUsername}")
-            println(s"DB Password: ${settings.triplestorePassword}")
-
-            println(s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
-            println(s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}")
-            println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
-            println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
-            println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
-        }
-
-        println("================================================================")
-        println("")
-    }
+   
 
     /**
       * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and

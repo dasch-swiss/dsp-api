@@ -35,6 +35,15 @@ case class GetPrintConfigExtendedState() extends ApplicationStateRequest
 case class SetAppState(value: AppState) extends ApplicationStateRequest
 case class GetAppState() extends ApplicationStateRequest
 
+case class InitStartUp(withOntologies: Boolean = false) extends ApplicationStateRequest
+case class InitStartUpAck() extends ApplicationStateRequest
+
+case class CheckRepository() extends ApplicationStateRequest
+
+case class CreateCaches() extends ApplicationStateRequest
+
+case class LoadOntologies() extends ApplicationStateRequest
+
 /**
   * Application States at Startup
   */
