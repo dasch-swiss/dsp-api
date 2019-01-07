@@ -422,9 +422,9 @@ class OntologyResponderV2 extends Responder {
       * is in a non-shared ontology in another project.
       *
       * @param ontologyCacheData the ontology cache data.
-      * @param sourceEntityIri the entity whose definition contains the reference.
-      * @param targetEntityIri the entity that's the target of the reference.
-      * @param errorFun a function that throws an exception with the specified message if the reference is invalid.
+      * @param sourceEntityIri   the entity whose definition contains the reference.
+      * @param targetEntityIri   the entity that's the target of the reference.
+      * @param errorFun          a function that throws an exception with the specified message if the reference is invalid.
       */
     private def checkOntologyReferenceInEntity(ontologyCacheData: OntologyCacheData, sourceEntityIri: SmartIri, targetEntityIri: SmartIri, errorFun: String => Nothing): Unit = {
         if (targetEntityIri.isKnoraDefinitionIri) {
@@ -446,8 +446,8 @@ class OntologyResponderV2 extends Responder {
       * Checks a property definition to ensure that it doesn't refer to any other non-shared ontologies.
       *
       * @param ontologyCacheData the ontology cache data.
-      * @param propertyDef the property definition.
-      * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
+      * @param propertyDef       the property definition.
+      * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
       */
     private def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData, propertyDef: PropertyInfoContentV2, errorFun: String => Nothing): Unit = {
         // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
@@ -492,8 +492,8 @@ class OntologyResponderV2 extends Responder {
       * Checks a class definition to ensure that it doesn't refer to any non-shared ontologies in other projects.
       *
       * @param ontologyCacheData the ontology cache data.
-      * @param classDef the class definition.
-      * @param errorFun a function that throws an exception with the specified message if the property definition is invalid.
+      * @param classDef          the class definition.
+      * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
       */
     private def checkOntologyReferencesInClassDef(ontologyCacheData: OntologyCacheData, classDef: ClassInfoContentV2, errorFun: String => Nothing): Unit = {
         for (subClassOf <- classDef.subClassOf) {
@@ -1409,7 +1409,7 @@ class OntologyResponderV2 extends Responder {
     /**
       * Gets the metadata describing the specified ontologies, or all ontologies.
       *
-      * @param ontologyIris    the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
+      * @param ontologyIris   the IRIs of the ontologies selected, or an empty set if all ontologies are selected.
       * @param requestingUser the user making the request.
       * @return a [[ReadOntologyMetadataV2]].
       */
@@ -1985,14 +1985,17 @@ class OntologyResponderV2 extends Responder {
       * cardinalities directly defined on the class. Adds link value properties for the corresponding
       * link properties.
       *
-      * @param internalClassDef the internal definition of the class.
-      * @param allBaseClassIris the IRIs of all the class's base classes, including the class itself.
-      * @param cacheData        the ontology cache.
+      * @param internalClassDef        the internal definition of the class.
+      * @param allBaseClassIris        the IRIs of all the class's base classes, including the class itself.
+      * @param cacheData               the ontology cache.
+      * @param existingLinkPropsToKeep the link properties that are already defined on the class and that
+      *                                will be kept after the update.
       * @return the updated class definition, and the cardinalities resulting from inheritance.
       */
     private def checkCardinalitiesBeforeAdding(internalClassDef: ClassInfoContentV2,
                                                allBaseClassIris: Set[SmartIri],
-                                               cacheData: OntologyCacheData): (ClassInfoContentV2, Map[SmartIri, KnoraCardinalityInfo]) = {
+                                               cacheData: OntologyCacheData,
+                                               existingLinkPropsToKeep: Set[SmartIri] = Set.empty): (ClassInfoContentV2, Map[SmartIri, KnoraCardinalityInfo]) = {
         // If the class has cardinalities, check that the properties are already defined as Knora properties.
 
         val propertyDefsForDirectCardinalities: Set[ReadPropertyInfoV2] = internalClassDef.directCardinalities.keySet.map {
@@ -2004,18 +2007,19 @@ class OntologyResponderV2 extends Responder {
                 cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
         }
 
-        val linkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkProp).map(_.entityInfoContent.propertyIri)
-        val linkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkValueProp).map(_.entityInfoContent.propertyIri)
+        val existingLinkValuePropsToKeep = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
+        val newLinkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkProp).map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
+        val newLinkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities.filter(_.isLinkValueProp).map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
 
         // Don't allow link value prop cardinalities to be included in the request.
 
-        if (linkValuePropsInClass.nonEmpty) {
-            throw BadRequestException(s"Resource class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)} has cardinalities for one or more link value properties: ${linkValuePropsInClass.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically.")
+        if (newLinkValuePropsInClass.nonEmpty) {
+            throw BadRequestException(s"In class ${internalClassDef.classIri.toOntologySchema(ApiV2WithValueObjects)}, cardinalities have been submitted for one or more link value properties: ${newLinkValuePropsInClass.map(_.toOntologySchema(ApiV2WithValueObjects)).mkString(", ")}. Just submit the link properties, and the link value properties will be included automatically.")
         }
 
-        // Add a link value prop cardinality for each link prop cardinality.
+        // Add a link value prop cardinality for each new link prop cardinality.
 
-        val linkValuePropCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = linkPropsInClass.map {
+        val linkValuePropCardinalitiesToAdd: Map[SmartIri, KnoraCardinalityInfo] = newLinkPropsInClass.map {
             linkPropIri =>
                 val linkValuePropIri = linkPropIri.fromLinkPropToLinkValueProp
 
@@ -2025,20 +2029,20 @@ class OntologyResponderV2 extends Responder {
                 linkValuePropIri -> internalClassDef.directCardinalities(linkPropIri)
         }.toMap
 
-        val classDefWithLinkValueProps = internalClassDef.copy(
+        val classDefWithAddedLinkValueProps = internalClassDef.copy(
             directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
         )
 
         // Get the cardinalities that the class can inherit.
 
-        val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = classDefWithLinkValueProps.subClassOf.flatMap {
+        val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = classDefWithAddedLinkValueProps.subClassOf.flatMap {
             baseClassIri => cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
         }.toMap
 
         // Check that the cardinalities directly defined on the class are compatible with any inheritable
         // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
 
-        val thisClassKnoraCardinalities = classDefWithLinkValueProps.directCardinalities.map {
+        val thisClassKnoraCardinalities = classDefWithAddedLinkValueProps.directCardinalities.map {
             case (propertyIri, knoraCardinality) => propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
         }
 
@@ -2071,7 +2075,7 @@ class OntologyResponderV2 extends Responder {
         }.toMap
 
         checkSubjectClassConstraintsViaCardinalities(
-            internalClassDef = classDefWithLinkValueProps,
+            internalClassDef = classDefWithAddedLinkValueProps,
             allBaseClassIris = allBaseClassIris,
             allClassCardinalityKnoraPropertyDefs = allClassCardinalityKnoraPropertyDefs,
             errorSchema = ApiV2WithValueObjects,
@@ -2087,12 +2091,12 @@ class OntologyResponderV2 extends Responder {
 
         maybePropertyAndSubproperty match {
             case Some((basePropertyIri, propertyIri)) =>
-                throw BadRequestException(s"Class <${classDefWithLinkValueProps.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
+                throw BadRequestException(s"Class <${classDefWithAddedLinkValueProps.classIri.toOntologySchema(ApiV2WithValueObjects)}> has a cardinality on property <${basePropertyIri.toOntologySchema(ApiV2WithValueObjects)}> and on its subproperty <${propertyIri.toOntologySchema(ApiV2WithValueObjects)}>")
 
             case None => ()
         }
 
-        (classDefWithLinkValueProps, cardinalitiesForClassWithInheritance)
+        (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
     }
 
     /**
@@ -2191,8 +2195,10 @@ class OntologyResponderV2 extends Responder {
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                existingClassDef: ClassInfoContentV2 = ontology.classes.getOrElse(internalClassIri,
-                    throw BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
+                existingReadClassInfo: ReadClassInfoV2 = ontology.classes.getOrElse(internalClassIri,
+                    throw BadRequestException(s"Class ${addCardinalitiesRequest.classInfoContent.classIri} does not exist"))
+
+                existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
 
                 redundantCardinalities = existingClassDef.directCardinalities.keySet.intersect(internalClassDef.directCardinalities.keySet)
 
@@ -2223,7 +2229,8 @@ class OntologyResponderV2 extends Responder {
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
-                    cacheData = cacheData
+                    cacheData = cacheData,
+                    existingLinkPropsToKeep = existingReadClassInfo.linkProperties
                 )
 
                 // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
@@ -2361,8 +2368,10 @@ class OntologyResponderV2 extends Responder {
 
                 ontology = cacheData.ontologies(internalOntologyIri)
 
-                existingClassDef: ClassInfoContentV2 = ontology.classes.getOrElse(internalClassIri,
-                    throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist")).entityInfoContent
+                existingReadClassInfo: ReadClassInfoV2 = ontology.classes.getOrElse(internalClassIri,
+                    throw BadRequestException(s"Class ${changeCardinalitiesRequest.classInfoContent.classIri} does not exist"))
+
+                existingClassDef: ClassInfoContentV2 = existingReadClassInfo.entityInfoContent
 
                 // Check that the class isn't used in data, and that it has no subclasses.
 
@@ -2387,7 +2396,8 @@ class OntologyResponderV2 extends Responder {
                 (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) = checkCardinalitiesBeforeAdding(
                     internalClassDef = newInternalClassDef,
                     allBaseClassIris = allBaseClassIris,
-                    cacheData = cacheData
+                    cacheData = cacheData,
+                    existingLinkPropsToKeep = existingReadClassInfo.linkProperties
                 )
 
                 // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
