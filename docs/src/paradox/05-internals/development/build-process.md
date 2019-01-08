@@ -67,7 +67,13 @@ $ sbt dockerComposeUp
 ```
 
 This will build, publish locally and use the docker images for `webapi` and `salsah1`. The versions defined in
-`project/Dependencies` will be used for `GraphDB` and `Sipi`. 
+`project/Dependencies` will be used for `GraphDB` and `Sipi`.
+
+The following SBT tasks are available:
+
+- `$ sbt dockerComposeUp` - starts the whole stack and prints out a summary
+- `$ sbt dockerComposeRestart` - stops and the starts again the whole stack
+- `$ sbt dockerComposeStop` - stops the whole stack 
 
 
 ## Building Documentation
