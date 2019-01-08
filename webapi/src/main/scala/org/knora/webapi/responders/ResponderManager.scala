@@ -19,9 +19,10 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
+import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -49,6 +50,7 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
+import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 import org.knora.webapi.{ActorMaker, KnoraDispatchers}
 
@@ -69,6 +71,22 @@ class ResponderManager extends Actor with ActorLogging {
       * The Akka actor system's execution context for futures.
       */
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+
+    /**
+      * A reference to the application state actor.
+      */
+    protected val applicationStateActor: ActorSelection = context.actorSelection(APPLICATION_STATE_ACTOR_PATH)
+
+    /**
+      * A reference to the Knora API responder manager.
+      */
+    protected val responderManager: ActorSelection = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+
+    /**
+      * A reference to the store manager.
+      */
+    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular
@@ -339,13 +357,13 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersRouterADM: ActorRef = makeActor(Props[UsersResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_ADM_ACTOR_NAME)
+    protected final def makeDefaultUsersRouterADM: NonActorResponder = new UsersResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
       * member to substitute a custom actor instead of the default users responder.
       */
-    protected val usersRouterADM: ActorRef = makeDefaultUsersRouterADM
+    protected val usersRouterADM: NonActorResponder = makeDefaultUsersRouterADM
 
 
     def receive = LoggingReceive {
@@ -377,7 +395,7 @@ class ResponderManager extends Actor with ActorLogging {
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
         case storeResponderRequestADM: StoreResponderRequestADM => storeRouterADM.forward(storeResponderRequestADM)
-        case usersResponderRequestADM: UsersResponderRequestADM => usersRouterADM.forward(usersResponderRequestADM)
+        case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersRouterADM. receive usersResponderRequestADM), log)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }

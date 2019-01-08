@@ -20,6 +20,7 @@
 package org.knora.webapi.responders
 
 import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
+import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.app._
 import org.knora.webapi.store._
@@ -74,4 +75,32 @@ trait Responder extends Actor with ActorLogging {
       * A reference to the store manager.
       */
     protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
+}
+
+
+abstract class NonActorResponder(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) {
+    /**
+      * The execution context for futures created in Knora actors.
+      */
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    /**
+      * The application settings.
+      */
+    protected val settings = Settings(system)
+
+    /**
+      * A string formatter.
+      */
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    /**
+      * The application's default timeout for `ask` messages.
+      */
+    protected implicit val timeout: Timeout = settings.defaultTimeout
+
+    /**
+      * Provides logging
+      */
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 }
