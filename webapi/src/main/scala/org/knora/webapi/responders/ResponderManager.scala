@@ -54,6 +54,8 @@ import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
 import org.knora.webapi.{ActorMaker, KnoraDispatchers}
 
+import org.knora.webapi.util.ActorUtil._
+
 import scala.concurrent.ExecutionContext
 
 /**
@@ -357,13 +359,13 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersRouterADM: NonActorResponder = new UsersResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
       * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
       * member to substitute a custom actor instead of the default users responder.
       */
-    protected val usersRouterADM: NonActorResponder = makeDefaultUsersRouterADM
+    protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
 
     def receive = LoggingReceive {
@@ -395,7 +397,7 @@ class ResponderManager extends Actor with ActorLogging {
         case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
         case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
         case storeResponderRequestADM: StoreResponderRequestADM => storeRouterADM.forward(storeResponderRequestADM)
-        case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersRouterADM. receive usersResponderRequestADM), log)
+        case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersResponderADM receive usersResponderRequestADM, log)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }

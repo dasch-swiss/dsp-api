@@ -57,7 +57,7 @@ class UsersResponderADM(system: ActorSystem, applicationStateActor: ActorSelecti
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def apply(msg: UsersResponderRequestADM) = msg match {
+    def receive(msg: UsersResponderRequestADM) = msg match {
         case UsersGetADM(userInformationTypeADM, requestingUser) => usersGetADM(userInformationTypeADM, requestingUser)
         case UsersGetRequestADM(userInformationTypeADM, requestingUser) => usersGetRequestADM(userInformationTypeADM, requestingUser)
         case UserGetADM(identifier, userInformationTypeADM, requestingUser) => userGetADM(identifier, userInformationTypeADM, requestingUser)
@@ -76,7 +76,7 @@ class UsersResponderADM(system: ActorSystem, applicationStateActor: ActorSelecti
         case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
         case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
         case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-        case other => UnexpectedMessageException(s"${this.getClass.getName} received an unexpected message $msg of type ${msg.getClass.getCanonicalName}")
+        case other => FastFuture.failed(UnexpectedMessageException(s"${this.getClass.getName} received an unexpected message $msg of type ${msg.getClass.getCanonicalName}"))
     }
 
 
