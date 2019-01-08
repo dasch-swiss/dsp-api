@@ -42,34 +42,35 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     "The Health Route" should {
 
-        "return 'ServiceUnavailable' for state 'Stopped'" in {
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            log.debug(response.toString())
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'StartingUp'" in {
-            applicationStateActor ! SetAppState(AppState.StartingUp)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            log.debug(response.toString())
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
         "return 'OK' for state 'Running'" in {
-            applicationStateActor ! SetAppState(AppState.Running)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
 
             response.status should be(StatusCodes.OK)
+        }
+
+        "return 'ServiceUnavailable' for state 'Stopped'" in {
+
+            applicationStateActor ! SetAppState(AppState.Stopped)
+
+            val request = Get(baseApiUrl + s"/health")
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            log.debug(response.toString())
+
+            response.status should be(StatusCodes.ServiceUnavailable)
+        }
+
+        "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
+            applicationStateActor ! SetAppState(AppState.MaintenanceMode)
+
+            val request = Get(baseApiUrl + s"/health")
+            val response: HttpResponse = singleAwaitingRequest(request)
+
+            log.debug(response.toString())
+
+            response.status should be(StatusCodes.ServiceUnavailable)
         }
 
     }

@@ -49,7 +49,7 @@ class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) 
             log.info("appStateChanged - to state: {}", value)
 
             value match {
-                // case AppState.Stopped => self ! SetAppState(AppState.StartingUp)
+                case AppState.Stopped => // do nothing
                 case AppState.StartingUp => self ! SetAppState(AppState.WaitingForRepository)
                 case AppState.WaitingForRepository => self ! CheckRepository() // check DB
                 case AppState.RepositoryReady =>  self ! SetAppState(AppState.CreatingCaches)
@@ -59,6 +59,7 @@ class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) 
                 case AppState.LoadingOntologies if !skipOntologies => self ! LoadOntologies() // load ontologies
                 case AppState.OntologiesReady => self ! SetAppState(AppState.Running)
                 case AppState.Running => printWelcomeMsg()
+                case AppState.MaintenanceMode => // do nothing
                 case value => throw UnsupportedValueException(s"The value: $value is not supported.")
             }
         }
@@ -163,35 +164,38 @@ class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) 
       */
     private def printWelcomeMsg(): Unit = {
 
-        println("")
-        println("================================================================")
-        println(s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}")
-        println("----------------------------------------------------------------")
+        var msg = ""
+
+        msg += "\n"
+        msg += "================================================================\n"
+        msg += s"Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}\n"
+        msg += "----------------------------------------------------------------\n"
 
         if (allowReloadOverHTTPState) {
-            println("WARNING: Resetting Triplestore Content over HTTP is turned ON.")
-            println("----------------------------------------------------------------")
+            msg += "WARNING: Resetting Triplestore Content over HTTP is turned ON.\n"
+            msg += "----------------------------------------------------------------\n"
         }
 
         // which repository are we using
-        println(s"DB-Name: ${settings.triplestoreDatabaseName}")
-        println(s"DB-Type: ${settings.triplestoreType}")
-        println(s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}")
+        msg += s"DB-Name: ${settings.triplestoreDatabaseName}\n"
+        msg += s"DB-Type: ${settings.triplestoreType}\n"
+        msg += s"DB Server: ${settings.triplestoreHost}, DB Port: ${settings.triplestorePort}\n"
 
 
         if (printConfigState) {
 
-            println(s"DB User: ${settings.triplestoreUsername}")
-            println(s"DB Password: ${settings.triplestorePassword}")
+            msg += s"DB User: ${settings.triplestoreUsername}\n"
+            msg += s"DB Password: ${settings.triplestorePassword}\n"
 
-            println(s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json")
-            println(s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}")
-            println(s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}")
-            println(s"Sipi internal URL: ${settings.internalSipiBaseUrl}")
-            println(s"Sipi external URL: ${settings.externalSipiBaseUrl}")
+            msg += s"Swagger Json: ${settings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
+            msg += s"Webapi internal URL: ${settings.internalKnoraApiBaseUrl}\n"
+            msg += s"Webapi external URL: ${settings.externalKnoraApiBaseUrl}\n"
+            msg += s"Sipi internal URL: ${settings.internalSipiBaseUrl}\n"
+            msg += s"Sipi external URL: ${settings.externalSipiBaseUrl}\n"
         }
 
-        println("================================================================")
-        println("")
+        msg += "================================================================\n"
+
+        log.info(msg)
     }
 }
