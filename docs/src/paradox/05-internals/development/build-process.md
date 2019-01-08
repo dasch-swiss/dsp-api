@@ -66,7 +66,8 @@ The complete knora stack (graphdb, webapi, salsah1, sipi) can be started by invo
 $ sbt dockerComposeUp
 ```
 
-This will build, publish locally and use the docker images for `webapi` and `salsah1`.
+This will build, publish locally and use the docker images for `webapi` and `salsah1`. The versions defined in
+`project/Dependencies` will be used for `GraphDB` and `Sipi`. 
 
 
 ## Building Documentation
