@@ -201,7 +201,8 @@ The submitted JSON-LD object must also contain one or more of the following pred
 
 - `rdfs:label`: a string
 - `knora-api:hasPermissions`, in the format described in @ref:[Permissions](../../02-knora-ontologies/knora-base.md#permissions)
-- `knora-api:newModificationDate`: an `xsd:dateTimeStamp`
+- `knora-api:newModificationDate`: an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
+  This is used to make sure that the resource has not been modified by someone else since you last read it.
 
 Here is an example:
 
