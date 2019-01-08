@@ -135,7 +135,7 @@ object OntologyConstants {
     /**
       * Ontology labels that are reserved for built-in ontologies.
       */
-    val BuiltInOntologyLabels = Set(
+    val BuiltInOntologyLabels: Set[String] = Set(
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
@@ -224,7 +224,7 @@ object OntologyConstants {
 
         val ResourceProperty: IRI = KnoraBasePrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraBasePrefixExpansion + "hasValue"
-        val HasIncomingLink: IRI = KnoraBasePrefixExpansion + "hasIncomingLink"
+        val HasIncomingLinkValue: IRI = KnoraBasePrefixExpansion + "hasIncomingLinkValue"
         val HasFileValue: IRI = KnoraBasePrefixExpansion + "hasFileValue"
         val HasStillImageFileValue: IRI = KnoraBasePrefixExpansion + "hasStillImageFileValue"
         val HasMovingImageFileValue: IRI = KnoraBasePrefixExpansion + "hasMovingImageFileValue"
@@ -769,7 +769,7 @@ object OntologyConstants {
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
         val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
-        val HasIncomingLink: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLink"
+        val HasIncomingLinkValue: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinkValue"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsPartOfValue: IRI = KnoraApiV2PrefixExpansion + "isPartOfValue"

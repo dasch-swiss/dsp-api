@@ -226,6 +226,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
                     // In the simple schema, use link properties instead of link value properties.
                     val adaptedPropertyIri = if (targetSchema == ApiV2Simple) {
+                        // If all the property's values are link values, it's a link value property.
                         val isLinkProp = readValues.forall {
                             readValue =>
                                 readValue.valueContent match {
@@ -234,6 +235,7 @@ case class ReadResourceV2(resourceIri: IRI,
                                 }
                         }
 
+                        // If it's a link value property, use the corresponding link property.
                         if (isLinkProp) {
                             propertyIriInTargetSchema.fromLinkValuePropToLinkProp
                         } else {
