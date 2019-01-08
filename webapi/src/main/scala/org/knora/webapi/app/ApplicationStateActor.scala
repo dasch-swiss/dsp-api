@@ -31,51 +31,17 @@ class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) 
 
     def receive: PartialFunction[Any, Unit] = {
 
-        case ActorReady() => {
-            sender ! ActorReadyAck()
+        /* Entry point for startup */
+        case InitStartUp(skipLoadingOfOntologies) => {
+            log.info("InitStartUp ... please wait.")
+
+            if (appState == AppState.Stopped) {
+                skipOntologies = skipLoadingOfOntologies
+                self ! SetAppState(AppState.StartingUp)
+            }
         }
 
-        case SetAllowReloadOverHTTPState(value) => {
-            log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
-            allowReloadOverHTTPState = value
-        }
-        case GetAllowReloadOverHTTPState() => {
-            log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-            sender ! allowReloadOverHTTPState
-        }
-        case SetPrometheusReporterState(value) => {
-            log.debug("ApplicationStateActor - SetPrometheusReporterState - value: {}", value)
-            prometheusReporterState = value
-        }
-        case GetPrometheusReporterState() => {
-            log.debug("ApplicationStateActor - GetPrometheusReporterState - value: {}", prometheusReporterState)
-            sender ! (prometheusReporterState | settings.prometheusReporter)
-        }
-        case SetZipkinReporterState(value) => {
-            log.debug("ApplicationStateActor - SetZipkinReporterState - value: {}", value)
-            zipkinReporterState = value
-        }
-        case GetZipkinReporterState() => {
-            log.debug("ApplicationStateActor - GetZipkinReporterState - value: {}", zipkinReporterState)
-            sender ! (zipkinReporterState | settings.zipkinReporter)
-        }
-        case SetJaegerReporterState(value) => {
-            log.debug("ApplicationStateActor - SetJaegerReporterState - value: {}", value)
-            jaegerReporterState = value
-        }
-        case GetJaegerReporterState() => {
-            log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
-            sender ! (jaegerReporterState | settings.jaegerReporter)
-        }
-        case SetPrintConfigExtendedState(value) => {
-            log.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
-            printConfigState = value
-        }
-        case GetPrintConfigExtendedState() => {
-            log.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
-            sender ! (printConfigState | settings.printExtendedConfig)
-        }
-
+        /* EACH app state change goes through here */
         case SetAppState(value: AppState) => {
 
             appState = value
@@ -96,48 +62,93 @@ class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) 
                 case value => throw UnsupportedValueException(s"The value: $value is not supported.")
             }
         }
-
         case GetAppState() => {
             log.debug("ApplicationStateActor - GetAppState - value: {}", appState)
             sender ! appState
         }
 
-        case InitStartUp(skipLoadingOfOntologies) => {
-            log.debug("ApplicationStateActor - InitApp")
-
-            if (appState == AppState.Stopped) {
-                skipOntologies = skipLoadingOfOntologies
-                self ! SetAppState(AppState.StartingUp)
-            }
+        case ActorReady() => {
+            sender ! ActorReadyAck()
         }
 
+        case SetAllowReloadOverHTTPState(value) => {
+            log.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
+            allowReloadOverHTTPState = value
+        }
+        case GetAllowReloadOverHTTPState() => {
+            log.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
+            sender ! allowReloadOverHTTPState
+        }
+
+        case SetPrometheusReporterState(value) => {
+            log.debug("ApplicationStateActor - SetPrometheusReporterState - value: {}", value)
+            prometheusReporterState = value
+        }
+        case GetPrometheusReporterState() => {
+            log.debug("ApplicationStateActor - GetPrometheusReporterState - value: {}", prometheusReporterState)
+            sender ! (prometheusReporterState | settings.prometheusReporter)
+        }
+
+        case SetZipkinReporterState(value) => {
+            log.debug("ApplicationStateActor - SetZipkinReporterState - value: {}", value)
+            zipkinReporterState = value
+        }
+        case GetZipkinReporterState() => {
+            log.debug("ApplicationStateActor - GetZipkinReporterState - value: {}", zipkinReporterState)
+            sender ! (zipkinReporterState | settings.zipkinReporter)
+        }
+        case SetJaegerReporterState(value) => {
+            log.debug("ApplicationStateActor - SetJaegerReporterState - value: {}", value)
+            jaegerReporterState = value
+        }
+        case GetJaegerReporterState() => {
+            log.debug("ApplicationStateActor - GetJaegerReporterState - value: {}", jaegerReporterState)
+            sender ! (jaegerReporterState | settings.jaegerReporter)
+        }
+
+        case SetPrintConfigExtendedState(value) => {
+            log.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
+            printConfigState = value
+        }
+        case GetPrintConfigExtendedState() => {
+            log.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
+            sender ! (printConfigState | settings.printExtendedConfig)
+        }
+
+        /* check repository request */
         case CheckRepository() => {
             storeManager ! CheckRepositoryRequest()
         }
 
+        /* check repository response */
         case CheckRepositoryResponse(status, message) => {
             status match {
                 case RepositoryStatus.ServiceAvailable =>
                     self ! SetAppState(AppState.RepositoryReady)
                 case RepositoryStatus.NotInitialized =>
-                    log.info(s"ApplicationStateActor - checkRepository - status: {}, message: {}", status, message)
+                    log.info(s"checkRepository - status: {}, message: {}", status, message)
                     log.info("Please initialize repository.")
                     timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
                 case RepositoryStatus.ServiceUnavailable =>
+                    log.info(s"checkRepository - status: {}, message: {}", status, message)
+                    log.info("Please start repository.")
                     timers.startSingleTimer("CheckRepository", CheckRepository(), 5.seconds)
             }
         }
 
+        /* create caches request */
         case CreateCaches() => {
             CacheUtil.createCaches(settings.caches)
             self ! SetAppState(AppState.CachesReady)
         }
 
+        /* load ontologies request */
         case LoadOntologies() => {
             responderManager !  LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
         }
 
-        case SuccessResponseV2(message) => {
+        /* load ontologies response */
+        case SuccessResponseV2(msg) => {
             self ! SetAppState(AppState.OntologiesReady)
         }
     }

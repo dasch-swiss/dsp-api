@@ -256,7 +256,7 @@ trait KnoraService {
         }
     }
 
-   
+
 
     /**
       * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and

@@ -42,8 +42,7 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     "The Health Route" should {
 
-        "return 'ServiceUnavailable' for state 'StartingUp'" in {
-            applicationStateActor ! SetAppState(AppState.StartingUp)
+        "return 'ServiceUnavailable' for state 'Stopped'" in {
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
@@ -53,65 +52,13 @@ class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
             response.status should be(StatusCodes.ServiceUnavailable)
         }
 
-        "return 'ServiceUnavailable' for state 'WaitingForRepository'" in {
-            applicationStateActor ! SetAppState(AppState.WaitingForRepository)
+        "return 'ServiceUnavailable' for state 'StartingUp'" in {
+            applicationStateActor ! SetAppState(AppState.StartingUp)
 
             val request = Get(baseApiUrl + s"/health")
             val response: HttpResponse = singleAwaitingRequest(request)
 
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'RepositoryReady'" in {
-            applicationStateActor ! SetAppState(AppState.RepositoryReady)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'CreatingCaches'" in {
-            applicationStateActor ! SetAppState(AppState.CreatingCaches)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'CachesReady'" in {
-            applicationStateActor ! SetAppState(AppState.CachesReady)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'LoadingOntologies'" in {
-            applicationStateActor ! SetAppState(AppState.LoadingOntologies)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'OntologiesReady'" in {
-            applicationStateActor ! SetAppState(AppState.OntologiesReady)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
-
-            response.status should be(StatusCodes.ServiceUnavailable)
-        }
-
-        "return 'ServiceUnavailable' for state 'MaintenanceMode'" in {
-            applicationStateActor ! SetAppState(AppState.MaintenanceMode)
-
-            val request = Get(baseApiUrl + s"/health")
-            val response: HttpResponse = singleAwaitingRequest(request)
+            log.debug(response.toString())
 
             response.status should be(StatusCodes.ServiceUnavailable)
         }
