@@ -11,4 +11,5 @@ Also, please change the "HINT" to the appropriate level:
 
 ## HINT => LEVEL
 
+- MAJOR CHANGE: Fix property names for incoming links (@github[#1144](#1144))
 - BUGFIX CHANGE: Triplestore connection error when using dockerComposeUp (@github[#1122](#1122))
