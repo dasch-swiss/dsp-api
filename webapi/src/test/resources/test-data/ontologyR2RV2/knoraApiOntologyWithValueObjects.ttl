@@ -2880,6 +2880,11 @@ knora-api:mappingHasName a owl:DatatypeProperty;
   rdfs:comment "Represents the name of a mapping";
   rdfs:label "Name of a mapping (will be part of the mapping's Iri)" .
 
+knora-api:newModificationDate a owl:DatatypeProperty;
+  knora-api:objectType xsd:dateTimeStamp;
+  rdfs:comment "Specifies the new modification date of a resource";
+  rdfs:label "new modification date" .
+
 knora-api:objectType a rdf:Property;
   rdfs:comment "Specifies the required type of the objects of a property";
   rdfs:label "Object type" .
