@@ -12,3 +12,4 @@ Also, please change the "HINT" to the appropriate level:
 ## HINT => LEVEL
 
 - BUGFIX CHANGE: Triplestore connection error when using dockerComposeUp (@github[#1122](#1122))
+- BUGFIX CHANGE: Fix error-checking when updating cardinalities in ontology API (@github[#1142](#1142))
