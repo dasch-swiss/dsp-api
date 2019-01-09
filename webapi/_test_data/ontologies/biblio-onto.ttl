@@ -559,7 +559,7 @@
                     rdfs:label "Link"@de ,
                                "Link "@en ;
 
-                    rdfs:comment """Represents a link of the publication."""@en ;
+                    rdfs:comment """Represents the link of a website article."""@en ;
 
                     knora-base:objectClassConstraint :Webpage ;
 
@@ -574,7 +574,7 @@
                     rdfs:label "Link"@de ,
                                "Link "@en ;
 
-                    rdfs:comment """Represents a link of the publication."""@en ;
+                    rdfs:comment """Represents the link of a website article."""@en ;
 
                     knora-base:objectClassConstraint knora-base:LinkValue ;
 
@@ -709,6 +709,15 @@
                     salsah-gui:guiElement salsah-gui:Richtext ;
 
                     rdfs:subPropertyOf knora-base:hasValue .
+
+###  http://www.knora.org/ontology/0801/biblio#publicationHasExternalLink
+:publicationHasExternalLink rdf:type owl:ObjectProperty ;
+                    rdfs:label "Externer Link"@de ,
+                               "External Link"@en ;
+
+                    rdfs:comment """Represents an external link of a publication."""@en ;
+                    knora-base:objectClassConstraint knora-base:UriValue ;
+                    rdfs:subPropertyOf :hasURI .
 
 
 ###  http://www.knora.org/ontology/0801/biblio#startPage
@@ -1394,18 +1403,6 @@
                                     ] ,
                                     [
                                         rdf:type owl:Restriction ;
-                                        owl:onProperty :hasLink ;
-                                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                                        salsah-gui:guiOrder "17"^^xsd:nonNegativeInteger
-                                    ] ,
-                                    [
-                                        rdf:type owl:Restriction ;
-                                        owl:onProperty :hasLinkValue ;
-                                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-                                        salsah-gui:guiOrder "17"^^xsd:nonNegativeInteger
-                                    ] ,
-                                    [
-                                        rdf:type owl:Restriction ;
                                         owl:onProperty :publicationIsTranslationOf ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "18"^^xsd:nonNegativeInteger
@@ -1436,21 +1433,27 @@
                                     ] ,
                                     [
                                         rdf:type owl:Restriction ;
-                                        owl:onProperty beol:mentionedIn ;
+                                        owl:onProperty :publicationHasExternalLink ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "21"^^xsd:nonNegativeInteger
                                     ] ,
                                     [
                                         rdf:type owl:Restriction ;
-                                        owl:onProperty beol:comment ;
+                                        owl:onProperty beol:mentionedIn ;
                                         owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                                         salsah-gui:guiOrder "22"^^xsd:nonNegativeInteger
                                     ] ,
                                     [
                                         rdf:type owl:Restriction ;
+                                        owl:onProperty beol:comment ;
+                                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                                        salsah-gui:guiOrder "23"^^xsd:nonNegativeInteger
+                                    ] ,
+                                    [
+                                        rdf:type owl:Restriction ;
                                         owl:onProperty beol:beolIDs ;
                                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
-                                        salsah-gui:guiOrder "23"^^xsd:nonNegativeInteger
+                                        salsah-gui:guiOrder "24"^^xsd:nonNegativeInteger
                                     ] ;
 
                     rdfs:label "Publikation"@de ,
@@ -1563,6 +1566,7 @@
 :Publisher rdf:type owl:Class ;
 
                     rdfs:subClassOf :Organization, dcterms:publisher,
+
                                     [
                                         rdf:type owl:Restriction ;
                                         owl:onProperty :publisherHasLocation ;
@@ -2067,7 +2071,19 @@
 ###  http://www.knora.org/ontology/0801/biblio#WebsiteArticle
 :WebsiteArticle rdf:type owl:Class ;
 
-                    rdfs:subClassOf :Publication, bibo:Webpage;
+                    rdfs:subClassOf :Publication, bibo:Webpage,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasLink ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "17"^^xsd:nonNegativeInteger
+                    ] ,
+                    [
+                        rdf:type owl:Restriction ;
+                        owl:onProperty :hasLinkValue ;
+                        owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                        salsah-gui:guiOrder "17"^^xsd:nonNegativeInteger
+                    ] ;
 
                     rdfs:label "Website Artikel"@de ,
                                 "Website Article"@en ;
