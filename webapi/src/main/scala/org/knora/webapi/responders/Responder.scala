@@ -79,6 +79,7 @@ trait Responder extends Actor with ActorLogging {
 
 
 abstract class NonActorResponder(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) {
+    
     /**
       * The execution context for futures created in Knora actors.
       */

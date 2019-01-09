@@ -302,68 +302,62 @@ class ResponderManager extends Actor with ActorLogging {
     //
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[GroupsResponderADM]].
+      * Constructs the default [[GroupsResponderADM]].
       */
-    protected final def makeDefaultGroupsRouterADM: ActorRef = makeActor(Props[GroupsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), GROUPS_ADM_ACTOR_NAME)
+    protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the groups responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default groups responder.
+      * The default [[GroupsResponderADM]].
       */
-    protected val groupsRouterADM: ActorRef = makeDefaultGroupsRouterADM
+    protected val groupsResponderADM: GroupsResponderADM = makeDefaultGroupsResponderADM
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ListsResponderADM]].
+      * Constructs the default [[ListsResponderADM]].
       */
-    protected final def makeDefaultListsAdminRouter: ActorRef = makeActor(Props[ListsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_ADM_ACTOR_NAME)
+    protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default lists responder.
+      * The default [[ListsResponderADM]].
       */
-    protected val listsAdminRouter: ActorRef = makeDefaultListsAdminRouter
+    protected val listsResponderADM: ListsResponderADM = makeDefaultListsResponderADM
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[PermissionsResponderADM]].
+      * Constructs the default [[PermissionsResponderADM]].
       */
-    protected final def makeDefaultPermissionsRouterADM: ActorRef = makeActor(Props[PermissionsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERMISSIONS_ADM_ACTOR_NAME)
+    protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the Permissions responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Permissions responder.
+      * The default [[PermissionsResponderADM]].
       */
-    protected val permissionsRouterADM: ActorRef = makeDefaultPermissionsRouterADM
+    protected val permissionsResponderADM: PermissionsResponderADM = makeDefaultPermissionsResponderADM
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderADM]].
+      * Constructs the default [[ProjectsResponderADM]].
       */
-    protected final def makeDefaultProjectsRouterADM: ActorRef = makeActor(Props[ProjectsResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_ADM_ACTOR_NAME)
+    protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default projects responder.
+      * The default [[ProjectsResponderADM]].
       */
-    protected val projectsRouterADM: ActorRef = makeDefaultProjectsRouterADM
+    protected val projectsResponderADMM: ProjectsResponderADM = makeDefaultProjectsResponderADM
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[StoresResponderADM]].
+      * Constructs the default [[StoresResponderADM]].
       */
-    protected final def makeDefaultStoreRouterADM: ActorRef = makeActor(Props[StoresResponderADM].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STORE_ADM_ACTOR_NAME)
+    protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the Store responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Store responder.
+      * The default [[StoresResponderADM]].
       */
-    protected val storeRouterADM: ActorRef = makeDefaultStoreRouterADM
+    protected val storeResponderADM: StoresResponderADM = makeDefaultStoreResponderADM
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[UsersResponderADM]].
+      * Constructs the default [[UsersResponderADM]].
       */
     protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default users responder.
+      * The default [[UsersResponderADM]].
       */
     protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
@@ -392,11 +386,11 @@ class ResponderManager extends Actor with ActorLogging {
         case sipiResponderRequestV2: SipiResponderRequestV2 => sipiRouterV2.forward(sipiResponderRequestV2)
 
         // Knora Admin message
-        case groupsResponderRequestADM: GroupsResponderRequestADM => groupsRouterADM.forward(groupsResponderRequestADM)
-        case listsResponderRequest: ListsResponderRequestADM => listsAdminRouter forward listsResponderRequest
-        case permissionsResponderRequestADM: PermissionsResponderRequestADM => permissionsRouterADM.forward(permissionsResponderRequestADM)
-        case projectsResponderRequestADM: ProjectsResponderRequestADM => projectsRouterADM.forward(projectsResponderRequestADM)
-        case storeResponderRequestADM: StoreResponderRequestADM => storeRouterADM.forward(storeResponderRequestADM)
+        case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)
+        case listsResponderRequest: ListsResponderRequestADM => future2Message(sender(), listsResponderADM receive listsResponderRequest, log)
+        case permissionsResponderRequestADM: PermissionsResponderRequestADM => future2Message(sender(), permissionsResponderADM receive permissionsResponderRequestADM, log)
+        case projectsResponderRequestADM: ProjectsResponderRequestADM => future2Message(sender(), projectsResponderADMM receive projectsResponderRequestADM, log)
+        case storeResponderRequestADM: StoreResponderRequestADM => future2Message(sender(), storeResponderADM receive storeResponderRequestADM, log)
         case usersResponderRequestADM: UsersResponderRequestADM => future2Message(sender(), usersResponderADM receive usersResponderRequestADM, log)
 
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)

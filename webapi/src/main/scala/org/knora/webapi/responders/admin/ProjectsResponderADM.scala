@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorSelection, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -30,8 +30,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGet
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
-import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.ResponderUtil._
+import org.knora.webapi.responders.{IriLocker, NonActorResponder}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 
@@ -40,7 +40,8 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderADM extends Responder {
+class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -53,18 +54,18 @@ class ProjectsResponderADM extends Responder {
       * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive: PartialFunction[Any, Unit] = {
-        case ProjectsGetADM(requestingUser) => future2Message(sender(), projectsGetADM(requestingUser), log)
-        case ProjectsGetRequestADM(requestingUser) => future2Message(sender(), projectsGetRequestADM(requestingUser), log)
-        case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => future2Message(sender(), projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser), log)
-        case ProjectsKeywordsGetRequestADM(requestingUser) => future2Message(sender(), projectsKeywordsGetRequestADM(requestingUser), log)
-        case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), projectKeywordsGetRequestADM(projectIri, requestingUser), log)
-        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), projectCreateRequestADM(createRequest, requestingUser, apiRequestID), log)
-        case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ProjectsResponderRequestADM) = msg match {
+        case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
+        case ProjectsGetRequestADM(requestingUser) => projectsGetRequestADM(requestingUser)
+        case ProjectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectGetADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+        case ProjectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+        case ProjectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+        case ProjectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser) => projectAdminMembersGetRequestADM(maybeIri, maybeShortname, maybeShortcode, requestingUser)
+        case ProjectsKeywordsGetRequestADM(requestingUser) => projectsKeywordsGetRequestADM(requestingUser)
+        case ProjectKeywordsGetRequestADM(projectIri, requestingUser) => projectKeywordsGetRequestADM(projectIri, requestingUser)
+        case ProjectCreateRequestADM(createRequest, requestingUser, apiRequestID) => projectCreateRequestADM(createRequest, requestingUser, apiRequestID)
+        case ProjectChangeRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID) => changeBasicInformationRequestADM(projectIri, changeProjectRequest, requestingUser, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

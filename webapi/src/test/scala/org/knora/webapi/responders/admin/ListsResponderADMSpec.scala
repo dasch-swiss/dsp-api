@@ -48,9 +48,6 @@ object ListsResponderADMSpec {
   */
 class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ListsResponderADM]
-
     // The default timeout for receiving reply messages from actors.
     implicit val timeout = 5.seconds
 
@@ -80,7 +77,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         "used to query information about lists" should {
 
             "return all lists" in {
-                actorUnderTest ! ListsGetRequestADM(requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -88,7 +85,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the images project" in {
-                actorUnderTest ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(projectIri = Some(IMAGES_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -98,7 +95,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return all lists belonging to the anything project" in {
-                actorUnderTest ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
+                responderManager ! ListsGetRequestADM(projectIri = Some(ANYTHING_PROJECT_IRI), requestingUser = SharedTestDataADM.imagesUser01)
 
                 val received: ListsGetResponseADM = expectMsgType[ListsGetResponseADM](timeout)
 
@@ -108,7 +105,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything list)" in {
-                actorUnderTest ! ListInfoGetRequestADM(
+                responderManager ! ListInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
@@ -121,7 +118,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic list information (anything other list)" in {
-                actorUnderTest ! ListInfoGetRequestADM(
+                responderManager ! ListInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/otherTreeList",
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
@@ -134,7 +131,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return basic node information (images list - sommer)" in {
-                actorUnderTest ! ListNodeInfoGetRequestADM(
+                responderManager ! ListNodeInfoGetRequestADM(
                     iri = "http://rdfh.ch/lists/00FF/526f26ed04",
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
@@ -147,7 +144,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return a full list response" in {
-                actorUnderTest ! ListGetRequestADM(
+                responderManager ! ListGetRequestADM(
                     iri = "http://rdfh.ch/lists/0001/treeList",
                     requestingUser = SharedTestDataADM.anythingUser1
                 )
@@ -170,7 +167,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             val thirdChildIri = new MutableTestIri
 
             "create a list" in {
-                actorUnderTest ! ListCreateRequestADM(
+                responderManager ! ListCreateRequestADM(
                     createListRequest = CreateListApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
                         name = Some("neuelistename"),
@@ -203,7 +200,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return a 'ForbiddenException' if the user creating the list is not project or system admin" in {
-                actorUnderTest ! ListCreateRequestADM(
+                responderManager ! ListCreateRequestADM(
                     createListRequest = CreateListApiRequestADM(
                         projectIri = IMAGES_PROJECT_IRI,
                         name = None,
@@ -218,7 +215,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "update basic list information" in {
-                actorUnderTest ! ListInfoChangeRequestADM(
+                responderManager ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
@@ -258,7 +255,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "return a 'ForbiddenException' if the user changing the list is not project or system admin" in {
-                actorUnderTest ! ListInfoChangeRequestADM(
+                responderManager ! ListInfoChangeRequestADM(
                     listIri = newListIri.get,
                     changeListRequest = ChangeListInfoApiRequestADM(
                         listIri = newListIri.get,
@@ -280,7 +277,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add child to list - to the root node" in {
-                actorUnderTest ! ListChildNodeCreateRequestADM(
+                responderManager ! ListChildNodeCreateRequestADM(
                     parentNodeIri = newListIri.get,
                     createChildNodeRequest = CreateChildNodeApiRequestADM(
                         parentNodeIri = newListIri.get,
@@ -324,7 +321,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             }
 
             "add second child to list - to the root node" in {
-               actorUnderTest ! ListChildNodeCreateRequestADM(
+                responderManager ! ListChildNodeCreateRequestADM(
                    parentNodeIri = newListIri.get,
                    createChildNodeRequest = CreateChildNodeApiRequestADM(
                        parentNodeIri = newListIri.get,
@@ -369,7 +366,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
            }
 
            "add child to second child node" in {
-               actorUnderTest ! ListChildNodeCreateRequestADM(
+               responderManager ! ListChildNodeCreateRequestADM(
                    parentNodeIri = secondChildIri.get,
                    createChildNodeRequest = CreateChildNodeApiRequestADM(
                        parentNodeIri = secondChildIri.get,

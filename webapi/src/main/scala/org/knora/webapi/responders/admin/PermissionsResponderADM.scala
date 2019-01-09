@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -27,9 +28,9 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.NonActorResponder
+import org.knora.webapi.responders.ResponderUtil._
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, PermissionUtilADM}
 
 import scala.collection.immutable.Iterable
@@ -40,7 +41,8 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class PermissionsResponderADM extends Responder {
+class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -54,25 +56,25 @@ class PermissionsResponderADM extends Responder {
       * If a serious error occurs (i.e. an error that isn't the client's fault), this
       * method first returns `Failure` to the sender, then throws an exception.
       */
-    def receive = {
-        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => future2Message(sender(), permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser), log)
-        case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
-        case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => future2Message(sender(), administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser), log)
-        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser), log)
-        case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser), log)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => future2Message(sender(), administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser), log)
-        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser), log)
-        case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser), log)
-        case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForValueGetADM(valueIri, requestingUser), log)
-        case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
-        case DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser), log)
-        case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser), log)
-        case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser), log)
-        //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, requestingUser) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, requestingUser), log)
-        //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, requestingUser) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, requestingUser), log)
-        //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: PermissionsResponderRequestADM) = msg match {
+        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser)
+        case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser) => administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser)
+        case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
+        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
+        case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser)
+        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser)
+        case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
+        case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
+        case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser)
+        case DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser) => defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser)
+        case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
+        case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
+        case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
+        //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, requestingUser) => createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, requestingUser)
+        //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, requestingUser) => deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, requestingUser)
+        //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser) => templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 

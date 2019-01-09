@@ -21,6 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
+import akka.actor.{ActorSelection, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,9 +29,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.ResponderUtil._
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.{IriLocker, NonActorResponder}
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.annotation.tailrec
@@ -54,7 +55,8 @@ object ListsResponderADM {
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderADM extends Responder {
+class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -62,16 +64,16 @@ class ListsResponderADM extends Responder {
     // The IRI used to lock user creation and update
     val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
 
-    def receive: PartialFunction[Any, Unit] = {
-        case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetRequestADM(projectIri, requestingUser), log)
-        case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetRequestADM(listIri, requestingUser), log)
-        case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetRequestADM(listIri, requestingUser), log)
-        case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetRequestADM(listIri, requestingUser), log)
-        case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
-        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
-        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
-        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => future2Message(sender(), listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) , log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ListsResponderRequestADM) = msg match {
+        case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
+        case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
+        case ListInfoGetRequestADM(listIri, requestingUser) => listInfoGetRequestADM(listIri, requestingUser)
+        case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
+        case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
+        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => listCreateRequestADM(createListRequest, requestingUser, apiRequestID)
+        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID)
+        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 

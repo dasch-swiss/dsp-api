@@ -37,6 +37,8 @@ import org.knora.webapi.responders.{IriLocker, NonActorResponder}
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
+import org.knora.webapi.responders.ResponderUtil._
+
 import scala.concurrent.Future
 
 /**
@@ -76,7 +78,7 @@ class UsersResponderADM(system: ActorSystem, applicationStateActor: ActorSelecti
         case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
         case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
         case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
-        case other => FastFuture.failed(UnexpectedMessageException(s"${this.getClass.getName} received an unexpected message $msg of type ${msg.getClass.getCanonicalName}"))
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 
