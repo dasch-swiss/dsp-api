@@ -24,6 +24,7 @@
 
     <xs:complexType name="resourceType">
         <xs:attribute name="id" use="required" type="xs:NCName"/>
+        <xs:attribute name="creation_date" use="optional" type="xs:dateTimeStamp"/>
     </xs:complexType>
 
     <xs:element name="file">
