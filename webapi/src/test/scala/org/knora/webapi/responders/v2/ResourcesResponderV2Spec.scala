@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v2
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
@@ -26,6 +27,7 @@ import akka.testkit.{ImplicitSender, TestActorRef}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
@@ -34,7 +36,7 @@ import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadReso
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
-import org.knora.webapi.util.{KnoraIdUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri, StringFormatter}
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -50,6 +52,9 @@ object ResourcesResponderV2Spec {
     private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
 
     private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
+
+    private val aThingIri = "http://rdfh.ch/0001/a-thing"
+    private var aThingLastModificationDate = Instant.now
 
     private val sampleStandoff: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -1446,6 +1451,164 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
             }
+        }
+
+        "not update a resource's metadata if the user does not have permission to update the resource" in {
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLabel = Some("new test label"),
+                requestingUser = incunabulaUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+            }
+        }
+
+        "not update a resource's metadata if the user does not supply the correct resource class" in {
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
+                maybeLabel = Some("new test label"),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "update a resource's metadata when it doesn't have a knora-base:lastModificationDate" in {
+            val dateTimeStampBeforeUpdate = Instant.now
+            val newLabel = "new test label"
+            val newPermissions = "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:ProjectMember"
+
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLabel = Some(newLabel),
+                maybePermissions = Some(newPermissions),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgType[SuccessResponseV2]
+
+            // Get the resource from the triplestore and check it.
+
+            val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+            assert(outputResource.label == newLabel)
+            assert(PermissionUtilADM.parsePermissions(outputResource.permissions) == PermissionUtilADM.parsePermissions(newPermissions))
+            aThingLastModificationDate = outputResource.lastModificationDate.get
+            assert(aThingLastModificationDate.isAfter(dateTimeStampBeforeUpdate))
+        }
+
+        "not update a resource's metadata if its knora-base:lastModificationDate exists but is not submitted" in {
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLabel = Some("another new test label"),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
+            }
+        }
+
+        "not update a resource's metadata if the wrong knora-base:lastModificationDate is submitted" in {
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLastModificationDate = Some(Instant.MIN),
+                maybeLabel = Some("another new test label"),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
+            }
+        }
+
+        "update a resource's metadata when it has a knora-base:lastModificationDate" in {
+            val newLabel = "another new test label"
+
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                maybeLabel = Some(newLabel),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgType[SuccessResponseV2]
+
+            // Get the resource from the triplestore and check it.
+
+            val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+            assert(outputResource.label == newLabel)
+            val updatedLastModificationDate = outputResource.lastModificationDate.get
+            assert(updatedLastModificationDate.isAfter(aThingLastModificationDate))
+            aThingLastModificationDate = updatedLastModificationDate
+        }
+
+        "not update a resource's knora-base:lastModificationDate with a value that's earlier than the current value" in {
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                maybeNewModificationDate = Some(Instant.MIN),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgPF(timeout) {
+                case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+            }
+        }
+
+        "update a resource's knora-base:lastModificationDate" in {
+            val newModificationDate = Instant.now.plus(java.time.Duration.ofDays(1))
+
+            val updateRequest = UpdateResourceMetadataRequestV2(
+                resourceIri = aThingIri,
+                resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+                maybeLastModificationDate = Some(aThingLastModificationDate),
+                maybeNewModificationDate = Some(newModificationDate),
+                requestingUser = anythingUserProfile,
+                apiRequestID = UUID.randomUUID
+            )
+
+            actorUnderTest ! updateRequest
+
+            expectMsgType[SuccessResponseV2]
+
+            // Get the resource from the triplestore and check it.
+
+            val outputResource: ReadResourceV2 = getResource(aThingIri, anythingUserProfile)
+            val updatedLastModificationDate = outputResource.lastModificationDate.get
+            assert(updatedLastModificationDate == newModificationDate)
+            aThingLastModificationDate = updatedLastModificationDate
         }
     }
 }
