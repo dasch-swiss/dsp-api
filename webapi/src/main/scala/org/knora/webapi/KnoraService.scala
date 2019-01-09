@@ -24,17 +24,12 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import org.knora.webapi.app._
 import org.knora.webapi.http.CORSSupport.CORS
 import org.knora.webapi.http.ServerVersion.addServerHeader
-import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
-import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders._
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
@@ -128,7 +123,7 @@ trait KnoraService {
     /**
       * Timeout definition
       */
-    implicit private val timeout: Timeout = settings.defaultTimeout
+    implicit protected val timeout: Timeout = settings.defaultTimeout
 
     /**
       * A user representing the Knora API server, used for initialisation on startup.
@@ -207,56 +202,6 @@ trait KnoraService {
         system.terminate()
         Await.result(system.whenTerminated, 30 seconds)
     }
-
-    /**
-      * Returns only when the application state actor is ready.
-      */
-    def applicationStateActorReady(): Unit = {
-
-        try {
-            Await.result(applicationStateActor ? ActorReady(), 1.second).asInstanceOf[ActorReadyAck]
-            log.info("KnoraService - applicationStateActorReady")
-        } catch {
-            case e: AskTimeoutException => {
-                // if we are here, then the ask timed out, so we need to try again until the actor is ready
-                applicationStateActorReady()
-            }
-        }
-    }
-
-    /**
-      * Returns only when the application state is 'Running'.
-      */
-    def applicationStateRunning(): Unit = {
-
-        val state: AppState = Await.result(applicationStateActor ? GetAppState(), 1.second).asInstanceOf[AppState]
-
-        if (state != AppState.Running) {
-            // not in running state so call startup checks again
-            // we should wait a bit before we call ourselves again
-            Await.result(blockingFuture(), 3.5.second)
-            applicationStateRunning()
-        }
-    }
-
-
-
-    /**
-      * A blocking future running on the blocking dispatcher.
-      */
-    private def blockingFuture(): Future[Unit] = {
-
-        val delay: Long = 3.second.toMillis
-
-        Future {
-            // uses the good "blocking dispatcher" that we configured,
-            // instead of the default dispatcher to isolate the blocking.
-            Thread.sleep(delay)
-            Future.successful(())
-        }
-    }
-
-
 
     /**
       * Start the different reporters if defined. Reporters are the connection points between kamon (the collector) and
