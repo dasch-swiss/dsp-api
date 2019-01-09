@@ -9,9 +9,12 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.util.CacheUtil
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
+/**
+  * This actor holds the current state of the application and is responsible for coordination of the startup sequence.
+  */
 class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) extends Actor with Timers with ActorLogging {
 
     log.debug("entered the ApplicationStateActor constructor")

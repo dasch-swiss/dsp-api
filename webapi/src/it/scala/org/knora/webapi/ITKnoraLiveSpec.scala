@@ -29,7 +29,7 @@ import akka.stream.ActorMaterializer
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.util.{StartupUtils, StringFormatter}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
 import spray.json.{JsObject, _}
@@ -46,7 +46,7 @@ object ITKnoraLiveSpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
+class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with TriplestoreJsonProtocol  {
 
     implicit lazy val settings: SettingsImpl = Settings(system)
 
