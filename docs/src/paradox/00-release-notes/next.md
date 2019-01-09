@@ -13,3 +13,4 @@ Also, please change the "HINT" to the appropriate level:
 
 - MAJOR CHANGE: Fix property names for incoming links (@github[#1144](#1144))
 - BUGFIX CHANGE: Triplestore connection error when using dockerComposeUp (@github[#1122](#1122))
+- BUGFIX CHANGE: Fix error-checking when updating cardinalities in ontology API (@github[#1142](#1142))
