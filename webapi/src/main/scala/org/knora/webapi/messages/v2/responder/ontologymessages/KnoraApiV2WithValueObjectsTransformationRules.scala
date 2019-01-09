@@ -307,8 +307,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
-    private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
-        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink,
+    private val HasIncomingLinkValue: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue,
         isResourceProp = true,
         propertyType = OntologyConstants.Owl.ObjectProperty,
         subjectType = Some(OntologyConstants.KnoraApiV2WithValueObjects.Resource),
@@ -319,8 +319,8 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
             makePredicate(
                 predicateIri = OntologyConstants.Rdfs.Label,
                 objectsWithLang = Map(
-                    LanguageCodes.DE -> "hat eingehende Verweise",
-                    LanguageCodes.EN -> "has incoming links"
+                    LanguageCodes.DE -> "hat eingehenden Verweis",
+                    LanguageCodes.EN -> "has incoming link"
                 )
             ),
             makePredicate(
@@ -1177,7 +1177,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
     )
 
     private val ResourceCardinalities = Map(
-        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue -> Cardinality.MayHaveMany
     )
 
     private val DateBaseCardinalities = Map(
@@ -1439,7 +1439,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         OntologyName,
         MappingHasName,
         ValueAsString,
-        HasIncomingLink,
+        HasIncomingLinkValue,
         SubjectType,
         ObjectType,
         TextValueHasStandoff,
