@@ -7351,7 +7351,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
 
-                assert(status == StatusCodes.NOT_FOUND, response.toString)
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.NOT_FOUND, responseStr)
+                assert(responseStr.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"))
 
             }
         }
