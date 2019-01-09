@@ -27,18 +27,72 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObj
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
 import org.knora.webapi.messages.v2.responder.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ValueContentV2}
-import org.knora.webapi.util.SmartIri
-import org.knora.webapi.{IRI, KnoraSystemInstances, NotFoundException}
+import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
+import org.knora.webapi.util.PermissionUtilADM.EntityPermission
+import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
+import org.knora.webapi.{ForbiddenException, IRI, KnoraSystemInstances, NotFoundException}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 /**
-  * Utility functions for working with Knora values.
+  * Utility functions for working with Knora resources and their values.
   */
-object ValueUtilV2 {
+object ResourceUtilV2 {
+
+    /**
+      * Checks that a user has the specified permission on a resource.
+      *
+      * @param resourceInfo   the resource to be updated.
+      * @param requestingUser the requesting user.
+      */
+    def checkResourcePermission(resourceInfo: ReadResourceV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
+        val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+            entityIri = resourceInfo.resourceIri,
+            entityCreator = resourceInfo.attachedToUser,
+            entityProject = resourceInfo.projectADM.id,
+            entityPermissionLiteral = resourceInfo.permissions,
+            requestingUser = requestingUser
+        )
+
+        val hasRequiredPermission: Boolean = maybeUserPermission match {
+            case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
+            case None => false
+        }
+
+        if (!hasRequiredPermission) {
+            throw ForbiddenException(s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>")
+        }
+    }
+
+    /**
+      * Checks that a user has the specified permission on a value.
+      *
+      * @param resourceInfo   the resource containing the value.
+      * @param valueInfo      the value to be updated.
+      * @param requestingUser the requesting user.
+      */
+    def checkValuePermission(resourceInfo: ReadResourceV2, valueInfo: ReadValueV2, permissionNeeded: EntityPermission, requestingUser: UserADM): Unit = {
+        val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+            entityIri = valueInfo.valueIri,
+            entityCreator = valueInfo.attachedToUser,
+            entityProject = resourceInfo.projectADM.id,
+            entityPermissionLiteral = valueInfo.permissions,
+            requestingUser = requestingUser
+        )
+
+        val hasRequiredPermission: Boolean = maybeUserPermission match {
+            case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
+            case None => false
+        }
+
+        if (!hasRequiredPermission) {
+            throw ForbiddenException(s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>")
+        }
+    }
+
     /**
       * Gets the default permissions for a new value.
       *

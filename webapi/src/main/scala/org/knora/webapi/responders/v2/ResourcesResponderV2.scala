@@ -28,8 +28,10 @@ import akka.pattern._
 import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
+import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
@@ -42,6 +44,7 @@ import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
+import org.knora.webapi.util.PermissionUtilADM.ModifyPermission
 import org.knora.webapi.util._
 import org.knora.webapi.util.date.CalendarNameGregorian
 
@@ -68,6 +71,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
         case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
         case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
         case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
+        case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => future2Message(sender(), updateResourceMetadataV2(updateResourceMetadataRequestV2), log)
         case graphDataGetRequest: GraphDataGetRequestV2 => future2Message(sender(), getGraphDataResponseV2(graphDataGetRequest), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
@@ -231,7 +235,121 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             createResources = Seq(createResourceRequestV2.createResource),
             requestingUser = createResourceRequestV2.requestingUser
         )
+    }
 
+    /**
+      * Updates a resources metadata.
+      *
+      * @param updateResourceMetadataRequestV2 the update request.
+      * @return a [[SuccessResponseV2]].
+      */
+    def updateResourceMetadataV2(updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[SuccessResponseV2] = {
+        def makeTaskFuture: Future[SuccessResponseV2] = {
+            for {
+                // Get the metadata of the resource to be updated.
+                resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+
+                _ = if (resourcesSeq.numberOfResources != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                }
+
+                resource: ReadResourceV2 = resourcesSeq.resources.head
+
+                internalResourceClassIri = updateResourceMetadataRequestV2.resourceClassIri.toOntologySchema(InternalSchema)
+
+                // Make sure that the resource's class is what the client thinks it is.
+                _ = if (resource.resourceClassIri != internalResourceClassIri) {
+                    throw BadRequestException(s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>")
+                }
+
+                // Make sure that the resource hasn't been updated since the client got its last modification date.
+                _ = if (resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
+                    throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
+                }
+
+                // Get information about the project that the resource is in.
+                projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+                    maybeIri = Some(resource.projectADM.id),
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )).mapTo[ProjectGetResponseADM]
+
+                // Check that the user has permission to modify the resource.
+                _ = ResourceUtilV2.checkResourcePermission(
+                    resourceInfo = resource,
+                    permissionNeeded = ModifyPermission,
+                    requestingUser = updateResourceMetadataRequestV2.requestingUser
+                )
+
+                // Get the IRI of the named graph in which the resource is stored.
+                dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(projectInfoResponse.project)
+
+                newModificationDate: Instant = updateResourceMetadataRequestV2.maybeNewModificationDate match {
+                    case Some(submittedNewModificationDate) =>
+                        if (resource.lastModificationDate.exists(_.isAfter(submittedNewModificationDate))) {
+                            throw BadRequestException(s"Submitted knora-api:newModificationDate is before the resource's current knora-api:lastModificationDate")
+                        } else {
+                            submittedNewModificationDate
+                        }
+                    case None => Instant.now
+                }
+
+                // Generate SPARQL for updating the resource.
+                sparqlUpdate = queries.sparql.v2.txt.changeResourceMetadata(
+                    triplestore = settings.triplestoreType,
+                    dataNamedGraph = dataNamedGraph,
+                    resourceIri = updateResourceMetadataRequestV2.resourceIri,
+                    resourceClassIri = internalResourceClassIri,
+                    maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+                    newModificationDate = newModificationDate,
+                    maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
+                    maybePermissions = updateResourceMetadataRequestV2.maybePermissions
+                ).toString()
+
+                // Do the update.
+                _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+                // Verify that the resource was updated correctly.
+
+                updatedResourcesSeq: ReadResourcesSequenceV2 <- getResourcePreview(Seq(updateResourceMetadataRequestV2.resourceIri), updateResourceMetadataRequestV2.requestingUser)
+
+                _ = if (updatedResourcesSeq.numberOfResources != 1) {
+                    throw AssertionException(s"Expected one resource, got ${resourcesSeq.numberOfResources}")
+                }
+
+                updatedResource: ReadResourceV2 = updatedResourcesSeq.resources.head
+
+                _ = if (!updatedResource.lastModificationDate.contains(newModificationDate)) {
+                    throw UpdateNotPerformedException(s"Updated resource has last modification date ${updatedResource.lastModificationDate}, expected $newModificationDate")
+                }
+
+                _ = updateResourceMetadataRequestV2.maybeLabel match {
+                    case Some(newLabel) =>
+                        if (!updatedResource.label.contains(stringFormatter.fromSparqlEncodedString(newLabel))) {
+                            throw UpdateNotPerformedException()
+                        }
+
+                    case None => ()
+                }
+
+                _ = updateResourceMetadataRequestV2.maybePermissions match {
+                    case Some(newPermissions) =>
+                        if (PermissionUtilADM.parsePermissions(updatedResource.permissions) != PermissionUtilADM.parsePermissions(newPermissions)) {
+                            throw UpdateNotPerformedException()
+                        }
+
+                    case None => ()
+                }
+            } yield SuccessResponseV2("Resource metadata updated")
+        }
+
+        for {
+            // Do the remaining pre-update checks and the update while holding an update lock on the resource.
+            taskResult <- IriLocker.runWithIriLock(
+                updateResourceMetadataRequestV2.apiRequestID,
+                updateResourceMetadataRequestV2.resourceIri,
+                () => makeTaskFuture
+            )
+        } yield taskResult
     }
 
     /**
@@ -524,7 +642,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 }
         }
 
-        Future.sequence(listNodesThatShouldExist.map(listNodeIri => ValueUtilV2.checkListNodeExists(listNodeIri, storeManager)).toSeq).map(_ => ())
+        Future.sequence(listNodesThatShouldExist.map(listNodeIri => ResourceUtilV2.checkListNodeExists(listNodeIri, storeManager)).toSeq).map(_ => ())
     }
 
     /**
@@ -611,7 +729,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
             case (resourceClassIri, propertyIris) =>
                 val propertyPermissionsFutures: Map[SmartIri, Future[String]] = propertyIris.toSeq.map {
                     propertyIri =>
-                        propertyIri -> ValueUtilV2.getDefaultValuePermissions(
+                        propertyIri -> ResourceUtilV2.getDefaultValuePermissions(
                             projectIri = projectIri,
                             resourceClassIri = resourceClassIri,
                             propertyIri = propertyIri,
@@ -712,7 +830,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
         val resultFutures: Seq[Future[T]] = allValues.map {
             valueContent =>
-                ValueUtilV2.doSipiPostUpdate(
+                ResourceUtilV2.doSipiPostUpdate(
                     updateFuture = updateFuture,
                     valueContent = valueContent,
                     requestingUser = requestingUser,
@@ -824,7 +942,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     )
             }.toVector
 
-            resourcesResponse <- Future.sequence(resourcesResponseFutures)
+            resourcesResponse: Vector[ReadResourceV2] <- Future.sequence(resourcesResponseFutures)
 
         } yield ReadResourcesSequenceV2(numberOfResources = resourceIrisDistinct.size, resources = resourcesResponse)
 
