@@ -59,7 +59,7 @@ knora-api:Annotation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -95,7 +95,7 @@ knora-api:Resource a owl:Class;
       owl:onProperty knora-api:deleteDate
     ], [ a owl:Restriction;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:hasPermissions
@@ -149,13 +149,13 @@ knora-api:hasComment a owl:ObjectProperty;
   rdfs:label "Comment";
   rdfs:subPropertyOf knora-api:hasValue .
 
-knora-api:hasIncomingLink a owl:ObjectProperty;
+knora-api:hasIncomingLinkValue a owl:ObjectProperty;
   knora-api:isLinkValueProperty true;
   knora-api:isResourceProperty true;
   knora-api:objectType knora-api:LinkValue;
   knora-api:subjectType knora-api:Resource;
   rdfs:comment "Indicates that this resource referred to by another resource";
-  rdfs:label "has incoming links";
+  rdfs:label "has incoming link";
   rdfs:subPropertyOf knora-api:hasLinkToValue .
 
 knora-api:hasPermissions a owl:DatatypeProperty;
@@ -360,7 +360,7 @@ knora-api:AudioRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -417,7 +417,7 @@ knora-api:Representation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -668,7 +668,7 @@ knora-api:DDDRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -998,7 +998,7 @@ knora-api:DocumentRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -1065,7 +1065,7 @@ knora-api:ForbiddenResource a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -1325,7 +1325,7 @@ knora-api:LinkObj a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasLinkTo
@@ -1612,7 +1612,7 @@ knora-api:MovingImageRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       owl:minCardinality 1;
       owl:onProperty knora-api:hasMovingImageFileValue
@@ -1690,7 +1690,7 @@ knora-api:Region a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2398,7 +2398,7 @@ knora-api:StillImageRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2510,7 +2510,7 @@ knora-api:TextRepresentation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -2716,7 +2716,7 @@ knora-api:XSLTransformation a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
