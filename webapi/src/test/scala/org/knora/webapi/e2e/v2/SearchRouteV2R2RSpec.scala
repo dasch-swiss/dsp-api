@@ -7331,5 +7331,32 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "reject a link value property in a query in the simple schema" in {
+            val gravsearchQuery =
+                """
+                  |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+                  |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                  |
+                  |CONSTRUCT {
+                  |    ?book knora-api:isMainResource true .
+                  |    ?book incunabula:title ?title .
+                  |    ?page incunabula:partOfValue ?book .
+                  |} WHERE {
+                  |    ?book a incunabula:book .
+                  |    ?book incunabula:title ?title .
+                  |    ?page a incunabula:page .
+                  |    ?page incunabula:partOfValue ?book .
+                  |}
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> searchPath ~> check {
+
+                val responseStr = responseAs[String]
+                assert(status == StatusCodes.NOT_FOUND, responseStr)
+                assert(responseStr.contains("http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOfValue"))
+
+            }
+        }
+
     }
 }
