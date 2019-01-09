@@ -247,6 +247,26 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         objectType = Some(OntologyConstants.Xsd.Boolean)
     )
 
+    private val NewModificationDate: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.NewModificationDate,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "new modification date",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Specifies the new modification date of a resource"
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.DateTimeStamp)
+    )
+
     private val OntologyName: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
         propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1415,6 +1435,7 @@ object KnoraApiV2WithValueObjectsTransformationRules extends KnoraBaseTransforma
         IsLinkProperty,
         IsLinkValueProperty,
         IsInherited,
+        NewModificationDate,
         OntologyName,
         MappingHasName,
         ValueAsString,
