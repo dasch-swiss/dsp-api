@@ -65,6 +65,13 @@ knora-api:hasComment a owl:DatatypeProperty;
   rdfs:label "Comment";
   rdfs:subPropertyOf knora-api:hasValue .
 
+knora-api:hasIncomingLink a owl:ObjectProperty;
+  knora-api:objectType knora-api:Resource;
+  knora-api:subjectType knora-api:Resource;
+  rdfs:comment "Indicates that this resource referred to by another resource";
+  rdfs:label "has incoming link";
+  rdfs:subPropertyOf knora-api:hasLinkTo .
+
 knora-api:hasStandoffLinkTo a owl:ObjectProperty;
   knora-api:objectType knora-api:Resource;
   knora-api:subjectType knora-api:Resource;

@@ -53,7 +53,7 @@ example-box:Box a owl:Class;
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
+      owl:onProperty knora-api:hasIncomingLinkValue
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;

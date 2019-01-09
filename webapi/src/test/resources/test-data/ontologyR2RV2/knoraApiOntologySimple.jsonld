@@ -783,6 +783,20 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
+    "@id" : "knora-api:hasIncomingLink",
+    "@type" : "owl:ObjectProperty",
+    "knora-api:objectType" : {
+      "@id" : "knora-api:Resource"
+    },
+    "knora-api:subjectType" : {
+      "@id" : "knora-api:Resource"
+    },
+    "rdfs:comment" : "Indicates that this resource referred to by another resource",
+    "rdfs:label" : "has incoming link",
+    "rdfs:subPropertyOf" : {
+      "@id" : "knora-api:hasLinkTo"
+    }
+  }, {
     "@id" : "knora-api:hasLinkTo",
     "@type" : "owl:ObjectProperty",
     "knora-api:objectType" : {

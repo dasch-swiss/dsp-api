@@ -54,7 +54,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -249,7 +249,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -596,7 +596,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1045,7 +1045,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1219,7 +1219,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -1642,7 +1642,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -2031,7 +2031,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -2150,7 +2150,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -2261,7 +2261,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -2346,7 +2346,7 @@
       "@type" : "owl:Restriction",
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -3363,7 +3363,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -3540,7 +3540,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -3889,7 +3889,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -4363,7 +4363,7 @@
       "@id" : "knora-api:hasValue"
     }
   }, {
-    "@id" : "knora-api:hasIncomingLink",
+    "@id" : "knora-api:hasIncomingLinkValue",
     "@type" : "owl:ObjectProperty",
     "knora-api:isLinkValueProperty" : true,
     "knora-api:isResourceProperty" : true,
@@ -4374,7 +4374,7 @@
       "@id" : "knora-api:Resource"
     },
     "rdfs:comment" : "Indicates that this resource referred to by another resource",
-    "rdfs:label" : "has incoming links",
+    "rdfs:label" : "has incoming link",
     "rdfs:subPropertyOf" : {
       "@id" : "knora-api:hasLinkToValue"
     }

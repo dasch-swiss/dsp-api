@@ -27,7 +27,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-06-06T12:08:56.890Z"
     },
-    "knora-api:hasIncomingLink" : {
+    "knora-api:hasIncomingLinkValue" : {
       "@id" : "http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw/values/XktHkAazSZWzBA3x0sYFuQ",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
@@ -77,7 +77,7 @@
       "@type" : "xsd:dateTimeStamp",
       "@value" : "2018-06-06T12:08:56.619Z"
     },
-    "knora-api:hasIncomingLink" : [ {
+    "knora-api:hasIncomingLinkValue" : [ {
       "@id" : "http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
