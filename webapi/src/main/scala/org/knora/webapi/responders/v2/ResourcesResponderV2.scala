@@ -444,9 +444,9 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 GenerateSparqlToCreateMultipleValuesRequestV2(
                     resourceIri = internalCreateResource.resourceIri,
                     values = valuesWithValidatedPermissions,
-                    currentTime = creationDate,
-                    requestingUser = requestingUser)
-                ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+                    creationDate = creationDate,
+                    requestingUser = requestingUser
+                )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
         } yield ResourceReadyToCreate(
             sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
                 resourceIri = internalCreateResource.resourceIri,
