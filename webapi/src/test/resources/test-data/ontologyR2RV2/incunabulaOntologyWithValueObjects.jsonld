@@ -48,7 +48,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -171,7 +171,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -534,7 +534,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",
@@ -771,7 +771,7 @@
       "knora-api:isInherited" : true,
       "owl:minCardinality" : 0,
       "owl:onProperty" : {
-        "@id" : "knora-api:hasIncomingLink"
+        "@id" : "knora-api:hasIncomingLinkValue"
       }
     }, {
       "@type" : "owl:Restriction",

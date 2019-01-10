@@ -278,6 +278,29 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         )
     )
 
+    private val HasIncomingLink: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.HasIncomingLink,
+        propertyType = OntologyConstants.Owl.ObjectProperty,
+        subjectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        objectType = Some(OntologyConstants.KnoraApiV2Simple.Resource),
+        subPropertyOf = Set(OntologyConstants.KnoraApiV2Simple.HasLinkTo),
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.DE -> "hat eingehenden Verweis",
+                    LanguageCodes.EN -> "has incoming link"
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Indicates that this resource referred to by another resource"
+                )
+            )
+        )
+    )
+
     private val ResourceCardinalites = Map(
         OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany
     )
@@ -486,7 +509,8 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         HasValue,
         ResourceProperty,
         SubjectType,
-        ObjectType
+        ObjectType,
+        HasIncomingLink
     ).map {
         propertyInfo => propertyInfo.entityInfoContent.propertyIri -> propertyInfo
     }.toMap

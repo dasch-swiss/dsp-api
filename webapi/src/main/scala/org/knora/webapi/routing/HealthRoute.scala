@@ -53,6 +53,7 @@ trait HealthCheck {
         state <- (applicationStateActor ? GetAppState()).mapTo[AppState]
 
         result = state match {
+            case AppState.Stopped => unhealthy("Stopped. Please retry later.")
             case AppState.StartingUp => unhealthy("Starting up. Please retry later.")
             case AppState.WaitingForRepository => unhealthy("Waiting for Repository. Please retry later.")
             case AppState.RepositoryReady => unhealthy("Repository ready. Please retry later.")

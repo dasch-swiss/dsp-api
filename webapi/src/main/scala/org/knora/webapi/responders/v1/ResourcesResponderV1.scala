@@ -758,9 +758,9 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
         /**
           * Represents a still image file value belonging to a source object (e.g., an image representation of a page).
           *
-          * @param id            the file value IRI
+          * @param id             the file value IRI
           * @param permissionCode the current user's permission code on the file value.
-          * @param image         a [[StillImageFileValueV1]]
+          * @param image          a [[StillImageFileValueV1]]
           */
         case class StillImageFileValue(id: IRI,
                                        permissionCode: Option[Int],
@@ -1181,10 +1181,11 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                             val valueOrders = row.rowMap("valueOrders").split(StringFormatter.INFORMATION_SEPARATOR_ONE).map(_.toInt)
 
                             val guiOrders: Array[Int] = properties.map {
-                                propertyIri => cardinalities(propertyIri).guiOrder match {
-                                    case Some(order) => order
-                                    case None => -1
-                                }
+                                propertyIri =>
+                                    cardinalities(propertyIri).guiOrder match {
+                                        case Some(order) => order
+                                        case None => -1
+                                    }
                             }
 
                             // create a list of three tuples, sort it by guiOrder and valueOrder and return only string values
@@ -1378,11 +1379,10 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
 
             defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(defaultPropertyAccessPermissions.toMap, { key: IRI => s"No default property access permissions found for resource class $key" })
 
-            // Make a timestamp for the new resources and their values.
-            currentTime: String = Instant.now.toString
-
             resourceCreationFutures: Seq[Future[SparqlTemplateResourceToCreate]] = resourcesToCreate.map {
                 resourceCreateRequest: OneOfMultipleResourceCreateRequestV1 =>
+                    val creationDate: Instant = resourceCreateRequest.creationDate.getOrElse(Instant.now)
+
                     for {
                         // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
                         // create a new resource in the given project.
@@ -1436,7 +1436,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                             defaultPropertyAccessPermissions = defaultPropertyAccessPermissionsMap(resourceCreateRequest.resourceTypeIri),
                             values = resourceValuesWithLinkTargetIris,
                             clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
-                            currentTime = currentTime,
+                            creationDate = creationDate,
                             fileValues = fileValues,
                             userProfile = userProfile,
                             apiRequestID = apiRequestID
@@ -1447,7 +1447,8 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                         permissions = defaultObjectAccessPermissions,
                         sparqlForValues = generateSparqlForValuesResponse.insertSparql,
                         resourceClassIri = resourceCreateRequest.resourceTypeIri,
-                        resourceLabel = resourceCreateRequest.label
+                        resourceLabel = resourceCreateRequest.label,
+                        resourceCreationDate = creationDate
                     )
             }
 
@@ -1459,8 +1460,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                 resourcesToCreate = sparqlTemplateResourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = userIri,
-                currentTime = currentTime
+                creatorIri = userIri
             )
 
             // Do the update.
@@ -1654,7 +1654,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                                              fileValues: Option[(IRI, Vector[CreateValueV1WithComment])],
                                              clientResourceIDsToResourceIris: Map[String, IRI],
-                                             currentTime: String,
+                                             creationDate: Instant,
                                              userProfile: UserADM,
                                              apiRequestID: UUID): Future[GenerateSparqlToCreateMultipleValuesResponseV1] = {
         for {
@@ -1666,7 +1666,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                 defaultPropertyAccessPermissions = defaultPropertyAccessPermissions,
                 values = values ++ fileValues,
                 clientResourceIDsToResourceIris = clientResourceIDsToResourceIris,
-                currentTime = currentTime,
+                creationDate = creationDate,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             ))
@@ -1680,19 +1680,18 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
       *
       * @param resourcesToCreate Collection of the resources to be created .
       * @param projectIri        IRI of the project .
-      * @param creatorIri        the creator of the resources to be created.
       * @param namedGraph        the named graph the resources belongs to.
+      * @param creatorIri        the creator of the resources to be created.
       * @return a [String] returns a Sparql query for creating the resources and their values .
       */
-    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI, currentTime: String): String = {
+    def generateSparqlForNewResources(resourcesToCreate: Seq[SparqlTemplateResourceToCreate], projectIri: IRI, namedGraph: IRI, creatorIri: IRI): String = {
         // Generate SPARQL for creating the resources, and include the SPARQL for creating the values of every resource.
         queries.sparql.v1.txt.createNewResources(
             dataNamedGraph = namedGraph,
             triplestore = settings.triplestoreType,
             resourcesToCreate = resourcesToCreate,
             projectIri = projectIri,
-            creatorIri = creatorIri,
-            currentTime = currentTime
+            creatorIri = creatorIri
         ).toString()
     }
 
@@ -1711,8 +1710,6 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                               createNewResourceSparql: String,
                               generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1,
                               userProfile: UserADM): Future[ResourceCreateResponseV1] = {
-        val userProfileV1 = userProfile.asUserProfileV1
-
         // Verify that the resource was created.
         for {
             createdResourcesSparql <- Future(queries.sparql.v1.txt.getCreatedResource(
@@ -1833,7 +1830,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
             // Everything looks OK, so we can create the resource and its values.
 
             // Make a timestamp for the resource and its values.
-            currentTime: String = Instant.now.toString
+            creationDate: Instant = Instant.now
 
             generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
                 projectIri = projectIri,
@@ -1843,25 +1840,27 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                 values = values,
                 fileValues = fileValues,
                 clientResourceIDsToResourceIris = Map.empty[String, IRI],
-                currentTime = currentTime,
+                creationDate = creationDate,
                 userProfile = userProfile,
                 apiRequestID = apiRequestID
             )
 
-            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(SparqlTemplateResourceToCreate(
-                resourceIri = resourceIri,
-                permissions = defaultResourceClassAccessPermissions,
-                sparqlForValues = generateSparqlForValuesResponse.insertSparql,
-                resourceClassIri = resourceClassIri,
-                resourceLabel = label)
+            resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(
+                SparqlTemplateResourceToCreate(
+                    resourceIri = resourceIri,
+                    permissions = defaultResourceClassAccessPermissions,
+                    sparqlForValues = generateSparqlForValuesResponse.insertSparql,
+                    resourceClassIri = resourceClassIri,
+                    resourceLabel = label,
+                    resourceCreationDate = creationDate
+                )
             )
 
             createNewResourceSparql = generateSparqlForNewResources(
                 resourcesToCreate = resourcesToCreate,
                 projectIri = projectIri,
                 namedGraph = namedGraph,
-                creatorIri = creatorIri,
-                currentTime = currentTime
+                creatorIri = creatorIri
             )
 
             // Do the update.
@@ -1888,7 +1887,13 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
       * @param apiRequestID          the ID of this API request.
       * @return a [[ResourceCreateResponseV1]] informing the client about the new resource.
       */
-    private def createNewResource(resourceClassIri: IRI, label: String, values: Map[IRI, Seq[CreateValueV1WithComment]], sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None, projectIri: IRI, userProfile: UserADM, apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
+    private def createNewResource(resourceClassIri: IRI,
+                                  label: String,
+                                  values: Map[IRI, Seq[CreateValueV1WithComment]],
+                                  sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None,
+                                  projectIri: IRI,
+                                  userProfile: UserADM,
+                                  apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
         val userProfileV1 = userProfile.asUserProfileV1
 
         val resultFuture = for {
@@ -1944,16 +1949,18 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
             result: ResourceCreateResponseV1 <- IriLocker.runWithIriLock(
                 apiRequestID,
                 resourceIri,
-                () => createResourceAndCheck(resourceClassIri,
-                    resourceProjectIri,
-                    label,
-                    resourceIri,
-                    values,
-                    sipiConversionRequest,
+                () => createResourceAndCheck(
+                    resourceClassIri = resourceClassIri,
+                    projectIri = resourceProjectIri,
+                    label = label,
+                    resourceIri = resourceIri,
+                    values = values,
+                    sipiConversionRequest = sipiConversionRequest,
                     creatorIri = userIri,
-                    namedGraph,
-                    userProfile,
-                    apiRequestID)
+                    namedGraph = namedGraph,
+                    userProfile = userProfile,
+                    apiRequestID = apiRequestID
+                )
             )
         } yield result
 

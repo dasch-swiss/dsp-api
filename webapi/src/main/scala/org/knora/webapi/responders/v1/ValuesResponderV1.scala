@@ -389,7 +389,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                 standoffLinkInsertSparql: String = queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(
                     resourceIri = createMultipleValuesRequest.resourceIri,
                     linkUpdates = standoffLinkUpdates,
-                    currentTime = createMultipleValuesRequest.currentTime
+                    creationDate = createMultipleValuesRequest.creationDate
                 ).toString()
 
                 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -462,7 +462,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                                         queries.sparql.v1.txt.generateInsertStatementsForCreateLink(
                                             resourceIri = createMultipleValuesRequest.resourceIri,
                                             linkUpdate = sparqlTemplateLinkUpdate,
-                                            currentTime = createMultipleValuesRequest.currentTime,
+                                            creationDate = createMultipleValuesRequest.creationDate,
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
@@ -510,7 +510,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                                             valueCreator = userIri,
                                             valuePermissions = defaultPropertyAccessPermissions,
-                                            currentTime = createMultipleValuesRequest.currentTime,
+                                            creationDate = createMultipleValuesRequest.creationDate,
                                             maybeValueHasOrder = Some(valueToCreate.valueHasOrder)
                                         ).toString()
                                 }
@@ -730,7 +730,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
             resultFuture.andThen {
                 case _ => changeFileValueRequest.file match {
-                    case (conversionPathRequest: SipiResponderConversionPathRequestV1) =>
+                    case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
                         // a tmp file has been created by the resources route (non GUI-case), delete it
                         FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()
@@ -2018,7 +2018,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                 userProfile = userProfile
             )
 
-            currentTime: String = Instant.now.toString
+            currentTime: Instant = Instant.now
 
             // Generate a SPARQL update string.
             sparqlUpdate = queries.sparql.v1.txt.createLink(
@@ -2026,7 +2026,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                currentTime = currentTime,
+                creationDate = currentTime,
                 maybeComment = comment
             ).toString()
 
@@ -2065,7 +2065,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                                                  userProfile: UserADM): Future[UnverifiedValueV1] = {
         // Generate an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
-        val currentTime: String = Instant.now.toString
+        val creationDate: Instant = Instant.now
 
         for {
             // If we're creating a text value, update direct links and LinkValues for any resource references in standoff.
@@ -2106,7 +2106,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
                 maybeComment = comment,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                currentTime = currentTime
+                creationDate = creationDate
             ).toString()
 
             /*

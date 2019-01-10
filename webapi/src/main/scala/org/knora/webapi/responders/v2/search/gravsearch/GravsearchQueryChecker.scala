@@ -148,7 +148,7 @@ object GravsearchQueryChecker {
         OntologyConstants.KnoraApiV2WithValueObjects.IsInherited,
         OntologyConstants.KnoraApiV2WithValueObjects.OntologyName,
         OntologyConstants.KnoraApiV2WithValueObjects.MappingHasName,
-        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLink,
+        OntologyConstants.KnoraApiV2WithValueObjects.HasIncomingLinkValue,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear,
         OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth,

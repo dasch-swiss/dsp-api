@@ -113,7 +113,7 @@ object Dependencies {
         val rdf4jRuntime           = "org.eclipse.rdf4j"                        % "rdf4j-runtime"            % "2.3.2"
         val scallop                = "org.rogach"                              %% "scallop"                  % "2.0.5"
         val gwtServlet             = "com.google.gwt"                           % "gwt-servlet"              % "2.8.0"
-        val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.7.0-14"
+        val saxonHE                = "net.sf.saxon"                             % "Saxon-HE"                 % "9.9.0-2"
 
         val scalaXml               = "org.scala-lang.modules"                  %% "scala-xml"                % "1.1.1"
         val scalaArm               = "com.jsuereth"                             % "scala-arm_2.12"           % "2.0"
