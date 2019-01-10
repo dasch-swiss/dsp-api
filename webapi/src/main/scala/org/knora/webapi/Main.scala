@@ -28,9 +28,6 @@ import org.knora.webapi.messages.app.appmessages._
   */
 object Main extends App with LiveCore with KnoraService {
 
-    // waits until the application state actor is ready
-    applicationStateActorReady()
-
     val arglist = args.toList
 
     // loads demo data
@@ -79,7 +76,8 @@ object Main extends App with LiveCore with KnoraService {
             """.stripMargin)
     } else {
         /* Start the HTTP layer, allowing access */
-        startService(true)
+        /* Don't skip loading of ontologies */
+        startService(skipLoadingOfOntologies=false)
 
         /* add the method for shutting down our application to the shutdown hook, so that we can clean up */
         scala.sys.addShutdownHook(stopService())

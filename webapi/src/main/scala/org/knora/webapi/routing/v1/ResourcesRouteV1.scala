@@ -23,6 +23,7 @@ package org.knora.webapi.routing.v1
 import java.io._
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -309,7 +310,8 @@ object ResourcesRouteV1 extends Authenticator {
                             source = fileToRead.file,
                             userProfile = userProfile.asUserProfileV1
                         )
-                }
+                },
+                creationDate = resourceRequest.creationDate
             )
         }
 
@@ -673,6 +675,9 @@ object ResourcesRouteV1 extends Authenticator {
                     // Get the client's unique ID for the resource.
                     val clientIDForResource: String = (resourceNode \ "@id").toString
 
+                    // Get the optional resource creation date.
+                    val creationDate: Option[Instant] = resourceNode.attribute("creationDate").map(creationDateNode => stringFormatter.toInstant(creationDateNode.text, throw BadRequestException(s"Invalid resource creation date: ${creationDateNode.text}")))
+
                     // Convert the XML element's label and namespace to an internal resource class IRI.
 
                     val elementNamespace: String = resourceNode.getNamespace(resourceNode.prefix)
@@ -771,7 +776,8 @@ object ResourcesRouteV1 extends Authenticator {
                         client_id = clientIDForResource,
                         label = resourceLabel,
                         properties = groupedPropertiesWithValues,
-                        file = file
+                        file = file,
+                        creationDate = creationDate
                     )
                 })
         }

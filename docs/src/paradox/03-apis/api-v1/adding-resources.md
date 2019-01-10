@@ -236,7 +236,7 @@ script. The resulting XML import document could look like this:
         <knoraXmlImport:label>Math Intelligencer</knoraXmlImport:label>
         <p0801-biblio:hasName knoraType="richtext_value">Math Intelligencer</p0801-biblio:hasName>
     </p0801-biblio:Journal>
-    <p0801-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries">
+    <p0801-biblio:JournalArticle id="strings_in_the_16th_and_17th_centuries" creationDate="2019-01-09T15:45:54Z">
         <knoraXmlImport:label>Strings in the 16th and 17th Centuries</knoraXmlImport:label>
         <p0801-biblio:p0801-beol__comment knoraType="richtext_value" mapping_id="http://rdfh.ch/standoff/mappings/StandardMapping">
             <text xmlns="">The most <strong>interesting</strong> article in <a class="salsah-link" href="ref:math_intelligencer">Math Intelligencer</a>.</text>
@@ -285,6 +285,11 @@ This illustrates several aspects of XML imports:
     [NCName](https://www.w3.org/TR/REC-xml-names/#NT-NCName), and must
     be unique within the file. These IDs are used only during the
     import, and will not be stored in the triplestore.
+
+  - Each resource can optionally have a `creationDate` attribute, which
+    can be an [xsd:dateTime](https://www.w3.org/TR/xmlschema11-2/#dateTime)
+    or an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
+    If `creationDate` is not supplied, the current time is used.
 
   - The first child element of each resource must be a
     `knoraXmlImport:label`, which will be stored as the resource's

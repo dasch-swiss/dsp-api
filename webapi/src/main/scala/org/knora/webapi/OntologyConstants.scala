@@ -74,7 +74,7 @@ object OntologyConstants {
           * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
           * a particular type can have.
           */
-        val cardinalityOWLRestrictions = Set(
+        val cardinalityOWLRestrictions: Set[IRI] = Set(
             Cardinality,
             MinCardinality,
             MaxCardinality
@@ -135,7 +135,7 @@ object OntologyConstants {
     /**
       * Ontology labels that are reserved for built-in ontologies.
       */
-    val BuiltInOntologyLabels = Set(
+    val BuiltInOntologyLabels: Set[String] = Set(
         KnoraBase.KnoraBaseOntologyLabel,
         KnoraApi.KnoraApiOntologyLabel,
         SalsahGui.SalsahGuiOntologyLabel,
@@ -224,7 +224,7 @@ object OntologyConstants {
 
         val ResourceProperty: IRI = KnoraBasePrefixExpansion + "resourceProperty"
         val HasValue: IRI = KnoraBasePrefixExpansion + "hasValue"
-        val HasIncomingLink: IRI = KnoraBasePrefixExpansion + "hasIncomingLink"
+        val HasIncomingLinkValue: IRI = KnoraBasePrefixExpansion + "hasIncomingLinkValue"
         val HasFileValue: IRI = KnoraBasePrefixExpansion + "hasFileValue"
         val HasStillImageFileValue: IRI = KnoraBasePrefixExpansion + "hasStillImageFileValue"
         val HasMovingImageFileValue: IRI = KnoraBasePrefixExpansion + "hasMovingImageFileValue"
@@ -508,7 +508,7 @@ object OntologyConstants {
         val ExternalResource: IRI = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ExternalResource"
         val ExternalResValue: IRI = OntologyConstants.KnoraBase.KnoraBasePrefixExpansion + "ExternalResValue"
 
-        val AbstractResourceClasses = Set(
+        val AbstractResourceClasses: Set[IRI] = Set(
             Resource,
             ExternalResource,
             Representation,
@@ -699,6 +699,7 @@ object OntologyConstants {
         val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val NewModificationDate: IRI = KnoraApiV2PrefixExpansion + "newModificationDate"
         val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
         val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
         val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
@@ -739,7 +740,7 @@ object OntologyConstants {
         val TextFileValue: IRI = KnoraApiV2PrefixExpansion + "TextFileValue"
         val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
 
-        val FileValueClasses = Set(
+        val FileValueClasses: Set[IRI] = Set(
             FileValue,
             StillImageFileValue,
             MovingImageFileValue,
@@ -749,7 +750,7 @@ object OntologyConstants {
             DocumentFileValue
         )
 
-        val ValueClasses = Set(
+        val ValueClasses: Set[IRI] = Set(
             TextValue,
             IntValue,
             DecimalValue,
@@ -769,7 +770,7 @@ object OntologyConstants {
         val ValueHas: IRI = KnoraApiV2PrefixExpansion + "valueHas"
         val HasLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasLinkTo"
         val HasLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasLinkToValue"
-        val HasIncomingLink: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLink"
+        val HasIncomingLinkValue: IRI = KnoraApiV2PrefixExpansion + "hasIncomingLinkValue"
 
         val IsPartOf: IRI = KnoraApiV2PrefixExpansion + "isPartOf"
         val IsPartOfValue: IRI = KnoraApiV2PrefixExpansion + "isPartOfValue"

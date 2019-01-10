@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -28,13 +29,13 @@
  *
  * @param resourceIri     the IRI of the resource.
  * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
- * @param currentTime an xsd:dateTimeStamp representing the current time.
+ * @param creationDate an xsd:dateTimeStamp to be attached to the link value.
  * @param maybeComment an optional comment on the link.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
  *@
 @(resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  currentTime: String,
+  creationDate: Instant,
   maybeComment: Option[String],
   maybeValueHasOrder: Option[Int])
 
@@ -72,7 +73,7 @@
                 }
             }
             knora-base:isDeleted false ;
-            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp ;
+            knora-base:valueCreationDate "@creationDate"^^xsd:dateTimeStamp ;
             knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
             knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .
 

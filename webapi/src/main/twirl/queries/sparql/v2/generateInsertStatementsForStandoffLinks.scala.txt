@@ -31,11 +31,11 @@
  * @param the IRI of the resource in which values are being created.
  * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
  *        updated for resource references in Standoff text values.
- * @param currentTime an xsd:dateTimeStamp representing the current time.
+ * @param creationDate an xsd:dateTimeStamp that will be attached to the link values.
  *@
 @(resourceIri: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
-  currentTime: Instant)
+  creationDate: Instant)
 
         @for((linkUpdate, linkValueIndex) <- linkUpdates.zipWithIndex) {
             @* Insert a direct link for the resource reference if necessary. *@
@@ -51,7 +51,7 @@
                 knora-base:valueHasString "@linkUpdate.linkTargetIri" ;
                 knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
                 knora-base:isDeleted false ;
-                knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+                knora-base:valueCreationDate "@creationDate"^^xsd:dateTimeStamp .
 
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .

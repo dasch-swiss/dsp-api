@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -37,7 +38,7 @@
  * @param maybeComment an optional comment on the value.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
- * @param currentTime an xsd:dateTimeStamp representing the current time.
+ * @param creationDate an xsd:dateTimeStamp to be attached to the value.
  *
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
@@ -53,7 +54,7 @@
   maybeComment: Option[String],
   valueCreator: IRI,
   valuePermissions: String,
-  currentTime: String)
+  creationDate: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -85,7 +86,7 @@ DELETE {
     }
 } INSERT {
     GRAPH ?dataNamedGraph {
-        ?resource knora-base:lastModificationDate "@currentTime"^^xsd:dateTimeStamp .
+        ?resource knora-base:lastModificationDate "@creationDate"^^xsd:dateTimeStamp .
 
         @{
             queries.sparql.v1.txt.generateInsertStatementsForCreateValue(resourceIri = resourceIri,
@@ -96,7 +97,7 @@ DELETE {
                                                                          maybeComment = maybeComment,
                                                                          valueCreator = valueCreator,
                                                                          valuePermissions = valuePermissions,
-                                                                         currentTime = currentTime,
+                                                                         creationDate = creationDate,
                                                                          maybeValueHasOrder = None)
         }
     }
