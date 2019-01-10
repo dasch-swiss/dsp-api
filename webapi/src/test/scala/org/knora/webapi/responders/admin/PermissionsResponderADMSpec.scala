@@ -20,18 +20,20 @@
 package org.knora.webapi.responders.admin
 
 import akka.actor.Status.Failure
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
+import org.scalatest.PrivateMethodTester
 
 import scala.collection.Map
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 
@@ -48,7 +50,7 @@ object PermissionsResponderADMSpec {
 /**
   * This spec is used to test the [[PermissionsResponderADM]] actor.
   */
-class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.config) with ImplicitSender {
+class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.config) with ImplicitSender with PrivateMethodTester {
 
     private val knoraIdUtil = new KnoraIdUtil
 
@@ -56,6 +58,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
     private val multiuserUser = SharedTestDataADM.multiuserUser
 
     val responderUnderTest = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
+
+    /* define private method access */
+    val userAdministrativePermissionsGetADM = PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]]('userAdministrativePermissionsGetADM)
+    val defaultObjectAccessPermissionsForGroupsGetADM = PrivateMethod[Future[Set[PermissionADM]]]('defaultObjectAccessPermissionsForGroupsGetADM)
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
@@ -156,7 +162,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
             }
 
             "return user's administrative permissions (helper method used in queries before)" in {
-                val result: Map[IRI, Set[PermissionADM]] = Await.result(underlyingActorUnderTest.userAdministrativePermissionsGetADM(multiuserUser.permissions.groupsPerProject).mapTo[Map[IRI, Set[PermissionADM]]], 1.seconds)
+                val f: Future[Map[IRI, Set[PermissionADM]]] = responderUnderTest invokePrivate userAdministrativePermissionsGetADM(multiuserUser.permissions.groupsPerProject)
+                val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)
                 result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
             }
         }
@@ -469,7 +476,8 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                         PermissionADM.viewPermission(OntologyConstants.KnoraBase.KnownUser),
                         PermissionADM.modifyPermission(OntologyConstants.KnoraBase.ProjectMember)
                     )
-                val result: Set[PermissionADM] = Await.result(underlyingActorUnderTest.defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups), 1.seconds)
+                val f: Future[Set[PermissionADM]] = responderUnderTest invokePrivate defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups)
+                val result: Set[PermissionADM] = Await.result(f, 1.seconds)
                 result should equal(expected)
             }
 

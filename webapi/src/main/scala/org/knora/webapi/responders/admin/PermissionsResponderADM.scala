@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSelection, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -41,7 +41,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
 
 
     // Creates IRIs for new Knora user objects.
@@ -182,7 +182,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorS
       * @param groupsPerProject the groups inside each project the user is member of.
       * @return a the user's resulting set of administrative permissions for each project.
       */
-    def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionADM]]] = {
+    private def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionADM]]] = {
 
 
         /* Get all permissions per project, applying permission precedence rule */
@@ -811,7 +811,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorS
       * @param groups     the list of groups for which default object access permissions are retrieved and combined.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionADM]] = {
 
         /* Get default object access permissions for each group and combine them */
         val gpf: Seq[Future[Seq[PermissionADM]]] = for {

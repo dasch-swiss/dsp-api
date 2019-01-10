@@ -19,10 +19,9 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
-import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -50,18 +49,15 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.ActorUtil.handleUnexpectedMessage
+import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, _}
 import org.knora.webapi.{ActorMaker, KnoraDispatchers}
-
-import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.ExecutionContext
 
 /**
   * This actor receives messages representing client requests, and forwards them to pools specialised actors that it supervises.
   */
-class ResponderManager extends Actor with ActorLogging {
+class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
@@ -74,21 +70,6 @@ class ResponderManager extends Actor with ActorLogging {
       */
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-
-    /**
-      * A reference to the application state actor.
-      */
-    protected val applicationStateActor: ActorSelection = context.actorSelection(APPLICATION_STATE_ACTOR_PATH)
-
-    /**
-      * A reference to the Knora API responder manager.
-      */
-    protected val responderManager: ActorSelection = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-    /**
-      * A reference to the store manager.
-      */
-    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing actors that route requests to particular
@@ -304,7 +285,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[GroupsResponderADM]].
       */
-    protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[GroupsResponderADM]].
@@ -314,7 +295,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[ListsResponderADM]].
       */
-    protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[ListsResponderADM]].
@@ -324,7 +305,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[PermissionsResponderADM]].
       */
-    protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[PermissionsResponderADM]].
@@ -334,7 +315,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[ProjectsResponderADM]].
       */
-    protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[ProjectsResponderADM]].
@@ -344,7 +325,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[StoresResponderADM]].
       */
-    protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[StoresResponderADM]].
@@ -354,7 +335,7 @@ class ResponderManager extends Actor with ActorLogging {
     /**
       * Constructs the default [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, responderManager, storeManager)
+    protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
       * The default [[UsersResponderADM]].

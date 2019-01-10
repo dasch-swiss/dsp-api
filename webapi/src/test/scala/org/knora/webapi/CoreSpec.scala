@@ -75,8 +75,9 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
     val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)), name = RESPONDER_MANAGER_ACTOR_NAME)
     val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
+
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)

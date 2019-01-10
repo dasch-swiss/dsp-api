@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi.app._
@@ -78,8 +78,8 @@ trait Responder extends Actor with ActorLogging {
 }
 
 
-abstract class NonActorResponder(system: ActorSystem, applicationStateActor: ActorSelection, responderManager: ActorSelection, storeManager: ActorSelection) {
-    
+abstract class NonActorResponder(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) {
+
     /**
       * The execution context for futures created in Knora actors.
       */

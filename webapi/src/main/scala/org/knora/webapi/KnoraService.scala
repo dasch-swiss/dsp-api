@@ -115,14 +115,15 @@ trait KnoraService {
 
     // #supervisors
     /**
-      * The supervisor actor that forwards messages to responder actors to handle API requests.
-      */
-    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
-
-    /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
     protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+
+
+    /**
+      * The supervisor actor that forwards messages to responder actors to handle API requests.
+      */
+    protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager(applicationStateActor, storeManager) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
     // #supervisors
 
     /**
