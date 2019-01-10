@@ -417,6 +417,49 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
             assert(resourceIri.toSmartIri.isKnoraDataIri)
         }
 
+        "create a resource with a custom creation date" in {
+            val creationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
+
+            val jsonLDEntity =
+                s"""{
+                  |  "@type" : "anything:Thing",
+                  |  "knora-api:attachedToProject" : {
+                  |    "@id" : "http://rdfh.ch/projects/0001"
+                  |  },
+                  |  "anything:hasBoolean" : {
+                  |    "@type" : "knora-api:BooleanValue",
+                  |    "knora-api:booleanValueAsBoolean" : true
+                  |  },
+                  |  "rdfs:label" : "test thing",
+                  |  "knora-api:creationDate" : {
+                  |    "@type" : "xsd:dateTimeStamp",
+                  |    "@value" : "$creationDate"
+                  |  },
+                  |  "@context" : {
+                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+                  |  }
+                  |}""".stripMargin
+
+            val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
+            val response: HttpResponse = singleAwaitingRequest(request)
+            assert(response.status == StatusCodes.OK, response.toString)
+            val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+            val resourceIri: IRI = responseJsonDoc.body.requireStringWithValidation(JsonLDConstants.ID, stringFormatter.validateAndEscapeIri)
+            assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+            val savedCreationDate: Instant = responseJsonDoc.body.requireDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.toInstant
+            )
+
+            assert(savedCreationDate == creationDate)
+        }
+
         "create a resource containing escaped text" in {
             val jsonLDEntity = FileUtil.readTextFile(new File("src/test/resources/test-data/resourcesR2RV2/CreateResourceWithEscape.jsonld"))
             val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
