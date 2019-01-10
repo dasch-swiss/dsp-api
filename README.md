@@ -36,7 +36,7 @@ Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html), release
 
 ### New features under development
 
-* Additional functionality for [Knora API v2](https://docs.knora.org/paradox/03-apis/api-v2/index.html)
+* See the [Roadmap](https://github.com/dhlab-basel/Knora/wiki/Roadmap)
 
 ## Requirements
 

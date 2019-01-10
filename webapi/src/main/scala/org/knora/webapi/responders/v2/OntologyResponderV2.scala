@@ -1121,18 +1121,26 @@ class OntologyResponderV2 extends Responder {
                         // Yes, so it's available.
                         acc
                     } else {
-                        // No. Is it among the properties removed from knora-base to create the requested schema?
+                        // No. See if it's available in the requested schema.
                         propertyIri.getOntologySchema.get match {
                             case apiV2Schema: ApiV2Schema =>
                                 val internalPropertyIri = propertyIri.toOntologySchema(InternalSchema)
-                                val knoraBasePropertiesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBasePropertiesToRemove
 
-                                if (knoraBasePropertiesToRemove.contains(internalPropertyIri)) {
-                                    // Yes. Include it in the set of unavailable properties.
+                                // If it's a link value property and it's requested in the simple schema, it's unavailable.
+                                if (apiV2Schema == ApiV2Simple && isLinkValueProp(internalPropertyIri, cacheData)) {
                                     acc + propertyIri
                                 } else {
-                                    // No. It's available.
-                                    acc
+                                    // Is it among the properties removed from knora-base to create the requested schema?
+
+                                    val knoraBasePropertiesToRemove = KnoraBaseTransformationRules.getTransformationRules(apiV2Schema).knoraBasePropertiesToRemove
+
+                                    if (knoraBasePropertiesToRemove.contains(internalPropertyIri)) {
+                                        // Yes. Include it in the set of unavailable properties.
+                                        acc + propertyIri
+                                    } else {
+                                        // No. It's available.
+                                        acc
+                                    }
                                 }
 
                             case InternalSchema => acc
