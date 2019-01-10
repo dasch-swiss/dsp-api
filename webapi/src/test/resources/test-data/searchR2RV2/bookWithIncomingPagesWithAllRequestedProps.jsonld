@@ -28,7 +28,7 @@
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2016-03-02T15:05:43Z"
   },
-  "knora-api:hasIncomingLink" : {
+  "knora-api:hasIncomingLinkValue" : {
     "@id" : "http://rdfh.ch/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051",
     "@type" : "knora-api:LinkValue",
     "knora-api:attachedToUser" : {
