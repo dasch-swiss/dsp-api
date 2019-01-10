@@ -19,6 +19,7 @@
 
 package org.knora.webapi.messages.v1.responder.resourcemessages
 
+import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -57,17 +58,19 @@ case class CreateResourceApiRequestV1(restype_id: IRI,
 /**
   * Used internally to represent a request to create a resource from an XML import.
   *
-  * @param restype_id the IRI of the resource class.
-  * @param label      the resource's label.
-  * @param client_id  the client's unique ID for the resource.
-  * @param properties the resource's properties.
-  * @param file       a file on disk that should be attached to the resource.
+  * @param restype_id   the IRI of the resource class.
+  * @param label        the resource's label.
+  * @param client_id    the client's unique ID for the resource.
+  * @param properties   the resource's properties.
+  * @param file         a file on disk that should be attached to the resource.
+  * @param creationDate the creation date that should be attached to the resource.
   */
 case class CreateResourceFromXmlImportRequestV1(restype_id: IRI,
                                                 client_id: String,
                                                 label: String,
                                                 properties: Map[IRI, Seq[CreateResourceValueV1]],
-                                                file: Option[ReadFileV1] = None)
+                                                file: Option[ReadFileV1] = None,
+                                                creationDate: Option[Instant])
 
 /**
   * Represents a property value to be created.
@@ -219,12 +222,14 @@ case class ResourceCreateRequestV1(resourceTypeIri: IRI,
   * @param label            the rdfs:label of the resource.
   * @param values           the properties to add: type and value(s): a Map of propertyIris to ApiValueV1.
   * @param file             a file on disk that should be stored by Sipi and should be attached to the resource.
+  * @param creationDate     the creation date that should be attached to the resource.
   */
 case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[SipiResponderConversionPathRequestV1] = None)
+                                                file: Option[SipiResponderConversionPathRequestV1] = None,
+                                                creationDate: Option[Instant])
 
 /**
   * Requests the creation of multiple new resources.
@@ -949,15 +954,15 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "label" -> propertyV1.label.toJson,
                         "attributes" -> propertyV1.attributes.toJson,
                         "occurrence" -> propertyV1.occurrence.toJson) ++
-                            // Don't generate JSON for these lists if they're empty.
-                            list2JsonOption("values", propertyV1.values, () => propertyV1.values.toJson) ++
-                            list2JsonOption("value_ids", propertyV1.value_ids, () => propertyV1.value_ids.toJson) ++
-                            list2JsonOption("comments", propertyV1.comments, () => propertyV1.comments.toJson) ++
-                            list2JsonOption("value_restype", propertyV1.value_restype, () => propertyV1.value_restype.toJson) ++
-                            list2JsonOption("value_iconsrcs", propertyV1.value_iconsrcs, () => propertyV1.value_iconsrcs.toJson) ++
-                            list2JsonOption("value_firstprops", propertyV1.value_firstprops, () => propertyV1.value_firstprops.toJson) ++
-                            list2JsonOption("value_rights", propertyV1.value_rights, () => propertyV1.value_rights.toJson) ++
-                            list2JsonOption("locations", propertyV1.locations, () => propertyV1.locations.toJson)
+                        // Don't generate JSON for these lists if they're empty.
+                        list2JsonOption("values", propertyV1.values, () => propertyV1.values.toJson) ++
+                        list2JsonOption("value_ids", propertyV1.value_ids, () => propertyV1.value_ids.toJson) ++
+                        list2JsonOption("comments", propertyV1.comments, () => propertyV1.comments.toJson) ++
+                        list2JsonOption("value_restype", propertyV1.value_restype, () => propertyV1.value_restype.toJson) ++
+                        list2JsonOption("value_iconsrcs", propertyV1.value_iconsrcs, () => propertyV1.value_iconsrcs.toJson) ++
+                        list2JsonOption("value_firstprops", propertyV1.value_firstprops, () => propertyV1.value_firstprops.toJson) ++
+                        list2JsonOption("value_rights", propertyV1.value_rights, () => propertyV1.value_rights.toJson) ++
+                        list2JsonOption("locations", propertyV1.locations, () => propertyV1.locations.toJson)
                     (propertyV1.pid, JsObject(fields))
             }(breakOut)
 
@@ -993,8 +998,8 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "guielement" -> propertyGetV1.guielement.toJson,
                         "is_annotation" -> propertyGetV1.is_annotation.toJson,
                         "attributes" -> propertyGetV1.attributes.toJson) ++
-                            // Don't generate JSON for these lists if they're empty.
-                            list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                        // Don't generate JSON for these lists if they're empty.
+                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
                     (propertyGetV1.pid, JsObject(fields))
             }(breakOut)
 
@@ -1081,8 +1086,8 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
                         "guielement" -> propertyGetV1.guielement.toJson,
                         "is_annotation" -> propertyGetV1.is_annotation.toJson,
                         "attributes" -> propertyGetV1.attributes.toJson) ++
-                            // Don't generate JSON for these lists if they're empty.
-                            list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
+                        // Don't generate JSON for these lists if they're empty.
+                        list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
                     (propertyGetV1.pid, JsObject(fields))
             }(breakOut)
 

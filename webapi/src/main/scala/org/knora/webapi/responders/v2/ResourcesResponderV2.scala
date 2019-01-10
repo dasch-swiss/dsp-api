@@ -141,7 +141,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 defaultPropertyPermissions: Map[SmartIri, String] = defaultPropertyPermissionsMap(internalCreateResource.resourceClassIri)
 
                 // Make a timestamp for the resource and its values.
-                currentTime: Instant = Instant.now
+                creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
                 // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
                 // for creating the resource.
@@ -152,7 +152,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     clientResourceIDs = Map.empty[IRI, String],
                     defaultResourcePermissions = defaultResourcePermissions,
                     defaultPropertyPermissions = defaultPropertyPermissions,
-                    currentTime = currentTime,
+                    creationDate = creationDate,
                     requestingUser = createResourceRequestV2.requestingUser
                 )
 
@@ -165,8 +165,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     triplestore = settings.triplestoreType,
                     resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
                     projectIri = createResourceRequestV2.createResource.projectADM.id,
-                    creatorIri = createResourceRequestV2.requestingUser.id,
-                    currentTime = currentTime
+                    creatorIri = createResourceRequestV2.requestingUser.id
                 ).toString()
 
                 // Do the update.
@@ -366,7 +365,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
       * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
       * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
       *                                   have custom permissions. This is a map of property IRIs to permission strings.
-      * @param currentTime                the timestamp to be attached to the resource and its values.
+      * @param creationDate               the timestamp to be attached to the resource and its values.
       * @param requestingUser             the user making the request.
       * @return a [[ResourceReadyToCreate]].
       */
@@ -376,7 +375,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                                               clientResourceIDs: Map[IRI, String],
                                               defaultResourcePermissions: String,
                                               defaultPropertyPermissions: Map[SmartIri, String],
-                                              currentTime: Instant,
+                                              creationDate: Instant,
                                               requestingUser: UserADM): Future[ResourceReadyToCreate] = {
         val resourceIDForErrorMsg: String = clientResourceIDs.get(internalCreateResource.resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
@@ -445,16 +444,17 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                 GenerateSparqlToCreateMultipleValuesRequestV2(
                     resourceIri = internalCreateResource.resourceIri,
                     values = valuesWithValidatedPermissions,
-                    currentTime = currentTime,
-                    requestingUser = requestingUser)
-                ).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+                    creationDate = creationDate,
+                    requestingUser = requestingUser
+                )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
         } yield ResourceReadyToCreate(
             sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
                 resourceIri = internalCreateResource.resourceIri,
                 permissions = resourcePermissions,
                 sparqlForValues = sparqlForValuesResponse.insertSparql,
                 resourceClassIri = internalCreateResource.resourceClassIri.toString,
-                resourceLabel = internalCreateResource.label
+                resourceLabel = internalCreateResource.label,
+                resourceCreationDate = creationDate
             ),
             values = sparqlForValuesResponse.unverifiedValues
         )

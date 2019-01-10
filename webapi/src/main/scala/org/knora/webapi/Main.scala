@@ -28,9 +28,6 @@ import org.knora.webapi.messages.app.appmessages._
   */
 object Main extends App with LiveCore with KnoraService {
 
-    // waits until the application state actor is ready
-    applicationStateActorReady()
-
     val arglist = args.toList
 
     // loads demo data

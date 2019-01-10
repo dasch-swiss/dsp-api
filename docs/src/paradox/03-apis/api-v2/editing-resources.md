@@ -137,7 +137,9 @@ For example, here is a request to create a resource with various value types:
 }
 ```
 
-Permissions for the new resource can be given by adding `knora-api:hasPermissions`. For example:
+Permissions for the new resource can be given by adding `knora-api:hasPermissions`, and a custom creation date
+can be specified by adding `knora-api:creationDate`
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)). For example:
 
 ```jsonld
 {
@@ -150,7 +152,11 @@ Permissions for the new resource can be given by adding `knora-api:hasPermission
     "@id" : "http://rdfh.ch/projects/0001"
   },
   "rdfs:label" : "test thing",
-  "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+  "knora-api:hasPermissions" : "CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+  "knora-api:creationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "2019-01-09T15:45:54.502951Z"
+  }
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",

@@ -328,7 +328,8 @@ case class CreateResourceV2(resourceIri: IRI,
                             label: String,
                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                             projectADM: ProjectADM,
-                            permissions: Option[String] = None) extends ResourceV2 {
+                            permissions: Option[String] = None,
+                            creationDate: Option[Instant] = None) extends ResourceV2 {
     lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
 
     /**
@@ -401,7 +402,14 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
             projectIri: SmartIri = jsonLDDocument.requireIriInObject(OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject, stringFormatter.toSmartIriWithErr)
 
             // Get the resource's permissions.
-            maybePermissions = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+            permissions = jsonLDDocument.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
+
+            // Get the resource's creation date.
+            creationDate: Option[Instant] = jsonLDDocument.maybeDatatypeValueInObject(
+                key = OntologyConstants.KnoraApiV2WithValueObjects.CreationDate,
+                expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+                validationFun = stringFormatter.toInstant
+            )
 
             // Get the resource's values.
 
@@ -411,7 +419,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                     JsonLDConstants.TYPE,
                     OntologyConstants.Rdfs.Label,
                     OntologyConstants.KnoraApiV2WithValueObjects.AttachedToProject,
-                    OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions
+                    OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions,
+                    OntologyConstants.KnoraApiV2WithValueObjects.CreationDate
                 )
 
             valueFutures: Map[SmartIri, Seq[Future[CreateValueInNewResourceV2]]] = propertyIriStrs.map {
@@ -469,7 +478,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                 label = label,
                 values = values,
                 projectADM = projectInfoResponse.project,
-                permissions = maybePermissions
+                permissions = permissions,
+                creationDate = creationDate
             ),
             requestingUser = requestingUser,
             apiRequestID = apiRequestID

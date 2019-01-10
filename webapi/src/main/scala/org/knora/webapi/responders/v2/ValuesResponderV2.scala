@@ -378,7 +378,7 @@ class ValuesResponderV2 extends Responder {
                 linkUpdates = standoffLinkUpdates,
                 valueCreator = valueCreator,
                 valuePermissions = valuePermissions,
-                currentTime = currentTime
+                creationDate = currentTime
             ).toString()
 
             /*
@@ -433,7 +433,7 @@ class ValuesResponderV2 extends Responder {
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceInfo.resourceIri,
                 linkUpdate = sparqlTemplateLinkUpdate,
-                currentTime = currentTime,
+                creationDate = currentTime,
                 maybeComment = linkValueContent.comment
             ).toString()
 
@@ -482,7 +482,7 @@ class ValuesResponderV2 extends Responder {
                                 propertyIri = propertyIri,
                                 valueToCreate = valueToCreate,
                                 valueHasOrder = valueHasOrder,
-                                currentTime = createMultipleValuesRequest.currentTime,
+                                creationDate = createMultipleValuesRequest.creationDate,
                                 requestingUser = createMultipleValuesRequest.requestingUser
                             )
                     }
@@ -508,7 +508,7 @@ class ValuesResponderV2 extends Responder {
       * @param propertyIri    the IRI of the property that will point to the value.
       * @param valueToCreate  the value to be created.
       * @param valueHasOrder  the value's `knora-base:valueHasOrder`.
-      * @param currentTime    the timestamp to be used as the value creation time.
+      * @param creationDate    the timestamp to be used as the value creation time.
       * @param requestingUser the user making the request.
       * @return a [[InsertSparqlWithUnverifiedValue]] containing the generated SPARQL and an [[UnverifiedValueV2]].
       */
@@ -516,7 +516,7 @@ class ValuesResponderV2 extends Responder {
                                                         propertyIri: SmartIri,
                                                         valueToCreate: GenerateSparqlForValueInNewResourceV2,
                                                         valueHasOrder: Int,
-                                                        currentTime: Instant,
+                                                        creationDate: Instant,
                                                         requestingUser: UserADM): InsertSparqlWithUnverifiedValue = {
         // Make an IRI for the new value.
         val newValueIri = knoraIdUtil.makeRandomValueIri(resourceIri)
@@ -547,7 +547,7 @@ class ValuesResponderV2 extends Responder {
                 queries.sparql.v2.txt.generateInsertStatementsForCreateLink(
                     resourceIri = resourceIri,
                     linkUpdate = sparqlTemplateLinkUpdate,
-                    currentTime = currentTime,
+                    creationDate = creationDate,
                     maybeComment = valueToCreate.valueContent.comment,
                     maybeValueHasOrder = Some(valueHasOrder)
                 ).toString()
@@ -562,7 +562,7 @@ class ValuesResponderV2 extends Responder {
                     linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                     valueCreator = requestingUser.id,
                     valuePermissions = valueToCreate.permissions,
-                    currentTime = currentTime,
+                    creationDate = creationDate,
                     maybeValueHasOrder = Some(valueHasOrder)
                 ).toString()
         }
@@ -636,7 +636,7 @@ class ValuesResponderV2 extends Responder {
         queries.sparql.v2.txt.generateInsertStatementsForStandoffLinks(
             resourceIri = createMultipleValuesRequest.resourceIri,
             linkUpdates = standoffLinkUpdates,
-            currentTime = createMultipleValuesRequest.currentTime
+            creationDate = createMultipleValuesRequest.creationDate
         ).toString()
     }
 
