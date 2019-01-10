@@ -76,7 +76,8 @@ object Main extends App with LiveCore with KnoraService {
             """.stripMargin)
     } else {
         /* Start the HTTP layer, allowing access */
-        startService(false)
+        /* Don't skip loading of ontologies */
+        startService(skipLoadingOfOntologies=false)
 
         /* add the method for shutting down our application to the shutdown hook, so that we can clean up */
         scala.sys.addShutdownHook(stopService())
