@@ -24,7 +24,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.listmessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 
 import scala.annotation.tailrec
@@ -34,7 +34,7 @@ import scala.concurrent.Future
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderV1 extends Responder {
+class ListsResponderV1 extends ActorBasedResponder {
 
     def receive = {
         case HListGetRequestV1(listIri, userProfile) => future2Message(sender(), listGetRequestV1(listIri, userProfile, PathType.HList), log)

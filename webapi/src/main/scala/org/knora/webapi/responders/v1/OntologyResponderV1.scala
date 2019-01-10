@@ -29,7 +29,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversi
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 
@@ -41,7 +41,7 @@ import scala.concurrent.Future
   * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
   * the application.
   */
-class OntologyResponderV1 extends Responder {
+class OntologyResponderV1 extends ActorBasedResponder {
 
     private val valueUtilV1 = new ValueUtilV1(settings)
 

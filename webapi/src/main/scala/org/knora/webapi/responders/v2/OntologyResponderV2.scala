@@ -31,7 +31,7 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, ActorBasedResponder}
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
@@ -58,7 +58,7 @@ import scala.concurrent.Future
   *
   * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
   */
-class OntologyResponderV2 extends Responder {
+class OntologyResponderV2 extends ActorBasedResponder {
 
     /**
       * The name of the ontology cache.

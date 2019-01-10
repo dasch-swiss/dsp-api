@@ -25,7 +25,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest,
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
@@ -37,7 +37,7 @@ import scala.concurrent.Future
   * Responds to requests for user search queries and returns responses in Knora API
   * v1 format.
   */
-class SearchResponderV1 extends Responder {
+class SearchResponderV1 extends ActorBasedResponder {
     // Valid combinations of value types and comparison operators, for determining whether a requested search
     // criterion is valid. The valid comparison operators for search criteria involving link properties can be
     // found in this Map under OntologyConstants.KnoraBase.Resource.

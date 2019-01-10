@@ -26,7 +26,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ListNodeInfoGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.listsmessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 
 import scala.concurrent.Future
@@ -34,7 +34,7 @@ import scala.concurrent.Future
 /**
   * Responds to requests relating to lists and nodes.
   */
-class ListsResponderV2 extends Responder {
+class ListsResponderV2 extends ActorBasedResponder {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 
@@ -39,7 +39,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderV1 extends Responder {
+class UsersResponderV1 extends ActorBasedResponder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

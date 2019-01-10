@@ -28,7 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 
@@ -37,7 +37,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderV1 extends Responder {
+class ProjectsResponderV1 extends ActorBasedResponder {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

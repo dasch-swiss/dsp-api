@@ -72,30 +72,38 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
 
 
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
-    // override one or more of the protected val members below representing actors that route requests to particular
-    // responder classes. To construct a default responder router, a subclass can call one of the protected methods below.
+    // override one or more of the protected val members below representing responder classes. To construct a default
+    // responder, a subclass can call one of the protected methods below.
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV1]].
+      * Constructs the default [[CkanResponderV1]].
       */
-    protected final def makeDefaultResourcesRouterV1: ActorRef = makeActor(Props[ResourcesResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RESOURCES_V1_ACTOR_NAME)
+    protected final def makeDefaultCkanResponderV1: CkanResponderV1 = new CkanResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default resources responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val resourcesRouterV1: ActorRef = makeDefaultResourcesRouterV1
+    protected lazy val ckanResponderV1: CkanResponderV1 = makeDefaultCkanResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV1]].
+      * Constructs the default [[ResourcesResponderV1]].
       */
-    protected final def makeDefaultValuesRouterV1: ActorRef = makeActor(Props[ValuesResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), VALUES_V1_ACTOR_NAME)
+    protected final def makeDefaultResourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default values responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val valuesRouterV1: ActorRef = makeDefaultValuesRouterV1
+    protected lazy val resourcesResponderV1: ResourcesResponderV1 = makeDefaultResourcesResponderV1
+
+    /**
+      * Constructs the default [[ValuesResponderV1]].
+      */
+    protected final def makeDefaultValuesResponderV1: ValuesResponderV1 = new ValuesResponderV1(system, applicationStateActor, context.self, storeManager)
+
+    /**
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
+      */
+    protected lazy val valuesResponderV1: ValuesResponderV1 = makeDefaultValuesResponderV1
 
     /**
       * Constructs the [[SipiResponderV1]] actor pool.
@@ -109,81 +117,66 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected lazy val sipiRouterV1: ActorRef = makeDefaultSipiRouterV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV1]].
+      * Constructs the default [[StandoffResponderV1]].
       */
-    protected final def makeDefaultStandoffRouterV1: ActorRef = makeActor(Props[StandoffResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_V1_ACTOR_NAME)
+    protected final def makeDefaultStandoffResponderV1: StandoffResponderV1 = new StandoffResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Sipi responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val standoffRouterV1: ActorRef = makeDefaultStandoffRouterV1
+    protected lazy val standoffResponderV1: StandoffResponderV1 = makeDefaultStandoffResponderV1
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[UsersResponderV1]].
+      * Constructs the default [[UsersResponderV1]].
       */
-    protected final def makeDefaultUsersRouterV1: ActorRef = makeActor(Props[UsersResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), USERS_V1_ACTOR_NAME)
+    protected final def makeDefaultUsersResponderV1: UsersResponderV1 = new UsersResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the users responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default users responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val usersRouterV1: ActorRef = makeDefaultUsersRouterV1
+    protected lazy val usersResponderV1: UsersResponderV1 = makeDefaultUsersResponderV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
       */
-    protected final def makeDefaultListsRouterV1: ActorRef = makeActor(Props[ListsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_V1_ACTOR_NAME)
+    protected final def makeDefaultListsResponderV1: ListsResponderV1 = new ListsResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default lists responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val listsRouterV1: ActorRef = makeDefaultListsRouterV1
+    protected lazy val listsResponderV1: ListsResponderV1 = makeDefaultListsResponderV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
       */
-    protected final def makeDefaultSearchRouterV1: ActorRef = makeActor(Props[SearchResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_V1_ACTOR_NAME)
+    protected final def makeDefaultSearchResponderV1: SearchResponderV1 = new SearchResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default search responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val searchRouterV1: ActorRef = makeDefaultSearchRouterV1
+    protected lazy val searchResponderV1: SearchResponderV1 = makeDefaultSearchResponderV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
       */
-    protected final def makeDefaultOntologyRouterV1: ActorRef = makeActor(Props[OntologyResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_V1_ACTOR_NAME)
+    protected final def makeDefaultOntologyResponderV1: OntologyResponderV1 = new OntologyResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default ontology responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val ontologyRouterV1: ActorRef = makeDefaultOntologyRouterV1
+    protected lazy val ontologyResponderV1: OntologyResponderV1 = makeDefaultOntologyResponderV1
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
       */
-    protected final def makeDefaultProjectsRouterV1: ActorRef = makeActor(Props[ProjectsResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PROJECTS_V1_ACTOR_NAME)
+    protected final def makeDefaultProjectsResponderV1: ProjectsResponderV1 = new ProjectsResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the projects responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default projects responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val projectsRouterV1: ActorRef = makeDefaultProjectsRouterV1
+    protected lazy val projectsResponderV1: ProjectsResponderV1 = makeDefaultProjectsResponderV1
 
-    /**
-      * Constructs the default Akka routing actor that routes messages to [[CkanResponderV1]].
-      */
-    protected final def makeDefaultCkanRouterV1: ActorRef = makeActor(Props[CkanResponderV1].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), CKAN_V1_ACTOR_NAME)
 
-    /**
-      * The Akka routing actor that should receive messages addressed to the Ckan responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Ckan responder.
-      */
-    protected lazy val ckanRouterV1: ActorRef = makeDefaultCkanRouterV1
 
 
     //
@@ -191,39 +184,39 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     //
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV2]].
+      * Constructs the default [[OntologyResponderV2]].
       */
-    protected final def makeDefaultOntologiesRouterV2: ActorRef = makeActor(Props[OntologyResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), ONTOLOGY_V2_ACTOR_NAME)
+    protected final def makeDefaultOntologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[SearchResponderV2]].
+      * Constructs the default [[SearchResponderV2]].
       */
-    protected final def makeDefaultSearchRouterV2: ActorRef = makeActor(Props[SearchResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SEARCH_V2_ACTOR_NAME)
+    protected final def makeDefaultSearchResponderV2: SearchResponderV2 = new SearchResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ResourcesResponderV2]].
+      * Constructs the default [[ResourcesResponderV2]].
       */
-    protected final def makeDefaultResourcesRouterV2: ActorRef = makeActor(Props[ResourcesResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RESOURCES_V2_ACTOR_NAME)
+    protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ValuesResponderV2]].
+      * Constructs the default [[ValuesResponderV2]].
       */
-    protected final def makeDefaultValuesRouterV2: ActorRef = makeActor(Props[ValuesResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), VALUES_V2_ACTOR_NAME)
+    protected final def makeDefaultValuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[PersistentMapResponderV2]].
+      * Constructs the default [[PersistentMapResponderV2]].
       */
-    protected final def makeDefaultPersistentMapRouterV2: ActorRef = makeActor(Props[PersistentMapResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), PERSISTENT_MAP_V2_ACTOR_NAME)
+    protected final def makeDefaultPersistentMapResponderV2: PersistentMapResponderV2 = new PersistentMapResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[StandoffResponderV2]].
+      * Constructs the default [[StandoffResponderV2]].
       */
-    protected final def makeDefaultStandoffRouterV2: ActorRef = makeActor(Props[StandoffResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), STANDOFF_V2_ACTOR_NAME)
+    protected final def makeDefaultStandoffResponderV2: StandoffResponderV2 = new StandoffResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[ListsResponderV2]].
+      * Constructs the default [[ListsResponderV2]].
       */
-    protected final def makeDefaultListsRouterV2: ActorRef = makeActor(Props[ListsResponderV2].withDispatcher(KnoraDispatchers.KnoraActorDispatcher), LISTS_V2_ACTOR_NAME)
+    protected final def makeDefaultListsResponderV2: ListsResponderV2 = new ListsResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SipiResponderV2]].
@@ -231,46 +224,39 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultSipiRouterV2: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV2]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SIPI_ROUTER_V2_ACTOR_NAME)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the ontology responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default ontology responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val ontologiesRouterV2: ActorRef = makeDefaultOntologiesRouterV2
+    protected val ontologiesResponderV2: OntologyResponderV2 = makeDefaultOntologiesResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the search responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default search responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val searchRouterV2: ActorRef = makeDefaultSearchRouterV2
+    protected val searchResponderV2: SearchResponderV2 = makeDefaultSearchResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the resources responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default resources responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val resourcesRouterV2: ActorRef = makeDefaultResourcesRouterV2
+    protected val resourcesResponderV2: ResourcesResponderV2 = makeDefaultResourcesResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the values responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default values responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val valuesRouterV2: ActorRef = makeDefaultValuesRouterV2
+    protected val valuesResponderV2: ValuesResponderV2 = makeDefaultValuesResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the persistent map responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default persistent map responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val persistentMapRouterV2: ActorRef = makeDefaultPersistentMapRouterV2
+    protected val persistentMapResponderV2: PersistentMapResponderV2 = makeDefaultPersistentMapResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the standoff responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default standoff responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val standoffRouterV2: ActorRef = makeDefaultStandoffRouterV2
+    protected val standoffResponderV2: StandoffResponderV2 = makeDefaultStandoffResponderV2
 
     /**
-      * The Akka routing actor that should receive messages addressed to the lists responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default lists responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected val listsRouterV2: ActorRef = makeDefaultListsRouterV2
+    protected val listsResponderV2: ListsResponderV2 = makeDefaultListsResponderV2
 
     /**
       * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
@@ -288,7 +274,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[GroupsResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val groupsResponderADM: GroupsResponderADM = makeDefaultGroupsResponderADM
 
@@ -298,7 +284,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[ListsResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val listsResponderADM: ListsResponderADM = makeDefaultListsResponderADM
 
@@ -308,7 +294,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[PermissionsResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val permissionsResponderADM: PermissionsResponderADM = makeDefaultPermissionsResponderADM
 
@@ -318,7 +304,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[ProjectsResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val projectsResponderADMM: ProjectsResponderADM = makeDefaultProjectsResponderADM
 
@@ -328,7 +314,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[StoresResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val storeResponderADM: StoresResponderADM = makeDefaultStoreResponderADM
 
@@ -338,33 +324,34 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The default [[UsersResponderADM]].
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
 
     def receive = LoggingReceive {
         // Knora API V1 messages
-        case resourcesResponderRequestV1: ResourcesResponderRequestV1 => resourcesRouterV1.forward(resourcesResponderRequestV1)
-        case valuesResponderRequestV1: ValuesResponderRequestV1 => valuesRouterV1.forward(valuesResponderRequestV1)
-        case sipiResponderRequestV1: SipiResponderRequestV1 => sipiRouterV1.forward(sipiResponderRequestV1)
-        case listsResponderRequestV1: ListsResponderRequestV1 => listsRouterV1.forward(listsResponderRequestV1)
-        case searchResponderRequestV1: SearchResponderRequestV1 => searchRouterV1.forward(searchResponderRequestV1)
-        case ontologyResponderRequestV1: OntologyResponderRequestV1 => ontologyRouterV1.forward(ontologyResponderRequestV1)
-        case ckanResponderRequestV1: CkanResponderRequestV1 => ckanRouterV1.forward(ckanResponderRequestV1)
-        case standoffResponderRequestV1: StandoffResponderRequestV1 => standoffRouterV1.forward(standoffResponderRequestV1)
-        case usersResponderRequestV1: UsersResponderRequestV1 => usersRouterV1.forward(usersResponderRequestV1)
-        case projectsResponderRequestV1: ProjectsResponderRequestV1 => projectsRouterV1.forward(projectsResponderRequestV1)
+        case ckanResponderRequestV1: CkanResponderRequestV1 => future2Message(sender(), ckanResponderV1 receive ckanResponderRequestV1, log)
+        case resourcesResponderRequestV1: ResourcesResponderRequestV1 => future2Message(sender(), resourcesResponderV1 receive resourcesResponderRequestV1, log)
+        case valuesResponderRequestV1: ValuesResponderRequestV1 => future2Message(sender(), valuesResponderV1 receive valuesResponderRequestV1, log)
+        case sipiResponderRequestV1: SipiResponderRequestV1 => sipiRouterV1 forward sipiResponderRequestV1
+        case listsResponderRequestV1: ListsResponderRequestV1 => future2Message(sender(), listsResponderV1 receive listsResponderRequestV1, log)
+        case searchResponderRequestV1: SearchResponderRequestV1 => future2Message(sender(), searchResponderV1 receive searchResponderRequestV1, log)
+        case ontologyResponderRequestV1: OntologyResponderRequestV1 => future2Message(sender(), ontologyResponderV1 receive ontologyResponderRequestV1, log)
+
+        case standoffResponderRequestV1: StandoffResponderRequestV1 => future2Message(sender(), standoffResponderV1 receive standoffResponderRequestV1, log)
+        case usersResponderRequestV1: UsersResponderRequestV1 => future2Message(sender(), usersResponderV1 receive usersResponderRequestV1, log)
+        case projectsResponderRequestV1: ProjectsResponderRequestV1 => future2Message(sender(), projectsResponderV1 receive projectsResponderRequestV1, log)
 
         // Knora API V2 messages
-        case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => ontologiesRouterV2.forward(ontologiesResponderRequestV2)
-        case searchResponderRequestV2: SearchResponderRequestV2 => searchRouterV2.forward(searchResponderRequestV2)
-        case resourcesResponderRequestV2: ResourcesResponderRequestV2 => resourcesRouterV2.forward(resourcesResponderRequestV2)
-        case valuesResponderRequestV2: ValuesResponderRequestV2 => valuesRouterV2.forward(valuesResponderRequestV2)
-        case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => persistentMapRouterV2.forward(persistentMapResponderRequestV2)
-        case standoffResponderRequestV2: StandoffResponderRequestV2 => standoffRouterV2.forward(standoffResponderRequestV2)
-        case listsResponderRequestV2: ListsResponderRequestV2 => listsRouterV2.forward(listsResponderRequestV2)
-        case sipiResponderRequestV2: SipiResponderRequestV2 => sipiRouterV2.forward(sipiResponderRequestV2)
+        case ontologiesResponderRequestV2: OntologiesResponderRequestV2 => future2Message(sender(), ontologiesResponderV2 receive ontologiesResponderRequestV2, log)
+        case searchResponderRequestV2: SearchResponderRequestV2 => future2Message(sender(), searchResponderV2 receive searchResponderRequestV2, log)
+        case resourcesResponderRequestV2: ResourcesResponderRequestV2 => future2Message(sender(), resourcesResponderV2 receive resourcesResponderRequestV2, log)
+        case valuesResponderRequestV2: ValuesResponderRequestV2 => future2Message(sender(), valuesResponderV2 receive valuesResponderRequestV2, log)
+        case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => future2Message(sender(), persistentMapResponderV2 receive persistentMapResponderRequestV2, log)
+        case standoffResponderRequestV2: StandoffResponderRequestV2 => future2Message(sender(), standoffResponderV2 receive standoffResponderRequestV2, log)
+        case listsResponderRequestV2: ListsResponderRequestV2 => future2Message(sender(), listsResponderV2 receive listsResponderRequestV2, log)
+        case sipiResponderRequestV2: SipiResponderRequestV2 => sipiRouterV2 forward sipiResponderRequestV2
 
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)

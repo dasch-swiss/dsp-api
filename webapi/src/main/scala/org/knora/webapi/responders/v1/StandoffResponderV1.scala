@@ -30,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyC
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
@@ -41,7 +41,7 @@ import scala.concurrent.Future
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV1 extends Responder {
+class StandoffResponderV1 extends ActorBasedResponder {
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 

@@ -29,9 +29,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.responders.ResponderUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.ListsResponderADM._
-import org.knora.webapi.responders.{IriLocker, NonActorResponder}
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.annotation.tailrec
@@ -55,7 +55,7 @@ object ListsResponderADM {
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
 
     // Creates IRIs for new Knora user objects.

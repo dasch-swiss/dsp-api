@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, ActorBasedResponder}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
@@ -46,7 +46,7 @@ import scala.concurrent.Future
 /**
   * Handles requests to read and write Knora values.
   */
-class ValuesResponderV2 extends Responder {
+class ValuesResponderV2 extends ActorBasedResponder {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 

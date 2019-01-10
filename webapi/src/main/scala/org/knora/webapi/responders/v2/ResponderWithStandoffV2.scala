@@ -23,7 +23,7 @@ import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ConstructResponseUtilV2
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 
@@ -32,7 +32,7 @@ import scala.concurrent.Future
 /**
   * An abstract class with standoff utility methods for v2 responders.
   */
-abstract class ResponderWithStandoffV2 extends Responder {
+abstract class ResponderWithStandoffV2 extends ActorBasedResponder {
 
     /**
       * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
