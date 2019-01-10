@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 @import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
@@ -30,14 +31,12 @@
  * @param resourcesToCreate a collection of resources to be created.
  * @param projectIri        the IRI of the project in which the resources are to be created.
  * @param creatorIri        the IRI of the creator of the resources.
- * @param currentTime       an xsd:dateTimeStamp that will be attached to the resources.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
   resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
-  creatorIri: IRI,
-  currentTime: String)
+  creatorIri: IRI)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -54,7 +53,7 @@ INSERT DATA {
                 knora-base:attachedToProject <@projectIri> ;
                 rdfs:label """@res.resourceLabel""" ;
  				knora-base:hasPermissions "@res.permissions" ;
-                knora-base:creationDate "@currentTime"^^xsd:dateTimeStamp .
+                knora-base:creationDate "@res.resourceCreationDate"^^xsd:dateTimeStamp .
 
             @res.sparqlForValues
         }

@@ -17,6 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  *@
 
+@import java.time.Instant
 @import org.knora.webapi._
 @import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
@@ -34,7 +35,7 @@
  * @param maybeComment an optional comment on the value.
  * @param valueCreator the IRI of the user who created the value.
  * @param valuePermissions the permissions that should be attached to the value.
- * @param currentTime an xsd:dateTimeStamp representing the current time.
+ * @param creationDate an xsd:dateTimeStamp to be attached to the value.
  * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
  *@
 @(resourceIri: IRI,
@@ -45,7 +46,7 @@
   maybeComment: Option[String],
   valueCreator: IRI,
   valuePermissions: String,
-  currentTime: String,
+  creationDate: Instant,
   maybeValueHasOrder: Option[Int])
 
         # Value: @newValueIri
@@ -237,13 +238,13 @@
                     knora-base:valueHasOrder ?nextOrder ;
                 }
             }
-            knora-base:valueCreationDate "@currentTime"^^xsd:dateTimeStamp .
+            knora-base:valueCreationDate "@creationDate"^^xsd:dateTimeStamp .
 
         @* Insert direct links and LinkValues for resource references. *@
         @{
             queries.sparql.v1.txt.generateInsertStatementsForStandoffLinks(resourceIri = resourceIri,
                                                                            linkUpdates = linkUpdates,
-                                                                           currentTime = currentTime)
+                                                                           creationDate = creationDate)
         }
 
         @* Attach the value to the resource. *@

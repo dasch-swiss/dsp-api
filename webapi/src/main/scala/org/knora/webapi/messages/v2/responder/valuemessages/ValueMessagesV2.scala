@@ -289,12 +289,12 @@ case class DeleteValueRequestV2(resourceIri: IRI,
   *
   * @param resourceIri    the IRI of the resource in which values are to be created.
   * @param values         a map of property IRIs to the values to be added for each property.
-  * @param currentTime    an xsd:dateTimeStamp that will be attached to the values.
+  * @param creationDate   an xsd:dateTimeStamp that will be attached to the values.
   * @param requestingUser the user that is creating the values.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV2(resourceIri: IRI,
                                                          values: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]],
-                                                         currentTime: Instant,
+                                                         creationDate: Instant,
                                                          requestingUser: UserADM) extends ValuesResponderRequestV2 {
     lazy val flatValues: Iterable[GenerateSparqlForValueInNewResourceV2] = values.values.flatten
 }

@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.v1.responder.valuemessages
 
 import java.io.File
+import java.time.Instant
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -392,7 +393,7 @@ case class CreateValueV1WithComment(updateValueV1: UpdateValueV1, comment: Optio
   * @param values                           the values to be added, with optional comments.
   * @param clientResourceIDsToResourceIris  a map of client resource IDs (which may appear in standoff link tags
   *                                         in values) to the IRIs that will be used for those resources.
-  * @param currentTime                      an xsd:dateTimeStamp that will be attached to the values.
+  * @param creationDate                     an xsd:dateTimeStamp that will be attached to the values.
   * @param userProfile                      the user that is creating the values.
   */
 case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
@@ -401,7 +402,7 @@ case class GenerateSparqlToCreateMultipleValuesRequestV1(projectIri: IRI,
                                                          defaultPropertyAccessPermissions: Map[IRI, String],
                                                          values: Map[IRI, Seq[CreateValueV1WithComment]],
                                                          clientResourceIDsToResourceIris: Map[String, IRI],
-                                                         currentTime: String,
+                                                         creationDate: Instant,
                                                          userProfile: UserADM,
                                                          apiRequestID: UUID) extends ValuesResponderRequestV1
 

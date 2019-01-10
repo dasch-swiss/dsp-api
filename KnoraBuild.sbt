@@ -4,9 +4,16 @@ import com.typesafe.sbt.packager.docker.DockerPlugin.autoImport.{Docker, dockerR
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 import org.knora.Dependencies
 
+import scala.sys.process.Process
+
 //////////////////////////////////////
 // GLOBAL SETTINGS
 //////////////////////////////////////
+
+// custom docker-compose plugin settings
+lazy val GDB = config("gdb") extend Default
+
+lazy val GDBSIPI = config("gdbsipi") extend Default
 
 lazy val aggregatedProjects: Seq[ProjectReference] = Seq(docs, salsah1, webapi)
 
@@ -60,8 +67,6 @@ lazy val root = Project(id = "knora", file("."))
 // DOCS (./docs)
 //////////////////////////////////////
 
-import scala.sys.process._
-
 // Define `Configuration` instances representing our different documentation trees
 lazy val ParadoxSite = config("paradox")
 
@@ -81,20 +86,20 @@ lazy val docs = knoraModule("docs")
             // Ghpages settings
             ghpagesNoJekyll := true,
             git.remoteRepo := "git@github.com:dhlab-basel/Knora.git",
-            excludeFilter in ghpagesCleanSite :=
+            ghpagesCleanSite / excludeFilter :=
                     new FileFilter {
                         def accept(f: File) = (ghpagesRepository.value / "CNAME").getCanonicalPath == f.getCanonicalPath
                     } || "LICENSE.md" || "README.md",
 
             // (sbt-site) Customize the source directory
             // sourceDirectory in Jekyll := sourceDirectory.value / "overview",
-            sourceDirectory in ParadoxSite := sourceDirectory.value / "paradox",
+            ParadoxSite / sourceDirectory := sourceDirectory.value / "paradox",
 
             // (sbt-site) Customize the output directory (subdirectory of site)
-            siteSubdirName in ParadoxSite := "paradox",
+            ParadoxSite / siteSubdirName := "paradox",
 
             // Set some paradox properties
-            paradoxProperties in ParadoxSite ++= Map(
+            ParadoxSite / paradoxProperties ++= Map(
                 "project.name" -> "Knora Documentation",
                 "github.base_url" -> "https://github.com/dhlab-basel/Knora",
                 "image.base_url" -> ".../assets/images",
@@ -104,7 +109,7 @@ lazy val docs = knoraModule("docs")
             ),
 
             // Paradox Material Theme Settings
-            paradoxMaterialTheme in ParadoxSite ~= {
+            ParadoxSite / paradoxMaterialTheme ~= {
                 _.withColor("blue", "yellow")
                         .withRepository(uri("https://github.com/dhlab-basel/Knora/docs"))
                         .withFavicon("cloud")
@@ -116,7 +121,7 @@ lazy val docs = knoraModule("docs")
                         .withLanguage(java.util.Locale.ENGLISH)
                         .withCopyright("Copyright 2015-2018 the contributors (see Contributors.md)")
             },
-            mappings in makeSite ++= Seq(
+            makeSite / mappings ++= Seq(
                 file("docs/src/api-admin/index.html") -> "api-admin/index.html",
                 file("docs/src/api-admin/swagger.json") -> "api-admin/swagger.json"
             ),
@@ -180,17 +185,17 @@ lazy val salsah1 = knoraModule("salsah1")
         .settings(
             Dependencies.salsahLibraryDependencies,
             logLevel := Level.Info,
-            fork in run := true,
-            javaOptions in run ++= javaRunOptions,
-            mainClass in(Compile, run) := Some("org.knora.salsah.Main"),
-            fork in Test := true,
-            javaOptions in Test ++= javaTestOptions,
-            parallelExecution in Test := false,
+            run / fork := true,
+            run / javaOptions ++= javaRunOptions,
+            Compile / run / mainClass := Some("org.knora.salsah.Main"),
+            Test / fork := true,
+            Test / javaOptions ++= javaTestOptions,
+            Test / parallelExecution := false,
             /* show full stack traces and test case durations */
-            testOptions in Test += Tests.Argument("-oDF")
+            Test / testOptions += Tests.Argument("-oDF")
         )
         .settings( // enable deployment staging with `sbt stage`
-            mappings in Universal ++= {
+            Universal / mappings ++= {
                 // copy the public folder
                 directory("salsah1/src/public") ++
                 // copy the configuration files to config directory
@@ -201,7 +206,7 @@ lazy val salsah1 = knoraModule("salsah1")
             // add 'config' directory first in the classpath of the start script,
             scriptClasspath := Seq("../config/") ++ scriptClasspath.value,
             // need this here, but why?
-            mainClass in Compile := Some("org.knora.salsah.Main"),
+            Compile / mainClass := Some("org.knora.salsah.Main"),
 
             // add dockerCommands used to create the image
             // docker:stage, docker:publishLocal, docker:publish, docker:clean
@@ -401,7 +406,7 @@ lazy val webapi = knoraModule("webapi")
                 Cmd("FROM", "openjdk:10-jre-slim-sid"),
                 Cmd("LABEL", s"""MAINTAINER="${maintainer.value}""""),
                 // install wget
-                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget=1.19.5-2 && rm -rf /var/lib/apt/lists/*"),
+                Cmd("RUN", "apt-get -qq update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*"),
                 // install yourkit profiler
                 Cmd("RUN", "wget https://www.yourkit.com/download/docker/YourKit-JavaProfiler-2018.04-docker.zip -P /tmp/ && unzip /tmp/YourKit-JavaProfiler-2018.04-docker.zip -d /usr/local && rm /tmp/YourKit-JavaProfiler-2018.04-docker.zip"),
 
