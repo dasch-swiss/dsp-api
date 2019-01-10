@@ -122,7 +122,7 @@ because they do their work synchronously; this allows concurrency to be controll
 by setting the size of each pool. These pools are configured in `application.conf`
 under `akka.actor.deployment`.
 
-`KnoraService` also starts the HTTP service:
+`KnoraService` also starts the HTTP service after which the startup sequence is initiated:
 
 @@snip [KnoraService.scala]($src$/org/knora/webapi/KnoraService.scala) { #startService }
 
@@ -132,14 +132,18 @@ To coordinate necessary startup tasks, the application goes through a few states
 
   - Stopped: Application starting. Http layer is still not started.
   - StartingUp: Http layer is started. Only '/health' and monitoring routes are working.
-  - WaitingForRepository:
-  - RepositoryReady:
-  - CreatingCaches:
-  - CachesReady:
-  - LoadingOntologies:
-  - OntologiesReady:
+  - WaitingForRepository: Repository check is initiated but not yet finished.
+  - RepositoryReady: Repository check has finished and repository is available.
+  - CreatingCaches: Creating caches is initiated but not yet finished.
+  - CachesReady: Caches are created and ready for use.
+  - LoadingOntologies: Loading of ontologies is initiated but not yet finished.
+  - OntologiesReady: Ontologies are loaded.
   - MaintenanceMode: During backup or other maintenance tasks, so that access to the API is closed
   - Running: Running state. All APIs are open.
+
+The startup sequence coordination is done by the `org.knora.webapi.app.ApplicationStateActor`. During
+the `WaitingForRepository` state, if the repository is not configured or available, the system will
+indefinitely retry to access it. This allows for prolonged startup times of the repository.
 
 ## Concurrency
 
