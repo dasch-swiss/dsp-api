@@ -49,9 +49,7 @@ class GroupsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, r
     val GROUPS_GLOBAL_LOCK_IRI = "http://rdfh.ch/groups"
 
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
       */
     def receive(msg: GroupsResponderRequestADM) = msg match {
         case GroupsGetADM(requestingUser) => groupsGetADM(requestingUser)
@@ -200,7 +198,7 @@ class GroupsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, r
       * @param requestingUser the user initiating the request.
       * @return
       */
-    def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
+    private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
 
         //log.debug("groupMembersByIRIGetRequestV1 - groupIri: {}", groupIri)
 
@@ -502,7 +500,7 @@ class GroupsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, r
       * @param groupIri the IRI of the group.
       * @return a [[Boolean]].
       */
-    def groupExists(groupIri: IRI): Future[Boolean] = {
+    private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             //_ = log.debug("groupExists - query: {}", askString)
@@ -520,7 +518,7 @@ class GroupsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, r
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
+    private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
 
         for {
             askString <- Future(queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)

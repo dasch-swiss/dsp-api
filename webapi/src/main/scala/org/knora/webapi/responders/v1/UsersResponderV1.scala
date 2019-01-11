@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v1
 
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -30,8 +30,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileTypeV1.UserProfileType
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.ActorBasedResponder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 
 import scala.concurrent.Future
@@ -39,7 +39,7 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderV1 extends ActorBasedResponder {
+class UsersResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -50,22 +50,20 @@ class UsersResponderV1 extends ActorBasedResponder {
     val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserProfileV1]]
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[UsersResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive = {
-        case UsersGetV1() => future2Message(sender(), usersGetV1, log)
-        case UsersGetRequestV1(userProfileV1) => future2Message(sender(), usersGetRequestV1(userProfileV1), log)
-        case UserDataByIriGetV1(userIri, short) => future2Message(sender(), userDataByIriGetV1(userIri, short), log)
-        case UserProfileByIRIGetV1(userIri, profileType) => future2Message(sender(), userProfileByIRIGetV1(userIri, profileType), log)
-        case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => future2Message(sender(), userProfileByIRIGetRequestV1(userIri, profileType, userProfile), log)
-        case UserProfileByEmailGetV1(email, profileType) => future2Message(sender(), userProfileByEmailGetV1(email, profileType), log)
-        case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => future2Message(sender(), userProfileByEmailGetRequestV1(email, profileType, userProfile), log)
-        case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: UsersResponderRequestV1) = msg match {
+        case UsersGetV1() => usersGetV1
+        case UsersGetRequestV1(userProfileV1) => usersGetRequestV1(userProfileV1)
+        case UserDataByIriGetV1(userIri, short) => userDataByIriGetV1(userIri, short)
+        case UserProfileByIRIGetV1(userIri, profileType) => userProfileByIRIGetV1(userIri, profileType)
+        case UserProfileByIRIGetRequestV1(userIri, profileType, userProfile) => userProfileByIRIGetRequestV1(userIri, profileType, userProfile)
+        case UserProfileByEmailGetV1(email, profileType) => userProfileByEmailGetV1(email, profileType)
+        case UserProfileByEmailGetRequestV1(email, profileType, userProfile) => userProfileByEmailGetRequestV1(email, profileType, userProfile)
+        case UserProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userProjectMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
+        case UserProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userProjectAdminMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
+        case UserGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID) => userGroupMembershipsGetRequestV1(userIri, userProfile, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 

@@ -52,6 +52,9 @@ class CkanResponderV1(system: ActorSystem, applicationStateActor: ActorRef, resp
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
+    /**
+      * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
+      */
     def receive(msg: CkanResponderRequestV1) = msg match {
         case CkanRequestV1(projects, limit, info, userProfile) => getCkanResponseV1(projects, limit, info, userProfile)
         case other => handleUnexpectedMessage(other, log, this.getClass.getName)

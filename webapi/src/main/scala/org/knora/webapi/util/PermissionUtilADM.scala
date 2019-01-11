@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef, ActorSelection}
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
@@ -565,7 +565,7 @@ object PermissionUtilADM {
       * @return the validated permission literal, normalised and reformatted.
       */
     def validatePermissions(permissionLiteral: String,
-                            responderManager: ActorSelection)
+                            responderManager: ActorRef)
                            (implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
         val stringFormatter = StringFormatter.getGeneralInstance
 

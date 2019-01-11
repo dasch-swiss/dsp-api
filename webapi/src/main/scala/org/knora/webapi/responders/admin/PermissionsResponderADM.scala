@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
-import akka.actor.{ActorRef, ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,8 +28,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.responders.NonActorResponder
-import org.knora.webapi.responders.ResponderUtil._
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, PermissionUtilADM}
 
@@ -41,20 +41,18 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
 
     // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
     /* Entity types used to more clearly distinguish what kind of entity is meant */
-    val ResourceEntityType = "resource"
-    val PropertyEntityType = "property"
+    private val ResourceEntityType = "resource"
+    private val PropertyEntityType = "property"
 
     /**
-      * Receives a message extending [[PermissionsResponderRequestADM]].
-      * If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[PermissionsResponderRequestADM]], and returns an appropriate response message.
       */
     def receive(msg: PermissionsResponderRequestADM) = msg match {
         case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser)
@@ -91,7 +89,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
       * @return
       */
-    def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean, requestingUser: UserADM): Future[PermissionsDataADM] = {
+    private def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean, requestingUser: UserADM): Future[PermissionsDataADM] = {
         // find out which project each group belongs to
         //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
 
@@ -374,7 +372,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param requestingUser              the requesting user.
       * @return a single [[AdministrativePermissionADM]] object.
       */
-    def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionForIriGetResponseADM] = {
+    private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionForIriGetResponseADM] = {
 
         // FIXME: Check user's permission for operation (issue #370)
 
@@ -529,7 +527,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param resourceIri the IRI of the resource.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
+    private def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
@@ -566,7 +564,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param valueIri the IRI of the value.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
+    private def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForValueGetV1 - resourceIRI: $valueIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
@@ -701,7 +699,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param propertyIri      the property's IRI.
       * @return an optional [[DefaultObjectAccessPermissionADM]]
       */
-    def defaultObjectAccessPermissionGetADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionADM]] = {
+    private def defaultObjectAccessPermissionGetADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionADM]] = {
 
         val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
         val permissionFromCache = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsCacheName, key)
@@ -780,7 +778,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param requestingUser
       * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
       */
-    def defaultObjectAccessPermissionGetRequestADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], requestingUser: UserADM): Future[DefaultObjectAccessPermissionGetResponseADM] = {
+    private def defaultObjectAccessPermissionGetRequestADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], requestingUser: UserADM): Future[DefaultObjectAccessPermissionGetResponseADM] = {
 
         // FIXME: Check user's permission for operation (issue #370)
 
@@ -853,7 +851,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param resourceClassIri the resource's class IRI
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = None)
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -871,7 +869,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param propertyIri      the property's IRI.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = Some(propertyIri))
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -888,7 +886,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param propertyIri the property's IRI.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForPropertyGetADM(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForPropertyGetADM(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = None, propertyIri = Some(propertyIri))
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -910,7 +908,7 @@ class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorR
       * @param requestingUser   the user initiating the request.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
+    private def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {

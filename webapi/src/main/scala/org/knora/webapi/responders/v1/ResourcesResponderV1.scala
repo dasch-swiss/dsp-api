@@ -59,9 +59,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
     val knoraIdUtil = new KnoraIdUtil
 
     /**
-      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
       */
     def receive(msg: ResourcesResponderRequestV1) = msg match {
         case ResourceInfoGetRequestV1(resourceIri, userProfile) => getResourceInfoResponseV1(resourceIri, userProfile)

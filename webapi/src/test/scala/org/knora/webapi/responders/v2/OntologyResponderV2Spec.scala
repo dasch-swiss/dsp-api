@@ -47,8 +47,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingNonAdminUser = SharedTestDataADM.anythingUser1
     private val anythingProjectIri = SharedTestDataADM.ANYTHING_PROJECT_IRI.toSmartIri
 
-    private val actorUnderTest = TestActorRef[OntologyResponderV2]
-
     private val exampleSharedOntology = RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box")
     private val anythingData = RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
 
@@ -83,7 +81,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     
     "The ontology responder v2" should {
         "not allow a user to create an ontology if they are not a sysadmin or an admin in the ontology's project" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = imagesProjectIri,
                 label = "The foo ontology",
@@ -99,7 +97,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create an empty ontology called 'foo' with a project code" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = imagesProjectIri,
                 label = "The foo ontology",
@@ -118,7 +116,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "change the metadata of 'foo'" in {
             val newLabel = "The modified foo ontology"
 
-            actorUnderTest ! ChangeOntologyMetadataRequestV2(
+            responderManager ! ChangeOntologyMetadataRequestV2(
                 ontologyIri = fooIri.get.toSmartIri,
                 label = newLabel,
                 lastModificationDate = fooLastModDate,
@@ -137,7 +135,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create 'foo' again" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "foo",
                 projectIri = imagesProjectIri,
                 label = "The foo ontology",
@@ -153,7 +151,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not delete an ontology that doesn't exist" in {
-            actorUnderTest ! DeleteOntologyRequestV2(
+            responderManager ! DeleteOntologyRequestV2(
                 ontologyIri = "http://0.0.0.0:3333/ontology/1234/nonexistent/v2".toSmartIri,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -168,7 +166,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not allow a user to delete an ontology if they are not a sysadmin or an admin in the ontology's project" in {
-            actorUnderTest ! DeleteOntologyRequestV2(
+            responderManager ! DeleteOntologyRequestV2(
                 ontologyIri = fooIri.get.toSmartIri,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -183,7 +181,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "delete the 'foo' ontology" in {
-            actorUnderTest ! DeleteOntologyRequestV2(
+            responderManager ! DeleteOntologyRequestV2(
                 ontologyIri = fooIri.get.toSmartIri,
                 lastModificationDate = fooLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -194,7 +192,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             // Request the metadata of all ontologies to check that 'foo' isn't listed.
 
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 requestingUser = imagesUser
             )
 
@@ -206,7 +204,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! LoadOntologiesRequestV2(KnoraSystemInstances.Users.SystemUser)
             expectMsgType[SuccessResponseV2](10.seconds)
 
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 requestingUser = imagesUser
             )
 
@@ -215,7 +213,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not delete the 'anything' ontology, because it is used in data and in the 'something' ontology" in {
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
@@ -224,7 +222,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             assert(metadataResponse.ontologies.size == 2)
             anythingLastModDate = metadataResponse.toOntologySchema(ApiV2WithValueObjects).ontologies.find(_.ontologyIri == AnythingOntologyIri).get.lastModificationDate.get
 
-            actorUnderTest ! DeleteOntologyRequestV2(
+            responderManager ! DeleteOntologyRequestV2(
                 ontologyIri = AnythingOntologyIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -251,7 +249,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
 
         "not create an ontology called 'rdfs'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "rdfs",
                 projectIri = imagesProjectIri,
                 label = "The rdfs ontology",
@@ -268,7 +266,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called '0000'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "0000",
                 projectIri = imagesProjectIri,
                 label = "The 0000 ontology",
@@ -285,7 +283,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called '-foo'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "-foo",
                 projectIri = imagesProjectIri,
                 label = "The -foo ontology",
@@ -302,7 +300,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called 'v3'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "v3",
                 projectIri = imagesProjectIri,
                 label = "The v3 ontology",
@@ -319,7 +317,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called 'ontology'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "ontology",
                 projectIri = imagesProjectIri,
                 label = "The ontology ontology",
@@ -336,7 +334,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called 'knora'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "knora",
                 projectIri = imagesProjectIri,
                 label = "The wrong knora ontology",
@@ -353,7 +351,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called 'simple'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "simple",
                 projectIri = imagesProjectIri,
                 label = "The simple ontology",
@@ -370,7 +368,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create an ontology called 'shared'" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "shared",
                 projectIri = imagesProjectIri,
                 label = "The invalid shared ontology",
@@ -387,7 +385,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a shared ontology in the wrong project" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "misplaced",
                 projectIri = imagesProjectIri,
                 isShared = true,
@@ -404,7 +402,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a non-shared ontology in the shared ontologies project" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "misplaced",
                 projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
                 label = "The invalid non-shared ontology",
@@ -420,7 +418,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create a shared ontology" in {
-            actorUnderTest ! CreateOntologyRequestV2(
+            responderManager ! CreateOntologyRequestV2(
                 ontologyName = "chair",
                 projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject.toSmartIri,
                 isShared = true,
@@ -439,7 +437,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "not allow a user to create a property if they are not a sysadmin or an admin in the ontology's project" in {
 
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingNonAdminUser
             )
@@ -484,7 +482,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -500,7 +498,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "create a property anything:hasName as a subproperty of knora-api:hasValue and schema:name" in {
 
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
@@ -545,7 +543,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -585,7 +583,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "create a link property in the 'anything' ontology, and automatically create the corresponding link value property" in {
 
-            actorUnderTest ! OntologyMetadataGetByProjectRequestV2(
+            responderManager ! OntologyMetadataGetByProjectRequestV2(
                 projectIris = Set(anythingProjectIri),
                 requestingUser = anythingAdminUser
             )
@@ -628,7 +626,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -739,7 +737,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -789,7 +787,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -839,7 +837,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -889,7 +887,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -939,7 +937,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -992,7 +990,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1042,7 +1040,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1092,7 +1090,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1142,7 +1140,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1192,7 +1190,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1242,7 +1240,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1292,7 +1290,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1342,7 +1340,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1392,7 +1390,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1442,7 +1440,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1492,7 +1490,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1542,7 +1540,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1593,7 +1591,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1652,7 +1650,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1710,7 +1708,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1734,7 +1732,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("hat Namen", Some("de"))
             )
 
-            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+            responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
                 propertyIri = propertyIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
                 newObjects = newObjects,
@@ -1760,7 +1758,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("hat Namen", Some("de"))
             )
 
-            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+            responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
                 propertyIri = propertyIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
                 newObjects = newObjects,
@@ -1793,7 +1791,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("Der Name eines Dinges", Some("de"))
             )
 
-            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+            responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
                 propertyIri = propertyIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
                 newObjects = newObjects,
@@ -1824,7 +1822,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case StringLiteralV2(text, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
             }
 
-            actorUnderTest ! ChangePropertyLabelsOrCommentsRequestV2(
+            responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
                 propertyIri = propertyIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
                 newObjects = newObjects,
@@ -1875,7 +1873,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1916,7 +1914,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1957,7 +1955,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -1997,7 +1995,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2021,7 +2019,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the class anything:CardinalityThing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2065,7 +2063,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2142,7 +2140,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2178,7 +2176,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("rien", Some("fr"))
             )
 
-            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+            responderManager ! ChangeClassLabelsOrCommentsRequestV2(
                 classIri = classIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
                 newObjects = newObjects,
@@ -2201,7 +2199,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("rien", Some("fr"))
             )
 
-            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+            responderManager ! ChangeClassLabelsOrCommentsRequestV2(
                 classIri = classIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
                 newObjects = newObjects,
@@ -2233,7 +2231,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 StringLiteralV2("ne représente rien", Some("fr"))
             )
 
-            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+            responderManager ! ChangeClassLabelsOrCommentsRequestV2(
                 classIri = classIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
                 newObjects = newObjects,
@@ -2261,7 +2259,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case StringLiteralV2(text, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
             }
 
-            actorUnderTest ! ChangeClassLabelsOrCommentsRequestV2(
+            responderManager ! ChangeClassLabelsOrCommentsRequestV2(
                 classIri = classIri,
                 predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
                 newObjects = newObjects,
@@ -2311,7 +2309,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2352,7 +2350,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2393,7 +2391,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2434,7 +2432,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2476,7 +2474,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2518,7 +2516,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2560,7 +2558,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2610,7 +2608,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2628,7 +2626,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val hasInterestingThingValue = AnythingOntologyIri.makeEntityIri("hasInterestingThingValue")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasInterestingThingValue,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2647,7 +2645,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val linkPropIri = AnythingOntologyIri.makeEntityIri("hasInterestingThing")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = linkPropIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2759,7 +2757,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2815,7 +2813,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2856,7 +2854,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2893,7 +2891,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2931,7 +2929,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2948,7 +2946,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not allow a user to delete a class if they are not a sysadmin or an admin in the ontology's project" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Void")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2964,7 +2962,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the class anything:Void" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Void")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -2999,7 +2997,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3048,7 +3046,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3078,7 +3076,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3129,7 +3127,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3182,7 +3180,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3233,7 +3231,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3271,7 +3269,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! AddCardinalitiesToClassRequestV2(
+            responderManager ! AddCardinalitiesToClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3327,7 +3325,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! ChangeCardinalitiesRequestV2(
+            responderManager ! ChangeCardinalitiesRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3357,7 +3355,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! ChangeCardinalitiesRequestV2(
+            responderManager ! ChangeCardinalitiesRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3388,7 +3386,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not delete the class anything:Nothing, because the property anything:hasEmptiness refers to it" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3405,7 +3403,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the property anything:hasNothingness" in {
             val hasNothingness = AnythingOntologyIri.makeEntityIri("hasNothingness")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasNothingness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3425,7 +3423,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not delete the property anything:hasEmptiness, because the class anything:Nothing refers to it" in {
             val hasNothingness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasNothingness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3454,7 +3452,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! ChangeCardinalitiesRequestV2(
+            responderManager ! ChangeCardinalitiesRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3482,7 +3480,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! ChangeCardinalitiesRequestV2(
+            responderManager ! ChangeCardinalitiesRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3512,7 +3510,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not delete the property anything:hasEmptiness with the wrong knora-api:lastModificationDate" in {
             val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasEmptiness,
                 lastModificationDate = anythingLastModDate.minusSeconds(60),
                 apiRequestID = UUID.randomUUID,
@@ -3529,7 +3527,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "not allow a user to delete a property if they are not a sysadmin or an admin in the ontology's project" in {
             val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasEmptiness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3546,7 +3544,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the properties anything:hasOtherNothing and anything:hasEmptiness" in {
             val hasOtherNothing = AnythingOntologyIri.makeEntityIri("hasOtherNothing")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasOtherNothing,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3564,7 +3562,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             val hasEmptiness = AnythingOntologyIri.makeEntityIri("hasEmptiness")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = hasEmptiness,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3584,7 +3582,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the class anything:Nothing" in {
             val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3624,7 +3622,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3662,7 +3660,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3708,7 +3706,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3758,7 +3756,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3804,7 +3802,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3841,7 +3839,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3865,7 +3863,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the class anything:AnyBox1" in {
             val classIri = AnythingOntologyIri.makeEntityIri("AnyBox1")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3906,7 +3904,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreateClassRequestV2(
+            responderManager ! CreateClassRequestV2(
                 classInfoContent = classInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3930,7 +3928,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the class anything:AnyBox2" in {
             val classIri = AnythingOntologyIri.makeEntityIri("AnyBox2")
 
-            actorUnderTest ! DeleteClassRequestV2(
+            responderManager ! DeleteClassRequestV2(
                 classIri = classIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3974,7 +3972,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -3998,7 +3996,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the property anything:hasAnyName" in {
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasAnyName")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -4046,7 +4044,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -4070,7 +4068,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the property anything:BoxHasBoolean" in {
             val propertyIri = AnythingOntologyIri.makeEntityIri("BoxHasBoolean")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -4114,7 +4112,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
                 ontologySchema = ApiV2WithValueObjects
             )
 
-            actorUnderTest ! CreatePropertyRequestV2(
+            responderManager ! CreatePropertyRequestV2(
                 propertyInfoContent = propertyInfoContent,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,
@@ -4138,7 +4136,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         "delete the property anything:hasBox" in {
             val propertyIri = AnythingOntologyIri.makeEntityIri("hasBox")
 
-            actorUnderTest ! DeletePropertyRequestV2(
+            responderManager ! DeletePropertyRequestV2(
                 propertyIri = propertyIri,
                 lastModificationDate = anythingLastModDate,
                 apiRequestID = UUID.randomUUID,

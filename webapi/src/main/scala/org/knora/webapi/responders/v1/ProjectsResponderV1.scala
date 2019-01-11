@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,8 +28,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.ActorBasedResponder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.Future
@@ -37,7 +37,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderV1 extends ActorBasedResponder {
+class ProjectsResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -46,21 +46,19 @@ class ProjectsResponderV1 extends ActorBasedResponder {
     val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive: PartialFunction[Any, Unit] = {
-        case ProjectsGetRequestV1(userProfile) => future2Message(sender(), projectsGetRequestV1(userProfile), log)
-        case ProjectsGetV1(userProfile) => future2Message(sender(), projectsGetV1(userProfile), log)
-        case ProjectInfoByIRIGetRequestV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetRequestV1(iri, userProfile), log)
-        case ProjectInfoByIRIGetV1(iri, userProfile) => future2Message(sender(), projectInfoByIRIGetV1(iri, userProfile), log)
-        case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => future2Message(sender(), projectInfoByShortnameGetRequestV1(shortname, userProfile), log)
-        case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectMembersByIRIGetRequestV1(iri, userProfileV1), log)
-        case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
-        case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => future2Message(sender(), projectAdminMembersByIRIGetRequestV1(iri, userProfileV1), log)
-        case ProjectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1) => future2Message(sender(), projectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ProjectsResponderRequestV1) = msg match {
+        case ProjectsGetRequestV1(userProfile) => projectsGetRequestV1(userProfile)
+        case ProjectsGetV1(userProfile) => projectsGetV1(userProfile)
+        case ProjectInfoByIRIGetRequestV1(iri, userProfile) => projectInfoByIRIGetRequestV1(iri, userProfile)
+        case ProjectInfoByIRIGetV1(iri, userProfile) => projectInfoByIRIGetV1(iri, userProfile)
+        case ProjectInfoByShortnameGetRequestV1(shortname, userProfile) => projectInfoByShortnameGetRequestV1(shortname, userProfile)
+        case ProjectMembersByIRIGetRequestV1(iri, userProfileV1) => projectMembersByIRIGetRequestV1(iri, userProfileV1)
+        case ProjectMembersByShortnameGetRequestV1(shortname, userProfileV1) => projectMembersByShortnameGetRequestV1(shortname, userProfileV1)
+        case ProjectAdminMembersByIRIGetRequestV1(iri, userProfileV1) => projectAdminMembersByIRIGetRequestV1(iri, userProfileV1)
+        case ProjectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1) => projectAdminMembersByShortnameGetRequestV1(shortname, userProfileV1)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

@@ -103,6 +103,12 @@ trait KnoraService {
 
     import scala.language.postfixOps
 
+    /**
+      * The actor used at startup, transitioning between states, and storing the application application wide variables in a thread safe manner.
+      */
+    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
+
+
     // #supervisors
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
@@ -116,10 +122,6 @@ trait KnoraService {
     protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager(applicationStateActor, storeManager) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
     // #supervisors
 
-    /**
-      * The actor used at startup, transitioning between states, and storing the application application wide variables in a thread safe manner.
-      */
-    protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor(responderManager, storeManager)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
 
     /**
       * Timeout definition

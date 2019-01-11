@@ -48,7 +48,7 @@ import scala.concurrent.Future
 /**
   * Updates Knora values.
   */
-class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager){
+class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 
@@ -56,9 +56,7 @@ class ValuesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, re
     val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
       */
     def receive(msg: ValuesResponderRequestV1) = msg match {
         case ValueGetRequestV1(valueIri, userProfile) => getValueResponseV1(valueIri, userProfile)

@@ -38,8 +38,6 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     import ListsResponderV2Spec._
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ListsResponderV2]
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val listsResponderV2SpecFullData = new ListsResponderV2SpecFullData
 
@@ -56,7 +54,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a list" in {
 
-            actorUnderTest ! ListGetRequestV2("http://rdfh.ch/lists/0001/treeList", userProfile)
+            responderManager ! ListGetRequestV2("http://rdfh.ch/lists/0001/treeList", userProfile)
 
             expectMsgPF(timeout) {
                 case response: ListGetResponseV2 =>
@@ -67,7 +65,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a node" in {
 
-            actorUnderTest ! NodeGetRequestV2("http://rdfh.ch/lists/0001/treeList11", userProfile)
+            responderManager ! NodeGetRequestV2("http://rdfh.ch/lists/0001/treeList11", userProfile)
 
             expectMsgPF(timeout) {
                 case response: NodeGetResponseV2 =>

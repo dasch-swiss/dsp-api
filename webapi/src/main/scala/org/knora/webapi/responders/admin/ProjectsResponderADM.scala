@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSelection, ActorSystem, Status}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -30,8 +30,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGet
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{OntologyMetadataGetByProjectRequestV2, ReadOntologyMetadataV2}
-import org.knora.webapi.responders.ResponderUtil._
-import org.knora.webapi.responders.{IriLocker, NonActorResponder}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{KnoraIdUtil, StringFormatter}
 
@@ -40,7 +40,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends NonActorResponder(system, applicationStateActor, responderManager, storeManager) {
+class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
 
     // Creates IRIs for new Knora user objects.
@@ -50,9 +50,7 @@ class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef,
     val PROJECTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/projects"
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1.responder.projectmessages.ProjectsResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
       */
     def receive(msg: ProjectsResponderRequestADM) = msg match {
         case ProjectsGetADM(requestingUser) => projectsGetADM(requestingUser)
@@ -656,7 +654,7 @@ class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef,
       * @param maybeShortcode the shortcode of the project.
       * @return a [[Boolean]].
       */
-    def projectExists(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String]): Future[Boolean] = {
+    private def projectExists(maybeIri: Option[IRI], maybeShortname: Option[String], maybeShortcode: Option[String]): Future[Boolean] = {
 
         if (maybeIri.nonEmpty) {
             projectByIriExists(maybeIri.get)
@@ -675,7 +673,7 @@ class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef,
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+    private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectExists - query: {}", askString)
@@ -692,7 +690,7 @@ class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef,
       * @param shortname the shortname of the project.
       * @return a [[Boolean]].
       */
-    def projectByShortnameExists(shortname: String): Future[Boolean] = {
+    private def projectByShortnameExists(shortname: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortname(shortname = shortname).toString)
             //_ = log.debug("projectExists - query: {}", askString)
@@ -709,7 +707,7 @@ class ProjectsResponderADM(system: ActorSystem, applicationStateActor: ActorRef,
       * @param shortcode the shortcode of the project.
       * @return a [[Boolean]].
       */
-    def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
+    private def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByShortcode(shortcode = shortcode).toString)
             //_ = log.debug("projectExists - query: {}", askString)

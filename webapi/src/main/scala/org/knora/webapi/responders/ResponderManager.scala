@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
@@ -329,6 +329,11 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected val usersResponderADM: UsersResponderADM = makeDefaultUsersResponderADM
 
 
+    /**
+      * Each responder's receive method is called and only messages of the allowed type are supplied as the parameter.
+      * If a serious error occurs (i.e. an error that isn't the client's fault), the future2Message method first
+      * returns `Failure` to the sender, then throws an exception.
+      */
     def receive = LoggingReceive {
         // Knora API V1 messages
         case ckanResponderRequestV1: CkanResponderRequestV1 => future2Message(sender(), ckanResponderV1 receive ckanResponderRequestV1, log)

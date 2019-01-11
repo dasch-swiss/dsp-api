@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -59,11 +59,14 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
 
 
     // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
+    private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
 
+    /**
+      * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
+      */
     def receive(msg: ListsResponderRequestADM) = msg match {
         case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
         case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
@@ -86,7 +89,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a [[ListsGetResponseADM]].
       */
-    def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
+    private def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -131,7 +134,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a optional [[ListADM]].
       */
-    def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
+    private def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -170,7 +173,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a [[ListGetResponseADM]].
       */
-    def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
+    private def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
 
         for {
             maybeListADM <- listGetADM(rootNodeIri, requestingUser)
@@ -188,7 +191,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a [[ListInfoGetResponseADM]].
       */
-    def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
+    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
             listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
 
@@ -213,7 +216,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a optional [[ListNodeInfoADM]].
       */
-    def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
+    private def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -306,7 +309,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param requestingUser the user making the request.
       * @return a [[ListNodeInfoGetResponseADM]].
       */
-    def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+    private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
         for {
             maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
             result = maybeListNodeInfoADM match {
@@ -873,7 +876,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+    private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectByIriExists - query: {}", askString)
@@ -890,7 +893,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param listNodeIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+    private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
@@ -907,7 +910,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param listNodeIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+    private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
             //_ = log.debug("listNodeByIriExists - query: {}", askString)
@@ -924,7 +927,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listNodeByNameExists(name: String): Future[Boolean] = {
+    private def listNodeByNameExists(name: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
             //_ = log.debug("listNodeByNameExists - query: {}", askString)
@@ -943,7 +946,7 @@ class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, re
       * @param listNodeName the list node name.
       * @return a [[Boolean]].
       */
-    def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
+    private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
         listNodeName match {
             case Some(name) => {
                 for {

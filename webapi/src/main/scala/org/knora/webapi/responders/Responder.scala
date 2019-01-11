@@ -53,7 +53,12 @@ object Responder {
 /**
   * An abstract class providing values that are commonly used in Knora responders.
   */
-abstract class Responder(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) {
+abstract class Responder(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) {
+
+    /**
+      * The actor system.
+      */
+    protected implicit val system: ActorSystem = _system
 
     /**
       * The execution context for futures created in Knora actors.

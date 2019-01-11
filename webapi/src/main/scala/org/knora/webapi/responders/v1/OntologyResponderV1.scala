@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsGetRequestADM, ProjectsGetResponseADM}
@@ -29,8 +29,8 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.SalsahGuiConversi
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.responders.ActorBasedResponder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.Responder
 import org.knora.webapi.util.IriConversions._
 
 import scala.concurrent.Future
@@ -41,30 +41,28 @@ import scala.concurrent.Future
   * All ontology data is loaded and cached when the application starts. To refresh the cache, you currently have to restart
   * the application.
   */
-class OntologyResponderV1 extends ActorBasedResponder {
+class OntologyResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[OntologyResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive = {
-        case LoadOntologiesRequest(userProfile) => future2Message(sender(), loadOntologies(userProfile), log)
-        case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => future2Message(sender(), getEntityInfoResponseV1(resourceIris, propertyIris, userProfile), log)
-        case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => future2Message(sender(), getResourceTypeResponseV1(resourceTypeIri, userProfile), log)
-        case checkSubClassRequest: CheckSubClassRequestV1 => future2Message(sender(), checkSubClass(checkSubClassRequest), log)
-        case subClassesGetRequest: SubClassesGetRequestV1 => future2Message(sender(), getSubClasses(subClassesGetRequest), log)
-        case NamedGraphsGetRequestV1(projectIris, userProfile) => future2Message(sender(), getNamedGraphs(projectIris, userProfile), log)
-        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getResourceTypesForNamedGraph(namedGraphIri, userProfile), log)
-        case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getPropertyTypesForNamedGraph(namedGraphIri, userProfile), log)
-        case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => future2Message(sender(), getPropertyTypesForResourceType(restypeId, userProfile), log)
-        case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => future2Message(sender(), getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile), log)
-        case StandoffClassesWithDataTypeGetRequestV1(userProfile) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV1(userProfile), log)
-        case StandoffAllPropertiesGetRequestV1(userProfile) => future2Message(sender(), getAllStandoffPropertyEntities(userProfile), log)
-        case NamedGraphEntityInfoRequestV1(namedGraphIri, userProfile) => future2Message(sender(), getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: OntologyResponderRequestV1) = msg match {
+        case LoadOntologiesRequest(userProfile) => loadOntologies(userProfile)
+        case EntityInfoGetRequestV1(resourceIris, propertyIris, userProfile) => getEntityInfoResponseV1(resourceIris, propertyIris, userProfile)
+        case ResourceTypeGetRequestV1(resourceTypeIri, userProfile) => getResourceTypeResponseV1(resourceTypeIri, userProfile)
+        case checkSubClassRequest: CheckSubClassRequestV1 => checkSubClass(checkSubClassRequest)
+        case subClassesGetRequest: SubClassesGetRequestV1 => getSubClasses(subClassesGetRequest)
+        case NamedGraphsGetRequestV1(projectIris, userProfile) => getNamedGraphs(projectIris, userProfile)
+        case ResourceTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => getResourceTypesForNamedGraph(namedGraphIri, userProfile)
+        case PropertyTypesForNamedGraphGetRequestV1(namedGraphIri, userProfile) => getPropertyTypesForNamedGraph(namedGraphIri, userProfile)
+        case PropertyTypesForResourceTypeGetRequestV1(restypeId, userProfile) => getPropertyTypesForResourceType(restypeId, userProfile)
+        case StandoffEntityInfoGetRequestV1(standoffClassIris, standoffPropertyIris, userProfile) => getStandoffEntityInfoResponseV1(standoffClassIris, standoffPropertyIris, userProfile)
+        case StandoffClassesWithDataTypeGetRequestV1(userProfile) => getStandoffStandoffClassesWithDataTypeV1(userProfile)
+        case StandoffAllPropertiesGetRequestV1(userProfile) => getAllStandoffPropertyEntities(userProfile)
+        case NamedGraphEntityInfoRequestV1(namedGraphIri, userProfile) => getNamedGraphEntityInfoV1ForNamedGraph(namedGraphIri, userProfile)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**
