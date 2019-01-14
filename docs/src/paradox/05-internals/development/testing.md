@@ -34,26 +34,18 @@ For example, when using "GraphDB Free", the nedded script is
 val rdfDataObjects = List (
        RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula")
 )
-
-"Load test data" in {
-    storeManager ! ResetTriplestoreContent(rdfDataObjects)
-    expectMsg(300.seconds, ResetTriplestoreContentACK())
-
-    responderManager ! LoadOntologiesRequest(SharedTestDataV1.rootUser)
-    expectMsg(10.seconds, LoadOntologiesResponse())
-}
 ```
-
-These tests should be stored inside the `src/test` folder hierarchy.
+The data will be automatically loaded before any tests are executed. These tests should be stored inside
+the `src/test` folder hierarchy.
 
 2)  Call the test from SBT:
 
 ```
 // when using a GraphDB-SE
-sbt:webapi> test
+sbt:knora> webapi / test
 
 // when using a GraphDB-Free
-sbt:webapi> GDBFree / test
+sbt:knora> webapi / GDBFree / test
 ```
 
 ## How to Write Integration Tests
@@ -62,13 +54,13 @@ The only difference between Integration and Unit tests is the location
 where they are stored and the way how they are called:
 
 1)  Store tests inside the `src/it` folder hierarchy.
-2)  Call the tests from SBT: `sbt:webapi> it:test`
+2)  Call the tests from SBT: `sbt:knore> webapi / it:test`
 
 ## How to Write Performance / Simulation Tests
 
 1)  Store the performance and simulation tests inside the `src/test` and
     the `src/it` folder hierarchy.
-2)  To call them, execute either `gatling:test` or `gatling-it:test`
+2)  To call them, execute either `webapi / gatling:test` or `webapi / gatling-it:test`
     from inside SBT.
 
 Bellow is an example of an simulation calling the `/admin/users`
@@ -87,43 +79,43 @@ built-in test tasks like `test`, `testOnly`, `testQuick`.
 For use with GraphDB-SE (using `test/resources/graphdb-se.conf`) running normal tests:
 
 ```
-sbt:webapi> test
-sbt:webapi> GDBSE / test
-sbt:webapi> gdbse:test
+sbt:knora> webapi / test
+sbt:knora> webapi / GDBSE / test
+sbt:knora> webapi / gdbse:test
 ```
 
 For use with GraphDB-SE (using `it/resources/graphdb-se.conf`) running integration tests:
 
 ```
-sbt:webapi> it:test
-sbt:webapi> GDBSEIt / test
-sbt:webapi> gdbse-it:test
+sbt:knora> webapi / it:test
+sbt:knora> webapi / GDBSEIt / test
+sbt:knora> webapi / gdbse-it:test
 ```
 
 For use with GraphDB-Free (using `test/resources/graphdb-free.conf`) running normal tests:
 
 ```
-sbt:webapi> GDBFree / test
-sbt:webapi> gdbfree:test
+sbt:knora> webapi / GDBFree / test
+sbt:knora> webapi / gdbfree:test
 ```
 
 For use with GraphDB-Free (using `it/resources/graphdb-free.conf`) running integration tests:
 
 ```
-sbt:webapi> GDBFreeIt / test
-sbt:webapi> gdbfree-it:test
+sbt:knora> webapi / GDBFreeIt / test
+sbt:knora> webapi / gdbfree-it:test
 ```
 
 For use with Fuseki (using `test/resources/fuseki.conf`) running normal tests:
 
 ```
-sbt:webapi> Fuseki / test
-sbt:webapi> fuseki:test
+sbt:knora> webapi / Fuseki / test
+sbt:knora> webapi / fuseki:test
 ```
 
 For use with Fuseki (using `it/resources/fuseki.conf`) running integration tests:
 
 ```
-sbt:webapi> FusekiIt / test
-sbt:webapi> fuseki-it:test
+sbt:knora> webapi / FusekiIt / test
+sbt:knora> webapi / fuseki-it:test
 ```
