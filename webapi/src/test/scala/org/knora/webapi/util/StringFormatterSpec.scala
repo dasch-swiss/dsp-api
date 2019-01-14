@@ -19,6 +19,8 @@
 
 package org.knora.webapi.util
 
+import java.time.Instant
+
 import org.knora.webapi._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.SalsahGuiAttributeDefinition
@@ -1044,6 +1046,18 @@ class StringFormatterSpec extends CoreSpec() {
                     unparsedString = wrapDef
                 )
             )
+        }
+
+        "generate an ARK URL for a resource IRI without a timestamp" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(None)
+            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-n")
+        }
+
+        "generate an ARK URL for a resource IRI with a timestamp" in {
+            val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(Instant.parse("2018-12-07T00:00:00Z")))
+            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-n.2018-12-07T00:00:00Z")
         }
     }
 }

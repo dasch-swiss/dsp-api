@@ -111,6 +111,9 @@ class SettingsImpl(config: Config) extends Extension {
     val sipiMoveFileRouteV2: String = config.getString("app.sipi.v2.move-file-route")
     val sipiDeleteTempFileRouteV2: String = config.getString("app.sipi.v2.delete-temp-file-route")
 
+    val arkResolverHost: String = config.getString("app.ark.host")
+    val arkAssignedNumber: Int = config.getInt("app.ark.assigned-number")
+
     val caches: Vector[KnoraCacheConfig] = config.getList("app.caches").iterator.asScala.map {
         cacheConfigItem: ConfigValue =>
             val cacheConfigMap = cacheConfigItem.unwrapped.asInstanceOf[java.util.HashMap[String, Any]].asScala
