@@ -1051,13 +1051,13 @@ class StringFormatterSpec extends CoreSpec() {
         "generate an ARK URL for a resource IRI without a timestamp" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(None)
-            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-n")
+            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-T")
         }
 
         "generate an ARK URL for a resource IRI with a timestamp" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Some(Instant.parse("2018-12-07T00:00:00Z")))
-            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-n.2018-12-07T00:00:00Z")
+            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/0001-cmfk1DMHRBiR4-_6HXpEFA-T.2018-12-07T00:00:00Z")
         }
     }
 }

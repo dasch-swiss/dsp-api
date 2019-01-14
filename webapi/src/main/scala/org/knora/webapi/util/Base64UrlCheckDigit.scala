@@ -36,15 +36,19 @@ class Base64UrlCheckDigit extends ModulusCheckDigit(Base64UrlCheckDigit.Alphabet
             throw new CheckDigitException(s"Invalid base64url character: '$character'")
         }
 
-        charIndexInAlphabet
+        // Use 1-based values, because otherwise an 'A' at the beginning of a string contributes nothing
+        // to the check digit.
+        charIndexInAlphabet + 1
     }
 
     override def toCheckDigit(charValue: Int): String = {
-        if (charValue > Base64UrlCheckDigit.Alphabet.length) {
+        val charIndexInAlphabet = charValue - 1
+
+        if (charIndexInAlphabet < 0 || charIndexInAlphabet >= Base64UrlCheckDigit.Alphabet.length) {
             throw new CheckDigitException(s"Invalid base64url character value: $charValue")
         }
 
-        Base64UrlCheckDigit.Alphabet.charAt(charValue).toString
+        Base64UrlCheckDigit.Alphabet.charAt(charIndexInAlphabet).toString
     }
 }
 
