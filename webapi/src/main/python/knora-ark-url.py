@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+#################################################################################################
+# Command-line program for converting between Knora resource IRIs and ARK URLs.
+#################################################################################################
+
+
 import re
 import argparse
-
-
-#################################################################################################
-# Command-line program for converting between Knora resource IRIs and ARK URls.
-#################################################################################################
 
 
 class ArkUrlException(Exception):
