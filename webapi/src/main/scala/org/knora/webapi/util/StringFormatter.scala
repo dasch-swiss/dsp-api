@@ -131,6 +131,11 @@ object StringFormatter {
     val PrecisionYear: String = "YEAR"
 
     /**
+      * The version number of the current version of Knora's ARK URL format.
+      */
+    val ArkVersion: String = "1"
+
+    /**
       * A container for an XML import namespace and its prefix label.
       *
       * @param namespace   the namespace.
@@ -2163,7 +2168,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
         }
 
-        val dateStr: String = timestamp.map(instant => "." + instant.toString).getOrElse("")
+        // Calculate a check digit for the resource ID.
 
         val checkDigitTry: Try[String] = Try {
             base64UrlCheckDigit.calculate(resourceID)
@@ -2174,6 +2179,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case Failure(ex) => throw DataConversionException(ex.getMessage)
         }
 
-        s"http://$host/ark:/$assignedNumber/$projectID-$resourceID-$checkDigit$dateStr"
+        // If there's a timestamp, make a string representation of it.
+        val timestampStr: String = timestamp.map(instant => "." + instant.toString).getOrElse("")
+
+        s"http://$host/ark:/$assignedNumber/$ArkVersion-$projectID-$resourceID-$checkDigit$timestampStr"
     }
 }
