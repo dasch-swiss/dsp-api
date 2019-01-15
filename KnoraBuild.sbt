@@ -119,7 +119,7 @@ lazy val docs = knoraModule("docs")
                             uri("https://twitter.com/dhlabbasel")
                         )
                         .withLanguage(java.util.Locale.ENGLISH)
-                        .withCopyright("Copyright 2015-2018 the contributors (see Contributors.md)")
+                        .withCopyright("Copyright 2015-2019 the contributors (see Contributors.md)")
             },
             makeSite / mappings ++= Seq(
                 file("docs/src/api-admin/index.html") -> "api-admin/index.html",
