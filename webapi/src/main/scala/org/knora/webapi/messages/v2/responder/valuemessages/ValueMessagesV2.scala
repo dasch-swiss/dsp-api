@@ -22,10 +22,11 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef, ActorSelection}
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -103,13 +104,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
 
                     for {
                         valueContent: ValueContentV2 <-
-                            ValueContentV2.fromJsonLDObject(
-                                jsonLDObject = jsonLDObject,
-                                requestingUser = requestingUser,
-                                responderManager = responderManager,
-                                settings = settings,
-                                log = log
-                            )
+                                ValueContentV2.fromJsonLDObject(
+                                    jsonLDObject = jsonLDObject,
+                                    requestingUser = requestingUser,
+                                    responderManager = responderManager,
+                                    storeManager = storeManager,
+                                    settings = settings,
+                                    log = log
+                                )
 
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
                     } yield CreateValueV2(
@@ -202,13 +204,14 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 case (propertyIri: SmartIri, jsonLDObject: JsonLDObject) =>
                     for {
                         valueContent: ValueContentV2 <-
-                            ValueContentV2.fromJsonLDObject(
-                                jsonLDObject = jsonLDObject,
-                                requestingUser = requestingUser,
-                                responderManager = responderManager,
-                                settings = settings,
-                                log = log
-                            )
+                                ValueContentV2.fromJsonLDObject(
+                                    jsonLDObject = jsonLDObject,
+                                    requestingUser = requestingUser,
+                                    responderManager = responderManager,
+                                    storeManager = storeManager,
+                                    settings = settings,
+                                    log = log
+                                )
 
                         valueIri = jsonLDObject.getIDAsKnoraDataIri
                         maybePermissions: Option[String] = jsonLDObject.maybeStringWithValidation(OntologyConstants.KnoraApiV2WithValueObjects.HasPermissions, stringFormatter.toSparqlEncodedString)
@@ -622,6 +625,7 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
     def fromJsonLDObject(jsonLDObject: JsonLDObject,
                          requestingUser: UserADM,
                          responderManager: ActorSelection,
+                         storeManager: ActorSelection,
                          settings: SettingsImpl,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
@@ -648,6 +652,7 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -659,43 +664,43 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
 
             valueContent: ValueContentV2 <- valueType.toString match {
                 case OntologyConstants.KnoraApiV2WithValueObjects.TextValue =>
-                    TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    TextValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.IntValue =>
-                    IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    IntegerValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.DecimalValue =>
-                    DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    DecimalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.BooleanValue =>
-                    BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    BooleanValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.DateValue =>
-                    DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    DateValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.GeomValue =>
-                    GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    GeomValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.IntervalValue =>
-                    IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    IntervalValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.LinkValue =>
-                    LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    LinkValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.ListValue =>
-                    HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    HierarchicalListValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.UriValue =>
-                    UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    UriValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.GeonameValue =>
-                    GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    GeonameValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.ColorValue =>
-                    ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    ColorValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case OntologyConstants.KnoraApiV2WithValueObjects.StillImageFileValue =>
-                    StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, settings = settings, log = log)
+                    StillImageFileValueContentV2.fromJsonLDObject(jsonLDObject = jsonLDObject, requestingUser = requestingUser, responderManager = responderManager, storeManager = storeManager, settings = settings, log = log)
 
                 case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
             }
@@ -764,14 +769,14 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
                 val endCalendarDate: CalendarDateV2 = asCalendarDateRange.endCalendarDate
 
                 val startDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartYear -> JsonLDInt(startCalendarDate.year)) ++
-                    startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
-                    startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
-                    startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
+                        startCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartMonth -> JsonLDInt(month)) ++
+                        startCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartDay -> JsonLDInt(day)) ++
+                        startCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasStartEra -> JsonLDString(era.toString))
 
                 val endDateAssertions = Map(OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndYear -> JsonLDInt(endCalendarDate.year)) ++
-                    endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
-                    endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
-                    endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
+                        endCalendarDate.maybeMonth.map(month => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndMonth -> JsonLDInt(month)) ++
+                        endCalendarDate.maybeDay.map(day => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndDay -> JsonLDInt(day)) ++
+                        endCalendarDate.maybeEra.map(era => OntologyConstants.KnoraApiV2WithValueObjects.DateValueHasEndEra -> JsonLDString(era.toString))
 
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.ValueAsString -> JsonLDString(valueHasString),
@@ -788,10 +793,10 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatDateValue: DateValueContentV2 =>
                 valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-                    valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-                    valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-                    valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-                    valueHasCalendar == thatDateValue.valueHasCalendar
+                        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+                        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+                        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+                        valueHasCalendar == thatDateValue.valueHasCalendar
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -801,11 +806,11 @@ case class DateValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatDateValue: DateValueContentV2 =>
                 valueHasStartJDN == thatDateValue.valueHasStartJDN &&
-                    valueHasEndJDN == thatDateValue.valueHasEndJDN &&
-                    valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
-                    valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
-                    valueHasCalendar == thatDateValue.valueHasCalendar &&
-                    comment == thatDateValue.comment
+                        valueHasEndJDN == thatDateValue.valueHasEndJDN &&
+                        valueHasStartPrecision == thatDateValue.valueHasStartPrecision &&
+                        valueHasEndPrecision == thatDateValue.valueHasEndPrecision &&
+                        valueHasCalendar == thatDateValue.valueHasCalendar &&
+                        comment == thatDateValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -841,6 +846,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
       *
       * @param jsonLDObject     the JSON-LD object.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -849,6 +855,7 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1175,6 +1182,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1183,6 +1191,7 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1300,7 +1309,7 @@ case class IntegerValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatIntegerValue: IntegerValueContentV2 =>
                 valueHasInteger == thatIntegerValue.valueHasInteger &&
-                    comment == thatIntegerValue.comment
+                        comment == thatIntegerValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1317,6 +1326,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1325,6 +1335,7 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1390,7 +1401,7 @@ case class DecimalValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatDecimalValue: DecimalValueContentV2 =>
                 valueHasDecimal == thatDecimalValue.valueHasDecimal &&
-                    comment == thatDecimalValue.comment
+                        comment == thatDecimalValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1407,6 +1418,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1415,6 +1427,7 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1477,7 +1490,7 @@ case class BooleanValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatBooleanValue: BooleanValueContentV2 =>
                 valueHasBoolean == thatBooleanValue.valueHasBoolean &&
-                    comment == thatBooleanValue.comment
+                        comment == thatBooleanValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1494,6 +1507,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1502,6 +1516,7 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1569,7 +1584,7 @@ case class GeomValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatGeomValue: GeomValueContentV2 =>
                 valueHasGeometry == thatGeomValue.valueHasGeometry &&
-                    comment == thatGeomValue.comment
+                        comment == thatGeomValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1586,6 +1601,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1594,6 +1610,7 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1644,15 +1661,15 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
             case ApiV2WithValueObjects =>
                 JsonLDObject(Map(
                     OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasStart ->
-                        JsonLDUtil.datatypeValueToJsonLDObject(
-                            value = valueHasIntervalStart.toString,
-                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
-                        ),
+                            JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueHasIntervalStart.toString,
+                                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                            ),
                     OntologyConstants.KnoraApiV2WithValueObjects.IntervalValueHasEnd ->
-                        JsonLDUtil.datatypeValueToJsonLDObject(
-                            value = valueHasIntervalEnd.toString,
-                            datatype = OntologyConstants.Xsd.Decimal.toSmartIri
-                        )
+                            JsonLDUtil.datatypeValueToJsonLDObject(
+                                value = valueHasIntervalEnd.toString,
+                                datatype = OntologyConstants.Xsd.Decimal.toSmartIri
+                            )
                 ))
         }
     }
@@ -1665,7 +1682,7 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatIntervalValueContent: IntervalValueContentV2 =>
                 valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-                    valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
+                        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -1675,8 +1692,8 @@ case class IntervalValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatIntervalValueContent: IntervalValueContentV2 =>
                 valueHasIntervalStart == thatIntervalValueContent.valueHasIntervalStart &&
-                    valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
-                    comment == thatIntervalValueContent.comment
+                        valueHasIntervalEnd == thatIntervalValueContent.valueHasIntervalEnd &&
+                        comment == thatIntervalValueContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1693,6 +1710,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1701,6 +1719,7 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1786,7 +1805,7 @@ case class HierarchicalListValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatListContent: HierarchicalListValueContentV2 =>
                 valueHasListNode == thatListContent.valueHasListNode &&
-                    comment == thatListContent.comment
+                        comment == thatListContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1803,6 +1822,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1811,6 +1831,7 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1883,7 +1904,7 @@ case class ColorValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatColorContent: ColorValueContentV2 =>
                 valueHasColor == thatColorContent.valueHasColor &&
-                    comment == thatColorContent.comment
+                        comment == thatColorContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1900,6 +1921,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -1908,6 +1930,7 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1976,7 +1999,7 @@ case class UriValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatUriContent: UriValueContentV2 =>
                 valueHasUri == thatUriContent.valueHasUri &&
-                    comment == thatUriContent.comment
+                        comment == thatUriContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -1993,6 +2016,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -2001,6 +2025,7 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2073,7 +2098,7 @@ case class GeonameValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatGeonameContent: GeonameValueContentV2 =>
                 valueHasGeonameCode == thatGeonameContent.valueHasGeonameCode &&
-                    comment == thatGeonameContent.comment
+                        comment == thatGeonameContent.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2090,6 +2115,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
       * @param jsonLDObject     the JSON-LD object.
       * @param requestingUser   the user making the request.
       * @param responderManager a reference to the responder manager.
+      * @param storeManager     a reference to the store manager.
       * @param log              a logging adapter.
       * @param timeout          a timeout for `ask` messages.
       * @param executionContext an execution context for futures.
@@ -2098,6 +2124,7 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2201,8 +2228,8 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatStillImage: StillImageFileValueContentV2 =>
                 fileValue == thatStillImage.fileValue &&
-                    dimX == thatStillImage.dimX &&
-                    dimY == thatStillImage.dimY
+                        dimX == thatStillImage.dimX &&
+                        dimY == thatStillImage.dimY
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2225,6 +2252,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2235,7 +2263,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
 
             // Ask Sipi about the rest of the file's metadata.
             tempFileUrl = s"${settings.internalSipiBaseUrl}/tmp/$internalFilename"
-            imageMetadataResponse: GetImageMetadataResponseV2 <- (responderManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetImageMetadataResponseV2]
+            imageMetadataResponse: GetImageMetadataResponseV2 <- (storeManager ? GetImageMetadataRequestV2(fileUrl = tempFileUrl, requestingUser = requestingUser)).mapTo[GetImageMetadataResponseV2]
 
             fileValue = FileValueV2(
                 internalFilename = internalFilename,
@@ -2299,7 +2327,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatTextFile: TextFileValueContentV2 =>
                 fileValue == thatTextFile.fileValue &&
-                    comment == thatTextFile.comment
+                        comment == thatTextFile.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2313,6 +2341,7 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
         // TODO
@@ -2403,7 +2432,7 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         that match {
             case thatLinkValue: LinkValueContentV2 =>
                 referredResourceIri == thatLinkValue.referredResourceIri &&
-                    isIncomingLink == thatLinkValue.isIncomingLink
+                        isIncomingLink == thatLinkValue.isIncomingLink
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
         }
@@ -2413,8 +2442,8 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
         currentVersion match {
             case thatLinkValue: LinkValueContentV2 =>
                 referredResourceIri == thatLinkValue.referredResourceIri &&
-                    isIncomingLink == thatLinkValue.isIncomingLink &&
-                    comment == thatLinkValue.comment
+                        isIncomingLink == thatLinkValue.isIncomingLink &&
+                        comment == thatLinkValue.comment
 
             case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
         }
@@ -2428,6 +2457,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
                                   responderManager: ActorSelection,
+                                  storeManager: ActorSelection,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
