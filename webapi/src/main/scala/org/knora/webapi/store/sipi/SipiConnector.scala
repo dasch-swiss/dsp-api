@@ -1,35 +1,36 @@
 /*
  * Copyright © 2015-2019 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi.store.sipi
 
 import java.util
 
+import akka.actor.{Actor, ActorLogging}
 import akka.stream.ActorMaterializer
 import org.apache.http.client.config.RequestConfig
 import org.apache.http.client.entity.UrlEncodedFormEntity
-import org.apache.http.client.methods.{CloseableHttpResponse, HttpDelete, HttpGet, HttpPost}
+import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.protocol.HttpClientContext
 import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
-import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
+import org.apache.http.{HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, GetImageMetadataRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.responders.Responder
@@ -44,7 +45,7 @@ import scala.util.Try
 /**
   * Makes requests to Sipi.
   */
-class SipiResponderV2 extends Responder {
+class SipiConnector extends Actor with ActorLogging {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")
@@ -52,10 +53,10 @@ class SipiResponderV2 extends Responder {
     private val sipiTimeoutMillis = settings.sipiTimeout.toMillis.toInt
 
     private val sipiRequestConfig = RequestConfig.custom()
-        .setConnectTimeout(sipiTimeoutMillis)
-        .setConnectionRequestTimeout(sipiTimeoutMillis)
-        .setSocketTimeout(sipiTimeoutMillis)
-        .build()
+            .setConnectTimeout(sipiTimeoutMillis)
+            .setConnectionRequestTimeout(sipiTimeoutMillis)
+            .setSocketTimeout(sipiTimeoutMillis)
+            .build()
 
     private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 

@@ -33,9 +33,8 @@ import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, NameValuePair}
 import org.knora.webapi._
+import org.knora.webapi.messages.store.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
-import org.knora.webapi.messages.v1.responder.sipimessages.RepresentationV1JsonProtocol._
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
@@ -45,7 +44,7 @@ import org.knora.webapi.util.{PermissionUtilADM, SipiUtil}
 import spray.json._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 /**
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
