@@ -19,14 +19,15 @@
 
 package org.knora.webapi.responders.admin
 
+import akka.actor.{ActorRef, ActorSelection, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM}
+import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, ResetTriplestoreContentResponseADM, StoreResponderRequestADM}
 import org.knora.webapi.messages.app.appmessages.GetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent, ResetTriplestoreContentACK}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{LoadOntologiesRequest, LoadOntologiesResponse}
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
 
@@ -34,16 +35,20 @@ import scala.concurrent.Future
   * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
   * 'Store Module'
   */
-class StoresResponderADM extends Responder {
+class StoresResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+
 
     /**
       * A user representing the Knora API server, used in those cases where a user is required.
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
 
-    def receive = {
-        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => future2Message(sender(), resetTriplestoreContent(rdfDataObjects), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
+      */
+    def receive(msg: StoreResponderRequestADM) = msg match {
+        case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject]) => resetTriplestoreContent(rdfDataObjects)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

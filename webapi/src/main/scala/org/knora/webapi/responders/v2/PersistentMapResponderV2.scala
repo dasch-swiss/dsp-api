@@ -21,11 +21,13 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
+import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, _}
 
@@ -35,16 +37,19 @@ import scala.concurrent.Future
   * Manages storage in `knora-base:Map` objects on behalf of other responders. Since this actor does no permission
   * checking, it should not be used directly by routes.
   */
-class PersistentMapResponderV2 extends Responder {
+class PersistentMapResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
     private val knoraIdUtil = new KnoraIdUtil
 
-    override def receive: Receive = {
-        case mapEntryGetRequest: PersistentMapEntryGetRequestV2 => future2Message(sender(), getPersistentMapEntryV2(mapEntryGetRequest), log)
-        case mapGetRequest: PersistentMapGetRequestV2 => future2Message(sender(), getPersistentMapV2(mapGetRequest), log)
-        case mapEntryPutRequest: PersistentMapEntryPutRequestV2 => future2Message(sender, putPersistentMapEntryV2(mapEntryPutRequest), log)
-        case mapEntryDeleteRequest: PersistentMapEntryDeleteRequestV2 => future2Message(sender, deletePersistentMapEntryV2(mapEntryDeleteRequest), log)
-        case mapDeleteRequest: PersistentMapDeleteRequestV2 => future2Message(sender, deletePersistentMapV2(mapDeleteRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[PersistentMapResponderRequestV2]], and returns an appropriate response message.
+      */
+    def receive(msg: PersistentMapResponderRequestV2) = msg match {
+        case mapEntryGetRequest: PersistentMapEntryGetRequestV2 => getPersistentMapEntryV2(mapEntryGetRequest)
+        case mapGetRequest: PersistentMapGetRequestV2 => getPersistentMapV2(mapGetRequest)
+        case mapEntryPutRequest: PersistentMapEntryPutRequestV2 => putPersistentMapEntryV2(mapEntryPutRequest)
+        case mapEntryDeleteRequest: PersistentMapEntryDeleteRequestV2 => deletePersistentMapEntryV2(mapEntryDeleteRequest)
+        case mapDeleteRequest: PersistentMapDeleteRequestV2 => deletePersistentMapV2(mapDeleteRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

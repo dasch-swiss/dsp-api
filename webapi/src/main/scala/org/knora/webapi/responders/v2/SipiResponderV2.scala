@@ -32,7 +32,9 @@ import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
 import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, GetImageMetadataRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.messages.v2.responder.sipimessages.GetImageMetadataResponseV2JsonProtocol._
+import org.knora.webapi.messages.v2.responder.sipimessages._
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.routing.JWTHelper
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 import org.knora.webapi.util.SipiUtil
@@ -44,7 +46,7 @@ import scala.util.Try
 /**
   * Makes requests to Sipi.
   */
-class SipiResponderV2 extends Responder {
+class SipiResponderV2 extends ActorBasedResponder {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     private val targetHost: HttpHost = new HttpHost(settings.internalSipiHost, settings.internalSipiPort, "http")

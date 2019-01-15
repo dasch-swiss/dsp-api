@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 import org.knora.webapi.SipiException
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.sipimessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil.{handleUnexpectedMessage, try2Message}
 
 import scala.util.{Failure, Success, Try}
@@ -41,7 +41,7 @@ object MockSipiResponderV2 {
 /**
   * Imitates [[MockSipiResponderV2]], with hard-coded responses.
   */
-class MockSipiResponderV2 extends Responder {
+class MockSipiResponderV2 extends ActorBasedResponder {
     override def receive: Receive = {
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)

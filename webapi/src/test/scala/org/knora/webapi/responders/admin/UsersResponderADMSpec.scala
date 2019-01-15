@@ -26,7 +26,7 @@ package org.knora.webapi.responders.admin
 import java.util.UUID
 
 import akka.actor.Status.Failure
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
@@ -64,22 +64,20 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
     private val imagesProject = SharedTestDataADM.imagesProject
     private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
-    private val actorUnderTest = TestActorRef[UsersResponderADM]
-
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     "The UsersResponder " when {
 
         "asked about all users" should {
             "return a list" in {
-                actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
+                responderManager ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
                 response.users.size should be (18)
             }
 
             "not return the system and anonymous users" in {
-                actorUnderTest ! UsersGetRequestADM(requestingUser = rootUser)
+                responderManager ! UsersGetRequestADM(requestingUser = rootUser)
                 val response = expectMsgType[UsersGetResponseADM](timeout)
                 response.users.nonEmpty should be (true)
                 response.users.size should be (18)
@@ -91,7 +89,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked about an user identified by 'iri' " should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(rootUser.id),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -100,7 +98,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(incunabulaUser.id),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -109,7 +107,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserGetRequestADM(
+                responderManager ! UserGetRequestADM(
                     identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -118,7 +116,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM("http://rdfh.ch/users/notexisting"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -130,7 +128,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked about an user identified by 'username'" should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(rootUser.username),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -139,7 +137,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(incunabulaUser.username),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -148,7 +146,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserGetRequestADM(
+                responderManager ! UserGetRequestADM(
                     identifier = UserIdentifierADM("userwrong"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -157,7 +155,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM("userwrong"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -169,7 +167,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked about an user identified by 'email'" should {
 
             "return a profile if the user (root user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(rootUser.email),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -178,7 +176,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return a profile if the user (incunabula user) is known" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM(incunabulaUser.email),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -187,7 +185,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'NotFoundException' when the user is unknown" in {
-                actorUnderTest ! UserGetRequestADM(
+                responderManager ! UserGetRequestADM(
                     identifier = UserIdentifierADM("userwrong@example.com"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -196,7 +194,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return 'None' when the user is unknown" in {
-                actorUnderTest ! UserGetADM(
+                responderManager ! UserGetADM(
                     identifier = UserIdentifierADM("userwrong@example.com"),
                     userInformationTypeADM = UserInformationTypeADM.FULL,
                     requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -208,7 +206,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked to create a new user" should {
 
             "CREATE the user and return it's profile if the supplied email is unique " in {
-                actorUnderTest ! UserCreateRequestADM(
+                responderManager ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
                         username = "donald.duck",
                         email = "donald.duck@example.com",
@@ -234,7 +232,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
-                actorUnderTest ! UserCreateRequestADM(
+                responderManager ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
                         username = "root",
                         email = "root2@example.com",
@@ -252,7 +250,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
-                actorUnderTest ! UserCreateRequestADM(
+                responderManager ! UserCreateRequestADM(
                     createRequest = CreateUserApiRequestADM(
                         username = "root2",
                         email = "root@example.com",
@@ -275,7 +273,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "UPDATE the user's basic information" in {
 
                 /* User information is updated by the user */
-                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                responderManager ! UserChangeBasicUserInformationRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
@@ -291,7 +289,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response1.user.givenName should equal ("Donald")
 
                 /* User information is updated by a system admin */
-                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                responderManager ! UserChangeBasicUserInformationRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
@@ -307,7 +305,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 response2.user.familyName should equal ("Duck")
 
                 /* User information is updated by a system admin */
-                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                responderManager ! UserChangeBasicUserInformationRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
@@ -326,7 +324,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "UPDATE the user's password (by himself)" in {
-                actorUnderTest ! UserChangePasswordRequestADM(
+                responderManager ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         requesterPassword = Some("test"), // of the requesting user
@@ -345,7 +343,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "UPDATE the user's password (by a system admin)" in {
-                actorUnderTest ! UserChangePasswordRequestADM(
+                responderManager ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         requesterPassword = Some("test"), // of the requesting user
@@ -364,7 +362,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "UPDATE the user's status, (deleting) making him inactive " in {
-                actorUnderTest ! UserChangeStatusRequestADM(
+                responderManager ! UserChangeStatusRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -374,7 +372,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 val response1 = expectMsgType[UserOperationResponseADM](timeout)
                 response1.user.status should equal (false)
 
-                actorUnderTest ! UserChangeStatusRequestADM(
+                responderManager ! UserChangeStatusRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(true)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -386,7 +384,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "UPDATE the user's system admin membership" in {
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                responderManager ! UserChangeSystemAdminMembershipStatusRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(true)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -396,7 +394,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 val response1 = expectMsgType[UserOperationResponseADM](timeout)
                 response1.user.isSystemAdmin should equal (true)
 
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                responderManager ! UserChangeSystemAdminMembershipStatusRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(false)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -411,7 +409,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "return a 'ForbiddenException' if the user requesting update is not the user itself or system admin" in {
 
                 /* User information is updated by other normal user */
-                actorUnderTest ! UserChangeBasicUserInformationRequestADM(
+                responderManager ! UserChangeBasicUserInformationRequestADM(
                     userIri = SharedTestDataADM.superUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         email = None,
@@ -425,7 +423,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsg(Failure(ForbiddenException("User information can only be changed by the user itself or a system administrator")))
 
                 /* Password is updated by other normal user */
-                actorUnderTest ! UserChangePasswordRequestADM(
+                responderManager ! UserChangePasswordRequestADM(
                     userIri = SharedTestDataADM.superUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(
                         requesterPassword = Some("test"),
@@ -437,7 +435,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsg(Failure(ForbiddenException("User's password can only be changed by the user itself or a system admin.")))
 
                 /* Status is updated by other normal user */
-                actorUnderTest ! UserChangeStatusRequestADM(
+                responderManager ! UserChangeStatusRequestADM(
                     userIri = SharedTestDataADM.superUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
                     requestingUser = SharedTestDataADM.normalUser,
@@ -446,7 +444,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsg(Failure(ForbiddenException("User's status can only be changed by the user itself or a system administrator")))
 
                 /* System admin group membership */
-                actorUnderTest ! UserChangeSystemAdminMembershipStatusRequestADM(
+                responderManager ! UserChangeSystemAdminMembershipStatusRequestADM(
                     userIri = SharedTestDataADM.normalUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(systemAdmin = Some(true)),
                     requestingUser = SharedTestDataADM.normalUser,
@@ -457,7 +455,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'BadRequest' if system user is requested to change" in {
 
-                actorUnderTest ! UserChangeStatusRequestADM(
+                responderManager ! UserChangeStatusRequestADM(
                     userIri = KnoraSystemInstances.Users.SystemUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -469,7 +467,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "return 'BadRequest' if anonymous user is requested to change" in {
 
-                actorUnderTest ! UserChangeStatusRequestADM(
+                responderManager ! UserChangeStatusRequestADM(
                     userIri = KnoraSystemInstances.Users.AnonymousUser.id,
                     changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
                     requestingUser = SharedTestDataADM.superUser,
@@ -489,14 +487,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "ADD user to project" in {
 
-                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq())
 
-                actorUnderTest ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
                 val membershipUpdateResponse = expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
@@ -513,14 +511,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "DELETE user from project" in {
 
-                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq(imagesProject))
 
-                actorUnderTest ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq())
 
@@ -538,11 +536,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
+                responderManager ! UserProjectMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project membership can only be changed by a project or system administrator")))
             }
 
@@ -552,14 +550,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
             "ADD user to project admin group" in {
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq())
 
-                actorUnderTest ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq(imagesProject))
 
@@ -575,14 +573,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "DELETE user from project admin group" in {
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.projects should equal (Seq(imagesProject))
 
-                actorUnderTest ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserProjectAdminMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.projects should equal (Seq())
 
@@ -600,11 +598,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipAddRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
+                responderManager ! UserProjectAdminMembershipRemoveRequestADM(normalUser.id, imagesProject.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's project admin membership can only be changed by a project or system administrator")))
             }
 
@@ -613,14 +611,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         "asked to update the user's group membership" should {
 
             "ADD user to group" in {
-                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.groups should equal (Seq())
 
-                actorUnderTest ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.groups.map(_.id) should equal (Seq(imagesReviewerGroup.id))
 
@@ -634,14 +632,14 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             }
 
             "DELETE user from group" in {
-                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsBeforeUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsBeforeUpdate.groups.map(_.id) should equal (Seq(imagesReviewerGroup.id))
 
-                actorUnderTest ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, rootUser, UUID.randomUUID())
                 expectMsgType[UserOperationResponseADM](timeout)
 
-                actorUnderTest ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipsGetRequestADM(normalUser.id, rootUser, UUID.randomUUID())
                 val membershipsAfterUpdate = expectMsgType[UserGroupMembershipsGetResponseADM](timeout)
                 membershipsAfterUpdate.groups should equal (Seq())
 
@@ -657,11 +655,11 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
 
                 /* User is added to a project by a normal user */
-                actorUnderTest ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipAddRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
 
                 /* User is removed from a project by a normal user */
-                actorUnderTest ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
+                responderManager ! UserGroupMembershipRemoveRequestADM(normalUser.id, imagesReviewerGroup.id, normalUser, UUID.randomUUID())
                 expectMsg(Failure(ForbiddenException("User's group membership can only be changed by a project or system administrator")))
             }
 

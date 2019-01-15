@@ -38,7 +38,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest,
 import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.ActorBasedResponder
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{PermissionUtilADM, SipiUtil}
 import spray.json._
@@ -50,7 +50,7 @@ import scala.util.Try
   * Responds to requests for information about binary representations of resources, and returns responses in Knora API
   * v1 format.
   */
-class SipiResponderV1 extends Responder {
+class SipiResponderV1 extends ActorBasedResponder {
 
     implicit override val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit private val materializer: ActorMaterializer = ActorMaterializer()
