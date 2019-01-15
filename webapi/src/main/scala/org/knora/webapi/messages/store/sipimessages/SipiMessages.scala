@@ -34,17 +34,17 @@ import spray.json._
 sealed trait SipiRequest
 
 /**
-  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiManager]].
+  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiConnector]].
   */
 sealed trait SipiRequestV1 extends SipiRequest
 
 /**
-  * Abstract trait to represent a conversion request to Sipi Responder.
+  * Abstract trait to represent a conversion request to Sipi Connector.
   *
   * For each type of conversion request, an implementation of `toFormData` must be provided.
   *
   */
-sealed trait SipiResponderConversionRequestV1 extends SipiRequestV1 {
+sealed trait SipiConversionRequestV1 extends SipiRequestV1 {
     val originalFilename: String
     val originalMimeType: String
     val userProfile: UserProfileV1
@@ -72,10 +72,10 @@ sealed trait SipiResponderConversionRequestV1 extends SipiRequestV1 {
   * @param source           the temporary location of the source file on disk (absolute path).
   * @param userProfile      the user making the request.
   */
-case class SipiResponderConversionPathRequestV1(originalFilename: String,
-                                                originalMimeType: String,
-                                                source: File,
-                                                userProfile: UserProfileV1) extends SipiResponderConversionRequestV1 {
+case class SipiConversionPathRequestV1(originalFilename: String,
+                                       originalMimeType: String,
+                                       source: File,
+                                       userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
     /**
       * Creates the parameters needed to call the Sipi route convert_path.
@@ -95,7 +95,7 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
         )
     }
 
-    def toJsValue = RepresentationV1JsonProtocol.SipiResponderConversionPathRequestV1Format.write(this)
+    def toJsValue = RepresentationV1JsonProtocol.SipiConversionPathRequestV1Format.write(this)
 }
 
 /**
@@ -110,10 +110,10 @@ case class SipiResponderConversionPathRequestV1(originalFilename: String,
   * @param userProfile      the user making the request.
   */
 
-case class SipiResponderConversionFileRequestV1(originalFilename: String,
-                                                originalMimeType: String,
-                                                filename: String,
-                                                userProfile: UserProfileV1) extends SipiResponderConversionRequestV1 {
+case class SipiConversionFileRequestV1(originalFilename: String,
+                                       originalMimeType: String,
+                                       filename: String,
+                                       userProfile: UserProfileV1) extends SipiConversionRequestV1 {
 
     /**
       * Creates the parameters needed to call the Sipi route convert_file.
@@ -133,7 +133,7 @@ case class SipiResponderConversionFileRequestV1(originalFilename: String,
         )
     }
 
-    def toJsValue = RepresentationV1JsonProtocol.SipiResponderConversionFileRequestV1Format.write(this)
+    def toJsValue = RepresentationV1JsonProtocol.SipiConversionFileRequestV1Format.write(this)
 
 }
 
@@ -229,11 +229,11 @@ object SipiConstants {
 }
 
 /**
-  * Response from SIPIResponder to a [[SipiResponderConversionRequestV1]] representing one or more [[FileValueV1]].
+  * Response from SIPIResponder to a [[SipiConversionRequestV1]] representing one or more [[FileValueV1]].
   *
   * @param fileValuesV1 a list of [[FileValueV1]]
   */
-case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: SipiConstants.FileType.Value)
+case class SipiConversionResponseV1(fileValuesV1: Vector[FileValueV1], file_type: SipiConstants.FileType.Value)
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -245,21 +245,21 @@ case class SipiResponderConversionResponseV1(fileValuesV1: Vector[FileValueV1], 
 object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with NullOptions {
 
     /**
-      * Converts between [[SipiResponderConversionPathRequestV1]] objects and [[JsValue]] objects.
+      * Converts between [[SipiConversionPathRequestV1]] objects and [[JsValue]] objects.
       */
-    implicit object SipiResponderConversionPathRequestV1Format extends RootJsonFormat[SipiResponderConversionPathRequestV1] {
+    implicit object SipiConversionPathRequestV1Format extends RootJsonFormat[SipiConversionPathRequestV1] {
         /**
           * Not implemented.
           */
         def read(jsonVal: JsValue) = ???
 
         /**
-          * Converts a [[SipiResponderConversionPathRequestV1]] into [[JsValue]] for formatting as JSON.
+          * Converts a [[SipiConversionPathRequestV1]] into [[JsValue]] for formatting as JSON.
           *
-          * @param request the [[SipiResponderConversionPathRequestV1]] to be converted.
+          * @param request the [[SipiConversionPathRequestV1]] to be converted.
           * @return a [[JsValue]].
           */
-        def write(request: SipiResponderConversionPathRequestV1): JsValue = {
+        def write(request: SipiConversionPathRequestV1): JsValue = {
 
             val fields = Map(
                 "originalFilename" -> request.originalFilename.toJson,
@@ -272,21 +272,21 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
     }
 
     /**
-      * Converts between [[SipiResponderConversionFileRequestV1]] objects and [[JsValue]] objects.
+      * Converts between [[SipiConversionFileRequestV1]] objects and [[JsValue]] objects.
       */
-    implicit object SipiResponderConversionFileRequestV1Format extends RootJsonFormat[SipiResponderConversionFileRequestV1] {
+    implicit object SipiConversionFileRequestV1Format extends RootJsonFormat[SipiConversionFileRequestV1] {
         /**
           * Not implemented.
           */
         def read(jsonVal: JsValue) = ???
 
         /**
-          * Converts a [[SipiResponderConversionFileRequestV1]] into [[JsValue]] for formatting as JSON.
+          * Converts a [[SipiConversionFileRequestV1]] into [[JsValue]] for formatting as JSON.
           *
-          * @param request the [[SipiResponderConversionFileRequestV1]] to be converted.
+          * @param request the [[SipiConversionFileRequestV1]] to be converted.
           * @return a [[JsValue]].
           */
-        def write(request: SipiResponderConversionFileRequestV1): JsValue = {
+        def write(request: SipiConversionFileRequestV1): JsValue = {
 
             val fields = Map(
                 "originalFilename" -> request.originalFilename.toJson,
@@ -306,7 +306,7 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
 // Messages V2
 
 /**
-  * An abstract trait for messages that can be sent to [[org.knora.webapi.responders.v2.SipiResponderV2]].
+  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiConnector]].
   */
 sealed trait SipiRequestV2 extends SipiRequest {
     def requestingUser: UserADM
@@ -358,6 +358,18 @@ case class DeleteTemporaryFileRequestV2(internalFilename: String,
                                         requestingUser: UserADM) extends SipiRequestV2
 
 
+/**
+  * Asks Sipi for a text file. Currently only for UTF8 encoded text files.
+  *
+  * @param fileUrl        the URL pointing to the file.
+  * @param requestingUser the user making the request.
+  */
+case class SipiGetTextFileRequest(fileUrl: String,
+                                  requestingUser: UserADM) extends SipiRequestV2
 
-
+/**
+  * Represents a response for [[SipiGetTextFileRequest]].
+  * @param content the file content.
+  */
+case class SipiGetTextFileResponse(content: String)
 

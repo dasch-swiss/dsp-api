@@ -24,6 +24,7 @@ import akka.event.LoggingReceive
 import org.knora.webapi._
 import org.knora.webapi.messages.store.sipimessages.SipiRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.store.sipi.SipiManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 /**
@@ -38,12 +39,12 @@ class StoreManager extends Actor with ActorLogging {
     /**
       * Starts the TriplestoreManager
       */
-    val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
+    protected lazy val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
       * Starts the SipiManager
       */
-    val sipiManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
+    protected lazy val sipiManager = makeActor(Props(new SipiManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiManagerActorName)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage

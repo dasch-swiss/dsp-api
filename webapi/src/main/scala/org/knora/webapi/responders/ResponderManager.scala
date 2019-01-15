@@ -19,9 +19,8 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.event.LoggingReceive
-import akka.routing.FromConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -43,7 +42,6 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.OntologiesRespond
 import org.knora.webapi.messages.v2.responder.persistentmapmessages.PersistentMapResponderRequestV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ResourcesResponderRequestV2
 import org.knora.webapi.messages.v2.responder.searchmessages.SearchResponderRequestV2
-import org.knora.webapi.messages.v2.responder.sipimessages.SipiResponderRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffResponderRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderRequestV2
 import org.knora.webapi.responders.admin._
@@ -106,15 +104,14 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected lazy val valuesResponderV1: ValuesResponderV1 = makeDefaultValuesResponderV1
 
     /**
-      * Constructs the [[SipiResponderV1]] actor pool.
+      * Constructs the default [[SipiResponderV1]].
       */
-    protected final def makeDefaultSipiRouterV1: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV1]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SIPI_ROUTER_V1_ACTOR_NAME)
+    protected final def makeDefaultSipiResponderV1: SipiResponderV1 = new SipiResponderV1(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Sipi responder.
+      * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
-    protected lazy val sipiRouterV1: ActorRef = makeDefaultSipiRouterV1
+    protected lazy val sipiRouterV1: SipiResponderV1 = makeDefaultSipiResponderV1
 
     /**
       * Constructs the default [[StandoffResponderV1]].
@@ -219,11 +216,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected final def makeDefaultListsResponderV2: ListsResponderV2 = new ListsResponderV2(system, applicationStateActor, context.self, storeManager)
 
     /**
-      * Constructs the default Akka routing actor that routes messages to [[SipiResponderV2]].
-      */
-    protected final def makeDefaultSipiRouterV2: ActorRef = makeActor(FromConfig.props(Props[SipiResponderV2]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SIPI_ROUTER_V2_ACTOR_NAME)
-
-    /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
       */
     protected val ontologiesResponderV2: OntologyResponderV2 = makeDefaultOntologiesResponderV2
@@ -258,11 +250,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
       */
     protected val listsResponderV2: ListsResponderV2 = makeDefaultListsResponderV2
 
-    /**
-      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Sipi responder.
-      */
-    protected lazy val sipiRouterV2: ActorRef = makeDefaultSipiRouterV2
 
     //
     // Admin responders
@@ -339,7 +326,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case ckanResponderRequestV1: CkanResponderRequestV1 => future2Message(sender(), ckanResponderV1 receive ckanResponderRequestV1, log)
         case resourcesResponderRequestV1: ResourcesResponderRequestV1 => future2Message(sender(), resourcesResponderV1 receive resourcesResponderRequestV1, log)
         case valuesResponderRequestV1: ValuesResponderRequestV1 => future2Message(sender(), valuesResponderV1 receive valuesResponderRequestV1, log)
-        case sipiResponderRequestV1: SipiResponderRequestV1 => sipiRouterV1 forward sipiResponderRequestV1
+        case sipiResponderRequestV1: SipiResponderRequestV1 => future2Message(sender(), sipiRouterV1 receive sipiResponderRequestV1, log)
         case listsResponderRequestV1: ListsResponderRequestV1 => future2Message(sender(), listsResponderV1 receive listsResponderRequestV1, log)
         case searchResponderRequestV1: SearchResponderRequestV1 => future2Message(sender(), searchResponderV1 receive searchResponderRequestV1, log)
         case ontologyResponderRequestV1: OntologyResponderRequestV1 => future2Message(sender(), ontologyResponderV1 receive ontologyResponderRequestV1, log)
@@ -356,8 +343,6 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
         case persistentMapResponderRequestV2: PersistentMapResponderRequestV2 => future2Message(sender(), persistentMapResponderV2 receive persistentMapResponderRequestV2, log)
         case standoffResponderRequestV2: StandoffResponderRequestV2 => future2Message(sender(), standoffResponderV2 receive standoffResponderRequestV2, log)
         case listsResponderRequestV2: ListsResponderRequestV2 => future2Message(sender(), listsResponderV2 receive listsResponderRequestV2, log)
-        case sipiResponderRequestV2: SipiResponderRequestV2 => sipiRouterV2 forward sipiResponderRequestV2
-
         // Knora Admin message
         case groupsResponderRequestADM: GroupsResponderRequestADM => future2Message(sender(), groupsResponderADM receive groupsResponderRequestADM, log)
         case listsResponderRequest: ListsResponderRequestADM => future2Message(sender(), listsResponderADM receive listsResponderRequest, log)

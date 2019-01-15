@@ -25,7 +25,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1}
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionPathRequestV1, SipiConversionRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -208,7 +208,7 @@ case class ResourceSearchGetRequestV1(searchString: String, resourceTypeIri: Opt
 case class ResourceCreateRequestV1(resourceTypeIri: IRI,
                                    label: String,
                                    values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                   file: Option[SipiResponderConversionRequestV1] = None,
+                                   file: Option[SipiConversionRequestV1] = None,
                                    projectIri: IRI,
                                    userProfile: UserADM,
                                    apiRequestID: UUID) extends ResourcesResponderRequestV1
@@ -228,7 +228,7 @@ case class OneOfMultipleResourceCreateRequestV1(resourceTypeIri: IRI,
                                                 clientResourceID: String,
                                                 label: String,
                                                 values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                                file: Option[SipiResponderConversionPathRequestV1] = None,
+                                                file: Option[SipiConversionPathRequestV1] = None,
                                                 creationDate: Option[Instant])
 
 /**

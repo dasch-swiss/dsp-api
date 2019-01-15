@@ -30,6 +30,9 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.GetImageMetadataResponseV2JsonProtocol._
+import org.knora.webapi.messages.store.sipimessages.RepresentationV1JsonProtocol._
 import org.knora.webapi.messages.store.sipimessages.SipiConstants.FileType
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
@@ -68,11 +71,12 @@ class SipiConnector extends Actor with ActorLogging {
     private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
     override def receive: Receive = {
-        case convertPathRequest: SipiResponderConversionPathRequestV1 => try2Message(sender(), convertPathV1(convertPathRequest), log)
-        case convertFileRequest: SipiResponderConversionFileRequestV1 => try2Message(sender(), convertFileV1(convertFileRequest), log)
+        case convertPathRequest: SipiConversionPathRequestV1 => try2Message(sender(), convertPathV1(convertPathRequest), log)
+        case convertFileRequest: SipiConversionFileRequestV1 => try2Message(sender(), convertFileV1(convertFileRequest), log)
         case getFileMetadataRequestV2: GetImageMetadataRequestV2 => try2Message(sender(), getFileMetadataV2(getFileMetadataRequestV2), log)
         case moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequestV2 => try2Message(sender(), moveTemporaryFileToPermanentStorageV2(moveTemporaryFileToPermanentStorageRequestV2), log)
         case deleteTemporaryFileRequestV2: DeleteTemporaryFileRequestV2 => try2Message(sender(), deleteTemporaryFileV2(deleteTemporaryFileRequestV2), log)
+        case SipiGetTextFileRequest(fileUrl, requestingUser) => try2Message(sender(), sipiGetXsltTransformationRequestV2(fileUrl, requestingUser), log)
         case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
     }
 
@@ -80,9 +84,9 @@ class SipiConnector extends Actor with ActorLogging {
       * Convert a file that has been sent to Knora (non GUI-case).
       *
       * @param conversionRequest the information about the file (uploaded by Knora).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      * @return a [[SipiConversionResponseV1]] representing the file values to be added to the triplestore.
       */
-    private def convertPathV1(conversionRequest: SipiResponderConversionPathRequestV1): Try[SipiResponderConversionResponseV1] = {
+    private def convertPathV1(conversionRequest: SipiConversionPathRequestV1): Try[SipiConversionResponseV1] = {
         val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiPathConversionRouteV1}"
 
         callSipiConvertRoute(url, conversionRequest)
@@ -92,23 +96,23 @@ class SipiConnector extends Actor with ActorLogging {
       * Convert a file that is already managed by Sipi (GUI-case).
       *
       * @param conversionRequest the information about the file (managed by Sipi).
-      * @return a [[SipiResponderConversionResponseV1]] representing the file values to be added to the triplestore.
+      * @return a [[SipiConversionResponseV1]] representing the file values to be added to the triplestore.
       */
-    private def convertFileV1(conversionRequest: SipiResponderConversionFileRequestV1): Try[SipiResponderConversionResponseV1] = {
+    private def convertFileV1(conversionRequest: SipiConversionFileRequestV1): Try[SipiConversionResponseV1] = {
         val url = s"${settings.internalSipiImageConversionUrlV1}/${settings.sipiFileConversionRouteV1}"
 
         callSipiConvertRoute(url, conversionRequest)
     }
 
     /**
-      * Makes a conversion request to Sipi and creates a [[SipiResponderConversionResponseV1]]
+      * Makes a conversion request to Sipi and creates a [[SipiConversionResponseV1]]
       * containing the file values to be added to the triplestore.
       *
       * @param urlPath           the Sipi route to be called.
       * @param conversionRequest the message holding the information to make the request.
-      * @return a [[SipiResponderConversionResponseV1]].
+      * @return a [[SipiConversionResponseV1]].
       */
-    private def callSipiConvertRoute(urlPath: String, conversionRequest: SipiResponderConversionRequestV1): Try[SipiResponderConversionResponseV1] = {
+    private def callSipiConvertRoute(urlPath: String, conversionRequest: SipiConversionRequestV1): Try[SipiConversionResponseV1] = {
         val context: HttpClientContext = HttpClientContext.create
 
         val formParams = new util.ArrayList[NameValuePair]()
@@ -235,7 +239,7 @@ class SipiConnector extends Actor with ActorLogging {
                 // TODO: add missing file types
             }
 
-        } yield SipiResponderConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
+        } yield SipiConversionResponseV1(fileValuesV1, file_type = fileTypeEnum)
     }
 
     /**
@@ -315,6 +319,20 @@ class SipiConnector extends Actor with ActorLogging {
         for {
             _ <- doSipiRequest(request)
         } yield SuccessResponseV2("Deleted temporary file.")
+    }
+
+    /**
+      * Asks Sipi for a file.
+      * @param xsltFileUrl the file's URL.
+      * @param requestingUser the user making the request.
+      */
+    private def sipiGetXsltTransformationRequestV2(xsltFileUrl: String, requestingUser: UserADM): Try[SipiGetTextFileResponse] = {
+        // ask Sipi to return the XSL transformation
+        val request = new HttpGet(xsltFileUrl)
+
+        for {
+            responseStr <- doSipiRequest(request)
+        } yield SipiGetTextFileResponse(responseStr)
     }
 
     /**

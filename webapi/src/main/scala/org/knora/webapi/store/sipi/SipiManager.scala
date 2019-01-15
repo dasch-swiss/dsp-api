@@ -19,15 +19,12 @@
 
 package org.knora.webapi.store.sipi
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi._
-import org.knora.webapi.responders.v1.SipiResponderV1
+import org.knora.webapi.messages.store.sipimessages.SipiRequest
 import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.util.StringFormatter
-
-import scala.concurrent.ExecutionContext
 
 /**
   * Makes requests to Sipi.
@@ -35,27 +32,19 @@ import scala.concurrent.ExecutionContext
 class SipiManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
-
-    implicit val system: ActorSystem = context.system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-    val settings = Settings(system)
-
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    /**
+      * Constructs the [[SipiConnector]] actor (pool).
+      */
+    protected final def makeDefaultSipiConnector: ActorRef = makeActor(FromConfig.props(Props[SipiConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiConnectorActorName)
 
     /**
-      * Constructs the [[SipiResponderV1]] actor pool.
+      * Subclasses can override this member to substitute a custom actor instead of the default SipiConnector.
       */
-    protected final def makeDefaultSipiConnectorPool: ActorRef = makeActor(FromConfig.props(Props[SipiConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiConnectorActorName)
-
-    /**
-      * The Akka routing actor that should receive messages addressed to the Sipi responder. Subclasses can override this
-      * member to substitute a custom actor instead of the default Sipi responder.
-      */
-    protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnectorPool
+    protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnector
 
     def receive = LoggingReceive {
-        case msg ⇒ sipiConnector forward msg
+        case sipiMessages: SipiRequest => sipiConnector forward sipiMessages
+        case other => sender ! Status.Failure(UnexpectedMessageException(s"SipiManager received an unexpected message: $other"))
     }
 
 }

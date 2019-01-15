@@ -23,7 +23,7 @@ import java.time.Instant
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -32,8 +32,9 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, 
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
+import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.store.sipi.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
@@ -57,7 +58,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private val anythingUser1 = SharedTestDataADM.anythingUser1
     private val anythingUser2 = SharedTestDataADM.anythingUser2
 
-    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V2_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV2)))
+    override lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> system.actorOf(Props(new MockSipiConnector), SipiConnectorActorName))
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -1847,7 +1848,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueContent = StillImageFileValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
                 fileValue = FileValueV2(
-                    internalFilename = MockSipiResponderV2.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
                     internalMimeType = "image/jp2",
                     originalFilename = "test.tiff",
                     originalMimeType = "image/tiff"
@@ -1881,7 +1882,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             val valueContent = StillImageFileValueContentV2(
                 ontologySchema = ApiV2WithValueObjects,
                 fileValue = FileValueV2(
-                    internalFilename = MockSipiResponderV2.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
+                    internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
                     internalMimeType = "image/jp2",
                     originalFilename = "test.tiff",
                     originalMimeType = "image/tiff"

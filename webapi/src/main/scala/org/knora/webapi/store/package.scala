@@ -24,11 +24,21 @@ package org.knora.webapi
   * These can be used from other packages by importing 'org.knora.rapier.store._'
   */
 package object store {
+
     val StoreManagerActorName: String = "storeManager"
     val StoreManagerActorPath: String = "/user/" + StoreManagerActorName
 
+    /* Triplestores */
+
     val TriplestoreManagerActorName: String = "triplestoreManager"
     val TriplestoreManagerActorPath: String = StoreManagerActorPath + "/" + TriplestoreManagerActorName
+
+    val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
+    val EmbeddedJenaActorName: String = "embeddedJenaTDB"
+    val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
+    val FakeTriplestoreActorName: String = "fakeTriplestore"
+
+    /* Sipi */
 
     val SipiManagerActorName: String = "sipiManager"
     val SipiManagerActorPath: String = StoreManagerActorPath + "/" + SipiManagerActorName
@@ -36,8 +46,5 @@ package object store {
     val SipiConnectorActorName: String = "sipiConnector"
 
 
-    val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
-    val EmbeddedJenaActorName: String = "embeddedJenaTDB"
-    val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
-    val FakeTriplestoreActorName: String = "fakeTriplestore"
+
 }
