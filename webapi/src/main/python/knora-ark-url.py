@@ -40,7 +40,7 @@ ark_resolver_host = "ark.dasch.swiss"
 ark_assigned_number = 72163
 ark_version = 1
 resource_iri_regex = re.compile(r"http://rdfh.ch/([0-9A-F]+)/([A-Za-z0-9_-]+)")
-ark_url_regex = re.compile(r"http://ark.dasch.swiss/ark:/72163/([0-9]+)\.([0-9A-F]+)\.([A-Za-z0-9_-]+)(/((-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9]))?")
+ark_url_regex = re.compile(r"http://ark.dasch.swiss/ark:/72163/([0-9]+)/([0-9A-F]+)/([A-Za-z0-9_=]+)(\.((-?(?:[1-9][0-9]*)?[0-9]{4})-(1[0-2]|0[1-9])-(3[01]|0[1-9]|[12][0-9])T(2[0-3]|[01][0-9]):([0-5][0-9]):([0-5][0-9])(\.[0-9]+)?Z|[+-](?:2[0-3]|[01][0-9]):[0-5][0-9]))?")
 
 
 # Converts a Knora resource IRI to an ARK URL.
@@ -53,18 +53,22 @@ def resource_iri_to_ark_url(resource_iri, timestamp=None):
     project_id = match.group(1)
     resource_id = match.group(2)
     check_digit = calculate_check_digit(resource_id)
+    resource_id_with_check_digit = resource_id + check_digit
 
-    url = "http://{}/ark:/{}/{}.{}.{}{}".format(
+    # Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
+    escaped_resource_id_with_check_digit = resource_id_with_check_digit.replace('-', '=')
+
+    url = "http://{}/ark:/{}/{}/{}/{}".format(
         ark_resolver_host,
         ark_assigned_number,
         ark_version,
         project_id,
-        resource_id,
-        check_digit
+        escaped_resource_id_with_check_digit
     )
 
+    # If there's a timestamp, add it as an object variant.
     if timestamp is not None:
-        url += "/" + timestamp
+        url += "." + timestamp
 
     return url
 
@@ -82,7 +86,8 @@ def ark_url_to_resource_iri(ark_url):
         raise ArkUrlException("Invalid ARK URL: {}".format(ark_url))
 
     project_id = match.group(2)
-    resource_id_with_check_digit = match.group(3)
+    escaped_resource_id_with_check_digit = match.group(3)
+    resource_id_with_check_digit = escaped_resource_id_with_check_digit.replace('=', '-')
     timestamp = match.group(5)
 
     if not is_valid(resource_id_with_check_digit):
@@ -218,22 +223,22 @@ def test():
     print("generate an ARK URL for a resource IRI without a timestamp: ", end='')
     resource_iri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
     ark_url = resource_iri_to_ark_url(resource_iri)
-    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1.0001.cmfk1DMHRBiR4-_6HXpEFAT"
+    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT"
     print("OK")
 
     print("generate an ARK URL for a resource IRI with a timestamp: ", end='')
     ark_url = resource_iri_to_ark_url(resource_iri, "2018-12-07T00:00:00Z")
-    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1.0001.cmfk1DMHRBiR4-_6HXpEFAT/2018-12-07T00:00:00Z"
+    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT.2018-12-07T00:00:00Z"
     print("OK")
 
     print("parse an ARK URL without a timestamp: ", end='')
-    (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1.0001.cmfk1DMHRBiR4-_6HXpEFAT")
+    (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT")
     assert converted_resource_iri == "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
     assert timestamp is None
     print("OK")
 
     print("parse an ARK URL with a timestamp: ", end='')
-    (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1.0001.cmfk1DMHRBiR4-_6HXpEFAT/2018-12-07T00:00:00Z")
+    (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT.2018-12-07T00:00:00Z")
     assert converted_resource_iri == "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
     assert timestamp == "2018-12-07T00:00:00Z"
     print("OK")
@@ -242,7 +247,7 @@ def test():
     rejected = False
 
     try:
-        (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1.0001.cmfk1DMHRBir4-_6HXpEFAT")
+        (converted_resource_iri, timestamp) = ark_url_to_resource_iri("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBir4=_6HXpEFAT")
     except ArkUrlException:
         rejected = True
 

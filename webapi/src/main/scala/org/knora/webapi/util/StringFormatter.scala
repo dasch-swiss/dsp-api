@@ -2179,9 +2179,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case Failure(ex) => throw DataConversionException(ex.getMessage)
         }
 
-        // If there's a timestamp, add it as a qualifier.
-        val timestampQualifier: String = timestamp.map(instant => "/" + instant.toString).getOrElse("")
+        val resourceIDWithCheckDigit = resourceID + checkDigit
 
-        s"http://$host/ark:/$assignedNumber/$ArkVersion.$projectID.$resourceID$checkDigit$timestampQualifier"
+        // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
+        val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
+
+        // If there's a timestamp, add it as an object variant.
+        val timestampVariant: String = timestamp.map(instant => "." + instant.toString).getOrElse("")
+
+        s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit$timestampVariant"
     }
 }
