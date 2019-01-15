@@ -2180,8 +2180,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         }
 
         // If there's a timestamp, make a string representation of it.
-        val timestampStr: String = timestamp.map(instant => "." + instant.toString).getOrElse("")
+        val timestampStr: String = timestamp.map(instant => "/" + instant.toString).getOrElse("")
 
-        s"http://$host/ark:/$assignedNumber/$ArkVersion.$projectID.$resourceID.$checkDigit$timestampStr"
+        s"http://$host/ark:/$assignedNumber/$ArkVersion.$projectID.$resourceID$checkDigit$timestampStr"
     }
 }
