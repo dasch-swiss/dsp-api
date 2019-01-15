@@ -34,7 +34,7 @@ import spray.json._
 sealed trait SipiRequest
 
 /**
-  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiConnector]].
+  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiManager]].
   */
 sealed trait SipiRequestV1 extends SipiRequest
 
