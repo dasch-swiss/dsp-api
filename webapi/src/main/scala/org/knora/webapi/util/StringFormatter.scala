@@ -2154,7 +2154,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     }
 
     /**
-      * Generates an ARK URL for a resource.
+      * Generates an ARK URL for a resource as per [[https://tools.ietf.org/html/draft-kunze-ark-18]].
       *
       * @param projectID the shortcode of the project that the resource belongs to.
       * @param resourceID the resource's ID (the last component of its IRI).
@@ -2179,9 +2179,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case Failure(ex) => throw DataConversionException(ex.getMessage)
         }
 
-        // If there's a timestamp, make a string representation of it.
-        val timestampStr: String = timestamp.map(instant => "/" + instant.toString).getOrElse("")
+        // If there's a timestamp, add it as a qualifier.
+        val timestampQualifier: String = timestamp.map(instant => "/" + instant.toString).getOrElse("")
 
-        s"http://$host/ark:/$assignedNumber/$ArkVersion.$projectID.$resourceID$checkDigit$timestampStr"
+        s"http://$host/ark:/$assignedNumber/$ArkVersion.$projectID.$resourceID$checkDigit$timestampQualifier"
     }
 }
