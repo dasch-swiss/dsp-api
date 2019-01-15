@@ -117,7 +117,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
             sid = sr.sid
 
-            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/"), httpOnly = true))))
 
             /* check for sensitive information leakage */
             val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
@@ -152,7 +152,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val response = singleAwaitingRequest(request)
             //log.debug("==>> " + responseAs[String])
             assert(response.status === StatusCodes.OK)
-            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), httpOnly= true, expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
         }
 
         "fail authentication with provided session cookie after logout" in {
@@ -198,7 +198,7 @@ class AuthenticationV1E2ESpec extends E2ESpec(AuthenticationV1E2ESpec.config) wi
             val sr: SessionResponse = Await.result(Unmarshal(response.entity).to[SessionResponse], 1.seconds)
             sid = sr.sid
 
-            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/")))))
+            assert(response.headers.contains(`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, value = sid, path = Some("/"), httpOnly = true))))
 
             /* check for sensitive information leakage */
             val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
