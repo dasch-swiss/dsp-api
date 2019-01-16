@@ -35,7 +35,7 @@ import akka.stream.scaladsl.FileIO
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
@@ -319,14 +319,14 @@ object ValuesRouteV1 extends Authenticator {
             )
         }
 
-        def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiResponderConversionPathRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
+        def makeChangeFileValueRequest(resIriStr: IRI, apiRequest: Option[ChangeFileValueApiRequestV1], multipartConversionRequest: Option[SipiConversionPathRequestV1], userADM: UserADM): ChangeFileValueRequestV1 = {
             if (apiRequest.nonEmpty && multipartConversionRequest.nonEmpty) throw BadRequestException("File information is present twice, only one is allowed.")
 
             val resourceIri = stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
 
             if (apiRequest.nonEmpty) {
                 // GUI-case
-                val fileRequest = SipiResponderConversionFileRequestV1(
+                val fileRequest = SipiConversionFileRequestV1(
                     originalFilename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalFilename, throw BadRequestException(s"The original filename is invalid: '${apiRequest.get.file.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(apiRequest.get.file.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${apiRequest.get.file.originalMimeType}'")),
                     filename = stringFormatter.toSparqlEncodedString(apiRequest.get.file.filename, throw BadRequestException(s"Invalid filename: '${apiRequest.get.file.filename}'")),
@@ -538,7 +538,7 @@ object ValuesRouteV1 extends Authenticator {
                             originalFilename = fileInfo.fileName
                             originalMimeType = fileInfo.contentType.toString
 
-                            sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            sipiConvertPathRequest = SipiConversionPathRequestV1(
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"The original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,

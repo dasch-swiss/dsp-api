@@ -34,7 +34,7 @@ import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
-import org.knora.webapi.store.{STORE_MANAGER_ACTOR_NAME, StoreManager}
+import org.knora.webapi.store.{MockableStoreManager, StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -58,9 +58,10 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
 
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+    lazy val mockStoreConnectors: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = StoreManagerActorName)
     val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]

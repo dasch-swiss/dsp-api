@@ -24,17 +24,17 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Overview
 
 The store module houses the different types of data stores supported by
-Knora. At the moment, only triplestores are supported.
+Knora. At the moment, only triplestores and IIIF servers (Sipi) are supported.
 The triplestore support is implemented in the
-`org.knora.webapi.store.triplestore` package.
+`org.knora.webapi.store.triplestore` package and the IIIF server support in
+`org.knora.webapi.store.iiif` package.
 
 ## Lifecycle
 
 At the top level, the store package houses the `StoreManager`-Actor
-which is started when Knora starts. The `StoreManager`
-then starts the `TriplestoreManager` which in turn starts the
-correct actor implementation (e.g., GraphDB, Fuseki, embedded Jena,
-etc.).
+which is started when Knora starts. The `StoreManager` then starts the
+`TriplestoreManager` and `IIIFManager`, which each in turn starts their
+correct actor implementation.
 
 ## HTTP-based Triplestores
 
@@ -202,3 +202,8 @@ As an example, to use it inside a test you could write something like:
         expectMsg(300.seconds, ResetTripleStoreContentACK())
     }
 ```
+
+## IIIF Servers
+
+Currently, only support for SIPI is implemented in
+`org.knora.webapi.store.iiifSipiConnector`.

@@ -443,6 +443,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                         jsonLDObject = valueJsonLDObject,
                                         requestingUser = requestingUser,
                                         responderManager = responderManager,
+                                        storeManager = storeManager,
                                         settings = settings,
                                         log = log
                                     )

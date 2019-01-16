@@ -24,14 +24,27 @@ package org.knora.webapi
   * These can be used from other packages by importing 'org.knora.rapier.store._'
   */
 package object store {
-    val STORE_MANAGER_ACTOR_NAME: String = "storeManager"
-    val STORE_MANAGER_ACTOR_PATH: String = "/user/" + STORE_MANAGER_ACTOR_NAME
 
-    val TRIPLESTORE_MANAGER_ACTOR_NAME: String = "triplestoreManager"
-    val TRIPLESTORE_MANAGER_ACTOR_PATH: String = STORE_MANAGER_ACTOR_PATH + "/" + TRIPLESTORE_MANAGER_ACTOR_NAME
+    val StoreManagerActorName: String = "storeManager"
+    val StoreManagerActorPath: String = "/user/" + StoreManagerActorName
 
-    val HTTP_TRIPLESTORE_ACTOR_NAME: String = "httpTriplestoreRouter"
-    val EMBEDDED_JENA_ACTOR_NAME: String = "embeddedJenaTDB"
-    val EMBEDDED_GRAPH_DB_ACTOR_NAME: String = "embeddedJenaGraphDB"
-    val FAKE_TRIPLESTORE_ACTOR_NAME: String = "fakeTriplestore"
+    /* Triplestores */
+
+    val TriplestoreManagerActorName: String = "triplestoreManager"
+    val TriplestoreManagerActorPath: String = StoreManagerActorPath + "/" + TriplestoreManagerActorName
+
+    val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
+    val EmbeddedJenaActorName: String = "embeddedJenaTDB"
+    val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
+    val FakeTriplestoreActorName: String = "fakeTriplestore"
+
+    /* Sipi */
+
+    val IIIFManagerActorName: String = "iiifManager"
+    val IIIFManagerActorPath: String = StoreManagerActorPath + "/" + IIIFManagerActorName
+
+    val SipiConnectorActorName: String = "sipiConnector"
+
+
+
 }

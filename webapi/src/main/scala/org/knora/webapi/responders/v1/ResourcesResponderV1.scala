@@ -22,17 +22,17 @@ package org.knora.webapi.responders.v1
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem, Status}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{MultipleResourceCreateResponseV1, _}
-import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
@@ -1497,7 +1497,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                               resourceClassInfo: ClassInfoV1,
                               propertyInfoMap: Map[IRI, PropertyInfoV1],
                               values: Map[IRI, Seq[CreateValueV1WithComment]],
-                              sipiConversionRequest: Option[SipiResponderConversionRequestV1],
+                              sipiConversionRequest: Option[SipiConversionRequestV1],
                               clientResourceIDsToResourceClasses: Map[String, IRI] = new ErrorHandlingMap[IRI, IRI](
                                   toWrap = Map.empty[IRI, IRI],
                                   errorTemplateFun = { key => s"Resource $key is the target of a link, but was not provided in the request" },
@@ -1601,7 +1601,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
             fileValues: Option[(IRI, Vector[CreateValueV1WithComment])] <- if (resourceClassInfo.fileValueProperties.nonEmpty) {
                 // call sipi responder
                 for {
-                    sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiResponderConversionResponseV1]
+                    sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest.getOrElse(throw OntologyConstraintException(s"No file (required) given for resource type $resourceClassIri"))).mapTo[SipiConversionResponseV1]
 
                     // check if the file type returned by Sipi corresponds to the expected fileValue property in resourceClassInfo.fileValueProperties.head
                     _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != resourceClassInfo.fileValueProperties.head) {
@@ -1619,9 +1619,9 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                 // TODO: in all cases of an error, the tmp file has to be deleted
                 sipiConversionRequest match {
                     case None => Future(None) // expected behaviour
-                    case Some(_: SipiResponderConversionFileRequestV1) =>
+                    case Some(_: SipiConversionFileRequestV1) =>
                         throw BadRequestException(s"File params (GUI-case) are given but resource class $resourceClassIri does not allow any representation")
-                    case Some(_: SipiResponderConversionPathRequestV1) =>
+                    case Some(_: SipiConversionPathRequestV1) =>
                         throw BadRequestException(s"A binary file was provided (non GUI-case) but resource class $resourceClassIri does not have any binary representation")
                 }
             }
@@ -1762,7 +1762,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                                label: String,
                                resourceIri: IRI,
                                values: Map[IRI, Seq[CreateValueV1WithComment]],
-                               sipiConversionRequest: Option[SipiResponderConversionRequestV1],
+                               sipiConversionRequest: Option[SipiConversionRequestV1],
                                creatorIri: IRI,
                                namedGraph: IRI,
                                userProfile: UserADM,
@@ -1888,7 +1888,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
     private def createNewResource(resourceClassIri: IRI,
                                   label: String,
                                   values: Map[IRI, Seq[CreateValueV1WithComment]],
-                                  sipiConversionRequest: Option[SipiResponderConversionRequestV1] = None,
+                                  sipiConversionRequest: Option[SipiConversionRequestV1] = None,
                                   projectIri: IRI,
                                   userProfile: UserADM,
                                   apiRequestID: UUID): Future[ResourceCreateResponseV1] = {
@@ -1968,7 +1968,7 @@ class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef,
                 sipiConversionRequest match {
                     case Some(conversionRequest) =>
                         conversionRequest match {
-                            case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
+                            case conversionPathRequest: SipiConversionPathRequestV1 =>
                                 // a tmp file has been created by the resources route (non GUI-case), delete it
                                 FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                             case _ => ()
