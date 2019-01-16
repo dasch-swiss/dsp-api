@@ -30,7 +30,7 @@ import org.knora.webapi.store.SipiConnectorActorName
   *                            The name of the actor (a constant from [[org.knora.webapi.store]] is used as the
   *                            key in the map.
   */
-class MockableSipiManager(mockStoreConnectors: Map[String, ActorRef]) extends IIIFManager with LiveActorMaker {
+class MockableIIIFManager(mockStoreConnectors: Map[String, ActorRef]) extends IIIFManager with LiveActorMaker {
 
     /**
       * Initialised to the value of the key 'SipiConnectorActorName' in `mockStoreConnectors` if provided, otherwise
