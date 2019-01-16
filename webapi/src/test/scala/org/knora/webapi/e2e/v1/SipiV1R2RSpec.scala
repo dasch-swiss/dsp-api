@@ -34,7 +34,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceAp
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
 import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.store.sipi.{MockSipiConnector, SourcePath}
+import org.knora.webapi.store.iiif.{MockSipiConnector, SourcePath}
 
 
 /**

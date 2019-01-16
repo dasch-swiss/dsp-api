@@ -22,9 +22,9 @@ package org.knora.webapi.store
 import akka.actor._
 import akka.event.LoggingReceive
 import org.knora.webapi._
-import org.knora.webapi.messages.store.sipimessages.SipiRequest
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
-import org.knora.webapi.store.sipi.SipiManager
+import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 /**
@@ -42,13 +42,13 @@ class StoreManager extends Actor with ActorLogging {
     protected lazy val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
-      * Starts the SipiManager
+      * Starts the iiifManager
       */
-    protected lazy val sipiManager = makeActor(Props(new SipiManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiManagerActorName)
+    protected lazy val iiifManager = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
-        case sipiMessages: SipiRequest => sipiManager forward sipiMessages
+        case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
         case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
     }
 }

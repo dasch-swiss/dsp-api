@@ -28,7 +28,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.responders.v2.search.SparqlQueryConstants
 import org.knora.webapi.routing.v2.{SearchRouteV2, ValuesRouteV2}
 import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.store.sipi.MockSipiConnector
+import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld._
 import org.knora.webapi.util.{MutableTestIri, SmartIri, StringFormatter}

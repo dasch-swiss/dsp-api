@@ -31,12 +31,15 @@ import spray.json._
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages V1
 
-sealed trait SipiRequest
+/**
+  * An abstract trait for messages that can be sent to the [[org.knora.webapi.store.iiif.IIIFManager]]
+  */
+sealed trait IIIFRequest
 
 /**
-  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiConnector]].
+  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.iiif.SipiConnector]].
   */
-sealed trait SipiRequestV1 extends SipiRequest
+sealed trait SipiRequestV1 extends IIIFRequest
 
 /**
   * Abstract trait to represent a conversion request to Sipi Connector.
@@ -306,9 +309,9 @@ object RepresentationV1JsonProtocol extends SprayJsonSupport with DefaultJsonPro
 // Messages V2
 
 /**
-  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.sipi.SipiConnector]].
+  * An abstract trait for messages that can be sent to [[org.knora.webapi.store.iiif.SipiConnector]].
   */
-sealed trait SipiRequestV2 extends SipiRequest {
+sealed trait SipiRequestV2 extends IIIFRequest {
     def requestingUser: UserADM
 }
 

@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.sipi
+package org.knora.webapi.store.iiif
 
 import java.util
 

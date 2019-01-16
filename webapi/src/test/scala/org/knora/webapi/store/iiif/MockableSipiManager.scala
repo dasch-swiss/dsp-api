@@ -17,20 +17,20 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.sipi
+package org.knora.webapi.store.iiif
 
 import akka.actor.ActorRef
 import org.knora.webapi.LiveActorMaker
 import org.knora.webapi.store.SipiConnectorActorName
 
 /**
-  * A subclass of [[SipiManager]] that allows tests to substitute standard connector for a custom one.
+  * A subclass of [[IIIFManager]] that allows tests to substitute standard connector for a custom one.
   *
   * @param mockStoreConnectors a [[Map]] containing the mock connectors to be used instead of the live ones.
   *                            The name of the actor (a constant from [[org.knora.webapi.store]] is used as the
   *                            key in the map.
   */
-class MockableSipiManager(mockStoreConnectors: Map[String, ActorRef]) extends SipiManager with LiveActorMaker {
+class MockableSipiManager(mockStoreConnectors: Map[String, ActorRef]) extends IIIFManager with LiveActorMaker {
 
     /**
       * Initialised to the value of the key 'SipiConnectorActorName' in `mockStoreConnectors` if provided, otherwise

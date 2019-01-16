@@ -40,8 +40,8 @@ package object store {
 
     /* Sipi */
 
-    val SipiManagerActorName: String = "sipiManager"
-    val SipiManagerActorPath: String = StoreManagerActorPath + "/" + SipiManagerActorName
+    val IIIFManagerActorName: String = "iiifManager"
+    val IIIFManagerActorPath: String = StoreManagerActorPath + "/" + IIIFManagerActorName
 
     val SipiConnectorActorName: String = "sipiConnector"
 

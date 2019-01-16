@@ -17,19 +17,19 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.sipi
+package org.knora.webapi.store.iiif
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import akka.event.LoggingReceive
 import akka.routing.FromConfig
 import org.knora.webapi._
-import org.knora.webapi.messages.store.sipimessages.SipiRequest
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.store.SipiConnectorActorName
 
 /**
-  * Makes requests to Sipi.
+  * Makes requests to IIIF servers.
   */
-class SipiManager extends Actor with ActorLogging {
+class IIIFManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
     /**
@@ -43,7 +43,7 @@ class SipiManager extends Actor with ActorLogging {
     protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnector
 
     def receive = LoggingReceive {
-        case sipiMessages: SipiRequest => sipiConnector forward sipiMessages
+        case sipiMessages: IIIFRequest => sipiConnector forward sipiMessages
         case other => sender ! Status.Failure(UnexpectedMessageException(s"SipiManager received an unexpected message: $other"))
     }
 

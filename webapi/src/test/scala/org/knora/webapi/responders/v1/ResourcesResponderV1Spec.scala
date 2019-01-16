@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.store.SipiConnectorActorName
-import org.knora.webapi.store.sipi.MockSipiConnector
+import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util._
 import spray.json.JsValue

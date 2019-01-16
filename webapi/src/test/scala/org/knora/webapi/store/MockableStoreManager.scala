@@ -20,7 +20,7 @@
 package org.knora.webapi.store
 
 import akka.actor.{ActorRef, Props}
-import org.knora.webapi.store.sipi.MockableSipiManager
+import org.knora.webapi.store.iiif.MockableSipiManager
 import org.knora.webapi.{KnoraDispatchers, LiveActorMaker}
 
 class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef]) extends StoreManager with LiveActorMaker{
@@ -28,6 +28,6 @@ class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef]) extends S
     /**
       * Starts the MockableSipiManager
       */
-    override lazy val sipiManager = makeActor(Props(new MockableSipiManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiManagerActorName)
+    override lazy val sipiManager = makeActor(Props(new MockableSipiManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
 }
