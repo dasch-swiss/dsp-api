@@ -203,23 +203,20 @@ def weighted_value(char_value, right_pos):
 
 # Converts a character at a specified position to an integer value.
 def to_int(char):
-    char_index_in_alphabet = base64url_alphabet.find(char)
+    char_value = base64url_alphabet.find(char)
 
-    if char_index_in_alphabet == -1:
+    if char_value == -1:
         raise ArkUrlException("Invalid base64url character: '{}'".format(char))
 
-    # Use 1-based values, because otherwise an 'A' at the beginning of a string contributes nothing to the check digit.
-    return char_index_in_alphabet + 1
+    return char_value
 
 
 # Converts an integer value to a check digit.
 def to_check_digit(char_value):
-    char_index_in_alphabet = char_value - 1
-
-    if char_index_in_alphabet < 0 or char_index_in_alphabet >= base64url_alphabet_length:
+    if char_value < 0 or char_value >= base64url_alphabet_length:
         raise ArkUrlException("Invalid character value: {}".format(char_value))
 
-    return base64url_alphabet[char_index_in_alphabet]
+    return base64url_alphabet[char_value]
 
 
 #################################################################################################
@@ -234,7 +231,7 @@ def test(config):
     print("OK")
 
     print("calculate a check digit for a string and validate it: ", end='')
-    correct_resource_id_check_digit = "T"
+    correct_resource_id_check_digit = "n"
     check_digit = calculate_check_digit(correct_resource_id)
     assert check_digit == correct_resource_id_check_digit
     correct_resource_id_with_correct_check_digit = correct_resource_id + check_digit
@@ -267,12 +264,12 @@ def test(config):
     print("generate an ARK URL for a resource IRI without a timestamp: ", end='')
     resource_iri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
     ark_url = resource_iri_to_ark_url(config, resource_iri)
-    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT"
+    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn"
     print("OK")
 
     print("generate an ARK URL for a resource IRI with a timestamp: ", end='')
     ark_url = resource_iri_to_ark_url(config, resource_iri, "20181207T000000Z")
-    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT.20181207T000000Z"
+    assert ark_url == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20181207T000000Z"
     print("OK")
 
     print("parse an ARK URL representing the top-level object: ", end='')
@@ -288,13 +285,13 @@ def test(config):
     print("OK")
 
     print("parse an ARK resource URL without a timestamp: ", end='')
-    ark_url_info = ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT")
+    ark_url_info = ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
     resource_request = ark_url_info.to_knora_request(config)
     assert resource_request == "http://0.0.0.0:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fcmfk1DMHRBiR4-_6HXpEFA"
     print("OK")
 
     print("parse an ARK resource URL with a timestamp: ", end='')
-    ark_url_info = ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAT.20181207T000000Z")
+    ark_url_info = ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20181207T000000Z")
     resource_request = ark_url_info.to_knora_request(config)
     assert resource_request == "http://0.0.0.0:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fcmfk1DMHRBiR4-_6HXpEFA?version=20181207T000000Z"
     print("OK")
@@ -303,7 +300,7 @@ def test(config):
     rejected = False
 
     try:
-        ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBir4=_6HXpEFAT")
+        ArkUrlInfo("http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBir4=_6HXpEFAn")
     except ArkUrlException:
         rejected = True
 

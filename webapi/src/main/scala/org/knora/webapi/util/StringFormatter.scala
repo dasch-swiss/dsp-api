@@ -606,8 +606,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
     // The strings that Knora data IRIs can start with.
     private val DataIriStarts: Set[String] = Set(
-        "http://" + KnoraIdUtil.IriDomain + "/",
-        "http://data.knora.org/"
+        "http://" + KnoraIdUtil.IriDomain + "/"
     )
 
     // The project code of the default shared ontologies project.
@@ -1309,11 +1308,18 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
             iri match {
                 case ResourceIriRegex(projectID: String, resourceID: String) =>
-                    makeArkUrl(
-                        projectID = projectID,
-                        resourceID = resourceID,
-                        timestamp = timestamp
-                    )
+                    val arkUrlTry = Try {
+                        makeArkUrl(
+                            projectID = projectID,
+                            resourceID = resourceID,
+                            timestamp = timestamp
+                        )
+                    }
+
+                    arkUrlTry match {
+                        case Success(arkUrl) => arkUrl
+                        case Failure(ex) => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
+                    }
 
                 case _ => throw DataConversionException(s"IRI $iri is not a Knora resource IRI")
             }

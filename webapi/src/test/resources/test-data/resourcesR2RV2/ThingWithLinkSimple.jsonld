@@ -4,6 +4,10 @@
   "anything:isPartOfOtherThing" : {
     "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
   },
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
+  },
   "rdfs:label" : "Sierra",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

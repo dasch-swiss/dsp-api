@@ -251,6 +251,8 @@ case class ReadResourceV2(resourceIri: IRI,
     }
 
     def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         if (!resourceClassIri.getOntologySchema.contains(targetSchema)) {
             throw DataConversionException(s"ReadClassInfoV2 for resource $resourceIri is not in schema $targetSchema")
         }
@@ -294,12 +296,24 @@ case class ReadResourceV2(resourceIri: IRI,
             Map.empty[IRI, JsonLDValue]
         }
 
+        val arkUrlProp: IRI = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ArkUrl
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl
+        }
+
+        val arkUrl: Map[IRI, JsonLDValue] = Map(
+            arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
+                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(timestamp = None),
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+            )
+        )
+
         JsonLDObject(
             Map(
                 JsonLDConstants.ID -> JsonLDString(resourceIri),
                 JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
                 OntologyConstants.Rdfs.Label -> JsonLDString(label)
-            ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema
+            ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema ++ arkUrl
         )
     }
 }

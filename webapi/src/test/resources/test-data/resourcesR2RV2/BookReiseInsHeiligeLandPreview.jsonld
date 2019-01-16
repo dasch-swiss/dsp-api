@@ -1,6 +1,10 @@
 {
-  "@id" : "http://rdfh.ch/2a6221216701",
+  "@id" : "http://rdfh.ch/0803/2a6221216701",
   "@type" : "incunabula:book",
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+  },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"
   },

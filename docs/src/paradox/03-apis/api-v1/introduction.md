@@ -44,7 +44,7 @@ that are stored in the triplestore (see @ref:[Knora IRIs](../api-v2/knora-iris.m
 ## V1 Path Segment
 
 Every request to API V1 includes `v1` as a path segment, e.g.
-`http://host/v1/resources/http%3A%2F%2Fdata.knora.org%2Fc5058f3a`.
+`http://host/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a`.
 Accordingly, requests to another version of the API will require another
 path segment.
 

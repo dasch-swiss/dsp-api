@@ -27,7 +27,7 @@ import org.knora.webapi.CoreSpec
 class Base64UrlCheckDigitSpec extends CoreSpec{
     private val base64UrlCheckDigit = new Base64UrlCheckDigit
     private val correctResourceID = "cmfk1DMHRBiR4-_6HXpEFA"
-    private val correctResourceIDCheckDigit = "T"
+    private val correctResourceIDCheckDigit = "n"
 
     "Base64UrlCheckDigit" should {
         "reject a string without a check digit" in {
