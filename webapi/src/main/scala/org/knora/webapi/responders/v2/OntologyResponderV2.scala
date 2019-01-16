@@ -21,18 +21,20 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.v1.responder.ontologymessages.OntologyResponderRequestV1
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
+import org.knora.webapi.responders.{ActorBasedResponder, IriLocker, Responder}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.util._
@@ -58,7 +60,7 @@ import scala.concurrent.Future
   *
   * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
   */
-class OntologyResponderV2 extends Responder {
+class OntologyResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     /**
       * The name of the ontology cache.
@@ -77,32 +79,35 @@ class OntologyResponderV2 extends Responder {
                                          guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
                                          propertiesUsedInStandoffCardinalities: Set[SmartIri])
 
-    override def receive: Receive = {
-        case LoadOntologiesRequestV2(requestingUser) => future2Message(sender(), loadOntologies(requestingUser), log)
-        case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => future2Message(sender(), getEntityInfoResponseV2(classIris, propertyIris, requestingUser), log)
-        case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => future2Message(sender(), getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser), log)
-        case StandoffClassesWithDataTypeGetRequestV2(requestingUser) => future2Message(sender(), getStandoffStandoffClassesWithDataTypeV2(requestingUser), log)
-        case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => future2Message(sender(), getAllStandoffPropertyEntitiesV2(requestingUser), log)
-        case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => future2Message(sender(), checkSubClassV2(subClassIri, superClassIri, requestingUser), log)
-        case SubClassesGetRequestV2(resourceClassIri, requestingUser) => future2Message(sender(), getSubClassesV2(resourceClassIri, requestingUser), log)
-        case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) => future2Message(sender(), getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser), log)
-        case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => future2Message(sender(), getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser), log)
-        case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => future2Message(sender(), getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser), log)
-        case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => future2Message(sender(), getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser), log)
-        case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) => future2Message(sender(), getOntologyMetadataForProjectsV2(projectIris, requestingUser), log)
-        case OntologyMetadataGetByIriRequestV2(ontologyIris, requestingUser) => future2Message(sender(), getOntologyMetadataByIriV2(ontologyIris, requestingUser), log)
-        case createOntologyRequest: CreateOntologyRequestV2 => future2Message(sender(), createOntology(createOntologyRequest), log)
-        case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => future2Message(sender(), changeOntologyMetadata(changeOntologyMetadataRequest), log)
-        case createClassRequest: CreateClassRequestV2 => future2Message(sender(), createClass(createClassRequest), log)
-        case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 => future2Message(sender(), changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest), log)
-        case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => future2Message(sender(), addCardinalitiesToClass(addCardinalitiesToClassRequest), log)
-        case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 => future2Message(sender(), changeClassCardinalities(changeCardinalitiesRequest), log)
-        case deleteClassRequest: DeleteClassRequestV2 => future2Message(sender(), deleteClass(deleteClassRequest), log)
-        case createPropertyRequest: CreatePropertyRequestV2 => future2Message(sender(), createProperty(createPropertyRequest), log)
-        case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => future2Message(sender(), changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest), log)
-        case deletePropertyRequest: DeletePropertyRequestV2 => future2Message(sender(), deleteProperty(deletePropertyRequest), log)
-        case deleteOntologyRequest: DeleteOntologyRequestV2 => future2Message(sender(), deleteOntology(deleteOntologyRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
+      */
+    def receive(msg: OntologiesResponderRequestV2) = msg match {
+        case LoadOntologiesRequestV2(requestingUser) => loadOntologies(requestingUser)
+        case EntityInfoGetRequestV2(classIris, propertyIris, requestingUser) => getEntityInfoResponseV2(classIris, propertyIris, requestingUser)
+        case StandoffEntityInfoGetRequestV2(standoffClassIris, standoffPropertyIris, requestingUser) => getStandoffEntityInfoResponseV2(standoffClassIris, standoffPropertyIris, requestingUser)
+        case StandoffClassesWithDataTypeGetRequestV2(requestingUser) => getStandoffStandoffClassesWithDataTypeV2(requestingUser)
+        case StandoffAllPropertyEntitiesGetRequestV2(requestingUser) => getAllStandoffPropertyEntitiesV2(requestingUser)
+        case CheckSubClassRequestV2(subClassIri, superClassIri, requestingUser) => checkSubClassV2(subClassIri, superClassIri, requestingUser)
+        case SubClassesGetRequestV2(resourceClassIri, requestingUser) => getSubClassesV2(resourceClassIri, requestingUser)
+        case OntologyKnoraEntityIrisGetRequestV2(namedGraphIri, requestingUser) => getKnoraEntityIrisInNamedGraphV2(namedGraphIri, requestingUser)
+        case OntologyEntitiesGetRequestV2(ontologyIri, allLanguages, requestingUser) => getOntologyEntitiesV2(ontologyIri, allLanguages, requestingUser)
+        case ClassesGetRequestV2(resourceClassIris, allLanguages, requestingUser) => getClassDefinitionsFromOntologyV2(resourceClassIris, allLanguages, requestingUser)
+        case PropertiesGetRequestV2(propertyIris, allLanguages, requestingUser) => getPropertyDefinitionsFromOntologyV2(propertyIris, allLanguages, requestingUser)
+        case OntologyMetadataGetByProjectRequestV2(projectIris, requestingUser) => getOntologyMetadataForProjectsV2(projectIris, requestingUser)
+        case OntologyMetadataGetByIriRequestV2(ontologyIris, requestingUser) => getOntologyMetadataByIriV2(ontologyIris, requestingUser)
+        case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
+        case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 => changeOntologyMetadata(changeOntologyMetadataRequest)
+        case createClassRequest: CreateClassRequestV2 => createClass(createClassRequest)
+        case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 => changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
+        case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 => addCardinalitiesToClass(addCardinalitiesToClassRequest)
+        case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 => changeClassCardinalities(changeCardinalitiesRequest)
+        case deleteClassRequest: DeleteClassRequestV2 => deleteClass(deleteClassRequest)
+        case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
+        case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 => changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
+        case deletePropertyRequest: DeletePropertyRequestV2 => deleteProperty(deletePropertyRequest)
+        case deleteOntologyRequest: DeleteOntologyRequestV2 => deleteOntology(deleteOntologyRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

@@ -19,20 +19,77 @@
 
 package org.knora.webapi.responders
 
-import akka.actor.{Actor, ActorLogging, ActorSelection, ActorSystem}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSelection, ActorSystem}
+import akka.event.LoggingAdapter
+import akka.http.scaladsl.util.FastFuture
 import akka.util.Timeout
 import org.knora.webapi.app._
 import org.knora.webapi.store._
 import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{KnoraDispatchers, Settings}
+import org.knora.webapi.{KnoraDispatchers, Settings, UnexpectedMessageException}
 
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 
 /**
-  * A trait providing values that are commonly used in Knora responders.
+  * Responder helper methods.
   */
-trait Responder extends Actor with ActorLogging {
+object Responder {
+
+    /**
+      * An responder use this method to handle unexpected request messages in a consistent way.
+      *
+      * @param message the message that was received.
+      * @param log     a [[LoggingAdapter]].
+      * @param who     the responder receiving the message.
+      */
+    def handleUnexpectedMessage(message: Any, log: LoggingAdapter, who: String) = {
+        val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
+        FastFuture.failed(unexpectedMessageException)
+    }
+
+}
+
+/**
+  * An abstract class providing values that are commonly used in Knora responders.
+  */
+abstract class Responder(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) {
+
+    /**
+      * The actor system.
+      */
+    protected implicit val system: ActorSystem = _system
+
+    /**
+      * The execution context for futures created in Knora actors.
+      */
+    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    /**
+      * The application settings.
+      */
+    protected val settings = Settings(system)
+
+    /**
+      * A string formatter.
+      */
+    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    /**
+      * The application's default timeout for `ask` messages.
+      */
+    protected implicit val timeout: Timeout = settings.defaultTimeout
+
+    /**
+      * Provides logging
+      */
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+}
+
+/**
+  * A trait providing values that are commonly used in Knora actor based responders.
+  */
+trait ActorBasedResponder extends Actor with ActorLogging {
     /**
       * The responder's Akka actor system.
       */
@@ -75,3 +132,5 @@ trait Responder extends Actor with ActorLogging {
       */
     protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
 }
+
+

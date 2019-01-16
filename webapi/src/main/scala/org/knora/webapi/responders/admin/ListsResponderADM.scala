@@ -21,6 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,9 +29,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.ListsResponderADM._
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.annotation.tailrec
@@ -54,24 +55,28 @@ object ListsResponderADM {
 /**
   * A responder that returns information about hierarchical lists.
   */
-class ListsResponderADM extends Responder {
+class ListsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+
 
     // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
+    private val LISTS_GLOBAL_LOCK_IRI = "http://rdfh.ch/lists"
 
-    def receive: PartialFunction[Any, Unit] = {
-        case ListsGetRequestADM(projectIri, requestingUser) => future2Message(sender(), listsGetRequestADM(projectIri, requestingUser), log)
-        case ListGetRequestADM(listIri, requestingUser) => future2Message(sender(), listGetRequestADM(listIri, requestingUser), log)
-        case ListInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listInfoGetRequestADM(listIri, requestingUser), log)
-        case ListNodeInfoGetRequestADM(listIri, requestingUser) => future2Message(sender(), listNodeInfoGetRequestADM(listIri, requestingUser), log)
-        case NodePathGetRequestADM(iri, requestingUser) => future2Message(sender(), nodePathGetAdminRequest(iri, requestingUser), log)
-        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => future2Message(sender(), listCreateRequestADM(createListRequest, requestingUser, apiRequestID), log)
-        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => future2Message(sender(), listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID), log)
-        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => future2Message(sender(), listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) , log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[ListsResponderRequestADM]], and returns an appropriate response message.
+      */
+    def receive(msg: ListsResponderRequestADM) = msg match {
+        case ListsGetRequestADM(projectIri, requestingUser) => listsGetRequestADM(projectIri, requestingUser)
+        case ListGetRequestADM(listIri, requestingUser) => listGetRequestADM(listIri, requestingUser)
+        case ListInfoGetRequestADM(listIri, requestingUser) => listInfoGetRequestADM(listIri, requestingUser)
+        case ListNodeInfoGetRequestADM(listIri, requestingUser) => listNodeInfoGetRequestADM(listIri, requestingUser)
+        case NodePathGetRequestADM(iri, requestingUser) => nodePathGetAdminRequest(iri, requestingUser)
+        case ListCreateRequestADM(createListRequest, requestingUser, apiRequestID) => listCreateRequestADM(createListRequest, requestingUser, apiRequestID)
+        case ListInfoChangeRequestADM(listIri, changeListRequest, requestingUser, apiRequestID) => listInfoChangeRequest(listIri, changeListRequest, requestingUser, apiRequestID)
+        case ListChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID) => listChildNodeCreateRequestADM(parentNodeIri, createListNodeRequest, requestingUser, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 
@@ -84,7 +89,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListsGetResponseADM]].
       */
-    def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
+    private def listsGetRequestADM(projectIri: Option[IRI], requestingUser: UserADM): Future[ListsGetResponseADM] = {
 
         // log.debug("listsGetRequestV2")
 
@@ -129,7 +134,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a optional [[ListADM]].
       */
-    def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
+    private def listGetADM(rootNodeIri: IRI, requestingUser: UserADM): Future[Option[ListADM]] = {
 
         for {
             // this query will give us only the information about the root node.
@@ -168,7 +173,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListGetResponseADM]].
       */
-    def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
+    private def listGetRequestADM(rootNodeIri: IRI, requestingUser: UserADM): Future[ListGetResponseADM] = {
 
         for {
             maybeListADM <- listGetADM(rootNodeIri, requestingUser)
@@ -186,7 +191,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListInfoGetResponseADM]].
       */
-    def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
+    private def listInfoGetRequestADM(listIri: IRI, requestingUser: UserADM): Future[ListInfoGetResponseADM] = {
         for {
             listNodeInfo <- listNodeInfoGetADM(nodeIri = listIri, requestingUser = requestingUser)
 
@@ -211,7 +216,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a optional [[ListNodeInfoADM]].
       */
-    def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
+    private def listNodeInfoGetADM(nodeIri: IRI, requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
             sparqlQuery <- Future(queries.sparql.admin.txt.getListNode(
                 triplestore = settings.triplestoreType,
@@ -304,7 +309,7 @@ class ListsResponderADM extends Responder {
       * @param requestingUser the user making the request.
       * @return a [[ListNodeInfoGetResponseADM]].
       */
-    def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
+    private def listNodeInfoGetRequestADM(nodeIri: IRI, requestingUser: UserADM): Future[ListNodeInfoGetResponseADM] = {
         for {
             maybeListNodeInfoADM: Option[ListNodeInfoADM] <- listNodeInfoGetADM(nodeIri, requestingUser)
             result = maybeListNodeInfoADM match {
@@ -871,7 +876,7 @@ class ListsResponderADM extends Responder {
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+    private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             //_ = log.debug("projectByIriExists - query: {}", askString)
@@ -888,7 +893,7 @@ class ListsResponderADM extends Responder {
       * @param listNodeIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+    private def listRootNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListRootNodeExistsByIri(listNodeIri = listNodeIri).toString)
             // _ = log.debug("listRootNodeByIriExists - query: {}", askString)
@@ -905,7 +910,7 @@ class ListsResponderADM extends Responder {
       * @param listNodeIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
+    private def listNodeByIriExists(listNodeIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
             //_ = log.debug("listNodeByIriExists - query: {}", askString)
@@ -922,7 +927,7 @@ class ListsResponderADM extends Responder {
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def listNodeByNameExists(name: String): Future[Boolean] = {
+    private def listNodeByNameExists(name: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByName(listNodeName = name).toString)
             //_ = log.debug("listNodeByNameExists - query: {}", askString)
@@ -941,7 +946,7 @@ class ListsResponderADM extends Responder {
       * @param listNodeName the list node name.
       * @return a [[Boolean]].
       */
-    def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
+    private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] = {
         listNodeName match {
             case Some(name) => {
                 for {

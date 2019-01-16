@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -33,10 +34,10 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2, ReadResourcesSequenceV2, ResourcesPreviewGetRequestV2}
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateLinkUpdate
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.{ChangeRightsPermission, DeletePermission, EntityPermission, ModifyPermission}
 import org.knora.webapi.util.{KnoraIdUtil, PermissionUtilADM, SmartIri}
@@ -46,7 +47,7 @@ import scala.concurrent.Future
 /**
   * Handles requests to read and write Knora values.
   */
-class ValuesResponderV2 extends Responder {
+class ValuesResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 
@@ -58,12 +59,15 @@ class ValuesResponderV2 extends Responder {
       */
     case class VerifiedValueV2(newValueIri: IRI, value: ValueContentV2, permissions: String)
 
-    override def receive: Receive = {
-        case createValueRequest: CreateValueRequestV2 => future2Message(sender(), createValueV2(createValueRequest), log)
-        case updateValueRequest: UpdateValueRequestV2 => future2Message(sender(), updateValueV2(updateValueRequest), log)
-        case deleteValueRequest: DeleteValueRequestV2 => future2Message(sender(), deleteValueV2(deleteValueRequest), log)
-        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 => future2Message(sender(), generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[ValuesResponderRequestV2]], and returns an appropriate response message.
+      */
+    def receive(msg: ValuesResponderRequestV2) = msg match {
+        case createValueRequest: CreateValueRequestV2 => createValueV2(createValueRequest)
+        case updateValueRequest: UpdateValueRequestV2 => updateValueV2(updateValueRequest)
+        case deleteValueRequest: DeleteValueRequestV2 => deleteValueV2(deleteValueRequest)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV2 => generateSparqToCreateMultipleValuesV2(createMultipleValuesRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**

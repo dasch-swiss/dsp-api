@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi
@@ -33,8 +33,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
@@ -43,41 +43,39 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class UsersResponderADM extends Responder {
+class UsersResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
     // The IRI used to lock user creation and update
-    val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
+    private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
-    val USER_ADM_CACHE_NAME = "userADMCache"
+    private val USER_ADM_CACHE_NAME = "userADMCache"
 
     /**
-      * Receives a message extending [[org.knora.webapi.messages.v1.responder.usermessages.UsersResponderRequestV1]], and returns a message of type [[UserADM]]
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[UsersResponderRequestV1]], and returns an appropriate message.
       */
-    def receive = {
-        case UsersGetADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetADM(userInformationTypeADM, requestingUser), log)
-        case UsersGetRequestADM(userInformationTypeADM, requestingUser) => future2Message(sender(), usersGetRequestADM(userInformationTypeADM, requestingUser), log)
-        case UserGetADM(identifier, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetADM(identifier, userInformationTypeADM, requestingUser), log)
-        case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) => future2Message(sender(), userGetRequestADM(identifier, userInformationTypeADM, requestingUser), log)
-        case UserCreateRequestADM(createRequest, requestingUser, apiRequestID) => future2Message(sender(), createNewUserADM(createRequest, requestingUser, apiRequestID), log)
-        case UserChangeBasicUserInformationRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeBasicUserInformationADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
-        case UserChangePasswordRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changePasswordADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
-        case UserChangeStatusRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => future2Message(sender(), changeUserStatusADM(userIri, changeUserRequest, requestingUser, apiRequestID), log)
-        case UserChangeSystemAdminMembershipStatusRequestADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID) => future2Message(sender(), changeUserSystemAdminMembershipStatusADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID), log)
-        case UserProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
-        case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
-        case UserProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID), log)
-        case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => future2Message(sender(), userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: UsersResponderRequestADM) = msg match {
+        case UsersGetADM(userInformationTypeADM, requestingUser) => usersGetADM(userInformationTypeADM, requestingUser)
+        case UsersGetRequestADM(userInformationTypeADM, requestingUser) => usersGetRequestADM(userInformationTypeADM, requestingUser)
+        case UserGetADM(identifier, userInformationTypeADM, requestingUser) => userGetADM(identifier, userInformationTypeADM, requestingUser)
+        case UserGetRequestADM(identifier, userInformationTypeADM, requestingUser) => userGetRequestADM(identifier, userInformationTypeADM, requestingUser)
+        case UserCreateRequestADM(createRequest, requestingUser, apiRequestID) => createNewUserADM(createRequest, requestingUser, apiRequestID)
+        case UserChangeBasicUserInformationRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => changeBasicUserInformationADM(userIri, changeUserRequest, requestingUser, apiRequestID)
+        case UserChangePasswordRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => changePasswordADM(userIri, changeUserRequest, requestingUser, apiRequestID)
+        case UserChangeStatusRequestADM(userIri, changeUserRequest, requestingUser, apiRequestID) => changeUserStatusADM(userIri, changeUserRequest, requestingUser, apiRequestID)
+        case UserChangeSystemAdminMembershipStatusRequestADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID) => changeUserSystemAdminMembershipStatusADM(userIri, changeSystemAdminMembershipStatusRequest, requestingUser, apiRequestID)
+        case UserProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => userProjectMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+        case UserProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userProjectMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case UserProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userProjectMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case UserProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => userProjectAdminMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+        case UserProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userProjectAdminMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case UserProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userProjectAdminMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case UserGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID) => userGroupMembershipsGetRequestADM(userIri, requestingUser, apiRequestID)
+        case UserGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipAddRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case UserGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID) => userGroupMembershipRemoveRequestADM(userIri, projectIri, requestingUser, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 
@@ -546,7 +544,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a sequence of [[ProjectADM]]
       */
-    def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
+    private def userProjectMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
         for {
             maybeUser <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = maybeUser match {
@@ -566,7 +564,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseADM]].
       */
-    def userProjectMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseADM] = {
+    private def userProjectMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectMembershipsGetResponseADM] = {
 
         for {
             userExists <- userExists(userIri)
@@ -588,7 +586,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return
       */
-    def userProjectMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userProjectMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -660,7 +658,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return
       */
-    def userProjectMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userProjectMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -729,7 +727,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
-    def userProjectAdminMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
+    private def userProjectAdminMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[ProjectADM]] = {
 
         // ToDo: only allow system user
         // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
@@ -773,7 +771,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a [[UserProjectMembershipsGetResponseV1]].
       */
-    def userProjectAdminMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
+    private def userProjectAdminMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
 
         // ToDo: which user is allowed to do this operation?
         // ToDo: check permissions
@@ -797,7 +795,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userProjectAdminMembershipAddRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -869,7 +867,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return
       */
-    def userProjectAdminMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userProjectAdminMembershipRemoveRequestADM(userIri: IRI, projectIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
 
@@ -939,7 +937,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a sequence of [[GroupADM]].
       */
-    def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
+    private def userGroupMembershipsGetADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[Seq[GroupADM]] = {
 
         for {
             maybeUserADM: Option[UserADM] <- userGetADM(identifier = UserIdentifierADM(userIri), userInformationType = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)
@@ -959,7 +957,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a [[UserGroupMembershipsGetResponseADM]].
       */
-    def userGroupMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseADM] = {
+    private def userGroupMembershipsGetRequestADM(userIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserGroupMembershipsGetResponseADM] = {
 
         for {
             groups: Seq[GroupADM] <- userGroupMembershipsGetADM(userIri, requestingUser, apiRequestID)
@@ -977,7 +975,7 @@ class UsersResponderADM extends Responder {
       * @param apiRequestID   the unique api request ID.
       * @return a [[UserOperationResponseADM]].
       */
-    def userGroupMembershipAddRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userGroupMembershipAddRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userGroupMembershipAddRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
@@ -1048,7 +1046,7 @@ class UsersResponderADM extends Responder {
 
     }
 
-    def userGroupMembershipRemoveRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
+    private def userGroupMembershipRemoveRequestADM(userIri: IRI, groupIri: IRI, requestingUser: UserADM, apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
         // log.debug(s"userGroupMembershipRemoveRequestV1: userIri: {}, groupIri: {}", userIri, groupIri)
 
@@ -1350,7 +1348,7 @@ class UsersResponderADM extends Responder {
       * @param userIri the IRI of the user.
       * @return a [[Boolean]].
       */
-    def userExists(userIri: IRI): Future[Boolean] = {
+    private def userExists(userIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkUserExists(userIri = userIri).toString)
             // _ = log.debug("userExists - query: {}", askString)
@@ -1367,7 +1365,7 @@ class UsersResponderADM extends Responder {
       * @param username the username of the user.
       * @return a [[Boolean]].
       */
-    def userByUsernameExists(username: String): Future[Boolean] = {
+    private def userByUsernameExists(username: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkUserExistsByUsername(username = username).toString)
             // _ = log.debug("userExists - query: {}", askString)
@@ -1384,7 +1382,7 @@ class UsersResponderADM extends Responder {
       * @param email the email of the user.
       * @return a [[Boolean]].
       */
-    def userByEmailExists(email: String): Future[Boolean] = {
+    private def userByEmailExists(email: String): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
             // _ = log.debug("userExists - query: {}", askString)
@@ -1401,7 +1399,7 @@ class UsersResponderADM extends Responder {
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def projectExists(projectIri: IRI): Future[Boolean] = {
+    private def projectExists(projectIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkProjectExistsByIri(projectIri = projectIri).toString)
             // _ = log.debug("projectExists - query: {}", askString)
@@ -1418,7 +1416,7 @@ class UsersResponderADM extends Responder {
       * @param groupIri the IRI of the group.
       * @return a [[Boolean]].
       */
-    def groupExists(groupIri: IRI): Future[Boolean] = {
+    private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             // _ = log.debug("groupExists - query: {}", askString)
@@ -1436,7 +1434,7 @@ class UsersResponderADM extends Responder {
       * @return true if writing was successful.
       * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
       */
-    def writeUserADMToCache(user: UserADM): Boolean = {
+    private def writeUserADMToCache(user: UserADM): Boolean = {
 
         val iri = user.id
 
@@ -1471,7 +1469,7 @@ class UsersResponderADM extends Responder {
       * @param userIri the user's IRI und which a profile could be cached.
       * @param email   the user's email under which a profile could be cached.
       */
-    def invalidateCachedUserADM(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
+    private def invalidateCachedUserADM(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
 
         if (userIri.nonEmpty) {
             CacheUtil.remove(USER_ADM_CACHE_NAME, userIri.get)

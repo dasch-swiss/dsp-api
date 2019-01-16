@@ -25,6 +25,7 @@ import akka.pattern._
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
@@ -73,8 +74,10 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders)), name = RESPONDER_MANAGER_ACTOR_NAME)
+    val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor), name = APPLICATION_STATE_ACTOR_NAME)
     val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker), name = STORE_MANAGER_ACTOR_NAME)
+    val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)), name = RESPONDER_MANAGER_ACTOR_NAME)
+
 
     final override def beforeAll() {
         CacheUtil.createCaches(settings.caches)

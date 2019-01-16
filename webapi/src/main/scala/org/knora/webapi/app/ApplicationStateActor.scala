@@ -1,12 +1,14 @@
 package org.knora.webapi.app
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Timers}
+import akka.actor.{Actor, ActorLogging, ActorSelection, Timers}
 import org.knora.webapi._
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryRequest, CheckRepositoryResponse, RepositoryStatus}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.CacheUtil
 
 import scala.concurrent.ExecutionContext
@@ -15,11 +17,22 @@ import scala.concurrent.duration._
 /**
   * This actor holds the current state of the application and is responsible for coordination of the startup sequence.
   */
-class ApplicationStateActor(responderManager: ActorRef, storeManager: ActorRef) extends Actor with Timers with ActorLogging {
+class ApplicationStateActor extends Actor with Timers with ActorLogging {
 
     log.debug("entered the ApplicationStateActor constructor")
 
-    val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+
+    /**
+      * A reference to the Knora API responder manager.
+      */
+    protected val responderManager: ActorSelection = context.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+
+    /**
+      * A reference to the store manager.
+      */
+    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
+
 
     // the prometheus, zipkin, jaeger, datadog, and printConfig flags can be set via application.conf and via command line parameter
     val settings: SettingsImpl = Settings(context.system)
