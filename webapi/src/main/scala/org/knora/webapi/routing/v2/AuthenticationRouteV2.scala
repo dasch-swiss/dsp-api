@@ -53,7 +53,7 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
             } ~
             post { // login
                 /* send iri, username, or email and password in body as: {"identifier": "iri|username|email", "password": "userspassword"}
-                 * returns a JWT token, which can be supplied with every request thereafter in the authorization
+                 * returns a JWT token (and session cookie), which can be supplied with every request thereafter in the authorization
                  * header with the bearer scheme: 'Authorization: Bearer abc.def.ghi'
                  */
                 entity(as[LoginApiRequestPayloadV2]) { apiRequest =>
@@ -68,6 +68,24 @@ object AuthenticationRouteV2 extends Authenticator with AuthenticationV2JsonProt
                     requestContext.complete {
                         doLogoutV2(requestContext)
                     }
+            }
+        } ~
+        path("v2" / "login") {
+            get { // html login interface (necessary for IIIF Authentication API support)
+                requestContext => {
+                    requestContext.complete {
+                        presentLoginFormV2(requestContext)
+                    }
+                }
+            } ~
+            post { // called by html login interface (necessary for IIIF Authentication API support)
+                formFields('identifier, 'password) { (identifier, password) =>
+                    requestContext => {
+                        requestContext.complete {
+                            doLoginV2(KnoraPasswordCredentialsV2(UserIdentifierADM(value = identifier), password))
+                        }
+                    }
+                }
             }
         }
     }
