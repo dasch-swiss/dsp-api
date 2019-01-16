@@ -21,7 +21,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
@@ -29,8 +29,8 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserGetADM, UserIdentifierADM, UserInformationTypeADM}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.KnoraIdUtil
 import org.knora.webapi.{DuplicateValueException, _}
 
@@ -40,7 +40,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
+class GroupsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) with GroupsADMJsonProtocol  {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil
@@ -49,20 +49,18 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
     val GROUPS_GLOBAL_LOCK_IRI = "http://rdfh.ch/groups"
 
     /**
-      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
       */
-    def receive: PartialFunction[Any, Unit] = {
-        case GroupsGetADM(requestingUser) => future2Message(sender(), groupsGetADM(requestingUser), log)
-        case GroupsGetRequestADM(requestingUser) => future2Message(sender(), groupsGetRequestADM(requestingUser), log)
-        case GroupGetADM(groupIri, requestingUser) => future2Message(sender(), groupGetADM(groupIri, requestingUser), log)
-        case MultipleGroupsGetRequestADM(groupIris, requestingUser) => future2Message(sender(), multipleGroupsGetRequestADM(groupIris, requestingUser), log)
-        case GroupGetRequestADM(groupIri, requestingUser) => future2Message(sender(), groupGetRequestADM(groupIri, requestingUser), log)
-        case GroupMembersGetRequestADM(groupIri, userProfileV1) => future2Message(sender(), groupMembersGetRequestADM(groupIri, userProfileV1), log)
-        case GroupCreateRequestADM(newGroupInfo, userProfile, apiRequestID) => future2Message(sender(), createGroupADM(newGroupInfo, userProfile, apiRequestID), log)
-        case GroupChangeRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID) => future2Message(sender(), changeGroupBasicInformationRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: GroupsResponderRequestADM) = msg match {
+        case GroupsGetADM(requestingUser) => groupsGetADM(requestingUser)
+        case GroupsGetRequestADM(requestingUser) => groupsGetRequestADM(requestingUser)
+        case GroupGetADM(groupIri, requestingUser) => groupGetADM(groupIri, requestingUser)
+        case MultipleGroupsGetRequestADM(groupIris, requestingUser) => multipleGroupsGetRequestADM(groupIris, requestingUser)
+        case GroupGetRequestADM(groupIri, requestingUser) => groupGetRequestADM(groupIri, requestingUser)
+        case GroupMembersGetRequestADM(groupIri, userProfileV1) => groupMembersGetRequestADM(groupIri, userProfileV1)
+        case GroupCreateRequestADM(newGroupInfo, userProfile, apiRequestID) => createGroupADM(newGroupInfo, userProfile, apiRequestID)
+        case GroupChangeRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID) => changeGroupBasicInformationRequestADM(groupIri, changeGroupRequest, userProfileV1, apiRequestID)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**
@@ -200,7 +198,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param requestingUser the user initiating the request.
       * @return
       */
-    def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
+    private def groupMembersGetRequestADM(groupIri: IRI, requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
 
         //log.debug("groupMembersByIRIGetRequestV1 - groupIri: {}", groupIri)
 
@@ -502,7 +500,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param groupIri the IRI of the group.
       * @return a [[Boolean]].
       */
-    def groupExists(groupIri: IRI): Future[Boolean] = {
+    private def groupExists(groupIri: IRI): Future[Boolean] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
             //_ = log.debug("groupExists - query: {}", askString)
@@ -520,7 +518,7 @@ class GroupsResponderADM extends Responder with GroupsADMJsonProtocol {
       * @param projectIri the IRI of the project.
       * @return a [[Boolean]].
       */
-    def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
+    private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
 
         for {
             askString <- Future(queries.sparql.admin.txt.checkGroupExistsByName(projectIri = projectIri, name = name).toString)

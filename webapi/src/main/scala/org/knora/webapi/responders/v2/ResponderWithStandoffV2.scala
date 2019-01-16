@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -32,7 +33,7 @@ import scala.concurrent.Future
 /**
   * An abstract class with standoff utility methods for v2 responders.
   */
-abstract class ResponderWithStandoffV2 extends Responder {
+abstract class ResponderWithStandoffV2(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(_system, applicationStateActor, responderManager, storeManager) {
 
     /**
       * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].

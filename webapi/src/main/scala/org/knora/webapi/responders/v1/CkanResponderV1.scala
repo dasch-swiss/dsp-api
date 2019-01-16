@@ -21,7 +21,7 @@ package org.knora.webapi.responders.v1
 
 import java.net.URLEncoder
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi
@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.usermessages.UserProfileV1
 import org.knora.webapi.messages.v1.responder.valuemessages.{DateValueV1, HierarchicalListValueV1, LinkV1, TextValueV1}
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -44,7 +44,7 @@ import scala.concurrent.{Await, Future}
   * This responder is used by the Ckan route, for serving data to the Ckan harverster, which is published
   * under http://data.humanities.ch
   */
-class CkanResponderV1 extends Responder {
+class CkanResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
 
     /**
@@ -52,9 +52,12 @@ class CkanResponderV1 extends Responder {
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser.asUserProfileV1
 
-    def receive = {
-        case CkanRequestV1(projects, limit, info, userProfile) => future2Message(sender(), getCkanResponseV1(projects, limit, info, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message extending [[CkanResponderRequestV1]], and returns an appropriate response message.
+      */
+    def receive(msg: CkanResponderRequestV1) = msg match {
+        case CkanRequestV1(projects, limit, info, userProfile) => getCkanResponseV1(projects, limit, info, userProfile)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     private def getCkanResponseV1(project: Option[Seq[String]], limit: Option[Int], info: Boolean, userProfile: UserADM): Future[CkanResponseV1] = {
@@ -460,7 +463,7 @@ class CkanResponderV1 extends Responder {
         }
     }
 
-    private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorSelection): String = {
+    private def listValue2String(list: HierarchicalListValueV1, responderManager: ActorRef): String = {
 
 
         val resultFuture = responderManager ? NodePathGetRequestV1(list.hierarchicalListIri, systemUser)
@@ -473,7 +476,7 @@ class CkanResponderV1 extends Responder {
         labels.mkString(" / ")
     }
 
-    private def resourceValue2String(resource: LinkV1, responderManager: ActorSelection): String = {
+    private def resourceValue2String(resource: LinkV1, responderManager: ActorRef): String = {
         resource.valueLabel.get
     }
 

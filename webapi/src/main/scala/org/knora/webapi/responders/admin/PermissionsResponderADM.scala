@@ -19,6 +19,7 @@
 
 package org.knora.webapi.responders.admin
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,8 +29,8 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.admin.PermissionsResponderADM._
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, PermissionUtilADM}
 
 import scala.collection.immutable.Iterable
@@ -40,39 +41,38 @@ import scala.concurrent.Future
 /**
   * Provides information about Knora users to other responders.
   */
-class PermissionsResponderADM extends Responder {
+class PermissionsResponderADM(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+
 
     // Creates IRIs for new Knora user objects.
-    val knoraIdUtil = new KnoraIdUtil
+    private val knoraIdUtil = new KnoraIdUtil
 
     /* Entity types used to more clearly distinguish what kind of entity is meant */
-    val ResourceEntityType = "resource"
-    val PropertyEntityType = "property"
+    private val ResourceEntityType = "resource"
+    private val PropertyEntityType = "property"
 
     /**
-      * Receives a message extending [[PermissionsResponderRequestADM]].
-      * If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[PermissionsResponderRequestADM]], and returns an appropriate response message.
       */
-    def receive = {
-        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => future2Message(sender(), permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser), log)
-        case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
-        case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => future2Message(sender(), administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser), log)
-        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser), log)
-        case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => future2Message(sender(), administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser), log)
-        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => future2Message(sender(), administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser), log)
-        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => future2Message(sender(), deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser), log)
-        case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser), log)
-        case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => future2Message(sender(), objectAccessPermissionsForValueGetADM(valueIri, requestingUser), log)
-        case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser), log)
-        case DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser), log)
-        case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser), log)
-        case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser), log)
-        case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => future2Message(sender(), defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser), log)
-        //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, requestingUser) => future2Message(sender(), createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, requestingUser), log)
-        //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, requestingUser) => future2Message(sender(), deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, requestingUser), log)
-        //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser) => future2Message(sender(), templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: PermissionsResponderRequestADM) = msg match {
+        case PermissionDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser) => permissionsDataGetADM(projectIris, groupIris, isInProjectAdminGroup, isInSystemAdminGroup, requestingUser)
+        case AdministrativePermissionsForProjectGetRequestADM(projectIri, requestingUser) => administrativePermissionsForProjectGetRequestADM(projectIri, requestingUser)
+        case AdministrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser) => administrativePermissionForIriGetRequestADM(administrativePermissionIri, requestingUser)
+        case AdministrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser)
+        case AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser) => administrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
+        case AdministrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser) => administrativePermissionCreateRequestADM(newAdministrativePermission, requestingUser)
+        //case AdministrativePermissionDeleteRequestV1(administrativePermissionIri, requestingUser) => deleteAdministrativePermissionV1(administrativePermissionIri, requestingUser)
+        case ObjectAccessPermissionsForResourceGetADM(resourceIri, requestingUser) => objectAccessPermissionsForResourceGetADM(resourceIri, requestingUser)
+        case ObjectAccessPermissionsForValueGetADM(valueIri, requestingUser) => objectAccessPermissionsForValueGetADM(valueIri, requestingUser)
+        case DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser) => defaultObjectAccessPermissionsForProjectGetRequestADM(projectIri, requestingUser)
+        case DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser) => defaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessPermissionIri, requestingUser)
+        case DefaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser) => defaultObjectAccessPermissionGetRequestADM(projectIri, groupIri, resourceClassIri, propertyIri, requestingUser)
+        case DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri, resourceClassIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, None, ResourceEntityType, targetUser, requestingUser)
+        case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
+        //case DefaultObjectAccessPermissionCreateRequestV1(newDefaultObjectAccessPermissionV1, requestingUser) => createDefaultObjectAccessPermissionV1(newDefaultObjectAccessPermissionV1, requestingUser)
+        //case DefaultObjectAccessPermissionDeleteRequestV1(defaultObjectAccessPermissionIri, requestingUser) => deleteDefaultObjectAccessPermissionV1(defaultObjectAccessPermissionIri, requestingUser)
+        //case TemplatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser) => templatePermissionsCreateRequestV1(projectIri, permissionsTemplate, requestingUser)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 
@@ -89,7 +89,7 @@ class PermissionsResponderADM extends Responder {
       * @param isInSystemAdminGroup   the flag denoting membership in the SystemAdmin group.
       * @return
       */
-    def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean, requestingUser: UserADM): Future[PermissionsDataADM] = {
+    private def permissionsDataGetADM(projectIris: Seq[IRI], groupIris: Seq[IRI], isInProjectAdminGroups: Seq[IRI], isInSystemAdminGroup: Boolean, requestingUser: UserADM): Future[PermissionsDataADM] = {
         // find out which project each group belongs to
         //_ = log.debug("getPermissionsProfileV1 - find out to which project each group belongs to")
 
@@ -180,7 +180,7 @@ class PermissionsResponderADM extends Responder {
       * @param groupsPerProject the groups inside each project the user is member of.
       * @return a the user's resulting set of administrative permissions for each project.
       */
-    def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionADM]]] = {
+    private def userAdministrativePermissionsGetADM(groupsPerProject: Map[IRI, Seq[IRI]]): Future[Map[IRI, Set[PermissionADM]]] = {
 
 
         /* Get all permissions per project, applying permission precedence rule */
@@ -372,7 +372,7 @@ class PermissionsResponderADM extends Responder {
       * @param requestingUser              the requesting user.
       * @return a single [[AdministrativePermissionADM]] object.
       */
-    def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionForIriGetResponseADM] = {
+    private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI, requestingUser: UserADM): Future[AdministrativePermissionForIriGetResponseADM] = {
 
         // FIXME: Check user's permission for operation (issue #370)
 
@@ -527,7 +527,7 @@ class PermissionsResponderADM extends Responder {
       * @param resourceIri the IRI of the resource.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
+    private def objectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
@@ -564,7 +564,7 @@ class PermissionsResponderADM extends Responder {
       * @param valueIri the IRI of the value.
       * @return a sequence of [[PermissionADM]]
       */
-    def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
+    private def objectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
         log.debug(s"objectAccessPermissionsForValueGetV1 - resourceIRI: $valueIri")
         for {
             sparqlQueryString <- Future(queries.sparql.v1.txt.getObjectAccessPermission(
@@ -699,7 +699,7 @@ class PermissionsResponderADM extends Responder {
       * @param propertyIri      the property's IRI.
       * @return an optional [[DefaultObjectAccessPermissionADM]]
       */
-    def defaultObjectAccessPermissionGetADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionADM]] = {
+    private def defaultObjectAccessPermissionGetADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Future[Option[DefaultObjectAccessPermissionADM]] = {
 
         val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
         val permissionFromCache = CacheUtil.get[DefaultObjectAccessPermissionADM](PermissionsCacheName, key)
@@ -778,7 +778,7 @@ class PermissionsResponderADM extends Responder {
       * @param requestingUser
       * @return a [[DefaultObjectAccessPermissionGetResponseADM]]
       */
-    def defaultObjectAccessPermissionGetRequestADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], requestingUser: UserADM): Future[DefaultObjectAccessPermissionGetResponseADM] = {
+    private def defaultObjectAccessPermissionGetRequestADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI], requestingUser: UserADM): Future[DefaultObjectAccessPermissionGetResponseADM] = {
 
         // FIXME: Check user's permission for operation (issue #370)
 
@@ -809,7 +809,7 @@ class PermissionsResponderADM extends Responder {
       * @param groups     the list of groups for which default object access permissions are retrieved and combined.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForGroupsGetADM(projectIri: IRI, groups: Seq[IRI]): Future[Set[PermissionADM]] = {
 
         /* Get default object access permissions for each group and combine them */
         val gpf: Seq[Future[Seq[PermissionADM]]] = for {
@@ -851,7 +851,7 @@ class PermissionsResponderADM extends Responder {
       * @param resourceClassIri the resource's class IRI
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForResourceClassGetADM(projectIri: IRI, resourceClassIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = None)
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -869,7 +869,7 @@ class PermissionsResponderADM extends Responder {
       * @param propertyIri      the property's IRI.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForResourceClassPropertyGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = Some(resourceClassIri), propertyIri = Some(propertyIri))
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -886,7 +886,7 @@ class PermissionsResponderADM extends Responder {
       * @param propertyIri the property's IRI.
       * @return a set of [[PermissionADM]].
       */
-    def defaultObjectAccessPermissionsForPropertyGetADM(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
+    private def defaultObjectAccessPermissionsForPropertyGetADM(projectIri: IRI, propertyIri: IRI): Future[Set[PermissionADM]] = {
         for {
             defaultPermissionsOption: Option[DefaultObjectAccessPermissionADM] <- defaultObjectAccessPermissionGetADM(projectIri = projectIri, groupIri = None, resourceClassIri = None, propertyIri = Some(propertyIri))
             defaultPermissions: Set[PermissionADM] = defaultPermissionsOption match {
@@ -908,7 +908,7 @@ class PermissionsResponderADM extends Responder {
       * @param requestingUser   the user initiating the request.
       * @return an optional string with object access permission statements
       */
-    def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
+    private def defaultObjectAccessPermissionsStringForEntityGetADM(projectIri: IRI, resourceClassIri: IRI, propertyIri: Option[IRI], entityType: String, targetUser: UserADM, requestingUser: UserADM): Future[DefaultObjectAccessPermissionsStringResponseADM] = {
 
         //log.debug(s"defaultObjectAccessPermissionsStringForEntityGetV1 - projectIRI: $projectIRI, resourceClassIRI: $resourceClassIRI, propertyIRI: $propertyIRI, permissionData:$permissionData")
         for {

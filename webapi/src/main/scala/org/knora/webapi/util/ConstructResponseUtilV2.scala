@@ -21,7 +21,7 @@ package org.knora.webapi.util
 
 import java.time.Instant
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef, ActorSelection}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
@@ -455,7 +455,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
-                                       responderManager: ActorSelection,
+                                       responderManager: ActorRef,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         // Any knora-base:TextValue may have a language
         val valueLanguageOption: Option[String] = valueObject.assertions.get(OntologyConstants.KnoraBase.ValueHasLanguage)
@@ -513,7 +513,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
-                                       responderManager: ActorSelection,
+                                       responderManager: ActorRef,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[FileValueContentV2] = {
         val fileValue = FileValueV2(
             internalMimeType = valueObject.assertions(OntologyConstants.KnoraBase.InternalMimeType),
@@ -558,7 +558,7 @@ object ConstructResponseUtilV2 {
                                        valueObjectValueHasString: String,
                                        valueCommentOption: Option[String],
                                        mappings: Map[IRI, MappingAndXSLTransformation],
-                                       responderManager: ActorSelection,
+                                       responderManager: ActorRef,
                                        requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         val referredResourceIri: IRI = if (valueObject.isIncomingLink) {
             valueObject.assertions(OntologyConstants.Rdf.Subject)
@@ -606,7 +606,7 @@ object ConstructResponseUtilV2 {
       */
     def createValueContentV2FromValueRdfData(valueObject: ValueRdfData,
                                              mappings: Map[IRI, MappingAndXSLTransformation],
-                                             responderManager: ActorSelection,
+                                             responderManager: ActorRef,
                                              requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -751,7 +751,7 @@ object ConstructResponseUtilV2 {
     def constructReadResourceV2(resourceIri: IRI,
                                 resourceWithValueRdfData: ResourceWithValueRdfData,
                                 mappings: Map[IRI, MappingAndXSLTransformation],
-                                responderManager: ActorSelection,
+                                responderManager: ActorRef,
                                 requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -872,7 +872,7 @@ object ConstructResponseUtilV2 {
     def createFullResourceResponse(resourceIri: IRI,
                                    resourceRdfData: ResourceWithValueRdfData,
                                    mappings: Map[IRI, MappingAndXSLTransformation],
-                                   responderManager: ActorSelection,
+                                   responderManager: ActorRef,
                                    requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ReadResourceV2] = {
 
         constructReadResourceV2(
@@ -895,7 +895,7 @@ object ConstructResponseUtilV2 {
                              orderByResourceIri: Seq[IRI],
                              mappings: Map[IRI, MappingAndXSLTransformation] = Map.empty[IRI, MappingAndXSLTransformation],
                              forbiddenResource: Option[ReadResourceV2],
-                             responderManager: ActorSelection,
+                             responderManager: ActorRef,
                              requestingUser: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Vector[ReadResourceV2]] = {
 
         if (orderByResourceIri.toSet != searchResults.keySet && forbiddenResource.isEmpty) throw AssertionException(s"Not all resources are visible, but forbiddenResource is None")

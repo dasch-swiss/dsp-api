@@ -21,9 +21,8 @@ package org.knora.webapi.responders.v1
 
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
-import akka.stream.ActorMaterializer
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyClassV2ToV1, StandoffEntityInfoGetResponseV1}
@@ -31,7 +30,7 @@ import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.responders.Responder
-import org.knora.webapi.util.ActorUtil._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 
@@ -41,20 +40,16 @@ import scala.concurrent.Future
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV1 extends Responder {
-
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
+class StandoffResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     /**
-      * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive = {
-        case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => future2Message(sender(), createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid), log)
-        case GetMappingRequestV1(mappingIri, userProfile) => future2Message(sender(), getMappingV1(mappingIri, userProfile), log)
-        case GetXSLTransformationRequestV1(xsltTextReprIri, userProfile) => future2Message(sender(), getXSLTransformation(xsltTextReprIri, userProfile), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: StandoffResponderRequestV1) = msg match {
+        case CreateMappingRequestV1(xml, label, projectIri, mappingName, userProfile, uuid) => createMappingV1(xml, label, projectIri, mappingName, userProfile, uuid)
+        case GetMappingRequestV1(mappingIri, userProfile) => getMappingV1(mappingIri, userProfile)
+        case GetXSLTransformationRequestV1(xsltTextReprIri, userProfile) => getXSLTransformation(xsltTextReprIri, userProfile)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
 

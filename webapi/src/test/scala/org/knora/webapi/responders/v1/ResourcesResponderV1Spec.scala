@@ -616,9 +616,6 @@ object ResourcesResponderV1Spec {
 class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
     import ResourcesResponderV1Spec._
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ResourcesResponderV1]
-
     private val valueUtilV1 = new ValueUtilV1(settings)
 
     override lazy val rdfDataObjects = List(
@@ -851,7 +848,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
@@ -860,7 +857,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => compareResourceFullResponses(received = response, expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
@@ -869,7 +866,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
 
@@ -878,7 +875,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
             // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?reqtype=context&resinfo=true
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => compareResourcePartOfContextResponses(received = response, expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
@@ -887,7 +884,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return 1 resource containing 'Reise in' in its label with three of its values" in {
             // http://localhost:3333/v1/resources?searchstr=Reise+in&numprops=3&limit=11&restype_id=-1
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Reise in",
                 numberOfProps = 3,
                 limitOfResults = 11,
@@ -902,7 +899,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
         "return 1 resource of type incunabula:book containing 'Reis' in its label with its label (first property)" in {
             // http://localhost:3333/v1/resources?searchstr=Reis&numprops=1&limit=11&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Reis",
                 numberOfProps = 1,
                 limitOfResults = 11,
@@ -923,7 +920,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             // has no guiOrder (normally, the guiOrder is defined in project specific ontologies) which used to cause problems in the SPARQL query.
             // Now, the guiOrder was made optional in the SPARQL query, and this test ensures that the query works as expected.
 
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
                 numberOfProps = 4,
                 limitOfResults = 100,
@@ -940,7 +937,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
             //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
                 numberOfProps = 3,
                 limitOfResults = 100,
@@ -957,7 +954,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
             //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
 
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "a1r",
                 numberOfProps = 3,
                 limitOfResults = 100,
@@ -974,7 +971,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
             //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
 
-            actorUnderTest ! ResourceSearchGetRequestV1(
+            responderManager ! ResourceSearchGetRequestV1(
                 searchString = "a1r",
                 numberOfProps = 3,
                 limitOfResults = 100,
@@ -1006,7 +1003,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! resourceCreateRequest
+            responderManager ! resourceCreateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
@@ -1044,7 +1041,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! resourceCreateRequest
+            responderManager ! resourceCreateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
@@ -1088,7 +1085,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(CreateValueV1WithComment(publoc))
             )
 
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
                 label = "Book with reference to nonexistent resource",
                 projectIri = "http://rdfh.ch/projects/0803",
@@ -1161,7 +1158,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             )
 
 
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = INCUNABULA_BOOK_RESOURCE_CLASS,
                 label = "Test-Book",
                 projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
@@ -1185,7 +1182,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
 
             // See if we can query the resource.
-            actorUnderTest ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userADM = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceFullGetRequestV1(iri = newBookResourceIri.get, userADM = SharedTestDataADM.incunabulaProjectAdminUser)
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
             }
@@ -1239,7 +1236,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValueFull, fileValueThumb)
             )
 
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = INCUNABULA_PAGE_RESOURCE_CLASS,
                 label = "Test-Page",
                 projectIri = SharedTestDataADM.INCUNABULA_PROJECT_IRI,
@@ -1275,7 +1272,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 userProfile = SharedTestDataADM.incunabulaProjectAdminUser
             )
 
-            actorUnderTest ! pageGetContext
+            responderManager ! pageGetContext
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1293,12 +1290,12 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! resourceDeleteRequest
+            responderManager ! resourceDeleteRequest
 
             expectMsg(timeout, ResourceDeleteResponseV1(id = newPageResourceIri.get))
 
             // Check that the resource is marked as deleted.
-            actorUnderTest ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceInfoGetRequestV1(iri = newPageResourceIri.get, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -1316,7 +1313,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 SharedTestDataADM.incunabulaProjectAdminUser
             )
 
-            actorUnderTest ! propertiesGetRequest
+            responderManager ! propertiesGetRequest
 
             expectMsgPF(timeout) {
                 case response: PropertiesGetResponseV1 => comparePropertiesGetResponse(received = response, expected = propertiesGetResponseV1Region)
@@ -1327,7 +1324,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             val resourceContextPage = ResourceContextGetRequestV1(iri = "http://rdfh.ch/9d626dc76c03", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
-            actorUnderTest ! resourceContextPage
+            responderManager ! resourceContextPage
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 => comparePageContextRegionResponse(received = response)
@@ -1337,7 +1334,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show incoming standoff links if the user has view permission on both resources, but show other incoming links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1348,7 +1345,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2", userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1360,7 +1357,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
             // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1376,7 +1373,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // But another user should see only the hasStandoffLinkTo link.
 
-            actorUnderTest ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1", userADM = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceFullResponseV1 =>
@@ -1393,7 +1390,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "show a contained resource in a context request only if the user has permission to see the containing resource, the contained resource, and the link value" in {
             // The owner of the resources and the link should see two contained resources.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser1)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser1)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1405,7 +1402,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // Another user in the project, who doesn't have permission to see the second link, should see only one contained resource.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser2)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.anythingUser2)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1414,7 +1411,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
             // A user who's not in the project shouldn't see any contained resources.
 
-            actorUnderTest ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
+            responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
                 case response: ResourceContextResponseV1 =>
@@ -1423,7 +1420,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "not create an instance of knora-base:Resource" in {
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
                 label = "Test Resource",
                 projectIri = "http://rdfh.ch/projects/0803",
@@ -1439,7 +1436,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "not create an instance of anything:Thing in the incunabula project" in {
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
                 label = "Test Resource",
                 projectIri = "http://rdfh.ch/projects/0803",
@@ -1455,7 +1452,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "not create a resource in the default shared ontologies project" in {
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/shared/example-box#Box",
                 label = "Test Resource",
                 projectIri = OntologyConstants.KnoraBase.DefaultSharedOntologiesProject,
@@ -1473,7 +1470,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         "change a resource's label" in {
             val myNewLabel = "my new beautiful label"
 
-            actorUnderTest ! ChangeResourceLabelRequestV1(
+            responderManager ! ChangeResourceLabelRequestV1(
                 resourceIri = "http://rdfh.ch/c5058f3a",
                 label = myNewLabel,
                 userADM = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1492,7 +1489,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
                 "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0001/a-thing")))
             )
 
-            actorUnderTest ! ResourceCreateRequestV1(
+            responderManager ! ResourceCreateRequestV1(
                 resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
                 label = "Test Thing",
                 projectIri = "http://rdfh.ch/projects/0001",
@@ -1509,7 +1506,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {
-            actorUnderTest ! GraphDataGetRequestV1(
+            responderManager ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
                 userADM = SharedTestDataADM.anythingUser1
@@ -1524,7 +1521,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
-            actorUnderTest ! GraphDataGetRequestV1(
+            responderManager ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
                 userADM = SharedTestDataADM.incunabulaProjectAdminUser
@@ -1539,7 +1536,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a graph containing a standoff link" in {
-            actorUnderTest ! GraphDataGetRequestV1(
+            responderManager ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/a-thing",
                 depth = 4,
                 userADM = SharedTestDataADM.anythingUser1
@@ -1551,7 +1548,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a graph containing just one node" in {
-            actorUnderTest ! GraphDataGetRequestV1(
+            responderManager ! GraphDataGetRequestV1(
                 resourceIri = "http://rdfh.ch/0001/another-thing",
                 depth = 4,
                 userADM = SharedTestDataADM.anythingUser1

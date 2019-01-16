@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v2
 import java.io._
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.pattern._
@@ -39,9 +39,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, Rea
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.{MappingElement, MappingStandoffDatatypeClass, MappingXMLAttribute}
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 import org.knora.webapi.util.standoff.StandoffTagUtilV2
@@ -55,23 +55,22 @@ import scala.xml.{Elem, Node, NodeSeq, XML}
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV2 extends Responder {
+class StandoffResponderV2(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(_system, applicationStateActor, responderManager, storeManager) {
 
+    /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     /**
-      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
       */
-    override def receive: Receive = {
-        case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => future2Message(sender(), createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid), log)
-        case GetMappingRequestV2(mappingIri, requestingUser) => future2Message(sender(), getMappingV2(mappingIri, requestingUser), log)
-        case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => future2Message(sender(), getXSLTransformation(xsltTextReprIri, requestingUser), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: StandoffResponderRequestV2) = msg match {
+        case CreateMappingRequestV2(metadata, xml, requestingUser, uuid) => createMappingV2(xml.xml, metadata.label, metadata.projectIri, metadata.mappingName, requestingUser, uuid)
+        case GetMappingRequestV2(mappingIri, requestingUser) => getMappingV2(mappingIri, requestingUser)
+        case GetXSLTransformationRequestV2(xsltTextReprIri, requestingUser) => getXSLTransformation(xsltTextReprIri, requestingUser)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
-    val xsltCacheName = "xsltCache"
+    private val xsltCacheName = "xsltCache"
 
     /**
       * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
