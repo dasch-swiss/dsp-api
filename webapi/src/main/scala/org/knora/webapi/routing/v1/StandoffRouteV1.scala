@@ -21,7 +21,7 @@ package org.knora.webapi.routing.v1
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
@@ -45,14 +45,12 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object StandoffRouteV1 extends Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val materializer: ActorMaterializer = ActorMaterializer()
         val stringFormatter = StringFormatter.getGeneralInstance
-
-        val responderManager = system.actorSelection("/user/responderManager")
 
         path("v1" / "mapping") {
             post {

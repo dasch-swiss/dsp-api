@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives.{get, path, _}
 import akka.http.scaladsl.server.Route
@@ -37,12 +37,11 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 object ListsRouteV2 extends Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 
         path("v2" / "lists" / Segment) { lIri: String =>
             get {

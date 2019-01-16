@@ -21,7 +21,7 @@ package org.knora.webapi.messages.v2.responder.standoffmessages
 
 import java.util.UUID
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.knora.webapi._
@@ -66,8 +66,8 @@ object CreateMappingRequestMetadataV2 extends KnoraJsonLDRequestReaderV2[CreateM
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateMappingRequestMetadataV2] = {
         Future {

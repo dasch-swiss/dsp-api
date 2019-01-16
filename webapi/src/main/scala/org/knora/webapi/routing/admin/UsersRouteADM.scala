@@ -21,18 +21,19 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
+import org.apache.jena.sparql.function.library.leviathan
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
 import org.knora.webapi.util.StringFormatter
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,12 +44,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
-class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator {
+class UsersRouteADM extends Authenticator {
+    this: KnoraRoute =>
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
@@ -68,7 +69,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
                     requestContext,
                     settings,
                     responderManager,
-                    log
+                    leviathan.log
                 )
         }
     }
@@ -133,7 +134,7 @@ class UsersRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAd
     }
 
     /* concatenate paths in the CORRECT order and return */
-    def knoraApiPath: Route = getUsers ~ postUser ~ getUser ~
+    override def knoraApiPath: Route = getUsers ~ postUser ~ getUser ~
         path("admin" / "users" / Segment) { value =>
             put {
                 /* update a user identified by iri */

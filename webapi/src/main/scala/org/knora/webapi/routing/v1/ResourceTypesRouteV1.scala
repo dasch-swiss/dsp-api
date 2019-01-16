@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing.v1
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -35,11 +35,11 @@ import scala.concurrent.ExecutionContext
   * Provides a spray-routing function for API routes that deal with resource types.
   */
 object ResourceTypesRouteV1 extends Authenticator {
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+
         val stringFormatter = StringFormatter.getGeneralInstance
 
         path("v1" / "resourcetypes" / Segment) { iri =>

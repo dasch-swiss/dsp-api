@@ -22,7 +22,7 @@ package org.knora.webapi.routing.v1
 import java.io.File
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
@@ -49,12 +49,12 @@ import scala.concurrent.{ExecutionContext, Future, Promise}
   */
 object ValuesRouteV1 extends Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val materializer: ActorMaterializer = ActorMaterializer()
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
+
         val stringFormatter = StringFormatter.getGeneralInstance
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {

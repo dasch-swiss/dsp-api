@@ -26,7 +26,7 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
@@ -45,10 +45,10 @@ import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
@@ -74,13 +74,12 @@ object ResourcesRouteV1 extends Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
 
         implicit val system: ActorSystem = _system
         implicit val materializer: ActorMaterializer = ActorMaterializer()
         implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
         implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
         val log = Logger(LoggerFactory.getLogger(this.getClass))

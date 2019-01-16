@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import java.util.{Base64, UUID}
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
 import akka.http.scaladsl.model.{headers, _}
 import akka.http.scaladsl.server.RequestContext
@@ -66,7 +66,7 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
+    def doLoginV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val settings = Settings(system)
 
@@ -102,7 +102,7 @@ trait Authenticator {
       * @return a [[HttpResponse]] containing either a failure message or a message with a cookie header containing
       *         the generated session id.
       */
-    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = for {
+    def doLoginV2(credentials: KnoraPasswordCredentialsV2)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = for {
 
         authenticated <- authenticateCredentialsV2(Some(credentials)) // will throw exception if not valid and thus trigger the correct response
 
@@ -182,7 +182,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[RequestContext]]
       */
-    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
+    def doAuthenticateV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -212,7 +212,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[HttpResponse]]
       */
-    def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
+    def doAuthenticateV2(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[HttpResponse] = {
 
         val credentials: Option[KnoraCredentialsV2] = extractCredentialsV2(requestContext)
 
@@ -309,7 +309,7 @@ trait Authenticator {
       * @return a [[UserProfileV1]]
       */
     @deprecated("Please use: getUserADM()", "Knora v1.7.0")
-    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserProfileV1] = {
+    def getUserProfileV1(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserProfileV1] = {
 
         val settings = Settings(system)
 
@@ -343,7 +343,7 @@ trait Authenticator {
       * @param system         the current [[ActorSystem]]
       * @return a [[UserProfileV1]]
       */
-    def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserADM] = {
+    def getUserADM(requestContext: RequestContext)(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
         val settings = Settings(system)
 
@@ -404,7 +404,7 @@ object Authenticator {
       * @throws BadCredentialsException when no credentials are supplied; when user is not active;
       *                                 when the password does not match; when the supplied token is not valid.
       */
-    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Future[Boolean] = {
+    def authenticateCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[Boolean] = {
 
         for {
             settings <- FastFuture.successful(Settings(system))
@@ -613,7 +613,7 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws AuthenticationException when the IRI can not be found inside the token, which is probably a bug.
       */
-    private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, executionContext: ExecutionContext): Future[UserADM] = {
+    private def getUserADMThroughCredentialsV2(credentials: Option[KnoraCredentialsV2])(implicit system: ActorSystem, responderManager: ActorRef, executionContext: ExecutionContext): Future[UserADM] = {
 
         val settings = Settings(system)
 
@@ -670,7 +670,7 @@ object Authenticator {
       * @return a [[UserADM]]
       * @throws BadCredentialsException when either the supplied email is empty or no user with such an email could be found.
       */
-    private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
+    private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, responderManager: ActorRef, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
 

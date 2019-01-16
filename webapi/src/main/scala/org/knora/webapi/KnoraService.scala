@@ -34,7 +34,7 @@ import org.knora.webapi.responders._
 import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
-import org.knora.webapi.routing.{HealthRoute, RejectingRoute, SwaggerApiDocsRoute}
+import org.knora.webapi.routing.{HealthRoute, KnoraRoute, RejectingRoute, SwaggerApiDocsRoute}
 import org.knora.webapi.store._
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 
@@ -137,34 +137,34 @@ trait KnoraService {
       * All routes composed together and CORS activated.
       */
     private val apiRoutes: Route = addServerHeader(CORS(
-        new HealthRoute(system, settings).knoraApiPath ~
+        new HealthRoute(system, applicationStateActor, settings).knoraApiPath ~
             new RejectingRoute(system, settings).knoraApiPath() ~
-            ResourcesRouteV1.knoraApiPath(system, settings, log) ~
-            ValuesRouteV1.knoraApiPath(system, settings, log) ~
-            SipiRouteV1.knoraApiPath(system, settings, log) ~
-            StandoffRouteV1.knoraApiPath(system, settings, log) ~
-            ListsRouteV1.knoraApiPath(system, settings, log) ~
-            ResourceTypesRouteV1.knoraApiPath(system, settings, log) ~
-            SearchRouteV1.knoraApiPath(system, settings, log) ~
+            ResourcesRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            ValuesRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            SipiRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            StandoffRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            ListsRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            ResourceTypesRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            SearchRouteV1.knoraApiPath(system, responderManager, settings, log) ~
             AuthenticationRouteV1.knoraApiPath(system, settings, log) ~
-            AssetsRouteV1.knoraApiPath(system, settings, log) ~
-            CkanRouteV1.knoraApiPath(system, settings, log) ~
-            UsersRouteV1.knoraApiPath(system, settings, log) ~
-            ProjectsRouteV1.knoraApiPath(system, settings, log) ~
-            OntologiesRouteV2.knoraApiPath(system, settings, log) ~
-            SearchRouteV2.knoraApiPath(system, settings, log) ~
-            ResourcesRouteV2.knoraApiPath(system, settings, log) ~
-            ValuesRouteV2.knoraApiPath(system, settings, log) ~
-            StandoffRouteV2.knoraApiPath(system, settings, log) ~
-            ListsRouteV2.knoraApiPath(system, settings, log) ~
+            AssetsRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            CkanRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            UsersRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            ProjectsRouteV1.knoraApiPath(system, responderManager, settings, log) ~
+            OntologiesRouteV2.knoraApiPath(system, responderManager, storeManager, settings, log) ~
+            SearchRouteV2.knoraApiPath(system, responderManager, settings, log) ~
+            ResourcesRouteV2.knoraApiPath(system, responderManager, storeManager, settings, log) ~
+            ValuesRouteV2.knoraApiPath(system, responderManager, storeManager, settings, log) ~
+            StandoffRouteV2.knoraApiPath(system, responderManager, storeManager, settings, log) ~
+            ListsRouteV2.knoraApiPath(system, responderManager, settings, log) ~
             AuthenticationRouteV2.knoraApiPath(system, settings, log) ~
-            new GroupsRouteADM(system, settings, log).knoraApiPath ~
-            new ListsRouteADM(system, settings, log).knoraApiPath ~
-            new PermissionsRouteADM(system, settings, log).knoraApiPath ~
-            new ProjectsRouteADM(system, settings, log).knoraApiPath ~
-            new StoreRouteADM(system, settings, log).knoraApiPath ~
-            new UsersRouteADM(system, settings, log).knoraApiPath ~
-            new SwaggerApiDocsRoute(system, settings, log).knoraApiPath,
+            new GroupsRouteADM(system, responderManager, settings, log).knoraApiPath ~
+            new ListsRouteADM(system, responderManager, settings, log).knoraApiPath ~
+            new PermissionsRouteADM(system, responderManager, settings, log).knoraApiPath ~
+            new ProjectsRouteADM(system, responderManager, settings, log).knoraApiPath ~
+            new StoreRouteADM(system, responderManager, settings, log).knoraApiPath ~
+                (new UsersRouteADM extends KnoraRoute(system, applicationStateActor, responderManager, storeManager, log).knoraApiPath ~
+            new SwaggerApiDocsRoute(system, responderManager, settings, log).knoraApiPath,
         settings,
         log
     ))

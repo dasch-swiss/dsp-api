@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -27,12 +27,10 @@ import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
-import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * A route used to send requests which can directly affect the data stored inside the triplestore.
@@ -40,13 +38,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Api(value = "store", produces = "application/json")
 @Path("/admin/store")
-class StoreRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with StoresADMJsonProtocol {
+class StoreRouteADM(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef, log: LoggingAdapter) extends KnoraRoute(_system, applicationStateActor, responderManager, storeManager) with Authenticator with StoresADMJsonProtocol {
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-    def knoraApiPath = Route {
+    override def knoraApiPath = Route {
         path("admin" / "store") {
             get {
                 requestContext =>

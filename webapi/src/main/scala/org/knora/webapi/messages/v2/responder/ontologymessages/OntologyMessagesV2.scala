@@ -23,7 +23,7 @@ package org.knora.webapi.messages.v2.responder.ontologymessages
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef, ActorSelection}
 import akka.event.LoggingAdapter
 import akka.util.Timeout
 import org.apache.commons.lang3.builder.HashCodeBuilder
@@ -90,8 +90,8 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateOntologyRequestV2] = {
         Future {

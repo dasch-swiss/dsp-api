@@ -21,16 +21,14 @@ package org.knora.webapi.routing.v2
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.StoreManagerActorPath
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
@@ -41,13 +39,11 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
   * Provides a routing function for API v2 routes that deal with values.
   */
 object ValuesRouteV2 extends Authenticator {
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
+    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, storeManager: ActorRef, settings: SettingsImpl, log: LoggingAdapter): Route = {
         implicit val system: ActorSystem = _system
         implicit val executionContext: ExecutionContextExecutor = system.dispatcher
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(StoreManagerActorPath)
 
         // #post-value-parse-jsonld
         path("v2" / "values") {

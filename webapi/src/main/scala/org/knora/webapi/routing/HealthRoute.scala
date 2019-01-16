@@ -19,14 +19,13 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorSelection, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
-import akka.pattern._
+import akka.pattern.ask
 import akka.util.Timeout
 import org.knora.webapi.SettingsImpl
-import org.knora.webapi.app.APPLICATION_STATE_ACTOR_PATH
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import spray.json.{JsObject, JsString}
@@ -111,11 +110,11 @@ trait HealthCheck {
 /**
   * Provides the '/health' endpoint serving the health status.
   */
-class HealthRoute(_system: ActorSystem, settings: SettingsImpl) extends HealthCheck{
+class HealthRoute(_system: ActorSystem, _applicationStateActor: ActorRef, settings: SettingsImpl) extends HealthCheck {
 
     implicit val system: ActorSystem = _system
     implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
-    protected val applicationStateActor: ActorSelection = system.actorSelection(APPLICATION_STATE_ACTOR_PATH)
+    val applicationStateActor: ActorRef = _applicationStateActor
 
     val log = akka.event.Logging(system, this.getClass)
 
