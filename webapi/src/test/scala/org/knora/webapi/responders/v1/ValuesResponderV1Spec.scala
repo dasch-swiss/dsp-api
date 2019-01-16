@@ -22,17 +22,18 @@ package org.knora.webapi.responders.v1
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.SharedOntologyTestDataADM._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
+import org.knora.webapi.messages.store.sipimessages.SipiConversionFileRequestV1
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.{LocationV1, ResourceFullGetRequestV1, ResourceFullResponseV1}
-import org.knora.webapi.messages.v1.responder.sipimessages.SipiResponderConversionFileRequestV1
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{MappingXMLtoStandoff, StandoffDataTypeClasses, XMLTag}
-import org.knora.webapi.responders._
+import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.MutableTestIri
 
@@ -85,9 +86,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     import ValuesResponderV1Spec._
 
-    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
+    override lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> system.actorOf(Props(new MockSipiConnector), SipiConnectorActorName))
 
-    override lazy val rdfDataObjects = Vector(
+    override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
@@ -1567,7 +1568,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "add a new image file value to an incunabula:page" in {
 
-            val fileRequest = SipiResponderConversionFileRequestV1(
+            val fileRequest = SipiConversionFileRequestV1(
                 originalFilename = "Chlaus.jpg",
                 originalMimeType = "image/jpeg",
                 filename = "./test_server/images/Chlaus.jpg",

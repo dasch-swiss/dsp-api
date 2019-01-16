@@ -23,12 +23,13 @@ import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
+import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.sipimessages.{DeleteTemporaryFileRequestV2, MoveTemporaryFileToPermanentStorageRequestV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
 import org.knora.webapi.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.util.{PermissionUtilADM, SmartIri}
@@ -152,6 +153,7 @@ object ResourceUtilV2 {
                             valueContent: ValueContentV2,
                             requestingUser: UserADM,
                             responderManager: ActorRef,
+                            storeManager: ActorRef,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
         // Was this a file value update?
         valueContent match {
@@ -166,7 +168,7 @@ object ResourceUtilV2 {
                         )
 
                         // If Sipi succeeds, return the future we were given. Otherwise, return a failed future.
-                        (responderManager ? sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
+                        (storeManager ? sipiRequest).mapTo[SuccessResponseV2].flatMap(_ => updateFuture)
 
                     case Failure(_) =>
                         // The file value update failed. Ask Sipi to delete the temporary file.
@@ -175,7 +177,7 @@ object ResourceUtilV2 {
                             requestingUser = requestingUser
                         )
 
-                        val sipiResponseFuture: Future[SuccessResponseV2] = (responderManager ? sipiRequest).mapTo[SuccessResponseV2]
+                        val sipiResponseFuture: Future[SuccessResponseV2] = (storeManager ? sipiRequest).mapTo[SuccessResponseV2]
 
                         // Did Sipi successfully delete the temporary file?
                         sipiResponseFuture.transformWith {

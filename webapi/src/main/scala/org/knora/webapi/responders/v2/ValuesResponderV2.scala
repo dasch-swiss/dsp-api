@@ -277,6 +277,7 @@ class ValuesResponderV2(system: ActorSystem, applicationStateActor: ActorRef, re
             valueContent = createValueRequest.createValue.valueContent,
             requestingUser = createValueRequest.requestingUser,
             responderManager = responderManager,
+            storeManager = storeManager,
             log = log
         )
     }
@@ -860,6 +861,7 @@ class ValuesResponderV2(system: ActorSystem, applicationStateActor: ActorRef, re
             valueContent = updateValueRequest.updateValue.valueContent,
             requestingUser = updateValueRequest.requestingUser,
             responderManager = responderManager,
+            storeManager = storeManager,
             log = log
         )
     }

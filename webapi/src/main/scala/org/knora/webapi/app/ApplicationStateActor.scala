@@ -8,7 +8,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{CheckRepositoryReque
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
+import org.knora.webapi.store.StoreManagerActorPath
 import org.knora.webapi.util.CacheUtil
 
 import scala.concurrent.ExecutionContext
@@ -31,7 +31,7 @@ class ApplicationStateActor extends Actor with Timers with ActorLogging {
     /**
       * A reference to the store manager.
       */
-    protected val storeManager: ActorSelection = context.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    protected val storeManager: ActorSelection = context.actorSelection(StoreManagerActorPath)
 
 
     // the prometheus, zipkin, jaeger, datadog, and printConfig flags can be set via application.conf and via command line parameter

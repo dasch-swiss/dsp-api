@@ -22,32 +22,33 @@ package org.knora.webapi.store
 import akka.actor._
 import akka.event.LoggingReceive
 import org.knora.webapi._
+import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
+import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
 /**
-  * This actor receives messages for different stores, and forwards them to corresponding store manager. At the moment only triple stores are implemented,
-  * but in the future, support for different remote repositories will probably be needed. This place would then be the crossroad for these different kinds
+  * This actor receives messages for different stores, and forwards them to the corresponding store manager.
+  * At the moment only triple stores and Sipi are implemented, but in the future, support for different
+  * remote repositories will probably be needed. This place would then be the crossroad for these different kinds
   * of 'stores' and their requests.
   */
 class StoreManager extends Actor with ActorLogging {
     this: ActorMaker =>
 
-    private val settings = Settings(context.system)
+    /**
+      * Starts the TriplestoreManager
+      */
+    protected lazy val triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
 
     /**
-      * Start the TriplestoreManagerActor
+      * Starts the iiifManager
       */
-    var triplestoreManager: ActorRef = _
-
-    override def preStart = {
-        log.debug("StoreManager: start with preStart")
-        triplestoreManager = makeActor(Props(new TriplestoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TRIPLESTORE_MANAGER_ACTOR_NAME)
-        log.debug("StoreManager: finished with preStart")
-    }
+    protected lazy val iiifManager = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
 
     def receive = LoggingReceive {
         case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
+        case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
         case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
     }
 }

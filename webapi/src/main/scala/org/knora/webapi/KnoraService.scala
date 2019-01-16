@@ -113,7 +113,7 @@ trait KnoraService {
     /**
       * The supervisor actor that forwards messages to actors that deal with persistent storage.
       */
-    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = STORE_MANAGER_ACTOR_NAME)
+    protected val storeManager: ActorRef = system.actorOf(Props(new StoreManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = StoreManagerActorName)
 
 
     /**

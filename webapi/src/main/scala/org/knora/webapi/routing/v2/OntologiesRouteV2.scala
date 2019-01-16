@@ -30,7 +30,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
+import org.knora.webapi.store.StoreManagerActorPath
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
@@ -50,7 +50,7 @@ object OntologiesRouteV2 extends Authenticator {
         implicit val timeout: Timeout = settings.defaultTimeout
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
         val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
+        val storeManager = system.actorSelection(StoreManagerActorPath)
 
         path("ontology" / Segments) { _: List[String] =>
             get {
