@@ -18,11 +18,15 @@ knora-api:Annotation a owl:Class;
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:attachedToProject
+      owl:onProperty knora-api:arkUrl
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
-      owl:onProperty knora-api:attachedToUser
+      owl:onProperty knora-api:attachedToProject
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:minCardinality 0;
+      owl:onProperty knora-api:hasStandoffLinkToValue
     ], [ a owl:Restriction;
       owl:minCardinality 1;
       owl:onProperty knora-api:isAnnotationOf
@@ -41,6 +45,10 @@ knora-api:Annotation a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty rdfs:label
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:attachedToUser
     ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
@@ -68,10 +76,6 @@ knora-api:Annotation a owl:Class;
       knora-api:isInherited true;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkToValue
     ] .
 
 knora-api:Resource a owl:Class;
@@ -79,6 +83,9 @@ knora-api:Resource a owl:Class;
   rdfs:comment "Represents something in the world, or an abstract thing";
   rdfs:label "Resource";
   rdfs:subClassOf [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
@@ -115,6 +122,11 @@ knora-api:Resource a owl:Class;
       owl:cardinality 1;
       owl:onProperty rdfs:label
     ] .
+
+knora-api:arkUrl a owl:DatatypeProperty;
+  knora-api:objectType xsd:anyURI;
+  rdfs:comment "Provides the ARK URL of a resource.";
+  rdfs:label "ARK URL" .
 
 knora-api:attachedToProject a owl:ObjectProperty;
   knora-api:objectType knora-api:knoraProject;
@@ -337,6 +349,10 @@ knora-api:AudioRepresentation a owl:Class;
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -392,6 +408,10 @@ knora-api:Representation a owl:Class;
   rdfs:comment "A resource that can store one or more files";
   rdfs:label "Representation";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
@@ -645,6 +665,10 @@ knora-api:DDDRepresentation a owl:Class;
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -803,6 +827,18 @@ knora-api:DateValue a owl:Class;
   rdfs:comment "Represents a Knora date value";
   rdfs:subClassOf knora-api:DateBase, knora-api:Value, [ a owl:Restriction;
       knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartDay
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:dateValueHasStartEra
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:maxCardinality 1;
+      owl:onProperty knora-api:dateValueHasStartMonth
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasStartYear
     ], [ a owl:Restriction;
@@ -857,18 +893,6 @@ knora-api:DateValue a owl:Class;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:dateValueHasEndYear
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:dateValueHasStartDay
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:cardinality 1;
-      owl:onProperty knora-api:dateValueHasStartEra
-    ], [ a owl:Restriction;
-      knora-api:isInherited true;
-      owl:maxCardinality 1;
-      owl:onProperty knora-api:dateValueHasStartMonth
     ] .
 
 knora-api:DecimalBase a owl:Class;
@@ -975,6 +999,10 @@ knora-api:DocumentRepresentation a owl:Class;
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1040,6 +1068,10 @@ knora-api:ForbiddenResource a owl:Class;
   rdfs:comment "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
   rdfs:label "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
@@ -1300,6 +1332,10 @@ knora-api:LinkObj a owl:Class;
   rdfs:comment "Represents a generic link object";
   rdfs:label "Link Object";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
@@ -1592,6 +1628,10 @@ knora-api:MovingImageRepresentation a owl:Class;
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -1659,6 +1699,10 @@ knora-api:Region a owl:Class;
   rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string.";
   rdfs:label "Region";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
@@ -2378,6 +2422,10 @@ knora-api:StillImageRepresentation a owl:Class;
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
     ], [ a owl:Restriction;
       knora-api:isInherited true;
@@ -2488,6 +2536,10 @@ knora-api:TextRepresentation a owl:Class;
   rdfs:comment "A resource containing text files";
   rdfs:label "Representation (Text)";
   rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
@@ -2694,6 +2746,10 @@ knora-api:XSLTransformation a owl:Class;
   rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.";
   rdfs:label "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.";
   rdfs:subClassOf knora-api:TextRepresentation, [ a owl:Restriction;
+      knora-api:isInherited true;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       knora-api:isInherited true;
       owl:cardinality 1;
       owl:onProperty knora-api:attachedToProject
