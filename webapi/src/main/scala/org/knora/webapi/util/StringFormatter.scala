@@ -748,6 +748,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // A regex that matches a Knora resource IRI.
     private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")").r
 
+    // A DateTimeFormatter that parses an ISO 8601 UTC timestamp with no hyphens or colons.
+    private val Iso8601UtcWithoutHyphensOrColonsFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss['.'n]X")
+
     /**
       * The information that is stored about non-Knora IRIs.
       */
@@ -1706,16 +1709,22 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       */
     def toInstant(s: String, errorFun: => Nothing): Instant = {
         try {
-            // Try parsing it as an ISO 8601 date in UTC.
+            // Try parsing it as an ISO 8601 UTC date.
             Instant.parse(s)
         } catch {
             case _: Exception =>
-                // Try parsing it as an ISO 8601 date with an offset.
+                // Try parsing it as an ISO 8601 UTC date without hyphens or colons.
                 try {
-                    val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
-                    Instant.from(creationAccessor)
+                    OffsetDateTime.parse(s, Iso8601UtcWithoutHyphensOrColonsFormat).toInstant
                 } catch {
-                    case _: Exception => errorFun
+                    case _: Exception =>
+                        // Try parsing it as an ISO 8601 date with an offset.
+                        try {
+                            val creationAccessor: TemporalAccessor = DateTimeFormatter.ISO_OFFSET_DATE_TIME.parse(s)
+                            Instant.from(creationAccessor)
+                        } catch {
+                            case _: Exception => errorFun
+                        }
                 }
         }
     }
@@ -2184,8 +2193,15 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
         val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
 
-        // If there's a timestamp, add it as an object variant.
-        val timestampVariant: String = timestamp.map(instant => "." + instant.toString).getOrElse("")
+        // If there's a timestamp, remove hyphens (for the same reason as above) and colons (because otherwise
+        // they would need to be URL-encoded), and append it to the URL as an ARK object variant.
+        val timestampVariant: String = timestamp.map {
+            instant: Instant =>
+                val instantStrWithoutHyphensOrColons = instant.toString.
+                    replace("-", "").
+                    replace(":", "")
+                "." + instantStrWithoutHyphensOrColons
+        }.getOrElse("")
 
         s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit$timestampVariant"
     }
