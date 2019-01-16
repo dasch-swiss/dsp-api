@@ -22,7 +22,7 @@ package org.knora.webapi.responders.v1
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -36,10 +36,10 @@ import org.knora.webapi.messages.v1.responder.sipimessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v1.GroupedProps._
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -50,7 +50,7 @@ import scala.util.Try
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1 extends Responder {
+class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)
@@ -59,26 +59,24 @@ class ResourcesResponderV1 extends Responder {
     val knoraIdUtil = new KnoraIdUtil
 
     /**
-      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message extending [[ResourcesResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive: Receive = {
-        case ResourceInfoGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getResourceInfoResponseV1(resourceIri, userProfile), log)
-        case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => future2Message(sender(), getFullResponseV1(resourceIri, userProfile, getIncoming), log)
-        case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => future2Message(sender(), getContextResponseV1(resourceIri, userProfile, resinfo), log)
-        case ResourceRightsGetRequestV1(resourceIri, userProfile) => future2Message(sender(), getRightsResponseV1(resourceIri, userProfile), log)
-        case graphDataGetRequest: GraphDataGetRequestV1 => future2Message(sender(), getGraphDataResponseV1(graphDataGetRequest), log)
-        case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => future2Message(sender(), getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile), log)
-        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => future2Message(sender(), createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID), log)
-        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => future2Message(sender(), createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID), log)
-        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => future2Message(sender(), checkResourceClass(resourceIri, owlClass, userProfile), log)
-        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => future2Message(sender(), getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile), log)
-        case resourceDeleteRequest: ResourceDeleteRequestV1 => future2Message(sender(), deleteResourceV1(resourceDeleteRequest), log)
-        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => future2Message(sender(), changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile), log)
-        case UnexpectedMessageRequest() => future2Message(sender(), makeFutureOfUnit, log)
-        case InternalServerExceptionMessageRequest() => future2Message(sender, makeInternalServerException, log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ResourcesResponderRequestV1) = msg match {
+        case ResourceInfoGetRequestV1(resourceIri, userProfile) => getResourceInfoResponseV1(resourceIri, userProfile)
+        case ResourceFullGetRequestV1(resourceIri, userProfile, getIncoming) => getFullResponseV1(resourceIri, userProfile, getIncoming)
+        case ResourceContextGetRequestV1(resourceIri, userProfile, resinfo) => getContextResponseV1(resourceIri, userProfile, resinfo)
+        case ResourceRightsGetRequestV1(resourceIri, userProfile) => getRightsResponseV1(resourceIri, userProfile)
+        case graphDataGetRequest: GraphDataGetRequestV1 => getGraphDataResponseV1(graphDataGetRequest)
+        case ResourceSearchGetRequestV1(searchString: String, resourceIri: Option[IRI], numberOfProps: Int, limitOfResults: Int, userProfile: UserADM) => getResourceSearchResponseV1(searchString, resourceIri, numberOfProps, limitOfResults, userProfile)
+        case ResourceCreateRequestV1(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID) => createNewResource(resourceTypeIri, label, values, convertRequest, projectIri, userProfile, apiRequestID)
+        case MultipleResourceCreateRequestV1(resourcesToCreate, projectIri, userProfile, apiRequestID) => createMultipleNewResources(resourcesToCreate, projectIri, userProfile, apiRequestID)
+        case ResourceCheckClassRequestV1(resourceIri: IRI, owlClass: IRI, userProfile: UserADM) => checkResourceClass(resourceIri, owlClass, userProfile)
+        case PropertiesGetRequestV1(resourceIri: IRI, userProfile: UserADM) => getPropertiesV1(resourceIri = resourceIri, userProfile = userProfile)
+        case resourceDeleteRequest: ResourceDeleteRequestV1 => deleteResourceV1(resourceDeleteRequest)
+        case ChangeResourceLabelRequestV1(resourceIri, label, userProfile, apiRequestID) => changeResourceLabelV1(resourceIri, label, apiRequestID, userProfile)
+        case UnexpectedMessageRequest() => makeFutureOfUnit
+        case InternalServerExceptionMessageRequest() => makeInternalServerException
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

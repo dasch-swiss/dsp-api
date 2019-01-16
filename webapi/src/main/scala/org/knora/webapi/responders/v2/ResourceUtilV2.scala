@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v2
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
@@ -106,7 +106,7 @@ object ResourceUtilV2 {
                                    resourceClassIri: SmartIri,
                                    propertyIri: SmartIri,
                                    requestingUser: UserADM,
-                                   responderManager: ActorSelection)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
+                                   responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
         for {
             defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
                 responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -126,7 +126,7 @@ object ResourceUtilV2 {
       * @param listNodeIri the IRI of the list node.
       */
     def checkListNodeExists(listNodeIri: IRI,
-                            storeManager: ActorSelection)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
+                            storeManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] = {
         for {
             askString <- Future(queries.sparql.admin.txt.checkListNodeExistsByIri(listNodeIri = listNodeIri).toString)
 
@@ -151,7 +151,7 @@ object ResourceUtilV2 {
     def doSipiPostUpdate[T](updateFuture: Future[T],
                             valueContent: ValueContentV2,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
+                            responderManager: ActorRef,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
         // Was this a file value update?
         valueContent match {
