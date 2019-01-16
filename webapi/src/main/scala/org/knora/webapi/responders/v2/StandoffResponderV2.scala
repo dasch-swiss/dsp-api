@@ -33,6 +33,7 @@ import javax.xml.validation.{Schema, SchemaFactory, Validator => JValidator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, ReadClassInfoV2, StandoffEntityInfoGetRequestV2, StandoffEntityInfoGetResponseV2}
@@ -125,52 +126,10 @@ class StandoffResponderV2(_system: ActorSystem, applicationStateActor: ActorRef,
                 // XSL transformation is cached
                 Future(xsltMaybe.get)
             } else {
-                // ask Sipi to return the XSL transformation
-                val sipiResponseFuture: Future[HttpResponse] = for {
-
-                    // ask Sipi to return the XSL transformation file
-                    response: HttpResponse <- Http().singleRequest(
-                        HttpRequest(
-                            method = HttpMethods.GET,
-                            uri = xsltFileUrl
-                        )
-                    )
-
-                } yield response
-
-                val sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                    case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                        // this problem is hardly the user's fault. Create a SipiException
-                        throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                    // TODO: what other exceptions have to be handled here?
-                    // if Exception is used, also previous errors are caught here
-
-                }
-
                 for {
-
-                    sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-                    httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-                    messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-                    // do cleanup after strict (in memory) access
-                    _ = sipiResponseRecovered.discardEntityBytes()
-
-                    _ = if (httpStatusCode != StatusCodes.OK) {
-                        throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-                    }
-
-                    // get the XSL transformation
-                    xslt: String = messageBody.data.decodeString("UTF-8")
-
-                    _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = xslt)
-
-                } yield xslt
+                    response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = xsltFileUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+                    _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
+                } yield response.content
             }
 
         } yield GetXSLTransformationResponseV2(xslt = xslt)

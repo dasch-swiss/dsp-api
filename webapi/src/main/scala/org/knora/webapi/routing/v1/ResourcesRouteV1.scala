@@ -48,7 +48,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
@@ -230,7 +230,7 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
 
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userADM: UserADM): Future[ResourceCreateRequestV1] = {
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiConversionPathRequestV1] = None, userADM: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
@@ -238,8 +238,8 @@ object ResourcesRouteV1 extends Authenticator {
             // for GUI-case:
             // file has already been stored by Sipi.
             // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-            val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
-                case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
+            val paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
+                case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
                     originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
                     filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
@@ -304,7 +304,7 @@ object ResourcesRouteV1 extends Authenticator {
                 values = valuesToBeCreated.toMap,
                 file = resourceRequest.file.map {
                     fileToRead =>
-                        SipiResponderConversionPathRequestV1(
+                        SipiConversionPathRequestV1(
                             originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
                             originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
                             source = fileToRead.file,
@@ -1018,7 +1018,7 @@ object ResourcesRouteV1 extends Authenticator {
                             originalMimeType = fileInfo.contentType.toString
 
 
-                            sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            sipiConvertPathRequest = SipiConversionPathRequestV1(
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,

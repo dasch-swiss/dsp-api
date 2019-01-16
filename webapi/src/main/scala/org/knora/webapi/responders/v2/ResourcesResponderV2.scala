@@ -31,6 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -840,6 +841,7 @@ class ResourcesResponderV2(_system: ActorSystem, applicationStateActor: ActorRef
                     valueContent = valueContent,
                     requestingUser = requestingUser,
                     responderManager = responderManager,
+                    storeManager = storeManager,
                     log = log
                 )
         }
@@ -996,43 +998,8 @@ class ResourcesResponderV2(_system: ActorSystem, applicationStateActor: ActorRef
 
         for {
             gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-
-            sipiResponseFuture: Future[HttpResponse] = for {
-
-                // ask Sipi to return the XSL transformation file
-                response: HttpResponse <- Http().singleRequest(
-                    HttpRequest(
-                        method = HttpMethods.GET,
-                        uri = gravsearchTemplateUrl
-                    )
-                )
-
-            } yield response
-
-            sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                    // this problem is hardly the user's fault. Create a SipiException
-                    throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                // TODO: what other exceptions have to be handled here?
-                // if Exception is used, also previous errors are caught here
-
-            }
-
-            sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-            httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-            messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-            }
-
-            // get the XSL transformation
-            gravsearchTemplate: String = messageBody.data.decodeString("UTF-8")
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+            gravsearchTemplate: String = response.content
 
         } yield gravsearchTemplate
 
