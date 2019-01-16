@@ -79,7 +79,7 @@ trait Authenticator {
             sessionToken = JWTHelper.createToken(userProfile.userData.user_id.get, settings.jwtSecretKey, settings.jwtLongevity)
 
             httpResponse = HttpResponse(
-                headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionToken, path = Some("/")))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
+                headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionToken, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
                 status = StatusCodes.OK,
                 entity = HttpEntity(
                     ContentTypes.`application/json`,
@@ -114,6 +114,7 @@ trait Authenticator {
 
 
         httpResponse = HttpResponse(
+            headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, token, path = Some("/"), httpOnly = true))), // set path to "/" to make the cookie valid for the whole domain (and not just a segment like v1 etc.)
             status = StatusCodes.OK,
             entity = HttpEntity(
                 ContentTypes.`application/json`,
@@ -125,6 +126,49 @@ trait Authenticator {
 
     } yield httpResponse
 
+    def presentLoginFormV2(requestContext: RequestContext)(implicit system: ActorSystem, executionContext: ExecutionContext): Future[HttpResponse] = {
+
+        val settings = Settings(system)
+
+        val apiUrl = settings.externalKnoraApiBaseUrl
+
+        val form = s"""
+          |<div align="center">
+          |    <section class="container">
+          |        <div class="login">
+          |            <h1>Knora Login</h1>
+          |            <form name="myform" action="${apiUrl}/v2/login" method="post">
+          |                <p>
+          |                    <input type="text" name="identifier" value="" placeholder="Username or Email">
+          |                </p>
+          |                <p>
+          |                    <input type="password" name="password" value="" placeholder="Password">
+          |                </p>
+          |                <p class="submit">
+          |                    <input type="submit" name="submit" value="Login">
+          |                </p>
+          |            </form>
+          |        </div>
+          |
+          |    </section>
+          |
+          |    <section class="about">
+          |        <p class="about-author">
+          |            &copy; 2015&ndash;2019 <a href="https://knora.org" target="_blank">Knora.org</a>
+          |    </section>
+          |</div>
+        """.stripMargin
+
+        val httpResponse = HttpResponse(
+            status = StatusCodes.OK,
+            entity = HttpEntity(
+                ContentTypes.`text/html(UTF-8)`,
+                form
+            )
+        )
+
+        FastFuture.successful(httpResponse)
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Authentication ENTRY POINT
@@ -208,7 +252,7 @@ trait Authenticator {
                 CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionCreds.token, sessionCreds.token)
 
                 HttpResponse(
-                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
+                    headers = List(headers.`Set-Cookie`(HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME, "", path = Some("/"), httpOnly = true , expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))),
                     status = StatusCodes.OK,
                     entity = HttpEntity(
                         ContentTypes.`application/json`,

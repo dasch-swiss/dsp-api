@@ -214,28 +214,6 @@
 					SALSAH.userprofile = data.userProfile;
 					window.sessionStorage.setItem('userprofile', JSON.stringify(SALSAH.userprofile));
 
-					/* Not needed anymore
-					$.ajax({
-						url: SIPI_URL + SIPI_LOGIN_ROUTE,
-						type: "POST",
-						contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-						dataType: "text", // response is empty, but without explicit content-type jQuery tries to parse the answer as XML
-						data: {
-							token: data.sid
-						},
-						xhrFields: {
-							withCredentials: true
-						},
-						error: function(jqXHR, textStatus, errorThrown) {
-							if (errorThrown !== undefined && jqXHR !== undefined && jqXHR.responseJSON !== undefined) {
-								alert("Sipi returned error " + errorThrown + " with message: " + jqXHR.responseJSON['message']);
-							} else {
-								alert("Call to Sipi failed");
-							}
-						}
-					});
-					*/
-
 					$('#dologin').simpledialog('loginbox', 'close');
 
 					$('#userctrl').empty().append(s_('_user') + ' : ' + SALSAH.userprofile.userData.firstname + ' ' + SALSAH.userprofile.userData.lastname)
@@ -277,25 +255,6 @@
 				if (data.status == ApiErrors.OK) {
 					window.sessionStorage.removeItem('userprofile');
 					SALSAH.userprofile = null;
-					// invalidate cookie obtained from Sipi when logging in to Knora
-                    /*
-                    $.ajax({
-                        url: SIPI_URL + SIPI_LOGOUT_ROUTE,
-                        type: "POST",
-                        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-                        xhrFields: {
-                            withCredentials: true
-                        },
-                        dataType: "text", // response is empty, but without explicit content-type jQuery tries to parse the answer as XML
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            if (errorThrown !== undefined) {
-                                alert("Sipi returned an error: " + errorThrown);
-                            } else {
-                                alert("Call to Sipi failed");
-                            }
-                        }
-                    });
-                    */
 
 					$('#dologut').simpledialog('logoutbox', 'close');
 					//SALSAH.reload_css();
