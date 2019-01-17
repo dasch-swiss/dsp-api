@@ -44,8 +44,6 @@ case class KnoraRouteData(system: ActorSystem, applicationStateActor: ActorRef, 
   */
 abstract class KnoraRoute(routeData: KnoraRouteData) {
 
-
-    /* define implicits */
     implicit protected val system: ActorSystem = routeData.system
     implicit protected val responderManager: ActorRef = routeData.responderManager
     implicit protected val settings: SettingsImpl = Settings(system)
@@ -53,7 +51,6 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
     implicit protected val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    /* other members */
     protected val applicationStateActor: ActorRef = routeData.applicationStateActor
     protected val storeManager: ActorRef = routeData.storeManager
     protected val log = akka.event.Logging(system, this.getClass)

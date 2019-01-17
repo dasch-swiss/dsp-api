@@ -33,7 +33,6 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil, StringFormatter}
 import org.slf4j.LoggerFactory
 import pdi.jwt.{JwtAlgorithm, JwtClaim, JwtHeader, JwtSprayJson}

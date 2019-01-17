@@ -52,8 +52,6 @@ trait Core {
 
     implicit val settings: SettingsImpl
 
-    implicit val log: LoggingAdapter
-
     implicit val materializer: ActorMaterializer
 
     implicit val executionContext: ExecutionContext
@@ -73,11 +71,6 @@ trait LiveCore extends Core {
       * The application's configuration.
       */
     implicit lazy val settings: SettingsImpl = Settings(system)
-
-    /**
-      * Provide logging
-      */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, "KnoraService")
 
     /**
       * Provides the actor materializer (akka-http)
@@ -122,7 +115,6 @@ trait KnoraService {
     protected val responderManager: ActorRef = system.actorOf(Props(new ResponderManager(applicationStateActor, storeManager) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
     // #supervisors
 
-
     /**
       * Timeout definition
       */
@@ -133,7 +125,16 @@ trait KnoraService {
       */
     private val systemUser = KnoraSystemInstances.Users.SystemUser
 
+    /**
+      * Provide logging
+      */
+    protected lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+
+    /**
+      * Route data.
+      */
     private val routeData = KnoraRouteData(system, applicationStateActor, responderManager, storeManager)
+
 
     /**
       * All routes composed together and CORS activated.

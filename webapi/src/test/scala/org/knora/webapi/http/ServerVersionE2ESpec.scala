@@ -38,7 +38,7 @@ class ServerVersionE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass)
+    override lazy val log = akka.event.Logging(system, this.getClass)
 
     "The Server" should {
 
