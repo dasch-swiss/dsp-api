@@ -4,6 +4,7 @@ The program `ark.py` in this directory has two modes of operation:
 
 - When run as an HTTP server, it resolves Knora ARK URLs by redirecting
   to the actual location of each resource.
+
 - It can also be used as a command-line tool for converting between
   resource IRIs and ARK URLs.
 
