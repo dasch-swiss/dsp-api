@@ -26,8 +26,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -38,8 +36,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
@@ -50,39 +46,33 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
-import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
 import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 /**
-  * Provides a spray-routing function for API routes that deal with resources.
+  * Provides API routes that deal with resources.
   */
-object ResourcesRouteV1 extends Authenticator {
+class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
+    /* needed for dealing with files in the request */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-        implicit val system: ActorSystem = _system
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val log = Logger(LoggerFactory.getLogger(this.getClass))
+    def knoraApiPath: Route = {
 
         def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
@@ -143,7 +133,7 @@ object ResourcesRouteV1 extends Authenticator {
                                                 userProfile = userProfile,
                                                 settings = settings,
                                                 responderManager = responderManager,
-                                                log = loggingAdapter
+                                                log = log
                                             )
 
                                             // collect the resource references from the linking standoff nodes
@@ -567,7 +557,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val parsedSchemaXml = try {
                             XML.loadString(unformattedSchemaXml)
                         } catch {
-                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException(s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.", parseEx, loggingAdapter)
+                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException(s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.", parseEx, log)
                         }
 
                         // Format the generated XML schema nicely.
@@ -928,7 +918,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             } ~ post {
                 // Create a new resource with he given type and possibly a file (GUI-case).
@@ -946,7 +936,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             } ~ post {
@@ -1036,7 +1026,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1057,7 +1047,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             } ~ delete {
@@ -1073,7 +1063,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1099,7 +1089,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             }
         } ~ path("v1" / "properties" / Segment) { iri =>
@@ -1115,7 +1105,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
 
             }
@@ -1139,7 +1129,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1157,7 +1147,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1178,7 +1168,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             }
         } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
@@ -1228,7 +1218,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )(timeout = 1.hour, executionContext = executionContext)
                 }
             }

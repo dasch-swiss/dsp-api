@@ -21,22 +21,16 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.apache.jena.sparql.function.library.leviathan
-import org.apache.jena.sparql.function.library.leviathan.log
-import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import org.knora.webapi.{BadRequestException, KnoraSystemInstances}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a spray-routing function for API routes that deal with users.
@@ -44,13 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
-class UsersRouteADM extends Authenticator {
-    this: KnoraRoute =>
-
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-    implicit val timeout: Timeout = settings.defaultTimeout
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
     @ApiResponses(Array(
@@ -69,7 +57,7 @@ class UsersRouteADM extends Authenticator {
                     requestContext,
                     settings,
                     responderManager,
-                    leviathan.log
+                    log
                 )
         }
     }

@@ -19,27 +19,17 @@
 
 package org.knora.webapi.routing.v1
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi.messages.v1.responder.ckanmessages.CkanRequestV1
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
-
-import scala.concurrent.ExecutionContext
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
   * A route used to serve data to CKAN. It is used be the Ckan instance running under http://data.humanities.ch.
   */
-object CkanRouteV1 extends Authenticator {
+class CkanRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, log: LoggingAdapter): Route = {
-
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
+    def knoraApiPath: Route = {
 
         path("v1" / "ckan") {
             get {

@@ -19,18 +19,16 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{AdministrativePermissionForProjectGroupGetRequestADM, PermissionType}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef, log: LoggingAdapter) extends KnoraRoute(_system, applicationStateActor, responderManager, storeManager) with Authenticator {
+class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     override def knoraApiPath: Route = {
 

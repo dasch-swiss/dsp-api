@@ -21,15 +21,13 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import javax.ws.rs.Path
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
 
@@ -39,7 +37,7 @@ import scala.concurrent.Future
 
 @Api(value = "lists", produces = "application/json")
 @Path("/admin/lists")
-class ListsRouteADM(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef, log: LoggingAdapter) extends KnoraRoute(_system, applicationStateActor, responderManager, storeManager) with Authenticator with ListADMJsonProtocol {
+class ListsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ListADMJsonProtocol {
 
     @ApiOperation(value = "Get lists", nickname = "getlists", httpMethod = "GET", response = classOf[ListsGetResponseADM])
     @ApiResponses(Array(

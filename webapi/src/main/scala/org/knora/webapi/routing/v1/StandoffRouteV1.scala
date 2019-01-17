@@ -21,36 +21,30 @@ package org.knora.webapi.routing.v1
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.v1.responder.standoffmessages.RepresentationV1JsonProtocol.createMappingApiRequestV1Format
 import org.knora.webapi.messages.v1.responder.standoffmessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import spray.json._
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 
 /**
   * A route used to convert XML to standoff.
   */
-object StandoffRouteV1 extends Authenticator {
+class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        val stringFormatter = StringFormatter.getGeneralInstance
+    /* needed for dealing with files in the request */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    def knoraApiPath: Route = {
 
         path("v1" / "mapping") {
             post {
@@ -119,7 +113,7 @@ object StandoffRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            loggingAdapter
+                            log
                         )
                 }
             }

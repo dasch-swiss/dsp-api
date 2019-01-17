@@ -19,15 +19,13 @@
 
 package org.knora.webapi.routing.admin
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
 import org.knora.webapi.messages.admin.responder.storesmessages.{ResetTriplestoreContentRequestADM, StoresADMJsonProtocol}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -38,7 +36,7 @@ import scala.concurrent.duration._
 
 @Api(value = "store", produces = "application/json")
 @Path("/admin/store")
-class StoreRouteADM(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef, log: LoggingAdapter) extends KnoraRoute(_system, applicationStateActor, responderManager, storeManager) with Authenticator with StoresADMJsonProtocol {
+class StoreRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with StoresADMJsonProtocol {
 
     override def knoraApiPath = Route {
         path("admin" / "store") {

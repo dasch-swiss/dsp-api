@@ -21,15 +21,13 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations._
 import javax.ws.rs.Path
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, RouteUtilADM}
-import org.knora.webapi.{BadRequestException, SettingsImpl}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 /**
   * Provides a spray-routing function for API routes that deal with groups.
@@ -37,7 +35,7 @@ import org.knora.webapi.{BadRequestException, SettingsImpl}
 
 @Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
-class GroupsRouteADM(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef, log: LoggingAdapter) extends KnoraRoute(_system, applicationStateActor, responderManager, storeManager) with Authenticator with GroupsADMJsonProtocol {
+class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with GroupsADMJsonProtocol {
 
     override def knoraApiPath: Route = {
 

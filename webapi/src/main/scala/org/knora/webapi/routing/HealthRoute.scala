@@ -19,19 +19,17 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives.{get, path}
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.util.Timeout
-import org.knora.webapi.SettingsImpl
 import org.knora.webapi.messages.app.appmessages.AppState.AppState
 import org.knora.webapi.messages.app.appmessages.{AppState, GetAppState}
 import spray.json.{JsObject, JsString}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 
 case class HealthCheckResult(name: String,
@@ -45,7 +43,7 @@ case class HealthCheckResult(name: String,
 trait HealthCheck {
     this: HealthRoute =>
 
-    implicit private val timeout: Timeout = 1.second
+    override implicit val timeout: Timeout = 1.second
 
     protected def healthcheck(): Future[HttpResponse] = for {
 
@@ -110,15 +108,9 @@ trait HealthCheck {
 /**
   * Provides the '/health' endpoint serving the health status.
   */
-class HealthRoute(_system: ActorSystem, _applicationStateActor: ActorRef, settings: SettingsImpl) extends HealthCheck {
+class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck {
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.defaultGlobalDispatcher
-    val applicationStateActor: ActorRef = _applicationStateActor
-
-    val log = akka.event.Logging(system, this.getClass)
-
-    def knoraApiPath: Route = {
+    override def knoraApiPath: Route = {
         path("health") {
             get {
                 requestContext =>

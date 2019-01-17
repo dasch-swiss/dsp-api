@@ -21,35 +21,22 @@ package org.knora.webapi.routing.v1
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
-import org.knora.webapi.util.StringFormatter
-
-import scala.concurrent.ExecutionContext
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
   * Provides a spray-routing function for API routes that deal with lists.
   */
-object UsersRouteV1 extends Authenticator {
+class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
     private val schemes = Array("http", "https")
     private val urlValidator = new UrlValidator(schemes)
 
-    def knoraApiPath(_system: ActorSystem, responderManager: ActorRef, settings: SettingsImpl, log: LoggingAdapter): Route = {
-
-
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-
-        val stringFormatter = StringFormatter.getGeneralInstance
+    def knoraApiPath: Route = {
 
         path("v1" / "users") {
             get {
