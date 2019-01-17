@@ -88,7 +88,7 @@ class CORSSupportV1E2ESpec extends E2ESpec(CORSSupportV1E2ESpec.config) with Tri
         }
 
         "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
-            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/0803/0cb8286054d5", "utf-8")) ~> Origin(exampleOrigin)
+            val request = Get(baseApiUrl + "/v1/resources/" + java.net.URLEncoder.encode("http://rdfh.ch/00FF/0cb8286054d5", "utf-8")) ~> Origin(exampleOrigin)
             val response = singleAwaitingRequest(request)
 
             response.status should equal(StatusCodes.OK)
