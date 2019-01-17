@@ -19,7 +19,9 @@
 
 
 #################################################################################################
-# Knora ARK redirect server and conversion utility
+# Knora ARK redirect server and conversion utility.
+#
+# For help on command-line options, run with --help.
 #################################################################################################
 
 
@@ -99,11 +101,11 @@ class ArkUrlInfo:
         project_iri_template = Template(project_config["KnoraProjectIri"])
 
         if self.resource_id is None:
-            request_template = Template(project_config["KnoraProjectInfoUrl"])
+            request_template = Template(project_config["KnoraProjectRedirectUrl"])
         elif self.timestamp is None:
-            request_template = Template(project_config["KnoraResourceRequestUrl"])
+            request_template = Template(project_config["KnoraResourceRedirectUrl"])
         else:
-            request_template = Template(project_config["KnoraResourceVersionRequestUrl"])
+            request_template = Template(project_config["KnoraResourceVersionRedirectUrl"])
 
         template_dict = self.template_dict.copy()
         template_dict["host"] = project_config["Host"]
@@ -122,9 +124,9 @@ class ArkUrlInfo:
         template_dict = self.template_dict.copy()
 
         if self.timestamp is None:
-            request_template = Template(project_config["PhpResourceRequestUrl"])
+            request_template = Template(project_config["PhpResourceRedirectUrl"])
         else:
-            request_template = Template(project_config["PhpResourceVersionRequestUrl"])
+            request_template = Template(project_config["PhpResourceVersionRedirectUrl"])
 
             # The PHP server only takes timestamps in the format YYYYMMDD
             template_dict["timestamp"] = self.timestamp[0:8]
@@ -177,7 +179,7 @@ def format_ark_url(project_id,
                    timestamp):
     url = "http://{}/ark:/{}/{}/{}/{}".format(
         top_config["ArkResolverHost"],
-        top_config["ArkAssignedNumber"],
+        top_config["ArkNaan"],
         knora_ark_version,
         project_id,
         resource_id_with_check_digit
