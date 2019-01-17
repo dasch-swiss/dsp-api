@@ -57,11 +57,11 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
     private val rootUser = SharedTestDataADM.rootUser
     private val multiuserUser = SharedTestDataADM.multiuserUser
 
-    val responderUnderTest = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    private val responderUnderTest = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
 
     /* define private method access */
-    val userAdministrativePermissionsGetADM = PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]]('userAdministrativePermissionsGetADM)
-    val defaultObjectAccessPermissionsForGroupsGetADM = PrivateMethod[Future[Set[PermissionADM]]]('defaultObjectAccessPermissionsForGroupsGetADM)
+    private val userAdministrativePermissionsGetADM = PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]]('userAdministrativePermissionsGetADM)
+    private val defaultObjectAccessPermissionsForGroupsGetADM = PrivateMethod[Future[Set[PermissionADM]]]('defaultObjectAccessPermissionsForGroupsGetADM)
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
