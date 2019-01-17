@@ -21,7 +21,6 @@ package org.knora.webapi.responders.v1
 
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -29,8 +28,8 @@ import org.knora.webapi.messages.v1.responder.ontologymessages.{ConvertOntologyC
 import org.knora.webapi.messages.v1.responder.standoffmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter
 
@@ -40,7 +39,7 @@ import scala.concurrent.Future
 /**
   * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
   */
-class StandoffResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class StandoffResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     /**
       * Receives a message of type [[StandoffResponderRequestV1]], and returns an appropriate response message.

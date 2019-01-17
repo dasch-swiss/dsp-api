@@ -672,8 +672,6 @@ object Authenticator {
       */
     private def getUserByIdentifier(identifier: UserIdentifierADM)(implicit system: ActorSystem, responderManager: ActorRef, timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
 
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
         if (identifier.nonEmpty) {
             val userADMFuture = for {
                 maybeUserADM <- (responderManager ? UserGetADM(identifier = identifier, userInformationTypeADM = UserInformationTypeADM.FULL, requestingUser = KnoraSystemInstances.Users.SystemUser)).mapTo[Option[UserADM]]

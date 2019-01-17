@@ -19,15 +19,14 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.twirl.SearchCriterion
 import org.knora.webapi.util.{DateUtilV1, PermissionUtilADM}
 
@@ -38,7 +37,7 @@ import scala.concurrent.Future
   * Responds to requests for user search queries and returns responses in Knora API
   * v1 format.
   */
-class SearchResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class SearchResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Valid combinations of value types and comparison operators, for determining whether a requested search
     // criterion is valid. The valid comparison operators for search criteria involving link properties can be

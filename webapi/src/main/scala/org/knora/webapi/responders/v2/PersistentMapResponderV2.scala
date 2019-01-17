@@ -21,13 +21,11 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlConstructRequest, SparqlConstructResponse, SparqlUpdateRequest, SparqlUpdateResponse}
-import org.knora.webapi.messages.v1.responder.searchmessages.SearchResponderRequestV1
 import org.knora.webapi.messages.v2.responder.persistentmapmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.KnoraIdUtil
 import org.knora.webapi.{IRI, InconsistentTriplestoreDataException, OntologyConstants, _}
 
@@ -37,7 +35,7 @@ import scala.concurrent.Future
   * Manages storage in `knora-base:Map` objects on behalf of other responders. Since this actor does no permission
   * checking, it should not be used directly by routes.
   */
-class PersistentMapResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class PersistentMapResponderV2(responderData: ResponderData) extends Responder(responderData) {
     private val knoraIdUtil = new KnoraIdUtil
 
     /**

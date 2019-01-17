@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import java.io.{StringReader, StringWriter}
 
-import akka.actor.{ActorRef, ActorSelection}
+import akka.actor.{ActorRef}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}

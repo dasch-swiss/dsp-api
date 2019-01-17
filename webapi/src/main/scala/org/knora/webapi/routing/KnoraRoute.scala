@@ -30,11 +30,11 @@ import scala.concurrent.ExecutionContext
 
 /**
   * Data needed to be passed to each route.
+  *
   * @param system the actor system.
   * @param applicationStateActor the application state actor ActorRef.
   * @param responderManager the responder manager ActorRef.
   * @param storeManager the store manager ActorRef.
-  * @param log the log adapter.
   */
 case class KnoraRouteData(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef)
 
