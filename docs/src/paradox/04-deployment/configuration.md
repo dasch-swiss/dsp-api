@@ -52,7 +52,7 @@ The relevant sections for tuning are:
 | app.knora-api.internal-host              | KNORA_WEBAPI_KNORA_API_INTERNAL_HOST              | 0.0.0.0              |
 | app.knora-api.internal-port              | KNORA_WEBAPI_KNORA_API_INTERNAL_PORT              | 3333                 |
 | app.knora-api.external-protocol          | KNORA_WEBAPI_KNORA_API_EXTERNAL_PROTOCOL          | http                 |
-| app.knora-api.external-host              | KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST              | localhost            |
+| app.knora-api.external-host              | KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST              | 0.0.0.0            |
 | app.knora-api.external-port              | KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT              | 3333                 |
 | app.sipi.internal-protocol               | KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL               | http                 |
 | app.sipi.internal-host                   | KNORA_WEBAPI_SIPI_INTERNAL_HOST                   | localhost            |
