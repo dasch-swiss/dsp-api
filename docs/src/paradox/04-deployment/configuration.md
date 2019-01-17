@@ -48,10 +48,11 @@ The relevant sections for tuning are:
 | app.print-extended-config                | KNORA_WEBAPI_PRINT_EXTENDED_CONFIG                | false                |
 | app.jwt-secret-key                       | KNORA_WEBAPI_JWT_SECRET_KEY                       | super-secret-key     |
 | app.jwt-longevity                        | KNORA_WEBAPI_JWT_LONGEVITY                        | 30 days              |
+| app.cookie-domain                        | KNORA_WEBAPI_COOKIE_DOMAIN                        | localhost            |
 | app.knora-api.internal-host              | KNORA_WEBAPI_KNORA_API_INTERNAL_HOST              | 0.0.0.0              |
 | app.knora-api.internal-port              | KNORA_WEBAPI_KNORA_API_INTERNAL_PORT              | 3333                 |
 | app.knora-api.external-protocol          | KNORA_WEBAPI_KNORA_API_EXTERNAL_PROTOCOL          | http                 |
-| app.knora-api.external-host              | KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST              | 0.0.0.0              |
+| app.knora-api.external-host              | KNORA_WEBAPI_KNORA_API_EXTERNAL_HOST              | localhost            |
 | app.knora-api.external-port              | KNORA_WEBAPI_KNORA_API_EXTERNAL_PORT              | 3333                 |
 | app.sipi.internal-protocol               | KNORA_WEBAPI_SIPI_INTERNAL_PROTOCOL               | http                 |
 | app.sipi.internal-host                   | KNORA_WEBAPI_SIPI_INTERNAL_HOST                   | localhost            |

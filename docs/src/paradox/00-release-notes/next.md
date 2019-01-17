@@ -18,3 +18,4 @@ Also, please change the **HINT** to the appropriate level:
 - FIX: Fix error-checking when updating cardinalities in ontology API (@github[#1142](#1142))
 - FEATURE: Allow setting resource creation date in bulk import (@github[#1151](#1151))
 - FEATURE: The `v2/authentication` route now also initiates cookie creation (the same as `v1/authentication`) (@github[#1159](#1159))
+- FIX: Set cookie domain to the value specified in `application.conf` with the setting `cookie-domain` (@github[#1169](#1169))
