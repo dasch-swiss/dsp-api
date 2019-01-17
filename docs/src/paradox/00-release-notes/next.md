@@ -4,9 +4,9 @@ Write any new release notes between releases into this file. They will be moved 
 at the time of the release, because only then we will know the next release number.
 
 Also, please change the **HINT** to the appropriate level:
- - MAJOR CHANGE, the changes introduced warrant a major number increase
- - MINOR CHANGE, the changes introduced warrant a minor number increase
- - BUGFIX CHANGE, the changes introduced warrant a bugfix number increase
+ - MAJOR: the changes introduced warrant a major number increase
+ - FEATURE: the changes introduced warrant a minor number increase
+ - FIX: the changes introduced warrant a bugfix number increase
 
 
 ## HINT => MAJOR CHANGE
@@ -18,3 +18,4 @@ Also, please change the **HINT** to the appropriate level:
 - FIX: Fix error-checking when updating cardinalities in ontology API (@github[#1142](#1142))
 - FEATURE: Allow setting resource creation date in bulk import (@github[#1151](#1151))
 - FEATURE: The `v2/authentication` route now also initiates cookie creation (the same as `v1/authentication`) (@github[#1159](#1159))
+- FIX: Allow hasRepresentation in an ontology used in a bulk import (@github[#1171](#1171))
