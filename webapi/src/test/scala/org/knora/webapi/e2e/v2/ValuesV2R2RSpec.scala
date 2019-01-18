@@ -47,8 +47,8 @@ class ValuesV2R2RSpec extends R2RSpec {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val valuesPath = ValuesRouteV2.knoraApiPath(system, settings, log)
-    private val searchPath = SearchRouteV2.knoraApiPath(system, settings, log)
+    private val valuesPath = new ValuesRouteV2(routeData).knoraApiPath
+    private val searchPath = new SearchRouteV2(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

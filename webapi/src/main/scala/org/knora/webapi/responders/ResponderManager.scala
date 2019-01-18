@@ -69,6 +69,11 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
 
+    /**
+      * The responder data.
+      */
+    private val responderData = ResponderData(system, applicationStateActor, context.self, storeManager)
+
     // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
     // override one or more of the protected val members below representing responder classes. To construct a default
     // responder, a subclass can call one of the protected methods below.
@@ -76,7 +81,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[CkanResponderV1]].
       */
-    protected final def makeDefaultCkanResponderV1: CkanResponderV1 = new CkanResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultCkanResponderV1: CkanResponderV1 = new CkanResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -86,7 +91,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[ResourcesResponderV1]].
       */
-    protected final def makeDefaultResourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultResourcesResponderV1: ResourcesResponderV1 = new ResourcesResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -96,7 +101,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[ValuesResponderV1]].
       */
-    protected final def makeDefaultValuesResponderV1: ValuesResponderV1 = new ValuesResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultValuesResponderV1: ValuesResponderV1 = new ValuesResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -106,7 +111,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[SipiResponderV1]].
       */
-    protected final def makeDefaultSipiResponderV1: SipiResponderV1 = new SipiResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultSipiResponderV1: SipiResponderV1 = new SipiResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -116,7 +121,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[StandoffResponderV1]].
       */
-    protected final def makeDefaultStandoffResponderV1: StandoffResponderV1 = new StandoffResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultStandoffResponderV1: StandoffResponderV1 = new StandoffResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -126,7 +131,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[UsersResponderV1]].
       */
-    protected final def makeDefaultUsersResponderV1: UsersResponderV1 = new UsersResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultUsersResponderV1: UsersResponderV1 = new UsersResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -136,7 +141,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ListsResponderV1]].
       */
-    protected final def makeDefaultListsResponderV1: ListsResponderV1 = new ListsResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultListsResponderV1: ListsResponderV1 = new ListsResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -146,7 +151,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default Akka routing actor that routes messages to [[SearchResponderV1]].
       */
-    protected final def makeDefaultSearchResponderV1: SearchResponderV1 = new SearchResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultSearchResponderV1: SearchResponderV1 = new SearchResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -156,7 +161,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default Akka routing actor that routes messages to [[OntologyResponderV1]].
       */
-    protected final def makeDefaultOntologyResponderV1: OntologyResponderV1 = new OntologyResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultOntologyResponderV1: OntologyResponderV1 = new OntologyResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -166,7 +171,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default Akka routing actor that routes messages to [[ProjectsResponderV1]].
       */
-    protected final def makeDefaultProjectsResponderV1: ProjectsResponderV1 = new ProjectsResponderV1(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultProjectsResponderV1: ProjectsResponderV1 = new ProjectsResponderV1(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -183,37 +188,37 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[OntologyResponderV2]].
       */
-    protected final def makeDefaultOntologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultOntologiesResponderV2: OntologyResponderV2 = new OntologyResponderV2(responderData)
 
     /**
       * Constructs the default [[SearchResponderV2]].
       */
-    protected final def makeDefaultSearchResponderV2: SearchResponderV2 = new SearchResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultSearchResponderV2: SearchResponderV2 = new SearchResponderV2(responderData)
 
     /**
       * Constructs the default [[ResourcesResponderV2]].
       */
-    protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
 
     /**
       * Constructs the default [[ValuesResponderV2]].
       */
-    protected final def makeDefaultValuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultValuesResponderV2: ValuesResponderV2 = new ValuesResponderV2(responderData)
 
     /**
       * Constructs the default [[PersistentMapResponderV2]].
       */
-    protected final def makeDefaultPersistentMapResponderV2: PersistentMapResponderV2 = new PersistentMapResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultPersistentMapResponderV2: PersistentMapResponderV2 = new PersistentMapResponderV2(responderData)
 
     /**
       * Constructs the default [[StandoffResponderV2]].
       */
-    protected final def makeDefaultStandoffResponderV2: StandoffResponderV2 = new StandoffResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultStandoffResponderV2: StandoffResponderV2 = new StandoffResponderV2(responderData)
 
     /**
       * Constructs the default [[ListsResponderV2]].
       */
-    protected final def makeDefaultListsResponderV2: ListsResponderV2 = new ListsResponderV2(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultListsResponderV2: ListsResponderV2 = new ListsResponderV2(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -258,7 +263,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[GroupsResponderADM]].
       */
-    protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultGroupsResponderADM: GroupsResponderADM = new GroupsResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -268,7 +273,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[ListsResponderADM]].
       */
-    protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultListsResponderADM: ListsResponderADM = new ListsResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -278,7 +283,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[PermissionsResponderADM]].
       */
-    protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultPermissionsResponderADM: PermissionsResponderADM = new PermissionsResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -288,7 +293,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[ProjectsResponderADM]].
       */
-    protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultProjectsResponderADM: ProjectsResponderADM = new ProjectsResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -298,7 +303,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[StoresResponderADM]].
       */
-    protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultStoreResponderADM: StoresResponderADM = new StoresResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.
@@ -308,7 +313,7 @@ class ResponderManager(applicationStateActor: ActorRef, storeManager: ActorRef) 
     /**
       * Constructs the default [[UsersResponderADM]].
       */
-    protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(system, applicationStateActor, context.self, storeManager)
+    protected final def makeDefaultUsersResponderADM: UsersResponderADM = new UsersResponderADM(responderData)
 
     /**
       * Subclasses of the can override this member to substitute a with a custom implementation instead of the default resources responder.

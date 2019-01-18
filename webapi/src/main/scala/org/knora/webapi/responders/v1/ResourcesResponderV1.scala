@@ -38,7 +38,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.Knora
 import org.knora.webapi.messages.v2.responder.ontologymessages.{Cardinality, OntologyMetadataGetByIriRequestV2, OntologyMetadataV2, ReadOntologyMetadataV2}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v1.GroupedProps._
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
@@ -50,7 +50,7 @@ import scala.util.Try
 /**
   * Responds to requests for information about resources, and returns responses in Knora API v1 format.
   */
-class ResourcesResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class ResourcesResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Converts SPARQL query results to ApiValueV1 objects.
     val valueUtilV1 = new ValueUtilV1(settings)

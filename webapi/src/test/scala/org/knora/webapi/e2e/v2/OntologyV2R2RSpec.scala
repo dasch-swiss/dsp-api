@@ -48,7 +48,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val ontologiesPath = OntologiesRouteV2.knoraApiPath(system, settings, log)
+    private val ontologiesPath = new OntologiesRouteV2(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

@@ -21,7 +21,7 @@ package org.knora.webapi.util
 
 import java.time.Instant
 
-import akka.actor.{ActorRef, ActorSelection}
+import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout

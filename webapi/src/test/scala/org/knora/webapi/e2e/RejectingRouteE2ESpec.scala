@@ -38,7 +38,7 @@ class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit override lazy val log = akka.event.Logging(system, this.getClass())
+    override lazy val log = akka.event.Logging(system, this.getClass())
 
     "The Rejecting Route" should {
 
