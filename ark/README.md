@@ -3,10 +3,13 @@
 The program `ark.py` in this directory has two modes of operation:
 
 - When run as an HTTP server, it resolves Knora ARK URLs by redirecting
-  to the actual location of each resource.
+  to the actual location of each resource. Redirect URLs are generated
+  from templates in a configuration file. The hostname used in the
+  redirect URL, as well as the whole URL template, can be configured per
+  project.
 
 - It can also be used as a command-line tool for converting between
-  resource IRIs and ARK URLs.
+  resource IRIs and ARK URLs, using the same configuration file.
 
 For usage information, run `./ark.py --help`, and see the sample configuration
 file `ark-config.ini`.

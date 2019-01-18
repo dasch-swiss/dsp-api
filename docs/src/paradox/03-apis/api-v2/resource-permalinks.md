@@ -64,7 +64,7 @@ property (in both the simple schema and the complex schema). For example:
 ## Resolving Knora ARK URLs
 
 A Knora ARK URL is intended to be resolved by the Knora ARK resolver, a Python 3
-program that can be found under `webapi/src/main/python/ark` in the Knora source
+program that can be found under `ark` in the Knora source
 tree. See the file `README.md` in that directory for more information.
 
 ## Knora ARK URL Format
