@@ -19,9 +19,9 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
-import akka.actor.ActorSystem
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionUtil.{TypeAnnotationProperties, TypeAnnotationProperty}
 import org.knora.webapi.util.SmartIri
@@ -39,7 +39,7 @@ import scala.concurrent.Future
   * of object that is required by the property.
   */
 class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchTypeInspector],
-                                               system: ActorSystem) extends GravsearchTypeInspector(nextInspector = nextInspector, system = system) {
+                                               responderData: ResponderData) extends GravsearchTypeInspector(nextInspector = nextInspector, responderData = responderData) {
 
     /**
       * Represents a Gravsearch type annotation.

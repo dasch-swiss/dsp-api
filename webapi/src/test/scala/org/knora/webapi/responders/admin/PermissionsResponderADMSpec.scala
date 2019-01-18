@@ -27,14 +27,13 @@ import org.knora.webapi.SharedPermissionsTestData._
 import org.knora.webapi.SharedTestDataADM._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.util.{CacheUtil, KnoraIdUtil}
 import org.scalatest.PrivateMethodTester
 
 import scala.collection.Map
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 
 object PermissionsResponderADMSpec {
@@ -57,7 +56,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
     private val rootUser = SharedTestDataADM.rootUser
     private val multiuserUser = SharedTestDataADM.multiuserUser
 
-    private val responderUnderTest = new PermissionsResponderADM(system, applicationStateActor, responderManager, storeManager)
+    private val responderUnderTest = new PermissionsResponderADM(responderData)
 
     /* define private method access */
     private val userAdministrativePermissionsGetADM = PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]]('userAdministrativePermissionsGetADM)

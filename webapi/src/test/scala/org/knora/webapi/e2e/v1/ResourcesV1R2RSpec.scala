@@ -59,9 +59,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val resourcesPathV1 = ResourcesRouteV1.knoraApiPath(system, settings, log)
-    private val resourcesPathV2 = ResourcesRouteV2.knoraApiPath(system, settings, log)
-    private val valuesPathV1 = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPathV1 = new ResourcesRouteV1(routeData).knoraApiPath
+    private val resourcesPathV2 = new ResourcesRouteV2(routeData).knoraApiPath
+    private val valuesPathV1 = new ValuesRouteV1(routeData).knoraApiPath
 
     private val superUser = SharedTestDataADM.superUser
     private val superUserEmail = superUser.email

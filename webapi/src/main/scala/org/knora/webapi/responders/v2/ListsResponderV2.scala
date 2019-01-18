@@ -25,7 +25,7 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.listsmessages.{ListGetRequestADM, ListGetResponseADM, ListNodeInfoGetRequestADM, ListNodeInfoGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.listsmessages._
-import org.knora.webapi.responders.Responder
+import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 
 import scala.concurrent.Future
@@ -33,7 +33,7 @@ import scala.concurrent.Future
 /**
   * Responds to requests relating to lists and nodes.
   */
-class ListsResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class ListsResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     /**
       * Receives a message of type [[ListsResponderRequestV2]], and returns an appropriate response message inside a future.

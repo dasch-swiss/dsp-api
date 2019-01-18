@@ -52,9 +52,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val searchPath = SearchRouteV2.knoraApiPath(system, settings, log)
-    private val standoffPath = StandoffRouteV2.knoraApiPath(system, settings, log)
-    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val searchPath = new SearchRouteV2(routeData).knoraApiPath
+    private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
+    private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
