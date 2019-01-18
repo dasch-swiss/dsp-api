@@ -34,6 +34,7 @@ import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
+import org.knora.webapi.routing.KnoraRouteData
 import org.knora.webapi.store.{MockableStoreManager, StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
@@ -63,6 +64,8 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
     protected val applicationStateActor: ActorRef = system.actorOf(Props(new ApplicationStateActor).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_STATE_ACTOR_NAME)
     protected val storeManager: ActorRef = system.actorOf(Props(new MockableStoreManager(mockStoreConnectors) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = StoreManagerActorName)
     val responderManager: ActorRef = system.actorOf(Props(new MockableResponderManager(mockResponders, applicationStateActor, storeManager)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = RESPONDER_MANAGER_ACTOR_NAME)
+
+    val routeData: KnoraRouteData = KnoraRouteData(system, applicationStateActor, responderManager, storeManager)
 
     lazy val rdfDataObjects = List.empty[RdfDataObject]
 

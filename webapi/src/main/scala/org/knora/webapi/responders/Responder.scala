@@ -49,14 +49,24 @@ object Responder {
 }
 
 /**
+  * Data needed to be passed to each responder.
+  *
+  * @param system the actor system.
+  * @param applicationStateActor the application state actor ActorRef.
+  * @param responderManager the responder manager ActorRef.
+  * @param storeManager the store manager ActorRef.
+  */
+case class ResponderData(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef)
+
+/**
   * An abstract class providing values that are commonly used in Knora responders.
   */
-abstract class Responder(_system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) {
+abstract class Responder(responderData: ResponderData) {
 
     /**
       * The actor system.
       */
-    protected implicit val system: ActorSystem = _system
+    protected implicit val system: ActorSystem = responderData.system
 
     /**
       * The execution context for futures created in Knora actors.
@@ -67,6 +77,21 @@ abstract class Responder(_system: ActorSystem, applicationStateActor: ActorRef, 
       * The application settings.
       */
     protected val settings = Settings(system)
+
+    /**
+      * The reference to the responder manager.
+      */
+    protected val responderManager: ActorRef = responderData.responderManager
+
+    /**
+      * The reference to the store manager.
+      */
+    protected val storeManager = responderData.storeManager
+
+    /**
+      * The reference to the application state actor
+      */
+    protected val applicationStateActor = responderData.applicationStateActor
 
     /**
       * A string formatter.

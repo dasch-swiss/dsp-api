@@ -22,11 +22,10 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.{ActorRef, ActorSelection}
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
-import org.apache.jena.sparql.function.library.leviathan.log
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -82,8 +81,8 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -186,8 +185,8 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateValueRequestV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -624,8 +623,8 @@ trait ValueContentReaderV2[C <: ValueContentV2] {
       */
     def fromJsonLDObject(jsonLDObject: JsonLDObject,
                          requestingUser: UserADM,
-                         responderManager: ActorSelection,
-                         storeManager: ActorSelection,
+                         responderManager: ActorRef,
+                         storeManager: ActorRef,
                          settings: SettingsImpl,
                          log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 
@@ -651,8 +650,8 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -854,8 +853,8 @@ object DateValueContentV2 extends ValueContentReaderV2[DateValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DateValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1190,8 +1189,8 @@ object TextValueContentV2 extends ValueContentReaderV2[TextValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -1334,8 +1333,8 @@ object IntegerValueContentV2 extends ValueContentReaderV2[IntegerValueContentV2]
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntegerValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1426,8 +1425,8 @@ object DecimalValueContentV2 extends ValueContentReaderV2[DecimalValueContentV2]
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[DecimalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1515,8 +1514,8 @@ object BooleanValueContentV2 extends ValueContentReaderV2[BooleanValueContentV2]
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BooleanValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1609,8 +1608,8 @@ object GeomValueContentV2 extends ValueContentReaderV2[GeomValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeomValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1718,8 +1717,8 @@ object IntervalValueContentV2 extends ValueContentReaderV2[IntervalValueContentV
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IntervalValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1830,8 +1829,8 @@ object HierarchicalListValueContentV2 extends ValueContentReaderV2[HierarchicalL
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[HierarchicalListValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -1929,8 +1928,8 @@ object ColorValueContentV2 extends ValueContentReaderV2[ColorValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ColorValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2024,8 +2023,8 @@ object UriValueContentV2 extends ValueContentReaderV2[UriValueContentV2] {
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UriValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2123,8 +2122,8 @@ object GeonameValueContentV2 extends ValueContentReaderV2[GeonameValueContentV2]
       */
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[GeonameValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))
@@ -2251,8 +2250,8 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
 object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[StillImageFileValueContentV2] = {
         implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -2340,8 +2339,8 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
 object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextFileValueContentV2] = {
         // TODO
@@ -2456,8 +2455,8 @@ case class LinkValueContentV2(ontologySchema: OntologySchema,
 object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
     override def fromJsonLDObject(jsonLDObject: JsonLDObject,
                                   requestingUser: UserADM,
-                                  responderManager: ActorSelection,
-                                  storeManager: ActorSelection,
+                                  responderManager: ActorRef,
+                                  storeManager: ActorRef,
                                   settings: SettingsImpl,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[LinkValueContentV2] = {
         Future(fromJsonLDObjectSync(jsonLDObject))

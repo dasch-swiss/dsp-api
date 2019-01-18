@@ -22,8 +22,6 @@ package org.knora.webapi.routing.v1
 import java.io.File
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
@@ -32,30 +30,26 @@ import akka.http.scaladsl.server.directives.FileInfo
 import akka.http.scaladsl.util.FastFuture
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.ApiValueV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, FileUtil}
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 
 /**
   * Provides a spray-routing function for API routes that deal with values.
   */
-object ValuesRouteV1 extends Authenticator {
+class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        val stringFormatter = StringFormatter.getGeneralInstance
+    /* needed for dealing with files in the request */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    def knoraApiPath: Route = {
 
         def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
             if (iris.length != 3) throw BadRequestException("Version history request requires resource IRI, property IRI, and current value IRI")
@@ -120,7 +114,7 @@ object ValuesRouteV1 extends Authenticator {
                                     userProfile = userADM,
                                     settings = settings,
                                     responderManager = responderManager,
-                                    log = loggingAdapter
+                                    log = log
                                 )
 
                                 // collect the resource references from the linking standoff nodes
@@ -222,7 +216,7 @@ object ValuesRouteV1 extends Authenticator {
                                     userProfile = userADM,
                                     settings = settings,
                                     responderManager = responderManager,
-                                    log = loggingAdapter
+                                    log = log
                                 )
 
                                 // collect the resource references from the linking standoff nodes
@@ -366,7 +360,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        loggingAdapter
+                        log
                     )
                 }
             }
@@ -384,7 +378,7 @@ object ValuesRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            loggingAdapter
+                            log
                         )
                 }
             }
@@ -400,7 +394,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        loggingAdapter
+                        log
                     )
                 }
             } ~ put {
@@ -421,7 +415,7 @@ object ValuesRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            loggingAdapter
+                            log
                         )
                 }
             } ~ delete {
@@ -437,7 +431,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        loggingAdapter
+                        log
                     )
                 }
             }
@@ -453,7 +447,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        loggingAdapter
+                        log
                     )
                 }
             }
@@ -470,7 +464,7 @@ object ValuesRouteV1 extends Authenticator {
                         requestContext,
                         settings,
                         responderManager,
-                        loggingAdapter
+                        log
                     )
                 }
             }
@@ -488,14 +482,14 @@ object ValuesRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            loggingAdapter
+                            log
                         )
                 }
             } ~ put {
                 entity(as[Multipart.FormData]) { formdata =>
                     requestContext =>
 
-                        loggingAdapter.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
+                        log.debug("/v1/filevalue - PUT - Multipart.FormData - Route")
 
 
 
@@ -515,12 +509,12 @@ object ValuesRouteV1 extends Authenticator {
                         val allPartsFuture: Future[Map[Name, Any]] = formdata.parts.mapAsync[(Name, Any)](1) {
                             case b: BodyPart =>
                                 if (b.name == FILE_PART) {
-                                    loggingAdapter.debug(s"inside allPartsFuture - processing $FILE_PART")
+                                    log.debug(s"inside allPartsFuture - processing $FILE_PART")
                                     val filename = b.filename.getOrElse(throw BadRequestException(s"Filename is not given"))
                                     val tmpFile = FileUtil.createTempFile(settings)
                                     val written = b.entity.dataBytes.runWith(FileIO.toPath(tmpFile.toPath))
                                     written.map { written =>
-                                        loggingAdapter.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
+                                        log.debug(s"written result: ${written.wasSuccessful}, ${b.filename.get}, ${tmpFile.getAbsolutePath}")
                                         receivedFile.success(tmpFile)
                                         (b.name, FileInfo(b.name, filename, b.entity.contentType))
                                     }
@@ -552,7 +546,7 @@ object ValuesRouteV1 extends Authenticator {
                             requestContext,
                             settings,
                             responderManager,
-                            loggingAdapter
+                            log
                         )
                 }
             }

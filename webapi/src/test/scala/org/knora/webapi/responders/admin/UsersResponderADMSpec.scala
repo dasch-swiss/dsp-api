@@ -25,6 +25,7 @@ package org.knora.webapi.responders.admin
 
 import java.util.UUID
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
@@ -36,6 +37,7 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPassword
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.util.StringFormatter
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 
@@ -337,7 +339,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test123456")))
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test123456")))(system, responderManager, executionContext)
 
                 resF map { res => assert(res) }
             }
@@ -356,7 +358,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
                 expectMsgType[UserOperationResponseADM](timeout)
 
                 // need to be able to authenticate credentials with new password
-                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test654321")))
+                val resF = Authenticator.authenticateCredentialsV2(Some(KnoraPasswordCredentialsV2(UserIdentifierADM(normalUser.email), "test654321")))(system, responderManager, executionContext)
 
                 resF map { res => assert(res) }
             }

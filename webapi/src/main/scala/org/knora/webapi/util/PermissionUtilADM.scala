@@ -19,7 +19,7 @@
 
 package org.knora.webapi.util
 
-import akka.actor.{ActorRef, ActorSelection}
+import akka.actor.ActorRef
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
