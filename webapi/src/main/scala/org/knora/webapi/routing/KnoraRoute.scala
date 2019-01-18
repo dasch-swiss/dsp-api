@@ -55,6 +55,9 @@ abstract class KnoraRoute(routeData: KnoraRouteData) {
     protected val storeManager: ActorRef = routeData.storeManager
     protected val log = akka.event.Logging(system, this.getClass)
 
-    /* define required method */
+    /**
+      * Returns the route. Needs to be implemented in each subclass.
+      * @return [[Route]]
+      */
     def knoraApiPath: Route
 }
