@@ -46,6 +46,12 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:complexType name="Representation_linkValueType">
+        <xs:sequence>
+            <xs:element name="Representation" type="linkValueType"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:element name="resources">
         <xs:complexType>
             <xs:sequence>
