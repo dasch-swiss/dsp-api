@@ -1230,7 +1230,7 @@ object ResourcesRouteV1 extends Authenticator {
                             settings = settings,
                             responderManager = responderManager,
                             log = loggingAdapter
-                        )(timeout = 1.hour, executionContext = executionContext)
+                        )(timeout = settings.triplestoreUpdateTimeout, executionContext = executionContext)
                 }
             }
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>
