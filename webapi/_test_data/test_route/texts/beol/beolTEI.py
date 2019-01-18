@@ -57,7 +57,9 @@ try:
 
     mappingParams = {
         "http://api.knora.org/ontology/knora-api/v2#mappingHasName": "BEOLTEIMapping",
-        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+        "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
+            "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
+        },
         "http://www.w3.org/2000/01/rdf-schema#label": "TEI mapping"
     }
 
