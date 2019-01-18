@@ -154,7 +154,7 @@ object ResourcesResponderV1Spec {
             locdata = None,
             locations = None,
             preview = None,
-            restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            restype_iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
             restype_description = Some("'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -176,7 +176,7 @@ object ResourcesResponderV1Spec {
             locdata = None,
             locations = None,
             preview = None,
-            restype_iconsrc = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            restype_iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
             restype_description = Some("'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
             restype_label = Some("Ding"),
             restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -194,12 +194,12 @@ object ResourcesResponderV1Spec {
         locations = Nil,
         value_rights = Vector(Some(8)),
         value_firstprops = Vector(Some("Another thing that only project members can see")),
-        value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
+        value_iconsrcs = Vector(Some("http://0.0.0.0:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
         comments = Vector(None),
         value_ids = Vector("http://rdfh.ch/0001/project-thing-1/values/0"),
         values = Vector(LinkV1(
-            valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            valueResourceClassIcon = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
             valueResourceClassLabel = Some("Ding"),
             valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
             valueLabel = Some("Another thing that only project members can see"),
@@ -218,12 +218,12 @@ object ResourcesResponderV1Spec {
         locations = Nil,
         value_rights = Vector(Some(2)),
         value_firstprops = Vector(Some("Another thing that only project members can see")),
-        value_iconsrcs = Vector(Some("http://localhost:3335/project-icons/anything/thing.png")),
+        value_iconsrcs = Vector(Some("http://0.0.0.0:3335/project-icons/anything/thing.png")),
         value_restype = Vector(Some("Ding")),
         comments = Vector(None),
         value_ids = Vector("http://rdfh.ch/0001/project-thing-1/values/1"),
         values = Vector(LinkV1(
-            valueResourceClassIcon = Some("http://localhost:3335/project-icons/anything/thing.png"),
+            valueResourceClassIcon = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
             valueResourceClassLabel = Some("Ding"),
             valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
             valueLabel = Some("Another thing that only project members can see"),
@@ -848,7 +848,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     "The resources responder" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a
             responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/c5058f3a", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
@@ -857,7 +857,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75
             responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", userADM = SharedTestDataADM.incunabulaMemberUser)
 
             expectMsgPF(timeout) {
@@ -866,7 +866,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context (describing 402 pages) of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2Fc5058f3a?reqtype=context&resinfo=true
             responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/c5058f3a", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             val response: JsValue = expectMsgType[ResourceContextResponseV1](timeout).toJsValue
@@ -875,7 +875,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return the context of a page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-            // http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?reqtype=context&resinfo=true
+            // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F8a0b1e75?reqtype=context&resinfo=true
             responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/8a0b1e75", resinfo = true, userProfile = SharedTestDataADM.incunabulaProjectAdminUser)
 
             expectMsgPF(timeout) {
@@ -884,7 +884,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 1 resource containing 'Reise in' in its label with three of its values" in {
-            // http://localhost:3333/v1/resources?searchstr=Reise+in&numprops=3&limit=11&restype_id=-1
+            // http://0.0.0.0:3333/v1/resources?searchstr=Reise+in&numprops=3&limit=11&restype_id=-1
             responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Reise in",
                 numberOfProps = 3,
@@ -899,7 +899,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 1 resource of type incunabula:book containing 'Reis' in its label with its label (first property)" in {
-            // http://localhost:3333/v1/resources?searchstr=Reis&numprops=1&limit=11&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+            // http://0.0.0.0:3333/v1/resources?searchstr=Reis&numprops=1&limit=11&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
             responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Reis",
                 numberOfProps = 1,
@@ -914,7 +914,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 27 resources containing 'Narrenschiff' in their label" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+            //http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=4&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             // This query is going to return also resources of knora-baseLinkObj with a knora-base:hasComment.
             // Because this resource is directly defined in knora-base, its property knora-base:hasComment
@@ -936,7 +936,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 3 resources containing 'Narrenschiff' in their label of type incunabula:book" in {
-            //http://localhost:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
+            //http://0.0.0.0:3333/v1/resources?searchstr=Narrenschiff&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
 
             responderManager ! ResourceSearchGetRequestV1(
                 searchString = "Narrenschiff",
@@ -953,7 +953,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 19 resources containing 'a1r' in their label of type incunabula:page" in {
-            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
+            //http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
 
             responderManager ! ResourceSearchGetRequestV1(
                 searchString = "a1r",
@@ -970,7 +970,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         }
 
         "return 19 resources containing 'a1r' in their label of type knora-base:Representation" in {
-            //http://localhost:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
+            //http://0.0.0.0:3333/v1/resources?searchstr=a1r&numprops=3&limit=100&restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Representation
 
             responderManager ! ResourceSearchGetRequestV1(
                 searchString = "a1r",

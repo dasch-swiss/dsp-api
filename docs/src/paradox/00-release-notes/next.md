@@ -19,3 +19,4 @@ Also, please change the **HINT** to the appropriate level:
 - FEATURE: Allow setting resource creation date in bulk import (@github[#1151](#1151))
 - FEATURE: The `v2/authentication` route now also initiates cookie creation (the same as `v1/authentication`) (@github[#1159](#1159))
 - FIX: Allow hasRepresentation in an ontology used in a bulk import (@github[#1171](#1171))
+- FIX: Set cookie domain to the value specified in `application.conf` with the setting `cookie-domain` (@github[#1169](#1169))
