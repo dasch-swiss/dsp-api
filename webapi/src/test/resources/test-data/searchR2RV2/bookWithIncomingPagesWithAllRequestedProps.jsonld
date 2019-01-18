@@ -77,7 +77,7 @@
         },
         "knora-api:fileValueAsUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://localhost:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg"
+          "@value" : "http://0.0.0.0:1024/knora/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg"
         },
         "knora-api:fileValueHasFilename" : "incunabula_0000003856.jp2",
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
@@ -85,7 +85,7 @@
         "knora-api:stillImageFileValueHasDimY" : 2700,
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://localhost:1024/knora"
+          "@value" : "http://0.0.0.0:1024/knora"
         }
       }, {
         "@id" : "http://rdfh.ch/50e7460a7203/reps/bf87bff7b706",
@@ -95,7 +95,7 @@
         },
         "knora-api:fileValueAsUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://localhost:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg"
+          "@value" : "http://0.0.0.0:1024/knora/incunabula_0000003856.jpg/full/90,128/0/default.jpg"
         },
         "knora-api:fileValueHasFilename" : "incunabula_0000003856.jpg",
         "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
@@ -103,7 +103,7 @@
         "knora-api:stillImageFileValueHasDimY" : 128,
         "knora-api:stillImageFileValueHasIIIFBaseUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://localhost:1024/knora"
+          "@value" : "http://0.0.0.0:1024/knora"
         }
       } ],
       "rdfs:label" : "vorderer Spiegel"
