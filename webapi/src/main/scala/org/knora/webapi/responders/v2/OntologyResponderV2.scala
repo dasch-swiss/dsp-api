@@ -33,7 +33,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{Knor
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.util._
@@ -59,7 +59,7 @@ import scala.concurrent.Future
   *
   * The API v1 ontology responder, which is read-only, delegates most of its work to this responder.
   */
-class OntologyResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class OntologyResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
     /**
       * The name of the ontology cache.

@@ -19,8 +19,8 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
-import akka.actor.ActorSystem
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.{GravsearchException, KnoraDispatchers, OntologyConstants}
 
@@ -32,16 +32,16 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param system     the Akka actor system.
   * @param inferTypes if true, use type inference.
   */
-class GravsearchTypeInspectionRunner(val system: ActorSystem,
+class GravsearchTypeInspectionRunner(responderData: ResponderData,
                                      inferTypes: Boolean = true) {
-    private implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+    private implicit val executionContext: ExecutionContext = responderData.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
     // If inference was requested, construct an inferring type inspector.
     private val maybeInferringTypeInspector: Option[GravsearchTypeInspector] = if (inferTypes) {
         Some(
             new InferringGravsearchTypeInspector(
                 nextInspector = None,
-                system = system
+                responderData = responderData
             )
         )
     } else {
@@ -51,7 +51,7 @@ class GravsearchTypeInspectionRunner(val system: ActorSystem,
     // The pipeline of type inspectors.
     private val typeInspectionPipeline = new AnnotationReadingGravsearchTypeInspector(
         nextInspector = maybeInferringTypeInspector,
-        system = system
+        responderData = responderData
     )
 
     /**

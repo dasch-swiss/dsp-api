@@ -19,7 +19,6 @@
 
 package org.knora.webapi.responders.v1
 
-import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -28,8 +27,8 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{NamedGraphV1, NamedGraphsGetRequestV1, NamedGraphsResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.usermessages._
-import org.knora.webapi.responders.Responder
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{Responder, ResponderData}
 import org.knora.webapi.util.KnoraIdUtil
 
 import scala.concurrent.Future
@@ -37,7 +36,7 @@ import scala.concurrent.Future
 /**
   * Returns information about Knora projects.
   */
-class ProjectsResponderV1(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends Responder(system, applicationStateActor, responderManager, storeManager) {
+class ProjectsResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
     // Creates IRIs for new Knora user objects.
     val knoraIdUtil = new KnoraIdUtil

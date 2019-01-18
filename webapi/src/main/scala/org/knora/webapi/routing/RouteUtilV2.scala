@@ -21,7 +21,7 @@ package org.knora.webapi.routing
 
 import java.io.{StringReader, StringWriter}
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
@@ -108,7 +108,7 @@ object RouteUtilV2 {
     private def runRdfRoute(requestMessage: KnoraRequestV2,
                     requestContext: RequestContext,
                     settings: SettingsImpl,
-                    responderManager: ActorSelection,
+                    responderManager: ActorRef,
                     log: LoggingAdapter,
                     responseSchema: ApiV2Schema)
                    (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -166,7 +166,7 @@ object RouteUtilV2 {
     def runTEIXMLRoute(requestMessageF: Future[KnoraRequestV2],
                        requestContext: RequestContext,
                        settings: SettingsImpl,
-                       responderManager: ActorSelection,
+                       responderManager: ActorRef,
                        log: LoggingAdapter,
                        responseSchema: ApiV2Schema)
                       (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
@@ -214,7 +214,7 @@ object RouteUtilV2 {
     def runRdfRouteWithFuture(requestMessageF: Future[KnoraRequestV2],
                               requestContext: RequestContext,
                               settings: SettingsImpl,
-                              responderManager: ActorSelection,
+                              responderManager: ActorRef,
                               log: LoggingAdapter,
                               responseSchema: ApiV2Schema)
                              (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {

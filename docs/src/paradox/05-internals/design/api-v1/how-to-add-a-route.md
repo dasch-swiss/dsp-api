@@ -60,7 +60,7 @@ See @ref:[Futures with Akka](../principles/futures-with-akka.md) and
 
 ## Write a Route
 
-Add an object to the `org.knora.webapi.routing.v1` package for your
+Add a class to the `org.knora.webapi.routing.v1` package for your
 route, using the Akka HTTP [Routing DSL](https://doc.akka.io/docs/akka-http/current/routing-dsl/index.html).
 See the routes in that package for examples. Typically, each route
 route will construct a responder request message and pass it to

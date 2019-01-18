@@ -19,25 +19,21 @@
 
 package org.knora.webapi.routing.v2
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a function for API routes that deal with search.
   */
-object SearchRouteV2 extends Authenticator {
+class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     private val LIMIT_TO_PROJECT = "limitToProject"
     private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
     private val OFFSET = "offset"
@@ -140,12 +136,7 @@ object SearchRouteV2 extends Authenticator {
         }
     }
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
+    def knoraApiPath: Route = {
 
         path("v2" / "search" / "count" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
             get {

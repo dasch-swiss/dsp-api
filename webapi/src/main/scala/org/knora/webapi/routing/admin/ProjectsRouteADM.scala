@@ -22,33 +22,22 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorSelection, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import io.swagger.annotations.Api
 import javax.ws.rs.Path
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 
 @Api(value = "projects", produces = "application/json")
 @Path("/admin/projects")
-class ProjectsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with ProjectsADMJsonProtocol {
+class ProjectsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with ProjectsADMJsonProtocol {
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-    implicit val timeout: Timeout = settings.defaultTimeout
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-
-    def knoraApiPath: Route = path("admin" / "projects") {
+    override def knoraApiPath: Route = path("admin" / "projects") {
         get {
             /* returns all projects */
             requestContext =>
