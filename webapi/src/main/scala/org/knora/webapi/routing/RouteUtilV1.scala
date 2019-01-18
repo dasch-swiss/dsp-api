@@ -19,7 +19,7 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorSelection
+import akka.actor.{ActorRef}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{RequestContext, RouteResult}
@@ -57,7 +57,7 @@ object RouteUtilV1 {
     def runJsonRoute(requestMessage: KnoraRequestV1,
                      requestContext: RequestContext,
                      settings: SettingsImpl,
-                     responderManager: ActorSelection,
+                     responderManager: ActorRef,
                      log: LoggingAdapter)
                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         // Optionally log the request message. TODO: move this to the testing framework.
@@ -110,7 +110,7 @@ object RouteUtilV1 {
     def runJsonRouteWithFuture[RequestMessageT <: KnoraRequestV1](requestMessageF: Future[RequestMessageT],
                                                                   requestContext: RequestContext,
                                                                   settings: SettingsImpl,
-                                                                  responderManager: ActorSelection,
+                                                                  responderManager: ActorRef,
                                                                   log: LoggingAdapter)
                                                                  (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
         for {
@@ -140,10 +140,10 @@ object RouteUtilV1 {
       * @param executionContext an execution context for futures.
       */
     def runHtmlRoute[RequestMessageT <: KnoraRequestV1, ReplyMessageT <: KnoraResponseV1 : ClassTag](requestMessageF: Future[RequestMessageT],
-                                                                                                     viewHandler: (ReplyMessageT, ActorSelection) => String,
+                                                                                                     viewHandler: (ReplyMessageT, ActorRef) => String,
                                                                                                      requestContext: RequestContext,
                                                                                                      settings: SettingsImpl,
-                                                                                                     responderManager: ActorSelection,
+                                                                                                     responderManager: ActorRef,
                                                                                                      log: LoggingAdapter)
                                                                                                     (implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
@@ -205,7 +205,7 @@ object RouteUtilV1 {
                                   acceptStandoffLinksToClientIDs: Boolean,
                                   userProfile: UserADM,
                                   settings: SettingsImpl,
-                                  responderManager: ActorSelection,
+                                  responderManager: ActorRef,
                                   log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TextWithStandoffTagsV2] = {
 
         for {

@@ -19,10 +19,9 @@
 
 package org.knora.webapi.responders.v2.search.gravsearch.types
 
-import akka.actor.{ActorSelection, ActorSystem}
 import akka.util.Timeout
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
+import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.{KnoraDispatchers, Settings, SettingsImpl}
 
@@ -37,9 +36,10 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param system        the Akka actor system.
   */
 abstract class GravsearchTypeInspector(protected val nextInspector: Option[GravsearchTypeInspector],
-                                       protected val system: ActorSystem) {
+                                       responderData: ResponderData) {
+
+    protected val system = responderData.system
     protected val settings: SettingsImpl = Settings(system)
-    protected val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
     protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
     protected implicit val timeout: Timeout = settings.defaultTimeout
 

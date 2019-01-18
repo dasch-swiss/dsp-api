@@ -68,7 +68,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with KnoraService with 
     implicit lazy val system: ActorSystem = _system
 
     /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+    override implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseSipiUrl: String = settings.internalSipiBaseUrl

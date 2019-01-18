@@ -27,6 +27,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.ResponderData
 import org.knora.webapi.responders.v2.search.ApacheLuceneSupport._
 import org.knora.webapi.responders.v2.search._
 import org.knora.webapi.responders.v2.search.gravsearch._
@@ -45,10 +46,10 @@ object SearchResponderV2Constants {
     val forbiddenResourceIri: IRI = s"http://${KnoraIdUtil.IriDomain}/permissions/forbiddenResource"
 }
 
-class SearchResponderV2(system: ActorSystem, applicationStateActor: ActorRef, responderManager: ActorRef, storeManager: ActorRef) extends ResponderWithStandoffV2(system, applicationStateActor, responderManager, storeManager) {
+class SearchResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
     // A Gravsearch type inspection runner.
-    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(system = system)
+    private val gravsearchTypeInspectionRunner = new GravsearchTypeInspectionRunner(responderData)
 
     /**
       * Receives a message of type [[SearchResponderRequestV2]], and returns an appropriate response message.

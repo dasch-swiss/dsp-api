@@ -51,6 +51,9 @@ object E2ESpec {
   */
 class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
+    /* needed by the core trait */
+    implicit lazy val system: ActorSystem = _system
+
     implicit lazy val settings: SettingsImpl = Settings(system)
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -67,11 +70,7 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
 
     def this() = this(ActorSystem("E2ETest", E2ESpec.defaultConfig))
 
-    /* needed by the core trait */
-    implicit lazy val system: ActorSystem = _system
-
-    /* needed by the core trait */
-    implicit lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
+    override lazy val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
