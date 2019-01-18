@@ -516,7 +516,7 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
       * @param timestamp a timestamp indicating the point in the resource's version history that the ARK URL should
       *                  cite.
       */
-    def fromResourceIriToArkUrl(timestamp: Option[Instant]): String
+    def fromResourceIriToArkUrl(timestamp: Instant): String
 
     override def equals(obj: scala.Any): Boolean = {
         // See the comment at the top of the SmartIri trait.
@@ -747,8 +747,8 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
     // A regex that matches a Knora resource IRI.
     private val ResourceIriRegex: Regex = ("^http://" + KnoraIdUtil.IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")").r
 
-    // A DateTimeFormatter that parses an ISO 8601 UTC timestamp with no hyphens or colons.
-    private val Iso8601UtcWithoutHyphensOrColonsFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss['.'n]X")
+    // A DateTimeFormatter that parses and formats Knora ARK timestamps.
+    private val ArkTimestampFormat = DateTimeFormatter.ofPattern("uuuuMMdd'T'HHmmss[nnnnnnnnn]X").withZone(ZoneId.of("UTC"))
 
     /**
       * The information that is stored about non-Knora IRIs.
@@ -1301,7 +1301,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
 
         override def fromLinkPropToLinkValueProp: SmartIri = asLinkValueProp
 
-        override def fromResourceIriToArkUrl(timestamp: Option[Instant]): String = {
+        override def fromResourceIriToArkUrl(timestamp: Instant): String = {
             if (!isKnoraDataIri) {
                 throw DataConversionException(s"IRI $iri is not a Knora data IRI, so it cannot be a resource IRI")
             }
@@ -1719,9 +1719,9 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             Instant.parse(s)
         } catch {
             case _: Exception =>
-                // Try parsing it as an ISO 8601 UTC date without hyphens or colons.
+                // Try parsing it as a Knora ARK timestamp.
                 try {
-                    OffsetDateTime.parse(s, Iso8601UtcWithoutHyphensOrColonsFormat).toInstant
+                    OffsetDateTime.parse(s, ArkTimestampFormat).toInstant
                 } catch {
                     case _: Exception =>
                         // Try parsing it as an ISO 8601 date with an offset.
@@ -2177,7 +2177,7 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
       *                  cite.
       * @return an ARK URL that can be resolved to obtain the resource.
       */
-    private def makeArkUrl(projectID: String, resourceID: String, timestamp: Option[Instant]): String = {
+    private def makeArkUrl(projectID: String, resourceID: String, timestamp: Instant): String = {
         val (host: String, assignedNumber: Int) = (arkResolverHost, arkAssignedNumber) match {
             case (Some(definedHost: String), Some(definedAssignedNumber: Int)) => (definedHost, definedAssignedNumber)
             case _ => throw AssertionException(s"StringFormatter has not been initialised with system settings")
@@ -2199,16 +2199,14 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
         // Escape '-' as '=' in the resource ID and check digit, because '-' can be ignored in ARK URLs.
         val escapedResourceIDWithCheckDigit = resourceIDWithCheckDigit.replace('-', '=')
 
-        // If there's a timestamp, remove hyphens (for the same reason as above) and colons (because otherwise
-        // they would need to be URL-encoded), and append it to the URL as an ARK object variant.
-        val timestampVariant: String = timestamp.map {
-            instant: Instant =>
-                val instantStrWithoutHyphensOrColons = instant.toString.
-                    replace("-", "").
-                    replace(":", "")
-                "." + instantStrWithoutHyphensOrColons
-        }.getOrElse("")
+        // TODO: uncomment when we support accessing past versions of resources (#1115).
+        /*
+        // Format the timestamp and append it to the URL as an ARK object variant.
+        val timestampStr: String = ArkTimestampFormat.format(timestamp)
 
-        s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit$timestampVariant"
+        s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit.$timestampStr"
+        */
+
+        s"http://$host/ark:/$assignedNumber/$ArkVersion/$projectID/$escapedResourceIDWithCheckDigit"
     }
 }

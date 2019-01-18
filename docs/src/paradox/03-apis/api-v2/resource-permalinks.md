@@ -85,9 +85,10 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
   the state of the resource at a specific time in the past. The format
   of the timestamp is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
-  date in Coordinated universal time (UTC), with both date and time
-  (and optionally nanoseconds) included, without hyphens or colons.
-  Example: `20181207T140326.0782Z`.
+  date in Coordinated universal time (UTC), including date, time, and a 9-digit
+  nano-of-second field, without the characters `-`, `:`, and `.` (because
+  `-` and `.` are reserved characters in ARK, and `:` would have to be URL-encoded).
+  Example: `20190118T102919000031660Z`.
 
 The `RESOURCE_UUID` is processed as follows:
 
@@ -99,7 +100,7 @@ The `RESOURCE_UUID` is processed as follows:
 
 For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
-ARK URL is:
+ARK URL without a timestamp is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
@@ -108,5 +109,12 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
 The same ARK URL with an optional timestamp is:
 
 ```
-http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20181207T140326.0782Z
+http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20190118T102919000031660Z
 ```
+
+Without a timestamp, a Knora ARK URL refers to the latest version of the
+resource at the time when the URL is resolved. Knora currently returns ARK URLs
+without timestamps, because querying past versions of resources is not yet
+implemented (@github[#1115](#1115)). When it is implemented, Knora will return
+ARK URLs with timestamps. The client can then remove the timestamp if necessary,
+by removing the last `.` and all subsequent characters.
