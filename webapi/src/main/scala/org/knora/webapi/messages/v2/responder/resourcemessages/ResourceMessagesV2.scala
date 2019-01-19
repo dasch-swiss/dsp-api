@@ -301,14 +301,15 @@ case class ReadResourceV2(resourceIri: IRI,
             case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl
         }
 
-        val timestamp = lastModificationDate.getOrElse(creationDate)
-
         val arkUrl: Map[IRI, JsonLDValue] = Map(
             arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(timestamp),
+                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(),
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
             )
         )
+
+        // TODO: Also return an ARK URL with a timestamp after #1115 is implemented.
+        // val timestamp = lastModificationDate.getOrElse(creationDate)
 
         JsonLDObject(
             Map(

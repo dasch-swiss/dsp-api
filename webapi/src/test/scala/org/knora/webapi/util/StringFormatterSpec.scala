@@ -1048,12 +1048,10 @@ class StringFormatterSpec extends CoreSpec() {
             )
         }
 
-        "generate an ARK URL for a resource IRI" in {
+        "generate an ARK URL for a resource IRI without a timestamp" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
-            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl(Instant.parse("2019-01-18T10:29:19.000031660Z"))
+            val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
             assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
-            // TODO: uncomment when we support accessing past versions of resources (#1115).
-            // assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn.20190118T102919000031660Z")
         }
     }
 }
