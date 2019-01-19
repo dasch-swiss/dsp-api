@@ -23,3 +23,4 @@ Also, please change the **HINT** to the appropriate level:
   that have resource IRIs that do not conform to the format specified in
   https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data
   must update them.
+- FIX: Set cookie domain to the value specified in `application.conf` with the setting `cookie-domain` (@github[#1169](#1169))

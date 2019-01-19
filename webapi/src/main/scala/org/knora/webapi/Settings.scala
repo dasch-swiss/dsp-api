@@ -189,6 +189,8 @@ class SettingsImpl(config: Config) extends Extension {
     val jwtSecretKey: String = config.getString("app.jwt-secret-key")
     val jwtLongevity: FiniteDuration = getFiniteDuration("app.jwt-longevity", config)
 
+    val cookieDomain: String = config.getString("app.cookie-domain")
+
     val fallbackLanguage: String = config.getString("user.default-language")
 
     val profileQueries: Boolean = config.getBoolean("app.triplestore.profile-queries")

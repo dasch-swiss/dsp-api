@@ -32,8 +32,8 @@ function getUrlVars()
 }
 
 
-var API_URL = 'http://localhost:3333';
-var SIPI_URL = 'http://localhost:1024';
+var API_URL = 'http://0.0.0.0:3333';
+var SIPI_URL = 'http://0.0.0.0:1024';
 
 /*
  * let's find the SITE_URL...
