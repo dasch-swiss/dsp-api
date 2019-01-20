@@ -17,21 +17,11 @@ You should have received a copy of the GNU Affero General Public
 License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2 Design
+# Archival Resource Key (ARK) Identifiers
 
-@@toc { depth=1 }
+@@toc
 
-@@@ index
+## Requirements
 
-- [API v2 Design Overview](overview.md)
-- [Ontology Schemas](ontology-schemas.md)
-- [Smart IRIs](smart-iris.md)
-- [Content Wrappers](content-wrappers.md)
-- [How to Add an API v2 Route](how-to-add-a-route.md)
-- [JSON-LD Parsing and Formatting](json-ld.md)
-- [Ontology Management](ontology-management.md)
-- [Knora and Sipi](sipi.md)
-- [Gravsearch Design](gravsearch.md)
-- [Archival Resource Key (ARK) Identifiers](ark.md)
 
-@@@
+## Design
