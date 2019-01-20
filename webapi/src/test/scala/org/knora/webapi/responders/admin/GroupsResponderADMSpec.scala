@@ -59,13 +59,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
     private val rootUser = SharedTestDataADM.rootUser
 
-    private val actorUnderTest = TestActorRef[GroupsResponderADM]
-
     "The GroupsResponder " when {
 
         "asked about all groups" should {
             "return a list" in {
-                actorUnderTest ! GroupsGetRequestADM(SharedTestDataADM.rootUser)
+                responderManager ! GroupsGetRequestADM(SharedTestDataADM.rootUser)
                 val response = expectMsgType[GroupsGetResponseADM](timeout)
                 // println(response.users)
                 response.groups.nonEmpty should be (true)
@@ -75,11 +73,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         "asked about a group identified by 'iri' " should {
             "return group info if the group is known " in {
-                actorUnderTest ! GroupGetRequestADM(imagesReviewerGroup.id, rootUser)
+                responderManager ! GroupGetRequestADM(imagesReviewerGroup.id, rootUser)
                 expectMsg(GroupGetResponseADM(imagesReviewerGroup))
             }
             "return 'NotFoundException' when the group is unknown " in {
-                actorUnderTest ! GroupGetRequestADM("http://rdfh.ch/groups/notexisting", rootUser)
+                responderManager ! GroupGetRequestADM("http://rdfh.ch/groups/notexisting", rootUser)
 
                 expectMsgPF(timeout) {
                     case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
@@ -92,7 +90,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             val newGroupIri = new MutableTestIri
 
             "CREATE the group and return the group's info if the supplied group name is unique" in {
-                actorUnderTest ! GroupCreateRequestADM(
+                responderManager ! GroupCreateRequestADM(
                     CreateGroupApiRequestADM("NewGroup", Some("""NewGroupDescription with "quotes" and <html tag>"""), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
@@ -112,7 +110,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return a 'DuplicateValueException' if the supplied group name is not unique" in {
-                actorUnderTest ! GroupCreateRequestADM(
+                responderManager ! GroupCreateRequestADM(
                     CreateGroupApiRequestADM("NewGroup", Some("NewGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
@@ -126,7 +124,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             "return 'BadRequestException' if group name or project IRI are missing" in {
 
                 /* missing group name */
-                actorUnderTest ! GroupCreateRequestADM(
+                responderManager ! GroupCreateRequestADM(
                     CreateGroupApiRequestADM("", Some("NoNameGroupDescription"), SharedTestDataADM.IMAGES_PROJECT_IRI, status = true, selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
@@ -134,7 +132,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 expectMsg(Failure(BadRequestException("Group name cannot be empty")))
 
                 /* missing project */
-                actorUnderTest ! GroupCreateRequestADM(
+                responderManager ! GroupCreateRequestADM(
                     CreateGroupApiRequestADM("OtherNewGroup", Some("OtherNewGroupDescription"), "", status = true, selfjoin = false),
                     SharedTestDataADM.imagesUser01,
                     UUID.randomUUID
@@ -143,7 +141,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "UPDATE a group" in {
-                actorUnderTest ! GroupChangeRequestADM(
+                responderManager ! GroupChangeRequestADM(
                     newGroupIri.get,
                     ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("""UpdatedDescription with "quotes" and <html tag>""")),
                     SharedTestDataADM.imagesUser01,
@@ -161,7 +159,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return 'NotFound' if a not-existing group IRI is submitted during update" in {
-                actorUnderTest ! GroupChangeRequestADM(
+                responderManager ! GroupChangeRequestADM(
                     groupIri = "http://rdfh.ch/groups/notexisting",
                     ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
                     SharedTestDataADM.imagesUser01,
@@ -174,7 +172,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return 'BadRequest' if the new group name already exists inside the project" in {
-                actorUnderTest ! GroupChangeRequestADM(
+                responderManager ! GroupChangeRequestADM(
                     newGroupIri.get,
                     ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
                     SharedTestDataADM.imagesUser01,
@@ -206,7 +204,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         "used to query members" should {
 
             "return all members of a group identified by IRI" in {
-                actorUnderTest ! GroupMembersGetRequestADM(
+                responderManager ! GroupMembersGetRequestADM(
                     groupIri = SharedTestDataADM.imagesReviewerGroup.id,
                     requestingUser = SharedTestDataADM.rootUser
                 )
@@ -220,7 +218,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             }
 
             "return 'NotFound' when the group IRI is unknown" in {
-                actorUnderTest ! GroupMembersGetRequestADM(
+                responderManager ! GroupMembersGetRequestADM(
                     groupIri = "http://rdfh.ch/groups/notexisting",
                     requestingUser = SharedTestDataADM.rootUser
                 )

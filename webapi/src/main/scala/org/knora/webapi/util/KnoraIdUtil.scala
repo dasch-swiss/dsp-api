@@ -22,7 +22,7 @@ package org.knora.webapi.util
 import java.nio.ByteBuffer
 import java.util.{Base64, UUID}
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
@@ -68,7 +68,7 @@ class KnoraIdUtil {
       * @param storeManager a reference to the Knora store manager actor.
       */
     def makeUnusedIri(iriFun: => IRI,
-                      storeManager: ActorSelection,
+                      storeManager: ActorRef,
                       log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[IRI] = {
         def makeUnusedIriRec(attempts: Int): Future[IRI] = {
             val newIri = iriFun

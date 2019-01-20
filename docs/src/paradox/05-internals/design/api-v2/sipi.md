@@ -76,12 +76,12 @@ must be a JSON object containing:
 - `permission`: must be `DeleteTempFile`
 - `filename`: must be the same as the filename submitted in the URL
 
-## SipiResponderV2
+## SipiConnector
 
-In Knora, the responder `SipiResponderV2` handles all communication with Sipi.
-It blocks while processing each request, to ensure that the number of
+In Knora, the `org.knora.webapi.iiif.SipiConnector` handles all communication
+with Sipi. It blocks while processing each request, to ensure that the number of
 concurrent requests to Sipi is not greater than
-`akka.actor.deployment./responderManager/sipiRouterV2.nr-of-instances`.
+`akka.actor.deployment./storeManager/iiifManager/sipiConnector.nr-of-instances`.
 If it encounters an error, it returns `SipiException`.
 
 ## The Image File Upload Workflow
@@ -94,7 +94,7 @@ If it encounters an error, it returns `SipiException`.
    to create or change a file value. The request includes Sipi's internal filename.
 3. During parsing of this JSON-LD request, a `StillImageFileValueContentV2`
    is constructed to represent the file value. During the construction of this
-   object, a `GetImageMetadataRequestV2` is sent to `SipiResponderV2`, which
+   object, a `GetImageMetadataRequestV2` is sent to `SipiConnector`, which
    uses Sipi's built-in `knora.json` route to get the rest of the file's
    metadata.
 4. A responder (`ResourcesResponderV2` or `ValuesResponderV2`) validates
@@ -102,9 +102,9 @@ If it encounters an error, it returns `SipiException`.
    it asks `ValuesResponderV2` to generate SPARQL for the values.)
 5. The responder that did the update calls `ValueUtilV2.doSipiPostUpdate`.
    If the triplestore update was successful, this method sends
-   `MoveTemporaryFileToPermanentStorageRequestV2` to `SipiResponderV2`, which
+   `MoveTemporaryFileToPermanentStorageRequestV2` to `SipiConnector`, which
    makes a request to Sipi's `store` route. Otherwise, the same method sends
-   `DeleteTemporaryFileRequestV2` to `SipiResponderV2`, which makes a request
+   `DeleteTemporaryFileRequestV2` to `SipiConnector`, which makes a request
    to Sipi's `delete_temp_file` route.
 
 If the request to Knora cannot be parsed, the temporary file is not deleted

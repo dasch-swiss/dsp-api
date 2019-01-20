@@ -46,9 +46,6 @@ object OntologyResponderV1Spec {
   */
 class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[OntologyResponderV1]
-
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
@@ -991,7 +988,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     "The ontology responder" should {
         "return the ontology information for a incunabula:page" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page
-            actorUnderTest ! ResourceTypeGetRequestV1(
+            responderManager ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#page"
             )
@@ -1004,7 +1001,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the ontology information for a incunabula:book" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23book
-            actorUnderTest ! ResourceTypeGetRequestV1(
+            responderManager ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book"
             )
@@ -1017,7 +1014,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the ontology information for a knora-base:Region" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23Region
-            actorUnderTest ! ResourceTypeGetRequestV1(
+            responderManager ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#Region"
             )
@@ -1030,7 +1027,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
         "return the ontology information for a knora-base:LinkObj" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fknora-base%23LinkObj
-            actorUnderTest ! ResourceTypeGetRequestV1(
+            responderManager ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/knora-base#LinkObj"
             )
@@ -1044,7 +1041,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         "return an appropriate error message if a resource class is not found" in {
             // http://localhost:3333/v1/resourcetypes/http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23image
 
-            actorUnderTest ! ResourceTypeGetRequestV1(
+            responderManager ! ResourceTypeGetRequestV1(
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman,
                 resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#image"
             )
@@ -1055,7 +1052,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return labels in the user's preferred language" in {
-            actorUnderTest ! EntityInfoGetRequestV1(
+            responderManager ! EntityInfoGetRequestV1(
                 propertyIris = Set("http://www.knora.org/ontology/0803/incunabula#title"),
                 userProfile = OntologyResponderV1Spec.userProfileWithGerman // irrelevant
             )
@@ -1069,7 +1066,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "get all the vocabularies" in {
-            actorUnderTest ! NamedGraphsGetRequestV1(
+            responderManager ! NamedGraphsGetRequestV1(
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
 
@@ -1080,7 +1077,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "get all the resource classes with their property types for incunabula named graph" in {
-            actorUnderTest ! ResourceTypesForNamedGraphGetRequestV1(
+            responderManager ! ResourceTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
@@ -1093,7 +1090,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "get all the properties for the named graph incunabula" in {
-            actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
+            responderManager ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = Some("http://www.knora.org/ontology/0803/incunabula"),
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )
@@ -1105,7 +1102,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         }
 
         "get all the properties for all vocabularies" in {
-            actorUnderTest ! PropertyTypesForNamedGraphGetRequestV1(
+            responderManager ! PropertyTypesForNamedGraphGetRequestV1(
                 namedGraph = None,
                 userADM = OntologyResponderV1Spec.userProfileWithEnglish
             )

@@ -45,9 +45,6 @@ object ListsResponderV1Spec {
   */
 class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ListsResponderV1]
-
     // The default timeout for receiving reply messages from actors.
     implicit val timeout = 5.seconds
 
@@ -3283,7 +3280,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
             "return all the toplevel and child nodes of \"Hierarchisches Stichwortverzeichnis / Signatur der Bilder\" when we do a query for the hlist 'http://rdfh.ch/lists/00FF/73d0ec0302' (root node) in the images-demo-data" in {
                 // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2F73d0ec0302
-                actorUnderTest ! HListGetRequestV1(
+                responderManager ! HListGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/73d0ec0302"
                 )
@@ -3293,7 +3290,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
             "return all nodes of the flat (one level only) list (selection) \"Art des Bildes oder Photographie\"" in {
                 // http://localhost:3333/v1/selections/http%3A%2F%2Frdfh.ch%2Flists%2F6cce4ce5
-                actorUnderTest ! SelectionGetRequestV1(
+                responderManager ! SelectionGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/6cce4ce5"
                 )
@@ -3303,7 +3300,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
             "return the two seasons winter and summer (flat season list consisting of two items)" in {
                 // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2Fd19af9ab
-                actorUnderTest ! HListGetRequestV1(
+                responderManager ! HListGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/d19af9ab"
                 )
@@ -3313,7 +3310,7 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
 
             "return the path to the node 'Heidi Film'" in {
                 // http://localhost:3333/v1/hlists/http%3A%2F%2Frdfh.ch%2Flists%2Fc7f07a3fc1?reqtype=node
-                actorUnderTest ! NodePathGetRequestV1(
+                responderManager ! NodePathGetRequestV1(
                     userProfile = userProfileV1,
                     iri = "http://rdfh.ch/lists/00FF/c7f07a3fc1"
                 )

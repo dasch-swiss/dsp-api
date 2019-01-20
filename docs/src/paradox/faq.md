@@ -147,3 +147,12 @@ each transaction can modify only one resource
 (see @ref:[Application-level Locking](05-internals/design/principles/triplestore-updates.md#application-level-locking)). Knora
 would then be unable to ensure that concurrent transactions do not
 interfere with each other.
+
+### Should `0.0.0.0` or `localhost` be used to access Knora locally
+
+When running locally with the default configuration, if you want authorization cookies
+to be shared between `webapi` and `sipi`, then both `webapi` and `sipi` must be accessed
+over `0.0.0.0`, or otherwise, the cookie will not be sent to `sipi`.
+
+If no authorization cookie sharing is necessary, then both `0.0.0.0` and `localhost`will
+work.

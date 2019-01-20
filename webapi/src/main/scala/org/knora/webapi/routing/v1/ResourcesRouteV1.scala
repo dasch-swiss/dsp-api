@@ -26,8 +26,6 @@ import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -38,52 +36,43 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.FileIO
-import akka.util.Timeout
-import com.typesafe.scalalogging.Logger
 import javax.xml.XMLConstants
 import javax.xml.transform.stream.StreamSource
 import javax.xml.validation.{Schema, SchemaFactory, Validator}
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiConversionFileRequestV1, SipiConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiResponderConversionFileRequestV1, SipiResponderConversionPathRequestV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
-import org.knora.webapi.routing.{Authenticator, RouteUtilV1}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.StringFormatter.XmlImportNamespaceInfoV1
 import org.knora.webapi.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri, StringFormatter}
+import org.knora.webapi.util.{DateUtilV1, FileUtil, SmartIri}
 import org.knora.webapi.viewhandlers.ResourceHtmlView
-import org.slf4j.LoggerFactory
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
 import spray.json._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success, Try}
 import scala.xml._
 
 /**
-  * Provides a spray-routing function for API routes that deal with resources.
+  * Provides API routes that deal with resources.
   */
-object ResourcesRouteV1 extends Authenticator {
+class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     // A scala.xml.PrettyPrinter for formatting generated XML import schemas.
     private val xmlPrettyPrinter = new scala.xml.PrettyPrinter(width = 160, step = 4)
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, loggingAdapter: LoggingAdapter): Route = {
+    /* needed for dealing with files in the request */
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-        implicit val system: ActorSystem = _system
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        val responderManager = system.actorSelection("/user/responderManager")
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-        val log = Logger(LoggerFactory.getLogger(this.getClass))
+    def knoraApiPath: Route = {
 
         def makeResourceRequestMessage(resIri: String,
                                        resinfo: Boolean,
@@ -144,7 +133,7 @@ object ResourcesRouteV1 extends Authenticator {
                                                 userProfile = userProfile,
                                                 settings = settings,
                                                 responderManager = responderManager,
-                                                log = loggingAdapter
+                                                log = log
                                             )
 
                                             // collect the resource references from the linking standoff nodes
@@ -230,7 +219,7 @@ object ResourcesRouteV1 extends Authenticator {
         }
 
 
-        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiResponderConversionPathRequestV1] = None, userADM: UserADM): Future[ResourceCreateRequestV1] = {
+        def makeCreateResourceRequestMessage(apiRequest: CreateResourceApiRequestV1, multipartConversionRequest: Option[SipiConversionPathRequestV1] = None, userADM: UserADM): Future[ResourceCreateRequestV1] = {
             val projectIri = stringFormatter.validateAndEscapeIri(apiRequest.project_id, throw BadRequestException(s"Invalid project IRI: ${apiRequest.project_id}"))
             val resourceTypeIri = stringFormatter.validateAndEscapeIri(apiRequest.restype_id, throw BadRequestException(s"Invalid resource IRI: ${apiRequest.restype_id}"))
             val label = stringFormatter.toSparqlEncodedString(apiRequest.label, throw BadRequestException(s"Invalid label: '${apiRequest.label}'"))
@@ -238,8 +227,8 @@ object ResourcesRouteV1 extends Authenticator {
             // for GUI-case:
             // file has already been stored by Sipi.
             // TODO: in the old SALSAH, the file params were sent as a property salsah:__location__ -> the GUI has to be adapated
-            val paramConversionRequest: Option[SipiResponderConversionFileRequestV1] = apiRequest.file match {
-                case Some(createFile: CreateFileV1) => Some(SipiResponderConversionFileRequestV1(
+            val paramConversionRequest: Option[SipiConversionFileRequestV1] = apiRequest.file match {
+                case Some(createFile: CreateFileV1) => Some(SipiConversionFileRequestV1(
                     originalFilename = stringFormatter.toSparqlEncodedString(createFile.originalFilename, throw BadRequestException(s"The original filename is invalid: '${createFile.originalFilename}'")),
                     originalMimeType = stringFormatter.toSparqlEncodedString(createFile.originalMimeType, throw BadRequestException(s"The original MIME type is invalid: '${createFile.originalMimeType}'")),
                     filename = stringFormatter.toSparqlEncodedString(createFile.filename, throw BadRequestException(s"Invalid filename: '${createFile.filename}'")),
@@ -304,7 +293,7 @@ object ResourcesRouteV1 extends Authenticator {
                 values = valuesToBeCreated.toMap,
                 file = resourceRequest.file.map {
                     fileToRead =>
-                        SipiResponderConversionPathRequestV1(
+                        SipiConversionPathRequestV1(
                             originalFilename = stringFormatter.toSparqlEncodedString(fileToRead.file.getName, throw BadRequestException(s"The filename is invalid: '${fileToRead.file.getName}'")),
                             originalMimeType = stringFormatter.toSparqlEncodedString(fileToRead.mimeType, throw BadRequestException(s"The MIME type is invalid: '${fileToRead.mimeType}'")),
                             source = fileToRead.file,
@@ -568,7 +557,7 @@ object ResourcesRouteV1 extends Authenticator {
                         val parsedSchemaXml = try {
                             XML.loadString(unformattedSchemaXml)
                         } catch {
-                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException(s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.", parseEx, loggingAdapter)
+                            case parseEx: org.xml.sax.SAXParseException => throw AssertionException(s"Generated XML schema for namespace ${namespaceInfo.namespace} is not valid XML. Please report this as a bug.", parseEx, log)
                         }
 
                         // Format the generated XML schema nicely.
@@ -929,7 +918,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             } ~ post {
                 // Create a new resource with he given type and possibly a file (GUI-case).
@@ -947,7 +936,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             } ~ post {
@@ -1018,7 +1007,7 @@ object ResourcesRouteV1 extends Authenticator {
                             originalMimeType = fileInfo.contentType.toString
 
 
-                            sipiConvertPathRequest = SipiResponderConversionPathRequestV1(
+                            sipiConvertPathRequest = SipiConversionPathRequestV1(
                                 originalFilename = stringFormatter.toSparqlEncodedString(originalFilename, throw BadRequestException(s"Original filename is invalid: '$originalFilename'")),
                                 originalMimeType = stringFormatter.toSparqlEncodedString(originalMimeType, throw BadRequestException(s"Original MIME type is invalid: '$originalMimeType'")),
                                 source = sourcePath,
@@ -1037,7 +1026,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1058,7 +1047,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             } ~ delete {
@@ -1074,7 +1063,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1100,7 +1089,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             }
         } ~ path("v1" / "properties" / Segment) { iri =>
@@ -1116,7 +1105,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
 
             }
@@ -1140,7 +1129,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1158,7 +1147,7 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
+                            log = log
                         )
                 }
             }
@@ -1179,7 +1168,7 @@ object ResourcesRouteV1 extends Authenticator {
                         requestContext = requestContext,
                         settings = settings,
                         responderManager = responderManager,
-                        log = loggingAdapter
+                        log = log
                     )
             }
         } ~ path("v1" / "resources" / "xmlimport" / Segment) { projectId =>
@@ -1229,8 +1218,8 @@ object ResourcesRouteV1 extends Authenticator {
                             requestContext = requestContext,
                             settings = settings,
                             responderManager = responderManager,
-                            log = loggingAdapter
-                        )(timeout = 1.hour, executionContext = executionContext)
+                            log = log
+                        )(timeout = settings.triplestoreUpdateTimeout, executionContext = executionContext)
                 }
             }
         } ~ path("v1" / "resources" / "xmlimportschemas" / Segment) { internalOntologyIri =>

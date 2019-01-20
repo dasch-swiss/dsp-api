@@ -43,8 +43,6 @@ object SipiResponderV1Spec {
   * Tests [[SipiResponderV1]].
   */
 class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[SipiResponderV1]
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/responders.v1.SipiResponderV1Spec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
@@ -56,7 +54,7 @@ class SipiResponderV1Spec extends CoreSpec() with ImplicitSender {
     "The Sipi responder" should {
         "return details of a full quality file value" in {
             // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
-            actorUnderTest ! SipiFileInfoGetRequestV1(
+            responderManager ! SipiFileInfoGetRequestV1(
                 userProfile = SipiResponderV1Spec.userProfile,
                 filename = "incunabula_0000000002.jp2"
             )

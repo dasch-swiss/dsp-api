@@ -64,9 +64,6 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     import PersistentMapResponderV2Spec._
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[PersistentMapResponderV2]
-
     // The default timeout for receiving reply messages from actors.
     private val timeout = 10.seconds
 
@@ -74,7 +71,7 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
         "store a persistent map entry, creating the map, then read the entry" in {
             val mapEntryKey = "key1"
 
-            actorUnderTest ! PersistentMapEntryPutRequestV2(
+            responderManager ! PersistentMapEntryPutRequestV2(
                 mapPath = testMap1Path,
                 mapEntryKey = mapEntryKey,
                 mapEntryValue = testMap1Data(mapEntryKey),
@@ -83,7 +80,7 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
 
             expectMsg(timeout, PersistentMapEntryPutResponseV2())
 
-            actorUnderTest ! PersistentMapEntryGetRequestV2(
+            responderManager ! PersistentMapEntryGetRequestV2(
                 mapPath = testMap1Path,
                 mapEntryKey = mapEntryKey
             )
@@ -98,7 +95,7 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
             for (index <- 2 to 4) {
                 val mapEntryKey = s"key$index"
 
-                actorUnderTest ! PersistentMapEntryPutRequestV2(
+                responderManager ! PersistentMapEntryPutRequestV2(
                     mapPath = testMap1Path,
                     mapEntryKey = mapEntryKey,
                     mapEntryValue = testMap1Data(mapEntryKey),
@@ -108,7 +105,7 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
                 expectMsg(timeout, PersistentMapEntryPutResponseV2())
             }
 
-            actorUnderTest ! PersistentMapGetRequestV2(mapPath = testMap1Path)
+            responderManager ! PersistentMapGetRequestV2(mapPath = testMap1Path)
 
             expectMsgPF(timeout) {
                 case persistentMap: PersistentMapV2 =>
@@ -123,14 +120,14 @@ class PersistentMapResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "delete a persistent map" in {
-            actorUnderTest ! PersistentMapDeleteRequestV2(
+            responderManager ! PersistentMapDeleteRequestV2(
                 mapPath = testMap1Path,
                 apiRequestID = UUID.randomUUID
             )
 
             expectMsg(timeout, PersistentMapDeleteResponseV2())
 
-            actorUnderTest ! PersistentMapGetRequestV2(mapPath = testMap1Path)
+            responderManager ! PersistentMapGetRequestV2(mapPath = testMap1Path)
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
