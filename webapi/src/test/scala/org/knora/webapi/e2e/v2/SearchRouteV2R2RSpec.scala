@@ -684,6 +684,47 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         }
 
+        "perform a Gravsearch query for an anything:Thing with an optional date and sort by date" in {
+
+            val gravsearchQuery =
+                    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+                      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+                      |
+                      |CONSTRUCT {
+                      |  ?thing knora-api:isMainResource true .
+                      |  ?thing anything:hasDate ?date .
+                      |} WHERE {
+                      |
+                      |  ?thing a knora-api:Resource .
+                      |  ?thing a anything:Thing .
+                      |
+                      |   OPTIONAL {
+                      |
+                      |    ?thing anything:hasDate ?date .
+                      |    anything:hasDate knora-api:objectType knora-api:Date .
+                      |    ?date a knora-api:Date .
+                      |
+                      |    }
+                      |}
+                      |ORDER BY DESC(?date)
+                """.stripMargin
+
+            Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
+
+                println(responseAs[String])
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // TODO: add JSON with expected response
+
+                // val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
+
+                // compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+
+        }
+
         "perform a Gravsearch query for the pages of a book and return them ordered by their seqnum and get the next OFFSET" in {
 
             val gravsearchQuery =

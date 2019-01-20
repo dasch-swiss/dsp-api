@@ -20,6 +20,7 @@
 package org.knora.webapi.responders.v2.search
 
 import org.knora.webapi.responders.v2.search.gravsearch.types.GravsearchTypeInspectionResult
+import org.knora.webapi.util.MessageUtil
 
 /**
   * A trait for classes that visit statements and filters in WHERE clauses, accumulating some result.
@@ -310,13 +311,16 @@ object QueryTraverser {
             whereTransformer = transformer
         )
 
-        val transformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
+        val transformedOrderBy: TransformedOrderBy = transformer.getOrderBy(inputQuery.orderBy)
 
         val groupBy: Seq[QueryVariable] = transformer.getGroupBy(transformedOrderBy)
 
         val limit: Int = transformer.getLimit
 
         val offset = transformer.getOffset(inputQuery.offset, limit)
+
+        println(MessageUtil.toSource(transformedOrderBy.statementPatterns))
+        println(MessageUtil.toSource(transformedOrderBy.orderBy))
 
         SelectQuery(
             variables = transformer.getSelectVariables,
