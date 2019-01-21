@@ -41,7 +41,7 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 - `HOST`: the hostname of the ARK resolver.
 - `NAAN`: the Name Assigning Authority Number (NAAN) that the ARK resolver uses.
 - `VERSION`: the version of the Knora ARK URL format being used (always 1 for now).
-- `PROJECT`: the @ref:[short code](knora-iris.md#project-short-codes) of the
+- `PROJECT`: the @ref:[short code](../../03-apis/api-v2/knora-iris.md#project-short-codes) of the
   project that the resource belongs to.
 - `RESOURCE_ID`: the resource ID, described below.
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
