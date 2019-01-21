@@ -1,7 +1,11 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/c5058f3a",
+    "@id" : "http://rdfh.ch/0803/c5058f3a",
     "@type" : "incunabula:book",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -15,8 +19,12 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Zeitglöcklein des Lebens und Leidens Christi"
   }, {
-    "@id" : "http://rdfh.ch/ff17e5ef9601",
+    "@id" : "http://rdfh.ch/0803/ff17e5ef9601",
     "@type" : "incunabula:book",
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ff17e5ef9601j"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },

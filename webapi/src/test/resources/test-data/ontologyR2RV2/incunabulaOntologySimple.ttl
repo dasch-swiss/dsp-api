@@ -13,6 +13,9 @@ incunabula:Sideband a owl:Class;
   rdfs:label "Randleiste";
   rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       owl:minCardinality 0;
@@ -65,6 +68,12 @@ incunabula:book a owl:Class;
   rdfs:comment "Diese Resource-Klasse beschreibt ein Buch";
   rdfs:label "Book";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:creationDate
+    ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty knora-api:hasIncomingLink
     ], [ a owl:Restriction;
@@ -112,9 +121,6 @@ incunabula:book a owl:Class;
     ], [ a owl:Restriction;
       owl:minCardinality 0;
       owl:onProperty incunabula:book_comment
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:creationDate
     ] .
 
 incunabula:title a owl:DatatypeProperty;
@@ -207,6 +213,9 @@ incunabula:page a owl:Class;
   rdfs:label "Page";
   rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
       owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
+      owl:cardinality 1;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;
       owl:minCardinality 0;
@@ -266,6 +275,9 @@ incunabula:misc a owl:Class;
   rdfs:comment "A fake resource class that only has optional properties";
   rdfs:label "Sonstiges";
   rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
+      owl:cardinality 1;
+      owl:onProperty knora-api:arkUrl
+    ], [ a owl:Restriction;
       owl:cardinality 1;
       owl:onProperty knora-api:creationDate
     ], [ a owl:Restriction;

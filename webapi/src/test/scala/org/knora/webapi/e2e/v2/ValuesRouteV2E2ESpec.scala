@@ -40,8 +40,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val zeitglöckleinIri: IRI = "http://rdfh.ch/c5058f3a"
-    private val generationeIri = "http://rdfh.ch/c3f913666f"
+    private val zeitglöckleinIri: IRI = "http://rdfh.ch/0803/c5058f3a"
+    private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
     private val aThingIri: IRI = "http://rdfh.ch/0001/a-thing"
     private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
@@ -1279,7 +1279,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "create a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2328,7 +2328,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "update a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
@@ -2387,7 +2387,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         }
 
         "delete a link between two resources" in {
-            val resourceIriEnc: String = URLEncoder.encode("http://rdfh.ch/cb1a74e3e2f6", "UTF-8")
+            val resourceIriEnc: String = URLEncoder.encode("http://rdfh.ch/0803/cb1a74e3e2f6", "UTF-8")
             val propertyIriEnc: String = URLEncoder.encode(OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue, "UTF-8")
             val valueIriEnc: String = URLEncoder.encode(linkValueIri.get, "UTF-8")
 

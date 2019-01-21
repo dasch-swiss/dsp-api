@@ -80,7 +80,7 @@ resourceParams = {
        ]
    },
    'label': "test resource",
-   'project_id': 'http://data.knora.org/projects/testproject'
+   'project_id': 'http://rdfh.ch/projects/testproject'
 }
 
 # the name of the file to be submitted
