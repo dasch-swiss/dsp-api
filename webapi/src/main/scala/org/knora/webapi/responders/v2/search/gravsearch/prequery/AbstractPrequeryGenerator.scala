@@ -267,7 +267,7 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
         )
     }
 
-    protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectioResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
+    protected def convertStatementForPropertyType(inputOrderBy: Seq[OrderCriterion])(propertyTypeInfo: PropertyTypeInfo, statementPattern: StatementPattern, typeInspectionResult: GravsearchTypeInspectionResult): Seq[QueryPattern] = {
         /**
           * Ensures that if the object of a statement is a variable, and is used in the ORDER BY clause of the input query, the subject of the statement
           * is the main resource. Throws an exception otherwise.

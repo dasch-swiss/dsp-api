@@ -319,15 +319,6 @@ object QueryTraverser {
 
         val offset = transformer.getOffset(inputQuery.offset, limit)
 
-        println(MessageUtil.toSource(transformedWherePatterns))
-        println("+++")
-
-        println(MessageUtil.toSource(transformedOrderBy.statementPatterns))
-        println("+++")
-        println(MessageUtil.toSource(transformedOrderBy.orderBy))
-        println("+++")
-
-
         SelectQuery(
             variables = transformer.getSelectVariables,
             whereClause = WhereClause(patterns = transformedWherePatterns ++ transformedOrderBy.statementPatterns),
