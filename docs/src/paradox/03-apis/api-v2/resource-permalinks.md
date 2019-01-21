@@ -63,9 +63,7 @@ property (in both the simple schema and the complex schema). For example:
 
 ## Resolving Knora ARK URLs
 
-A Knora ARK URL is intended to be resolved by the Knora ARK resolver, a Python 3
-program that can be found under `ark` in the Knora source
-tree. See the file `README.md` in that directory for more information.
+A Knora ARK URL is intended to be resolved by the [Knora ARK resolver](https://github.com/dhlab-basel/ark-resolver).
 
 ## Knora ARK URL Format
 
@@ -77,11 +75,11 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 
 - `HOST`: the hostname of the ARK resolver.
 - `NAAN`: the Name Assigning Authority Number (NAAN) that the ARK resolver uses.
-- `VERSION`: the version of the Knora ARK URL format being used (always 1 for now).
+- `VERSION`: the version of the Knora ARK URL format being used.
 - `PROJECT`: the @ref:[short code](knora-iris.md#project-short-codes) of the
   project that the resource belongs to.
 - `RESOURCE_UUID`: the resource's @ref:[UUID](knora-iris.md#iris-for-data),
-  after processing described below.
+  with an added check digit, and with the `-` character (which is reserved in ARK) escaped as `=`.
 - `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
   the state of the resource at a specific time in the past. The format
   of the timestamp is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
@@ -89,14 +87,6 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
   nano-of-second field, without the characters `-`, `:`, and `.` (because
   `-` and `.` are reserved characters in ARK, and `:` would have to be URL-encoded).
   Example: `20190118T102919000031660Z`.
-
-The `RESOURCE_UUID` is processed as follows:
-
-1. A check digit is calculated, using the algorithm in
-  the Scala class `org.knora.webapi.util.Base64UrlCheckDigit`, and appended
-  to the `RESOURCE_UUID`.
-2. Any `-` characters in the resulting string are replaced with `=`, because
-   `-` is a reserved character in ARK URLs.
 
 For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
