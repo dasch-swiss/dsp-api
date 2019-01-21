@@ -2067,7 +2067,13 @@ class StringFormatter private(val maybeSettings: Option[SettingsImpl], initForTe
             case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
                 maybeProjectID match {
                     case Some(projectID) =>
-                        Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        // Is this ia shared ontology?
+                        // TODO: when multiple shared project ontologies are supported, this will need to be done differently.
+                        if (projectID == DefaultSharedOntologiesProjectCode) {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/shared/$prefixLabel#$localName")
+                        } else {
+                            Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+                        }
 
                     case None =>
                         if (prefixLabel == OntologyConstants.KnoraXmlImportV1.KnoraXmlImportNamespacePrefixLabel) {
