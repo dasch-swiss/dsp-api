@@ -1,17 +1,21 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/7bbb8e59b703",
+    "@id" : "http://rdfh.ch/0803/7bbb8e59b703",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
+      "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -27,13 +31,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/7bbb8e59b703/values/824db4b2da0e",
+      "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/824db4b2da0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 1
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/7bbb8e59b703A"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -48,18 +56,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Vorsatzblatt, recto"
   }, {
-    "@id" : "http://rdfh.ch/40c11d94b703",
+    "@id" : "http://rdfh.ch/0803/40c11d94b703",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/40c11d94b703/values/3ee2ce17-6b6e-4a9c-b747-91d31375ab8e",
+      "@id" : "http://rdfh.ch/0803/40c11d94b703/values/3ee2ce17-6b6e-4a9c-b747-91d31375ab8e",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -75,13 +87,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/40c11d94b703/values/8ef40098db0e",
+      "@id" : "http://rdfh.ch/0803/40c11d94b703/values/8ef40098db0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 2
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/40c11d94b7031"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -96,18 +112,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Vorsatzblatt, verso"
   }, {
-    "@id" : "http://rdfh.ch/05c7acceb703",
+    "@id" : "http://rdfh.ch/0803/05c7acceb703",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/05c7acceb703/values/ad6b1ac8-7727-4893-9a30-4de4666b4780",
+      "@id" : "http://rdfh.ch/0803/05c7acceb703/values/ad6b1ac8-7727-4893-9a30-4de4666b4780",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -123,13 +143,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/05c7acceb703/values/9a9b4d7ddc0e",
+      "@id" : "http://rdfh.ch/0803/05c7acceb703/values/9a9b4d7ddc0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 3
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/05c7acceb703v"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -144,18 +168,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a1r; Titelblatt, recto"
   }, {
-    "@id" : "http://rdfh.ch/cacc3b09b803",
+    "@id" : "http://rdfh.ch/0803/cacc3b09b803",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/cacc3b09b803/values/b3e7e7c5-b5ac-4efc-9279-067f8ec61a2b",
+      "@id" : "http://rdfh.ch/0803/cacc3b09b803/values/b3e7e7c5-b5ac-4efc-9279-067f8ec61a2b",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -171,13 +199,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/cacc3b09b803/values/a6429a62dd0e",
+      "@id" : "http://rdfh.ch/0803/cacc3b09b803/values/a6429a62dd0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 4
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/cacc3b09b803u"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -192,18 +224,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a1v; Titelblatt, verso"
   }, {
-    "@id" : "http://rdfh.ch/8fd2ca43b803",
+    "@id" : "http://rdfh.ch/0803/8fd2ca43b803",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/8fd2ca43b803/values/38ac4bc2-a6d1-4d27-b22e-e793bfcdf9ff",
+      "@id" : "http://rdfh.ch/0803/8fd2ca43b803/values/38ac4bc2-a6d1-4d27-b22e-e793bfcdf9ff",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -219,13 +255,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/8fd2ca43b803/values/b2e9e647de0e",
+      "@id" : "http://rdfh.ch/0803/8fd2ca43b803/values/b2e9e647de0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 5
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8fd2ca43b803G"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -240,18 +280,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a2r"
   }, {
-    "@id" : "http://rdfh.ch/54d8597eb803",
+    "@id" : "http://rdfh.ch/0803/54d8597eb803",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/54d8597eb803/values/0b6bdaa2-7444-44ec-9c80-cc04c020742a",
+      "@id" : "http://rdfh.ch/0803/54d8597eb803/values/0b6bdaa2-7444-44ec-9c80-cc04c020742a",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -267,13 +311,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/54d8597eb803/values/be90332ddf0e",
+      "@id" : "http://rdfh.ch/0803/54d8597eb803/values/be90332ddf0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 6
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/54d8597eb803p"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -288,18 +336,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a2v"
   }, {
-    "@id" : "http://rdfh.ch/19dee8b8b803",
+    "@id" : "http://rdfh.ch/0803/19dee8b8b803",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/19dee8b8b803/values/f27b06da-6576-445d-b771-22664a397913",
+      "@id" : "http://rdfh.ch/0803/19dee8b8b803/values/f27b06da-6576-445d-b771-22664a397913",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -315,13 +367,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/19dee8b8b803/values/ca378012e00e",
+      "@id" : "http://rdfh.ch/0803/19dee8b8b803/values/ca378012e00e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 7
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/19dee8b8b8030"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -336,18 +392,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a3r"
   }, {
-    "@id" : "http://rdfh.ch/dee377f3b803",
+    "@id" : "http://rdfh.ch/0803/dee377f3b803",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/dee377f3b803/values/2a19b42d-df5b-4289-a455-46094a438dc0",
+      "@id" : "http://rdfh.ch/0803/dee377f3b803/values/2a19b42d-df5b-4289-a455-46094a438dc0",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -363,13 +423,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/dee377f3b803/values/d6deccf7e00e",
+      "@id" : "http://rdfh.ch/0803/dee377f3b803/values/d6deccf7e00e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 8
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/dee377f3b803g"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -384,18 +448,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a3v"
   }, {
-    "@id" : "http://rdfh.ch/a3e9062eb903",
+    "@id" : "http://rdfh.ch/0803/a3e9062eb903",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/a3e9062eb903/values/a3446ea8-918e-488f-977a-fc8b8de9b003",
+      "@id" : "http://rdfh.ch/0803/a3e9062eb903/values/a3446ea8-918e-488f-977a-fc8b8de9b003",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -411,13 +479,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/a3e9062eb903/values/e28519dde10e",
+      "@id" : "http://rdfh.ch/0803/a3e9062eb903/values/e28519dde10e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 9
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/a3e9062eb903X"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -432,18 +504,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a4r"
   }, {
-    "@id" : "http://rdfh.ch/68ef9568b903",
+    "@id" : "http://rdfh.ch/0803/68ef9568b903",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/68ef9568b903/values/58713048-3e67-4951-806d-fbfcc8ccb79b",
+      "@id" : "http://rdfh.ch/0803/68ef9568b903/values/58713048-3e67-4951-806d-fbfcc8ccb79b",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -459,13 +535,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/68ef9568b903/values/ee2c66c2e20e",
+      "@id" : "http://rdfh.ch/0803/68ef9568b903/values/ee2c66c2e20e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 10
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/68ef9568b903O"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -480,18 +560,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a4v"
   }, {
-    "@id" : "http://rdfh.ch/2df524a3b903",
+    "@id" : "http://rdfh.ch/0803/2df524a3b903",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/2df524a3b903/values/918d4f09-b794-4c6e-89e8-6602cc5a1df0",
+      "@id" : "http://rdfh.ch/0803/2df524a3b903/values/918d4f09-b794-4c6e-89e8-6602cc5a1df0",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -507,13 +591,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/2df524a3b903/values/fad3b2a7e30e",
+      "@id" : "http://rdfh.ch/0803/2df524a3b903/values/fad3b2a7e30e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 11
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2df524a3b903s"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -528,18 +616,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a5r"
   }, {
-    "@id" : "http://rdfh.ch/f2fab3ddb903",
+    "@id" : "http://rdfh.ch/0803/f2fab3ddb903",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/f2fab3ddb903/values/e33e8440-a7a5-45a7-8289-7f73089f969e",
+      "@id" : "http://rdfh.ch/0803/f2fab3ddb903/values/e33e8440-a7a5-45a7-8289-7f73089f969e",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -555,13 +647,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/f2fab3ddb903/values/067bff8ce40e",
+      "@id" : "http://rdfh.ch/0803/f2fab3ddb903/values/067bff8ce40e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 12
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/f2fab3ddb903j"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -576,18 +672,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a5v"
   }, {
-    "@id" : "http://rdfh.ch/b7004318ba03",
+    "@id" : "http://rdfh.ch/0803/b7004318ba03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/b7004318ba03/values/207169dc-1aa6-49ef-8d55-f3adcec63ed7",
+      "@id" : "http://rdfh.ch/0803/b7004318ba03/values/207169dc-1aa6-49ef-8d55-f3adcec63ed7",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -603,13 +703,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/b7004318ba03/values/12224c72e50e",
+      "@id" : "http://rdfh.ch/0803/b7004318ba03/values/12224c72e50e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 13
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b7004318ba03V"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -624,18 +728,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a6r"
   }, {
-    "@id" : "http://rdfh.ch/7c06d252ba03",
+    "@id" : "http://rdfh.ch/0803/7c06d252ba03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/7c06d252ba03/values/ed703dd2-3442-4642-9467-fa0a45b6ca13",
+      "@id" : "http://rdfh.ch/0803/7c06d252ba03/values/ed703dd2-3442-4642-9467-fa0a45b6ca13",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -651,13 +759,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/7c06d252ba03/values/1ec99857e60e",
+      "@id" : "http://rdfh.ch/0803/7c06d252ba03/values/1ec99857e60e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 14
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/7c06d252ba03w"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -672,18 +784,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a6v"
   }, {
-    "@id" : "http://rdfh.ch/410c618dba03",
+    "@id" : "http://rdfh.ch/0803/410c618dba03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/410c618dba03/values/34b2aba0-7717-42fc-b9f8-7b3ddc0b053e",
+      "@id" : "http://rdfh.ch/0803/410c618dba03/values/34b2aba0-7717-42fc-b9f8-7b3ddc0b053e",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -699,13 +815,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/410c618dba03/values/2a70e53ce70e",
+      "@id" : "http://rdfh.ch/0803/410c618dba03/values/2a70e53ce70e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 15
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/410c618dba03b"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -720,18 +840,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a7r"
   }, {
-    "@id" : "http://rdfh.ch/0612f0c7ba03",
+    "@id" : "http://rdfh.ch/0803/0612f0c7ba03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/0612f0c7ba03/values/c372a754-26ee-44eb-8322-67310f8847e6",
+      "@id" : "http://rdfh.ch/0803/0612f0c7ba03/values/c372a754-26ee-44eb-8322-67310f8847e6",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -747,13 +871,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/0612f0c7ba03/values/36173222e80e",
+      "@id" : "http://rdfh.ch/0803/0612f0c7ba03/values/36173222e80e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 16
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/0612f0c7ba03r"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -768,18 +896,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a7v"
   }, {
-    "@id" : "http://rdfh.ch/cb177f02bb03",
+    "@id" : "http://rdfh.ch/0803/cb177f02bb03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/cb177f02bb03/values/ef40540c-559b-4485-a87f-ade5d92e6011",
+      "@id" : "http://rdfh.ch/0803/cb177f02bb03/values/ef40540c-559b-4485-a87f-ade5d92e6011",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -795,13 +927,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/cb177f02bb03/values/42be7e07e90e",
+      "@id" : "http://rdfh.ch/0803/cb177f02bb03/values/42be7e07e90e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 17
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/cb177f02bb03D"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -816,18 +952,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a8r"
   }, {
-    "@id" : "http://rdfh.ch/901d0e3dbb03",
+    "@id" : "http://rdfh.ch/0803/901d0e3dbb03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/901d0e3dbb03/values/7ef81f04-554b-4063-a496-8fb3b4065372",
+      "@id" : "http://rdfh.ch/0803/901d0e3dbb03/values/7ef81f04-554b-4063-a496-8fb3b4065372",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -843,13 +983,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/901d0e3dbb03/values/4e65cbece90e",
+      "@id" : "http://rdfh.ch/0803/901d0e3dbb03/values/4e65cbece90e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 18
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/901d0e3dbb03e"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -864,18 +1008,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "a8v"
   }, {
-    "@id" : "http://rdfh.ch/55239d77bb03",
+    "@id" : "http://rdfh.ch/0803/55239d77bb03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/55239d77bb03/values/905411a5-3524-490c-a384-25b80f21fbaa",
+      "@id" : "http://rdfh.ch/0803/55239d77bb03/values/905411a5-3524-490c-a384-25b80f21fbaa",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -891,13 +1039,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/55239d77bb03/values/5a0c18d2ea0e",
+      "@id" : "http://rdfh.ch/0803/55239d77bb03/values/5a0c18d2ea0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 19
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/55239d77bb03u"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -912,18 +1064,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b1r"
   }, {
-    "@id" : "http://rdfh.ch/1a292cb2bb03",
+    "@id" : "http://rdfh.ch/0803/1a292cb2bb03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/1a292cb2bb03/values/e56153b8-d80b-4032-8d1c-b2b202be4d67",
+      "@id" : "http://rdfh.ch/0803/1a292cb2bb03/values/e56153b8-d80b-4032-8d1c-b2b202be4d67",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -939,13 +1095,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/1a292cb2bb03/values/66b364b7eb0e",
+      "@id" : "http://rdfh.ch/0803/1a292cb2bb03/values/66b364b7eb0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 20
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/1a292cb2bb03f"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -960,18 +1120,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b1v"
   }, {
-    "@id" : "http://rdfh.ch/df2ebbecbb03",
+    "@id" : "http://rdfh.ch/0803/df2ebbecbb03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/df2ebbecbb03/values/fc760dc9-486e-4dcf-ba30-d626e2400cf8",
+      "@id" : "http://rdfh.ch/0803/df2ebbecbb03/values/fc760dc9-486e-4dcf-ba30-d626e2400cf8",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -987,13 +1151,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/df2ebbecbb03/values/725ab19cec0e",
+      "@id" : "http://rdfh.ch/0803/df2ebbecbb03/values/725ab19cec0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 21
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/df2ebbecbb03T"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -1008,18 +1176,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b2r"
   }, {
-    "@id" : "http://rdfh.ch/a4344a27bc03",
+    "@id" : "http://rdfh.ch/0803/a4344a27bc03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/a4344a27bc03/values/713d7821-6f08-4ce6-8e97-a85f64bba80c",
+      "@id" : "http://rdfh.ch/0803/a4344a27bc03/values/713d7821-6f08-4ce6-8e97-a85f64bba80c",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -1035,13 +1207,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/a4344a27bc03/values/7e01fe81ed0e",
+      "@id" : "http://rdfh.ch/0803/a4344a27bc03/values/7e01fe81ed0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 22
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/a4344a27bc03c"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -1056,18 +1232,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b2v"
   }, {
-    "@id" : "http://rdfh.ch/693ad961bc03",
+    "@id" : "http://rdfh.ch/0803/693ad961bc03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/693ad961bc03/values/59356d71-076b-419a-ad43-b9fb2be3c278",
+      "@id" : "http://rdfh.ch/0803/693ad961bc03/values/59356d71-076b-419a-ad43-b9fb2be3c278",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -1083,13 +1263,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/693ad961bc03/values/8aa84a67ee0e",
+      "@id" : "http://rdfh.ch/0803/693ad961bc03/values/8aa84a67ee0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 23
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/693ad961bc03P"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -1104,18 +1288,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b3r"
   }, {
-    "@id" : "http://rdfh.ch/2e40689cbc03",
+    "@id" : "http://rdfh.ch/0803/2e40689cbc03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/2e40689cbc03/values/ec32f122-97d9-435c-87bb-40b04ebb0649",
+      "@id" : "http://rdfh.ch/0803/2e40689cbc03/values/ec32f122-97d9-435c-87bb-40b04ebb0649",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -1131,13 +1319,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/2e40689cbc03/values/964f974cef0e",
+      "@id" : "http://rdfh.ch/0803/2e40689cbc03/values/964f974cef0e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 24
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2e40689cbc03s"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -1152,18 +1344,22 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "b3v"
   }, {
-    "@id" : "http://rdfh.ch/f345f7d6bc03",
+    "@id" : "http://rdfh.ch/0803/f345f7d6bc03",
     "@type" : "incunabula:page",
     "incunabula:partOfValue" : {
-      "@id" : "http://rdfh.ch/f345f7d6bc03/values/99d0c47d-830e-4b57-a95c-d472988c3f16",
+      "@id" : "http://rdfh.ch/0803/f345f7d6bc03/values/99d0c47d-830e-4b57-a95c-d472988c3f16",
       "@type" : "knora-api:LinkValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:linkValueHasTarget" : {
-        "@id" : "http://rdfh.ch/b6b5ff1eb703",
+        "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
         "@type" : "incunabula:book",
+        "knora-api:arkUrl" : {
+          "@type" : "xsd:anyURI",
+          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+        },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
         },
@@ -1179,13 +1375,17 @@
       }
     },
     "incunabula:seqnum" : {
-      "@id" : "http://rdfh.ch/f345f7d6bc03/values/a2f6e331f00e",
+      "@id" : "http://rdfh.ch/0803/f345f7d6bc03/values/a2f6e331f00e",
       "@type" : "knora-api:IntValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|V knora-base:UnknownUser,knora-base:KnownUser,knora-base:ProjectMember",
       "knora-api:intValueAsInt" : 25
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/f345f7d6bc03g"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"

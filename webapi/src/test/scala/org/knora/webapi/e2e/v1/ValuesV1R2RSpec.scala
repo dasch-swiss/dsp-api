@@ -43,7 +43,7 @@ class ValuesV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

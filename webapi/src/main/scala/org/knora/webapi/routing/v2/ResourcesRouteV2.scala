@@ -21,26 +21,21 @@ package org.knora.webapi.routing.v2
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import org.knora.webapi._
 import org.knora.webapi.messages.v2.responder.resourcemessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{SmartIri, StringFormatter}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 /**
   * Provides a routing function for API v2 routes that deal with resources.
   */
-object ResourcesRouteV2 extends Authenticator {
+class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
     private val Text_Property = "textProperty"
     private val Mapping_Iri = "mappingIri"
     private val GravsearchTemplate_Iri = "gravsearchTemplateIri"
@@ -131,13 +126,7 @@ object ResourcesRouteV2 extends Authenticator {
     }
 
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    def knoraApiPath: Route = {
 
         path("v2" / "resources") {
             post {

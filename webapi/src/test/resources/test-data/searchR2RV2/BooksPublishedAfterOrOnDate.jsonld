@@ -1,9 +1,9 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/de6d83112e04",
+    "@id" : "http://rdfh.ch/0803/de6d83112e04",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/de6d83112e04/values/99206ecaab10",
+      "@id" : "http://rdfh.ch/0803/de6d83112e04/values/99206ecaab10",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -17,13 +17,17 @@
       "knora-api:valueAsString" : "JULIAN:1475 CE:1499 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/de6d83112e04/values/d6f61a91ab10",
+      "@id" : "http://rdfh.ch/0803/de6d83112e04/values/d6f61a91ab10",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Itinerarius seu peregrinatio beatae virginis Mariae"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/de6d83112e04o"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -38,10 +42,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "Itinerarius seu peregrinatio beatae virginis Mariae"
   }, {
-    "@id" : "http://rdfh.ch/8be1b7cf7103",
+    "@id" : "http://rdfh.ch/0803/8be1b7cf7103",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/8be1b7cf7103/values/150c04b7b80d",
+      "@id" : "http://rdfh.ch/0803/8be1b7cf7103/values/150c04b7b80d",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -59,7 +63,7 @@
       "knora-api:valueAsString" : "JULIAN:1497-03-01 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/8be1b7cf7103/values/463b6498b70d",
+      "@id" : "http://rdfh.ch/0803/8be1b7cf7103/values/463b6498b70d",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -67,7 +71,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
     }, {
-      "@id" : "http://rdfh.ch/8be1b7cf7103/values/0965b7d1b70d",
+      "@id" : "http://rdfh.ch/0803/8be1b7cf7103/values/0965b7d1b70d",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -75,6 +79,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8be1b7cf7103G"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -88,10 +96,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
-    "@id" : "http://rdfh.ch/b6b5ff1eb703",
+    "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/b6b5ff1eb703/values/b5a26f2cd00e",
+      "@id" : "http://rdfh.ch/0803/b6b5ff1eb703/values/b5a26f2cd00e",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -109,7 +117,7 @@
       "knora-api:valueAsString" : "JULIAN:1497-08-01 CE"
     },
     "incunabula:title" : [ {
-      "@id" : "http://rdfh.ch/b6b5ff1eb703/values/e6d1cf0dcf0e",
+      "@id" : "http://rdfh.ch/0803/b6b5ff1eb703/values/e6d1cf0dcf0e",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -117,7 +125,7 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "[Das] Narrenschiff (lat.)"
     }, {
-      "@id" : "http://rdfh.ch/b6b5ff1eb703/values/a9fb2247cf0e",
+      "@id" : "http://rdfh.ch/0803/b6b5ff1eb703/values/a9fb2247cf0e",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -125,6 +133,10 @@
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Stultifera navis (...)"
     } ],
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+    },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
     },
@@ -138,10 +150,10 @@
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser",
     "rdfs:label" : "[Das] Narrenschiff (lat.)"
   }, {
-    "@id" : "http://rdfh.ch/9935159f67",
+    "@id" : "http://rdfh.ch/0803/9935159f67",
     "@type" : "incunabula:book",
     "incunabula:pubdate" : {
-      "@id" : "http://rdfh.ch/9935159f67/values/f2877cc89901",
+      "@id" : "http://rdfh.ch/0803/9935159f67/values/f2877cc89901",
       "@type" : "knora-api:DateValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -155,13 +167,17 @@
       "knora-api:valueAsString" : "JULIAN:1504 CE"
     },
     "incunabula:title" : {
-      "@id" : "http://rdfh.ch/9935159f67/values/e6e02fe39801",
+      "@id" : "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801",
       "@type" : "knora-api:TextValue",
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/91e19f1e01"
       },
       "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
       "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
+    },
+    "knora-api:arkUrl" : {
+      "@type" : "xsd:anyURI",
+      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/9935159f67u"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"

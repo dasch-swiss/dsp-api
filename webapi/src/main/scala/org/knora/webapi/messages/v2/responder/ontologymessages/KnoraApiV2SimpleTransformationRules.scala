@@ -84,6 +84,26 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
         objectType = Some(OntologyConstants.Xsd.String)
     )
 
+    private val ArkUrl: ReadPropertyInfoV2 = makeProperty(
+        propertyIri = OntologyConstants.KnoraApiV2Simple.ArkUrl,
+        propertyType = OntologyConstants.Owl.DatatypeProperty,
+        predicates = Seq(
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Label,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "ARK URL",
+                )
+            ),
+            makePredicate(
+                predicateIri = OntologyConstants.Rdfs.Comment,
+                objectsWithLang = Map(
+                    LanguageCodes.EN -> "Provides the ARK URL of a resource."
+                )
+            )
+        ),
+        objectType = Some(OntologyConstants.Xsd.Uri)
+    )
+
     private val ResourceProperty: ReadPropertyInfoV2 = makeProperty(
         propertyIri = OntologyConstants.KnoraApiV2Simple.ResourceProperty,
         propertyType = OntologyConstants.Rdf.Property,
@@ -302,7 +322,8 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     )
 
     private val ResourceCardinalites = Map(
-        OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany
+        OntologyConstants.KnoraApiV2Simple.HasIncomingLink -> Cardinality.MayHaveMany,
+        OntologyConstants.KnoraApiV2Simple.ArkUrl -> Cardinality.MustHaveOne
     )
 
     /**
@@ -506,6 +527,7 @@ object KnoraApiV2SimpleTransformationRules extends KnoraBaseTransformationRules 
     override val knoraApiPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2] = Set(
         Result,
         Error,
+        ArkUrl,
         HasValue,
         ResourceProperty,
         SubjectType,

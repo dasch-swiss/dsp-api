@@ -21,38 +21,27 @@ package org.knora.webapi.routing.v2
 
 import java.util.UUID
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart
 import akka.http.scaladsl.model.Multipart.BodyPart
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import akka.util.Timeout
 import org.knora.webapi.messages.v2.responder.standoffmessages.{CreateMappingRequestMetadataV2, CreateMappingRequestV2, CreateMappingRequestXMLV2}
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilV2}
-import org.knora.webapi.store.STORE_MANAGER_ACTOR_PATH
-import org.knora.webapi.util.StringFormatter
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 import org.knora.webapi.util.jsonld.JsonLDUtil
-import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException, KnoraDispatchers, SettingsImpl}
+import org.knora.webapi.{ApiV2WithValueObjects, BadRequestException}
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Provides a function for API routes that deal with search.
   */
-object StandoffRouteV2 extends Authenticator {
+class StandoffRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    def knoraApiPath(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter): Route = {
-        implicit val system: ActorSystem = _system
-        implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-        implicit val timeout: Timeout = settings.defaultTimeout
-        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-        implicit val materializer: ActorMaterializer = ActorMaterializer()
-        val responderManager = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-        val storeManager = system.actorSelection(STORE_MANAGER_ACTOR_PATH)
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+    def knoraApiPath: Route = {
 
         path("v2" / "mapping") {
             post {

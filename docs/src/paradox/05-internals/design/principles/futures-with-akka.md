@@ -279,7 +279,8 @@ If you don't have an execution context in scope, you'll get a compile
 error asking you to include one, and suggesting that you could use
 `import scala.concurrent.ExecutionContext.Implicits.global`. Don't do
 this, because the global Scala execution context is not the most
-efficient option. Instead, Knora's `Responder` trait provides a suitable
-implicit execution context:
+efficient option. Instead, use Knora's custom execution context like so:
 
-@@snip [Responder.scala]($src$/org/knora/webapi/responders/Responder.scala) { #executionContext }
+```scala
+implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+```

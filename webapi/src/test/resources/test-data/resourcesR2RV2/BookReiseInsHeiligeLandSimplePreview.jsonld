@@ -1,6 +1,10 @@
 {
-  "@id" : "http://rdfh.ch/2a6221216701",
+  "@id" : "http://rdfh.ch/0803/2a6221216701",
   "@type" : "incunabula:book",
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+  },
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

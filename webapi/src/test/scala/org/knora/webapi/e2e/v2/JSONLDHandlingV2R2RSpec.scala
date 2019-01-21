@@ -46,7 +46,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val resourcesPath = ResourcesRouteV2.knoraApiPath(system, settings, log)
+    private val resourcesPath = new ResourcesRouteV2(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -77,7 +77,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
         "produce the expected JSONLD context object (on the server side)" in {
 
-            Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
+            Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
 
                 assert(status == StatusCodes.OK, response.toString)
 

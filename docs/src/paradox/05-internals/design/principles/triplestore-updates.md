@@ -343,9 +343,9 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?p ?o
 WHERE {
-    BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
+    BIND(IRI("http://rdfh.ch/c5058f3a") as ?resource)
     BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
-    BIND(IRI("http://data.knora.org/c5058f3a/values/testComment002") as ?searchValue)
+    BIND(IRI("http://rdfh.ch/c5058f3a/values/testComment002") as ?searchValue)
 
     ?resource ?property ?currentValue .
     ?currentValue knora-base:previousValue* ?searchValue .
@@ -364,16 +364,16 @@ WITH <http://www.knora.org/ontology/0803/incunabula>
 INSERT {
     ?newValue rdf:type ?valueType ;
               knora-base:valueHasString """Comment 1""" ;
-              knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-              knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+              knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
+              knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
               knora-base:hasPermissions "V knora-admin:KnownUser,knora-admin:UnknownUser|M knora-admin:ProjectMember"  ;
               knora-base:valueTimestamp ?currentTime .
 
     ?resource ?property ?newValue .
 } WHERE {
-    BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
+    BIND(IRI("http://rdfh.ch/c5058f3a") as ?resource)
     BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
-    BIND(IRI("http://data.knora.org/c5058f3a/values/testComment001") AS ?newValue)
+    BIND(IRI("http://rdfh.ch/c5058f3a/values/testComment001") AS ?newValue)
     BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType)
     BIND(NOW() AS ?currentTime)
 
@@ -403,16 +403,16 @@ DELETE {
     ?newValue rdf:type ?valueType ;
               knora-base:valueHasString """Comment 2""" ;
               knora-base:previousValue ?currentValue ;
-              knora-base:attachedToUser <http://data.knora.org/users/91e19f1e01> ;
-              knora-base:attachedToProject <http://data.knora.org/projects/77275339> ;
+              knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01> ;
+              knora-base:attachedToProject <http://rdfh.ch/projects/77275339> ;
               knora-base:hasPermissions "V knora-admin:KnownUser,knora-admin:UnknownUser|M knora-admin:ProjectMember"  ;
               knora-base:valueTimestamp ?currentTime .
 
     ?resource ?property ?newValue .
 } WHERE {
-    BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
-    BIND(IRI("http://data.knora.org/c5058f3a/values/testComment001") AS ?currentValue)
-    BIND(IRI("http://data.knora.org/c5058f3a/values/testComment002") AS ?newValue)
+    BIND(IRI("http://rdfh.ch/c5058f3a") as ?resource)
+    BIND(IRI("http://rdfh.ch/c5058f3a/values/testComment001") AS ?currentValue)
+    BIND(IRI("http://rdfh.ch/c5058f3a/values/testComment002") AS ?newValue)
     BIND(IRI("http://www.knora.org/ontology/knora-base#TextValue") AS ?valueType)
     BIND(NOW() AS ?currentTime)
 
@@ -422,7 +422,7 @@ DELETE {
 ```
 
 The update request must contain the IRI of the most recent version of
-the value (`http://data.knora.org/c5058f3a/values/c3295339`). If this is
+the value (`http://rdfh.ch/c5058f3a/values/c3295339`). If this is
 not in fact the most recent version (because someone else has done an
 update), this operation will do nothing (because the `WHERE` clause will
 return no rows). To find out whether the update succeeded, the
@@ -451,9 +451,9 @@ prefix knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT ?value ?valueTimestamp ?previousValue
 WHERE {
-    BIND(IRI("http://data.knora.org/c5058f3a") as ?resource)
+    BIND(IRI("http://rdfh.ch/c5058f3a") as ?resource)
     BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book_comment") as ?property)
-    BIND(IRI("http://data.knora.org/c5058f3a/values/testComment002") AS ?currentValue)
+    BIND(IRI("http://rdfh.ch/c5058f3a/values/testComment002") AS ?currentValue)
 
     ?resource ?property ?currentValue .
     ?currentValue knora-base:previousValue* ?value .

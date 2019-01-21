@@ -19,25 +19,17 @@
 
 package org.knora.webapi.routing
 
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Route
 import com.github.swagger.akka.SwaggerHttpService
 import com.github.swagger.akka.model.Info
 import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{ExternalDocs, Scheme}
 import org.knora.webapi.routing.admin._
-import org.knora.webapi.{KnoraDispatchers, SettingsImpl}
-
-import scala.concurrent.ExecutionContext
 
 /**
   * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
   */
-class SwaggerApiDocsRoute(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends SwaggerHttpService {
-
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with SwaggerHttpService {
 
     // List all routes here
     override val apiClasses: Set[Class[_]] = Set(

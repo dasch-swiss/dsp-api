@@ -23,7 +23,7 @@ import java.time.Instant
 import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
-import akka.testkit.{ImplicitSender, TestActorRef}
+import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
@@ -31,8 +31,9 @@ import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, MappingXMLtoStandoff, StandoffDataTypeClasses}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.SIPI_ROUTER_V2_ACTOR_NAME
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
+import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.twirl.{StandoffTagIriAttributeV2, StandoffTagV2}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.date.{CalendarNameGregorian, DatePrecisionYear}
@@ -51,7 +52,7 @@ object ResourcesResponderV2Spec {
     private val defaultAnythingValuePermissions = defaultAnythingResourcePermissions
     private val defaultStillImageFileValuePermissions = "M knora-base:Creator,knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser"
 
-    private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
+    private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
 
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private var aThingLastModificationDate = Instant.now
@@ -414,8 +415,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     import ResourcesResponderV2Spec._
 
-    // Construct the actors needed for this test.
-    private val actorUnderTest = TestActorRef[ResourcesResponderV2]
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
     private val knoraIdUtil = new KnoraIdUtil
@@ -424,7 +423,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     private val graphTestData = new GraphTestData
 
-    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V2_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV2)))
+    override lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> system.actorOf(Props(new MockSipiConnector), SipiConnectorActorName))
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -433,7 +432,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     )
 
     private def getResource(resourceIri: IRI, requestingUser: UserADM): ReadResourceV2 = {
-        actorUnderTest ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = anythingUserProfile)
+        responderManager ! ResourcesGetRequestV2(resourceIris = Seq(resourceIri), requestingUser = anythingUserProfile)
 
         expectMsgPF(timeout) {
             case response: ReadResourcesSequenceV2 =>
@@ -509,7 +508,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "The resources responder v2" should {
         "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -520,7 +519,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -531,7 +530,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -542,7 +541,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -553,7 +552,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
-            actorUnderTest ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesPreviewGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -564,7 +563,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/2a6221216701", "http://rdfh.ch/c5058f3a"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"), incunabulaUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ReadResourcesSequenceV2 =>
@@ -575,7 +574,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return two full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
-            actorUnderTest ! ResourcesGetRequestV2(Seq("http://rdfh.ch/c5058f3a", "http://rdfh.ch/c5058f3a", "http://rdfh.ch/2a6221216701"), incunabulaUserProfile)
+            responderManager ! ResourcesGetRequestV2(Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"), incunabulaUserProfile)
 
             // the redundant Iri should be ignored (distinct)
             expectMsgPF(timeout) {
@@ -587,7 +586,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a resource of type thing with text as TEI/XML" in {
 
-            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
+            responderManager ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceTEIGetResponseV2 =>
@@ -605,7 +604,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         "return a resource of type Something with text with standoff as TEI/XML" in {
 
-            actorUnderTest ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
+            responderManager ! ResourceTEIGetRequestV2(resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g", textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri, mappingIri = None, gravsearchTemplateIri = None, headerXSLTIri = None, requestingUser = anythingUserProfile)
 
             expectMsgPF(timeout) {
                 case response: ResourceTEIGetResponseV2 =>
@@ -622,7 +621,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return a graph of resources reachable via links from/to a given resource" in {
-            actorUnderTest ! GraphDataGetRequestV2(
+            responderManager ! GraphDataGetRequestV2(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
                 inbound = true,
@@ -640,7 +639,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
-            actorUnderTest ! GraphDataGetRequestV2(
+            responderManager ! GraphDataGetRequestV2(
                 resourceIri = "http://rdfh.ch/0001/start",
                 depth = 6,
                 inbound = true,
@@ -658,7 +657,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return a graph containing a standoff link" in {
-            actorUnderTest ! GraphDataGetRequestV2(
+            responderManager ! GraphDataGetRequestV2(
                 resourceIri = "http://rdfh.ch/0001/a-thing",
                 depth = 4,
                 inbound = true,
@@ -673,7 +672,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "return a graph containing just one node" in {
-            actorUnderTest ! GraphDataGetRequestV2(
+            responderManager ! GraphDataGetRequestV2(
                 resourceIri = "http://rdfh.ch/0001/another-thing",
                 depth = 4,
                 inbound = true,
@@ -700,7 +699,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -752,7 +751,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 permissions = Some("CR knora-base:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -911,7 +910,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -963,7 +962,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -995,7 +994,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = incunabulaUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1042,7 +1041,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = incunabulaUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1083,7 +1082,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = incunabulaUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1128,7 +1127,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = incunabulaUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1161,7 +1160,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1194,7 +1193,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1263,7 +1262,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1296,7 +1295,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1329,7 +1328,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1362,7 +1361,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1385,7 +1384,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 permissions = Some("M knora-base:Creator,V knora-base:KnownUser")
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1420,7 +1419,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.anythingProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = anythingUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1442,7 +1441,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 projectADM = SharedTestDataADM.incunabulaProject
             )
 
-            actorUnderTest ! CreateResourceRequestV2(
+            responderManager ! CreateResourceRequestV2(
                 createResource = inputResource,
                 requestingUser = incunabulaUserProfile,
                 apiRequestID = UUID.randomUUID
@@ -1462,7 +1461,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
@@ -1478,7 +1477,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -1499,7 +1498,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgType[SuccessResponseV2]
 
@@ -1521,7 +1520,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
@@ -1538,7 +1537,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
@@ -1557,7 +1556,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgType[SuccessResponseV2]
 
@@ -1580,7 +1579,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgPF(timeout) {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
@@ -1599,7 +1598,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 apiRequestID = UUID.randomUUID
             )
 
-            actorUnderTest ! updateRequest
+            responderManager ! updateRequest
 
             expectMsgType[SuccessResponseV2]
 

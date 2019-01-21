@@ -316,9 +316,11 @@ different domains, this solution offers the necessary flexibility.
 
 ## Authentication of users with Sipi
 
-Whenever a file is requested, Sipi asks Knora about the currents user's permissions on the given file.
-This is achieved by sharing the Knora session id with Sipi. When the user logs in to Knora using his
-browser (with Salsah1), a session cookie containing a JWT token representing the user is stored in the
-user's client. This session cookie is then read by Sipi and used to query for the user's image permissions.
+Whenever a file is requested, Sipi asks Knora about the current user's permissions on the given file.
+This is achieved by sharing the Knora session cookie with Sipi. When the user logs in to Knora using his
+browser (using either `V1` or `V2` authentication route), a session cookie containing a JWT token representing
+the user is stored in the user's client. This session cookie is then read by Sipi and used to query for
+the user's image permissions.
 
-Currently this only works for Salsah1. Authentication of users using Salsah2 is still under development.
+For the session cookie to be sent to Sipi, both the Knora API and Sipi endpoints need to
+be under the same domain, e.g., `api.example.com` and `iiif.example.com`.

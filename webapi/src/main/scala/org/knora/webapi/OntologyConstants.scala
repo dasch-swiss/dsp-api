@@ -703,6 +703,7 @@ object OntologyConstants {
         val IsDeleted: IRI = KnoraApiV2PrefixExpansion + "isDeleted"
         val DeleteDate: IRI = KnoraApiV2PrefixExpansion + "deleteDate"
         val DeleteComment: IRI = KnoraApiV2PrefixExpansion + "deleteComment"
+        val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
 
         val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
         val ForbiddenResource: IRI = KnoraApiV2PrefixExpansion + "ForbiddenResource"
@@ -944,6 +945,7 @@ object OntologyConstants {
         val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
         val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
         val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"
+        val ArkUrl: IRI = KnoraApiV2PrefixExpansion + "arkUrl"
     }
 
     /**

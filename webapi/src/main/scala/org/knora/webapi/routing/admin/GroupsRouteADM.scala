@@ -21,20 +21,13 @@ package org.knora.webapi.routing.admin
 
 import java.util.UUID
 
-import akka.actor.{ActorSelection, ActorSystem}
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.util.Timeout
 import io.swagger.annotations._
 import javax.ws.rs.Path
+import org.knora.webapi.BadRequestException
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.responders.RESPONDER_MANAGER_ACTOR_PATH
-import org.knora.webapi.routing.{Authenticator, RouteUtilADM}
-import org.knora.webapi.util.StringFormatter
-import org.knora.webapi.{BadRequestException, KnoraDispatchers, SettingsImpl}
-
-import scala.concurrent.ExecutionContext
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 /**
   * Provides a spray-routing function for API routes that deal with groups.
@@ -42,15 +35,9 @@ import scala.concurrent.ExecutionContext
 
 @Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
-class GroupsRouteADM(_system: ActorSystem, settings: SettingsImpl, log: LoggingAdapter) extends Authenticator with GroupsADMJsonProtocol {
+class GroupsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with GroupsADMJsonProtocol {
 
-    implicit val system: ActorSystem = _system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-    implicit val timeout: Timeout = settings.defaultTimeout
-    val responderManager: ActorSelection = system.actorSelection(RESPONDER_MANAGER_ACTOR_PATH)
-    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    def knoraApiPath: Route = {
+    override def knoraApiPath: Route = {
 
         path("admin" / "groups") {
             get {

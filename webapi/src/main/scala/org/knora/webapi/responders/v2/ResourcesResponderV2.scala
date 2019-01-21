@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.util.FastFuture
@@ -30,6 +31,7 @@ import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForResourceClassGetADM, DefaultObjectAccessPermissionsStringResponseADM, ResourceCreateOperation}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -37,11 +39,11 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
 import org.knora.webapi.messages.v2.responder.valuemessages._
-import org.knora.webapi.responders.IriLocker
+import org.knora.webapi.responders.{IriLocker, ResponderData}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.search.ConstructQuery
 import org.knora.webapi.responders.v2.search.gravsearch.GravsearchParser
 import org.knora.webapi.twirl.SparqlTemplateResourceToCreate
-import org.knora.webapi.util.ActorUtil.{future2Message, handleUnexpectedMessage}
 import org.knora.webapi.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util.PermissionUtilADM.ModifyPermission
@@ -52,8 +54,9 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class ResourcesResponderV2 extends ResponderWithStandoffV2 {
+class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
 
+    /* actor materializer needed for http requests */
     implicit val materializer: ActorMaterializer = ActorMaterializer()
 
     /**
@@ -66,14 +69,17 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
     private case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
                                              values: Map[SmartIri, Seq[UnverifiedValueV2]])
 
-    override def receive: Receive = {
-        case ResourcesGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResources(resIris, requestingUser), log)
-        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => future2Message(sender(), getResourcePreview(resIris, requestingUser), log)
-        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => future2Message(sender(), getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser), log)
-        case createResourceRequestV2: CreateResourceRequestV2 => future2Message(sender(), createResourceV2(createResourceRequestV2), log)
-        case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => future2Message(sender(), updateResourceMetadataV2(updateResourceMetadataRequestV2), log)
-        case graphDataGetRequest: GraphDataGetRequestV2 => future2Message(sender(), getGraphDataResponseV2(graphDataGetRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    /**
+      * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
+      */
+    def receive(msg: ResourcesResponderRequestV2) = msg match {
+        case ResourcesGetRequestV2(resIris, requestingUser) => getResources(resIris, requestingUser)
+        case ResourcesPreviewGetRequestV2(resIris, requestingUser) => getResourcePreview(resIris, requestingUser)
+        case ResourceTEIGetRequestV2(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser) => getResourceAsTEI(resIri, textProperty, mappingIri, gravsearchTemplateIri, headerXSLTIri, requestingUser)
+        case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
+        case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 => updateResourceMetadataV2(updateResourceMetadataRequestV2)
+        case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /**
@@ -835,6 +841,7 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
                     valueContent = valueContent,
                     requestingUser = requestingUser,
                     responderManager = responderManager,
+                    storeManager = storeManager,
                     log = log
                 )
         }
@@ -991,43 +998,8 @@ class ResourcesResponderV2 extends ResponderWithStandoffV2 {
 
         for {
             gravsearchTemplateUrl <- recoveredGravsearchUrlFuture
-
-            sipiResponseFuture: Future[HttpResponse] = for {
-
-                // ask Sipi to return the XSL transformation file
-                response: HttpResponse <- Http().singleRequest(
-                    HttpRequest(
-                        method = HttpMethods.GET,
-                        uri = gravsearchTemplateUrl
-                    )
-                )
-
-            } yield response
-
-            sipiResponseFutureRecovered: Future[HttpResponse] = sipiResponseFuture.recoverWith {
-
-                case noResponse: akka.stream.scaladsl.TcpIdleTimeoutException =>
-                    // this problem is hardly the user's fault. Create a SipiException
-                    throw SipiException(message = "Sipi not reachable", e = noResponse, log = log)
-
-
-                // TODO: what other exceptions have to be handled here?
-                // if Exception is used, also previous errors are caught here
-
-            }
-
-            sipiResponseRecovered: HttpResponse <- sipiResponseFutureRecovered
-
-            httpStatusCode: StatusCode = sipiResponseRecovered.status
-
-            messageBody <- sipiResponseRecovered.entity.toStrict(5.seconds)
-
-            _ = if (httpStatusCode != StatusCodes.OK) {
-                throw SipiException(s"Sipi returned status code ${httpStatusCode.intValue} with msg '${messageBody.data.decodeString("UTF-8")}'")
-            }
-
-            // get the XSL transformation
-            gravsearchTemplate: String = messageBody.data.decodeString("UTF-8")
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(fileUrl = gravsearchTemplateUrl, KnoraSystemInstances.Users.SystemUser)).mapTo[SipiGetTextFileResponse]
+            gravsearchTemplate: String = response.content
 
         } yield gravsearchTemplate
 

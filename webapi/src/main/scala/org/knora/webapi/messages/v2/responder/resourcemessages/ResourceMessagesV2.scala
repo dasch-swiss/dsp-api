@@ -23,7 +23,7 @@ import java.io.{StringReader, StringWriter}
 import java.time.Instant
 import java.util.UUID
 
-import akka.actor.ActorSelection
+import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
 import akka.util.Timeout
@@ -251,6 +251,8 @@ case class ReadResourceV2(resourceIri: IRI,
     }
 
     def toJsonLD(targetSchema: ApiV2Schema, settings: SettingsImpl): JsonLDObject = {
+        implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
         if (!resourceClassIri.getOntologySchema.contains(targetSchema)) {
             throw DataConversionException(s"ReadClassInfoV2 for resource $resourceIri is not in schema $targetSchema")
         }
@@ -294,12 +296,27 @@ case class ReadResourceV2(resourceIri: IRI,
             Map.empty[IRI, JsonLDValue]
         }
 
+        val arkUrlProp: IRI = targetSchema match {
+            case ApiV2Simple => OntologyConstants.KnoraApiV2Simple.ArkUrl
+            case ApiV2WithValueObjects => OntologyConstants.KnoraApiV2WithValueObjects.ArkUrl
+        }
+
+        val arkUrl: Map[IRI, JsonLDValue] = Map(
+            arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
+                value = resourceIri.toSmartIri.fromResourceIriToArkUrl(),
+                datatype = OntologyConstants.Xsd.Uri.toSmartIri
+            )
+        )
+
+        // TODO: Also return an ARK URL with a timestamp after #1115 is implemented.
+        // val timestamp = lastModificationDate.getOrElse(creationDate)
+
         JsonLDObject(
             Map(
                 JsonLDConstants.ID -> JsonLDString(resourceIri),
                 JsonLDConstants.TYPE -> JsonLDString(resourceClassIri.toString),
                 OntologyConstants.Rdfs.Label -> JsonLDString(label)
-            ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema
+            ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema ++ arkUrl
         )
     }
 }
@@ -382,8 +399,8 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[CreateResourceRequestV2] = {
         // #getGeneralInstance
@@ -443,6 +460,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
                                         jsonLDObject = valueJsonLDObject,
                                         requestingUser = requestingUser,
                                         responderManager = responderManager,
+                                        storeManager = storeManager,
                                         settings = settings,
                                         log = log
                                     )
@@ -524,8 +542,8 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
     override def fromJsonLD(jsonLDDocument: JsonLDDocument,
                             apiRequestID: UUID,
                             requestingUser: UserADM,
-                            responderManager: ActorSelection,
-                            storeManager: ActorSelection,
+                            responderManager: ActorRef,
+                            storeManager: ActorRef,
                             settings: SettingsImpl,
                             log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UpdateResourceMetadataRequestV2] = {
         Future {

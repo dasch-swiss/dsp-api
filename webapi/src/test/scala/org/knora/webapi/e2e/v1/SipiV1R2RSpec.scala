@@ -32,9 +32,9 @@ import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.resourcemessages.{CreateResourceApiRequestV1, CreateResourceValueV1}
 import org.knora.webapi.messages.v1.responder.valuemessages.{ChangeFileValueApiRequestV1, CreateFileV1, CreateRichtextV1}
-import org.knora.webapi.responders._
-import org.knora.webapi.responders.v1._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
+import org.knora.webapi.store.SipiConnectorActorName
+import org.knora.webapi.store.iiif.{MockSipiConnector, SourcePath}
 
 
 /**
@@ -49,8 +49,8 @@ class SipiV1R2RSpec extends R2RSpec {
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val resourcesPath = ResourcesRouteV1.knoraApiPath(system, settings, log)
-    private val valuesPath = ValuesRouteV1.knoraApiPath(system, settings, log)
+    private val resourcesPath = new ResourcesRouteV1(routeData).knoraApiPath
+    private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
 
     implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)
 
@@ -63,7 +63,7 @@ class SipiV1R2RSpec extends R2RSpec {
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
     )
 
-    override lazy val mockResponders: Map[String, ActorRef] = Map(SIPI_ROUTER_V1_ACTOR_NAME -> system.actorOf(Props(new MockSipiResponderV1)))
+    override lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> system.actorOf(Props(new MockSipiConnector)))
 
     object RequestParams {
 
@@ -81,7 +81,7 @@ class SipiV1R2RSpec extends R2RSpec {
                     ))
                 )),
                 "http://www.knora.org/ontology/0803/incunabula#partOf" -> Seq(CreateResourceValueV1(
-                    link_value = Some("http://rdfh.ch/5e77e98d2603")
+                    link_value = Some("http://rdfh.ch/0803/5e77e98d2603")
                 )),
                 "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Seq(CreateResourceValueV1(
                     int_value = Some(999)
@@ -208,7 +208,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
 
@@ -237,7 +237,7 @@ class SipiV1R2RSpec extends R2RSpec {
 
             RequestParams.createTmpFileDir()
 
-            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, formData) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
 
@@ -264,7 +264,7 @@ class SipiV1R2RSpec extends R2RSpec {
                 )
             )
 
-            val resIri = URLEncoder.encode("http://rdfh.ch/8a0b1e75", "UTF-8")
+            val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
 
             Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
                 assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])

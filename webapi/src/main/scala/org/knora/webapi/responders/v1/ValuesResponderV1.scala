@@ -21,23 +21,23 @@ package org.knora.webapi.responders.v1
 
 import java.time.Instant
 
-import akka.actor.Status
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{DefaultObjectAccessPermissionsStringForPropertyGetADM, DefaultObjectAccessPermissionsStringResponseADM, PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.sipimessages.{SipiConstants, SipiConversionPathRequestV1, SipiConversionRequestV1, SipiConversionResponseV1}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoByIRIGetV1, ProjectInfoV1}
 import org.knora.webapi.messages.v1.responder.resourcemessages._
-import org.knora.webapi.messages.v1.responder.sipimessages.{SipiConstants, SipiResponderConversionPathRequestV1, SipiResponderConversionRequestV1, SipiResponderConversionResponseV1}
 import org.knora.webapi.messages.v1.responder.usermessages.{UserProfileByIRIGetV1, UserProfileTypeV1, UserProfileV1}
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.{IriLocker, Responder, ResponderData}
 import org.knora.webapi.twirl.{SparqlTemplateLinkUpdate, StandoffTagIriAttributeV2, StandoffTagV2}
-import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.IriConversions._
 import org.knora.webapi.util._
 
@@ -48,7 +48,7 @@ import scala.concurrent.Future
 /**
   * Updates Knora values.
   */
-class ValuesResponderV1 extends Responder {
+class ValuesResponderV1(responderData: ResponderData) extends Responder(responderData) {
     // Creates IRIs for new Knora value objects.
     val knoraIdUtil = new KnoraIdUtil
 
@@ -56,22 +56,20 @@ class ValuesResponderV1 extends Responder {
     val valueUtilV1 = new ValueUtilV1(settings)
 
     /**
-      * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message, or
-      * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-      * method first returns `Failure` to the sender, then throws an exception.
+      * Receives a message of type [[ValuesResponderRequestV1]], and returns an appropriate response message.
       */
-    def receive = {
-        case ValueGetRequestV1(valueIri, userProfile) => future2Message(sender(), getValueResponseV1(valueIri, userProfile), log)
-        case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, userProfile) => future2Message(sender(), getLinkValue(subjectIri, predicateIri, objectIri, userProfile), log)
-        case versionHistoryRequest: ValueVersionHistoryGetRequestV1 => future2Message(sender(), getValueVersionHistoryResponseV1(versionHistoryRequest), log)
-        case createValueRequest: CreateValueRequestV1 => future2Message(sender(), createValueV1(createValueRequest), log)
-        case changeValueRequest: ChangeValueRequestV1 => future2Message(sender(), changeValueV1(changeValueRequest), log)
-        case changeFileValueRequest: ChangeFileValueRequestV1 => future2Message(sender(), changeFileValueV1(changeFileValueRequest), log)
-        case changeCommentRequest: ChangeCommentRequestV1 => future2Message(sender(), changeCommentV1(changeCommentRequest), log)
-        case deleteValueRequest: DeleteValueRequestV1 => future2Message(sender(), deleteValueV1(deleteValueRequest), log)
-        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1 => future2Message(sender(), createMultipleValuesV1(createMultipleValuesRequest), log)
-        case verifyMultipleValueCreationRequest: VerifyMultipleValueCreationRequestV1 => future2Message(sender(), verifyMultipleValueCreation(verifyMultipleValueCreationRequest), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+    def receive(msg: ValuesResponderRequestV1) = msg match {
+        case ValueGetRequestV1(valueIri, userProfile) => getValueResponseV1(valueIri, userProfile)
+        case LinkValueGetRequestV1(subjectIri, predicateIri, objectIri, userProfile) => getLinkValue(subjectIri, predicateIri, objectIri, userProfile)
+        case versionHistoryRequest: ValueVersionHistoryGetRequestV1 => getValueVersionHistoryResponseV1(versionHistoryRequest)
+        case createValueRequest: CreateValueRequestV1 => createValueV1(createValueRequest)
+        case changeValueRequest: ChangeValueRequestV1 => changeValueV1(changeValueRequest)
+        case changeFileValueRequest: ChangeFileValueRequestV1 => changeFileValueV1(changeFileValueRequest)
+        case changeCommentRequest: ChangeCommentRequestV1 => changeCommentV1(changeCommentRequest)
+        case deleteValueRequest: DeleteValueRequestV1 => deleteValueV1(deleteValueRequest)
+        case createMultipleValuesRequest: GenerateSparqlToCreateMultipleValuesRequestV1 => createMultipleValuesV1(createMultipleValuesRequest)
+        case verifyMultipleValueCreationRequest: VerifyMultipleValueCreationRequestV1 => verifyMultipleValueCreation(verifyMultipleValueCreationRequest)
+        case other => handleUnexpectedMessage(other, log, this.getClass.getName)
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -662,10 +660,10 @@ class ValuesResponderV1 extends Responder {
                         )
                 }
 
-                // the message to be sent to Sipi responder
-                sipiConversionRequest: SipiResponderConversionRequestV1 = changeFileValueRequest.file
+                // the message to be sent to SipiConnector
+                sipiConversionRequest: SipiConversionRequestV1 = changeFileValueRequest.file
 
-                sipiResponse: SipiResponderConversionResponseV1 <- (responderManager ? sipiConversionRequest).mapTo[SipiResponderConversionResponseV1]
+                sipiResponse: SipiConversionResponseV1 <- (storeManager ? sipiConversionRequest).mapTo[SipiConversionResponseV1]
 
                 // check if the file type returned by Sipi corresponds to the already existing file value type (e.g., hasStillImageRepresentation)
                 _ = if (SipiConstants.fileType2FileValueProperty(sipiResponse.file_type) != fileValues.head.property) {
@@ -730,7 +728,7 @@ class ValuesResponderV1 extends Responder {
             // If a temporary file was created, ensure that it's deleted, regardless of whether the request succeeded or failed.
             resultFuture.andThen {
                 case _ => changeFileValueRequest.file match {
-                    case conversionPathRequest: SipiResponderConversionPathRequestV1 =>
+                    case conversionPathRequest: SipiConversionPathRequestV1 =>
                         // a tmp file has been created by the resources route (non GUI-case), delete it
                         FileUtil.deleteFileFromTmpLocation(conversionPathRequest.source, log)
                     case _ => ()

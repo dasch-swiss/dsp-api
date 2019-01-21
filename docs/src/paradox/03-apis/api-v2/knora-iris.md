@@ -203,19 +203,11 @@ project, `0000`, is assumed. The sample shared ontology, `example-box`, has thes
 Knora generates IRIs for data that it creates in the triplestore. Each
 generated data IRI contains one or more @extref[UUID](rfc:4122)
 identifiers to make it unique. To keep data IRIs relatively short, each UUID is
-@extref[Base64](rfc:4648) encoded, using the 'URL
-and Filename safe Base64 Alphabet' specified in Table 2 of @extref[RFC 4648](rfc:4648),
-without padding; thus each UUID is a 22-character string.
+@extref[base64url-encoded](rfc:4648#section-5), without padding;
+thus each UUID is a 22-character string.
 
 Data IRIs are not currently intended to be dereferenced as URLs.
-Instead, each Knora resource will have a corresponding
-[ARK](https://tools.ietf.org/html/draft-kunze-ark-18) URL, which will be
-handled by a server that redirects requests to the relevant Knora API
-server (see @ref:[Knora Resource Permalinks](#knora-resource-permalinks)). However, every
-generated data IRI begins with `http://rdfh.ch`. This domain is not
-currently used, but it is owned by the [DaSCH](http://dasch.swiss/), so
-it would be possible to make resource IRIs directly dereferenceable in
-the future.
+Instead, each Knora resource has a separate @ref:[permalink](resource-permalinks.md).
 
 A Knora value does not have a stable IRI throughout its version history.
 Each time a new version of a value is made, the new version gets a new IRI.
@@ -241,9 +233,3 @@ follows:
     `http://rdfh.ch/permissions/PROJECT_SHORTCODE/PERMISSION_UUID`
   - Lists: `http://rdfh.ch/lists/PROJECT_SHORTCODE/LIST_UUID`
   - User: `http://rdfh.ch/users/USER_UUID`
-
-## Knora Resource Permalinks
-
-TODO: document the use of
-[ARK](https://tools.ietf.org/html/draft-kunze-ark-18) permalinks for
-Knora resources.
