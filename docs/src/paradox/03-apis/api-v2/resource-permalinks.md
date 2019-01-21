@@ -73,20 +73,7 @@ The format of a Knora ARK URL is as follows:
 http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 ```
 
-- `HOST`: the hostname of the ARK resolver.
-- `NAAN`: the Name Assigning Authority Number (NAAN) that the ARK resolver uses.
-- `VERSION`: the version of the Knora ARK URL format being used.
-- `PROJECT`: the @ref:[short code](knora-iris.md#project-short-codes) of the
-  project that the resource belongs to.
-- `RESOURCE_UUID`: the resource's @ref:[UUID](knora-iris.md#iris-for-data),
-  with an added check digit, and with the `-` character (which is reserved in ARK) escaped as `=`.
-- `TIMESTAMP`: an optional timestamp indicating that the ARK URL represents
-  the state of the resource at a specific time in the past. The format
-  of the timestamp is an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
-  date in Coordinated universal time (UTC), including date, time, and a 9-digit
-  nano-of-second field, without the characters `-`, `:`, and `.` (because
-  `-` and `.` are reserved characters in ARK, and `:` would have to be URL-encoded).
-  Example: `20190118T102919000031660Z`.
+For details, see @ref:[Archival Resource Key (ARK) Identifiers](../../05-internals/design/api-v2/ark.md).
 
 For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
