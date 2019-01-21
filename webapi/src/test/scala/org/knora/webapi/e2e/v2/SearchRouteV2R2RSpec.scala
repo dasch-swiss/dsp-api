@@ -70,7 +70,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     private val password = "test"
 
     // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
-    private val writeTestDataFiles = true
+    private val writeTestDataFiles = false
 
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
