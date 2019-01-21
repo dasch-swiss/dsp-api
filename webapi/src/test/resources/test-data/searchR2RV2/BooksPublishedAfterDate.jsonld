@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/9935159f67",
+  "@id" : "http://rdfh.ch/0803/9935159f67",
   "@type" : "incunabula:book",
   "incunabula:pubdate" : {
-    "@id" : "http://rdfh.ch/9935159f67/values/f2877cc89901",
+    "@id" : "http://rdfh.ch/0803/9935159f67/values/f2877cc89901",
     "@type" : "knora-api:DateValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
@@ -16,13 +16,17 @@
     "knora-api:valueAsString" : "JULIAN:1504 CE"
   },
   "incunabula:title" : {
-    "@id" : "http://rdfh.ch/9935159f67/values/e6e02fe39801",
+    "@id" : "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801",
     "@type" : "knora-api:TextValue",
     "knora-api:attachedToUser" : {
       "@id" : "http://rdfh.ch/users/91e19f1e01"
     },
     "knora-api:hasPermissions" : "CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser,knora-base:UnknownUser",
     "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)"
+  },
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/9935159f67u"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/0803"

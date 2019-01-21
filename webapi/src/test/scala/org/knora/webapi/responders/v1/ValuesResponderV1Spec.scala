@@ -53,8 +53,8 @@ object ValuesResponderV1Spec {
     private val incunabulaProjectIri = INCUNABULA_PROJECT_IRI
     private val anythingProjectIri = ANYTHING_PROJECT_IRI
 
-    private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
-    private val miscResourceIri = "http://rdfh.ch/miscResource"
+    private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+    private val miscResourceIri = "http://rdfh.ch/0803/miscResource"
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
 
     private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
@@ -68,12 +68,12 @@ object ValuesResponderV1Spec {
             ValueVersionV1(
                 previousValue = None, // The user doesn't have permission to see the previous value.
                 valueCreationDate = Some("2016-01-22T11:31:24Z"),
-                valueObjectIri = "http://rdfh.ch/21abac2162/values/f76660458201"
+                valueObjectIri = "http://rdfh.ch/0803/21abac2162/values/f76660458201"
             ),
             ValueVersionV1(
                 previousValue = None,
                 valueCreationDate = Some("2016-01-20T11:31:24Z"),
-                valueObjectIri = "http://rdfh.ch/21abac2162/values/11111111"
+                valueObjectIri = "http://rdfh.ch/0803/21abac2162/values/11111111"
             )
         )
     )
@@ -158,7 +158,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
 
 
-        // expected Standoff information for <http://rdfh.ch/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
+        // expected Standoff information for <http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04> in incunabula-data.ttl
         val standoff = Vector(
             StandoffTagV2(
                 standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag,
@@ -307,7 +307,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "query a text value containing Standoff" in {
             responderManager ! ValueGetRequestV1(
-                valueIri = "http://rdfh.ch/e41ab5695c/values/d3398239089e04",
+                valueIri = "http://rdfh.ch/0803/e41ab5695c/values/d3398239089e04",
                 userProfile = incunabulaUser
             )
 
@@ -320,7 +320,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         "query a standoff link as an ordinary value" in {
             responderManager ! ValueGetRequestV1(
                 valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
-                userProfile = incunabulaUser
+                userProfile = anythingUser
             )
 
             expectMsgPF(timeout) {
@@ -330,7 +330,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "query a LinkValue" in {
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/8a0b1e75",
+                subjectIri = "http://rdfh.ch/0803/8a0b1e75",
                 predicateIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -340,7 +340,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/8a0b1e75",
+                        subjectIri = "http://rdfh.ch/0803/8a0b1e75",
                         predicateIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
@@ -405,7 +405,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val utf8str = "GW 4168"
 
             responderManager ! ChangeValueRequestV1(
-                valueIri = "http://rdfh.ch/c5058f3a/values/184e99ca01",
+                valueIri = "http://rdfh.ch/0803/c5058f3a/values/184e99ca01",
                 value = TextValueSimpleV1(utf8str = utf8str),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -481,7 +481,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a nonexistent resource" in {
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/nonexistent",
+                resourceIri = "http://rdfh.ch/0803/nonexistent",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
@@ -495,7 +495,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a deleted resource" in {
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/9935159f67",
+                resourceIri = "http://rdfh.ch/0803/9935159f67",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
@@ -522,7 +522,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value to a resource that the user doesn't have permission to modify" in {
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/e41ab5695c",
+                resourceIri = "http://rdfh.ch/0803/e41ab5695c",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
                 value = TextValueSimpleV1("Comment 1"),
                 userProfile = incunabulaUser,
@@ -536,7 +536,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new value of the wrong type" in {
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#pubdate",
                 value = TextValueSimpleV1("this is not a date"),
                 userProfile = incunabulaUser,
@@ -550,7 +550,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new version to a value that the user doesn't have permission to modify" in {
             responderManager ! ChangeValueRequestV1(
-                valueIri = "http://rdfh.ch/c5058f3a/values/c3295339",
+                valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
                 value = TextValueSimpleV1("Zeitglöcklein des Lebens und Leidens Christi modified"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -563,7 +563,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not add a new version of a value of the wrong type" in {
             responderManager ! ChangeValueRequestV1(
-                valueIri = "http://rdfh.ch/c5058f3a/values/cfd09f1e01",
+                valueIri = "http://rdfh.ch/0803/c5058f3a/values/cfd09f1e01",
                 value = TextValueSimpleV1("this is not a date"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -576,11 +576,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "not add a new value that would violate a cardinality restriction" in {
-            // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/4f11adaf is already part of a book.
+            // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/0803/4f11adaf is already part of a book.
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/4f11adaf",
+                resourceIri = "http://rdfh.ch/0803/4f11adaf",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
-                value = LinkUpdateV1(targetResourceIri = "http://rdfh.ch/e41ab5695c"),
+                value = LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/e41ab5695c"),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
             )
@@ -589,9 +589,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
 
-            // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/4f11adaf already has a seqnum.
+            // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/4f11adaf",
+                resourceIri = "http://rdfh.ch/0803/4f11adaf",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum",
                 value = IntegerValueV1(1),
                 userProfile = incunabulaUser,
@@ -605,9 +605,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "hide versions the user doesn't have permission to see" in {
             responderManager ! ValueVersionHistoryGetRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#title",
-                currentValueIri = "http://rdfh.ch/21abac2162/values/f76660458201",
+                currentValueIri = "http://rdfh.ch/0803/21abac2162/values/f76660458201",
                 userProfile = incunabulaUser
             )
 
@@ -777,7 +777,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
                 value = textValueWithResourceRef,
                 userProfile = incunabulaUser,
@@ -791,7 +791,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -804,7 +804,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/21abac2162",
+                        subjectIri = "http://rdfh.ch/0803/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
@@ -814,7 +814,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -878,7 +878,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -891,7 +891,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/21abac2162",
+                        subjectIri = "http://rdfh.ch/0803/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
@@ -901,7 +901,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -940,7 +940,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
                 value = textValueWithResourceRef,
                 userProfile = incunabulaUser,
@@ -954,7 +954,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -967,7 +967,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/21abac2162",
+                        subjectIri = "http://rdfh.ch/0803/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 2
@@ -977,7 +977,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -1013,7 +1013,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -1025,7 +1025,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/21abac2162",
+                        subjectIri = "http://rdfh.ch/0803/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
@@ -1035,7 +1035,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -1056,7 +1056,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // The LinkValue should have 3 versions in its version history.
 
             responderManager ! ValueVersionHistoryGetRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = OntologyConstants.KnoraBase.HasStandoffLinkToValue,
                 currentValueIri = standoffLinkValueIri.get,
                 userProfile = incunabulaUser
@@ -1086,7 +1086,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // The new version of the LinkValue should be marked as deleted.
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -1098,7 +1098,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 includeDeleted = true
@@ -1153,7 +1153,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             }
 
             responderManager ! LinkValueGetRequestV1(
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri,
                 userProfile = incunabulaUser
@@ -1166,7 +1166,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 case msg: ValueGetResponseV1 =>
                     msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
                     msg.value should ===(LinkValueV1(
-                        subjectIri = "http://rdfh.ch/21abac2162",
+                        subjectIri = "http://rdfh.ch/0803/21abac2162",
                         predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                         objectIri = zeitglöckleinIri,
                         referenceCount = 1
@@ -1176,7 +1176,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
             val sparqlQuery = queries.sparql.v1.txt.findLinkValueByObject(
                 triplestore = settings.triplestoreType,
-                subjectIri = "http://rdfh.ch/21abac2162",
+                subjectIri = "http://rdfh.ch/0803/21abac2162",
                 predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
                 objectIri = zeitglöckleinIri
             ).toString()
@@ -1197,7 +1197,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val seqnum = 4
 
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/8a0b1e75",
+                resourceIri = "http://rdfh.ch/0803/8a0b1e75",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum",
                 value = IntegerValueV1(seqnum),
                 userProfile = incunabulaUser,
@@ -1233,7 +1233,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // great resource to verify that expected conversion result from and to JDC is correct:
             // https://www.fourmilab.ch/documents/calendar/
             responderManager ! CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/21abac2162",
+                resourceIri = "http://rdfh.ch/0803/21abac2162",
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#pubdate",
                 value = JulianDayNumberValueV1(
                     dateval1 = 2451545,
@@ -1277,7 +1277,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "create a link between two resources" in {
-            val resourceIri = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val lastModBeforeUpdate = getLastModificationDate(resourceIri)
 
             val createValueRequest = CreateValueRequestV1(
@@ -1325,7 +1325,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "not create a duplicate link" in {
             val createValueRequest = CreateValueRequestV1(
-                resourceIri = "http://rdfh.ch/cb1a74e3e2f6",
+                resourceIri = "http://rdfh.ch/0803/cb1a74e3e2f6",
                 propertyIri = OntologyConstants.KnoraBase.HasLinkTo,
                 value = LinkUpdateV1(
                     targetResourceIri = zeitglöckleinIri
@@ -1346,7 +1346,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 resourceIri = miscResourceIri,
                 propertyIri = "http://www.knora.org/ontology/0803/incunabula#miscHasBook", // can only point to an incunabula:book
                 value = LinkUpdateV1(
-                    targetResourceIri = "http://rdfh.ch/8a0b1e75" // an incunabula:page, not an incunabula:book
+                    targetResourceIri = "http://rdfh.ch/0803/8a0b1e75" // an incunabula:page, not an incunabula:book
                 ),
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -1358,8 +1358,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "change a link" in {
-            val linkSourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkTargetIri = "http://rdfh.ch/21abac2162"
+            val linkSourceIri = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkTargetIri = "http://rdfh.ch/0803/21abac2162"
             val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
 
             val changeValueRequest = ChangeValueRequestV1(
@@ -1426,8 +1426,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
         "delete a link between two resources" in {
 
-            val linkSourceIri = "http://rdfh.ch/cb1a74e3e2f6"
-            val linkTargetIri = "http://rdfh.ch/21abac2162"
+            val linkSourceIri = "http://rdfh.ch/0803/cb1a74e3e2f6"
+            val linkTargetIri = "http://rdfh.ch/0803/21abac2162"
             val lastModBeforeUpdate = getLastModificationDate(linkSourceIri)
 
             val comment = "This link is no longer needed"
@@ -1473,9 +1473,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // A test UserProfile.
             val userProfile = SharedTestDataADM.incunabulaCreatorUser
 
-            val linkTargetIri = "http://rdfh.ch/e41ab5695c"
+            val linkTargetIri = "http://rdfh.ch/0803/e41ab5695c"
 
-            partOfLinkValueIri.set("http://rdfh.ch/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436")
+            partOfLinkValueIri.set("http://rdfh.ch/0803/8a0b1e75/values/3a7b5130-22c2-4400-a794-062b7a3e3436")
 
             val changeValueRequest = ChangeValueRequestV1(
                 value = LinkUpdateV1(
@@ -1502,7 +1502,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             // A test UserADM.
             val userProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
-            val linkTargetIri = "http://rdfh.ch/e41ab5695c"
+            val linkTargetIri = "http://rdfh.ch/0803/e41ab5695c"
 
             val changeValueRequest = ChangeValueRequestV1(
                 value = LinkUpdateV1(
@@ -1547,7 +1547,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             val comment = Some("This is wrong. I am the author!")
 
             val changeCommentRequest = ChangeCommentRequestV1(
-                valueIri = "http://rdfh.ch/c5058f3a/values/8653a672",
+                valueIri = "http://rdfh.ch/0803/c5058f3a/values/8653a672",
                 comment = comment,
                 userProfile = incunabulaUser,
                 apiRequestID = UUID.randomUUID
@@ -1576,7 +1576,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             )
 
             val fileChangeRequest = ChangeFileValueRequestV1(
-                resourceIri = "http://rdfh.ch/8a0b1e75",
+                resourceIri = "http://rdfh.ch/0803/8a0b1e75",
                 file = fileRequest,
                 apiRequestID = UUID.randomUUID,
                 userProfile = incunabulaUser)
@@ -1596,7 +1596,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             responderManager ! ChangeValueRequestV1(
                 value = HierarchicalListValueV1(winter),
                 userProfile = imagesUser,
-                valueIri = "http://rdfh.ch/d208fb9357d5/values/bc90a9c5091004",
+                valueIri = "http://rdfh.ch/00FF/d208fb9357d5/values/bc90a9c5091004",
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1615,7 +1615,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
                 value = HierarchicalListValueV1(summer),
                 userProfile = imagesUser,
                 propertyIri = s"$IMAGES_ONTOLOGY_IRI#jahreszeit",
-                resourceIri = "http://rdfh.ch/691e7e2244d5",
+                resourceIri = "http://rdfh.ch/00FF/691e7e2244d5",
                 apiRequestID = UUID.randomUUID
             )
 
@@ -1921,7 +1921,7 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         }
 
         "not add a text value containing a standoff reference to a nonexistent resource" in {
-            val nonexistentIri = "http://rdfh.ch/nonexistent"
+            val nonexistentIri = "http://rdfh.ch/0803/nonexistent"
 
             val textValueWithResourceRef = TextValueWithStandoffV1(
                 utf8str = "This comment refers to another resource",

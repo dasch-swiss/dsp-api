@@ -219,7 +219,7 @@ export module basicMessageComponents {
     type color = string;
 
     /**
-     * String must be a valid Knora IRI, e.g. "http://data.knora.org/c5058f3a".
+     * String must be a valid Knora IRI, e.g. "http://rdfh.ch/c5058f3a".
      */
     export type KnoraIRI = string;
 

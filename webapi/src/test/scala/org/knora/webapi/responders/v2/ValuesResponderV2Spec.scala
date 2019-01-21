@@ -48,8 +48,8 @@ import scala.concurrent.duration._
 class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    private val zeitglöckleinIri = "http://rdfh.ch/c5058f3a"
-    private val generationeIri = "http://rdfh.ch/c3f913666f"
+    private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+    private val generationeIri = "http://rdfh.ch/0803/c3f913666f"
     private val aThingIri = "http://rdfh.ch/0001/a-thing"
     private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
 
@@ -1318,7 +1318,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "create a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
@@ -1362,7 +1362,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not create a duplicate link" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
@@ -1387,7 +1387,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not accept a link property in a request to create a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
 
             val createValueRequest = CreateValueRequestV2(
@@ -1432,7 +1432,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value to a nonexistent resource" in {
-            val resourceIri: IRI = "http://rdfh.ch/nonexistent"
+            val resourceIri: IRI = "http://rdfh.ch/0001/nonexistent"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
             val intValue = 6
 
@@ -1459,7 +1459,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value to a deleted resource" in {
-            val resourceIri: IRI = "http://rdfh.ch/9935159f67"
+            val resourceIri: IRI = "http://rdfh.ch/0803/9935159f67"
             val valueHasString = "Comment 2"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
 
@@ -1511,7 +1511,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value of the wrong type" in {
-            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val resourceIri: IRI = "http://rdfh.ch/0803/21abac2162"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pubdate".toSmartIri
 
             responderManager ! CreateValueRequestV2(
@@ -1534,9 +1534,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not add a new value that would violate a cardinality restriction" in {
-            val resourceIri: IRI = "http://rdfh.ch/4f11adaf"
+            val resourceIri: IRI = "http://rdfh.ch/0803/4f11adaf"
 
-            // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/4f11adaf is already part of a book.
+            // The cardinality of incunabula:partOf in incunabula:page is 1, and page http://rdfh.ch/0803/4f11adaf is already part of a book.
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
@@ -1545,7 +1545,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                     propertyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#partOfValue".toSmartIri,
                     valueContent = LinkValueContentV2(
                         ontologySchema = ApiV2WithValueObjects,
-                        referredResourceIri = "http://rdfh.ch/e41ab5695c"
+                        referredResourceIri = "http://rdfh.ch/0803/e41ab5695c"
                     )
                 ),
                 requestingUser = incunabulaUser,
@@ -1556,11 +1556,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
                 case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
             }
 
-            // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/4f11adaf already has a seqnum.
+            // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
 
             responderManager ! CreateValueRequestV2(
                 CreateValueV2(
-                    resourceIri = "http://rdfh.ch/4f11adaf",
+                    resourceIri = "http://rdfh.ch/0803/4f11adaf",
                     resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#page".toSmartIri,
                     propertyIri = "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri,
                     valueContent = IntegerValueContentV2(
@@ -1579,7 +1579,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add a new text value containing a Standoff resource reference, and create a hasStandoffLinkTo direct link and a corresponding LinkValue" in {
-            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val resourceIri: IRI = "http://rdfh.ch/0803/21abac2162"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val valueHasString = "This comment refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
@@ -1668,7 +1668,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "add another new text value containing a Standoff resource reference, and make a new version of the LinkValue" in {
-            val resourceIri: IRI = "http://rdfh.ch/21abac2162"
+            val resourceIri: IRI = "http://rdfh.ch/0803/21abac2162"
             val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book_comment".toSmartIri
             val valueHasString = "This remark refers to another resource"
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
@@ -3190,7 +3190,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "update a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, incunabulaUser)
@@ -3235,7 +3235,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "not update a link without changing it" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
 
             val updateValueRequest = UpdateValueRequestV2(
@@ -3474,7 +3474,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         }
 
         "delete a link between two resources" in {
-            val resourceIri: IRI = "http://rdfh.ch/cb1a74e3e2f6"
+            val resourceIri: IRI = "http://rdfh.ch/0803/cb1a74e3e2f6"
             val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkTo.toSmartIri
             val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2WithValueObjects.HasLinkToValue.toSmartIri
             val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
@@ -3503,7 +3503,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
             responderManager ! DeleteValueRequestV2(
                 resourceIri = zeitglöckleinIri,
                 propertyIri = propertyIri,
-                valueIri = "http://rdfh.ch/c5058f3a/values/c3295339",
+                valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
                 requestingUser = incunabulaCreatorUser,
                 apiRequestID = UUID.randomUUID
             )

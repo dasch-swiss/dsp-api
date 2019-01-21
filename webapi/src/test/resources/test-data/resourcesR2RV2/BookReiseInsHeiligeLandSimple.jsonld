@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/2a6221216701",
+  "@id" : "http://rdfh.ch/0803/2a6221216701",
   "@type" : "incunabula:book",
   "incunabula:book_comment" : "Katalogaufnahme anhand ISTC und v.d.Haegen",
   "incunabula:citation" : [ "Van der Haegen I: 9,14", "Goff M165", "C 3833", "Klebs 651.2", "Schr 4799", "Schramm XXI p. 9 & 26", "FairMur(G) 283", "IBP 3556", "Borm 1751" ],
@@ -14,6 +14,10 @@
   "incunabula:publoc" : "Basel",
   "incunabula:title" : [ "Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius" ],
   "incunabula:url" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320",
+  "knora-api:arkUrl" : {
+    "@type" : "xsd:anyURI",
+    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+  },
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

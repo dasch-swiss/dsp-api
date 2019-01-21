@@ -13,6 +13,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -131,6 +138,13 @@
     "rdfs:label" : "Book",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -499,6 +513,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -731,6 +752,13 @@
     "rdfs:label" : "Page",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:StillImageRepresentation"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,

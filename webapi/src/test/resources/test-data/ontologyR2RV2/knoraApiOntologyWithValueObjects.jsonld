@@ -13,6 +13,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -203,6 +210,13 @@
     "rdfs:label" : "Representation (Audio)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -550,6 +564,13 @@
     "rdfs:label" : "Representation (3D)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -1004,6 +1025,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -1173,6 +1201,13 @@
     "rdfs:label" : "A ForbiddenResource is a proxy for a resource that the client has insufficient permissions to see.",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -1601,6 +1636,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -1996,6 +2038,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -2092,6 +2141,13 @@
     "rdfs:label" : "Region",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Resource"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -2220,6 +2276,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -2313,6 +2376,12 @@
     "rdfs:comment" : "Represents something in the world, or an abstract thing",
     "rdfs:label" : "Resource",
     "rdfs:subClassOf" : [ {
+      "@type" : "owl:Restriction",
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
       "@type" : "owl:Restriction",
       "owl:cardinality" : 1,
       "owl:onProperty" : {
@@ -3328,6 +3397,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -3500,6 +3576,13 @@
     "rdfs:label" : "Representation (Text)",
     "rdfs:subClassOf" : [ {
       "@id" : "knora-api:Representation"
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
     }, {
       "@type" : "owl:Restriction",
       "knora-api:isInherited" : true,
@@ -3854,6 +3937,13 @@
       "knora-api:isInherited" : true,
       "owl:cardinality" : 1,
       "owl:onProperty" : {
+        "@id" : "knora-api:arkUrl"
+      }
+    }, {
+      "@type" : "owl:Restriction",
+      "knora-api:isInherited" : true,
+      "owl:cardinality" : 1,
+      "owl:onProperty" : {
         "@id" : "knora-api:attachedToProject"
       }
     }, {
@@ -3940,6 +4030,14 @@
         "@id" : "rdfs:label"
       }
     } ]
+  }, {
+    "@id" : "knora-api:arkUrl",
+    "@type" : "owl:DatatypeProperty",
+    "knora-api:objectType" : {
+      "@id" : "xsd:anyURI"
+    },
+    "rdfs:comment" : "Provides the ARK URL of a resource.",
+    "rdfs:label" : "ARK URL"
   }, {
     "@id" : "knora-api:attachedToProject",
     "@type" : "owl:ObjectProperty",
