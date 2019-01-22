@@ -43,13 +43,11 @@ import org.eclipse.rdf4j.rio.RDFHandler
 import org.eclipse.rdf4j.rio.turtle._
 import org.knora.webapi._
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.SparqlResultProtocol._
 import org.knora.webapi.util.{FakeTriplestore, StringFormatter}
 import spray.json._
 
-import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
@@ -384,6 +382,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         } yield SparqlAskResponse(result)
     }
 
+    /**
+      * Initiates resetting of the triplestore content. First all data is removed and then the supplied data
+      * is loaded.
+      */
     private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject]): Try[ResetTriplestoreContentACK] = {
         log.debug("resetTripleStoreContent")
         val resetTriplestoreResult = for {
@@ -401,6 +403,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         resetTriplestoreResult
     }
 
+    /**
+      * Drops (removes) all data from the triplestore repository.
+      */
     private def dropAllTriplestoreContent(): Try[DropAllTriplestoreContentACK] = {
 
         log.debug("==>> Drop All Data Start")
@@ -423,7 +428,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
     }
 
     /**
-      * Inserts the data referenced inside the `rdfDataObjects`.
+      * Inserts the data.
       *
       * @param rdfDataObjects a sequence of paths and graph names referencing data that needs to be inserted.
       * @return [[InsertTriplestoreContentACK]]
@@ -432,14 +437,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
         try {
             log.debug("==>> Loading Data Start")
 
-            val defaultRdfDataList = settings.tripleStoreConfig.getConfigList("default-rdf-data")
-            val defaultRdfDataObjectList = defaultRdfDataList.asScala.map {
-                config => RdfDataObjectFactory(config)
-            }
-
-            val completeRdfDataObjectList = defaultRdfDataObjectList ++ rdfDataObjects
-
-            for (elem <- completeRdfDataObjectList) {
+            for (elem <- rdfDataObjects) {
 
                 GraphProtocolAccessor.post(elem.name, elem.path)
 
@@ -462,7 +460,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging {
             case e: TriplestoreUnsupportedFeatureException => Failure(e)
             case e: Exception => Failure(TriplestoreResponseException("Reset: Failed to execute insert into triplestore", e, log))
         }
-
     }
 
     /**

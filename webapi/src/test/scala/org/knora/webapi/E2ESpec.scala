@@ -32,6 +32,7 @@ import org.eclipse.rdf4j.model.Model
 import org.eclipse.rdf4j.rio.{RDFFormat, Rio}
 import org.knora.webapi.messages.app.appmessages.SetAllowReloadOverHTTPState
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{FileUtil, StartupUtils, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, Suite, WordSpecLike}
@@ -49,7 +50,7 @@ object E2ESpec {
   * This class can be used in End-to-End testing. It starts the Knora server and
   * provides access to settings and logging.
   */
-class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
+class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupUtils with TriplestoreJsonProtocol with TriplestoreDataUtil with Suite with WordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding {
 
     /* needed by the core trait */
     implicit lazy val system: ActorSystem = _system
@@ -111,8 +112,14 @@ class E2ESpec(_system: ActorSystem) extends Core with KnoraService with StartupU
         if (response.status.isSuccess()) log.info("Knora is running.")
     }
 
+    /**
+      * Initiates resetting of the triplestore data. The supplied data is prepended with
+      * a default set configurable in 'application.conf' with 'app.triplestore.default-rdf-data'.
+      */
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+        val dataWithPrependedDefaultData = prependDefaultData(rdfDataObjects, settings)
+
+        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, dataWithPrependedDefaultData.toJson.compactPrint))
         singleAwaitingRequest(request, 5.minutes)
     }
 

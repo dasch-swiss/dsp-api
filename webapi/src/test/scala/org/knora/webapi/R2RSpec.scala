@@ -35,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Reset
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME}
 import org.knora.webapi.routing.KnoraRouteData
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 import org.knora.webapi.store.{MockableStoreManager, StoreManager, StoreManagerActorName}
 import org.knora.webapi.util.jsonld.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.util.{CacheUtil, FileUtil, StringFormatter}
@@ -46,7 +47,7 @@ import scala.language.postfixOps
 /**
   * Created by subotic on 08.12.15.
   */
-class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Matchers with BeforeAndAfterAll {
+class R2RSpec extends Suite with ScalatestRouteTest with TriplestoreDataUtil with WordSpecLike with Matchers with BeforeAndAfterAll {
 
     def actorRefFactory: ActorSystem = system
 
@@ -92,9 +93,16 @@ class R2RSpec extends Suite with ScalatestRouteTest with WordSpecLike with Match
         Rio.parse(new StringReader(rdfXmlStr), "", RDFFormat.RDFXML)
     }
 
+    /**
+      * Initiates resetting of the triplestore data. The supplied data is prepended with
+      * a default set configurable in 'application.conf' with 'app.triplestore.default-rdf-data'.
+      */
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+
+        val dataWithPrependedDefaultData = prependDefaultData(rdfDataObjects, settings)
+
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(storeManager ? ResetTriplestoreContent(dataWithPrependedDefaultData), 5 minutes)
         Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 30 seconds)
     }
 

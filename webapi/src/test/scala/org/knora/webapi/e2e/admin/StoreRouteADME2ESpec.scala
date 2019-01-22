@@ -20,7 +20,7 @@
 package org.knora.webapi.e2e.admin
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, Multipart, StatusCodes}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.E2ESpec
@@ -90,5 +90,33 @@ class StoreRouteADME2ESpec extends E2ESpec(StoreRouteADME2ESpec.config) with Tri
             // log.debug("==>> " + response.toString)
             assert(response.status === StatusCodes.Forbidden)
         }
+    }
+
+    "The ResetTriplestoreContentWithData Command ('admin/triplestore/command/ResetTriplestoreContentWithData')" should {
+        "succeed with resetting if user has the necessary permissions" in {
+
+            val multipartForm =
+                Multipart.FormData(
+                    Multipart.FormData.BodyPart.Strict(
+                        "csv",
+                        HttpEntity(ContentTypes.`text/plain(UTF-8)`, "2,3,5\n7,11,13,17,23\n29,31,37\n"),
+                        Map("filename" -> "primesA.csv")),
+                    Multipart.FormData.BodyPart.Strict(
+                        "csv",
+                        HttpEntity(ContentTypes.`text/plain(UTF-8)`, "41,43,47\n53,59,6167,71\n73,79,83\n"),
+                        Map("filename" -> "primesB.csv")))
+
+
+            val request = Post(baseApiUrl + "/admin/triplestore/command/ResetTriplestoreContentWithData", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+            val response = singleAwaitingRequest(request, 300.seconds)
+            // log.debug("==>> " + response.toString)
+            assert(response.status === StatusCodes.OK)
+
+        }
+
+        "fail with resetting if user does not have the necessary permissions" in {
+
+        }
+
     }
 }

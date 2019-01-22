@@ -29,6 +29,7 @@ import org.knora.webapi.app.{APPLICATION_STATE_ACTOR_NAME, ApplicationStateActor
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetTriplestoreContent}
 import org.knora.webapi.messages.v1.responder.ontologymessages.LoadOntologiesRequest
 import org.knora.webapi.responders.{MockableResponderManager, RESPONDER_MANAGER_ACTOR_NAME, ResponderData}
+import org.knora.webapi.store.triplestore.util.TriplestoreDataUtil
 import org.knora.webapi.store.{MockableStoreManager, StoreManagerActorName}
 import org.knora.webapi.util.{CacheUtil, StringFormatter}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -59,7 +60,7 @@ object CoreSpec {
     }
 }
 
-abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
+abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with TriplestoreDataUtil with WordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
 
     // can be overridden in individual spec
     lazy val rdfDataObjects = Seq.empty[RdfDataObject]
@@ -107,9 +108,17 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Word
 
     def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), ConfigFactory.load()))
 
+
+    /**
+      * Initiates resetting of the triplestore data. The supplied data is prepended with
+      * a default set configurable in 'application.conf' with 'app.triplestore.default-rdf-data'.
+      */
     protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+
+        val dataWithPrependedDefaultData = prependDefaultData(rdfDataObjects, settings)
+
         implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(storeManager ? ResetTriplestoreContent(rdfDataObjects), 5 minutes)
+        Await.result(storeManager ? ResetTriplestoreContent(dataWithPrependedDefaultData), 5 minutes)
         Await.result(responderManager ? LoadOntologiesRequest(KnoraSystemInstances.Users.SystemUser), 1 minute)
     }
 
