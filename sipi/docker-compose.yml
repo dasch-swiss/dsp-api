@@ -19,7 +19,7 @@ services:
       restart: unless-stopped
       environment:
         - SIPI_EXTERNAL_PROTOCOL=http
-        - SIPI_EXTERNAL_HOSTNAME=localhost
+        - SIPI_EXTERNAL_HOSTNAME=0.0.0.0
         - SIPI_EXTERNAL_PORT=1024
       command: --config=/sipi/config/sipi.knora-docker-config.lua
 
@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
     environment:
       - SIPI_EXTERNAL_PROTOCOL=http
-      - SIPI_EXTERNAL_HOSTNAME=localhost
+      - SIPI_EXTERNAL_HOSTNAME=0.0.0.0
       - SIPI_EXTERNAL_PORT=1024
     command: --config=/sipi/config/sipi.knora-docker-it-config.lua
 
@@ -63,6 +63,6 @@ services:
       restart: unless-stopped
       environment:
         - SIPI_EXTERNAL_PROTOCOL=http
-        - SIPI_EXTERNAL_HOSTNAME=localhost
+        - SIPI_EXTERNAL_HOSTNAME=0.0.0.0
         - SIPI_EXTERNAL_PORT=1024
       command: --config=/sipi/config/sipi.knora-docker-no-auth-config.lua
