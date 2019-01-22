@@ -107,6 +107,20 @@ class SearchRouteV2R2RSpec extends R2RSpec {
             }
         }
 
+        "perform a fulltext search for 'Ding'" in {
+
+            Get("/v2/search/Ding") ~> searchPath ~> check {
+
+                assert(status == StatusCodes.OK, response.toString)
+
+                // the response involves forbidden resource
+
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/searchResponseWithforbiddenResource.jsonld"), writeTestDataFiles)
+
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+            }
+        }
 
         "perform a fulltext search for 'Dinge' (in the complex schema)" in {
             Get("/v2/search/Dinge") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {

@@ -7,7 +7,7 @@
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
   },
   "rdfs:label" : "ein verdammtes Ding mit einer Sprache",
   "@context" : {
