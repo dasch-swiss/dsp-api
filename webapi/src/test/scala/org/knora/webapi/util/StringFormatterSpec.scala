@@ -1051,7 +1051,7 @@ class StringFormatterSpec extends CoreSpec() {
         "generate an ARK URL for a resource IRI without a timestamp" in {
             val resourceIri: IRI = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
             val arkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
-            assert(arkUrl == "http://ark.dasch.swiss/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
+            assert(arkUrl == "http://0.0.0.0:3336/ark:/72163/1/0001/cmfk1DMHRBiR4=_6HXpEFAn")
         }
     }
 }

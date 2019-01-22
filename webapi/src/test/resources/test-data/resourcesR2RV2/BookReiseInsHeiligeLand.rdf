@@ -30,7 +30,7 @@
 	<incunabula:title rdf:resource="http://rdfh.ch/0803/2a6221216701/values/942b620f9105"/>
 	<incunabula:title rdf:resource="http://rdfh.ch/0803/2a6221216701/values/5755b5489105"/>
 	<incunabula:url rdf:resource="http://rdfh.ch/0803/2a6221216701/values/f89173afca2704"/>
-	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
+	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
 	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0803"/>
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/91e19f1e01"/>
 	<knora-api:creationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2016-03-02T15:05:21Z</knora-api:creationDate>

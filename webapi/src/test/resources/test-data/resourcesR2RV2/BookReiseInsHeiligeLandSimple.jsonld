@@ -16,7 +16,7 @@
   "incunabula:url" : "http://aleph.unibas.ch/F/?local_base=DSV01&con_lng=GER&func=find-b&find_code=SYS&request=002610320",
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
   },
   "rdfs:label" : "Reise ins Heilige Land",
   "@context" : {
