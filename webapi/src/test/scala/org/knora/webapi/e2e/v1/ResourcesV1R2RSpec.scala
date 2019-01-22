@@ -92,6 +92,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     override lazy val rdfDataObjects = List(
         RdfDataObject(path = "_test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
+        RdfDataObject(path = "_test_data/ontologies/example-ibox.ttl", name = "http://www.knora.org/ontology/shared/example-ibox"),
         RdfDataObject(path = "_test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
         RdfDataObject(path = "_test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
         RdfDataObject(path = "_test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -1949,6 +1950,32 @@ class ResourcesV1R2RSpec extends R2RSpec {
                 val responseStr = responseAs[String]
                 responseStr should include(creationDateStr)
             }
+        }
+
+        "create a resource belonging to a class in a shared ontology that refers to a property in another shared ontology" in {
+            val xmlImport =
+                s"""<?xml version="1.0" encoding="UTF-8"?>
+                   |  <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-ibox/xml-import/v1#"
+                   |  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   |  xsi:schemaLocation="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#"
+                   |  xmlns:p0000-example-box="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
+                   |  xmlns:p0000-example-ibox="http://api.knora.org/ontology/shared/example-ibox/xml-import/v1#"
+                   |  xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+                   |  <p0000-example-ibox:iBox id="test_box">
+                   |    <knoraXmlImport:label>test box 2</knoraXmlImport:label>
+                   |    <p0000-example-box__hasName knoraType="richtext_value">This is a test.</p0000-example-box__hasName>
+                   |  </p0000-example-ibox:iBox>
+                   |</knoraXmlImport:resources>
+                 """.stripMargin
+
+            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+
+            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+                assert(status == StatusCodes.OK, response.toString)
+                val responseStr = responseAs[String]
+                responseStr should include("createdResources")
+            }
+
         }
     }
 }

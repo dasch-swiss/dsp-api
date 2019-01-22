@@ -24,3 +24,4 @@ Also, please change the **HINT** to the appropriate level:
   https://docs.knora.org/paradox/03-apis/api-v2/knora-iris.html#iris-for-data
   must update them.
 - FIX: Set cookie domain to the value specified in `application.conf` with the setting `cookie-domain` (@github[#1169](#1169))
+- FIX: Fix processing of shared property in bulk import (@github[#1182](#1182))
