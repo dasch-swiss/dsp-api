@@ -143,7 +143,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
                         )
 
                     case None =>
-                        // No. Generate such a variable and generate an additional statement to get its literal value in the WHERE clause.
+                        // No. Generate such a variable.
+
+                        // TODO: [AbstractPrequeryGenerator.convertStatementForPropertyType] should put the generated variable in a collection like `valueVariablesGeneratedInFilters`
 
                         val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
                             case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
@@ -157,11 +159,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryGenerator(typeInspectionResult: 
                         // Generate the variable name.
                         val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
 
-                        // Generate a statement to get the literal value.
-                        val statementPattern = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
-
                         acc.copy(
-                            statementPatterns = acc.statementPatterns :+ statementPattern,
                             orderBy = acc.orderBy :+ OrderCriterion(queryVariable = variableForLiteral, isAscending = criterion.isAscending)
                         )
                 }

@@ -336,7 +336,39 @@ abstract class AbstractPrequeryGenerator(typeInspectionResult: GravsearchTypeIns
 
                     // Convert the statement to the internal schema, and add a statement to check that the value object is not marked as deleted.
                     val valueObjectIsNotDeleted = StatementPattern.makeExplicit(subj = statementPattern.obj, pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri), obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri))
-                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted)
+
+                    // check if the object var is used as a sort criterion
+                    val objectVarAsSortCriterionMaybe = inputOrderBy.find(criterion => criterion.queryVariable == objectVar)
+
+                    val orderByStatement: Option[QueryPattern] = if (objectVarAsSortCriterionMaybe.nonEmpty) {
+                        // it is used as a sort criterion, create an additional statement to get the literal value
+
+                        val criterion = objectVarAsSortCriterionMaybe.get
+
+                        // TODO: put the generated variable in a collection like `valueVariablesGeneratedInFilters` so it can be reused by `NonTriplestoreSpecificGravsearchToPrequeryGenerator.getOrderBy`
+
+                        val propertyIri: SmartIri = typeInspectionResult.getTypeOfEntity(criterion.queryVariable) match {
+                            case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) =>
+                                valueTypesToValuePredsForOrderBy.getOrElse(nonPropertyTypeInfo.typeIri.toString, throw GravsearchException(s"${criterion.queryVariable.toSparql} cannot be used in ORDER BY")).toSmartIri
+
+                            case Some(_) => throw GravsearchException(s"Variable ${criterion.queryVariable.toSparql} represents a property, and therefore cannot be used in ORDER BY")
+
+                            case None => throw GravsearchException(s"No type information found for ${criterion.queryVariable.toSparql}")
+                        }
+
+                        // Generate the variable name.
+                        val variableForLiteral: QueryVariable = SparqlTransformer.createUniqueVariableNameFromEntityAndProperty(criterion.queryVariable, propertyIri.toString)
+
+                        // Generate a statement to get the literal value.
+                        val statementPatternForSortCriterion = StatementPattern.makeExplicit(subj = criterion.queryVariable, pred = IriRef(propertyIri), obj = variableForLiteral)
+
+                        Some(statementPatternForSortCriterion)
+                    } else {
+                        // it is not a sort criterion
+                        None
+                    }
+                    
+                    Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult), valueObjectIsNotDeleted) ++ orderByStatement
                 } else {
                     // The variable doesn't refer to a value object. Just convert the statement pattern to the internal schema.
                     Seq(statementPatternToInternalSchema(statementPattern, typeInspectionResult))

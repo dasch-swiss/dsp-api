@@ -711,15 +711,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
             Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
 
-                println(responseAs[String])
-
                 assert(status == StatusCodes.OK, response.toString)
 
-                // TODO: add JSON with expected response
+                val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/thingWithOptionalDateSortedDesc.jsonld"), writeTestDataFiles)
 
-                // val expectedAnswerJSONLD = readOrWriteTextFile(responseAs[String], new File("src/test/resources/test-data/searchR2RV2/PagesOfNarrenschiffOrderedBySeqnum.jsonld"), writeTestDataFiles)
-
-                // compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+                compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
 
             }
 
