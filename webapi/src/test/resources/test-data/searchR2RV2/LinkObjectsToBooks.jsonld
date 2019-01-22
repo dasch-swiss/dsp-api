@@ -4,7 +4,7 @@
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/881405205304a"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/881405205304a"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -28,7 +28,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8be1b7cf7103G"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -55,7 +55,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/5e77e98d2603U"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -78,7 +78,7 @@
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ab79ffa43935M"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ab79ffa43935M"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -102,7 +102,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -125,7 +125,7 @@
     "@type" : "knora-api:LinkObj",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/cb1a74e3e2f6X"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cb1a74e3e2f6X"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -149,7 +149,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/21abac2162A"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/21abac2162A"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -176,7 +176,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/e41ab5695cN"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/e41ab5695cN"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -203,7 +203,7 @@
         "@type" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book",
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"

@@ -4,7 +4,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/1967a9933401n"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1967a9933401n"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -48,7 +48,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/0da887734b01l"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/0da887734b01l"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -71,7 +71,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/2a6221216701W"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -115,7 +115,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/1ea3ff007e01L"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/1ea3ff007e01L"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -138,7 +138,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/41d01bd9fb0"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/41d01bd9fb0"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -182,7 +182,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/700b6b7e1201t"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/700b6b7e1201t"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -205,7 +205,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/5e77e98d2603U"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/5e77e98d2603U"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -249,7 +249,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/52b8c76d3d03p"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/52b8c76d3d03p"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -272,7 +272,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/861b5644b302T"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/861b5644b302T"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -316,7 +316,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/7a5c3424ca02J"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7a5c3424ca02J"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -339,7 +339,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/8be1b7cf7103G"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -383,7 +383,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/7f2296af8803U"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/7f2296af8803U"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -406,7 +406,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/9311a421b501n"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9311a421b501n"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -450,7 +450,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/87528201cc01p"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87528201cc01p"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -473,7 +473,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/939baf3f2a02L"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/939baf3f2a02L"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -517,7 +517,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/87dc8d1f41020"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/87dc8d1f41020"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -540,7 +540,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b6b5ff1eb703T"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -584,7 +584,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/aaf6ddfecd03Z"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/aaf6ddfecd03Z"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -607,7 +607,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c5058f3a5"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -651,7 +651,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b9466d1a17j"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b9466d1a17j"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -674,7 +674,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/cf0892760104a"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/cf0892760104a"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -718,7 +718,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/c34970561804T"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/c34970561804T"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"
@@ -741,7 +741,7 @@
     "@type" : "incunabula:book",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
-      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/ff17e5ef9601j"
+      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j"
     },
     "knora-api:attachedToProject" : {
       "@id" : "http://rdfh.ch/projects/0803"
@@ -785,7 +785,7 @@
         },
         "knora-api:arkUrl" : {
           "@type" : "xsd:anyURI",
-          "@value" : "http://ark.dasch.swiss/ark:/72163/1/0803/b85e520aae015"
+          "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/b85e520aae015"
         },
         "knora-api:attachedToProject" : {
           "@id" : "http://rdfh.ch/projects/0803"

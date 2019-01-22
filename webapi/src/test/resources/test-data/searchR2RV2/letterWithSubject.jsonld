@@ -15,7 +15,7 @@
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",
-    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD"
+    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/_B3lQa6tSymIq7_7SowBsAD"
   },
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
